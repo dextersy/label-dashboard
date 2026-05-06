@@ -9,10 +9,11 @@ import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn, HeaderAction } from '../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-label-finance-tab',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, ModalToBodyDirective, PaginatedTableComponent, IconComponent],
     templateUrl: './label-finance-tab.component.html',
     styleUrl: './label-finance-tab.component.scss'
 })
@@ -68,7 +69,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
 
   get paymentHeaderActions(): HeaderAction[] {
     return [{
-      icon: () => this.paymentsLoading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      icon: () => this.paymentsLoading ? 'spinner' : 'refresh',
       label: '',
       handler: () => this.loadPayments(this.paymentsResponse?.pagination?.current_page ?? 1),
       type: 'secondary',

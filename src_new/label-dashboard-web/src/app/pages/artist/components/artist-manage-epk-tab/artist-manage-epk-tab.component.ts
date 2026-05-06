@@ -7,6 +7,7 @@ import { BrandService } from '../../../../services/brand.service';
 import { ApiService } from '../../../../services/api.service';
 import { ModalToBodyDirective } from '../../../../directives/modal-to-body.directive';
 import { downloadQRCode } from '../../../../utils/qr-utils';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface ArtistWithEPK extends Artist {
   epk_template?: number;
@@ -14,7 +15,7 @@ export interface ArtistWithEPK extends Artist {
 
 @Component({
     selector: 'app-artist-manage-epk-tab',
-    imports: [CommonModule, FormsModule, ModalToBodyDirective],
+    imports: [CommonModule, FormsModule, ModalToBodyDirective, IconComponent],
     templateUrl: './artist-manage-epk-tab.component.html',
     styleUrl: './artist-manage-epk-tab.component.scss'
 })

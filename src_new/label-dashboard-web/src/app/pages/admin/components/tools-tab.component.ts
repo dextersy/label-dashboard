@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { AdminService, EmailLog, EmailDetail } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo, TableAction, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-tools-tab',
-    imports: [CommonModule, PaginatedTableComponent],
+    imports: [CommonModule, PaginatedTableComponent, IconComponent],
     templateUrl: './tools-tab.component.html',
     styleUrls: ['./tools-tab.component.scss']
 })
@@ -21,12 +22,12 @@ export class ToolsTabComponent implements OnInit, OnDestroy {
 
   emailLogsActions: TableAction[] = [
     {
-      icon: 'fa-solid fa-eye',
+      icon: 'eye',
       label: 'View Details',
       handler: (email: EmailLog) => this.viewEmailContent(email.id)
     },
     {
-      icon: 'fa-solid fa-external-link-alt',
+      icon: 'external-link',
       label: 'Preview in New Window',
       handler: (email: EmailLog) => this.previewEmail(email.id)
     }

@@ -2,10 +2,11 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { NotificationService, NotificationMessage } from '../../services/notification.service';
+import { IconComponent } from '../shared/icon/icon.component';
 
 @Component({
     selector: 'app-global-notification',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './global-notification.component.html',
     styleUrl: './global-notification.component.scss'
 })
@@ -70,17 +71,17 @@ export class GlobalNotificationComponent implements OnInit, OnDestroy {
 
   getNotificationIcon(): string {
     if (!this.currentNotification) return '';
-    
+
     switch (this.currentNotification.type) {
       case 'success':
-        return 'fa-check-circle';
+        return 'check-circle';
       case 'info':
-        return 'fa-info-circle';
+        return 'info';
       case 'warning':
-        return 'fa-exclamation-triangle';
+        return 'warning';
       case 'error':
       default:
-        return 'fa-exclamation-circle';
+        return 'warning';
     }
   }
 

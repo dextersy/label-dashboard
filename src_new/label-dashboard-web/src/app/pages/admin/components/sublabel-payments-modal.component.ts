@@ -82,7 +82,7 @@ export class SublabelPaymentsModalComponent implements OnChanges {
 
   get headerActions(): HeaderAction[] {
     return [{
-      icon: () => this.loading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      icon: () => this.loading ? 'spinner' : 'refresh',
       label: '',
       handler: () => this.loadPayments(this.pagination?.current_page ?? 1),
       type: 'secondary',
@@ -93,14 +93,14 @@ export class SublabelPaymentsModalComponent implements OnChanges {
 
   rowActions: TableAction[] = [
     {
-      icon: 'fas fa-check-circle',
+      icon: 'check-circle',
       label: 'Mark as succeeded',
       type: 'secondary',
       hidden: (payment: SublabelPayment) => payment.status === 'succeeded',
       handler: (payment: SublabelPayment) => this.updateStatus(payment, 'succeeded')
     },
     {
-      icon: 'fas fa-ban',
+      icon: 'ban',
       label: 'Void payment',
       type: 'danger',
       hidden: (payment: SublabelPayment) => payment.status === 'failed',

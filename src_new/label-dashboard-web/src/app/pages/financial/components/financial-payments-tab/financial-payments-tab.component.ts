@@ -7,10 +7,11 @@ import { PaymentsTableComponent } from '../payments-table/payments-table.compone
 import { PaginationInfo, SearchFilters } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { AuthService } from '../../../../services/auth.service';
 import { ConfirmationService } from '../../../../services/confirmation.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-financial-payments-tab',
-    imports: [CommonModule, FormsModule, PaymentsTableComponent],
+    imports: [CommonModule, FormsModule, PaymentsTableComponent, IconComponent],
     templateUrl: './financial-payments-tab.component.html',
     styleUrl: './financial-payments-tab.component.scss'
 })

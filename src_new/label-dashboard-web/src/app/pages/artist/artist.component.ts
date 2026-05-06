@@ -14,6 +14,7 @@ import { ArtistStateService } from '../../services/artist-state.service';
 import { AuthService } from '../../services/auth.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from '../../../environments/environment';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'manage-epk';
 
@@ -27,7 +28,7 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'manage-epk'
         ArtistTeamTabComponent,
         ArtistManageEpkTabComponent,
         BreadcrumbComponent
-    ],
+, IconComponent],
     templateUrl: './artist.component.html',
     styleUrl: './artist.component.scss'
 })

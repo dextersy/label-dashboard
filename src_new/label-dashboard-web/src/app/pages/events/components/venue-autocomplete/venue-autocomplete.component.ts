@@ -4,6 +4,7 @@ import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/f
 import { GooglePlacesService, GooglePlacesPrediction, GooglePlaceDetails } from '../../../../services/google-places.service';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface VenueSelection {
   venue: string;
@@ -18,7 +19,7 @@ export interface VenueSelection {
 
 @Component({
     selector: 'app-venue-autocomplete',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     providers: [
         {
             provide: NG_VALUE_ACCESSOR,

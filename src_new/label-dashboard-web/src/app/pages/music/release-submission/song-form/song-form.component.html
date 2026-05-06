@@ -7,7 +7,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">
-          <i class="fa fa-music mr-2"></i>
+          <app-icon name="music" class="mr-2" />
           {{ isEditMode ? 'Edit Song' : 'Add Song' }}
         </h4>
         <button type="button" class="close" (click)="onClose()" aria-label="Close">
@@ -17,7 +17,7 @@
       <div class="modal-body">
         <!-- Info Message for Non-Draft Releases -->
         <div *ngIf="isEditMode && isRestrictedMode()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mb-3">
-          <i class="fa fa-info-circle tw-mr-2"></i>
+          <app-icon name="info" class="tw-mr-2" />
           <strong>This release is {{ releaseStatus }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
         </div>
 
@@ -230,7 +230,7 @@
                   <button type="button"
                           class="chip-dropdown-item create-new-item"
                           (click)="createNewAuthor()">
-                    <i class="fa fa-plus-circle"></i>
+                    <app-icon name="plus-circle" />
                     <span *ngIf="newAuthor.name.trim()"> Create new songwriter "{{ newAuthor.name }}"</span>
                     <span *ngIf="!newAuthor.name.trim()"> Create new songwriter...</span>
                   </button>
@@ -300,10 +300,10 @@
                 </div>
                 <div class="tw-mt-3">
                   <button type="button" class="btn-primary btn-sm mr-2" (click)="addAuthor()" [disabled]="isRestrictedMode() || !newAuthor.name.trim()">
-                    <i class="fa fa-check"></i> Add
+                    <app-icon name="check" /> Add
                   </button>
                   <button type="button" class="btn-secondary btn-sm" (click)="cancelNewAuthor()" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-times"></i> Cancel
+                    <app-icon name="x" /> Cancel
                   </button>
                 </div>
               </div>
@@ -360,7 +360,7 @@
                   <button type="button"
                           class="chip-dropdown-item create-new-item"
                           (click)="createNewComposer()">
-                    <i class="fa fa-plus-circle"></i>
+                    <app-icon name="plus-circle" />
                     <span *ngIf="newComposer.name.trim()"> Create new songwriter "{{ newComposer.name }}"</span>
                     <span *ngIf="!newComposer.name.trim()"> Create new songwriter...</span>
                   </button>
@@ -430,10 +430,10 @@
                 </div>
                 <div class="tw-mt-3">
                   <button type="button" class="btn-primary btn-sm mr-2" (click)="addComposer()" [disabled]="isRestrictedMode() || !newComposer.name.trim()">
-                    <i class="fa fa-check"></i> Add
+                    <app-icon name="check" /> Add
                   </button>
                   <button type="button" class="btn-secondary btn-sm" (click)="cancelNewComposer()" [disabled]="isRestrictedMode()">
-                    <i class="fa fa-times"></i> Cancel
+                    <app-icon name="x" /> Cancel
                   </button>
                 </div>
               </div>

@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-expense-flow-detail-modal',
-    imports: [CommonModule, PaginatedTableComponent],
+    imports: [CommonModule, PaginatedTableComponent, IconComponent],
     templateUrl: './expense-flow-detail-modal.component.html',
     styleUrl: './expense-flow-detail-modal.component.scss'
 })

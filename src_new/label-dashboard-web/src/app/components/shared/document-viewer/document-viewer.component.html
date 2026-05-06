@@ -2,7 +2,7 @@
   <div class="document-viewer-modal">
     <div class="document-viewer-header">
       <div class="document-info">
-        <i [class]="'fa ' + getFileIcon()"></i>
+        <app-icon [name]="getFileIcon()" />
         <div class="document-details">
           <h5 class="document-title">{{ document?.title }}</h5>
           <small class="document-filename tw-text-muted">{{ document?.filename }}</small>
@@ -14,21 +14,21 @@
           class="btn-secondary btn-sm tw-mr-2"
           (click)="downloadDocument()"
           title="Download">
-          <i class="fa fa-download"></i>
+          <app-icon name="download" />
         </button>
         <button 
           type="button" 
           class="btn-secondary btn-sm tw-mr-2"
           (click)="openInNewTab()"
           title="Open in new tab">
-          <i class="fas fa-external-link-alt"></i>
+          <app-icon name="external-link" />
         </button>
         <button 
           type="button" 
           class="btn-secondary btn-sm"
           (click)="onClose()"
           title="Close">
-          <i class="fa fa-times"></i>
+          <app-icon name="x" />
         </button>
       </div>
     </div>
@@ -69,7 +69,7 @@
       <!-- Office Documents -->
       <div *ngIf="documentType === 'office'" class="office-viewer">
         <div class="office-preview">
-          <i [class]="'fa fa-5x ' + getFileIcon()"></i>
+          <app-icon [name]="getFileIcon()" [size]="48" />
           <h3 class="tw-mt-3">{{ document?.title }}</h3>
           <p class="tw-text-muted">Office documents cannot be previewed directly.</p>
           <div class="tw-mt-3">
@@ -77,14 +77,14 @@
               type="button" 
               class="btn-primary tw-mr-2"
               (click)="downloadDocument()">
-              <i class="fa fa-download tw-mr-1"></i>
+              <app-icon name="download" class="tw-mr-1" />
               Download Document
             </button>
             <button 
               type="button" 
               class="btn-secondary"
               (click)="openInNewTab()">
-              <i class="fas fa-external-link-alt tw-mr-1"></i>
+              <app-icon name="external-link" class="tw-mr-1" />
               Open in New Tab
             </button>
           </div>
@@ -106,7 +106,7 @@
       <!-- Unsupported Documents -->
       <div *ngIf="documentType === 'unsupported'" class="unsupported-viewer">
         <div class="unsupported-preview">
-          <i class="fa fa-file fa-5x tw-text-muted"></i>
+          <app-icon name="file" class="fa-5x tw-text-muted" />
           <h3 class="tw-mt-3">{{ document?.title }}</h3>
           <p class="tw-text-muted">This file type cannot be previewed.</p>
           <div class="tw-mt-3">
@@ -114,14 +114,14 @@
               type="button" 
               class="btn-primary tw-mr-2"
               (click)="downloadDocument()">
-              <i class="fa fa-download tw-mr-1"></i>
+              <app-icon name="download" class="tw-mr-1" />
               Download Document
             </button>
             <button 
               type="button" 
               class="btn-secondary"
               (click)="openInNewTab()">
-              <i class="fas fa-external-link-alt tw-mr-1"></i>
+              <app-icon name="external-link" class="tw-mr-1" />
               Open in New Tab
             </button>
           </div>

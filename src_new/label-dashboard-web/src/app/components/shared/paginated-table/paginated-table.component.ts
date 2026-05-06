@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, TemplateRef, ContentChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { IconComponent } from '../icon/icon.component';
 import { SafeHtml } from '@angular/platform-browser';
 
 export interface PaginationInfo {
@@ -13,7 +14,7 @@ export interface PaginationInfo {
 }
 
 export interface TableAction {
-  icon: string;                          // Full FA class e.g. 'fa-solid fa-trash'
+  icon: string;                          // app-icon name e.g. 'trash'
   label: string;
   handler: (item: any) => void;
   type?: 'primary' | 'secondary' | 'danger';
@@ -21,7 +22,7 @@ export interface TableAction {
 }
 
 export interface HeaderAction {
-  icon: string | (() => string);         // FA class, or function for dynamic icons (e.g. spinner)
+  icon: string | (() => string);         // app-icon name, or function for dynamic icon names (e.g. 'spinner')
   label: string | (() => string);        // Button label, or function for dynamic text
   handler: () => void;
   type?: 'primary' | 'secondary' | 'danger';
@@ -62,7 +63,7 @@ export interface SortInfo {
 
 @Component({
     selector: 'app-paginated-table',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './paginated-table.component.html',
     styleUrl: './paginated-table.component.scss'
 })
@@ -339,14 +340,18 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
     this.sortChange.emit(newSortInfo);
   }
 
-  getSortIcon(column: TableColumn): string {
-    if (!column.sortable) return '';
-    
+  getSortIconName(column: TableColumn): string {
     if (!this.sortInfo || this.sortInfo.column !== column.key) {
-      return 'fa-sort text-muted';
+      return 'sort';
     }
-    
-    return this.sortInfo.direction === 'asc' ? 'fa-sort-up text-primary' : 'fa-sort-down text-primary';
+    return this.sortInfo.direction === 'asc' ? 'sort-asc' : 'sort-desc';
+  }
+
+  getSortIconClass(column: TableColumn): string {
+    if (!this.sortInfo || this.sortInfo.column !== column.key) {
+      return 'tw-text-muted';
+    }
+    return 'tw-text-primary';
   }
 
   getColumnValue(item: any, column: TableColumn): any {

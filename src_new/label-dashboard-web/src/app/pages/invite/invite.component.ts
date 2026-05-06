@@ -4,10 +4,11 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-invite',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, IconComponent],
     templateUrl: './invite.component.html',
     styleUrl: './invite.component.scss'
 })

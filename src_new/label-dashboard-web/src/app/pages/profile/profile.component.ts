@@ -5,10 +5,11 @@ import { Router } from '@angular/router';
 import { ProfileService, UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '../../services/profile.service';
 import { NotificationService } from '../../services/notification.service';
 import { validatePassword } from '../../utils/password-utils';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-profile',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './profile.component.html',
     styleUrl: './profile.component.scss'
 })

@@ -8,7 +8,7 @@
   <div *ngIf="isError && !isLoading" class="wrapper tw-h-full tw-flex tw-justify-center tw-items-center">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-text-center" style="max-width: 500px;">
       <div class="tw-px-card-pad tw-pb-card-pad tw-py-5">
-        <i class="fas fa-exclamation-triangle fa-3x tw-text-danger tw-mb-3"></i>
+        <app-icon name="warning" [size]="48" class="tw-text-danger tw-mb-3" />
         <h1 class="tw-text-danger" style="font-size: 1.5rem;">Error</h1>
         <p class="tw-text-muted">{{ errorMessage }}</p>
       </div>
@@ -28,7 +28,7 @@
       <!-- Body Section -->
       <div class="body-section tw-text-center">
         <div class="closed-message tw-py-5">
-          <i class="fas fa-heart fa-4x" style="color: var(--brand-color);"></i>
+          <app-icon name="heart" class="fa-4x" style="color: var(--brand-color);" />
           <h1 class="tw-mb-3" style="font-size: 3rem;">Thank You!</h1>
           <p class="tw-mb-4 tw-text-muted">
             <strong>{{ fundraiser.title }}</strong> fundraiser has ended and is no longer accepting donations.
@@ -59,7 +59,7 @@
             class="view-full-image-btn"
             (click)="openLightbox(); $event.stopPropagation()"
             title="View full image">
-            <i class="fas fa-search-plus"></i>
+            <app-icon name="info" class="fa-search-plus" />
           </button>
         </div>
       </div>
@@ -148,7 +148,7 @@
             </div>
             <div class="valid-feedback tw-block"
                  *ngIf="!emailControl?.invalid && emailControl?.value">
-              <i class="fas fa-check-circle tw-text-success"></i>
+              <app-icon name="check-circle" class="tw-text-success" />
               Please make sure your email address is correct.
             </div>
           </div>
@@ -189,7 +189,7 @@
 
           <!-- Submit Error -->
           <div class="submit-error tw-mb-3" *ngIf="submitError">
-            <i class="fas fa-exclamation-circle tw-mr-2"></i>{{ submitError }}
+            <app-icon name="warning" class="tw-mr-2" />{{ submitError }}
           </div>
 
           <!-- Submit Button -->
@@ -199,7 +199,7 @@
               class="btn-primary btn-lg tw-w-full submit-button"
               [disabled]="isSubmitting"
             >
-              <i class="fas fa-heart tw-mr-2" *ngIf="!isSubmitting"></i>
+              <app-icon name="heart" class="tw-mr-2" *ngIf="!isSubmitting" />
               <span *ngIf="!isSubmitting">Donate Now</span>
               <span *ngIf="isSubmitting">
                 <span class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>
@@ -231,7 +231,7 @@
   <div class="lightbox-overlay" *ngIf="showLightbox" (click)="closeLightbox()">
     <div class="lightbox-content" (click)="$event.stopPropagation()">
       <button class="lightbox-close" (click)="closeLightbox()">
-        <i class="fas fa-times"></i>
+        <app-icon name="x" />
       </button>
       <img [src]="fundraiser?.poster_url" class="lightbox-image" alt="Fundraiser poster">
       <div class="lightbox-caption" *ngIf="fundraiser?.description">

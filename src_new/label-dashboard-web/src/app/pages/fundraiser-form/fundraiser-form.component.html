@@ -41,7 +41,7 @@
         <!-- Public Link (shown for published/closed fundraisers) -->
         <div class="tw-mb-4 link-accent" *ngIf="!isNewFundraiser && fundraiser?.id && (isFundraiserPublished() || isFundraiserClosed())">
           <label class="tw-label tw-font-semibold tw-mb-2">
-            <i class="fa fa-link tw-mr-1"></i> Public Donation Link
+            <app-icon name="link" class="tw-mr-1" /> Public Donation Link
           </label>
           <div class="tw-flex tw-flex-wrap tw-gap-2 tw-items-center">
             <input
@@ -54,18 +54,18 @@
               class="btn-secondary tw-flex tw-items-center tw-gap-1 tw-shrink-0"
               (click)="copyPublicLink()"
               title="Copy link to clipboard">
-              <i class="fa fa-copy"></i> Copy
+              <app-icon name="copy" /> Copy
             </button>
             <button
               type="button"
               class="btn-secondary tw-flex tw-items-center tw-gap-1 tw-shrink-0"
               (click)="downloadFundraiserQR()"
               title="Download QR Code">
-              <i class="fa fa-qrcode"></i> QR Code
+              <app-icon name="scan" /> QR Code
             </button>
           </div>
           <small class="form-text tw-text-muted">
-            <i class="fa fa-info-circle"></i> Share this link with potential donors
+            <app-icon name="info" /> Share this link with potential donors
           </small>
         </div>
 
@@ -81,7 +81,7 @@
               [disabled]="isFundraiserClosed()"
               required>
             <small class="form-text tw-text-muted">
-              <i class="fa fa-info-circle"></i> The title will be displayed prominently on the donation page
+              <app-icon name="info" /> The title will be displayed prominently on the donation page
             </small>
           </div>
 
@@ -109,7 +109,7 @@
                  (click)="posterInput.click()"
                  (keydown)="onPosterUploadKeydown($event)"
                  aria-label="Upload fundraiser poster image">
-              <i class="fa fa-image fa-3x tw-mb-2 tw-text-muted"></i>
+              <app-icon name="image" [size]="48" class="tw-mb-2 tw-text-muted" />
               <p class="tw-mb-0 tw-text-muted">Click to upload poster image</p>
               <small class="tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
             </div>
@@ -121,7 +121,7 @@
                 class="poster-remove-btn"
                 (click)="removePoster()"
                 *ngIf="!isFundraiserClosed()">
-                <i class="fa fa-times"></i>
+                <app-icon name="x" />
               </button>
             </div>
 
@@ -159,8 +159,8 @@
     (click)="onSave()"
     [disabled]="saving"
     *ngIf="isFundraiserDraft()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-save" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="save" class="" *ngIf="!saving" />
     <span *ngIf="!saving">Save as Draft</span>
     <span *ngIf="saving">Saving...</span>
   </button>
@@ -170,8 +170,8 @@
     (click)="onUnpublish()"
     [disabled]="saving || hasDonations()"
     *ngIf="isFundraiserPublished() && !hasDonations()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="eye-off" *ngIf="!saving" />
     <span *ngIf="!saving">Unpublish</span>
     <span *ngIf="saving">Unpublishing...</span>
   </button>
@@ -181,8 +181,8 @@
     (click)="onClose()"
     [disabled]="saving"
     *ngIf="isFundraiserPublished()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-lock" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="lock" *ngIf="!saving" />
     <span *ngIf="!saving">Close Fundraiser</span>
     <span *ngIf="saving">Closing...</span>
   </button>
@@ -194,8 +194,8 @@
     (click)="onPublish()"
     [disabled]="saving"
     *ngIf="isFundraiserDraft()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-rocket" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="rocket" *ngIf="!saving" />
     <span *ngIf="!saving">Publish</span>
     <span *ngIf="saving">Publishing...</span>
   </button>
@@ -205,8 +205,8 @@
     (click)="onSave()"
     [disabled]="saving || !isFormDirty()"
     *ngIf="isFundraiserPublished()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-save" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="save" class="" *ngIf="!saving" />
     <span *ngIf="!saving">Save Changes</span>
     <span *ngIf="saving">Saving...</span>
   </button>
@@ -216,8 +216,8 @@
     (click)="onReopen()"
     [disabled]="saving"
     *ngIf="isFundraiserClosed()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-unlock" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="unlock" *ngIf="!saving" />
     <span *ngIf="!saving">Reopen Fundraiser</span>
     <span *ngIf="saving">Reopening...</span>
   </button>

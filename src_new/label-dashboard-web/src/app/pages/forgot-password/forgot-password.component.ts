@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-forgot-password',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './forgot-password.component.html',
     styleUrl: './forgot-password.component.scss'
 })

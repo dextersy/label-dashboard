@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from '../../../../services/confirmation.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface TicketType {
   id?: number;
@@ -41,7 +42,7 @@ function createNewTicketTypeForm() {
 
 @Component({
     selector: 'app-ticket-types',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './ticket-types.component.html',
     styleUrls: ['./ticket-types.component.scss']
 })

@@ -10,6 +10,7 @@ import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, Pagina
 import { AuthService } from '../../../../services/auth.service';
 import { environment } from '../../../../../environments/environment';
 import { TransferTicketModalComponent, TransferData } from '../transfer-ticket-modal/transfer-ticket-modal.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface EventTicket {
   id: number;
@@ -45,7 +46,7 @@ export interface TicketSummary {
 
 @Component({
     selector: 'app-event-tickets-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent, TransferTicketModalComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, TransferTicketModalComponent, IconComponent],
     templateUrl: './event-tickets-tab.component.html',
     styleUrl: './event-tickets-tab.component.scss'
 })
@@ -118,14 +119,14 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.isAdmin) return [];
     return [
       {
-        icon: 'fa fa-plus',
+        icon: 'plus',
         label: 'Custom Ticket',
         handler: () => this.onCreateCustomTicket(),
         disabled: () => this.loading || !this.canCreateCustomTickets(),
         title: () => this.getCustomTicketButtonTooltip(),
       },
       {
-        icon: 'fa fa-download',
+        icon: 'download',
         label: 'Download CSV',
         handler: () => this.onDownloadCSV(),
         disabled: () => this.loading,
@@ -135,25 +136,25 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   ticketActions: TableAction[] = [
     {
-      icon: 'fa-solid fa-envelope',
+      icon: 'envelope',
       label: 'Resend',
       hidden: (item) => !this.isTicketResendable(item),
       handler: (item) => this.onResendTicket(item.id)
     },
     {
-      icon: 'fa-solid fa-right-left',
+      icon: 'transfer',
       label: 'Transfer',
       hidden: (item) => !this.isTicketTransferable(item),
       handler: (item) => this.onTransferTicket(item)
     },
     {
-      icon: 'fa-solid fa-rotate-left',
+      icon: 'undo',
       label: 'Refund',
       hidden: (item) => !this.isTicketRefundable(item),
       handler: (item) => this.onRefundTicket(item.id)
     },
     {
-      icon: 'fa-solid fa-ban',
+      icon: 'ban',
       label: 'Cancel',
       type: 'danger',
       hidden: (item) => !this.isTicketCancellable(item),

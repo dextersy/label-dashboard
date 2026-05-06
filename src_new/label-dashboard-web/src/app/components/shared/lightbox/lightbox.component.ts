@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
     selector: 'app-lightbox',
-    imports: [CommonModule, ModalToBodyDirective],
+    imports: [CommonModule, ModalToBodyDirective, IconComponent],
     templateUrl: './lightbox.component.html',
     styleUrl: './lightbox.component.scss'
 })

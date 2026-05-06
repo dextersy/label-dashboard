@@ -12,6 +12,7 @@ import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 interface MenuItem {
   route: string;
@@ -30,7 +31,7 @@ interface MenuSection {
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule, ArtistSelectionComponent, ModalToBodyDirective],
+    imports: [CommonModule, RouterModule, ArtistSelectionComponent, ModalToBodyDirective, IconComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss'
 })
@@ -80,8 +81,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     {
       id: 'dashboard',
       items: [
-        { route: '/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: false },
-        { route: '/music/sync-licensing', icon: 'fas fa-file-contract', title: 'Sync Licensing', adminOnly: true }
+        { route: '/dashboard', icon: 'chart-line', title: 'Dashboard', adminOnly: false },
+        { route: '/music/sync-licensing', icon: 'file', title: 'Sync Licensing', adminOnly: true }
       ]
     },
     {
@@ -90,7 +91,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       items: [
         {
           route: '/artist',
-          icon: 'fas fa-headphones',
+          icon: 'headphones',
           title: 'Artist',
           adminOnly: false,
           children: [
@@ -101,7 +102,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         },
         {
           route: '/music',
-          icon: 'fas fa-music',
+          icon: 'music',
           title: 'Music',
           adminOnly: false,
           children: [
@@ -110,7 +111,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         },
         {
           route: '/financial',
-          icon: 'fas fa-dollar-sign',
+          icon: 'currency',
           title: 'Financial',
           adminOnly: false,
           children: [
@@ -122,7 +123,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
         },
-        { route: '/team', icon: 'fas fa-users', title: 'Team', adminOnly: false }
+        { route: '/team', icon: 'users', title: 'Team', adminOnly: false }
       ]
     },
     {
@@ -131,7 +132,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       items: [
         {
           route: '/campaigns/events',
-          icon: 'fas fa-ticket-alt',
+          icon: 'ticket',
           title: 'Events',
           adminOnly: true,
           children: [
@@ -144,7 +145,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         },
         {
           route: '/campaigns/fundraisers',
-          icon: 'fas fa-hand-holding-heart',
+          icon: 'heart',
           title: 'Fundraisers',
           adminOnly: true,
           children: [
@@ -160,7 +161,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       items: [
         {
           route: '/labels',
-          icon: 'fas fa-tags',
+          icon: 'tags',
           title: 'Labels',
           adminOnly: true,
           children: [
@@ -177,7 +178,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       items: [
         {
           route: '/admin',
-          icon: 'fas fa-cogs',
+          icon: 'settings',
           title: 'Admin',
           adminOnly: true,
           children: [
@@ -232,7 +233,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       case 'campaigns':
         // For campaigns workspace, show dashboard first, then events and fundraisers menu items
         const campaignsSection = this.sections.find(section => section.id === 'campaigns');
-        const campaignsDashboardItem = { route: '/campaigns/dashboard', icon: 'fas fa-chart-line', title: 'Dashboard', adminOnly: true };
+        const campaignsDashboardItem = { route: '/campaigns/dashboard', icon: 'chart-line', title: 'Dashboard', adminOnly: true };
         if (campaignsSection && campaignsSection.items.length > 0) {
           this.visibleSections = [
             {
@@ -243,7 +244,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
               id: 'campaigns-top-level',
               items: campaignsSection.items.map(item => {
                 // Assign appropriate icons based on the route
-                let icon = item.icon || 'fas fa-bullhorn';
+                let icon = item.icon || 'bullhorn';
                 return {
                   ...item,
                   icon: icon
@@ -273,16 +274,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 })
                 .map(child => {
                   // Assign appropriate icons based on the route
-                  let icon = 'fas fa-tags'; // default
+                  let icon = 'tags'; // default
                   switch (child.route) {
                     case '/labels/earnings':
-                      icon = 'fas fa-coins';
+                      icon = 'coins';
                       break;
                     case '/labels/sublabels':
-                      icon = 'fas fa-layer-group';
+                      icon = 'layers';
                       break;
                     case '/labels/setup':
-                      icon = 'fas fa-sliders';
+                      icon = 'settings';
                       break;
                   }
                   return {
@@ -306,16 +307,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
               id: 'admin-top-level',
               items: adminItem.children?.map(child => {
                 // Assign appropriate icons based on the route
-                let icon = 'fas fa-cogs'; // default
+                let icon = 'settings'; // default
                 switch (child.route) {
                   case '/admin/reports':
-                    icon = 'fas fa-chart-bar';
+                    icon = 'chart-bar';
                     break;
                   case '/admin/tools':
-                    icon = 'fas fa-wrench';
+                    icon = 'wrench';
                     break;
                   case '/admin/users':
-                    icon = 'fas fa-users';
+                    icon = 'users';
                     break;
                 }
                 return {

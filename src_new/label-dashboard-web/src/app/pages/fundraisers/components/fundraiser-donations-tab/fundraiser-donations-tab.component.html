@@ -15,7 +15,7 @@
       <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div class="summary-icon tw-text-success">
-            <i class="fas fa-peso-sign"></i>
+            <app-icon name="currency" />
           </div>
           <div class="summary-content">
             <div class="summary-value">{{ formatCurrency(summary.totalRaised) }}</div>
@@ -28,7 +28,7 @@
       <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div class="summary-icon text-primary">
-            <i class="fas fa-users"></i>
+            <app-icon name="users" />
           </div>
           <div class="summary-content">
             <div class="summary-value">{{ summary.totalDonations }}</div>
@@ -41,7 +41,7 @@
       <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div class="summary-icon tw-text-warning">
-            <i class="fas fa-receipt"></i>
+            <app-icon name="receipt" />
           </div>
           <div class="summary-content">
             <div class="summary-value">{{ formatCurrency(hasPlatformFees ? summary.totalPlatformFees : summary.totalProcessingFees) }}</div>
@@ -54,7 +54,7 @@
       <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden summary-card">
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div class="summary-icon tw-text-[#0891b2]">
-            <i class="fas fa-wallet"></i>
+            <app-icon name="wallet" />
           </div>
           <div class="summary-content">
             <div class="summary-value">{{ formatCurrency(summary.netAmount) }}</div>
@@ -85,7 +85,7 @@
         <div class="donation-card__header">
           <div class="donation-card__avatar"
                [style.background-color]="donation.anonymous ? '#9ca3af' : getAvatarColor(donation.name)">
-            <i *ngIf="donation.anonymous" class="fas fa-user-secret" style="font-size:15px"></i>
+            <app-icon name="user" *ngIf="donation.anonymous" style="font-size:15px" />
             <ng-container *ngIf="!donation.anonymous">{{ getInitials(donation.name) }}</ng-container>
           </div>
           <div class="donation-card__info">

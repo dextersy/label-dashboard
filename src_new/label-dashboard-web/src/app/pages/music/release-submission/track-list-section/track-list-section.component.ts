@@ -8,6 +8,7 @@ import { SongListComponent } from '../song-list/song-list.component';
 import { SongFormComponent } from '../song-form/song-form.component';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import { ConfirmationService } from '../../../../services/confirmation.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface TrackListData {
   songs: Song[];
@@ -16,7 +17,7 @@ export interface TrackListData {
 
 @Component({
     selector: 'app-track-list-section',
-    imports: [CommonModule, SongListComponent, SongFormComponent],
+    imports: [CommonModule, SongListComponent, SongFormComponent, IconComponent],
     templateUrl: './track-list-section.component.html',
     styleUrl: './track-list-section.component.scss'
 })

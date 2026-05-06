@@ -6,10 +6,11 @@ import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-login',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './login.component.html',
     styleUrl: './login.component.scss'
 })

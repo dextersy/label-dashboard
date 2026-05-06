@@ -7,9 +7,9 @@
 
 <!-- Error -->
 <div *ngIf="error" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-m-4 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-text-sm" role="alert">
-  <span><i class="fa fa-exclamation-triangle tw-mr-2"></i>{{ error }}</span>
+  <span><app-icon name="warning" class="tw-mr-2" />{{ error }}</span>
   <button class="btn-sm btn-danger" (click)="loadDashboardData()">
-    <i class="fas fa-sync tw-mr-1"></i> Retry
+    <app-icon name="refresh" class="tw-mr-1" /> Retry
   </button>
 </div>
 
@@ -39,7 +39,7 @@
         <!-- Draft -->
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad">
           <div class="tw-text-[2rem] tw-mr-4 tw-opacity-60 tw-text-gray-400">
-            <i class="fas fa-file-alt"></i>
+            <app-icon name="file" />
           </div>
           <div>
             <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ getPipelineStageCount('Draft') }}</div>
@@ -52,7 +52,7 @@
         <a routerLink="/music/releases"
            class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
           <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80" style="color: #3b82f6;">
-            <i class="fas fa-paper-plane"></i>
+            <app-icon name="paper-plane" />
           </div>
           <div>
             <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #3b82f6;">{{ getPipelineStageCount('For Submission') }}</div>
@@ -65,7 +65,7 @@
         <a routerLink="/music/releases"
            class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
           <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-warning">
-            <i class="fas fa-clock"></i>
+            <app-icon name="clock" />
           </div>
           <div>
             <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #f59e0b;">{{ getPipelineStageCount('Pending') }}</div>
@@ -77,7 +77,7 @@
         <!-- Live -->
         <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad">
           <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-success">
-            <i class="fas fa-globe"></i>
+            <app-icon name="globe" />
           </div>
           <div>
             <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #10b981;">{{ getPipelineStageCount('Live') }}</div>

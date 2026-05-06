@@ -9,6 +9,7 @@ import { ConfirmationService } from '../../../services/confirmation.service';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-label-setup',
@@ -19,7 +20,7 @@ import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.compo
     InPageNavComponent,
     FloatingActionBarComponent,
     BreadcrumbComponent
-  ],
+, IconComponent],
   templateUrl: './label-setup.component.html',
   styleUrls: []
 })
@@ -37,8 +38,8 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
 
   get navTabs(): InPageNavTab[] {
     return [
-      { id: 'brand-settings', label: 'Brand Settings', icon: 'fas fa-palette' },
-      { id: 'domains', label: 'Domains', icon: 'fas fa-globe' }
+      { id: 'brand-settings', label: 'Brand Settings', icon: 'palette' },
+      { id: 'domains', label: 'Domains', icon: 'globe' }
     ];
   }
 
@@ -362,11 +363,11 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
 
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'Connected': return 'fas fa-check-circle text-success';
-      case 'No SSL': return 'fas fa-exclamation-triangle text-warning';
-      case 'Pending': return 'fas fa-clock text-info';
+      case 'Connected': return 'check-circle';
+      case 'No SSL': return 'warning';
+      case 'Pending': return 'clock';
       case 'Unverified':
-      default: return 'fas fa-times-circle text-danger';
+      default: return 'x-circle';
     }
   }
 

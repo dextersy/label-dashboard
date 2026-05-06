@@ -10,6 +10,7 @@ import { BrandService, BrandSettings } from '../../services/brand.service';
 import { EventService } from '../../services/event.service';
 import { FundraiserService } from '../../services/fundraiser.service';
 import { environment } from 'environments/environment';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 interface CampaignsDashboardStats {
   activeEvents: number;
@@ -54,7 +55,7 @@ interface CampaignsDashboardData {
         RouterModule,
         AnalyticsPanelComponent,
         BreadcrumbComponent
-    ],
+, IconComponent],
     templateUrl: './events-dashboard.component.html',
     styleUrl: './events-dashboard.component.scss'
 })

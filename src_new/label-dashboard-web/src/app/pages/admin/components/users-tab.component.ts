@@ -6,10 +6,11 @@ import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-users-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent, InPageNavComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, InPageNavComponent, IconComponent],
     templateUrl: './users-tab.component.html',
     styleUrl: './users-tab.component.scss'
 })
@@ -32,8 +33,8 @@ export class UsersTabComponent implements OnInit {
   activeSection: string = 'users';
 
   navTabs: InPageNavTab[] = [
-    { id: 'users', label: 'Users', icon: 'fa-solid fa-users' },
-    { id: 'login-attempts', label: 'Login Attempts', icon: 'fa-solid fa-shield-halved' },
+    { id: 'users', label: 'Users', icon: 'users' },
+    { id: 'login-attempts', label: 'Login Attempts', icon: 'shield' },
   ];
 
   setActiveSection(section: string): void {
@@ -51,7 +52,7 @@ export class UsersTabComponent implements OnInit {
 
   headerActions: HeaderAction[] = [
     {
-      icon: 'fa-solid fa-user-plus',
+      icon: 'user-plus',
       label: 'Invite Admin',
       handler: () => this.openInviteModal(),
       type: 'primary',
@@ -61,27 +62,27 @@ export class UsersTabComponent implements OnInit {
   // Table action definitions
   usersActions: TableAction[] = [
     {
-      icon: 'fa-solid fa-user-shield',
+      icon: 'shield',
       label: 'Make Admin',
       type: 'primary',
       hidden: (user) => user.is_admin || user.has_pending_invite,
       handler: (user) => this.toggleAdminStatus(user.id)
     },
     {
-      icon: 'fa-solid fa-user-times',
+      icon: 'user',
       label: 'Remove Admin',
       type: 'danger',
       hidden: (user) => !user.is_admin || user.has_pending_invite,
       handler: (user) => this.toggleAdminStatus(user.id)
     },
     {
-      icon: 'fa-solid fa-envelope',
+      icon: 'envelope',
       label: 'Resend Invitation',
       hidden: (user) => !user.has_pending_invite,
       handler: (user) => this.resendInvite(user.id)
     },
     {
-      icon: 'fa-solid fa-ban',
+      icon: 'ban',
       label: 'Cancel Invitation',
       type: 'danger',
       hidden: (user) => !user.has_pending_invite,

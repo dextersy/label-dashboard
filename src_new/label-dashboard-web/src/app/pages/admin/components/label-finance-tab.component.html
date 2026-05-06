@@ -54,15 +54,15 @@
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
           <h3 class="tw-mb-0">Payment Methods</h3>
           <button class="btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
-            <i class="fas fa-plus tw-mr-1"></i>Add
+            <app-icon name="plus" class="tw-mr-1" />Add
           </button>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="tw-text-center tw-text-muted">
-            <i class="fas fa-credit-card fa-3x tw-mb-3"></i>
+            <app-icon name="credit-card" [size]="48" class="tw-mb-3" />
             <p>No payment methods configured yet.</p>
             <button class="btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
-              <i class="fas fa-plus tw-mr-1"></i>Add Payment Method
+              <app-icon name="plus" class="tw-mr-1" />Add Payment Method
             </button>
           </div>
           <div *ngIf="paymentMethods && paymentMethods.length > 0">

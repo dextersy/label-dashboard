@@ -4,7 +4,7 @@
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-mb-2">
-        <i class="fas fa-images tw-mr-2"></i>
+        <app-icon name="images" class="tw-mr-2" />
         Media Gallery
       </h3>
       <p class="tw-mb-0 tw-text-muted">Upload and manage photos shown on your EPK and public artist profile.</p>
@@ -22,7 +22,7 @@
                 (click)="toggleReorderMode()"
                 [disabled]="savingReorder">
           <div class="loading-spinner" *ngIf="savingReorder"></div>
-          <i class="fa fa-arrows-alt" *ngIf="!savingReorder"></i>
+          <app-icon name="move" *ngIf="!savingReorder" />
           {{ reorderMode ? 'Done' : 'Reorder' }}
         </button>
         <div class="release-filter-group" role="group">
@@ -34,13 +34,13 @@
                   class="release-filter-btn"
                   [class.active]="epkFilter === 'visible'"
                   (click)="epkFilter = 'visible'">
-            <i class="fa fa-globe"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Visible in EPK</span>
+            <app-icon name="globe" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Visible in EPK</span>
           </button>
           <button type="button"
                   class="release-filter-btn"
                   [class.active]="epkFilter === 'hidden'"
                   (click)="epkFilter = 'hidden'">
-            <i class="fa fa-eye-slash"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
+            <app-icon name="eye-off" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
           </button>
         </div>
       </div>
@@ -56,13 +56,13 @@
       </div>
 
       <div *ngIf="!loading && photos.length === 0" class="empty-gallery tw-text-center tw-text-muted">
-        <i class="fa fa-camera fa-3x"></i>
+        <app-icon name="camera" [size]="48" />
         <p>No photos uploaded yet</p>
         <small>Upload your first photo to get started!</small>
       </div>
 
       <div *ngIf="!loading && photos.length > 0 && filteredPhotos.length === 0" class="empty-gallery tw-text-center tw-text-muted">
-        <i class="fa fa-filter fa-3x"></i>
+        <app-icon name="filter" [size]="48" />
         <p>No photos match the current filter</p>
         <small>Try changing the EPK visibility filter above</small>
       </div>
@@ -81,11 +81,11 @@
                  (dblclick)="onPhotoDoubleClick(photo)">
 
             <div class="drag-handle" *ngIf="reorderMode" cdkDragHandle>
-              <i class="fa fa-grip-vertical"></i>
+              <app-icon name="drag" />
             </div>
 
             <div class="hidden-badge" *ngIf="photo.exclude_from_epk" title="Hidden from EPK">
-              <i class="fa fa-eye-slash"></i>
+              <app-icon name="eye-off" />
             </div>
 
             <div class="photo-overlay" *ngIf="!reorderMode">
@@ -93,29 +93,29 @@
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="openLightbox(photo)"
                         title="View photo">
-                  <i class="fa fa-eye"></i>
+                  <app-icon name="eye" />
                 </button>
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="setAsProfilePhoto(photo)"
                         title="Set as profile photo">
-                  <i class="fa fa-user"></i>
+                  <app-icon name="user" />
                 </button>
                 <button class="btn-sm btn-icon"
                         [ngClass]="photo.exclude_from_epk ? 'btn-secondary' : 'btn-secondary'"
                         (click)="toggleExcludeFromEPK(photo)"
                         [title]="photo.exclude_from_epk ? 'Excluded from EPK (click to include)' : 'Included in EPK (click to exclude)'">
-                  <i class="fa" [ngClass]="photo.exclude_from_epk ? 'fa-eye-slash' : 'fa-globe'"></i>
+                  <app-icon [name]="photo.exclude_from_epk ? 'eye-off' : 'globe'" />
                 </button>
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="startEditingCaption(photo)"
                         *ngIf="!editingCaptions[photo.id]"
                         title="Edit caption">
-                  <i class="fa fa-edit"></i>
+                  <app-icon name="edit" />
                 </button>
                 <button class="btn-sm btn-danger btn-icon"
                         (click)="deletePhoto(photo)"
                         title="Delete photo">
-                  <i class="fa fa-trash"></i>
+                  <app-icon name="trash" />
                 </button>
               </div>
             </div>
@@ -136,11 +136,11 @@
               <div class="caption-actions">
                 <button class="btn-sm btn-primary"
                         (click)="saveCaption(photo)">
-                  <i class="fa fa-check"></i> Save
+                  <app-icon name="check" /> Save
                 </button>
                 <button class="btn-sm btn-secondary"
                         (click)="cancelEditingCaption(photo.id)">
-                  <i class="fa fa-times"></i> Cancel
+                  <app-icon name="x" /> Cancel
                 </button>
               </div>
             </div>
@@ -165,7 +165,7 @@
                accept="image/jpeg,image/jpg,image/png,image/gif"
                (change)="onFilesSelected($event)">
         <label for="photoUpload" class="upload-label">
-          <i class="fas fa-cloud-upload-alt fa-3x"></i>
+          <app-icon name="upload" [size]="48" />
           <p>Click to select photos or drag and drop</p>
           <small>Supported formats: JPEG, PNG, GIF (Max 10MB each)</small>
         </label>
@@ -193,7 +193,7 @@
               (click)="uploadPhotos()"
               [disabled]="!selectedFiles || selectedFiles.length === 0 || uploading">
         <div class="loading-spinner" *ngIf="uploading"></div>
-        <i class="fa fa-upload" *ngIf="!uploading"></i>
+        <app-icon name="upload" *ngIf="!uploading" />
         {{ uploading ? 'Uploading...' : 'Upload Photos' }}
       </button>
     </div>

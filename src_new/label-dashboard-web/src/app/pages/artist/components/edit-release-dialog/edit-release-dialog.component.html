@@ -7,7 +7,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="modal-title">
-          <i class="fa fa-edit mr-2"></i>
+          <app-icon name="edit" class="mr-2" />
           Edit Release
         </h4>
         <button type="button" class="close" (click)="onClose()" aria-label="Close">
@@ -17,7 +17,7 @@
       <div class="modal-body">
         <!-- Info Message for Non-Draft Releases -->
         <div *ngIf="isRestrictedMode()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mb-3">
-          <i class="fa fa-info-circle tw-mr-2"></i>
+          <app-icon name="info" class="tw-mr-2" />
           <strong>This release is {{ editingRelease?.status }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
         </div>
 
@@ -26,7 +26,7 @@
           <!-- Errors -->
           <div *ngIf="validation.hasErrors" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-mb-2">
             <div class="tw-flex tw-items-start">
-              <i class="fa fa-exclamation-circle tw-mt-1 tw-mr-2"></i>
+              <app-icon name="warning" class="tw-mt-1 tw-mr-2" />
               <div class="tw-grow tw-flex-grow">
                 <strong>Missing Required Information</strong>
                 <ul class="tw-mb-0 tw-mt-1">
@@ -39,7 +39,7 @@
           <!-- Warnings -->
           <div *ngIf="validation.hasWarnings" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-2">
             <div class="tw-flex tw-items-start">
-              <i class="fa fa-exclamation-triangle tw-mt-1 tw-mr-2"></i>
+              <app-icon name="warning" class="tw-mt-1 tw-mr-2" />
               <div class="tw-grow tw-flex-grow">
                 <strong>Recommended Information</strong>
                 <ul class="tw-mb-0 tw-mt-1">

@@ -9,7 +9,7 @@
   <!-- Error State -->
   <div *ngIf="isError && !isLoading" class="epk-error-state">
     <div class="epk-error-icon">
-      <i class="fas fa-music"></i>
+      <app-icon name="music" />
     </div>
     <h3 class="epk-error-title">Artist not found</h3>
     <p class="epk-error-message">Sorry, we couldn't find the artist you were looking for.<br>If you think this was a mistake, please <a href="mailto:support@melt-records.com?subject=EPK Page Not Found">contact support</a>.</p>
@@ -94,8 +94,8 @@
                   [disabled]="isReleaseLoading(release)"
                   (click)="togglePlayRelease(release); $event.stopPropagation()"
                   [attr.aria-label]="isReleaseLoading(release) ? 'Loading' : isReleasePlaying(release) ? 'Pause' : isReleasePaused(release) ? 'Resume' : 'Play'">
-                  <i *ngIf="!isReleaseLoading(release)" [class]="isReleasePlaying(release) ? 'fas fa-pause' : 'fas fa-play'"></i>
-                  <i *ngIf="isReleaseLoading(release)" class="fas fa-spinner fa-spin"></i>
+                  <app-icon *ngIf="!isReleaseLoading(release)" [name]="isReleasePlaying(release) ? 'pause' : 'play'" />
+                  <app-icon name="spinner" class="tw-animate-spin" *ngIf="isReleaseLoading(release)" />
                 </button>
                 
                 <div class="streaming-icons" *ngIf="getStreamingLinks(release).length > 0">
@@ -134,7 +134,7 @@
               class="gallery-img">
             <div class="gallery-hover">
               <div class="gallery-hover-content">
-                <i class="fas fa-expand"></i>
+                <app-icon name="expand" />
                 <span *ngIf="item.caption" class="hover-caption">{{ item.caption }}</span>
               </div>
             </div>
@@ -237,8 +237,8 @@
                     [disabled]="isReleaseLoading(release)"
                     (click)="togglePlayRelease(release); $event.stopPropagation()"
                     [attr.aria-label]="isReleaseLoading(release) ? 'Loading' : isReleasePlaying(release) ? 'Pause' : isReleasePaused(release) ? 'Resume' : 'Play'">
-                    <i *ngIf="!isReleaseLoading(release)" [class]="isReleasePlaying(release) ? 'fas fa-pause' : 'fas fa-play'"></i>
-                    <i *ngIf="isReleaseLoading(release)" class="fas fa-spinner fa-spin"></i>
+                    <app-icon *ngIf="!isReleaseLoading(release)" [name]="isReleasePlaying(release) ? 'pause' : 'play'" />
+                    <app-icon name="spinner" class="tw-animate-spin" *ngIf="isReleaseLoading(release)" />
                   </button>
                 </div>
               </div>
@@ -294,7 +294,7 @@
       
       <!-- Close Button -->
       <button class="lightbox-close" (click)="closeLightbox()" aria-label="Close lightbox">
-        <i class="fas fa-times"></i>
+        <app-icon name="x" />
       </button>
       
       <!-- Navigation Arrows -->
@@ -303,7 +303,7 @@
         class="lightbox-nav lightbox-prev" 
         (click)="prevImage()" 
         aria-label="Previous image">
-        <i class="fas fa-chevron-left"></i>
+        <app-icon name="chevron-left" />
       </button>
       
       <button 
@@ -311,7 +311,7 @@
         class="lightbox-nav lightbox-next" 
         (click)="nextImage()" 
         aria-label="Next image">
-        <i class="fas fa-chevron-right"></i>
+        <app-icon name="chevron-right" />
       </button>
       
       <!-- Image Container -->

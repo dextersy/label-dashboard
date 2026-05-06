@@ -42,7 +42,7 @@
                   type="button"
                   (click)="toggleKebab($event)"
                   [class.active]="isKebabOpen">
-            <i class="fas fa-ellipsis-v"></i>
+            <app-icon name="more-vertical" />
           </button>
         </div>
         <div class="brand-card__stats">
@@ -83,7 +83,7 @@
     <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-6 tw-gap-2">
 
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
-        <i class="fas fa-coins tw-text-xl tw-text-success tw-opacity-70"></i>
+        <app-icon name="coins" class="tw-text-xl tw-text-success tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalBalance())">₱{{ getTotalBalance() | number:'1.2-2' }}</div>
           <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Total Balance</div>
@@ -91,7 +91,7 @@
       </div>
 
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
-        <i class="fas fa-headphones tw-text-xl tw-text-[#0891b2] tw-opacity-70"></i>
+        <app-icon name="headphones" class="tw-text-xl tw-text-[#0891b2] tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</div>
           <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Music Earnings</div>
@@ -99,15 +99,15 @@
       </div>
 
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-cursor-pointer hover:tw-bg-gray-50" (click)="openTotalEventBreakdown()">
-        <i class="fas fa-ticket-alt tw-text-xl tw-text-warning tw-opacity-70"></i>
+        <app-icon name="ticket" class="tw-text-xl tw-text-warning tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</div>
-          <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Event Earnings <i class="fas fa-info-circle tw-opacity-50"></i></div>
+          <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Event Earnings <app-icon name="info" class="tw-opacity-50" /></div>
         </div>
       </div>
 
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
-        <i class="fas fa-hand-holding-heart tw-text-xl tw-text-danger tw-opacity-70"></i>
+        <app-icon name="heart" class="tw-text-xl tw-text-danger tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalFundraiserEarnings())">₱{{ getTotalFundraiserEarnings() | number:'1.2-2' }}</div>
           <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Fundraiser Earnings</div>
@@ -115,7 +115,7 @@
       </div>
 
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
-        <i class="fas fa-money-bill-wave tw-text-xl tw-text-gray-400 tw-opacity-70"></i>
+        <app-icon name="currency" class="tw-text-xl tw-text-gray-400 tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</div>
           <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Payments Made</div>
@@ -123,10 +123,10 @@
       </div>
 
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-cursor-pointer hover:tw-bg-gray-50" (click)="openTotalPlatformFeesBreakdown()">
-        <i class="fas fa-percentage tw-text-xl tw-text-gray-600 tw-opacity-70"></i>
+        <app-icon name="percentage" class="tw-text-xl tw-text-gray-600 tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</div>
-          <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Platform Fees <i class="fas fa-info-circle tw-opacity-50"></i></div>
+          <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Platform Fees <app-icon name="info" class="tw-opacity-50" /></div>
         </div>
       </div>
 

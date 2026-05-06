@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FinancialSummary, Earning, Royalty, PayoutSettings } from '../../financial.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-financial-summary-tab',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './financial-summary-tab.component.html',
     styleUrl: './financial-summary-tab.component.scss'
 })

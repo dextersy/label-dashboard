@@ -4,6 +4,7 @@ import { FinancialService } from '../../../../services/financial.service';
 import { NotificationService } from '../../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { ExpensesTableComponent } from '../expenses-table/expenses-table.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface ReleaseExpense {
   id: number;
@@ -14,7 +15,7 @@ export interface ReleaseExpense {
 
 @Component({
     selector: 'app-release-expenses-dialog',
-    imports: [CommonModule, PaginatedTableComponent, ExpensesTableComponent],
+    imports: [CommonModule, PaginatedTableComponent, ExpensesTableComponent, IconComponent],
     templateUrl: './release-expenses-dialog.component.html',
     styleUrl: './release-expenses-dialog.component.scss'
 })

@@ -4,7 +4,7 @@
   <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h3 class="tw-mb-2">
-        <i class="fas fa-id-card tw-mr-2"></i>
+        <app-icon name="id-card" class="tw-mr-2" />
         Manage Profile
       </h3>
       <p class="tw-mb-0 tw-text-muted">Update your artist bio, social links, and public-facing profile information.</p>
@@ -163,7 +163,7 @@
           [disabled]="saving || !isFormValid()"
           (click)="saveProfile()">
     <div class="loading-spinner" *ngIf="saving"></div>
-    <i class="fa fa-save" *ngIf="!saving"></i>
+    <app-icon name="save" class="" *ngIf="!saving" />
     {{ saving ? 'Saving...' : 'Save Changes' }}
   </button>
 </app-floating-action-bar>

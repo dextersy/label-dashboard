@@ -4,10 +4,11 @@ import { Subject, takeUntil } from 'rxjs';
 import { PublicService, PublicEventsList } from '../../../services/public.service';
 import { BrandService } from '../../../services/brand.service';
 import { MetaService } from '../../../services/meta.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-public-events',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './public-events.component.html',
     styleUrls: ['./public-events.component.scss']
 })

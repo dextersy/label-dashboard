@@ -4,11 +4,12 @@ import { Subscription } from 'rxjs';
 import { AppNotification, NotificationAction } from '../../../models/notification.model';
 import { AppNotificationService } from '../../../services/app-notification.service';
 import { AuthService } from '../../../services/auth.service';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-notification-banner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './app-notification-banner.component.html',
   styleUrls: ['./app-notification-banner.component.scss']
 })

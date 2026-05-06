@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-plus-circle tw-mr-2"></i>
+      <app-icon name="plus-circle" class="tw-mr-2" />
       Add New Earning
     </h3>
     <p class="tw-mb-0 tw-text-muted">Record a new earning entry against a release for this artist.</p>
@@ -64,8 +64,8 @@
 
         <div class="tw-mt-5 tw-flex tw-justify-end">
           <button type="submit" class="btn-primary" [disabled]="isLoading">
-            <i class="fa fa-spinner fa-spin" *ngIf="isLoading"></i>
-            <i class="fa fa-plus" *ngIf="!isLoading"></i>
+            <app-icon name="spinner" class="tw-animate-spin" *ngIf="isLoading" />
+            <app-icon name="plus" *ngIf="!isLoading" />
             {{ isLoading ? 'Adding...' : 'Add Earning' }}
           </button>
         </div>

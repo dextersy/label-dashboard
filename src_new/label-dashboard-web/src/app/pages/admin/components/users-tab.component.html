@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-users-cog tw-mr-2"></i>
+      <app-icon name="settings" class="tw-mr-2" />
       Users &amp; Access
     </h3>
     <p class="tw-mb-0 tw-text-muted">Manage admin users, send invitations, and review login activity.</p>
@@ -46,11 +46,11 @@
                     type="button"
                     (click)="toggleKebab($event)"
                     [class.active]="isKebabOpen">
-              <i class="fas fa-ellipsis-v"></i>
+              <app-icon name="more-vertical" />
             </button>
           </div>
           <div class="user-card__footer" *ngIf="user.last_logged_in">
-            <i class="fas fa-clock"></i> Last login: {{ user.last_logged_in | date:'mediumDate' }}
+            <app-icon name="clock" /> Last login: {{ user.last_logged_in | date:'mediumDate' }}
           </div>
         </div>
       </ng-template>
@@ -91,8 +91,8 @@
             </div>
           </div>
           <div class="user-card__footer">
-            <span><i class="fas fa-clock"></i> {{ attempt.date_and_time | date:'medium' }}</span>
-            <span class="user-card__ip"><i class="fas fa-network-wired"></i> {{ attempt.remote_ip }}</span>
+            <span><app-icon name="clock" /> {{ attempt.date_and_time | date:'medium' }}</span>
+            <span class="user-card__ip"><app-icon name="network" /> {{ attempt.remote_ip }}</span>
           </div>
         </div>
       </ng-template>

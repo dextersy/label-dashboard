@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild, ChangeDetectorRef 
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { AudioPlayerService, AudioPlayerState } from '../../../services/audio-player.service';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-audio-player-popup',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './audio-player-popup.component.html',
   styleUrls: ['./audio-player-popup.component.scss']
 })

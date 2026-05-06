@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChildBrand } from '../../../services/admin.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface AggregatedTotals {
   event_sales: number;
@@ -15,7 +16,7 @@ export interface AggregatedTotals {
 
 @Component({
     selector: 'app-earnings-breakdown-modal',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './earnings-breakdown-modal.component.html',
     styleUrls: ['./earnings-breakdown-modal.component.scss']
 })

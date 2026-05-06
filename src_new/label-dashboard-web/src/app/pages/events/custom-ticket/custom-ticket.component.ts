@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface CustomTicketForm {
   name: string;
@@ -39,7 +40,7 @@ export interface BulkTicketRow {
 
 @Component({
     selector: 'app-custom-ticket',
-    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent],
+    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent, IconComponent],
     templateUrl: './custom-ticket.component.html',
     styleUrl: './custom-ticket.component.scss'
 })
@@ -354,7 +355,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     if (this.selectedEvent) {
       const parentTabLabel = this.returnRoute === '/campaigns/events/tickets' ? 'Tickets' : 'Pending Orders';
       this.breadcrumbService.setBreadcrumbs([
-        { label: 'Events', route: '/campaigns/events', icon: 'fas fa-ticket-alt' },
+        { label: 'Events', route: '/campaigns/events', icon: 'ticket' },
         { label: parentTabLabel, route: this.returnRoute },
         { label: 'Create Custom Ticket' } // Current page - no route
       ]);

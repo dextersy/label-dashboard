@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-admin-invite',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './admin-invite.component.html',
     styleUrl: './admin-invite.component.scss'
 })

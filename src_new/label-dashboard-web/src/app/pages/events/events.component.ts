@@ -15,6 +15,7 @@ import { EventReferralsTabComponent } from './components/event-referrals-tab/eve
 import { EventEmailTabComponent } from './components/event-email-tab/event-email-tab.component';
 import { EventSelectionComponent } from './components/event-selection/event-selection.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email';
 
@@ -39,7 +40,7 @@ export type EventSelection = Event;
         EventEmailTabComponent,
         EventSelectionComponent,
         BreadcrumbComponent
-    ],
+, IconComponent],
     templateUrl: './events.component.html',
     styleUrl: './events.component.scss'
 })
@@ -60,10 +61,10 @@ export class EventsComponent implements OnInit, OnDestroy {
   availableEvents: EventSelection[] = [];
 
   tabs = [
-    { id: 'tickets' as EventsTabType, label: 'Tickets & Walk-Ins', icon: 'fas fa-ticket-alt' },
-    { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'fa-solid fa-shopping-cart' },
-    { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'fa-solid fa-user-plus' },
-    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'fas fa-envelope', adminOnly: true }
+    { id: 'tickets' as EventsTabType, label: 'Tickets & Walk-Ins', icon: 'ticket' },
+    { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'cart' },
+    { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'user-plus' },
+    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope', adminOnly: true }
   ];
 
   constructor(

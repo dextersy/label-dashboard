@@ -23,13 +23,13 @@
                   class="release-filter-btn"
                   [class.active]="epkFilter === 'visible'"
                   (click)="epkFilter = 'visible'">
-            <i class="fa fa-globe"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Visible in EPK</span>
+            <app-icon name="globe" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Visible in EPK</span>
           </button>
           <button type="button"
                   class="release-filter-btn"
                   [class.active]="epkFilter === 'hidden'"
                   (click)="epkFilter = 'hidden'">
-            <i class="fa fa-eye-slash"></i> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
+            <app-icon name="eye-off" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
           </button>
         </div>
       </div>
@@ -45,7 +45,7 @@
             <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
             <span class="release-chip release-chip--status" [ngClass]="getStatusChipClass(release.status)">{{ release.status }}</span>
             <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
-              <i class="fa fa-eye-slash"></i>
+              <app-icon name="eye-off" />
             </span>
             <!-- Alert dot: pushed to far right, single unified style -->
             <span class="release-chip release-chip--alert release-chip--alert-error tw-ml-auto"
@@ -70,7 +70,7 @@
                 type="button"
                 (click)="toggleKebab($event)"
                 [class.active]="isKebabOpen">
-          <i class="fas fa-ellipsis-v"></i>
+          <app-icon name="more-vertical" />
         </button>
       </div>
     </ng-template>

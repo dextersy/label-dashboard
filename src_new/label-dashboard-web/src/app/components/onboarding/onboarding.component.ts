@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OnboardingService, OnboardingStep } from '../../services/onboarding.service';
 import { Subscription } from 'rxjs';
+import { IconComponent } from '../shared/icon/icon.component';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './onboarding.component.html',
   styleUrl: './onboarding.component.scss'
 })

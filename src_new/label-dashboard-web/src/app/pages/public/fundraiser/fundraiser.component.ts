@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { PublicService } from '../../../services/public.service';
 import { BrandService, BrandSettings } from '../../../services/brand.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-fundraiser',
@@ -12,7 +13,7 @@ import { BrandService, BrandSettings } from '../../../services/brand.service';
   imports: [
     CommonModule,
     ReactiveFormsModule
-  ],
+, IconComponent],
   templateUrl: './fundraiser.component.html',
   styleUrls: ['./fundraiser.component.scss']
 })

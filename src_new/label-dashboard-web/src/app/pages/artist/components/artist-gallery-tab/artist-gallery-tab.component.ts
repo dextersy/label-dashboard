@@ -7,6 +7,7 @@ import { Artist } from '../../../../models/artist.model';
 import { environment } from 'environments/environment';
 import { LightboxComponent } from '../../../../components/shared/lightbox/lightbox.component';
 import { ConfirmationService } from '../../../../services/confirmation.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface ArtistPhoto {
   id: number;
@@ -20,7 +21,7 @@ export interface ArtistPhoto {
 
 @Component({
     selector: 'app-artist-gallery-tab',
-    imports: [CommonModule, FormsModule, LightboxComponent, DragDropModule],
+    imports: [CommonModule, FormsModule, LightboxComponent, DragDropModule, IconComponent],
     templateUrl: './artist-gallery-tab.component.html',
     styleUrl: './artist-gallery-tab.component.scss'
 })

@@ -12,10 +12,10 @@ export interface WorkspaceInfo {
 }
 
 const WORKSPACE_CONFIG: Record<WorkspaceType, Omit<WorkspaceInfo, 'type'>> = {
-  music:     { label: 'Music',          icon: 'fas fa-music',              description: 'Artist information, music releases, and financial' },
-  campaigns: { label: 'Campaigns',      icon: 'fas fa-bullhorn',            description: 'Event tickets and fundraisers' },
-  labels:    { label: 'Labels',         icon: 'fas fa-tags',                description: 'Label and sublabel information' },
-  admin:     { label: 'Administration', icon: 'fas fa-cogs',                description: 'System settings and administration' },
+  music:     { label: 'Music',          icon: 'music',    description: 'Artist information, music releases, and financial' },
+  campaigns: { label: 'Campaigns',      icon: 'bullhorn', description: 'Event tickets and fundraisers' },
+  labels:    { label: 'Labels',         icon: 'tags',     description: 'Label and sublabel information' },
+  admin:     { label: 'Administration', icon: 'settings', description: 'System settings and administration' },
 };
 
 @Injectable({

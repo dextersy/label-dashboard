@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-toggle-on tw-mr-2"></i>Toggle Features — {{ sublabelName }}
+          <app-icon name="toggle" class="tw-mr-2" />Toggle Features — {{ sublabelName }}
         </h5>
         <button type="button" class="btn-close" (click)="onClose()" [disabled]="loading || saving"></button>
       </div>
@@ -11,13 +11,13 @@
       <div class="modal-body">
         <!-- Loading state -->
         <div class="tw-py-5 tw-text-center" *ngIf="loading">
-          <i class="fas fa-spinner fa-spin fa-2x tw-text-muted"></i>
+          <app-icon name="spinner" [size]="32" class="tw-text-muted tw-animate-spin" />
           <p class="tw-mt-2 tw-mb-0 tw-text-muted">Loading feature settings...</p>
         </div>
 
         <ng-container *ngIf="!loading">
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-            <i class="fas fa-info-circle tw-mr-2"></i>
+            <app-icon name="info" class="tw-mr-2" />
             Control which workspaces and features are available on this sublabel's domain. Click a card to toggle a feature. Changes take effect after saving.
           </div>
 
@@ -34,10 +34,10 @@
                 Disabled
               </div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_music_workspace">
-                <i class="fas fa-check"></i>
+                <app-icon name="check" />
               </div>
               <div class="feature-icon">
-                <i class="fas fa-music"></i>
+                <app-icon name="music" />
               </div>
               <div class="feature-name">Music Workspace</div>
               <div class="feature-desc">Artist info, releases, and financial</div>
@@ -53,10 +53,10 @@
                 Disabled
               </div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_campaigns_workspace">
-                <i class="fas fa-check"></i>
+                <app-icon name="check" />
               </div>
               <div class="feature-icon">
-                <i class="fas fa-bullhorn"></i>
+                <app-icon name="bullhorn" />
               </div>
               <div class="feature-name">Campaigns Workspace</div>
               <div class="feature-desc">Events and fundraisers</div>
@@ -72,10 +72,10 @@
                 Disabled
               </div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_sublabels">
-                <i class="fas fa-check"></i>
+                <app-icon name="check" />
               </div>
               <div class="feature-icon">
-                <i class="fas fa-tags"></i>
+                <app-icon name="tags" />
               </div>
               <div class="feature-name">Sublabels</div>
               <div class="feature-desc">Sublabels management in Labels workspace</div>
@@ -91,10 +91,10 @@
         </button>
         <button type="button" class="btn-primary" (click)="onSave()" [disabled]="loading || saving">
           <span *ngIf="saving">
-            <i class="fas fa-spinner fa-spin tw-mr-2"></i>Saving...
+            <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" />Saving...
           </span>
           <span *ngIf="!saving">
-            <i class="fas fa-save tw-mr-2"></i>Save Changes
+            <app-icon name="save" class=" tw-mr-2" />Save Changes
           </span>
         </button>
       </div>

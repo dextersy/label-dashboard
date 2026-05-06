@@ -19,7 +19,7 @@
 
     <!-- Past Event Warning -->
     <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3" *ngIf="selectedEvent && isEventPast(selectedEvent)">
-      <i class="fas fa-exclamation-triangle tw-mr-2"></i>
+      <app-icon name="warning" class="tw-mr-2" />
       <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
     </div>
 
@@ -86,11 +86,11 @@
       <div class="tw-col-span-12">
         <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
-            <i class="fas fa-ticket-alt fa-4x tw-mb-3 tw-text-muted"></i>
+            <app-icon name="ticket" class="fa-4x tw-mb-3 tw-text-muted" />
             <h4>No Events Available</h4>
             <p class="tw-text-muted">No events found for your label. Create a new event to get started.</p>
             <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateEventModal()">
-              <i class="fa fa-plus tw-mr-1"></i>Create New Event
+              <app-icon name="plus" class="tw-mr-1" />Create New Event
             </button>
           </div>
         </div>

@@ -42,7 +42,7 @@ export class PendingInviteNotificationProvider implements NotificationProvider {
         id: `pending-invite-${invite.invite_hash}`,
         type: 'invite' as const,
         style: 'gradient-purple' as const,
-        icon: 'fa-user-plus',
+        icon: 'user-plus',
         title: `You have a pending invite to join ${invite.artist_name}'s team!`,
         actions: [{
           label: 'Accept',

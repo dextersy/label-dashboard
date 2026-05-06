@@ -6,13 +6,14 @@ import { DateRangeFilterComponent, DateRangeSelection } from '../../../component
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { ExpenseFlowDetailModalComponent } from './expense-flow-detail-modal.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export type RecuperableExpenseSection = 'balance' | 'flow';
 
 @Component({
   selector: 'app-recuperable-expense-tab',
   standalone: true,
-  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent, InPageNavComponent, ExpenseFlowDetailModalComponent],
+  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent, InPageNavComponent, ExpenseFlowDetailModalComponent, IconComponent],
   templateUrl: './recuperable-expense-tab.component.html',
   styleUrls: ['./recuperable-expense-tab.component.scss']
 })
@@ -20,8 +21,8 @@ export class RecuperableExpenseTabComponent implements OnInit {
   activeSection: RecuperableExpenseSection = 'balance';
 
   navTabs: InPageNavTab[] = [
-    { id: 'balance', label: 'Balance', icon: 'fas fa-scale-balanced' },
-    { id: 'flow', label: 'Expense Flow', icon: 'fas fa-arrows-rotate' },
+    { id: 'balance', label: 'Balance', icon: 'scale' },
+    { id: 'flow', label: 'Expense Flow', icon: 'refresh' },
   ];
 
   // ── Balance section ───────────────────────────────────────────────────────
@@ -60,7 +61,7 @@ export class RecuperableExpenseTabComponent implements OnInit {
 
   flowActions: TableAction[] = [
     {
-      icon: 'fa-solid fa-eye',
+      icon: 'eye',
       label: 'View Details',
       handler: (item: any) => this.openFlowDetailModal(item)
     }

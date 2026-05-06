@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-wallet tw-mr-2"></i>
+      <app-icon name="wallet" class="tw-mr-2" />
       Artist Balances
     </h3>
     <p class="tw-mb-0 tw-text-muted">Current balance summary for each artist on the label.</p>
@@ -32,33 +32,28 @@
               <tr>
                 <th class="mobile-text" style="cursor: pointer;" (click)="onBalanceSortToggle('name')">
                   Artist
-                  <i class="fas fa-sort tw-ml-1"
-                     [class.fa-sort-up]="balanceSort?.column === 'name' && balanceSort?.direction === 'asc'"
-                     [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'"></i>
+                  <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'name' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
                   Total royalties (₱)
-                  <i class="fas fa-sort tw-ml-1"
-                     [class.fa-sort-up]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'asc'"
-                     [class.fa-sort-down]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'desc'"></i>
+                  <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
                   Total payments (₱)
-                  <i class="fas fa-sort tw-ml-1"
-                     [class.fa-sort-up]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'asc'"
-                     [class.fa-sort-down]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'desc'"></i>
+                  <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-narrow mobile-number tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_balance')">
                   Balance (₱)
-                  <i class="fas fa-sort tw-ml-1"
-                     [class.fa-sort-up]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'asc'"
-                     [class.fa-sort-down]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'desc'"></i>
+                  <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'total_balance' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('payout_point')">
                   Payout point (₱)
-                  <i class="fas fa-sort tw-ml-1"
-                     [class.fa-sort-up]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'asc'"
-                     [class.fa-sort-down]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'desc'"></i>
+                  <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'asc'"
+                     [class.fa-sort-down]="balanceSort?.column === 'payout_point' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-narrow tw-text-center">Due</th>
                 <th class="mobile-hide tw-text-center">Paused</th>
@@ -72,11 +67,11 @@
                 <td class="mobile-narrow mobile-number tw-text-right tw-font-bold" data-label="Balance"><span [ngClass]="{'tw-text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
                 <td class="mobile-hide tw-text-right" data-label="Payout point"><span [ngClass]="{'tw-text-danger': artist.payout_point < 0}">{{ formatCurrency(artist.payout_point) }}</span></td>
                 <td class="mobile-narrow tw-text-center" data-label="Due for payment">
-                  <i class="fas fa-check tw-text-success" *ngIf="artist.due_for_payment"></i>
+                  <app-icon name="check" class="tw-text-success" *ngIf="artist.due_for_payment" />
                   <span *ngIf="!artist.due_for_payment" class="tw-text-muted">-</span>
                 </td>
                 <td class="mobile-hide tw-text-center" data-label="Payouts paused">
-                  <i class="fas fa-pause-circle tw-text-warning" *ngIf="artist.hold_payouts"></i>
+                  <app-icon name="pause-circle" class="tw-text-warning" *ngIf="artist.hold_payouts" />
                   <span *ngIf="!artist.hold_payouts" class="tw-text-muted">-</span>
                 </td>
               </tr>
@@ -95,7 +90,7 @@
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-success tw-opacity-80">
-          <i class="fas fa-coins"></i>
+          <app-icon name="coins" />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : '#333'">
@@ -110,7 +105,7 @@
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-warning tw-opacity-80">
-          <i class="fas fa-clock"></i>
+          <app-icon name="clock" />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
@@ -125,7 +120,7 @@
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
-          <i class="fas fa-wallet"></i>
+          <app-icon name="wallet" />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
@@ -133,7 +128,7 @@
           </div>
           <div class="tw-text-sm tw-text-gray-500 tw-mt-1">
             Ready to Pay
-            <i class="fas fa-info-circle tw-ml-1" title="Due for payment and has bank account"></i>
+            <app-icon name="info" class="tw-ml-1" title="Due for payment and has bank account" />
           </div>
         </div>
       </div>
@@ -141,7 +136,7 @@
         <button class="btn-primary tw-w-full"
                 [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
                 (click)="payAllBalances()">
-          <i class="fas fa-credit-card"></i> Pay Now
+          <app-icon name="credit-card" /> Pay Now
         </button>
       </div>
       <div class="tw-mt-3 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-2 tw-text-center">

@@ -4,10 +4,11 @@ import { AdminService, ArtistBalance } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { PaymentConfirmationDialogComponent, PaymentArtist } from './payment-confirmation-dialog.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-balance-summary-tab',
-    imports: [CommonModule, PaginatedTableComponent, PaymentConfirmationDialogComponent],
+    imports: [CommonModule, PaginatedTableComponent, PaymentConfirmationDialogComponent, IconComponent],
     templateUrl: './balance-summary-tab.component.html'
 })
 export class BalanceSummaryTabComponent implements OnInit {

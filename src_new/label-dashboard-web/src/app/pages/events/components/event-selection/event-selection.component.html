@@ -14,7 +14,7 @@
              (error)="onImageError($event, selectedEvent!.id)"
              alt=""
              class="event-icon-poster">
-        <i class="fa fa-music" *ngIf="!selectedEvent || !hasValidImage(selectedEvent)"></i>
+        <app-icon name="music" *ngIf="!selectedEvent || !hasValidImage(selectedEvent)" />
       </div>
 
       <!-- Selected event info -->
@@ -25,7 +25,7 @@
 
       <!-- Placeholder -->
       <div class="tw-flex tw-items-center tw-gap-2 tw-text-gray-400 tw-text-sm tw-flex-1 tw-min-w-0" *ngIf="!selectedEvent && !loading">
-        <i class="fa fa-calendar-plus"></i>
+        <app-icon name="calendar-plus" />
         Select an Event
       </div>
 
@@ -54,14 +54,14 @@
         <button type="button"
                 class="tw-w-9 tw-h-9 tw-rounded-full tw-bg-gray-100 tw-border-0 tw-flex tw-items-center tw-justify-center tw-cursor-pointer hover:tw-bg-gray-200"
                 (click)="toggleDropdown(); $event.stopPropagation()">
-          <i class="fa fa-times tw-text-gray-500"></i>
+          <app-icon name="x" class="tw-text-gray-500" />
         </button>
       </li>
 
       <!-- Search (5+ events) -->
       <li class="tw-px-3 tw-py-2 tw-border-b tw-border-gray-100" *ngIf="events.length > 5">
         <div class="tw-relative tw-flex tw-items-center">
-          <i class="fa fa-search tw-absolute tw-left-3 tw-text-gray-400 tw-z-10"></i>
+          <app-icon name="search" class="tw-absolute tw-left-3 tw-text-gray-400 tw-z-10" />
           <input
             type="text"
             class="tw-input tw-pl-8 tw-pr-8 tw-rounded-full tw-text-sm tw-h-9 tw-w-full"
@@ -73,7 +73,7 @@
             class="tw-absolute tw-right-2 tw-border-0 tw-bg-transparent tw-text-gray-400 hover:tw-text-gray-600 tw-cursor-pointer"
             *ngIf="searchTerm"
             (click)="clearSearch(); $event.stopPropagation()">
-            <i class="fa fa-times tw-text-xs"></i>
+            <app-icon name="x" class="tw-text-xs" />
           </button>
         </div>
       </li>
@@ -81,7 +81,7 @@
       <!-- Create new event -->
       <li *ngIf="isAdmin" class="dropdown-create-item">
         <a (click)="createEvent()" class="tw-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2.5 tw-text-sm tw-font-semibold tw-cursor-pointer hover:tw-bg-gray-50 tw-no-underline" style="color: var(--brand-color, #3b82f6)">
-          <i class="fa fa-plus" style="color: var(--brand-color, #3b82f6)"></i>
+          <app-icon name="plus" style="color: var(--brand-color, #3b82f6)" />
           Create New Event
         </a>
       </li>
@@ -100,7 +100,7 @@
                  (error)="onDropdownImageError($event, event.id)"
                  alt=""
                  class="di-poster">
-            <i class="fa fa-music" *ngIf="!hasValidImage(event)"></i>
+            <app-icon name="music" *ngIf="!hasValidImage(event)" />
           </div>
           <!-- Info -->
           <div class="di-info">
@@ -118,7 +118,7 @@
 
       <!-- No results -->
       <li *ngIf="filteredEvents.length === 0 && searchTerm" class="tw-py-5 tw-text-center tw-text-sm tw-text-gray-400">
-        <i class="fa fa-search tw-mr-2"></i>
+        <app-icon name="search" class="tw-mr-2" />
         No events found matching "{{ searchTerm }}"
       </li>
     </ul>
@@ -127,7 +127,7 @@
   <!-- Search summary -->
   <div class="tw-mt-1.5" *ngIf="searchTerm && filteredEvents.length > 0">
     <small class="tw-text-gray-500">
-      <i class="fa fa-filter tw-mr-1" style="color: var(--brand-color, #3b82f6)"></i>
+      <app-icon name="filter" class="tw-mr-1" style="color: var(--brand-color, #3b82f6)" />
       Showing {{ filteredEvents.length }} of {{ events.length }} events
     </small>
   </div>

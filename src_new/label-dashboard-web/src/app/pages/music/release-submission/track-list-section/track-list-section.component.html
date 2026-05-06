@@ -1,13 +1,13 @@
 <div class="track-list-section">
   <!-- Info Message for Non-Draft Releases -->
   <div *ngIf="isRestrictedMode()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mb-3">
-    <i class="fa fa-info-circle tw-mr-2"></i>
+    <app-icon name="info" class="tw-mr-2" />
     <strong>This release is {{ releaseStatus }}.</strong> You can only do limited edits. Contact your label administrator if you need to change more information.
   </div>
 
   <div class="header-row">
     <p class="info-text tw-mb-0 tw-text-muted">
-      <i class="fa fa-info-circle mr-1"></i>
+      <app-icon name="info" class="mr-1" />
       Manage the tracklist for this release. You can add tracks now or skip and add them later.
     </p>
     <!-- Desktop buttons -->
@@ -18,10 +18,8 @@
         (click)="onDownloadMasters()"
         [disabled]="downloadingMasters"
         title="Download masters (cover art + audio files)">
-        <i class="fa tw-mr-1"
-           [class.fa-spinner]="downloadingMasters"
-           [class.fa-spin]="downloadingMasters"
-           [class.fa-download]="!downloadingMasters"></i>
+        <app-icon [name]="downloadingMasters ? 'spinner' : 'download'" class="tw-mr-1"
+                  [class.tw-animate-spin]="downloadingMasters" />
         {{ downloadingMasters ? 'Downloading...' : 'Download' }}
       </button>
       <button
@@ -30,31 +28,31 @@
         (click)="onAddExistingSong()"
         [disabled]="isRestrictedMode()"
         title="Add an existing song from another release">
-        <i class="fa fa-link tw-mr-1"></i> Add Existing
+        <app-icon name="link" class="tw-mr-1" /> Add Existing
       </button>
       <button
         type="button"
         class="btn-sm btn-primary"
         (click)="onAddSong()"
         [disabled]="isRestrictedMode()">
-        <i class="fa fa-plus tw-mr-1"></i> Add Song
+        <app-icon name="plus" class="tw-mr-1" /> Add Song
       </button>
     </div>
 
     <!-- Mobile kebab menu -->
     <div class="mobile-kebab md:tw-hidden">
       <button class="btn-sm btn-icon" type="button" (click)="mobileMenuOpen = !mobileMenuOpen">
-        <i class="fas fa-ellipsis-v"></i>
+        <app-icon name="more-vertical" />
       </button>
       <div class="kebab-dropdown" *ngIf="mobileMenuOpen" (click)="mobileMenuOpen = false">
         <button class="btn-ghost" (click)="onDownloadMasters()" [disabled]="downloadingMasters">
-          <i class="fa fa-download tw-mr-2"></i>{{ downloadingMasters ? 'Downloading...' : 'Download Masters' }}
+          <app-icon name="download" class="tw-mr-2" />{{ downloadingMasters ? 'Downloading...' : 'Download Masters' }}
         </button>
         <button class="btn-ghost" (click)="onAddExistingSong()" [disabled]="isRestrictedMode()">
-          <i class="fa fa-link tw-mr-2"></i>Add Existing
+          <app-icon name="link" class="tw-mr-2" />Add Existing
         </button>
         <button class="btn-ghost" (click)="onAddSong()" [disabled]="isRestrictedMode()">
-          <i class="fa fa-plus tw-mr-2"></i>Add Song
+          <app-icon name="plus" class="tw-mr-2" />Add Song
         </button>
       </div>
     </div>
@@ -63,7 +61,7 @@
   <!-- Add Existing Song Picker -->
   <div *ngIf="showExistingSongPicker" class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-3">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center tw-py-2">
-      <strong><i class="fa fa-search tw-mr-1"></i> Add Existing Song</strong>
+      <strong><app-icon name="search" class="tw-mr-1" /> Add Existing Song</strong>
       <button type="button" class="btn-close btn-sm" (click)="closeExistingSongPicker()"></button>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad tw-py-2">
@@ -93,7 +91,7 @@
               <div class="small tw-text-sm tw-text-muted" *ngIf="getArtistNames(song)">{{ getArtistNames(song) }}</div>
               <div class="small tw-text-sm tw-text-muted" *ngIf="getReleaseNames(song)">From: {{ getReleaseNames(song) }}</div>
             </div>
-            <i class="fa fa-plus text-primary"></i>
+            <app-icon name="plus" class="text-primary" />
           </div>
         </button>
       </div>
@@ -105,7 +103,7 @@
     <!-- Errors -->
     <div *ngIf="validation.hasErrors" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-mb-2">
       <div class="tw-flex tw-items-start">
-        <i class="fa fa-exclamation-circle tw-mt-1 tw-mr-2"></i>
+        <app-icon name="warning" class="tw-mt-1 tw-mr-2" />
         <div class="tw-grow tw-flex-grow">
           <strong>Missing Required Information</strong>
           <ul class="tw-mb-0 tw-mt-1">
@@ -120,7 +118,7 @@
     <!-- Warnings -->
     <div *ngIf="validation.hasWarnings" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-2">
       <div class="tw-flex tw-items-start">
-        <i class="fa fa-exclamation-triangle tw-mt-1 tw-mr-2"></i>
+        <app-icon name="warning" class="tw-mt-1 tw-mr-2" />
         <div class="tw-grow tw-flex-grow">
           <strong>Recommended Information</strong>
           <ul class="tw-mb-0 tw-mt-1">

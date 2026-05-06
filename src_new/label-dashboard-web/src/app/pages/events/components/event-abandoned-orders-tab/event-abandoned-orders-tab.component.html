@@ -39,11 +39,11 @@
                   type="button"
                   (click)="toggleKebab($event)"
                   [class.active]="isKebabOpen">
-            <i class="fas fa-ellipsis-v"></i>
+            <app-icon name="more-vertical" />
           </button>
         </div>
         <div class="order-card__phone" *ngIf="order.contact_number">
-          <i class="fas fa-phone"></i> {{ order.contact_number }}
+          <app-icon name="phone" /> {{ order.contact_number }}
         </div>
         <div class="order-card__footer">
           <span class="order-card__type">{{ order.ticket_type_name || 'Regular' }}</span>
@@ -56,15 +56,15 @@
     <ng-template #bulkOperationsContent let-selectedOrders let-disabled="disabled">
       <div class="bulk-operations tw-flex tw-flex-wrap tw-gap-2">
         <button type="button" class="btn-sm btn-secondary" (click)="onBulkSendTickets(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkSendTickets(selectedOrders)" title="Send tickets for selected orders (only Payment Confirmed)">
-          <i class="fa fa-paper-plane tw-mr-1"></i>
+          <app-icon name="paper-plane" class="tw-mr-1" />
           Send {{ getBulkSendCount(selectedOrders) }} Ticket(s)
         </button>
         <button type="button" class="btn-sm btn-primary" (click)="onBulkMarkAsPaid(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkMarkAsPaid(selectedOrders)" title="Mark selected orders as paid (only New)">
-          <i class="fa fa-check tw-mr-1"></i>
+          <app-icon name="check" class="tw-mr-1" />
           Mark {{ getBulkMarkPaidCount(selectedOrders) }} as Paid
         </button>
         <button type="button" class="btn-sm btn-danger" (click)="onBulkCancel(selectedOrders)" [disabled]="disabled || isEventPast() || !canBulkCancel(selectedOrders)" title="Cancel selected orders (only New)">
-          <i class="fa fa-times tw-mr-1"></i>
+          <app-icon name="x" class="tw-mr-1" />
           Cancel {{ getBulkCancelCount(selectedOrders) }}
         </button>
       </div>
@@ -78,7 +78,7 @@
         <strong class="text-primary fs-5">Totals</strong>
         
         <span class="summary-stat tw-text-warning" title="Number of pending tickets">
-          <i class="far fa-dot-circle tw-mr-2"></i>
+          <app-icon name="circle-dot" class="tw-mr-2" />
           {{ getTotalPendingOrders() }} pending tickets
         </span>
       </div>
@@ -87,7 +87,7 @@
 
   <!-- Event Past Message -->
   <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mt-4" *ngIf="isAdmin && isEventPast()">
-    <i class="far fa-clock tw-mr-2"></i>
+    <app-icon name="clock" class="tw-mr-2" />
     <strong>Event Past:</strong> This event has already occurred. Custom ticket creation is disabled.
   </div>
 </div>

@@ -8,6 +8,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
 import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
 import { QuillModule } from 'ngx-quill';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface AlbumCreditsData {
   liner_notes: string;
@@ -16,7 +17,7 @@ export interface AlbumCreditsData {
 
 @Component({
     selector: 'app-album-credits-section',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent],
     templateUrl: './album-credits-section.component.html',
     styleUrl: './album-credits-section.component.scss'
 })

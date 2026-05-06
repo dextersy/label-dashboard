@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface EventSales {
   id: number;
@@ -17,7 +18,7 @@ Chart.register(...registerables);
 
 @Component({
     selector: 'app-event-sales-chart',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './event-sales-chart.component.html',
     styleUrl: './event-sales-chart.component.scss'
 })

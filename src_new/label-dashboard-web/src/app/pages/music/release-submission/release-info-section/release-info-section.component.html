@@ -90,7 +90,7 @@
                     class="btn-sm btn-danger tw-mt-2"
                     (click)="removeCoverArt()"
                     [disabled]="isRestrictedMode()">
-              <i class="fa fa-trash"></i> Remove
+              <app-icon name="trash" /> Remove
             </button>
           </div>
         </div>
@@ -124,8 +124,8 @@
         class="btn-primary save-info-btn"
         [disabled]="savingRelease"
         (click)="saveRelease()">
-        <i class="fa fa-save tw-mr-2" *ngIf="!savingRelease"></i>
-        <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="savingRelease"></i>
+        <app-icon name="save" class=" tw-mr-2" *ngIf="!savingRelease" />
+        <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="savingRelease" />
         {{ savingRelease ? 'Saving...' : 'Save Information' }}
       </button>
     </div>

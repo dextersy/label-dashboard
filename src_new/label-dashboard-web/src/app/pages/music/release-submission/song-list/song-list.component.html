@@ -1,6 +1,6 @@
 <div class="table-responsive" *ngIf="songs.length > 0">
   <div *ngIf="!isRestrictedMode()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mb-3">
-    <i class="fa fa-arrows-alt mr-2"></i>
+    <app-icon name="move" class="mr-2" />
     Drag and drop rows to reorder tracks
   </div>
 
@@ -22,7 +22,7 @@
       <tr *ngFor="let song of songs; let i = index" cdkDrag [cdkDragDisabled]="isRestrictedMode()" class="song-row">
         <td *ngIf="!isRestrictedMode()" class="drag-handle-cell">
           <div class="drag-handle" cdkDragHandle>
-            <i class="fa fa-grip-vertical tw-text-muted"></i>
+            <app-icon name="drag" class="tw-text-muted" />
           </div>
         </td>
         <td>{{ i + 1 }}</td>
@@ -36,18 +36,14 @@
             [disabled]="loadingSongId === song.id"
             (click)="onPlayAudio(song)"
             [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
-            <i class="fa"
-               [class.fa-play]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
-               [class.fa-pause]="playingSongId === song.id"
-               [class.fa-play-circle]="pausedSongId === song.id"
-               [class.fa-spinner]="loadingSongId === song.id"
-               [class.fa-spin]="loadingSongId === song.id"></i>
+            <app-icon [name]="loadingSongId === song.id ? 'spinner' : playingSongId === song.id ? 'pause' : pausedSongId === song.id ? 'play-circle' : 'play'"
+                      [class.tw-animate-spin]="loadingSongId === song.id" />
           </button>
         </td>
         <td>
           <strong>{{ song.title }}</strong>
           <div *ngIf="!song.audio_file && !isUploading(song.id)" class="tw-text-danger small tw-text-sm">
-            <i class="fa fa-exclamation-circle tw-mr-1"></i>
+            <app-icon name="warning" class="tw-mr-1" />
             <strong>No audio master</strong>
           </div>
           <div *ngIf="isUploading(song.id)" class="tw-mt-2">
@@ -69,13 +65,13 @@
         <td>
           <div class="tw-flex tw-items-center tw-gap-0">
             <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn-icon btn-sm tw-text-success" title="Spotify">
-              <i class="fab fa-spotify"></i>
+              <app-icon name="spotify" />
             </a>
             <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn-icon btn-sm" title="Apple Music">
-              <i class="fab fa-apple"></i>
+              <app-icon name="apple" />
             </a>
             <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn-icon btn-sm tw-text-danger" title="YouTube">
-              <i class="fab fa-youtube"></i>
+              <app-icon name="youtube" />
             </a>
           </div>
           <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="tw-text-muted">-</span>
@@ -85,7 +81,7 @@
             <button class="kebab-btn" type="button"
                     (click)="toggleKebab(song, $event)"
                     [class.active]="openKebabItem === song">
-              <i class="fas fa-ellipsis-v"></i>
+              <app-icon name="more-vertical" />
             </button>
           </div>
         </td>
@@ -101,31 +97,31 @@
      [style.right.px]="dropdownPosition.right"
      (click)="$event.stopPropagation()">
   <button class="btn-ghost" (click)="onEdit(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id)">
-    <i class="fa fa-edit tw-mr-2"></i> Edit Song
+    <app-icon name="edit" class="tw-mr-2" /> Edit Song
   </button>
   <button class="btn-ghost" (click)="onUploadAudio(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id) || isRestrictedMode()">
-    <i class="fa tw-mr-2" [class.fa-upload]="!isUploading(openKebabItem.id)" [class.fa-spinner]="isUploading(openKebabItem.id)" [class.fa-spin]="isUploading(openKebabItem.id)"></i>
+    <app-icon [name]="isUploading(openKebabItem.id) ? 'spinner' : 'upload'" class="tw-mr-2" [class.tw-animate-spin]="isUploading(openKebabItem.id)" />
     {{ isUploading(openKebabItem.id) ? 'Uploading...' : openKebabItem.audio_file ? 'Replace Audio' : 'Upload Audio' }}
   </button>
   <button *ngIf="openKebabItem.audio_file" class="btn-ghost"
           (click)="onDownloadMaster(openKebabItem); closeKebab()"
           [disabled]="downloadingSongMaster[openKebabItem.id!]">
-    <i class="fa tw-mr-2" [class.fa-download]="!downloadingSongMaster[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMaster[openKebabItem.id!]" [class.fa-spin]="downloadingSongMaster[openKebabItem.id!]"></i>
+    <app-icon [name]="downloadingSongMaster[openKebabItem.id!] ? 'spinner' : 'download'" class="tw-mr-2" [class.tw-animate-spin]="downloadingSongMaster[openKebabItem.id!]" />
     {{ downloadingSongMaster[openKebabItem.id!] ? 'Downloading...' : 'Download WAV' }}
   </button>
   <button *ngIf="openKebabItem.audio_file_mp3" class="btn-ghost"
           (click)="onDownloadMp3(openKebabItem); closeKebab()"
           [disabled]="downloadingSongMp3[openKebabItem.id!]">
-    <i class="fa tw-mr-2" [class.fa-music]="!downloadingSongMp3[openKebabItem.id!]" [class.fa-spinner]="downloadingSongMp3[openKebabItem.id!]" [class.fa-spin]="downloadingSongMp3[openKebabItem.id!]"></i>
+    <app-icon [name]="downloadingSongMp3[openKebabItem.id!] ? 'spinner' : 'music'" class="tw-mr-2" [class.tw-animate-spin]="downloadingSongMp3[openKebabItem.id!]" />
     {{ downloadingSongMp3[openKebabItem.id!] ? 'Downloading...' : 'Download MP3' }}
   </button>
   <button *ngIf="!isRestrictedMode()" class="btn-ghost tw-text-danger"
           (click)="onDelete(openKebabItem); closeKebab()">
-    <i class="fa fa-trash tw-mr-2"></i> Delete Song
+    <app-icon name="trash" class="tw-mr-2" /> Delete Song
   </button>
 </div>
 
 <div *ngIf="songs.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-  <i class="fa fa-info-circle mr-2"></i>
+  <app-icon name="info" class="mr-2" />
   No songs added yet.
 </div>

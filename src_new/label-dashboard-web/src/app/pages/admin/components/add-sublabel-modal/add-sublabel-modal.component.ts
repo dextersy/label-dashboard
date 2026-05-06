@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-add-sublabel-modal',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './add-sublabel-modal.component.html',
     styleUrls: ['./add-sublabel-modal.component.scss']
 })

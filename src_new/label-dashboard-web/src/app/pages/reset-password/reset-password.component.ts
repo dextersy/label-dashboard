@@ -5,10 +5,11 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BrandService } from '../../services/brand.service';
 import { validatePassword } from '../../utils/password-utils';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-reset-password',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './reset-password.component.html',
     styleUrl: './reset-password.component.scss'
 })

@@ -6,7 +6,7 @@
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Release Information</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('info')">
-        <i class="fa fa-edit tw-mr-1"></i>Edit
+        <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
@@ -37,7 +37,7 @@
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Album Credits</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('credits')">
-        <i class="fa fa-edit tw-mr-1"></i>Edit
+        <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
@@ -75,7 +75,7 @@
               <p class="tw-mb-2"><strong>Artists:</strong></p>
               <ul class="list-unstyled">
                 <li *ngFor="let artist of albumCreditsData.artists" class="tw-mb-1">
-                  <i class="fa fa-user tw-mr-2"></i>{{ artist.artist_name || artist.name || 'Unknown Artist' }}
+                  <app-icon name="user" class="tw-mr-2" />{{ artist.artist_name || artist.name || 'Unknown Artist' }}
                 </li>
               </ul>
             </div>
@@ -89,7 +89,7 @@
       </div>
 
       <div *ngIf="!albumCreditsData.artists || albumCreditsData.artists.length === 0" class="tw-py-3 tw-text-center tw-text-muted">
-        <i class="fa fa-users fa-2x tw-mb-2"></i>
+        <app-icon name="users" [size]="32" class="tw-mb-2" />
         <p>No artists added yet</p>
       </div>
     </div>
@@ -100,7 +100,7 @@
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h3>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('tracks')">
-        <i class="fa fa-edit tw-mr-1"></i>Edit
+        <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
     </div>
     <div class="tw-px-card-pad tw-pb-card-pad">
@@ -113,7 +113,7 @@
             </div>
             <div>
               <span class="badge tw-text-white" [style.background-color]="song.audio_file ? '#28a745' : '#ffc107'">
-                <i class="fa" [class]="song.audio_file ? 'fa-check' : 'fa-exclamation-triangle'"></i>
+                <app-icon [name]="song.audio_file ? 'check' : 'warning'" />
                 {{ song.audio_file ? 'Audio uploaded' : 'No audio' }}
               </span>
             </div>
@@ -125,7 +125,7 @@
       </div>
 
       <div *ngIf="!trackListData.songs || trackListData.songs.length === 0" class="tw-py-3 tw-text-center tw-text-muted">
-        <i class="fa fa-music fa-2x tw-mb-2"></i>
+        <app-icon name="music" [size]="32" class="tw-mb-2" />
         <p>No tracks added yet</p>
       </div>
     </div>
@@ -143,7 +143,7 @@
           <!-- Errors -->
           <div *ngIf="allErrors.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-mb-3">
             <div class="tw-flex tw-items-center tw-mb-2">
-              <i class="fa fa-exclamation-circle tw-mr-2"></i>
+              <app-icon name="warning" class="tw-mr-2" />
               <strong>{{ allErrors.length }} error{{ allErrors.length !== 1 ? 's' : '' }} found</strong>
             </div>
             <ul class="tw-mb-0 small tw-text-sm">
@@ -154,7 +154,7 @@
           <!-- Warnings -->
           <div *ngIf="allWarnings.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3">
             <div class="tw-flex tw-items-center tw-mb-2">
-              <i class="fa fa-exclamation-triangle tw-mr-2"></i>
+              <app-icon name="warning" class="tw-mr-2" />
               <strong>{{ allWarnings.length }} warning{{ allWarnings.length !== 1 ? 's' : '' }}</strong>
             </div>
             <ul class="tw-mb-0 small tw-text-sm">
@@ -164,7 +164,7 @@
 
           <!-- Success -->
           <div *ngIf="allErrors.length === 0 && allWarnings.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-green-200 tw-bg-green-50 tw-text-green-800 tw-mb-0">
-            <i class="fa fa-check-circle tw-mr-2"></i>
+            <app-icon name="check-circle" class="tw-mr-2" />
             <strong>All validations passed!</strong>
             <div class="small tw-mt-1 tw-text-sm">Ready for submission</div>
           </div>
@@ -175,7 +175,7 @@
     <div class="md:tw-col-span-6">
       <!-- Submission Warning -->
       <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
-        <i class="fa fa-exclamation-triangle tw-mr-2"></i>
+        <app-icon name="warning" class="tw-mr-2" />
         <strong>Important:</strong> Once submitted, this release will be sent for processing and distribution.
         Make sure all information is correct and complete.
 
@@ -199,27 +199,27 @@
         style="font-size: 1.25rem; padding: 1rem 2rem; font-weight: 600; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
         [disabled]="allErrors.length > 0 || isSubmitting || !hasAcknowledged"
         (click)="onSubmit()">
-        <i class="fa fa-2x tw-mr-3" [class]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'" style="vertical-align: middle;"></i>
+        <app-icon name="info" [size]="32" class="tw-mr-3" [class]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'" style="vertical-align: middle;" />
         <span style="vertical-align: middle;">{{ isSubmitting ? 'Submitting...' : 'Submit Release' }}</span>
       </button>
 
       <div *ngIf="allErrors.length > 0" class="tw-mt-2 tw-text-center">
         <small class="tw-text-danger">
-          <i class="fa fa-exclamation-circle tw-mr-1"></i>
+          <app-icon name="warning" class="tw-mr-1" />
           Please fix all errors before submitting
         </small>
       </div>
 
       <div *ngIf="allErrors.length === 0 && !hasAcknowledged" class="tw-mt-2 tw-text-center">
         <small class="tw-text-muted">
-          <i class="fa fa-info-circle tw-mr-1"></i>
+          <app-icon name="info" class="tw-mr-1" />
           Please check the acknowledgment box to enable submission
         </small>
       </div>
 
       <div *ngIf="allErrors.length === 0 && hasAcknowledged && allWarnings.length > 0" class="tw-mt-2 tw-text-center">
         <small class="tw-text-warning">
-          <i class="fa fa-exclamation-triangle tw-mr-1"></i>
+          <app-icon name="warning" class="tw-mr-1" />
           Warnings detected - you can still submit, but consider addressing them first
         </small>
       </div>

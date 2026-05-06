@@ -5,10 +5,11 @@ import { AdminService, EarningsSummary } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-summary-view-tab',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, IconComponent],
     templateUrl: './summary-view-tab.component.html',
     styleUrls: ['./summary-view-tab.component.scss']
 })

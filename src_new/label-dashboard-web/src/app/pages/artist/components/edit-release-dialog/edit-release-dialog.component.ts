@@ -7,10 +7,11 @@ import { ReleaseService } from '../../../../services/release.service';
 import { SongService, Song } from '../../../../services/song.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-edit-release-dialog',
-    imports: [CommonModule, ReleaseFormComponent],
+    imports: [CommonModule, ReleaseFormComponent, IconComponent],
     templateUrl: './edit-release-dialog.component.html',
     styleUrl: './edit-release-dialog.component.scss'
 })

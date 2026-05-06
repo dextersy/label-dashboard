@@ -5,7 +5,7 @@
     <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
       <div class="tw-col-span-12">
         <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-flex tw-items-center">
-          <i class="fas fa-info-circle tw-mr-2"></i>
+          <app-icon name="info" class="tw-mr-2" />
           <div>
             <strong>To:</strong> 
             <span *ngIf="loadingCount">Loading recipients...</span>
@@ -43,7 +43,7 @@
               {{ subject.length }}/500 characters
             </span>
             <span *ngIf="subject.length > 500" class="tw-text-danger tw-ml-2">
-              <i class="fas fa-exclamation-triangle"></i> Too long!
+              <app-icon name="warning" /> Too long!
             </span>
           </small>
         </div>
@@ -96,7 +96,7 @@
                 <span [class]="getContentSizeClass()">{{ getContentSizeText() }}</span>
               </span>
               <span *ngIf="isContentTooLarge()" class="tw-text-danger">
-                <i class="fas fa-exclamation-triangle"></i> Content too large!
+                <app-icon name="warning" /> Content too large!
               </span>
             </div>
           </div>
@@ -108,7 +108,7 @@
 
   <!-- No Event Selected -->
   <div class="tw-py-5 tw-text-center" *ngIf="!selectedEvent">
-    <i class="fas fa-envelope fa-4x tw-mb-3 tw-text-muted"></i>
+    <app-icon name="envelope" class="fa-4x tw-mb-3 tw-text-muted" />
     <h5 class="tw-text-muted">No Event Selected</h5>
     <p class="tw-text-muted">Please select an event to send emails to ticket holders.</p>
   </div>
@@ -117,7 +117,7 @@
 <!-- Floating Action Bar -->
 <app-floating-action-bar *ngIf="selectedEvent">
   <span floatingStart class="tw-text-muted">
-    <small><i class="fas fa-clock tw-mr-1"></i>Emails will be sent one by one to preserve deliverability</small>
+    <small><app-icon name="clock" class="tw-mr-1" />Emails will be sent one by one to preserve deliverability</small>
   </span>
   <button
     type="button"
@@ -125,7 +125,7 @@
     [disabled]="!isFormValid() || sending"
     (click)="showTestEmailModal()"
     title="Send a test email to specific addresses first">
-    <i class="fas fa-flask tw-mr-2"></i>
+    <app-icon name="flask" class="tw-mr-2" />
     Send Test Email
   </button>
   <button
@@ -134,7 +134,7 @@
     [disabled]="!isFormValid() || recipientsCount === 0 || sending || loadingCount"
     (click)="sendEmail()">
     <span *ngIf="sending" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
-    <i *ngIf="!sending" class="fas fa-paper-plane tw-mr-2"></i>
+    <app-icon name="paper-plane" class="tw-mr-2" *ngIf="!sending" />
     <span *ngIf="sending">Sending Email...</span>
     <span *ngIf="!sending">Send Email to {{ recipientsCount }} Recipients</span>
   </button>

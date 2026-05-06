@@ -7,6 +7,7 @@ import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.compo
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { ArtistStateService } from '../../../services/artist-state.service';
 import { environment } from 'environments/environment';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface NewArtistData {
   name: string;
@@ -22,7 +23,7 @@ export interface NewArtistData {
 
 @Component({
     selector: 'app-add-new-artist',
-    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent],
+    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent, IconComponent],
     templateUrl: './add-new-artist.component.html',
     styleUrl: './add-new-artist.component.scss'
 })

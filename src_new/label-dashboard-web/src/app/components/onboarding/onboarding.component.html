@@ -10,7 +10,7 @@
     <div class="tooltip-header">
       <h3>{{ currentStep.title }}</h3>
       <button class="close-btn" (click)="onSkip()" aria-label="Skip onboarding">
-        <i class="fas fa-times"></i>
+        <app-icon name="x" />
       </button>
     </div>
 
@@ -35,7 +35,7 @@
           *ngIf="canGoPrevious"
           class="btn-secondary"
           (click)="onPrevious()">
-          <i class="fas fa-arrow-left"></i> Previous
+          <app-icon name="arrow-left" /> Previous
         </button>
         <button
           class="btn-secondary"
@@ -46,8 +46,8 @@
           class="btn-primary"
           (click)="onNext()">
           {{ isLastStep ? 'Get Started' : 'Next' }}
-          <i class="fas fa-arrow-right" *ngIf="!isLastStep"></i>
-          <i class="fas fa-check" *ngIf="isLastStep"></i>
+          <app-icon name="arrow-right" *ngIf="!isLastStep" />
+          <app-icon name="check" *ngIf="isLastStep" />
         </button>
       </div>
     </div>

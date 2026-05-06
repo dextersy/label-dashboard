@@ -4,7 +4,7 @@
   <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h3 class="tw-mb-2">
-        <i class="fas fa-users tw-mr-2"></i>
+        <app-icon name="users" class="tw-mr-2" />
         Team
       </h3>
       <p class="tw-mb-0 tw-text-muted">Manage team members who have access to this artist's profile.</p>
@@ -42,11 +42,11 @@
                   type="button"
                   (click)="toggleKebab($event)"
                   [class.active]="isKebabOpen">
-            <i class="fas fa-ellipsis-v"></i>
+            <app-icon name="more-vertical" />
           </button>
         </div>
         <div class="member-card__footer">
-          <i class="fas fa-calendar-alt"></i> Invited {{ formatDate(member.invited_date) }}
+          <app-icon name="calendar" /> Invited {{ formatDate(member.invited_date) }}
         </div>
       </div>
     </ng-template>
@@ -78,7 +78,7 @@
                       class="btn-sm btn-primary tw-w-full md:tw-w-auto"
                       [disabled]="!inviteForm.form.valid || sendingInvite">
                 <div class="loading-spinner" *ngIf="sendingInvite"></div>
-                <i class="fa fa-paper-plane" *ngIf="!sendingInvite"></i>
+                <app-icon name="paper-plane" *ngIf="!sendingInvite" />
                 {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
               </button>
           </div>

@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface TestEmailData {
   emails: string[];
@@ -10,7 +11,7 @@ export interface TestEmailData {
 
 @Component({
     selector: 'app-test-email-modal',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './test-email-modal.component.html',
     styleUrl: './test-email-modal.component.scss'
 })

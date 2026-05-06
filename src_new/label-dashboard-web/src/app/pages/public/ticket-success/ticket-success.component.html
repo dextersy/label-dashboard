@@ -8,11 +8,11 @@
   <!-- Error -->
   <div *ngIf="isError" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-6">
     <div class="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-text-center tw-max-w-sm tw-w-full tw-p-10">
-      <i class="fas fa-exclamation-triangle fa-3x tw-text-red-400 tw-mb-4 tw-block"></i>
+      <app-icon name="warning" [size]="48" class="tw-text-red-400 tw-mb-4 tw-block" />
       <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-2">Ticket Not Found</h2>
       <p class="tw-text-gray-500 tw-text-base tw-mb-6">We couldn't find your ticket details. The link may have expired.</p>
       <button class="btn-primary" (click)="goToEventPage()">
-        <i class="fas fa-arrow-left tw-mr-1"></i>Go Back
+        <app-icon name="arrow-left" class="tw-mr-1" />Go Back
       </button>
     </div>
   </div>
@@ -43,7 +43,7 @@
         <!-- Check + message -->
         <div class="tw-text-center tw-mb-6">
           <div class="tw-w-20 tw-h-20 tw-rounded-full tw-bg-green-50 tw-flex tw-items-center tw-justify-center tw-mx-auto tw-mb-4">
-            <i class="fas fa-check-circle tw-text-green-500" style="font-size: 2.5rem;"></i>
+            <app-icon name="check-circle" class="tw-text-green-500" style="font-size: 2.5rem;" />
           </div>
           <p class="tw-text-base tw-text-gray-700 tw-mb-0">
             All set! ✨ Your tickets to <strong>{{ event.title }}</strong> have been sent to your email address.
@@ -55,13 +55,14 @@
           <button class="btn-primary tw-w-full tw-py-4 tw-text-base tw-font-bold"
             (click)="downloadPDF()"
             [disabled]="isDownloading">
-            <i class="fas tw-mr-2" [ngClass]="isDownloading ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+            <app-icon [name]="isDownloading ? 'spinner' : 'download'" class="tw-mr-2"
+                      [class.tw-animate-spin]="isDownloading" />
             {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
           <p class="tw-text-sm tw-text-gray-400 tw-text-center tw-mt-2">Save or print your ticket for easy access at the event</p>
           <div *ngIf="downloadError"
             class="tw-mt-3 tw-flex tw-items-start tw-gap-2 tw-text-base tw-text-red-700 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-3 tw-py-2.5">
-            <i class="fas fa-exclamation-triangle tw-flex-shrink-0 tw-mt-0.5"></i>
+            <app-icon name="warning" class="tw-flex-shrink-0 tw-mt-0.5" />
             <span>Failed to download PDF. Please try again or contact support if the issue persists.</span>
           </div>
         </div>
@@ -69,7 +70,7 @@
         <!-- How to use -->
         <div class="tw-rounded-xl tw-border tw-border-blue-100 tw-bg-blue-50 tw-p-4 tw-mb-5">
           <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-blue-600 tw-mb-2">
-            <i class="fas fa-info-circle tw-mr-1"></i>How to use your ticket
+            <app-icon name="info" class="tw-mr-1" />How to use your ticket
           </p>
           <ul class="tw-text-base tw-text-blue-800 tw-space-y-1.5 tw-pl-4 tw-list-disc">
             <li>Print out a copy of your ticket or show the email you received with your name and ticket code at the gate.</li>
@@ -91,18 +92,18 @@
               class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-lg tw-text-base tw-font-semibold tw-text-white tw-border-none tw-cursor-pointer tw-transition-opacity hover:tw-opacity-90"
               style="background-color: #1877f2;"
               (click)="shareOnFacebook()">
-              <i class="fab fa-facebook"></i> Share
+              <app-icon name="facebook" /> Share
             </button>
             <button *ngIf="event.buy_shortlink" type="button"
               class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-lg tw-text-base tw-font-semibold tw-text-white tw-border-none tw-cursor-pointer tw-transition-opacity hover:tw-opacity-90"
               style="background-color: #1da1f2;"
               (click)="shareOnTwitter()">
-              <i class="fab fa-twitter"></i> Tweet
+              <app-icon name="twitter" /> Tweet
             </button>
             <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
               class="tw-inline-flex tw-items-center tw-gap-2 tw-px-4 tw-py-2 tw-rounded-lg tw-text-base tw-font-semibold tw-text-white tw-no-underline tw-transition-opacity hover:tw-opacity-90"
               style="background-color: #4285f4;">
-              <i class="fas fa-calendar-plus"></i> Add to Calendar
+              <app-icon name="calendar-plus" /> Add to Calendar
             </a>
           </div>
         </div>

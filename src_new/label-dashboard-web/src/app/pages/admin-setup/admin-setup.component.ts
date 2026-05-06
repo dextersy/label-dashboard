@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { BrandService } from '../../services/brand.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { validatePassword } from '../../utils/password-utils';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 export interface AdminProfile {
   id: number;
@@ -26,7 +27,7 @@ export interface BrandInfo {
 
 @Component({
     selector: 'app-admin-setup',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './admin-setup.component.html',
     styleUrl: './admin-setup.component.scss'
 })

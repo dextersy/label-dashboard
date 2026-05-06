@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-envelope tw-mr-2"></i>
+      <app-icon name="envelope" class="tw-mr-2" />
       Email Logs
     </h3>
     <p class="tw-mb-0 tw-text-muted">View and inspect all outbound emails sent by the system.</p>
@@ -29,7 +29,7 @@
         <div class="email-log-card">
           <div class="email-log-card__header">
             <div class="email-log-card__icon">
-              <i class="fas fa-envelope"></i>
+              <app-icon name="envelope" />
             </div>
             <div class="email-log-card__info">
               <div class="email-log-card__subject">{{ email.subject }}</div>
@@ -47,11 +47,11 @@
                     type="button"
                     (click)="toggleKebab($event)"
                     [class.active]="isKebabOpen">
-              <i class="fas fa-ellipsis-v"></i>
+              <app-icon name="more-vertical" />
             </button>
           </div>
           <div class="email-log-card__footer">
-            <i class="fas fa-clock"></i> Sent on {{ formatDate(email.timestamp) }}
+            <app-icon name="clock" /> Sent on {{ formatDate(email.timestamp) }}
           </div>
         </div>
       </ng-template>
@@ -95,7 +95,7 @@
       <div class="modal-footer">
         <button type="button" class="btn-secondary" (click)="closeEmailModal()">Close</button>
         <button type="button" class="btn-primary" (click)="previewEmail(selectedEmail.id)" *ngIf="selectedEmail">
-          <i class="fas fa-external-link-alt"></i> Preview in New Window
+          <app-icon name="external-link" /> Preview in New Window
         </button>
       </div>
     </div>

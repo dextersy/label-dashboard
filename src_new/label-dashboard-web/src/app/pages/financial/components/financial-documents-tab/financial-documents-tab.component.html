@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-folder-open tw-mr-2"></i>
+      <app-icon name="folder" class="tw-mr-2" />
       Documents
     </h3>
     <p class="tw-mb-0 tw-text-muted">Upload and manage financial documents for this artist.</p>
@@ -62,7 +62,7 @@
             class="btn-primary btn-sm tw-w-full"
             [disabled]="uploadingDocument || !documentUploadForm.title || !documentUploadForm.file">
             <span *ngIf="uploadingDocument" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
-            <i *ngIf="!uploadingDocument" class="fa fa-upload tw-mr-1"></i>
+            <app-icon name="upload" class="tw-mr-1" *ngIf="!uploadingDocument" />
             {{ uploadingDocument ? 'Uploading...' : 'Upload Document' }}
           </button>
         </form>

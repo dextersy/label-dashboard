@@ -2,10 +2,11 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Document } from '../../../pages/financial/financial.component';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
     selector: 'app-document-viewer',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './document-viewer.component.html',
     styleUrl: './document-viewer.component.scss'
 })
@@ -131,26 +132,26 @@ export class DocumentViewerComponent implements OnInit, OnChanges {
     const extension = this.document?.filename.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return 'fa-solid fa-file-pdf text-danger';
+        return 'file';
       case 'doc':
       case 'docx':
-        return 'fa-solid fa-file-word text-primary';
+        return 'file';
       case 'xls':
       case 'xlsx':
-        return 'fa-solid fa-file-excel text-success';
+        return 'file';
       case 'ppt':
       case 'pptx':
-        return 'fa-solid fa-file-powerpoint text-warning';
+        return 'file';
       case 'txt':
-        return 'fa-solid fa-file-lines text-muted';
+        return 'file';
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
       case 'webp':
-        return 'fa-solid fa-file-image text-info';
+        return 'image';
       default:
-        return 'fa-solid fa-file text-muted';
+        return 'file';
     }
   }
 }

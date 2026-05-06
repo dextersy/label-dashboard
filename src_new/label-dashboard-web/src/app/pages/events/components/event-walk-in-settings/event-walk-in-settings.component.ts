@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface WalkInType {
   id?: number;
@@ -11,7 +12,7 @@ export interface WalkInType {
 
 @Component({
     selector: 'app-event-walk-in-settings',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './event-walk-in-settings.component.html',
     styleUrl: './event-walk-in-settings.component.scss'
 })

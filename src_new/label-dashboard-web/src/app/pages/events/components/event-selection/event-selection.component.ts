@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Event } from '../../../../services/event.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-event-selection',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './event-selection.component.html',
     styleUrl: './event-selection.component.scss'
 })

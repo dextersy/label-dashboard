@@ -7,6 +7,7 @@ import { EventService, Event, EventTicket as ServiceEventTicket } from '../../..
 import { CsvService } from '../../../../services/csv.service';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, PaginationInfo, SearchFilters, SortInfo } from '../../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface AbandonedOrder {
   id: number;
@@ -24,7 +25,7 @@ export interface AbandonedOrder {
 
 @Component({
     selector: 'app-event-abandoned-orders-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent],
     templateUrl: './event-abandoned-orders-tab.component.html',
     styleUrl: './event-abandoned-orders-tab.component.scss'
 })
@@ -66,25 +67,25 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
   get headerActions(): HeaderAction[] {
     const actions: HeaderAction[] = [
       {
-        icon: 'fa fa-download',
+        icon: 'download',
         label: 'Download CSV',
         handler: () => this.onDownloadCSV(),
         disabled: () => this.loading,
       },
       {
-        icon: 'fa fa-check',
+        icon: 'check',
         label: 'Verify Payments',
         handler: () => this.onVerifyPayments(),
         disabled: () => this.loading || this.isEventPast(),
       },
       {
-        icon: 'fa fa-bell',
+        icon: 'bullhorn',
         label: 'Send Reminders',
         handler: () => this.onSendPaymentReminders(),
         disabled: () => this.loading || this.isEventPast(),
       },
       {
-        icon: 'fa fa-times',
+        icon: 'x',
         label: 'Cancel All Unpaid',
         handler: () => this.onCancelAllUnpaid(),
         disabled: () => this.loading || this.isEventPast(),
@@ -92,7 +93,7 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
     ];
     if (this.isAdmin) {
       actions.unshift({
-        icon: 'fa fa-plus',
+        icon: 'plus',
         label: 'Custom Ticket',
         handler: () => this.onCreateCustomTicket(),
         disabled: () => this.loading || !this.canCreateCustomTickets(),
@@ -104,20 +105,20 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
   orderActions: TableAction[] = [
     {
-      icon: 'fa-solid fa-paper-plane',
+      icon: 'paper-plane',
       label: 'Send Ticket',
       hidden: (item) => item.status !== 'Payment Confirmed' || this.isEventPast(),
       handler: (item) => this.onSendTicket(item.id)
     },
     {
-      icon: 'fa-solid fa-check',
+      icon: 'check',
       label: 'Mark Paid',
       type: 'primary',
       hidden: (item) => item.status !== 'New' || this.isEventPast(),
       handler: (item) => this.onMarkAsPaid(item.id)
     },
     {
-      icon: 'fa-solid fa-ban',
+      icon: 'ban',
       label: 'Cancel',
       type: 'danger',
       hidden: (item) => item.status !== 'New' || this.isEventPast(),

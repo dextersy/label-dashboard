@@ -2,10 +2,11 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } fro
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { ConfirmationService, ConfirmationDialogData } from '../../../services/confirmation.service';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-confirmation-dialog',
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './confirmation-dialog.component.html',
   styleUrl: './confirmation-dialog.component.scss'
 })

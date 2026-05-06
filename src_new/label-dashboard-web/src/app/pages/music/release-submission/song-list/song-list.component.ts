@@ -4,10 +4,11 @@ import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-
 import { Subscription } from 'rxjs';
 import { Song } from '../../../../services/song.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-song-list',
-    imports: [CommonModule, DragDropModule],
+    imports: [CommonModule, DragDropModule, IconComponent],
     templateUrl: './song-list.component.html',
     styleUrl: './song-list.component.scss'
 })

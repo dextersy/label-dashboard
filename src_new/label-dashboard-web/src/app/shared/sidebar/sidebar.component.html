@@ -12,7 +12,7 @@
          (click)="onWorkspaceIndicatorClick()"
          [title]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1 ? 'Switch workspace' : ''">
       <span class="workspace-icon-wrap">
-        <i [class]="getWorkspaceInfo(currentWorkspace).icon"></i>
+        <app-icon [name]="getWorkspaceInfo(currentWorkspace).icon" />
       </span>
       <span class="workspace-label">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
     </div>
@@ -20,7 +20,7 @@
     <button class="switch-workspace-btn"
             *ngIf="availableWorkspaceInfos.length > 1"
             (click)="openWorkspaceSwitchModal()">
-      <i class="fas fa-shuffle"></i>
+      <app-icon name="shuffle" />
       <span>Switch workspace</span>
     </button>
 
@@ -52,14 +52,14 @@
 
         <li class="mobile-only">
           <a routerLink="/profile" (click)="onMenuItemClick()" class="nav-link">
-            <span class="nav-icon"><i class="fa fa-pen-to-square"></i></span>
+            <span class="nav-icon"><app-icon name="edit" /></span>
             <span class="nav-label">Edit Profile</span>
           </a>
         </li>
 
         <li class="mobile-only">
           <a (click)="logout(); onMenuItemClick()" class="nav-link tw-cursor-pointer">
-            <span class="nav-icon"><i class="fas fa-arrow-right-from-bracket"></i></span>
+            <span class="nav-icon"><app-icon name="info" class="fa-arrow-right-from-bracket" /></span>
             <span class="nav-label">Log Out</span>
           </a>
         </li>
@@ -82,7 +82,7 @@
          class="nav-link"
          [class.nav-link-active]="isActiveRoute(item.route)"
          [title]="isCollapsed && !isMobileView ? item.title : ''">
-        <span class="nav-icon"><i [class]="item.icon"></i></span>
+        <span class="nav-icon"><app-icon [name]="item.icon" /></span>
         <span class="nav-label">{{ item.title }}</span>
       </a>
 
@@ -92,10 +92,9 @@
            class="nav-link nav-link-parent"
            [class.nav-link-active]="isActiveParentRoute(item.route)"
            [title]="isCollapsed && !isMobileView ? item.title : ''">
-          <span class="nav-icon"><i [class]="item.icon"></i></span>
+          <span class="nav-icon"><app-icon [name]="item.icon" /></span>
           <span class="nav-label">{{ item.title }}</span>
-          <i class="fas fa-chevron-down submenu-arrow"
-             [class.rotated]="isSubmenuExpanded(item.route)"></i>
+          <app-icon name="chevron-down" class="submenu-arrow" [class.rotated]="isSubmenuExpanded(item.route)" />
         </a>
 
         <!-- Submenu -->
@@ -155,8 +154,8 @@
                   class="workspace-option-btn"
                   [class.active]="info.type === currentWorkspace"
                   (click)="switchWorkspace(info.type)">
-            <i *ngIf="info.type === currentWorkspace" class="fas fa-check workspace-option-check"></i>
-            <i [class]="info.icon" class="workspace-option-icon"></i>
+            <app-icon name="check" class="workspace-option-check" *ngIf="info.type === currentWorkspace" />
+            <app-icon [name]="info.icon" class="workspace-option-icon" />
             <span class="workspace-option-name">{{ info.label }}</span>
             <span class="workspace-option-desc">{{ info.description }}</span>
           </button>

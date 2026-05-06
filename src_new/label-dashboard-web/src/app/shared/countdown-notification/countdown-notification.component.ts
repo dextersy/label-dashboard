@@ -1,9 +1,10 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-countdown-notification',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './countdown-notification.component.html',
     styleUrl: './countdown-notification.component.scss'
 })

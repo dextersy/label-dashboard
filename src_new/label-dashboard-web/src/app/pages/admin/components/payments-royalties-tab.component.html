@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-money-check-alt tw-mr-2"></i>
+      <app-icon name="payment" class="tw-mr-2" />
       Payments &amp; Royalties
     </h3>
     <p class="tw-mb-0 tw-text-muted">Track all payments and royalty disbursements to artists.</p>
@@ -33,7 +33,7 @@
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-success tw-opacity-80">
-          <i class="fas fa-money-bill"></i>
+          <app-icon name="currency" />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-text-gray-800">{{ formatCurrency(overallTotalPayments) }}</div>
@@ -44,7 +44,7 @@
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
-          <i class="fas fa-chart-line"></i>
+          <app-icon name="chart-line" />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-text-gray-800">{{ formatCurrency(overallTotalRoyalties) }}</div>

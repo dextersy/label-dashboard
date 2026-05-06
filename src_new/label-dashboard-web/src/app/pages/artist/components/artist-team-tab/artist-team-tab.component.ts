@@ -6,6 +6,7 @@ import { Artist } from '../../../../models/artist.model';
 import { environment } from 'environments/environment';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { PaginatedTableComponent, TableAction, TableColumn } from '../../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface TeamMember {
   id: number;
@@ -17,7 +18,7 @@ export interface TeamMember {
 
 @Component({
     selector: 'app-artist-team-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent],
     templateUrl: './artist-team-tab.component.html',
     styleUrl: './artist-team-tab.component.scss'
 })
@@ -106,13 +107,13 @@ export class ArtistTeamTabComponent {
   get teamActions(): TableAction[] {
     return [
       {
-        icon: 'fa-solid fa-paper-plane',
+        icon: 'paper-plane',
         label: 'Resend Invite',
         handler: (member: TeamMember) => this.resendInvite(member),
         hidden: (member: TeamMember) => member.status !== 'Pending'
       },
       {
-        icon: 'fa-solid fa-trash',
+        icon: 'trash',
         label: 'Remove',
         type: 'danger',
         handler: (member: TeamMember) => this.removeMember(member)

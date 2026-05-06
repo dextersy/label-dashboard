@@ -62,7 +62,7 @@
             <td class="rf-cell-release">
               <img *ngIf="release.cover_art" [src]="release.cover_art" [alt]="release.title" class="rf-cover-thumb">
               <div *ngIf="!release.cover_art" class="rf-cover-thumb rf-cover-placeholder">
-                <i class="fa fa-music"></i>
+                <app-icon name="music" />
               </div>
               <div>
                 <span class="rf-release-title">{{ release.title }}</span>
@@ -119,25 +119,25 @@
                         (click)="saveRowEdit(i, $event)"
                         title="Save">
                   <span *ngIf="isSavingRow" class="spinner-border spinner-border-sm"></span>
-                  <i *ngIf="!isSavingRow" class="fa fa-check"></i>
+                  <app-icon name="check" *ngIf="!isSavingRow" />
                 </button>
                 <button type="button" class="btn-ghost btn-sm btn-icon tw-ml-1"
                         [disabled]="isSavingRow"
                         (click)="cancelRowEdit(i, $event)"
                         title="Cancel">
-                  <i class="fa fa-times"></i>
+                  <app-icon name="x" />
                 </button>
               </ng-container>
               <ng-template #viewActions>
                 <button *ngIf="isAdmin" type="button" class="btn-ghost btn-sm btn-icon rf-action-edit"
                         (click)="startEditRow(i, $event)"
                         title="Edit splits">
-                  <i class="fa fa-pencil"></i>
+                  <app-icon name="edit" />
                 </button>
                 <button *ngIf="isAdmin" type="button" class="btn-ghost btn-sm btn-icon tw-ml-1"
                         (click)="openAddExpenseDialog(release.id, release.title)"
                         title="Add recuperable expense">
-                  <i class="fa fa-plus"></i>
+                  <app-icon name="plus" />
                 </button>
               </ng-template>
             </td>
@@ -208,7 +208,7 @@
   </div>
 
   <div *ngIf="releases.length === 0" class="tw-py-12 tw-text-center">
-    <i class="fa fa-music fa-3x tw-mb-3 tw-text-muted"></i>
+    <app-icon name="music" [size]="48" class="tw-mb-3 tw-text-muted" />
     <p class="tw-text-muted">No releases yet.</p>
   </div>
 
@@ -221,7 +221,7 @@
 <div class="lg:tw-hidden tw-mb-8 rf-mobile-breakout">
 
   <div *ngIf="releases.length === 0" class="tw-bg-white tw-py-12 tw-text-center">
-    <i class="fa fa-music fa-3x tw-mb-3 tw-text-muted"></i>
+    <app-icon name="music" [size]="48" class="tw-mb-3 tw-text-muted" />
     <p class="tw-text-muted">No releases yet.</p>
   </div>
 
@@ -233,16 +233,14 @@
       <div class="tw-flex tw-items-center tw-gap-3 tw-min-w-0">
         <img *ngIf="release.cover_art" [src]="release.cover_art" [alt]="release.title" class="rf-cover-thumb tw-flex-shrink-0">
         <div *ngIf="!release.cover_art" class="rf-cover-thumb rf-cover-placeholder tw-flex-shrink-0">
-          <i class="fa fa-music"></i>
+          <app-icon name="music" />
         </div>
         <div class="tw-min-w-0">
           <span class="rf-release-title tw-block tw-truncate">{{ release.title }}</span>
           <span *ngIf="release.catalog_no" class="rf-catalog-badge tw-mt-1">{{ release.catalog_no }}</span>
         </div>
       </div>
-      <i class="fa tw-ml-3 tw-flex-shrink-0"
-         [class.fa-chevron-down]="openMobileCard !== i"
-         [class.fa-chevron-up]="openMobileCard === i"></i>
+      <app-icon [name]="openMobileCard === i ? 'chevron-up' : 'chevron-down'" class="tw-ml-3 tw-flex-shrink-0" />
     </div>
 
     <!-- Card body -->
@@ -351,12 +349,12 @@
         <ng-template #mobileEditBtn>
           <button type="button" class="btn-ghost tw-w-full"
                   (click)="startMobileEdit(i, $event)">
-            <i class="fa fa-pencil tw-mr-1"></i> Edit splits
+            <app-icon name="edit" class="tw-mr-1" /> Edit splits
           </button>
         </ng-template>
         <button type="button" class="btn-ghost tw-w-full"
                 (click)="openAddExpenseDialog(release.id, release.title)">
-          <i class="fa fa-plus tw-mr-1"></i> Add recuperable expense
+          <app-icon name="plus" class="tw-mr-1" /> Add recuperable expense
         </button>
       </div>
 

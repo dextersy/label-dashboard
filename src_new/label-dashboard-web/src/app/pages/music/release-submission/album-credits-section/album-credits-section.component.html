@@ -8,12 +8,12 @@
                 class="ac-add-btn"
                 (click)="addRoyaltyArtistFromUI()"
                 [disabled]="loadingArtists || !canModifyArtists">
-          <i class="fa fa-plus"></i> Add Artist
+          <app-icon name="plus" /> Add Artist
         </button>
       </div>
 
       <div *ngIf="!canModifyArtists" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-py-2 tw-mb-3">
-        <small><i class="fa fa-info-circle"></i> Artist modifications are restricted for non-draft releases. Only administrators can modify artists on releases with status: {{ editingRelease?.status }}</small>
+        <small><app-icon name="info" /> Artist modifications are restricted for non-draft releases. Only administrators can modify artists on releases with status: {{ editingRelease?.status }}</small>
       </div>
 
       <div *ngIf="loadingArtists" class="tw-py-3 tw-text-center">
@@ -44,7 +44,7 @@
                        class="ac-artist-avatar" alt="">
                   <span *ngIf="!getArtistPhoto(artistControl.get('artist_id')?.value)"
                         class="ac-artist-avatar ac-artist-avatar--placeholder">
-                    <i class="fa fa-user"></i>
+                    <app-icon name="user" />
                   </span>
                   <p class="ac-artist-name">{{ getArtistName(artistControl.get('artist_id')?.value) }}</p>
                 </div>
@@ -64,13 +64,13 @@
                            class="ac-artist-avatar" alt="">
                       <span *ngIf="!getArtistPhoto(artistControl.get('artist_id')?.value)"
                             class="ac-artist-avatar ac-artist-avatar--placeholder">
-                        <i class="fa fa-user"></i>
+                        <app-icon name="user" />
                       </span>
                     </ng-container>
                     <span class="ac-artist-trigger-name">
                       {{ artistControl.get('artist_id')?.value ? getArtistName(artistControl.get('artist_id')?.value) : 'Select Artist' }}
                     </span>
-                    <i class="fa fa-chevron-down ac-artist-trigger-caret"></i>
+                    <app-icon name="chevron-down" class="ac-artist-trigger-caret" />
                   </button>
 
                   <div class="ac-artist-panel" *ngIf="openDropdownIndex === i">
@@ -80,7 +80,7 @@
                             (click)="selectArtistFromDropdown(i, a.id)">
                       <img *ngIf="a.profile_photo" [src]="a.profile_photo" class="ac-artist-avatar" alt="">
                       <span *ngIf="!a.profile_photo" class="ac-artist-avatar ac-artist-avatar--placeholder">
-                        <i class="fa fa-user"></i>
+                        <app-icon name="user" />
                       </span>
                       <span>{{ a.name }}</span>
                     </button>
@@ -96,7 +96,7 @@
                     (click)="removeRoyaltyArtist(i)"
                     [disabled]="!canModifyArtists"
                     title="Remove Artist">
-              <i class="fa fa-trash"></i>
+              <app-icon name="trash" />
             </button>
           </div>
 
@@ -143,7 +143,7 @@
                 class="ac-add-another-btn"
                 (click)="addRoyaltyArtistFromUI()"
                 [disabled]="loadingArtists || !canModifyArtists">
-          <i class="fa fa-plus tw-mr-1"></i> Add another artist
+          <app-icon name="plus" class="tw-mr-1" /> Add another artist
         </button>
 
         <!-- Label royalty summary (admin only) -->
@@ -208,7 +208,7 @@
       </div>
 
       <div *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="tw-py-3 tw-text-center tw-text-muted">
-        <i class="fa fa-info-circle"></i>
+        <app-icon name="info" />
         No artists added yet. Click "Add Artist" to get started.
       </div>
     </div>
@@ -240,8 +240,8 @@
         class="btn-primary save-changes-btn"
         [disabled]="savingCredits || !creditsForm.valid"
         (click)="saveCredits()">
-        <i class="fa fa-save tw-mr-2" *ngIf="!savingCredits"></i>
-        <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="savingCredits"></i>
+        <app-icon name="save" class=" tw-mr-2" *ngIf="!savingCredits" />
+        <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="savingCredits" />
         {{ savingCredits ? 'Saving...' : 'Save Changes' }}
       </button>
     </div>

@@ -1,10 +1,11 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReleaseExpense } from '../release-expenses-dialog/release-expenses-dialog.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-expenses-table',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './expenses-table.component.html',
     styleUrl: './expenses-table.component.scss'
 })

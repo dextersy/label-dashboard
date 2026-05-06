@@ -5,6 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { PublicService } from '../../../services/public.service';
 import { MetaService } from '../../../services/meta.service';
 import { AudioPlayerService, AudioPlayerState } from '../../../services/audio-player.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface ArtistEPK {
   artist: {
@@ -63,7 +64,7 @@ export interface ArtistEPK {
 
 @Component({
     selector: 'app-artist-epk',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './artist-epk.component.html',
     styleUrls: ['./artist-epk.component.scss']
 })
@@ -244,39 +245,39 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
 
     if (social.website) {
       const url = social.website.startsWith('http') ? social.website : `https://${social.website}`;
-      links.push({ name: 'Website', url, icon: 'fas fa-globe' });
+      links.push({ name: 'Website', url, icon: 'globe' });
     }
     if (social.instagram) {
       const url = social.instagram.startsWith('http') ? social.instagram : `https://instagram.com/${social.instagram.replace('@', '')}`;
-      links.push({ name: 'Instagram', url, icon: 'fab fa-instagram' });
+      links.push({ name: 'Instagram', url, icon: 'instagram' });
     }
     if (social.facebook) {
       const url = social.facebook.startsWith('http') ? social.facebook : `https://facebook.com/${social.facebook}`;
-      links.push({ name: 'Facebook', url, icon: 'fab fa-facebook' });
+      links.push({ name: 'Facebook', url, icon: 'facebook' });
     }
     if (social.twitter) {
       const url = social.twitter.startsWith('http') ? social.twitter : `https://twitter.com/${social.twitter.replace('@', '')}`;
-      links.push({ name: 'Twitter', url, icon: 'fab fa-twitter' });
+      links.push({ name: 'Twitter', url, icon: 'twitter' });
     }
     if (social.tiktok) {
       const url = social.tiktok.startsWith('http') ? social.tiktok : `https://tiktok.com/@${social.tiktok.replace('@', '')}`;
-      links.push({ name: 'TikTok', url, icon: 'fab fa-tiktok' });
+      links.push({ name: 'TikTok', url, icon: 'tiktok' });
     }
     if (social.spotify) {
-      links.push({ name: 'Spotify', url: social.spotify, icon: 'fab fa-spotify' });
+      links.push({ name: 'Spotify', url: social.spotify, icon: 'spotify' });
     }
     if (social.apple_music) {
-      links.push({ name: 'Apple Music', url: social.apple_music, icon: 'fab fa-apple' });
+      links.push({ name: 'Apple Music', url: social.apple_music, icon: 'apple' });
     }
     if (social.youtube) {
       const url = social.youtube.startsWith('http') ? social.youtube : `https://youtube.com/${social.youtube}`;
-      links.push({ name: 'YouTube', url, icon: 'fab fa-youtube' });
+      links.push({ name: 'YouTube', url, icon: 'youtube' });
     }
     if (social.soundcloud) {
-      links.push({ name: 'SoundCloud', url: social.soundcloud, icon: 'fab fa-soundcloud' });
+      links.push({ name: 'SoundCloud', url: social.soundcloud, icon: 'soundcloud' });
     }
     if (social.bandcamp) {
-      links.push({ name: 'Bandcamp', url: social.bandcamp, icon: 'fab fa-bandcamp' });
+      links.push({ name: 'Bandcamp', url: social.bandcamp, icon: 'bandcamp' });
     }
 
     return links;
@@ -287,19 +288,19 @@ export class ArtistEPKComponent implements OnInit, OnDestroy {
     const streaming = release.streaming_links;
 
     if (streaming.spotify) {
-      links.push({ name: 'Spotify', url: streaming.spotify, icon: 'fab fa-spotify' });
+      links.push({ name: 'Spotify', url: streaming.spotify, icon: 'spotify' });
     }
     if (streaming.apple_music) {
-      links.push({ name: 'Apple Music', url: streaming.apple_music, icon: 'fab fa-apple' });
+      links.push({ name: 'Apple Music', url: streaming.apple_music, icon: 'apple' });
     }
     if (streaming.youtube) {
-      links.push({ name: 'YouTube', url: streaming.youtube, icon: 'fab fa-youtube' });
+      links.push({ name: 'YouTube', url: streaming.youtube, icon: 'youtube' });
     }
     if (streaming.soundcloud) {
-      links.push({ name: 'SoundCloud', url: streaming.soundcloud, icon: 'fab fa-soundcloud' });
+      links.push({ name: 'SoundCloud', url: streaming.soundcloud, icon: 'soundcloud' });
     }
     if (streaming.bandcamp) {
-      links.push({ name: 'Bandcamp', url: streaming.bandcamp, icon: 'fab fa-bandcamp' });
+      links.push({ name: 'Bandcamp', url: streaming.bandcamp, icon: 'bandcamp' });
     }
 
     return links;

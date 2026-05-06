@@ -7,9 +7,9 @@
 
 <!-- Error -->
 <div *ngIf="error" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-m-4 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-text-sm" role="alert">
-  <span><i class="fa fa-exclamation-triangle tw-mr-2"></i>{{ error }}</span>
+  <span><app-icon name="warning" class="tw-mr-2" />{{ error }}</span>
   <button class="btn-sm btn-danger" (click)="loadDashboardData()">
-    <i class="fas fa-sync tw-mr-1"></i> Retry
+    <app-icon name="refresh" class="tw-mr-1" /> Retry
   </button>
 </div>
 
@@ -191,7 +191,7 @@
           <a routerLink="/campaigns/events/details"
              class="tw-no-underline tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
             <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-[var(--brand-color,#667eea)]">
-              <i class="fas fa-calendar-alt"></i>
+              <app-icon name="calendar" />
             </div>
             <div>
               <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
@@ -202,7 +202,7 @@
           <a routerLink="/campaigns/fundraisers/details"
              class="tw-no-underline tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
             <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-success">
-              <i class="fas fa-hand-holding-heart"></i>
+              <app-icon name="heart" />
             </div>
             <div>
               <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
@@ -213,7 +213,7 @@
           <a routerLink="/campaigns/events/tickets"
              class="tw-no-underline tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
             <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-warning">
-              <i class="fas fa-ticket-alt"></i>
+              <app-icon name="ticket" />
             </div>
             <div class="tw-min-w-0">
               <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color: #333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
@@ -224,7 +224,7 @@
           <a routerLink="/campaigns/fundraisers/donations"
              class="tw-no-underline tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
             <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-[#0891b2]">
-              <i class="fas fa-peso-sign"></i>
+              <app-icon name="currency" />
             </div>
             <div class="tw-min-w-0">
               <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color: #333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>

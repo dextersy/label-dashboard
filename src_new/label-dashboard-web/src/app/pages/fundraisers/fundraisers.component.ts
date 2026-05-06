@@ -10,6 +10,7 @@ import { FundraiserService, Fundraiser } from '../../services/fundraiser.service
 import { FundraiserSelectionComponent } from './components/fundraiser-selection/fundraiser-selection.component';
 import { FundraiserDonationsTabComponent } from './components/fundraiser-donations-tab/fundraiser-donations-tab.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 export type FundraisersTabType = 'donations';
 
@@ -22,7 +23,7 @@ export type FundraisersTabType = 'donations';
     FundraiserSelectionComponent,
     FundraiserDonationsTabComponent,
     BreadcrumbComponent
-  ],
+, IconComponent],
   templateUrl: './fundraisers.component.html',
   styleUrl: './fundraisers.component.scss'
 })
@@ -37,7 +38,7 @@ export class FundraisersComponent implements OnInit, OnDestroy {
   availableFundraisers: Fundraiser[] = [];
 
   tabs = [
-    { id: 'donations' as FundraisersTabType, label: 'Donations', icon: 'fas fa-hand-holding-heart' }
+    { id: 'donations' as FundraisersTabType, label: 'Donations', icon: 'heart' }
   ];
 
   constructor(

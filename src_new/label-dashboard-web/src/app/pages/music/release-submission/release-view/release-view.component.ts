@@ -7,11 +7,12 @@ import { SongService } from '../../../../services/song.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import JsBarcode from 'jsbarcode';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-release-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './release-view.component.html',
   styleUrl: './release-view.component.scss'
 })
@@ -226,9 +227,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   }
 
   getPlayButtonIcon(song: any): string {
-    if (this.isLoading(song.id)) return 'fas fa-spinner fa-spin';
-    if (this.isPlaying(song.id)) return 'fas fa-pause';
-    return 'fas fa-play';
+    if (this.isLoading(song.id)) return 'spinner';
+    if (this.isPlaying(song.id)) return 'pause';
+    return 'play';
   }
 
   // Get collaborators for a song

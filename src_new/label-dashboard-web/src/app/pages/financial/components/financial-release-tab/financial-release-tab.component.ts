@@ -5,10 +5,11 @@ import { Router } from '@angular/router';
 import { ReleaseInfo } from '../../financial.component';
 import { ReleaseExpensesDialogComponent } from '../release-expenses-dialog/release-expenses-dialog.component';
 import { AddExpenseDialogComponent } from '../add-expense-dialog/add-expense-dialog.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-financial-release-tab',
-    imports: [CommonModule, FormsModule, ReleaseExpensesDialogComponent, AddExpenseDialogComponent],
+    imports: [CommonModule, FormsModule, ReleaseExpensesDialogComponent, AddExpenseDialogComponent, IconComponent],
     templateUrl: './financial-release-tab.component.html',
     styleUrl: './financial-release-tab.component.scss'
 })

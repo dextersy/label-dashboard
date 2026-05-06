@@ -24,15 +24,15 @@
         <div class="payment-methods-grid">
           <div class="payment-method-card">
             <input type="checkbox" id="walkInCash" [(ngModel)]="eventData.walk_in_supports_cash">
-            <label for="walkInCash"><i class="fas fa-money-bill-wave"></i><span>Cash</span></label>
+            <label for="walkInCash"><app-icon name="currency" /><span>Cash</span></label>
           </div>
           <div class="payment-method-card">
             <input type="checkbox" id="walkInGcash" [(ngModel)]="eventData.walk_in_supports_gcash">
-            <label for="walkInGcash"><i class="fas fa-mobile-alt"></i><span>GCash</span></label>
+            <label for="walkInGcash"><app-icon name="mobile" /><span>GCash</span></label>
           </div>
           <div class="payment-method-card">
             <input type="checkbox" id="walkInCard" [(ngModel)]="eventData.walk_in_supports_card">
-            <label for="walkInCard"><i class="fas fa-credit-card"></i><span>Credit Card</span></label>
+            <label for="walkInCard"><app-icon name="credit-card" /><span>Credit Card</span></label>
           </div>
         </div>
       </div>
@@ -64,7 +64,7 @@
       <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-mb-0">Walk-in types</p>
       <button *ngIf="isAdmin && editingIndex === null && !showNewForm"
               class="btn-sm btn-secondary" (click)="startAddNew()">
-        <i class="fas fa-plus"></i> Add new
+        <app-icon name="plus" /> Add new
       </button>
     </div>
 
@@ -113,10 +113,10 @@
           </div>
           <div class="tw-flex tw-gap-2 tw-justify-end">
             <button type="button" class="btn-primary btn-sm" (click)="saveEdit()" [disabled]="!typeForm.name.trim()" title="Save changes">
-              <i class="fas fa-check"></i>
+              <app-icon name="check" />
             </button>
             <button type="button" class="btn-secondary btn-sm" (click)="cancelForm()" title="Cancel editing">
-              <i class="fas fa-times"></i>
+              <app-icon name="x" />
             </button>
           </div>
         </div>
@@ -140,13 +140,13 @@
             <button type="button" class="btn-secondary btn-sm"
                     [disabled]="editingIndex !== null || showNewForm"
                     (click)="startEdit(i)" title="Edit walk-in type">
-              <i class="fas fa-edit"></i> Edit
+              <app-icon name="edit" /> Edit
             </button>
             <button type="button"
                     class="tw-w-7 tw-h-7 tw-flex tw-items-center tw-justify-center tw-rounded tw-bg-red-50 tw-text-red-500 tw-border-0 tw-cursor-pointer hover:tw-bg-red-100 tw-transition-colors disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
                     [disabled]="editingIndex !== null || showNewForm"
                     (click)="deleteType(i)" title="Delete walk-in type">
-              <i class="fas fa-trash tw-text-xs"></i>
+              <app-icon name="trash" class="tw-text-xs" />
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@
          style="box-shadow: 0 0 0 3px rgba(40,167,69,0.15)">
       <div class="tw-px-4 tw-pt-4 tw-pb-3 tw-border-b tw-border-gray-100">
         <p class="tw-text-sm tw-font-semibold tw-text-green-600 tw-mb-0">
-          <i class="fas fa-plus tw-mr-1.5"></i>Add New Walk-In Type
+          <app-icon name="plus" class="tw-mr-1.5" />Add New Walk-In Type
         </p>
       </div>
       <div class="tw-p-4">
@@ -201,10 +201,10 @@
         </div>
         <div class="tw-flex tw-gap-2 tw-justify-end">
           <button type="button" class="btn-primary btn-sm" [disabled]="!typeForm.name.trim()" (click)="saveNew()" title="Save new walk-in type">
-            <i class="fas fa-check"></i>
+            <app-icon name="check" />
           </button>
           <button type="button" class="btn-secondary btn-sm" (click)="cancelForm()" title="Cancel adding walk-in type">
-            <i class="fas fa-times"></i>
+            <app-icon name="x" />
           </button>
         </div>
       </div>
@@ -212,7 +212,7 @@
 
     <!-- Empty State -->
     <div *ngIf="walkInTypes.length === 0 && !showNewForm" class="tw-py-3 tw-text-center tw-text-muted">
-      <i class="fas fa-ticket-alt fa-2x tw-mb-2 tw-block"></i>
+      <app-icon name="ticket" [size]="32" class="tw-mb-2 tw-block" />
       No walk-in types defined yet. Add one to get started.
     </div>
 

@@ -9,10 +9,8 @@
               (click)="onSubmitRelease()"
               [disabled]="submittingRelease"
               title="Submit Release">
-        <i class="fa"
-           [class.fa-spinner]="submittingRelease"
-           [class.fa-spin]="submittingRelease"
-           [class.fa-paper-plane]="!submittingRelease"></i>
+        <app-icon [name]="submittingRelease ? 'spinner' : 'paper-plane'"
+                  [class.tw-animate-spin]="submittingRelease" />
         <span class="tw-ml-1">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
       </button>
       <button *ngIf="isAdmin"
@@ -20,35 +18,33 @@
               (click)="onDownloadPriorityPitch()"
               [disabled]="downloadingPriorityPitch"
               title="Download Priority Pitch">
-        <i class="fa"
-           [class.fa-spinner]="downloadingPriorityPitch"
-           [class.fa-spin]="downloadingPriorityPitch"
-           [class.fa-file-word]="!downloadingPriorityPitch"></i>
+        <app-icon [name]="downloadingPriorityPitch ? 'spinner' : 'file'"
+                  [class.tw-animate-spin]="downloadingPriorityPitch" />
         <span class="tw-ml-1">{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}</span>
       </button>
       <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
-        <i class="fas fa-edit"></i>
+        <app-icon name="edit" />
       </button>
     </div>
 
     <!-- Mobile kebab menu -->
     <div class="kebab-menu md:tw-hidden" *ngIf="isAdmin || canSubmitRelease()">
       <button class="kebab-toggle" (click)="kebabOpen = !kebabOpen">
-        <i class="fas fa-ellipsis-v"></i>
+        <app-icon name="more-vertical" />
       </button>
       <div class="kebab-dropdown" *ngIf="kebabOpen">
         <button *ngIf="canSubmitRelease()"
                 (click)="onSubmitRelease(); kebabOpen = false"
                 [disabled]="submittingRelease">
-          <i class="fa fa-paper-plane tw-mr-2"></i>{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}
+          <app-icon name="paper-plane" class="tw-mr-2" />{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}
         </button>
         <button *ngIf="isAdmin"
                 (click)="onDownloadPriorityPitch(); kebabOpen = false"
                 [disabled]="downloadingPriorityPitch">
-          <i class="fa fa-file-word tw-mr-2"></i>{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
+          <app-icon name="file" class="tw-mr-2" />{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
         </button>
         <button *ngIf="isAdmin" (click)="onEditClick(); kebabOpen = false">
-          <i class="fas fa-edit tw-mr-2"></i>Edit Release
+          <app-icon name="edit" class="tw-mr-2" />Edit Release
         </button>
       </div>
     </div>
@@ -59,7 +55,7 @@
     <!-- Release Information Section -->
     <section class="view-section">
       <h3 class="section-title">
-        <i class="fas fa-info-circle tw-mr-2"></i>Release Information
+        <app-icon name="info" class="tw-mr-2" />Release Information
         <span class="badge tw-ml-2" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
       </h3>
       
@@ -72,7 +68,7 @@
             [alt]="release.title"
             class="cover-art">
           <div *ngIf="!release.cover_art" class="cover-art-placeholder">
-            <i class="fas fa-compact-disc"></i>
+            <app-icon name="disc" />
           </div>
         </div>
 
@@ -89,7 +85,7 @@
               <button class="btn-secondary btn-sm tw-ml-2"
                       (click)="downloadBarcode()"
                       title="Download Barcode">
-                <i class="fas fa-barcode"></i>
+                <app-icon name="scan" />
               </button>
             </span>
           </div>
@@ -109,13 +105,13 @@
         <h3 class="subsection-title">Streaming Links</h3>
         <div class="links-row">
           <a *ngIf="release.spotify_link" [href]="release.spotify_link" target="_blank" class="streaming-link spotify">
-            <i class="fab fa-spotify"></i> Spotify
+            <app-icon name="spotify" /> Spotify
           </a>
           <a *ngIf="release.apple_music_link" [href]="release.apple_music_link" target="_blank" class="streaming-link apple">
-            <i class="fab fa-apple"></i> Apple Music
+            <app-icon name="apple" /> Apple Music
           </a>
           <a *ngIf="release.youtube_link" [href]="release.youtube_link" target="_blank" class="streaming-link youtube">
-            <i class="fab fa-youtube"></i> YouTube
+            <app-icon name="youtube" /> YouTube
           </a>
         </div>
       </div>
@@ -124,7 +120,7 @@
     <!-- Artists & Collaborators Section -->
     <section class="view-section">
       <h3 class="section-title">
-        <i class="fas fa-users tw-mr-2"></i>Artists & Royalties
+        <app-icon name="users" class="tw-mr-2" />Artists & Royalties
       </h3>
       
       <div class="artists-grid" *ngIf="release.artists?.length; else noArtists">
@@ -132,7 +128,7 @@
           <div class="artist-details">
             <img *ngIf="artist.profile_photo" [src]="artist.profile_photo" [alt]="artist.name" class="artist-photo">
             <div *ngIf="!artist.profile_photo" class="artist-photo artist-photo--placeholder">
-              <i class="fa fa-user"></i>
+              <app-icon name="user" />
             </div>
             <span class="artist-name">{{ artist.name }}</span>
             <div class="royalty-splits-grid" *ngIf="artist.ReleaseArtist">
@@ -171,18 +167,17 @@
     <section class="view-section">
       <div class="tw-flex tw-justify-between tw-items-center">
         <h3 class="section-title tw-mb-0">
-          <i class="fas fa-music tw-mr-2"></i>Track List
+          <app-icon name="music" class="tw-mr-2" />Track List
         </h3>
         <div *ngIf="hasMasters() || hasMp3s()" class="masters-dropdown" style="position: relative;">
           <span class="masters-dropdown-toggle"
                 (click)="mastersDropdownOpen = !mastersDropdownOpen"
                 [class.disabled]="downloadingMasters || downloadingMp3s">
-            <i class="fa tw-mr-1"
-               [class.fa-spinner]="downloadingMasters || downloadingMp3s"
-               [class.fa-spin]="downloadingMasters || downloadingMp3s"
-               [class.fa-download]="!downloadingMasters && !downloadingMp3s"></i>
+            <app-icon [name]="(downloadingMasters || downloadingMp3s) ? 'spinner' : 'download'"
+                      class="tw-mr-1"
+                      [class.tw-animate-spin]="downloadingMasters || downloadingMp3s" />
             {{ downloadingMasters ? 'Downloading WAV...' : downloadingMp3s ? 'Downloading MP3...' : 'Download Masters' }}
-            <i class="fa fa-caret-down tw-ml-1" *ngIf="!downloadingMasters && !downloadingMp3s"></i>
+            <app-icon name="caret-down" class="tw-ml-1" *ngIf="!downloadingMasters && !downloadingMp3s" />
           </span>
           <div class="masters-dropdown-menu" *ngIf="mastersDropdownOpen">
             <div *ngIf="hasMasters()" class="masters-dropdown-item" (click)="onDownloadMasters(); mastersDropdownOpen = false">
@@ -217,14 +212,11 @@
               [disabled]="isLoading(song.id)"
               (click)="togglePlay(song)"
               [title]="isPlaying(song.id) ? 'Pause' : isPaused(song.id) ? 'Resume' : isLoading(song.id) ? 'Loading...' : 'Play'">
-              <i class="fa"
-                 [class.fa-play]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id) || isPaused(song.id)"
-                 [class.fa-pause]="isPlaying(song.id)"
-                 [class.fa-spinner]="isLoading(song.id)"
-                 [class.fa-spin]="isLoading(song.id)"></i>
+              <app-icon [name]="isLoading(song.id) ? 'spinner' : isPlaying(song.id) ? 'pause' : 'play'"
+                        [class.tw-animate-spin]="isLoading(song.id)" />
             </button>
             <span *ngIf="!song.audio_file" class="tw-text-muted">
-              <i class="fa fa-ban" title="No audio file"></i>
+              <app-icon name="ban" title="No audio file" />
             </span>
           </span>
           <span class="track-title">
@@ -238,7 +230,7 @@
               <button class="kebab-btn" type="button"
                       (click)="toggleTrackKebab(song, $event)"
                       [class.active]="openTrackKebabItem === song">
-                <i class="fas fa-ellipsis-v"></i>
+                <app-icon name="more-vertical" />
               </button>
             </div>
           </span>
@@ -256,24 +248,22 @@
            (click)="$event.stopPropagation()">
         <button *ngIf="openTrackKebabItem.lyrics" class="btn-ghost"
                 (click)="openLyricsModal(openTrackKebabItem); closeTrackKebab()">
-          <i class="fa fa-align-left tw-mr-2"></i>View Lyrics
+          <app-icon name="paragraph" class="tw-mr-2" />View Lyrics
         </button>
         <button *ngIf="openTrackKebabItem.audio_file" class="btn-ghost"
                 (click)="onDownloadSongMaster(openTrackKebabItem); closeTrackKebab()"
                 [disabled]="downloadingSongMaster[openTrackKebabItem.id]">
-          <i class="fa tw-mr-2"
-             [class.fa-download]="!downloadingSongMaster[openTrackKebabItem.id]"
-             [class.fa-spinner]="downloadingSongMaster[openTrackKebabItem.id]"
-             [class.fa-spin]="downloadingSongMaster[openTrackKebabItem.id]"></i>
+          <app-icon [name]="downloadingSongMaster[openTrackKebabItem.id] ? 'spinner' : 'download'"
+                    class="tw-mr-2"
+                    [class.tw-animate-spin]="downloadingSongMaster[openTrackKebabItem.id]" />
           {{ downloadingSongMaster[openTrackKebabItem.id] ? 'Downloading...' : 'Download WAV' }}
         </button>
         <button *ngIf="openTrackKebabItem.audio_file_mp3" class="btn-ghost"
                 (click)="onDownloadSongMp3(openTrackKebabItem); closeTrackKebab()"
                 [disabled]="downloadingSongMp3[openTrackKebabItem.id]">
-          <i class="fa tw-mr-2"
-             [class.fa-music]="!downloadingSongMp3[openTrackKebabItem.id]"
-             [class.fa-spinner]="downloadingSongMp3[openTrackKebabItem.id]"
-             [class.fa-spin]="downloadingSongMp3[openTrackKebabItem.id]"></i>
+          <app-icon [name]="downloadingSongMp3[openTrackKebabItem.id] ? 'spinner' : 'music'"
+                    class="tw-mr-2"
+                    [class.tw-animate-spin]="downloadingSongMp3[openTrackKebabItem.id]" />
           {{ downloadingSongMp3[openTrackKebabItem.id] ? 'Downloading...' : 'Download MP3' }}
         </button>
       </div>
@@ -294,7 +284,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-outline-secondary btn-sm" (click)="copyLyrics()">
-            <i class="fa tw-mr-1" [class.fa-copy]="!lyricsCopied" [class.fa-check]="lyricsCopied"></i>
+            <app-icon [name]="lyricsCopied ? 'check' : 'copy'" class="tw-mr-1" />
             {{ lyricsCopied ? 'Copied!' : 'Copy' }}
           </button>
         </div>

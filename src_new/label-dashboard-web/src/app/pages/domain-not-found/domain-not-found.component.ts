@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BrandService } from '../../services/brand.service';
 import { AuthService } from '../../services/auth.service';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-domain-not-found',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './domain-not-found.component.html',
     styleUrl: './domain-not-found.component.scss'
 })

@@ -2,7 +2,7 @@
   <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
       <h3 class="tw-mb-2">
-        <i class="fas fa-link tw-mr-2"></i>
+        <app-icon name="link" class="tw-mr-2" />
         Manage EPK
       </h3>
       <p class="tw-mb-0 tw-text-muted">
@@ -31,7 +31,7 @@
                   type="button"
                   (click)="copyToClipboard()"
                   [disabled]="!epkUrl">
-                  <i class="fas fa-copy tw-mr-1"></i>
+                  <app-icon name="copy" class="tw-mr-1" />
                   Copy
                 </button>
                 <button
@@ -40,7 +40,7 @@
                   (click)="downloadEPKQRCode()"
                   [disabled]="!epkUrl"
                   title="Download QR Code">
-                  <i class="fas fa-qrcode tw-mr-1"></i>
+                  <app-icon name="scan" class="tw-mr-1" />
                   QR Code
                 </button>
               </div>
@@ -84,7 +84,7 @@
                         type="button"
                         class="btn-sm btn-secondary tw-w-full"
                         (click)="openPreview(template.value); $event.stopPropagation()">
-                        <i class="fas fa-eye tw-mr-1"></i>
+                        <app-icon name="eye" class="tw-mr-1" />
                         Preview Template
                       </button>
                     </div>
@@ -102,7 +102,7 @@
               (click)="updateEPKSettings()"
               [disabled]="saving || selectedTemplate === artist.epk_template">
               <span *ngIf="!saving">
-                <i class="fas fa-save tw-mr-1"></i>
+                <app-icon name="save" class=" tw-mr-1" />
                 Save EPK Settings
               </span>
               <span *ngIf="saving">
@@ -125,7 +125,7 @@
         <div class="tw-flex tw-items-center tw-justify-between tw-w-full">
           <div>
             <h5 class="modal-title tw-mb-0">
-              <i class="fas fa-eye tw-mr-2"></i>
+              <app-icon name="eye" class="tw-mr-2" />
               Template Preview: {{ getPreviewTemplateName() }}
             </h5>
           </div>
@@ -135,20 +135,20 @@
               class="btn-primary"
               (click)="useThisTemplate()"
               *ngIf="previewTemplate !== artist.epk_template">
-              <i class="fas fa-check tw-mr-1"></i>
+              <app-icon name="check" class="tw-mr-1" />
               Like this? Use this template
             </button>
             <div
               class="current-template-badge"
               *ngIf="previewTemplate === artist.epk_template">
-              <i class="fas fa-check-circle tw-mr-2"></i>
+              <app-icon name="check-circle" class="tw-mr-2" />
               This is currently set as your template
             </div>
             <button
               type="button"
               class="btn-secondary"
               (click)="closePreview()">
-              <i class="fas fa-times tw-mr-1"></i>
+              <app-icon name="x" class="tw-mr-1" />
               Close Preview
             </button>
           </div>

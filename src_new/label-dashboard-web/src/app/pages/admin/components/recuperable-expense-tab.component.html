@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-receipt tw-mr-2"></i>
+      <app-icon name="receipt" class="tw-mr-2" />
       Recuperable Expenses
     </h3>
     <p class="tw-mb-0 tw-text-muted">Track and manage expense balances recoverable from artist earnings.</p>
@@ -65,14 +65,14 @@
         <div class="stats-compact-item">
           <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(totalNewExpense) }}</span>
           <div class="stats-compact-meta">
-            <i class="fas fa-plus-circle"></i>
+            <app-icon name="plus-circle" />
             <span class="stats-compact-label">New Expenses</span>
           </div>
         </div>
         <div class="stats-compact-item">
           <span class="stats-compact-value stats-compact-value-currency">{{ formatCurrency(totalRecuperatedExpense) }}</span>
           <div class="stats-compact-meta">
-            <i class="fas fa-minus-circle"></i>
+            <app-icon name="minus-circle" />
             <span class="stats-compact-label">Recuperated</span>
           </div>
         </div>

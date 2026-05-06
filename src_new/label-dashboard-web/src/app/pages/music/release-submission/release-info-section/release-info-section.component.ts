@@ -8,6 +8,7 @@ import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
 import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
 import { QuillModule } from 'ngx-quill';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface ReleaseInfoData {
   title: string;
@@ -23,7 +24,7 @@ export interface ReleaseInfoData {
 
 @Component({
     selector: 'app-release-info-section',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent],
     templateUrl: './release-info-section.component.html',
     styleUrl: './release-info-section.component.scss'
 })

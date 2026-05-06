@@ -6,11 +6,12 @@ import { FundraiserService, Fundraiser, Donation, DonationSummary } from '../../
 import { AdminService, FeeSettings } from '../../../../services/admin.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo, SearchFilters, SortInfo } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../../components/shared/date-range-filter/date-range-filter.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-fundraiser-donations-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent, DateRangeFilterComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent, DateRangeFilterComponent, IconComponent],
   templateUrl: './fundraiser-donations-tab.component.html',
   styleUrl: './fundraiser-donations-tab.component.scss'
 })
@@ -187,7 +188,7 @@ export class FundraiserDonationsTabComponent implements OnInit, OnDestroy, OnCha
 
   getDisplayName(donation: Donation): string {
     if (donation.anonymous) {
-      return `<span class="avatar-chip"><span class="avatar-chip__circle avatar-chip__circle--anon"><i class="fas fa-user-secret"></i></span>Anonymous</span>`;
+      return `<span class="avatar-chip"><span class="avatar-chip__circle avatar-chip__circle--anon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Anonymous</span>`;
     }
     const initials = this.getInitials(donation.name);
     const idx = this.getAvatarColorIndex(donation.name);

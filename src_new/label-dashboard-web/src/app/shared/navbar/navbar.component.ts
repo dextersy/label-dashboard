@@ -9,10 +9,11 @@ import { BrandService, BrandSettings } from '../../services/brand.service';
 import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-navbar',
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, IconComponent],
     templateUrl: './navbar.component.html',
     styleUrl: './navbar.component.scss'
 })

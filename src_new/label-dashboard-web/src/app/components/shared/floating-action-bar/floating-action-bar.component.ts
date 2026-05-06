@@ -9,11 +9,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-floating-action-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './floating-action-bar.component.html',
   styleUrl: './floating-action-bar.component.scss',
 })

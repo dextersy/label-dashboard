@@ -39,7 +39,7 @@
             class="btn-secondary"
             (click)="setActiveSection('credits')">
             Next: Album Credits
-            <i class="fa fa-arrow-right tw-ml-2"></i>
+            <app-icon name="arrow-right" class="tw-ml-2" />
           </button>
         </div>
       </div>
@@ -63,7 +63,7 @@
             type="button"
             class="btn-secondary"
             (click)="setActiveSection('info')">
-            <i class="fa fa-arrow-left tw-mr-2"></i>
+            <app-icon name="arrow-left" class="tw-mr-2" />
             Back: Release Info
           </button>
           <button
@@ -71,7 +71,7 @@
             class="btn-secondary"
             (click)="setActiveSection('tracks')">
             Next: Track List
-            <i class="fa fa-arrow-right tw-ml-2"></i>
+            <app-icon name="arrow-right" class="tw-ml-2" />
           </button>
         </div>
       </div>
@@ -97,7 +97,7 @@
             type="button"
             class="btn-secondary"
             (click)="setActiveSection('credits')">
-            <i class="fa fa-arrow-left tw-mr-2"></i>
+            <app-icon name="arrow-left" class="tw-mr-2" />
             Back: Album Credits
           </button>
           <button
@@ -107,7 +107,7 @@
             *ngIf="isDraftStatus"
             (click)="setActiveSection('submit')">
             Next: Submit
-            <i class="fa fa-arrow-right tw-ml-2"></i>
+            <app-icon name="arrow-right" class="tw-ml-2" />
           </button>
         </div>
       </div>
@@ -133,7 +133,7 @@
             type="button"
             class="btn-secondary"
             (click)="setActiveSection('tracks')">
-            <i class="fa fa-arrow-left tw-mr-2"></i>
+            <app-icon name="arrow-left" class="tw-mr-2" />
             Back: Track List
           </button>
           <button

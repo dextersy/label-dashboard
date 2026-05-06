@@ -9,10 +9,11 @@ import { AuthService } from '../../../../services/auth.service';
 import { FinancialService } from '../../../../services/financial.service';
 import { NotificationService } from '../../../../services/notification.service';
 import { ArtistStateService } from '../../../../services/artist-state.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-financial-earnings-tab',
-    imports: [CommonModule, PaginatedTableComponent, DateRangeFilterComponent],
+    imports: [CommonModule, PaginatedTableComponent, DateRangeFilterComponent, IconComponent],
     templateUrl: './financial-earnings-tab.component.html',
     styleUrl: './financial-earnings-tab.component.scss'
 })
@@ -35,7 +36,7 @@ export class FinancialEarningsTabComponent {
 
   get headerActions(): HeaderAction[] {
     const actions: HeaderAction[] = [{
-      icon: () => this.downloadingCSV ? 'fas fa-spinner fa-spin' : 'fas fa-download',
+      icon: () => this.downloadingCSV ? 'spinner' : 'download',
       label: 'CSV',
       handler: () => this.downloadCSV(),
       disabled: () => this.downloadingCSV,
@@ -43,7 +44,7 @@ export class FinancialEarningsTabComponent {
     }];
     if (this.isAdmin) {
       actions.push({
-        icon: 'fas fa-plus',
+        icon: 'plus',
         label: 'Add',
         handler: () => this.navigateToNewEarning(),
         type: 'primary',

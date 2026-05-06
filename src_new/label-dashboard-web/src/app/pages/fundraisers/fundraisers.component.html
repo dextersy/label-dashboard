@@ -44,11 +44,11 @@
     <div *ngIf="!loading && availableFundraisers.length === 0"
          class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-4">
       <div class="tw-p-8 tw-text-center">
-        <i class="fas fa-hand-holding-heart fa-4x tw-mb-3 tw-text-muted"></i>
+        <app-icon name="heart" class="fa-4x tw-mb-3 tw-text-muted" />
         <h4>No Fundraisers Available</h4>
         <p class="tw-text-muted">No fundraisers found for your label. Create a new fundraiser to get started.</p>
         <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateFundraiserModal()">
-          <i class="fa fa-plus tw-mr-1"></i>Create New Fundraiser
+          <app-icon name="plus" class="tw-mr-1" />Create New Fundraiser
         </button>
       </div>
     </div>

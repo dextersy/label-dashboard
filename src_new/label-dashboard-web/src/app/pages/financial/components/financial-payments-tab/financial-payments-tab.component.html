@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-credit-card tw-mr-2"></i>
+      <app-icon name="credit-card" class="tw-mr-2" />
       Payments
     </h3>
     <p class="tw-mb-0 tw-text-muted">Track payments made to this artist and manage payout settings.</p>
@@ -44,7 +44,7 @@
                 [disabled]="method.is_default_for_artist"
                 (click)="setDefaultPaymentMethod(method.id)"
                 title="Set as default">
-                <i class="fa-solid fa-star" [class.tw-text-warning]="method.is_default_for_artist" [class.tw-text-muted]="!method.is_default_for_artist"></i>
+                <app-icon [name]="method.is_default_for_artist ? 'star-filled' : 'star'" [class.tw-text-yellow-400]="method.is_default_for_artist" [class.tw-text-gray-300]="!method.is_default_for_artist" />
               </button>
               <button 
                 type="button" 
@@ -52,7 +52,7 @@
                 [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                 (click)="deletePaymentMethod(method.id)"
                 [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
-                <i class="fa fa-trash"></i>
+                <app-icon name="trash" />
               </button>
             </div>
           </div>
@@ -67,7 +67,7 @@
         <div class="collapsible-section">
           <div class="collapsible-header" (click)="toggleAddPaymentMethodCollapse()">
             <h6 class="tw-mb-0">Add Payment Method</h6>
-            <i class="fa" [class.fa-chevron-down]="isAddPaymentMethodCollapsed" [class.fa-chevron-up]="!isAddPaymentMethodCollapsed"></i>
+            <app-icon [name]="isAddPaymentMethodCollapsed ? 'chevron-down' : 'chevron-up'" />
           </div>
           
           <div class="collapsible-content" [class.collapsed]="isAddPaymentMethodCollapsed">

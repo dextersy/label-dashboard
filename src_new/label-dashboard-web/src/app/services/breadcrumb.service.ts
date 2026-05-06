@@ -24,27 +24,27 @@ export class BreadcrumbService {
 
   // Menu structure for breadcrumb generation
   private menuStructure: Record<string, MenuItemBase> = {
-    '/dashboard': { label: 'Dashboard', icon: 'fas fa-chart-line' },
-    '/music/sync-licensing': { label: 'Sync Licensing', icon: 'fa-file-contract fas'},
-    
+    '/dashboard': { label: 'Dashboard', icon: 'chart-line' },
+    '/music/sync-licensing': { label: 'Sync Licensing', icon: 'file' },
+
     // Artist section
-    '/artist': { label: 'Artist', icon: 'fas fa-headphones' },
+    '/artist': { label: 'Artist', icon: 'headphones' },
     '/artist/profile': { label: 'Profile', parent: '/artist' },
     '/artist/gallery': { label: 'Media Gallery', parent: '/artist' },
     '/artist/epk': { label: 'Electronic Press Kit (EPK)', parent: '/artist' },
     '/artist/new': { label: 'Add New Artist', parent: '/artist' },
 
     // Team (top-level)
-    '/team': { label: 'Team', icon: 'fas fa-users' },
+    '/team': { label: 'Team', icon: 'users' },
 
     // Music section
-    '/music': { label: 'Music', icon: 'fas fa-music' },
+    '/music': { label: 'Music', icon: 'music' },
     '/music/releases': { label: 'Releases', parent: '/music' },
     '/music/releases/new': { label: 'Create Release', parent: '/music/releases' },
     '/music/releases/edit/:id': { label: 'Edit Release', parent: '/music/releases' },
-    
+
     // Financial section
-    '/financial': { label: 'Financial', icon: 'fas fa-dollar-sign' },
+    '/financial': { label: 'Financial', icon: 'currency' },
     '/financial/summary': { label: 'Summary', parent: '/financial' },
     '/financial/documents': { label: 'Documents', parent: '/financial' },
     '/financial/earnings': { label: 'Earnings', parent: '/financial' },
@@ -54,13 +54,13 @@ export class BreadcrumbService {
     '/financial/royalties/new': { label: 'New Royalty', parent: '/financial/royalties' },
     '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
     '/financial/earnings/new': { label: 'New Earning', parent: '/financial/earnings' },
-    
+
     // Campaigns section
-    '/campaigns': { label: 'Campaigns', icon: 'fas fa-bullhorn' },
+    '/campaigns': { label: 'Campaigns', icon: 'bullhorn' },
 
     // Events (under campaigns)
     '/campaigns/dashboard': { label: 'Dashboard', parent: '/campaigns' },
-    '/campaigns/events': { label: 'Events', parent: '/campaigns', icon: 'fas fa-ticket-alt' },
+    '/campaigns/events': { label: 'Events', parent: '/campaigns', icon: 'ticket' },
     '/campaigns/events/new': { label: 'New Event', parent: '/campaigns/events' },
     '/campaigns/events/details': { label: 'Manage Events', parent: '/campaigns/events' },
     '/campaigns/events/tickets': { label: 'Tickets', parent: '/campaigns/events' },
@@ -70,13 +70,13 @@ export class BreadcrumbService {
     '/campaigns/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/campaigns/events' },
 
     // Fundraisers (under campaigns)
-    '/campaigns/fundraisers': { label: 'Fundraisers', parent: '/campaigns', icon: 'fas fa-hand-holding-heart' },
+    '/campaigns/fundraisers': { label: 'Fundraisers', parent: '/campaigns', icon: 'heart' },
     '/campaigns/fundraisers/new': { label: 'New Fundraiser', parent: '/campaigns/fundraisers' },
     '/campaigns/fundraisers/details': { label: 'Manage Fundraisers', parent: '/campaigns/fundraisers' },
     '/campaigns/fundraisers/donations': { label: 'Donations', parent: '/campaigns/fundraisers' },
-    
+
     // Admin section
-    '/admin': { label: 'Admin', icon: 'fas fa-cogs' },
+    '/admin': { label: 'Admin', icon: 'settings' },
     '/admin/reports': { label: 'Reports', parent: '/admin' },
     '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
     '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
@@ -88,7 +88,7 @@ export class BreadcrumbService {
     '/admin/users': { label: 'Users', parent: '/admin' },
 
     // Labels section
-    '/labels': { label: 'Labels', icon: 'fas fa-tags' },
+    '/labels': { label: 'Labels', icon: 'tags' },
     '/labels/earnings': { label: 'My Label Earnings', parent: '/labels' },
     '/labels/sublabels': { label: 'Sublabels', parent: '/labels' },
     '/labels/setup': { label: 'Label Setup', parent: '/labels' },

@@ -4,11 +4,12 @@ import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-payments-royalties-tab',
   standalone: true,
-  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent],
+  imports: [CommonModule, DateRangeFilterComponent, PaginatedTableComponent, IconComponent],
   templateUrl: './payments-royalties-tab.component.html',
   styleUrls: ['./payments-royalties-tab.component.scss']
 })

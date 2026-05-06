@@ -3,7 +3,7 @@
     <!-- Desktop: single centered row -->
     <div class="tw-hidden md:tw-flex tw-items-center tw-justify-center tw-gap-4">
       <div class="countdown-text">
-        <i class="fas fa-clock tw-mr-2"></i>
+        <app-icon name="clock" class="tw-mr-2" />
         Ticket sales for <strong>{{ eventTitle }}</strong> close in:
       </div>
       <div class="countdown-timer">
@@ -27,7 +27,7 @@
     </div>
     <!-- Mobile: single compact row -->
     <div class="md:tw-hidden tw-flex tw-items-center tw-justify-center tw-gap-2">
-      <i class="fas fa-clock" style="font-size: 10px; opacity: 0.7;"></i>
+      <app-icon name="clock" style="font-size: 10px; opacity: 0.7;" />
       <span class="mobile-countdown-inline">
         Closes in
         <ng-container *ngIf="timeLeft.days > 0"><strong>{{ timeLeft.days }}d</strong> </ng-container><strong>{{ timeLeft.hours.toString().padStart(2, '0') }}h {{ timeLeft.minutes.toString().padStart(2, '0') }}m {{ timeLeft.seconds.toString().padStart(2, '0') }}s</strong>

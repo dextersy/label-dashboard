@@ -7,11 +7,12 @@ import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-sync-licensing',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent, BreadcrumbComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent],
   templateUrl: './sync-licensing.component.html',
   styleUrl: './sync-licensing.component.scss'
 })
@@ -55,13 +56,15 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         const validSongs = songs.filter(s => this.getSongWarnings(s).length === 0);
 
         const validTooltip = validSongs.map(s => this.escapeHtml(s.title)).join('&#10;');
-        let html = `<i class="fas fa-check-circle text-success me-1" title="${validTooltip}"></i>${validSongs.length}`;
+        const checkSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-green-600" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+        let html = `<span class="tw-inline-flex tw-items-center tw-gap-1">${checkSvg}<span title="${validTooltip}">${validSongs.length}</span></span>`;
 
         if (warnSongs.length > 0) {
           const warnTooltip = warnSongs
             .map(s => `${this.escapeHtml(s.title)}: ${this.getSongWarnings(s).join(', ')}`)
             .join('&#10;');
-          html += ` <i class="fas fa-exclamation-triangle text-warning ms-2 me-1" title="${warnTooltip}"></i>${warnSongs.length}`;
+          const warnSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-amber-500" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+          html += ` <span class="tw-inline-flex tw-items-center tw-gap-1 tw-ml-2">${warnSvg}<span title="${warnTooltip}">${warnSongs.length}</span></span>`;
         }
 
         return html;
@@ -105,7 +108,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   headerActions: HeaderAction[] = [
     {
-      icon: 'fas fa-plus',
+      icon: 'plus',
       label: 'New Pitch',
       handler: () => this.openCreateModal(),
       type: 'primary',
@@ -114,36 +117,36 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   pitchActions: TableAction[] = [
     {
-      icon: 'fas fa-music',
+      icon: 'music',
       label: 'Download Masters',
       hidden: (item) => !item.songs?.length,
       handler: (item) => this.downloadMasters(item)
     },
     {
-      icon: 'fas fa-file-alt',
+      icon: 'file',
       label: 'Download Lyrics',
       hidden: (item) => !item.songs?.length,
       handler: (item) => this.downloadLyrics(item)
     },
     {
-      icon: 'fas fa-file-excel',
+      icon: 'file',
       label: 'Download B-Sheet',
       hidden: (item) => !item.songs?.length,
       handler: (item) => this.downloadBSheet(item)
     },
     {
-      icon: 'fas fa-file-archive',
+      icon: 'file',
       label: 'Download All',
       hidden: (item) => !item.songs?.length,
       handler: (item) => this.downloadAll(item)
     },
     {
-      icon: 'fas fa-edit',
+      icon: 'edit',
       label: 'Edit',
       handler: (item) => this.openEditModal(item)
     },
     {
-      icon: 'fas fa-trash',
+      icon: 'trash',
       label: 'Delete',
       type: 'danger',
       handler: (item) => this.deletePitch(item)

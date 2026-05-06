@@ -33,13 +33,13 @@
               class="btn-sm btn-secondary tw-mr-1"
               (click)="copyToClipboard(referrer.referral_shortlink)"
               title="Copy referral link">
-              <i class="fa fa-copy"></i>
+              <app-icon name="copy" />
             </button>
             <button
               class="btn-sm btn-secondary"
               (click)="downloadReferralQR(referrer.referral_shortlink, referrer.referral_code)"
               title="Download QR code">
-              <i class="fa fa-qrcode"></i>
+              <app-icon name="scan" />
             </button>
           </td>
         </tr>
@@ -59,7 +59,7 @@
 
   <ng-template #noReferrers>
     <div class="tw-py-5 tw-text-center">
-      <i class="fa fa-user-plus fa-3x tw-mb-3 tw-text-muted"></i>
+      <app-icon name="user-plus" [size]="48" class="tw-mb-3 tw-text-muted" />
       <h3>No Referrers Yet</h3>
       <p class="tw-text-muted">No referrers have been added for this event.</p>
     </div>
@@ -70,11 +70,11 @@
     <div class="md:tw-col-span-6">
       <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-          <h3><i class="fa fa-plus tw-mr-2"></i>Add Referrer</h3>
+          <h3><app-icon name="plus" class="tw-mr-2" />Add Referrer</h3>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3" *ngIf="isEventPast()">
-            <i class="fas fa-lock tw-mr-2"></i>
+            <app-icon name="lock" class="tw-mr-2" />
             Cannot add referrers to past events
           </div>
           <form (ngSubmit)="onSubmitReferrer()" #referrerFormRef="ngForm">
@@ -123,7 +123,7 @@
               type="submit"
               class="btn-primary"
               [disabled]="!referrerFormRef.form.valid || loading || isEventPast()">
-              <i class="fa fa-plus tw-mr-1"></i>
+              <app-icon name="plus" class="tw-mr-1" />
               <span *ngIf="loading">Adding...</span>
               <span *ngIf="!loading">Add Referrer</span>
             </button>
@@ -136,31 +136,31 @@
     <div class="md:tw-col-span-6">
       <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8 border-info">
         <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-text-[#0891b2]">
-          <h6 class="tw-mb-0"><i class="fa fa-info-circle tw-mr-2"></i>How Referrals Work</h6>
+          <h6 class="tw-mb-0"><app-icon name="info" class="tw-mr-2" />How Referrals Work</h6>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
           <ol class="list-unstyled">
             <li class="tw-mb-2">
-              <i class="fa fa-check-circle tw-text-success tw-mr-2"></i>
+              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
               <strong>Create a referrer</strong> for each person promoting your event
             </li>
             <li class="tw-mb-2">
-              <i class="fa fa-check-circle tw-text-success tw-mr-2"></i>
+              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
               <strong>Share the referral link</strong> with them to promote
             </li>
             <li class="tw-mb-2">
-              <i class="fa fa-check-circle tw-text-success tw-mr-2"></i>
+              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
               <strong>Track their sales</strong> in the table above
             </li>
             <li class="tw-mb-2">
-              <i class="fa fa-check-circle tw-text-success tw-mr-2"></i>
+              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
               <strong>Reward them</strong> based on their performance
             </li>
           </ol>
           
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal alert-light tw-mt-3">
             <small class="tw-text-muted">
-              <i class="far fa-lightbulb tw-mr-1"></i>
+              <app-icon name="lightbulb" class="tw-mr-1" />
               <strong>Tip:</strong> Use descriptive names and codes to easily identify your referrers later.
             </small>
           </div>
@@ -171,7 +171,7 @@
 
   <!-- Read-only message for non-admin users -->
   <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mt-4" *ngIf="!isAdmin">
-    <i class="fa fa-info-circle tw-mr-2"></i>
+    <app-icon name="info" class="tw-mr-2" />
     You have read-only access to referral information. Contact an administrator to add new referrers.
   </div>
 </div>

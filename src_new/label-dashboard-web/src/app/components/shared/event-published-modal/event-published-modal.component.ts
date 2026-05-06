@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { EventPublishedService, EventPublishedModalData, EventPublishedModalState } from '../../../services/event-published.service';
 import { downloadQRCode } from '../../../utils/qr-utils';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-event-published-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './event-published-modal.component.html',
   styleUrls: ['./event-published-modal.component.scss']
 })

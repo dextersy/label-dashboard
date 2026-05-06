@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 
 @Component({
@@ -29,7 +30,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
         MatButtonModule,
         MatCheckboxModule,
         CountdownNotificationComponent
-    ],
+, IconComponent],
     templateUrl: './ticket-buy.component.html',
     styleUrls: ['./ticket-buy.component.scss']
 })

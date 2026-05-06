@@ -9,7 +9,7 @@
         <form [formGroup]="feeForm" (ngSubmit)="onSubmit()">
           
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-            <i class="fas fa-info-circle tw-mr-2"></i>
+            <app-icon name="info" class="tw-mr-2" />
             Configure the fees that will be charged to this sublabel. The monthly fee applies to both music and event earnings, while transaction and percentage fees can be set separately. All values can be set to 0 if no fees apply.
           </div>
 
@@ -17,7 +17,7 @@
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
               <h6 class="tw-mb-0">
-                <i class="fas fa-calendar tw-mr-2 tw-text-success"></i>
+                <app-icon name="calendar" class="tw-mr-2 tw-text-success" />
                 General Monthly Fee
               </h6>
             </div>
@@ -25,10 +25,9 @@
               <div class="tw-mb-3">
                 <label for="monthlyFee" class="tw-label">
                   Monthly Fee (₱)
-                  <i class="fas fa-info-circle tw-ml-1 tw-text-muted" 
-                     title="Not yet supported" 
+                  <app-icon name="info" class="tw-ml-1 tw-text-muted" title="Not yet supported" 
                      data-bs-toggle="tooltip" 
-                     data-bs-placement="top"></i>
+                     data-bs-placement="top" />
                 </label>
                 <input
                   type="number"
@@ -52,7 +51,7 @@
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
               <h6 class="tw-mb-0">
-                <i class="fas fa-music tw-mr-2 text-primary"></i>
+                <app-icon name="music" class="tw-mr-2 text-primary" />
                 Music Earnings Fee Settings
               </h6>
             </div>
@@ -134,7 +133,7 @@
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
               <h6 class="tw-mb-0">
-                <i class="fas fa-calendar-alt tw-mr-2 tw-text-warning"></i>
+                <app-icon name="calendar" class="tw-mr-2 tw-text-warning" />
                 Event Earnings Fee Settings
               </h6>
             </div>
@@ -216,7 +215,7 @@
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
               <h6 class="tw-mb-0">
-                <i class="fas fa-hand-holding-heart tw-mr-2 tw-text-danger"></i>
+                <app-icon name="heart" class="tw-mr-2 tw-text-danger" />
                 Fundraiser Earnings Fee Settings
               </h6>
             </div>
@@ -302,11 +301,11 @@
               <!-- General Monthly Fee Summary -->
               <div *ngIf="showMonthlyPreview()" class="tw-mb-3">
                 <strong class="tw-text-success">
-                  <i class="fas fa-calendar tw-mr-2"></i>General Monthly Fee:
+                  <app-icon name="calendar" class="tw-mr-2" />General Monthly Fee:
                 </strong>
                 <ul class="list-unstyled tw-mb-0 tw-ml-3">
                   <li>
-                    <i class="fas fa-calendar tw-mr-2 tw-text-success"></i>
+                    <app-icon name="calendar" class="tw-mr-2 tw-text-success" />
                     Monthly: ₱{{ feeForm.get('monthly_fee')?.value | number:'1.2-2' }} (applies to both music and events)
                   </li>
                 </ul>
@@ -315,15 +314,15 @@
               <!-- Music Fees Summary -->
               <div *ngIf="showMusicPreview()" class="tw-mb-3">
                 <strong class="text-primary">
-                  <i class="fas fa-music tw-mr-2"></i>Music Earnings Fees:
+                  <app-icon name="music" class="tw-mr-2" />Music Earnings Fees:
                 </strong>
                 <ul class="list-unstyled tw-mb-0 tw-ml-3">
                   <li *ngIf="feeForm.get('music.transaction_fixed_fee')?.value > 0">
-                    <i class="fas fa-exchange-alt tw-mr-2 tw-text-[#0891b2]"></i>
+                    <app-icon name="transfer" class="tw-mr-2 tw-text-[#0891b2]" />
                     Per Transaction: ₱{{ feeForm.get('music.transaction_fixed_fee')?.value | number:'1.2-2' }}
                   </li>
                   <li *ngIf="feeForm.get('music.revenue_percentage_fee')?.value > 0">
-                    <i class="fas fa-percentage tw-mr-2 tw-text-warning"></i>
+                    <app-icon name="percentage" class="tw-mr-2 tw-text-warning" />
                     {{ feeForm.get('music.revenue_percentage_fee')?.value }}% of {{ feeForm.get('music.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
@@ -332,15 +331,15 @@
               <!-- Event Fees Summary -->
               <div *ngIf="showEventPreview()" class="tw-mb-3">
                 <strong class="tw-text-warning">
-                  <i class="fas fa-calendar-alt tw-mr-2"></i>Event Earnings Fees:
+                  <app-icon name="calendar" class="tw-mr-2" />Event Earnings Fees:
                 </strong>
                 <ul class="list-unstyled tw-mb-0 tw-ml-3">
                   <li *ngIf="feeForm.get('event.transaction_fixed_fee')?.value > 0">
-                    <i class="fas fa-exchange-alt tw-mr-2 tw-text-[#0891b2]"></i>
+                    <app-icon name="transfer" class="tw-mr-2 tw-text-[#0891b2]" />
                     Per Transaction: ₱{{ feeForm.get('event.transaction_fixed_fee')?.value | number:'1.2-2' }}
                   </li>
                   <li *ngIf="feeForm.get('event.revenue_percentage_fee')?.value > 0">
-                    <i class="fas fa-percentage tw-mr-2 tw-text-warning"></i>
+                    <app-icon name="percentage" class="tw-mr-2 tw-text-warning" />
                     {{ feeForm.get('event.revenue_percentage_fee')?.value }}% of {{ feeForm.get('event.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
@@ -349,15 +348,15 @@
               <!-- Fundraiser Fees Summary -->
               <div *ngIf="showFundraiserPreview()">
                 <strong class="tw-text-danger">
-                  <i class="fas fa-hand-holding-heart tw-mr-2"></i>Fundraiser Earnings Fees:
+                  <app-icon name="heart" class="tw-mr-2" />Fundraiser Earnings Fees:
                 </strong>
                 <ul class="list-unstyled tw-mb-0 tw-ml-3">
                   <li *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.value > 0">
-                    <i class="fas fa-exchange-alt tw-mr-2 tw-text-[#0891b2]"></i>
+                    <app-icon name="transfer" class="tw-mr-2 tw-text-[#0891b2]" />
                     Per Donation: ₱{{ feeForm.get('fundraiser.transaction_fixed_fee')?.value | number:'1.2-2' }}
                   </li>
                   <li *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.value > 0">
-                    <i class="fas fa-percentage tw-mr-2 tw-text-warning"></i>
+                    <app-icon name="percentage" class="tw-mr-2 tw-text-warning" />
                     {{ feeForm.get('fundraiser.revenue_percentage_fee')?.value }}% of {{ feeForm.get('fundraiser.fee_revenue_type')?.value }} revenue
                   </li>
                 </ul>
@@ -365,7 +364,7 @@
 
               <!-- No Fees Message -->
               <div *ngIf="!showPreview()">
-                <i class="fas fa-check tw-mr-2 tw-text-success"></i>
+                <app-icon name="check" class="tw-mr-2 tw-text-success" />
                 No fees configured
               </div>
             </div>
@@ -379,10 +378,10 @@
         </button>
         <button type="button" class="btn-primary" (click)="onSubmit()" [disabled]="loading || feeForm.invalid">
           <span *ngIf="loading">
-            <i class="fas fa-spinner fa-spin tw-mr-2"></i>Saving...
+            <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" />Saving...
           </span>
           <span *ngIf="!loading">
-            <i class="fas fa-save tw-mr-2"></i>Save Fee Settings
+            <app-icon name="save" class=" tw-mr-2" />Save Fee Settings
           </span>
         </button>
       </div>

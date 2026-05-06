@@ -6,18 +6,18 @@
 
     <!-- Event Status Information -->
     <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="isEventPast()">
-      <i class="far fa-clock tw-mr-2"></i>
+      <app-icon name="clock" class="tw-mr-2" />
       <strong>Event Past:</strong> {{ getEventStatusMessage() }} Custom ticket creation is disabled for past events.
     </div>
 
     <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800" *ngIf="isEventClosed() && !isEventPast()">
-      <i class="fas fa-lock tw-mr-2"></i>
+      <app-icon name="lock" class="tw-mr-2" />
       <strong>Sales Closed:</strong> {{ getEventStatusMessage() }} You can still create custom tickets for special invites.
     </div>
 
     <!-- Access Denied for Past Events -->
     <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="selectedEvent && !canCreateCustomTickets()">
-      <i class="fa fa-lock tw-mr-2"></i>
+      <app-icon name="lock" class="tw-mr-2" />
       <strong>Access Denied:</strong> Custom ticket creation is disabled for past events.
     </div>
 
@@ -30,7 +30,7 @@
                   [class.sub-tab-btn-active]="currentView === 'single'"
                   (click)="switchToSingleView()"
                   [attr.aria-pressed]="currentView === 'single'">
-            <i class="fa fa-user"></i>
+            <app-icon name="user" />
             <span>Single Ticket</span>
           </button>
           <button type="button"
@@ -38,12 +38,12 @@
                   [class.sub-tab-btn-active]="currentView === 'bulk'"
                   (click)="switchToBulkView()"
                   [attr.aria-pressed]="currentView === 'bulk'">
-            <i class="fa fa-users"></i>
+            <app-icon name="users" />
             <span>Bulk Create</span>
           </button>
         </div>
         <small class="tw-mt-2 tw-text-gray-400">
-          <i class="fa fa-info-circle tw-mr-1"></i>
+          <app-icon name="info" class="tw-mr-1" />
           <span *ngIf="currentView === 'single'">Create individual custom tickets with detailed options</span>
           <span *ngIf="currentView === 'bulk'">Create multiple tickets at once with bulk editing features</span>
         </small>
@@ -57,7 +57,7 @@
         <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
             <h3 class="tw-mb-0">
-              <i class="fa fa-ticket-alt tw-mr-2"></i>Ticket Details
+              <app-icon name="ticket" class="tw-mr-2" />Ticket Details
             </h3>
           </div>
           <div class="tw-px-card-pad tw-pb-card-pad">
@@ -69,7 +69,7 @@
               <!-- Event Name -->
               <div class="tw-mb-4" *ngIf="selectedEvent">
                 <h6 class="tw-mb-2 tw-text-muted">
-                  <i class="fa fa-calendar tw-mr-2"></i>Event
+                  <app-icon name="calendar" class="tw-mr-2" />Event
                 </h6>
                 <h3 class="tw-mb-0">{{ selectedEvent.title }}</h3>
                 <small class="tw-text-muted" *ngIf="selectedEvent.date_and_time">
@@ -174,7 +174,7 @@
                     (click)="enablePriceOverride()"
                     *ngIf="!priceOverrideEnabled"
                     title="Override price">
-                    <i class="fas fa-pen"></i>
+                    <app-icon name="edit" />
                   </button>
                   <button
                     type="button"
@@ -182,7 +182,7 @@
                     (click)="disablePriceOverride()"
                     *ngIf="priceOverrideEnabled"
                     title="Use ticket type price">
-                    <i class="fas fa-undo"></i>
+                    <app-icon name="undo" />
                   </button>
                 </div>
                 <div class="form-text" *ngIf="!priceOverrideEnabled && customTicketForm.ticket_type_id">
@@ -256,7 +256,7 @@
         <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
             <h6 class="tw-mb-0">
-              <i class="fa fa-info-circle tw-mr-2"></i>Ticket Summary
+              <app-icon name="info" class="tw-mr-2" />Ticket Summary
             </h6>
           </div>
           <div class="tw-px-card-pad tw-pb-card-pad">
@@ -292,11 +292,11 @@
             </table>
 
             <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mt-3" *ngIf="customTicketForm.ticket_paid">
-              <small><i class="fa fa-check-circle tw-mr-1"></i>This ticket will be marked as paid immediately after creation.</small>
+              <small><app-icon name="check-circle" class="tw-mr-1" />This ticket will be marked as paid immediately after creation.</small>
             </div>
 
             <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mt-3" *ngIf="!customTicketForm.ticket_paid && customTicketForm.send_email">
-              <small><i class="fa fa-envelope tw-mr-1"></i>A payment email will be sent to the customer.</small>
+              <small><app-icon name="envelope" class="tw-mr-1" />A payment email will be sent to the customer.</small>
             </div>
           </div>
         </div>
@@ -316,7 +316,7 @@
         class="btn-secondary"
         (click)="resetCustomTicketForm()"
         [disabled]="submitting">
-        <i class="fa fa-undo tw-mr-1"></i>
+        <app-icon name="undo" class="tw-mr-1" />
         Reset Form
       </button>
       <button
@@ -324,8 +324,8 @@
         class="btn-primary fab-primary-btn"
         (click)="onSubmitCustomTicket()"
         [disabled]="!customTicketFormRef.form.valid || submitting">
-        <i class="fa fa-plus tw-mr-1" *ngIf="!submitting"></i>
-        <i class="fa fa-spinner fa-spin tw-mr-1" *ngIf="submitting"></i>
+        <app-icon name="plus" class="tw-mr-1" *ngIf="!submitting" />
+        <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" *ngIf="submitting" />
         <span *ngIf="submitting">Creating...</span>
         <span *ngIf="!submitting">Create Ticket</span>
       </button>
@@ -342,7 +342,7 @@
               <div class="tw-flex tw-items-center tw-justify-between">
                 <div>
                   <h6 class="tw-mb-1 text-primary">
-                    <i class="fa fa-calendar tw-mr-2"></i>{{ selectedEvent.title }}
+                    <app-icon name="calendar" class="tw-mr-2" />{{ selectedEvent.title }}
                   </h6>
                   <small class="tw-text-muted">
                     {{ selectedEvent.date_and_time | date:'medium' }}
@@ -555,7 +555,7 @@
                         class="btn-danger btn-sm" 
                         (click)="removeBulkRow(i)"
                         title="Remove row">
-                  <i class="fa fa-times"></i>
+                  <app-icon name="x" />
                 </button>
               </td>
             </tr>
@@ -613,8 +613,8 @@
                   class="btn-primary btn-lg tw-w-full"
                   (click)="onSubmitBulkTickets()"
                   [disabled]="submitting || bulkTickets.length === 0">
-            <i class="fa fa-plus tw-mr-2" *ngIf="!submitting"></i>
-            <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="submitting"></i>
+            <app-icon name="plus" class="tw-mr-2" *ngIf="!submitting" />
+            <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="submitting" />
             <span *ngIf="submitting">Creating...</span>
             <span *ngIf="!submitting && bulkTickets.length > 0">Create {{ bulkTickets.length }} Tickets</span>
             <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
@@ -633,8 +633,8 @@
                   class="btn-primary btn-lg"
                   (click)="onSubmitBulkTickets()"
                   [disabled]="submitting || bulkTickets.length === 0">
-            <i class="fa fa-plus tw-mr-2" *ngIf="!submitting"></i>
-            <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="submitting"></i>
+            <app-icon name="plus" class="tw-mr-2" *ngIf="!submitting" />
+            <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="submitting" />
             <span *ngIf="submitting">Creating...</span>
             <span *ngIf="!submitting && bulkTickets.length > 0">Create All Tickets</span>
             <span *ngIf="!submitting && bulkTickets.length === 0">No Tickets to Create</span>
@@ -645,14 +645,14 @@
 
     <!-- Non-Admin Access Denied -->
     <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="!isAdmin && !loading">
-      <i class="fa fa-lock tw-mr-2"></i>
+      <app-icon name="lock" class="tw-mr-2" />
       <strong>Access Denied:</strong> You don't have permission to create custom tickets. Only administrators can create custom tickets.
     </div>
   </div>
 
   <!-- Loading State -->
   <div class="tw-py-5 tw-text-center" *ngIf="loading">
-    <i class="fa fa-spinner fa-spin fa-2x tw-text-muted"></i>
+    <app-icon name="spinner" [size]="32" class="tw-text-muted tw-animate-spin" />
     <p class="tw-mt-2 tw-text-muted">Loading...</p>
   </div>
 </div>

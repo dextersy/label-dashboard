@@ -27,14 +27,14 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   rowActions: TableAction[] = [
     {
-      icon: 'fas fa-check-circle',
+      icon: 'check-circle',
       label: 'Mark as succeeded',
       type: 'secondary',
       hidden: (payment: Payment) => !this.isAdmin || payment.status === 'succeeded',
       handler: (payment: Payment) => this.updateStatus(payment, 'succeeded')
     },
     {
-      icon: 'fas fa-ban',
+      icon: 'ban',
       label: 'Void payment',
       type: 'danger',
       hidden: (payment: Payment) => !this.isAdmin || payment.status === 'failed',
@@ -44,7 +44,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   get headerActions(): HeaderAction[] {
     const actions: HeaderAction[] = [{
-      icon: () => this.loading ? 'fas fa-sync fa-spin' : 'fas fa-sync',
+      icon: () => this.loading ? 'spinner' : 'refresh',
       label: '',
       handler: () => this.refresh.emit(),
       type: 'secondary',
@@ -53,7 +53,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     }];
     if (this.isAdmin) {
       actions.push({
-        icon: 'fas fa-plus',
+        icon: 'plus',
         label: 'Add',
         handler: () => this.navigateToNewPayment(),
         type: 'primary',

@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { environment } from 'environments/environment';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface LatestRelease {
   id: number;
@@ -16,7 +17,7 @@ export interface LatestRelease {
 
 @Component({
     selector: 'app-latest-albums',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './latest-albums.component.html',
     styleUrl: './latest-albums.component.scss'
 })

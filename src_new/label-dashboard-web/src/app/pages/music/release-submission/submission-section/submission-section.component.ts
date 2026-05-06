@@ -7,12 +7,13 @@ import { AlbumCreditsData } from '../album-credits-section/album-credits-section
 import { TrackListData } from '../track-list-section/track-list-section.component';
 import { ValidationResult } from '../../../../services/release-validation.service';
 import { AuthService } from '../../../../services/auth.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
 @Component({
     selector: 'app-submission-section',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './submission-section.component.html',
     styleUrl: './submission-section.component.scss'
 })

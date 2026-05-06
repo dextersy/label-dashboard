@@ -9,12 +9,13 @@ import { filter } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Artist } from '../../../models/artist.model';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
+import { IconComponent } from '../icon/icon.component';
 
 export type { Artist };
 
 @Component({
     selector: 'app-artist-selection',
-    imports: [CommonModule, FormsModule, ModalToBodyDirective],
+    imports: [CommonModule, FormsModule, ModalToBodyDirective, IconComponent],
     templateUrl: './artist-selection.component.html',
     styleUrl: './artist-selection.component.scss'
 })

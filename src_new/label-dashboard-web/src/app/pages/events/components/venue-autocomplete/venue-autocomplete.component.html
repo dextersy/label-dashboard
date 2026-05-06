@@ -3,23 +3,23 @@
   <!-- ── Filled state (Google place selected) ─────────────────────────────── -->
   <div class="venue-filled" *ngIf="selectedVenue && selectedVenue.google_place_id">
     <div class="venue-filled-icon">
-      <i class="fa fa-map-marker-alt"></i>
+      <app-icon name="map-pin" />
     </div>
     <div class="venue-filled-body">
       <p class="venue-filled-name">{{ selectedVenue.venue }}</p>
       <p class="venue-filled-address" *ngIf="selectedVenue.venue_address">{{ selectedVenue.venue_address }}</p>
       <div class="venue-filled-pills" *ngIf="selectedVenue.venue_phone || selectedVenue.venue_website">
         <span class="venue-pill venue-pill--phone" *ngIf="selectedVenue.venue_phone">
-          <i class="fa fa-phone"></i> {{ selectedVenue.venue_phone }}
+          <app-icon name="phone" /> {{ selectedVenue.venue_phone }}
         </span>
         <a [href]="selectedVenue.venue_website" target="_blank" rel="noopener"
            class="venue-pill venue-pill--website" *ngIf="selectedVenue.venue_website">
-          <i class="fa fa-globe"></i> Website
+          <app-icon name="globe" /> Website
         </a>
       </div>
     </div>
     <button type="button" class="venue-dismiss" (click)="clearSelection()" [disabled]="disabled" title="Remove venue">
-      <i class="fa fa-times"></i>
+      <app-icon name="x" />
     </button>
   </div>
 
@@ -47,7 +47,7 @@
            *ngIf="!isFocused && !displayValue"
            aria-hidden="true">
         <div class="venue-empty-icon">
-          <i class="fa fa-map-marker-alt"></i>
+          <app-icon name="map-pin" />
         </div>
         <div class="venue-empty-text">
           <span class="venue-hint-primary">Search for a venue</span>
@@ -59,7 +59,7 @@
 
   <!-- Loading indicator -->
   <div class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1.5 tw-text-xs tw-text-gray-400" *ngIf="isLoading">
-    <i class="fa fa-spinner fa-spin"></i> Searching places...
+    <app-icon name="spinner" class="tw-animate-spin" /> Searching places...
   </div>
 
   <!-- No results hint -->

@@ -6,11 +6,12 @@ import { ArtistStateService } from '../../services/artist-state.service';
 import { Artist } from '../../models/artist.model';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from 'environments/environment';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-select-artist',
   standalone: true,
-  imports: [CommonModule, BreadcrumbComponent],
+  imports: [CommonModule, BreadcrumbComponent, IconComponent],
   templateUrl: './select-artist.component.html',
   styleUrl: './select-artist.component.scss'
 })

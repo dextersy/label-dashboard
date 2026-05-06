@@ -30,13 +30,13 @@
       <div *ngIf="message && messageType === 'error'"
         class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-red-50 tw-border tw-border-red-200 tw-text-red-800 tw-text-sm"
         role="alert">
-        <i class="fas fa-exclamation-circle tw-mt-0.5 tw-shrink-0"></i>
+        <app-icon name="warning" class="tw-mt-0.5 tw-shrink-0" />
         <span>{{ message }}</span>
       </div>
       <div *ngIf="message && messageType === 'success'"
         class="tw-flex tw-items-start tw-gap-2 tw-px-4 tw-py-3 tw-mb-5 tw-rounded-lg tw-bg-green-50 tw-border tw-border-green-200 tw-text-green-800 tw-text-sm"
         role="alert">
-        <i class="fas fa-check-circle tw-mt-0.5 tw-shrink-0"></i>
+        <app-icon name="check-circle" class="tw-mt-0.5 tw-shrink-0" />
         <span>{{ message }}</span>
       </div>
 
@@ -119,7 +119,7 @@
                 (click)="togglePasswordVisibility()"
                 tabindex="-1"
                 aria-label="Toggle password visibility">
-                <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                <app-icon [name]="showPassword ? 'eye-off' : 'eye'" />
               </button>
             </div>
             <p *ngIf="errors.password" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.password }}</p>
@@ -146,7 +146,7 @@
                 (click)="toggleConfirmPasswordVisibility()"
                 tabindex="-1"
                 aria-label="Toggle password visibility">
-                <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                <app-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" />
               </button>
             </div>
             <p *ngIf="errors.confirmPassword" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ errors.confirmPassword }}</p>

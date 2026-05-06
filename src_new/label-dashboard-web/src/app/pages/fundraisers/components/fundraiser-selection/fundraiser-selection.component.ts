@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Fundraiser } from '../../../../services/fundraiser.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-fundraiser-selection',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   templateUrl: './fundraiser-selection.component.html',
   styleUrl: './fundraiser-selection.component.scss'
 })

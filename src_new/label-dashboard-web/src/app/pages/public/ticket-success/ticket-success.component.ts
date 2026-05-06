@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { PublicService, TicketDetails, PublicEvent } from '../../../services/public.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 
 @Component({
     selector: 'app-ticket-success',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     templateUrl: './ticket-success.component.html',
     styleUrls: ['./ticket-success.component.scss']
 })

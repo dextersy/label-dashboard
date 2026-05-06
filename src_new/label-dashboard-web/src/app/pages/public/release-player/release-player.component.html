@@ -10,7 +10,7 @@
   <!-- Error -->
   <div *ngIf="isError && !isLoading" class="error-container">
     <div class="error-icon">
-      <i class="fas fa-music"></i>
+      <app-icon name="music" />
     </div>
     <h3 class="error-title">Link not found</h3>
     <p class="error-message">Sorry, we couldn't find the link you were looking for.<br>If you think this was a mistake, please <a href="mailto:support@melt-records.com?subject=Player Link Not Found">contact support</a>.</p>
@@ -43,14 +43,14 @@
          [href]="getEpkUrl()"
          class="epk-link"
          target="_blank">
-        <i class="fas fa-id-badge tw-mr-1"></i>View Artist EPK
+        <app-icon name="id-card" class="tw-mr-1" />View Artist EPK
       </a>
       <p class="release-date" *ngIf="playerData.release.release_date">{{ formatReleaseDate(playerData.release.release_date) }}</p>
     </div>
 
     <!-- Pre-release discretion notice -->
     <div class="pre-release-notice" *ngIf="isPreRelease()">
-      <i class="fas fa-lock"></i>
+      <app-icon name="lock" />
       <span>This release is not yet public. Please keep this link confidential.</span>
     </div>
 
@@ -83,9 +83,9 @@
         <span class="track-number">{{ song.track_number || (i + 1) }}</span>
 
         <span class="track-play-icon" *ngIf="song.has_audio">
-          <i *ngIf="isSongLoading(i)" class="fas fa-spinner fa-spin"></i>
-          <i *ngIf="!isSongLoading(i) && isSongPlaying(i)" class="fas fa-pause"></i>
-          <i *ngIf="!isSongLoading(i) && !isSongPlaying(i)" class="fas fa-play"></i>
+          <app-icon name="spinner" class="tw-animate-spin" *ngIf="isSongLoading(i)" />
+          <app-icon name="pause" *ngIf="!isSongLoading(i) && isSongPlaying(i)" />
+          <app-icon name="play" *ngIf="!isSongLoading(i) && !isSongPlaying(i)" />
         </span>
 
         <span class="track-title">{{ song.title }}</span>

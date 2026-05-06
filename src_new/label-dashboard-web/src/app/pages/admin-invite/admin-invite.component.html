@@ -21,12 +21,12 @@
 
         <!-- Success icon -->
         <div *ngIf="messageType === 'success'" class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-green-100 tw-flex tw-items-center tw-justify-center">
-          <i class="fas fa-check tw-text-xl tw-text-green-600"></i>
+          <app-icon name="check" class="tw-text-xl tw-text-green-600" />
         </div>
 
         <!-- Error icon -->
         <div *ngIf="messageType !== 'success'" class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-red-100 tw-flex tw-items-center tw-justify-center">
-          <i class="fas fa-exclamation-triangle tw-text-xl tw-text-red-600"></i>
+          <app-icon name="warning" class="tw-text-xl tw-text-red-600" />
         </div>
 
         <div

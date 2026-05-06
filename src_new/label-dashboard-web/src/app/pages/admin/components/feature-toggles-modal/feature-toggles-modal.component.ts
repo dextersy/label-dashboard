@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { AdminService, FeatureToggles } from '../../../../services/admin.service';
 import { NotificationService } from '../../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../../directives/modal-to-body.directive';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-feature-toggles-modal',
-  imports: [CommonModule, ModalToBodyDirective],
+  imports: [CommonModule, ModalToBodyDirective, IconComponent],
   templateUrl: './feature-toggles-modal.component.html',
   styleUrls: ['./feature-toggles-modal.component.scss']
 })

@@ -12,9 +12,9 @@
 
   <!-- Error state -->
   <div *ngIf="error" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" role="alert">
-    <i class="fa fa-exclamation-triangle"></i> {{ error }}
+    <app-icon name="warning" /> {{ error }}
     <button class="btn-sm btn-danger ml-2" (click)="loadArtists()">
-      <i class="fas fa-sync"></i> Retry
+      <app-icon name="refresh" /> Retry
     </button>
   </div>
 
@@ -29,12 +29,12 @@
     <!-- No Artists State -->
     <div *ngIf="artists.length === 0" class="no-artists tw-py-5 tw-text-center">
       <div class="no-artists-icon tw-mb-4">
-        <i class="fas fa-users"></i>
+        <app-icon name="users" />
       </div>
       <h3>No Artists Found</h3>
       <p class="tw-text-muted">You don't have any artists yet.</p>
       <button *ngIf="isAdmin" class="btn-primary tw-mt-3" (click)="addNewArtist()">
-        <i class="fas fa-plus tw-mr-2"></i>Add New Artist
+        <app-icon name="plus" class="tw-mr-2" />Add New Artist
       </button>
     </div>
 
@@ -62,7 +62,7 @@
           <p *ngIf="artist.band_members" class="artist-members">{{ artist.band_members }}</p>
         </div>
         <div class="artist-select-indicator">
-          <i class="fas fa-chevron-right"></i>
+          <app-icon name="chevron-right" />
         </div>
       </div>
 
@@ -76,7 +76,7 @@
         (keydown.space)="addNewArtist(); $event.preventDefault()">
         <div class="artist-photo-container">
           <div class="artist-photo-placeholder add-icon">
-            <i class="fas fa-plus"></i>
+            <app-icon name="plus" />
           </div>
         </div>
         <div class="artist-info">
@@ -84,7 +84,7 @@
           <p class="artist-members">Create a new artist profile</p>
         </div>
         <div class="artist-select-indicator">
-          <i class="fas fa-chevron-right"></i>
+          <app-icon name="chevron-right" />
         </div>
       </div>
     </div>

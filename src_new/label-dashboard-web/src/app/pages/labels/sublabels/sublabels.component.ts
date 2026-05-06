@@ -17,10 +17,11 @@ import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../admin/co
 import { EarningsBreakdownModalComponent, AggregatedTotals } from '../../admin/components/earnings-breakdown-modal.component';
 import { SublabelPaymentsModalComponent } from '../../admin/components/sublabel-payments-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-labels-sublabels',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, BreadcrumbComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, BreadcrumbComponent, IconComponent],
     templateUrl: './sublabels.component.html',
     styleUrls: ['./sublabels.component.scss']
 })
@@ -91,17 +92,17 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
         const status = item.status || 'Unknown';
         switch (status) {
           case 'OK':
-            return '<span title="All the domains are connected and SSL certified."><i class="fas fa-check-circle text-success me-1"></i><span class="text-success">OK</span></span>';
+            return '<span title="All the domains are connected and SSL certified." class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="tw-text-green-600">OK</span></span>';
           case 'Pending':
-            return '<span title="Working on it. Please check again in a few minutes."><i class="fas fa-clock text-info me-1"></i><span class="text-info">Pending</span></span>';
+            return '<span title="Working on it. Please check again in a few minutes." class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-cyan-600"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="tw-text-cyan-600">Pending</span></span>';
           case 'Warning':
-            return '<span title="Some domains are unverified or have SSL issues"><i class="fas fa-exclamation-triangle text-warning me-1"></i><span class="text-warning">Warning</span></span>';
+            return '<span title="Some domains are unverified or have SSL issues" class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-amber-500"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tw-text-amber-500">Warning</span></span>';
           case 'Unverified':
-            return '<span title="You don\'t have any verified domains for this sublabel."><i class="fas fa-times-circle text-danger me-1"></i><span class="text-danger">Unverified</span></span>';
+            return '<span title="You don\'t have any verified domains for this sublabel." class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-red-500"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span class="tw-text-red-500">Unverified</span></span>';
           case 'No domains':
-            return '<i class="fas fa-minus-circle text-secondary me-1"></i><span class="text-secondary">No domains</span>';
+            return '<span class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-gray-400"><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="tw-text-gray-400">No domains</span></span>';
           default:
-            return '<i class="fas fa-question-circle text-muted me-1"></i><span class="text-muted">Unknown</span>';
+            return '<span class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-gray-400"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tw-text-gray-400">Unknown</span></span>';
         }
       }
     },
@@ -162,7 +163,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   get headerActions(): HeaderAction[] {
     return [{
-      icon: () => this.isAnyPollingInProgress() ? 'fas fa-spinner fa-spin' : 'fas fa-plus',
+      icon: () => this.isAnyPollingInProgress() ? 'spinner' : 'plus',
       label: () => {
         if (this.sublabelCreationState.inProgress) return `Creating ${this.sublabelCreationState.pendingName}...`;
         if (this.domainVerificationState.inProgress) return `Verifying ${this.domainVerificationState.pendingDomain}...`;
@@ -178,29 +179,29 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   sublabelActions: TableAction[] = [
     {
-      icon: 'fas fa-external-link-alt',
+      icon: 'external-link',
       label: 'Go to Dashboard',
       hidden: (item) => !this.hasDomains(item),
       handler: (item) => this.openSublabelDashboard(item)
     },
     {
-      icon: 'fas fa-shield-alt',
+      icon: 'shield',
       label: 'Verify Domains',
       hidden: (item) => !this.canVerifyDomains(item),
       handler: (item) => this.verifyDomains(item)
     },
     {
-      icon: 'fas fa-dollar-sign',
+      icon: 'currency',
       label: 'Fee Settings',
       handler: (item) => this.openFeeSettingsModal(item)
     },
     {
-      icon: 'fas fa-toggle-on',
+      icon: 'toggle',
       label: 'Toggle Features',
       handler: (item) => this.openFeatureTogglesModal(item)
     },
     {
-      icon: 'fas fa-money-bill-wave',
+      icon: 'currency',
       label: 'Pay Out',
       handler: (item) => this.openPayoutModal(item)
     }

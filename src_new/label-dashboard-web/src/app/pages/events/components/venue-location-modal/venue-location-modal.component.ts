@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ElementRef, ViewChild, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../../../components/shared/icon/icon.component';
 
 export interface VenueLocationData {
   venue: string;
@@ -14,14 +15,14 @@ export interface VenueLocationData {
 @Component({
   selector: 'app-venue-location-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="modal fade show" style="display: block;" tabindex="-1" *ngIf="isOpen">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i class="fa fa-map-marker-alt me-2"></i>
+              <app-icon name="map-pin" class="tw-mr-2" />
               {{ venueData?.venue || 'Venue Location' }}
             </h5>
             <button type="button" class="btn-close" (click)="close()"></button>
@@ -38,7 +39,7 @@ export interface VenueLocationData {
             
             <!-- Error message -->
             <div *ngIf="mapError" class="alert alert-warning m-3">
-              <i class="fa fa-exclamation-triangle me-2"></i>
+              <app-icon name="warning" class="tw-mr-2" />
               {{ mapError }}
             </div>
             
@@ -53,22 +54,22 @@ export interface VenueLocationData {
               <div class="row">
                 <div class="col-md-8">
                   <h6 class="mb-2">
-                    <i class="fa fa-map-marker-alt text-primary me-2"></i>
+                    <app-icon name="map-pin" class="tw-text-primary tw-mr-2" />
                     {{ venueData.venue }}
                   </h6>
                   <p class="text-muted mb-2" *ngIf="venueData.venue_address">
-                    <i class="fa fa-location-arrow me-2"></i>
+                    <app-icon name="map-pin" class="tw-mr-2" />
                     {{ venueData.venue_address }}
                   </p>
                   <div class="contact-info" *ngIf="venueData.venue_phone || venueData.venue_website">
                     <p class="mb-1" *ngIf="venueData.venue_phone">
-                      <i class="fa fa-phone me-2"></i>
+                      <app-icon name="phone" class="tw-mr-2" />
                       <a [href]="'tel:' + venueData.venue_phone" class="text-decoration-none">
                         {{ venueData.venue_phone }}
                       </a>
                     </p>
                     <p class="mb-1" *ngIf="venueData.venue_website">
-                      <i class="fa fa-globe me-2"></i>
+                      <app-icon name="globe" class="tw-mr-2" />
                       <a [href]="venueData.venue_website" target="_blank" class="text-decoration-none">
                         Visit Website
                       </a>
@@ -81,7 +82,7 @@ export interface VenueLocationData {
                     class="btn btn-outline-primary btn-sm me-2"
                     *ngIf="canGetDirections()"
                     (click)="getDirections()">
-                    <i class="fa fa-directions me-1"></i>
+                    <app-icon name="map-pin" class="tw-mr-1" />
                     Directions
                   </button>
                   <button 
@@ -89,7 +90,7 @@ export interface VenueLocationData {
                     class="btn btn-primary btn-sm"
                     *ngIf="venueData.venue_maps_url"
                     (click)="openInGoogleMaps()">
-                    <i class="fa fa-external-link-alt me-1"></i>
+                    <app-icon name="external-link" class="tw-mr-1" />
                     Open in Maps
                   </button>
                 </div>
@@ -247,7 +248,7 @@ export class VenueLocationModalComponent implements OnInit, OnDestroy, OnChanges
     }
     
     if (this.venueData.venue_phone) {
-      content += `<p class="mb-1"><i class="fa fa-phone me-1"></i> ${this.venueData.venue_phone}</p>`;
+      content += `<p class="mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.12 6.12l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${this.venueData.venue_phone}</p>`;
     }
     
     content += '</div>';

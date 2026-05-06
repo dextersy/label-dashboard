@@ -7,7 +7,7 @@
               [class.sub-tab-btn-active]="activeSubTab === 'tickets'"
               (click)="setSubTab('tickets')"
               [attr.aria-pressed]="activeSubTab === 'tickets'">
-        <i class="fa fa-ticket-alt"></i>
+        <app-icon name="ticket" />
         <span>Tickets</span>
       </button>
       <button type="button"
@@ -15,7 +15,7 @@
               [class.sub-tab-btn-active]="activeSubTab === 'walk-in'"
               (click)="setSubTab('walk-in')"
               [attr.aria-pressed]="activeSubTab === 'walk-in'">
-        <i class="fa fa-walking"></i>
+        <app-icon name="walking" />
         <span>Walk-in</span>
       </button>
     </div>
@@ -100,16 +100,16 @@
                     type="button"
                     (click)="toggleKebab($event)"
                     [class.active]="isKebabOpen">
-              <i class="fas fa-ellipsis-v"></i>
+              <app-icon name="more-vertical" />
             </button>
           </div>
           <div class="ticket-card__phone" *ngIf="ticket.contact_number">
-            <i class="fas fa-phone"></i> {{ ticket.contact_number }}
+            <app-icon name="phone" /> {{ ticket.contact_number }}
           </div>
           <div class="ticket-card__footer">
             <span class="ticket-card__claimed"
                   [class.ticket-card__claimed--done]="ticket.number_of_claimed_entries >= ticket.number_of_entries">
-              <i class="fas fa-check-circle"></i>
+              <app-icon name="check-circle" />
               {{ ticket.number_of_claimed_entries }}/{{ ticket.number_of_entries }} claimed
             </span>
             <span class="ticket-card__type">{{ ticket.ticket_type_name || 'Regular' }}</span>
@@ -172,12 +172,12 @@
           </div>
           <div class="walkin-card__footer">
             <span class="walkin-card__payment">
-              <i class="fas fa-credit-card"></i> {{ tx.payment_method }}<ng-container *ngIf="tx.payment_reference"> ({{ tx.payment_reference }})</ng-container>
+              <app-icon name="credit-card" /> {{ tx.payment_method }}<ng-container *ngIf="tx.payment_reference"> ({{ tx.payment_reference }})</ng-container>
             </span>
             <span class="walkin-card__amount">{{ formatWalkInPrice(tx.total_amount) }}</span>
           </div>
           <div class="walkin-card__registered" *ngIf="tx.registeredByUser?.first_name">
-            <i class="fas fa-user"></i> {{ tx.registeredByUser?.first_name }}
+            <app-icon name="user" /> {{ tx.registeredByUser?.first_name }}
           </div>
         </div>
       </ng-template>

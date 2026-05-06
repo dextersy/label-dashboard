@@ -46,7 +46,7 @@
         <!-- Search + Create New Artist -->
         <div class="artist-modal-search tw-mb-3">
           <div class="search-input-wrapper">
-            <i class="fa fa-search search-icon"></i>
+            <app-icon name="search" class="search-icon" />
             <input type="text"
                    class="artist-search-input tw-input"
                    [(ngModel)]="searchTerm"
@@ -59,14 +59,14 @@
         <!-- Artist list -->
         <div class="artist-modal-list">
           <button *ngIf="isAdmin" class="artist-modal-item create-artist-item" (click)="addNewArtist()">
-            <i class="fa fa-plus artist-modal-plus"></i>
+            <app-icon name="plus" class="artist-modal-plus" />
             <span class="artist-modal-name">Create new artist</span>
           </button>
           <button *ngFor="let artist of pagedArtists"
                   class="artist-modal-item"
                   [class.active]="selectedArtist?.id === artist.id"
                   (click)="selectArtist(artist, true)">
-            <i *ngIf="selectedArtist?.id === artist.id" class="fas fa-check artist-modal-check"></i>
+            <app-icon name="check" class="artist-modal-check" *ngIf="selectedArtist?.id === artist.id" />
             <img [src]="getProfilePhotoUrl(artist)"
                  class="artist-modal-photo"
                  [alt]="artist.name"
@@ -76,7 +76,7 @@
 
           <!-- No results -->
           <div class="artist-modal-no-results" *ngIf="filteredArtists.length === 0">
-            <i class="fa fa-search tw-mr-2"></i>No artists found matching "{{ searchTerm }}"
+            <app-icon name="search" class="tw-mr-2" />No artists found matching "{{ searchTerm }}"
           </div>
         </div>
 
@@ -85,13 +85,13 @@
           <button class="btn-sm btn-outline-secondary"
                   [disabled]="currentPage === 0"
                   (click)="prevPage()">
-            <i class="fas fa-chevron-left"></i>
+            <app-icon name="chevron-left" />
           </button>
           <span class="pagination-info">{{ currentPage + 1 }} / {{ totalPages }}</span>
           <button class="btn-sm btn-outline-secondary"
                   [disabled]="currentPage === totalPages - 1"
                   (click)="nextPage()">
-            <i class="fas fa-chevron-right"></i>
+            <app-icon name="chevron-right" />
           </button>
         </div>
 

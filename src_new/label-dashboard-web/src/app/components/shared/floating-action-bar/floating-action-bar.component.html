@@ -29,9 +29,7 @@
   (click)="toggleDrawer()"
   [attr.aria-expanded]="drawerOpen"
   aria-label="More options">
-  <i class="fa"
-     [class.fa-chevron-up]="!drawerOpen"
-     [class.fa-chevron-down]="drawerOpen"></i>
+  <app-icon [name]="drawerOpen ? 'chevron-down' : 'chevron-up'" />
 </button>
 
 <!-- Secondary buttons: default ng-content MUST be last.

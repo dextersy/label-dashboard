@@ -3,7 +3,7 @@
   <!-- Preview Banner -->
   <div *ngIf="isPreview"
     class="tw-sticky tw-top-0 tw-z-[1050] tw-bg-amber-400 tw-text-black tw-text-center tw-px-4 tw-py-2 tw-text-sm tw-font-bold tw-shadow">
-    <i class="fas fa-eye tw-mr-2"></i>
+    <app-icon name="eye" class="tw-mr-2" />
     Preview Mode — This is how the buy page will look. Purchasing is disabled.
   </div>
 
@@ -24,11 +24,11 @@
   <!-- 404 -->
   <div *ngIf="isError" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-6">
     <div class="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-text-center tw-max-w-sm tw-w-full tw-p-10">
-      <i class="fas fa-exclamation-triangle fa-3x tw-text-red-400 tw-mb-4 tw-block"></i>
+      <app-icon name="warning" [size]="48" class="tw-text-red-400 tw-mb-4 tw-block" />
       <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-2">Event Not Found</h2>
       <p class="tw-text-gray-500 tw-text-sm tw-mb-6">The event you're looking for could not be found.</p>
       <button class="btn-primary" (click)="goBack()">
-        <i class="fas fa-arrow-left tw-mr-1"></i>Go Back
+        <app-icon name="arrow-left" class="tw-mr-1" />Go Back
       </button>
     </div>
   </div>
@@ -47,14 +47,14 @@
         </div>
         <p class="tw-text-white tw-font-bold tw-text-lg tw-leading-tight tw-mb-2">{{ event.title }}</p>
         <p class="tw-text-white/70 tw-text-sm tw-mb-0.5">
-          <i class="fas fa-calendar-alt tw-mr-1.5 tw-text-white/40"></i>{{ formatEventDate(event.date_and_time) }} · {{ formatEventTime(event.date_and_time) }}
+          <app-icon name="calendar" class="tw-mr-1.5 tw-text-white/40" />{{ formatEventDate(event.date_and_time) }} · {{ formatEventTime(event.date_and_time) }}
         </p>
         <p *ngIf="event.venue" class="tw-text-white/70 tw-text-sm">
-          <i class="fas fa-map-marker-alt tw-mr-1.5 tw-text-white/40"></i>{{ event.venue }}
+          <app-icon name="map-pin" class="tw-mr-1.5 tw-text-white/40" />{{ event.venue }}
         </p>
       </div>
       <button class="view-full-image-btn" (click)="openLightbox(); $event.stopPropagation()" title="View full image">
-        <i class="fas fa-expand-alt"></i>
+        <app-icon name="expand" />
       </button>
     </div>
 
@@ -95,7 +95,7 @@
                 <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
                 <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
                   class="tw-flex tw-items-center tw-gap-1 tw-text-[11px] tw-text-indigo-500 hover:tw-text-indigo-700 tw-no-underline tw-font-medium tw-whitespace-nowrap tw-transition-colors">
-                  <i class="fas fa-calendar-plus tw-text-[10px]"></i>
+                  <app-icon name="calendar-plus" class="tw-text-[10px]" />
                   <span>Add to calendar</span>
                 </a>
               </div>
@@ -105,7 +105,7 @@
             <div *ngIf="event.venue" class="tw-flex tw-items-center tw-gap-3.5 tw-flex-1 tw-px-5 tw-py-4 tw-min-w-0">
               <!-- Pin icon chip -->
               <div class="tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-8 tw-h-8" style="background-color: #EEEDFE;">
-                <i class="fas fa-map-marker-alt tw-text-sm" style="color: #534AB7;"></i>
+                <app-icon name="map-pin" class="tw-text-sm" style="color: #534AB7;" />
               </div>
               <!-- Venue info -->
               <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
@@ -113,7 +113,7 @@
                 <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-400 tw-leading-snug">{{ event.venue_address }}</span>
                 <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank"
                   class="tw-flex tw-items-center tw-gap-1 tw-text-[11px] tw-text-indigo-500 hover:tw-text-indigo-700 tw-no-underline tw-font-medium tw-whitespace-nowrap tw-transition-colors">
-                  <i class="fas fa-external-link-alt tw-text-[10px]"></i>
+                  <app-icon name="external-link" class="tw-text-[10px]" />
                   <span>View on map ↗</span>
                 </a>
               </div>
@@ -136,7 +136,7 @@
             <p class="tw-mt-1.5 tw-text-sm tw-text-red-500" *ngIf="isFieldInvalid('name')">Full name is required.</p>
             <p class="tw-mt-1.5 tw-text-xs tw-text-green-600"
               *ngIf="!isFieldInvalid('name') && ticketForm.get('name')?.value">
-              <i class="fas fa-check-circle tw-mr-1"></i>Please make sure your full name is as it appears on your identification.
+              <app-icon name="check-circle" class="tw-mr-1" />Please make sure your full name is as it appears on your identification.
             </p>
           </div>
 
@@ -152,10 +152,10 @@
               *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">Enter a valid email address.</p>
             <p class="tw-mt-1.5 tw-text-xs tw-text-green-600"
               *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
-              <i class="fas fa-check-circle tw-mr-1"></i>Please make sure your email address is correct.
+              <app-icon name="check-circle" class="tw-mr-1" />Please make sure your email address is correct.
             </p>
             <div class="tw-mt-2 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-amber-600" *ngIf="emailTypoResult?.suggestedEmail">
-              <i class="fas fa-exclamation-triangle tw-flex-shrink-0"></i>
+              <app-icon name="warning" class="tw-flex-shrink-0" />
               <span>
                 Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?
                 <button type="button" class="tw-ml-1 tw-underline tw-text-blue-600" (click)="applySuggestedEmail()">Yes</button>
@@ -211,7 +211,7 @@
                 </span>
                 <span *ngIf="selectedTicketType?.id === ticketType.id"
                   class="tw-absolute tw-top-2 tw-right-2 tw-w-4 tw-h-4 tw-rounded-full tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
-                  <i class="fas fa-check tw-text-white" style="font-size: 8px;"></i>
+                  <app-icon name="check" class="tw-text-white" style="font-size: 8px;" />
                 </span>
               </button>
             </div>
@@ -220,7 +220,7 @@
           <!-- Special instructions -->
           <div *ngIf="selectedTicketType?.special_instructions"
             class="tw-mb-4 tw-flex tw-items-start tw-gap-2 tw-text-sm tw-text-green-700 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-3 tw-py-2.5">
-            <i class="fas fa-info-circle tw-flex-shrink-0 tw-mt-0.5"></i>
+            <app-icon name="info" class="tw-flex-shrink-0 tw-mt-0.5" />
             <span>{{ selectedTicketType?.special_instructions }}</span>
           </div>
 
@@ -252,7 +252,7 @@
               formControlName="referral_code" placeholder="Enter code if you have one">
           </div>
           <div *ngIf="referralCode" class="tw-mb-5 tw-flex tw-items-center tw-gap-2 tw-text-sm">
-            <i class="fas fa-tag tw-text-gray-400"></i>
+            <app-icon name="tag" class="tw-text-gray-400" />
             <span class="tw-text-gray-600">Referral code:</span>
             <span class="tw-bg-cyan-100 tw-text-cyan-800 tw-font-semibold tw-px-2.5 tw-py-0.5 tw-rounded-full">{{ referralCode }}</span>
           </div>
@@ -260,7 +260,7 @@
           <!-- Reminders -->
           <div class="tw-mb-5 tw-rounded-xl tw-border tw-border-blue-100 tw-bg-blue-50 tw-p-4">
             <p class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-widest tw-text-blue-600 tw-mb-2">
-              <i class="fas fa-info-circle tw-mr-1"></i>Before you submit
+              <app-icon name="info" class="tw-mr-1" />Before you submit
             </p>
             <ul class="tw-text-sm tw-text-blue-800 tw-space-y-1.5 tw-pl-4 tw-list-disc">
               <li>Please make sure your full name is as it appears on your identification.</li>
@@ -311,12 +311,12 @@
               </div>
               <span *ngIf="totalAmount > 0" class="tw-text-2xl tw-font-extrabold tw-text-gray-900">₱{{ formatPrice(totalAmount) }}</span>
               <span *ngIf="totalAmount === 0" class="tw-flex tw-items-center tw-gap-1.5 tw-text-green-600 tw-font-bold tw-text-lg">
-                <i class="fas fa-check-circle"></i> FREE
+                <app-icon name="check-circle" /> FREE
               </span>
             </div>
             <button type="submit" class="btn-primary tw-w-full tw-py-4"
               [disabled]="ticketForm.invalid || isSubmitting || isPreview">
-              <i class="fas tw-mr-2" [ngClass]="totalAmount > 0 ? 'fa-credit-card' : 'fa-user-check'"></i>
+              <app-icon [name]="totalAmount > 0 ? 'credit-card' : 'user-check'" class="tw-mr-2" />
               {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>
             <p *ngIf="totalAmount > 0" class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">
@@ -333,7 +333,7 @@
         <!-- State header -->
         <div class="closed-state-header">
           <div class="closed-icon-circle">
-            <i class="fas fa-ticket-alt tw-text-gray-400" style="font-size: 18px;"></i>
+            <app-icon name="ticket" class="tw-text-gray-400" style="font-size: 18px;" />
           </div>
           <h2 class="closed-title">Online Sales Ended</h2>
           <p class="closed-subtitle">Online ticket sales for this event have closed. Walk-in tickets are still available at the venue.</p>
@@ -343,7 +343,7 @@
         <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
           class="walkin-card">
           <div class="walkin-card-header">
-            <i class="fas fa-map-marker-alt" style="color: #1d4ed8; font-size: 13px;"></i>
+            <app-icon name="map-pin" style="color: #1d4ed8; font-size: 13px;" />
             <span>Walk-in tickets at the venue</span>
           </div>
           <div class="walkin-rows">
@@ -363,7 +363,7 @@
           class="walkin-details-card">
           <!-- Date & time column -->
           <div class="walkin-details-col">
-            <i class="fas fa-calendar-alt walkin-details-icon"></i>
+            <app-icon name="calendar" class="walkin-details-icon" />
             <span class="walkin-details-label">Date &amp; time</span>
             <span class="walkin-details-value">{{ formatEventDate(event.date_and_time) }}</span>
             <span class="walkin-details-value">{{ formatEventTime(event.date_and_time) }}</span>
@@ -372,7 +372,7 @@
           <div class="walkin-details-divider"></div>
           <!-- Venue column -->
           <div class="walkin-details-col" *ngIf="event.venue">
-            <i class="fas fa-map-marker-alt walkin-details-icon"></i>
+            <app-icon name="map-pin" class="walkin-details-icon" />
             <span class="walkin-details-label">Venue</span>
             <span class="walkin-details-value">{{ event.venue }}</span>
             <span *ngIf="hasVenueAddress(event)" class="walkin-details-subvalue">{{ event.venue_address }}</span>
@@ -390,11 +390,11 @@
         <div class="closed-cta-row">
           <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank" rel="noopener"
             class="closed-btn-primary">
-            <i class="fas fa-map-marker-alt" style="font-size: 13px;"></i>
+            <app-icon name="map-pin" style="font-size: 13px;" />
             Get Directions
           </a>
           <button *ngIf="!hasVenueMapsLink(event)" class="closed-btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
-            <i class="fas fa-map-marker-alt" style="font-size: 13px;"></i>
+            <app-icon name="map-pin" style="font-size: 13px;" />
             Get Directions
           </button>
           <button type="button" class="closed-btn-secondary" (click)="showClosedDetails = !showClosedDetails">
@@ -417,7 +417,7 @@
           </a>
           <!-- Copy link -->
           <button type="button" class="share-icon-btn" title="Copy link" (click)="copyEventLink()">
-            <i class="fas fa-link" style="font-size: 11px;"></i>
+            <app-icon name="link" style="font-size: 11px;" />
           </button>
         </div>
 
@@ -440,7 +440,7 @@
       <button
         class="tw-absolute tw-top-[-2.5rem] tw-right-0 tw-w-9 tw-h-9 tw-rounded-full tw-bg-white/20 tw-border tw-border-white/40 tw-text-white tw-flex tw-items-center tw-justify-center tw-cursor-pointer tw-transition-colors hover:tw-bg-white/35"
         (click)="closeLightbox()">
-        <i class="fas fa-times"></i>
+        <app-icon name="x" />
       </button>
       <img [src]="event?.poster_url" alt="Event poster"
         class="tw-max-w-full tw-max-h-[72vh] tw-object-contain tw-rounded-xl tw-shadow-2xl">

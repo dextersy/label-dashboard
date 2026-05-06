@@ -7,6 +7,7 @@ import { ReleaseService, ReleaseFormData } from '../../../../services/release.se
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
 import { QuillModule } from 'ngx-quill';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface ReleaseFormSubmitData {
   formData: ReleaseFormData;
@@ -16,7 +17,7 @@ export interface ReleaseFormSubmitData {
 
 @Component({
     selector: 'app-release-form',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent],
     templateUrl: './release-form.component.html',
     styleUrl: './release-form.component.scss'
 })

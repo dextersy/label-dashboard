@@ -5,10 +5,11 @@ import { firstValueFrom } from 'rxjs';
 import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter } from '../../../../services/song.service';
 import { ApiService } from '../../../../services/api.service';
 import { SongwriterService } from '../../../../services/songwriter.service';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-song-form',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './song-form.component.html',
     styleUrl: './song-form.component.scss',
     encapsulation: ViewEncapsulation.None

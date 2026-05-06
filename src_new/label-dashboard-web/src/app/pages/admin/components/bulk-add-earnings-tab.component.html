@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-file-upload tw-mr-2"></i>
+      <app-icon name="file-upload" class="tw-mr-2" />
       Bulk Add Earnings
     </h3>
     <p class="tw-mb-0 tw-text-muted">Import earnings in bulk via CSV or add them manually for multiple artists.</p>
@@ -17,7 +17,7 @@
             [class.sub-tab-btn-active]="currentView === 'manual'"
             (click)="switchToManualView()"
             [attr.aria-pressed]="currentView === 'manual'">
-      <i class="fa fa-edit"></i>
+      <app-icon name="edit" />
       <span>Manual Entry</span>
     </button>
     <button type="button"
@@ -25,12 +25,12 @@
             [class.sub-tab-btn-active]="currentView === 'csv'"
             (click)="switchToCsvView()"
             [attr.aria-pressed]="currentView === 'csv'">
-      <i class="fa fa-file-csv"></i>
+      <app-icon name="file" />
       <span>CSV Import</span>
     </button>
   </div>
   <small class="tw-mt-2 tw-text-gray-400">
-    <i class="fa fa-info-circle tw-mr-1"></i>
+    <app-icon name="info" class="tw-mr-1" />
     <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
     <span *ngIf="currentView === 'csv'">Bulk import earnings from CSV file</span>
   </small>
@@ -191,8 +191,8 @@
       <button type="button"
               class="btn-secondary btn-sm dropdown-toggle dropdown-toggle-split"
               (click)="toggleAddRowsDropdown()">
-        <i class="fa fa-caret-up" *ngIf="showAddRowsDropdown"></i>
-        <i class="fa fa-caret-down" *ngIf="!showAddRowsDropdown"></i>
+        <app-icon name="caret-up" *ngIf="showAddRowsDropdown" />
+        <app-icon name="caret-down" *ngIf="!showAddRowsDropdown" />
       </button>
     </div>
     <div class="dropdown-menu-wrapper" *ngIf="showAddRowsDropdown">
@@ -204,13 +204,13 @@
   </div>
   <!-- Mobile: flat buttons in drawer (no popup dropdowns inside overflow:hidden) -->
   <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(1)">
-    <i class="fa fa-plus tw-mr-2"></i>Add 1 Row
+    <app-icon name="plus" class="tw-mr-2" />Add 1 Row
   </button>
   <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(5)">
-    <i class="fa fa-plus tw-mr-2"></i>Add 5 Rows
+    <app-icon name="plus" class="tw-mr-2" />Add 5 Rows
   </button>
   <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(10)">
-    <i class="fa fa-plus tw-mr-2"></i>Add 10 Rows
+    <app-icon name="plus" class="tw-mr-2" />Add 10 Rows
   </button>
 
   <!-- Primary: Save -->
@@ -218,7 +218,7 @@
           class="btn-primary fab-primary-btn"
           (click)="saveBulkEarnings()"
           [disabled]="loading || bulkEarnings.length === 0">
-    <i class="fa fa-save tw-mr-2"></i>
+    <app-icon name="save" class=" tw-mr-2" />
     <span *ngIf="bulkEarnings.length > 0">Save {{ bulkEarnings.length }} Earnings</span>
     <span *ngIf="bulkEarnings.length === 0">No Earnings to Save</span>
   </button>
@@ -233,7 +233,7 @@
        (dragleave)="onDragLeave($event)" 
        (drop)="onDrop($event)">
     <div class="tw-mb-3">
-      <i class="fa fa-cloud-upload-alt fa-3x tw-mb-3 tw-text-muted"></i>
+      <app-icon name="upload" [size]="48" class="tw-mb-3 tw-text-muted" />
       <h3>Upload CSV File</h3>
       <p class="tw-text-muted">
         Drag and drop a CSV file here, or click to select a file.<br>
@@ -246,7 +246,7 @@
              accept=".csv" 
              (change)="onFileSelected($event)">
       <button type="button" class="btn-primary" (click)="openFileDialog()">
-        <i class="fa fa-folder-open tw-mr-2"></i>Select CSV File
+        <app-icon name="folder" class="tw-mr-2" />Select CSV File
       </button>
     </div>
   </div>
@@ -281,7 +281,7 @@
               class="btn-danger btn-sm tw-mt-2" 
               (click)="downloadUnmatchedCsv()"
               *ngIf="csvTotalUnmatched > 0">
-              <i class="fa fa-download tw-mr-1"></i>Download CSV
+              <app-icon name="download" class="tw-mr-1" />Download CSV
             </button>
           </div>
         </div>
@@ -303,12 +303,12 @@
       <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-justify-between tw-items-center">
         <h6 class="tw-mb-0">CSV Preview</h6>
         <button type="button" class="btn-danger btn-sm" (click)="removeCsvFile()">
-          <i class="fa fa-times tw-mr-2"></i>Remove File
+          <app-icon name="x" class="tw-mr-2" />Remove File
         </button>
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <div *ngIf="csvData.length === 0; else showTable" class="tw-py-4 tw-text-center">
-          <i class="fa fa-exclamation-triangle fa-3x tw-text-warning tw-mb-3"></i>
+          <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" />
           <h5 class="tw-text-muted">No matches found in the CSV file.</h5>
           <p class="tw-text-muted">
             Please check that your CSV contains valid catalog numbers or release titles that match existing releases in your system.
@@ -364,7 +364,7 @@
       </div>
     </div>
     <div *ngIf="csvTotalUnmatched > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-0 tw-ml-3" style="font-size: 12px; padding: 6px 12px; margin-top: 32px;">
-      <i class="fa fa-exclamation-triangle tw-mr-1"></i>{{ csvTotalUnmatched }} unmatched
+      <app-icon name="warning" class="tw-mr-1" />{{ csvTotalUnmatched }} unmatched
     </div>
   </div>
 
@@ -394,11 +394,11 @@
     </div>
   </div>
   <div *ngIf="csvTotalUnmatched > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-0 lg:tw-hidden" style="font-size: 12px; padding: 8px 12px;">
-    <i class="fa fa-exclamation-triangle tw-mr-1"></i>{{ csvTotalUnmatched }} rows will be skipped
+    <app-icon name="warning" class="tw-mr-1" />{{ csvTotalUnmatched }} rows will be skipped
   </div>
   <!-- Cancel: visible on both desktop (in secondary bar) and mobile (in drawer) -->
   <button type="button" class="btn-secondary" (click)="removeCsvFile()">
-    <i class="fa fa-times tw-mr-2"></i>Cancel
+    <app-icon name="x" class="tw-mr-2" />Cancel
   </button>
 
   <!-- Primary: Import -->
@@ -406,7 +406,7 @@
           class="btn-primary fab-primary-btn"
           (click)="saveCsvEarnings()"
           [disabled]="loading || csvData.length === 0">
-    <i class="fa fa-save tw-mr-2"></i>
+    <app-icon name="save" class=" tw-mr-2" />
     <span *ngIf="csvData.length > 0">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
     <span *ngIf="csvData.length === 0">No Earnings to Import</span>
   </button>

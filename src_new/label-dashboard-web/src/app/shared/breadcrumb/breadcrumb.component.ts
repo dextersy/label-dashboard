@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 import { Subscription } from 'rxjs';
 import { BreadcrumbService, BreadcrumbItem } from '../../services/breadcrumb.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
@@ -16,7 +17,7 @@ const WORKSPACE_ROOT_ROUTES: Record<WorkspaceType, string[]> = {
 
 @Component({
     selector: 'app-breadcrumb',
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, IconComponent],
     templateUrl: './breadcrumb.component.html',
     styleUrl: './breadcrumb.component.scss'
 })

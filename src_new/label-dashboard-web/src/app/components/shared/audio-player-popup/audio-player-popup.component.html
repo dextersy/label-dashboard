@@ -1,7 +1,7 @@
 <div class="audio-player-popup" *ngIf="isVisible" [class.loading]="state?.isLoading">
   <!-- Close Button (upper right) -->
   <button class="close-btn-corner" (click)="close()" title="Close player" aria-label="Close audio player">
-    <i class="fa fa-times"></i>
+    <app-icon name="x" />
   </button>
 
   <!-- Track Info -->
@@ -21,11 +21,8 @@
             (click)="togglePlayPause()" 
             [disabled]="state?.isLoading"
             [attr.aria-label]="state?.isLoading ? 'Loading' : state?.isPlaying ? 'Pause' : 'Play'">
-      <i class="fa" [ngClass]="{
-        'fa-spinner fa-spin': state?.isLoading,
-        'fa-pause': state?.isPlaying && !state?.isLoading,
-        'fa-play': state?.isPaused && !state?.isLoading
-      }"></i>
+      <app-icon [name]="state?.isLoading ? 'spinner' : state?.isPlaying ? 'pause' : 'play'"
+                [class.tw-animate-spin]="state?.isLoading" />
     </button>
 
     <!-- Progress Section -->

@@ -50,19 +50,19 @@
               <div class="event-details tw-mb-3">
                 <!-- Date & Time -->
                 <div class="detail-item tw-mb-2">
-                  <i class="fas fa-calendar-alt tw-mr-2 tw-text-muted"></i>
+                  <app-icon name="calendar" class="tw-mr-2 tw-text-muted" />
                   <span class="event-date">{{ formatEventDate(event.date_and_time) }}</span>
                 </div>
 
                 <!-- Venue -->
                 <div class="detail-item tw-mb-2">
-                  <i class="fas fa-map-marker-alt tw-mr-2 tw-text-muted"></i>
+                  <app-icon name="map-pin" class="tw-mr-2 tw-text-muted" />
                   <span class="event-venue">{{ event.venue }}</span>
                 </div>
 
                 <!-- Price -->
                 <div class="detail-item tw-mb-3">
-                  <i class="fas fa-ticket-alt tw-mr-2 tw-text-muted"></i>
+                  <app-icon name="ticket" class="tw-mr-2 tw-text-muted" />
                   <span class="event-price">{{ formatPrice(event.ticket_price) }}</span>
                   <span *ngIf="event.ticket_naming" class="ticket-naming tw-ml-1">({{ event.ticket_naming }})</span>
                 </div>
@@ -78,7 +78,7 @@
                   [style.background-color]="!event.is_closed ? event.brandColor : ''"
                   [style.border-color]="!event.is_closed ? event.brandColor : ''"
                   target="_blank">
-                  <i class="fas fa-shopping-cart tw-mr-2"></i>
+                  <app-icon name="cart" class="tw-mr-2" />
                   {{ event.is_closed ? 'Sold Out' : 'Get Tickets' }}
                 </a>
               </div>
@@ -90,7 +90,7 @@
       <!-- No Events Message -->
       <div *ngIf="getAllEventsSorted().length === 0" class="no-events tw-py-5 tw-text-center">
         <div class="tw-mb-4">
-          <i class="fas fa-calendar-times fa-4x tw-mb-3 tw-text-muted"></i>
+          <app-icon name="calendar-x" class="fa-4x tw-mb-3 tw-text-muted" />
           <h3 class="tw-text-muted">No Upcoming Events</h3>
           <p class="tw-text-muted">Check back later for new events and shows!</p>
         </div>

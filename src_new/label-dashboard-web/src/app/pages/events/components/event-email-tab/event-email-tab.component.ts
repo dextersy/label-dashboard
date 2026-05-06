@@ -7,10 +7,11 @@ import { QuillModule } from 'ngx-quill';
 import { TestEmailModalComponent, TestEmailData } from '../test-email-modal/test-email-modal.component';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
 import 'quill/dist/quill.snow.css';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-event-email-tab',
-    imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent, FloatingActionBarComponent],
+    imports: [CommonModule, FormsModule, QuillModule, TestEmailModalComponent, FloatingActionBarComponent, IconComponent],
     templateUrl: './event-email-tab.component.html',
     styleUrl: './event-email-tab.component.scss'
 })

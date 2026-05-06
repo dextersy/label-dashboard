@@ -137,7 +137,7 @@
                 class="btn-sm btn-secondary"
                 (click)="addRoyaltyArtist()"
                 [disabled]="loadingArtists">
-          <i class="fa fa-plus"></i> Add Artist
+          <app-icon name="plus" /> Add Artist
         </button>
       </div>
 
@@ -182,7 +182,7 @@
                     (click)="removeRoyaltyArtist(i)"
                     [disabled]="royaltyArtists.length <= 1"
                     title="Remove Artist">
-              <i class="fa fa-trash"></i>
+              <app-icon name="trash" />
             </button>
           </div>
         </div>
@@ -199,13 +199,13 @@
         </div>
 
         <p class="tw-text-xs tw-text-muted">
-          <i class="fa fa-info-circle"></i>
+          <app-icon name="info" />
           Artist percentages for each royalty type should not exceed 100%. The label row shows the remaining percentage.
         </p>
       </div>
 
       <p *ngIf="royaltyArtists.length === 0 && !loadingArtists" class="tw-text-sm tw-text-muted tw-text-center tw-py-3">
-        <i class="fa fa-info-circle"></i> No artists added yet. Click "Add Artist" to get started.
+        <app-icon name="info" /> No artists added yet. Click "Add Artist" to get started.
       </p>
     </div>
 
@@ -222,8 +222,8 @@
     <button type="submit"
             class="btn-primary"
             [disabled]="loading || !isFormValid">
-      <i class="fa fa-save" *ngIf="!loading"></i>
-      <i class="fa fa-spinner fa-spin" *ngIf="loading"></i>
+      <app-icon name="save" class="" *ngIf="!loading" />
+      <app-icon name="spinner" class="tw-animate-spin" *ngIf="loading" />
       {{ loading ? 'Saving...' : submitButtonText }}
     </button>
   </div>

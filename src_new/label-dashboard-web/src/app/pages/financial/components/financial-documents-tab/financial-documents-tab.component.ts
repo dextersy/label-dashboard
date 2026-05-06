@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Document } from '../../financial.component';
 import { DocumentViewerComponent } from '../../../../components/shared/document-viewer/document-viewer.component';
 import { PaginatedTableComponent, TableAction, TableColumn } from '../../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-financial-documents-tab',
-    imports: [CommonModule, FormsModule, DocumentViewerComponent, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, DocumentViewerComponent, PaginatedTableComponent, IconComponent],
     templateUrl: './financial-documents-tab.component.html',
     styleUrl: './financial-documents-tab.component.scss'
 })
@@ -32,7 +33,7 @@ export class FinancialDocumentsTabComponent {
         renderHtml: true,
         formatter: (doc: Document) => {
           const icon = this.getFileIcon(doc.filename);
-          return `<i class="fa ${icon} fa-lg"></i>`;
+          return `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`;
         }
       },
       {
@@ -56,12 +57,12 @@ export class FinancialDocumentsTabComponent {
   get docActions(): TableAction[] {
     return [
       {
-        icon: 'fa-solid fa-eye',
+        icon: 'eye',
         label: 'View',
         handler: (doc: Document) => this.openDocument(doc)
       },
       {
-        icon: 'fa-solid fa-trash',
+        icon: 'trash',
         label: 'Delete',
         type: 'danger',
         handler: (doc: Document) => this.deleteDocument(doc.id)
@@ -76,23 +77,13 @@ export class FinancialDocumentsTabComponent {
   getFileIcon(filename: string): string {
     const extension = filename.split('.').pop()?.toLowerCase();
     switch (extension) {
-      case 'pdf':
-        return 'fa-solid fa-file-pdf text-danger';
-      case 'doc':
-      case 'docx':
-        return 'fa-solid fa-file-word text-primary';
-      case 'xls':
-      case 'xlsx':
-        return 'fa-solid fa-file-excel text-success';
-      case 'txt':
-        return 'fa-solid fa-file-lines text-muted';
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
-        return 'fa-solid fa-file-image text-info';
+        return 'image';
       default:
-        return 'fa-file text-muted';
+        return 'file';
     }
   }
 

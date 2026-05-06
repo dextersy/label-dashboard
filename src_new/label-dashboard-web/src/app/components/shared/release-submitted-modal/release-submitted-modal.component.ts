@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { ReleaseSubmittedService, ReleaseSubmittedModalData, ReleaseSubmittedModalState } from '../../../services/release-submitted.service';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-release-submitted-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './release-submitted-modal.component.html',
   styleUrls: ['./release-submitted-modal.component.scss']
 })

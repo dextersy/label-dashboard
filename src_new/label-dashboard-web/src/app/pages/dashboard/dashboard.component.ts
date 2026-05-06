@@ -10,6 +10,7 @@ import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.componen
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { environment } from 'environments/environment';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 interface DashboardStats {
   latestRelease: {
@@ -46,7 +47,7 @@ interface DashboardData {
         BalanceTableComponent,
         ReleasePipelineComponent,
         BreadcrumbComponent
-    ],
+, IconComponent],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })

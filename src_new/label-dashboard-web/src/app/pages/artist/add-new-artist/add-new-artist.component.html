@@ -162,8 +162,8 @@
             class="btn-primary fab-primary-btn"
             [disabled]="creating || !isFormValid()"
             (click)="createArtist()">
-      <i class="fa fa-spinner fa-spin" *ngIf="creating"></i>
-      <i class="fa fa-plus" *ngIf="!creating"></i>
+      <app-icon name="spinner" class="tw-animate-spin" *ngIf="creating" />
+      <app-icon name="plus" *ngIf="!creating" />
       {{ creating ? 'Creating...' : 'Create Artist' }}
     </button>
   </app-floating-action-bar>

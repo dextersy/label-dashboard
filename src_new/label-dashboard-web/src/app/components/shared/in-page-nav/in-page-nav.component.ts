@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { IconComponent } from '../icon/icon.component';
 
 export interface InPageNavTab {
   id: string;
   label: string;
-  icon: string; // full Font Awesome class string, e.g. 'fas fa-scale-balanced'
+  icon: string; // app-icon name, e.g. 'scale'
   /** Greys out the tab and prevents clicking */
   disabled?: boolean;
   /** Trailing status icon: green check, yellow warning, or red error */
@@ -19,7 +20,7 @@ export interface InPageNavTab {
 @Component({
   selector: 'app-in-page-nav',
   standalone: true,
-  imports: [CommonModule, MatTooltipModule],
+  imports: [CommonModule, MatTooltipModule, IconComponent],
   templateUrl: './in-page-nav.component.html',
   styleUrls: ['./in-page-nav.component.scss']
 })

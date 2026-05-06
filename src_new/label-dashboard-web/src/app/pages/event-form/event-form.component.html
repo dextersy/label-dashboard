@@ -20,7 +20,7 @@
   <div class="new-event-header" *ngIf="isNewEvent">
     <div class="new-event-top">
       <button type="button" class="new-event-back" (click)="onCancel()">
-        <i class="fa fa-chevron-left"></i>
+        <app-icon name="chevron-left" />
       </button>
       <div class="new-event-title-block">
         <h1 class="new-event-title">New event</h1>
@@ -56,13 +56,13 @@
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 draft-notification" *ngIf="!isEventPublished()">
             <div class="draft-notification-header" (click)="draftExpanded = !draftExpanded">
               <div class="tw-flex tw-items-center tw-gap-3">
-                <i class="fa fa-info-circle fs-5 tw-shrink-0"></i>
+                <app-icon name="info" class="fs-5 tw-shrink-0" />
                 <div>
                   <strong>Draft mode</strong>
                   <span class="tw-block small tw-mt-1 tw-text-sm">This event is not yet visible to the public.</span>
                 </div>
               </div>
-              <i class="fa fa-chevron-down draft-caret" [class.draft-caret--open]="draftExpanded"></i>
+              <app-icon name="chevron-down" class="draft-caret" [class.draft-caret--open]="draftExpanded" />
             </div>
             <div class="draft-notification-body" [class.draft-notification-body--open]="draftExpanded">
               <div class="draft-notification-body-inner">
@@ -73,7 +73,7 @@
 
           <!-- Past Event Warning -->
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800" *ngIf="isEventPast()">
-            <i class="fas fa-exclamation-triangle tw-mr-2"></i>
+            <app-icon name="warning" class="tw-mr-2" />
             <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
           </div>
 
@@ -97,7 +97,7 @@
                     placeholder="Enter event title"
                     [disabled]="isEventPast()"
                     required>
-                  <span class="ef-field-check" *ngIf="eventData.title"><i class="fa fa-check"></i></span>
+                  <span class="ef-field-check" *ngIf="eventData.title"><app-icon name="check" /></span>
                 </div>
               </div>
               <div>
@@ -113,8 +113,8 @@
                     [(ngModel)]="eventData.date_and_time"
                     [disabled]="false"
                     required>
-                  <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><i class="fa fa-calendar"></i></span>
-                  <span class="ef-field-check" *ngIf="eventData.date_and_time"><i class="fa fa-check"></i></span>
+                  <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><app-icon name="calendar" /></span>
+                  <span class="ef-field-check" *ngIf="eventData.date_and_time"><app-icon name="check" /></span>
                 </div>
               </div>
             </div>
@@ -147,11 +147,11 @@
                     [(ngModel)]="eventData.rsvp_link"
                     placeholder="https://facebook.com/events/..."
                     [disabled]="isEventPast()">
-                  <span class="ef-field-icon-end" *ngIf="!eventData.rsvp_link"><i class="fa fa-link"></i></span>
-                  <span class="ef-field-check" *ngIf="eventData.rsvp_link"><i class="fa fa-check"></i></span>
+                  <span class="ef-field-icon-end" *ngIf="!eventData.rsvp_link"><app-icon name="link" /></span>
+                  <span class="ef-field-check" *ngIf="eventData.rsvp_link"><app-icon name="check" /></span>
                 </div>
                 <small class="ef-hint">
-                  <i class="fa fa-info-circle"></i> Facebook event page link or preferred social media page
+                  <app-icon name="info" /> Facebook event page link or preferred social media page
                 </small>
               </div>
             </div>
@@ -174,11 +174,11 @@
                   (click)="generateSlug()"
                   [disabled]="isEventPast()"
                   title="Auto-generate from title">
-                  <i class="fas fa-sync"></i>
+                  <app-icon name="refresh" />
                 </button>
               </div>
               <small class="form-text tw-text-muted">
-                <i class="fa fa-info-circle"></i> Custom URL path for shortened links. Auto-generated from title if left empty.
+                <app-icon name="info" /> Custom URL path for shortened links. Auto-generated from title if left empty.
               </small>
             </div>
 
@@ -219,7 +219,7 @@
                    (keydown)="onPosterUploadKeydown($event)"
                    aria-label="Upload event poster image">
                 <div class="ef-poster-icon">
-                  <i class="fa fa-cloud-upload-alt"></i>
+                  <app-icon name="upload" />
                 </div>
                 <p class="ef-poster-label">Tap to upload a poster</p>
                 <small class="ef-poster-hint">JPG or PNG · Max 5MB</small>
@@ -232,7 +232,7 @@
                   type="button"
                   class="poster-remove-btn"
                   (click)="removePoster()">
-                  <i class="fa fa-times"></i>
+                  <app-icon name="x" />
                 </button>
               </div>
 
@@ -246,7 +246,7 @@
             </div>
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-ghost" (click)="goToNextTab()">
-                Next: Pricing <i class="fas fa-arrow-right tw-ml-1"></i>
+                Next: Pricing <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
           </div>
@@ -263,12 +263,12 @@
                   <div class="tw-flex tw-gap-2 tw-shrink-0">
                     <button type="button" class="btn-primary tw-flex-1 sm:tw-flex-none"
                             (click)="copyToClipboard(event.buy_shortlink)" title="Copy to clipboard">
-                      <i class="fa fa-copy tw-mr-2"></i>Copy Link
+                      <app-icon name="copy" class="tw-mr-2" />Copy Link
                     </button>
                     <button type="button" class="btn-secondary tw-flex-1 sm:tw-flex-none"
                             (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
                             title="Download QR Code">
-                      <i class="fa fa-qrcode"></i>
+                      <app-icon name="scan" />
                     </button>
                   </div>
                 </div>
@@ -276,7 +276,7 @@
               </div>
               <div *ngIf="!event || !event.buy_shortlink"
                    class="tw-px-4 tw-py-3 tw-border tw-rounded-lg tw-text-sm tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-                <i class="fa fa-info-circle tw-mr-2"></i>The ticket purchase link will be generated after publishing the event.
+                <app-icon name="info" class="tw-mr-2" />The ticket purchase link will be generated after publishing the event.
               </div>
             </div>
 
@@ -358,36 +358,36 @@
               <div class="payment-methods-grid">
                 <div class="payment-method-card">
                   <input type="checkbox" id="gcash" [(ngModel)]="eventData.supports_gcash" [disabled]="isEventPast()">
-                  <label for="gcash"><i class="fas fa-mobile-alt"></i><span>GCash</span></label>
+                  <label for="gcash"><app-icon name="mobile" /><span>GCash</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="qrph" [(ngModel)]="eventData.supports_qrph" [disabled]="isEventPast()">
-                  <label for="qrph"><i class="fas fa-qrcode"></i><span>QR Ph</span></label>
+                  <label for="qrph"><app-icon name="scan" /><span>QR Ph</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="card" [(ngModel)]="eventData.supports_card" [disabled]="isEventPast()">
-                  <label for="card"><i class="fas fa-credit-card"></i><span>Credit / Debit Card</span></label>
+                  <label for="card"><app-icon name="credit-card" /><span>Credit / Debit Card</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="ubp" [(ngModel)]="eventData.supports_ubp" [disabled]="isEventPast()">
-                  <label for="ubp"><i class="fas fa-university"></i><span>UnionBank</span></label>
+                  <label for="ubp"><app-icon name="bank" /><span>UnionBank</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="maya" [(ngModel)]="eventData.supports_maya" [disabled]="isEventPast()">
-                  <label for="maya"><i class="fas fa-wallet"></i><span>Maya</span></label>
+                  <label for="maya"><app-icon name="wallet" /><span>Maya</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="grabpay" [(ngModel)]="eventData.supports_grabpay" [disabled]="isEventPast()">
-                  <label for="grabpay"><i class="fas fa-car"></i><span>GrabPay</span></label>
+                  <label for="grabpay"><app-icon name="car" /><span>GrabPay</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="dob" [(ngModel)]="eventData.supports_dob" [disabled]="isEventPast()">
-                  <label for="dob"><i class="fas fa-landmark"></i><span>Direct Online Banking</span></label>
+                  <label for="dob"><app-icon name="bank" /><span>Direct Online Banking</span></label>
                 </div>
               </div>
               <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))"
                    class="tw-inline-flex tw-items-start tw-gap-2 tw-text-sm tw-text-violet-700 tw-mt-3">
-                <i class="fas fa-info-circle tw-mt-0.5 tw-shrink-0"></i>
+                <app-icon name="info" class="tw-mt-0.5 tw-shrink-0" />
                 <div>
                   <strong class="tw-font-semibold">Minimum transaction requirements</strong> —
                   <span *ngIf="paymentConfig?.min_card && eventData.supports_card">
@@ -402,7 +402,7 @@
 
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-ghost" (click)="goToNextTab()" *ngIf="!isEventDraft()">
-                Next: Scanner <i class="fas fa-arrow-right tw-ml-1"></i>
+                Next: Scanner <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
           </div>
@@ -416,7 +416,7 @@
             </app-ticket-types>
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-ghost" (click)="goToNextTab()">
-                Next: Buy Page <i class="fas fa-arrow-right tw-ml-1"></i>
+                Next: Buy Page <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
           </div>
@@ -441,14 +441,14 @@
                   <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [value]="event.verification_link" readonly>
                   <button type="button" class="btn-primary tw-shrink-0"
                           (click)="copyToClipboard(event.verification_link)" title="Copy to clipboard">
-                    <i class="fa fa-copy tw-mr-2"></i>Copy Link
+                    <app-icon name="copy" class="tw-mr-2" />Copy Link
                   </button>
                 </div>
                 <p class="tw-text-xs tw-text-muted tw-mt-1.5">Share with ticket scanners</p>
               </div>
               <div *ngIf="!event || !event.verification_link"
                    class="tw-px-4 tw-py-3 tw-border tw-rounded-lg tw-text-sm tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-                <i class="fa fa-info-circle tw-mr-2"></i>The verification link will be generated after publishing the event.
+                <app-icon name="info" class="tw-mr-2" />The verification link will be generated after publishing the event.
               </div>
             </div>
 
@@ -463,17 +463,17 @@
                         class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                         (click)="copyVerificationPIN()" title="Copy PIN"
                         [disabled]="!eventData.verification_pin">
-                  <i class="fas fa-copy tw-text-sm"></i>
+                  <app-icon name="copy" class="tw-text-sm" />
                 </button>
                 <button type="button"
                         class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                         (click)="generateVerificationPIN()" title="Generate random PIN">
-                  <i class="fas fa-sync tw-text-sm"></i>
+                  <app-icon name="refresh" class="tw-text-sm" />
                 </button>
               </div>
               <p class="tw-text-xs tw-text-muted tw-mt-1.5">6-digit PIN for ticket scanners</p>
               <small class="form-text tw-text-warning" *ngIf="pinRefreshed">
-                <i class="fa fa-exclamation-triangle"></i> Save Changes to apply new PIN code
+                <app-icon name="warning" /> Save Changes to apply new PIN code
               </small>
             </div>
           </div>
@@ -491,7 +491,7 @@
     class="btn-secondary"
     (click)="previewBuyPage()"
     *ngIf="!isNewEvent && eventId && isEventDraft()">
-    <i class="fa fa-eye"></i> Preview Buy Page
+    <app-icon name="eye" /> Preview Buy Page
   </button>
 
   <!-- Draft secondary button -->
@@ -501,8 +501,8 @@
     (click)="onSave()"
     [disabled]="saving || isEventPast()"
     *ngIf="!isNewEvent && isEventDraft()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-save" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="save" class="" *ngIf="!saving" />
     <span *ngIf="!saving">Save as Draft</span>
     <span *ngIf="saving">Saving...</span>
   </button>
@@ -514,8 +514,8 @@
     (click)="onUnpublish()"
     [disabled]="saving || hasConfirmedTickets() || isEventPast()"
     *ngIf="isEventPublished() && !hasConfirmedTickets()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-eye-slash" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="eye-off" *ngIf="!saving" />
     <span *ngIf="!saving">Unpublish</span>
     <span *ngIf="saving">Unpublishing...</span>
   </button>
@@ -528,8 +528,8 @@
     [disabled]="saving || !isNewEventValid()"
     [class.ef-create-btn--disabled]="!isNewEventValid()"
     *ngIf="isNewEvent">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-rocket" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="rocket" *ngIf="!saving" />
     <span *ngIf="!saving">Create event</span>
     <span *ngIf="saving">Creating...</span>
   </button>
@@ -541,8 +541,8 @@
     (click)="onPublish()"
     [disabled]="saving || isEventPast()"
     *ngIf="!isNewEvent && isEventDraft()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-rocket" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="rocket" *ngIf="!saving" />
     <span *ngIf="!saving">Publish</span>
     <span *ngIf="saving">Publishing...</span>
   </button>
@@ -554,8 +554,8 @@
     (click)="onSave()"
     [disabled]="saving || isEventPast()"
     *ngIf="isEventPublished()">
-    <i class="fa fa-spinner fa-spin" *ngIf="saving"></i>
-    <i class="fa fa-save" *ngIf="!saving"></i>
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="save" class="" *ngIf="!saving" />
     <span *ngIf="!saving">Save changes</span>
     <span *ngIf="saving">Saving...</span>
   </button>

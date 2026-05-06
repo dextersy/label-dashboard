@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface PipelineStage {
   status: string;
@@ -11,7 +12,7 @@ const FLOW_ORDER = ['Draft', 'For Submission', 'Pending', 'Live'];
 
 @Component({
   selector: 'app-release-pipeline',
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './release-pipeline.component.html',
   styleUrl: './release-pipeline.component.scss'
 })
@@ -49,13 +50,13 @@ export class ReleasePipelineComponent {
 
   getIcon(status: string): string {
     const icons: Record<string, string> = {
-      'Draft':          'fas fa-pencil-alt',
-      'For Submission': 'fas fa-paper-plane',
-      'Pending':        'fas fa-hourglass-half',
-      'Live':           'fas fa-broadcast-tower',
-      'Taken Down':     'fas fa-ban'
+      'Draft':          'edit',
+      'For Submission': 'paper-plane',
+      'Pending':        'hourglass',
+      'Live':           'broadcast',
+      'Taken Down':     'ban'
     };
-    return icons[status] ?? 'fas fa-circle';
+    return icons[status] ?? 'circle-dot';
   }
 
   goToReleases(): void {

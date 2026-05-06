@@ -6,6 +6,7 @@ import { ReleaseService, Release } from '../../../services/release.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 interface CsvEarningRow {
   catalog_no: string;
@@ -16,7 +17,7 @@ interface CsvEarningRow {
 
 @Component({
     selector: 'app-bulk-add-earnings-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent, FloatingActionBarComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, FloatingActionBarComponent, IconComponent],
     templateUrl: './bulk-add-earnings-tab.component.html',
     styleUrl: './bulk-add-earnings-tab.component.scss'
 })

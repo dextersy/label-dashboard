@@ -26,10 +26,7 @@
             'cd-icon-warning': data?.type === 'warning',
             'cd-icon-danger':  data?.type === 'danger'
           }">
-            <i class="fas" [ngClass]="{
-              'fa-exclamation-triangle': data?.type === 'danger' || data?.type === 'warning',
-              'fa-info-circle':          data?.type === 'info' || !data?.type
-            }"></i>
+            <app-icon [name]="(data?.type === 'danger' || data?.type === 'warning') ? 'warning' : 'info'" />
           </span>
           <h5 class="cd-modal-title" id="confirmation-dialog-title">{{ data?.title }}</h5>
         </div>

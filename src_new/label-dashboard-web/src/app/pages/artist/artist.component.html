@@ -72,11 +72,11 @@
       <div class="tw-col-span-12">
         <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
-            <i class="fas fa-user-plus fa-4x tw-mb-3 tw-text-muted"></i>
+            <app-icon name="user-plus" class="fa-4x tw-mb-3 tw-text-muted" />
             <h4>No Artists Available</h4>
             <p class="tw-text-muted">No artists found for your label. Create a new artist to get started.</p>
             <button class="btn-primary" *ngIf="isAdmin" (click)="openCreateArtistModal()">
-              <i class="fa fa-plus tw-mr-1"></i>Create New Artist
+              <app-icon name="plus" class="tw-mr-1" />Create New Artist
             </button>
           </div>
         </div>
@@ -88,7 +88,7 @@
       <div class="tw-col-span-12">
         <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-8">
           <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
-            <i class="far fa-user-circle fa-4x tw-mb-3 tw-text-muted"></i>
+            <app-icon name="user" class="fa-4x tw-mb-3 tw-text-muted" />
             <h4>No Artist Selected</h4>
             <p class="tw-text-muted">Please select an artist from the dropdown above to manage their profile.</p>
           </div>

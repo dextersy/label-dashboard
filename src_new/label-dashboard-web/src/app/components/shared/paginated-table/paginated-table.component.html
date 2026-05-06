@@ -30,7 +30,7 @@
                 [disabled]="isHeaderActionDisabled(headerActions[0])"
                 [title]="resolveHeaderActionTitle(headerActions[0])"
                 (click)="headerActions[0].handler()">
-                <i [class]="resolveHeaderActionIcon(headerActions[0])"></i>
+                <app-icon [name]="resolveHeaderActionIcon(headerActions[0])" />
                 <span class="tw-ml-1">{{ resolveHeaderActionLabel(headerActions[0]) }}</span>
               </button>
             </ng-container>
@@ -41,7 +41,7 @@
               [class.active]="mobileActionsOpen"
               (click)="toggleMobileActions($event)"
               title="Actions">
-              <i class="fas fa-ellipsis-v"></i>
+              <app-icon name="more-vertical" />
             </button>
 
             <!-- Desktop header action buttons (≥ 576px) -->
@@ -56,7 +56,7 @@
                   [disabled]="isHeaderActionDisabled(action)"
                   [title]="resolveHeaderActionTitle(action)"
                   (click)="action.handler()">
-                  <i [class]="resolveHeaderActionIcon(action)"></i>
+                  <app-icon [name]="resolveHeaderActionIcon(action)" />
                   <span class="tw-ml-1">{{ resolveHeaderActionLabel(action) }}</span>
                 </button>
               </ng-container>
@@ -68,7 +68,7 @@
               [class.search-active]="showSearchFilters"
               (click)="toggleSearchFilters()"
               title="Search">
-              <i class="fa fa-search"></i>
+              <app-icon name="search" />
             </button>
           </div>
         </div>
@@ -76,7 +76,7 @@
       
       <!-- Search bar -->
       <div *ngIf="showSearch && displayColumns.length > 0 && showSearchFilters" class="search-bar-panel">
-        <i class="fa fa-search search-bar-icon"></i>
+        <app-icon name="search" class="search-bar-icon" />
         <div class="search-fields-row">
           <div class="search-field" *ngFor="let column of displayColumns" [hidden]="column.searchable === false">
             <input
@@ -115,10 +115,10 @@
           </div>
         </div>
         <button *ngIf="hasActiveFilters()" type="button" class="btn-icon search-bar-clear" (click)="clearFilters()" title="Clear filters">
-          <i class="fa fa-filter-circle-xmark"></i>
+          <app-icon name="filter-x" />
         </button>
         <button type="button" class="btn-icon search-bar-close" (click)="toggleSearchFilters()" title="Hide search">
-          <i class="fa fa-times"></i>
+          <app-icon name="x" />
         </button>
       </div>
       <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
@@ -156,9 +156,9 @@
                       (click)="onSort(column)"
                       [style.cursor]="column.sortable ? 'pointer' : 'default'">
                     {{ column.label }}
-                    <i *ngIf="column.sortable" 
-                       class="fa tw-ml-1" 
-                       [class]="getSortIcon(column)"></i>
+                    <app-icon *ngIf="column.sortable"
+                              [name]="getSortIconName(column)"
+                              [class]="'tw-ml-1 ' + getSortIconClass(column)" />
                   </th>
                   <th *ngIf="hasActionsColumn()" class="actions-column"></th>
                 </tr>
@@ -169,8 +169,8 @@
                   <td [attr.colspan]="getTotalColspan()" class="tw-p-3">
                     <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-2">
                       <span class="tw-font-bold text-primary">
-                        <i class="fa fa-check-circle tw-mr-2" *ngIf="!bulkOperationsLoading"></i>
-                        <i class="fa fa-spinner fa-spin tw-mr-2" *ngIf="bulkOperationsLoading"></i>
+                        <app-icon name="check-circle" class="tw-mr-2" *ngIf="!bulkOperationsLoading" />
+                        <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="bulkOperationsLoading" />
                         {{ getSelectedCount() }} item(s) selected
                         <span *ngIf="bulkOperationsLoading" class="tw-ml-2 tw-text-muted">- Processing...</span>
                       </span>
@@ -184,7 +184,7 @@
                           [disabled]="isOperationsDisabled()"
                           (click)="clearSelection()"
                           title="Clear selection">
-                          <i class="fa fa-times"></i> Clear
+                          <app-icon name="x" /> Clear
                         </button>
                       </div>
                     </div>
@@ -234,7 +234,7 @@
                           target="_blank"
                           *ngIf="item[column.key]"
                           class="btn-sm btn-secondary">
-                          <i class="fas fa-external-link-alt"></i>
+                          <app-icon name="external-link" />
                         </a>
                         <span *ngIf="!item[column.key]" class="tw-text-muted">-</span>
                       </span>
@@ -249,7 +249,7 @@
                                 (click)="onBreakdownButtonClick(item, column.key)"
                                 title="View breakdown"
                                 style="border: none; box-shadow: none;">
-                          <i class="fas fa-chart-pie"></i>
+                          <app-icon name="chart-pie" />
                         </button>
                       </div>
 
@@ -283,7 +283,7 @@
                         <button class="kebab-btn" type="button"
                                 (click)="toggleKebab(item, $event)"
                                 [class.active]="isKebabOpen(item)">
-                          <i class="fas fa-ellipsis-v"></i>
+                          <app-icon name="more-vertical" />
                         </button>
                       </div>
                     </td>
@@ -364,7 +364,7 @@
       [class.btn-danger]="action.type === 'danger'"
       [disabled]="isHeaderActionDisabled(action)"
       (click)="action.handler(); closeAllKebabs()">
-      <i [class]="resolveHeaderActionIcon(action) + ' me-2'"></i>{{ resolveHeaderActionLabel(action) }}
+      <app-icon [name]="resolveHeaderActionIcon(action)" class="tw-mr-2" />{{ resolveHeaderActionLabel(action) }}
     </button>
   </ng-container>
 </div>
@@ -383,7 +383,7 @@
             [class.btn-danger]="action.type === 'danger'"
             [class.btn-secondary]="!action.type || action.type === 'secondary'"
             (click)="action.handler(openKebabItem); closeAllKebabs()">
-      <i [class]="action.icon + ' me-2'"></i>{{ action.label }}
+      <app-icon [name]="action.icon" class="tw-mr-2" />{{ action.label }}
     </button>
   </ng-container>
   <ng-container *ngIf="actions.length === 0 && actionsContent">

@@ -18,6 +18,7 @@ import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 import { EventWalkInSettingsComponent } from '../events/components/event-walk-in-settings/event-walk-in-settings.component';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 export interface TicketType {
   id?: number;
@@ -61,7 +62,7 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 
     InPageNavComponent,
     FloatingActionBarComponent,
     EventWalkInSettingsComponent
-  ],
+, IconComponent],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
 })
@@ -315,15 +316,15 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
   get navTabs(): InPageNavTab[] {
     const tabs: InPageNavTab[] = [
-      { id: 'details', label: 'Details', icon: 'fa fa-info-circle' },
-      { id: 'pricing', label: 'Pricing', icon: 'fa fa-ticket' },
-      { id: 'purchase', label: 'Buy page', icon: 'fa fa-shopping-cart' },
+      { id: 'details', label: 'Details', icon: 'info' },
+      { id: 'pricing', label: 'Pricing', icon: 'ticket' },
+      { id: 'purchase', label: 'Buy page', icon: 'cart' },
     ];
     if (!this.isNewEvent) {
-      tabs.push({ id: 'walk-in', label: 'Walk-in', icon: 'fas fa-walking' });
+      tabs.push({ id: 'walk-in', label: 'Walk-in', icon: 'walking' });
     }
     if (!this.isEventDraft()) {
-      tabs.push({ id: 'scanner', label: 'Scanner', icon: 'fa fa-qrcode' });
+      tabs.push({ id: 'scanner', label: 'Scanner', icon: 'scan' });
     }
     return tabs;
   }

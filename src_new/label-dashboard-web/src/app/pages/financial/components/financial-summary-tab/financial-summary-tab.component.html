@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-tachometer-alt tw-mr-2"></i>
+      <app-icon name="chart-bar" class="tw-mr-2" />
       Summary
     </h3>
     <p class="tw-mb-0 tw-text-muted">An overview of the current balance, latest earnings, and royalties.</p>
@@ -22,7 +22,7 @@
         <div class="tw-flex tw-items-center tw-justify-center tw-gap-2">
           <h1 class="balance-amount tw-mb-0" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
           <span class="tw-relative tw-group tw-cursor-help tw-self-center">
-            <i class="fa-solid fa-circle-info tw-text-white tw-text-xl tw-opacity-80 hover:tw-opacity-100 tw-transition-opacity"></i>
+            <app-icon name="info" class="fa-solid tw-text-white tw-text-xl tw-opacity-80 hover:tw-opacity-100 tw-transition-opacity" />
             <span class="tw-absolute tw-bottom-full tw-left-1/2 -tw-translate-x-1/2 tw-mb-2 tw-w-64 tw-rounded-lg tw-bg-gray-900 tw-px-3 tw-py-2 tw-text-xs tw-text-white tw-shadow-xl tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity tw-pointer-events-none tw-z-10 tw-text-left tw-leading-relaxed">
               This is your total earned royalties less payments and advances made to you.
             </span>
@@ -31,7 +31,7 @@
 
         <!-- Payout note widget -->
         <div class="payout-note tw-mt-3 tw-w-full" *ngIf="payoutSettings">
-          <i class="fas fa-calendar-alt payout-note-icon"></i>Paid out on the <strong>15th of the month</strong> when your payout point of
+          <app-icon name="calendar" class="payout-note-icon" />Paid out on the <strong>15th of the month</strong> when your payout point of
           <a (click)="viewPaymentsDetails.emit()">{{ formatCurrency(payoutSettings.payout_point) }}</a>
           is reached.
         </div>
@@ -42,7 +42,7 @@
         <button class="btn-primary pay-now-btn"
                 (click)="onPayNow()"
                 [disabled]="summary.currentBalance <= 0">
-          <i class="fas fa-credit-card tw-mr-2"></i>Pay Now
+          <app-icon name="credit-card" class="tw-mr-2" />Pay Now
         </button>
       </ng-template>
     </div>
@@ -98,7 +98,7 @@
               <div class="tw-flex tw-items-center tw-gap-3">
                 <img *ngIf="earning.cover_art" [src]="earning.cover_art" alt="" class="tw-w-9 tw-h-9 tw-rounded tw-object-cover tw-flex-shrink-0">
                 <div *ngIf="!earning.cover_art" class="tw-w-9 tw-h-9 tw-rounded tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
-                  <i class="fas fa-music tw-text-gray-300 tw-text-xs"></i>
+                  <app-icon name="music" class="tw-text-gray-300 tw-text-xs" />
                 </div>
                 <div class="tw-min-w-0">
                   <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ earning.release_title || '(None)' }}</div>
@@ -135,7 +135,7 @@
               <div class="tw-flex tw-items-center tw-gap-3">
                 <img *ngIf="royalty.cover_art" [src]="royalty.cover_art" alt="" class="tw-w-9 tw-h-9 tw-rounded tw-object-cover tw-flex-shrink-0">
                 <div *ngIf="!royalty.cover_art" class="tw-w-9 tw-h-9 tw-rounded tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-flex-shrink-0">
-                  <i class="fas fa-music tw-text-gray-300 tw-text-xs"></i>
+                  <app-icon name="music" class="tw-text-gray-300 tw-text-xs" />
                 </div>
                 <div class="tw-min-w-0">
                   <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ royalty.release_title || '(None)' }}</div>

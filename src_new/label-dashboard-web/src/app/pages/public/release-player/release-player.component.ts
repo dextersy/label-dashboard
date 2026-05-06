@@ -5,6 +5,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { PublicService } from '../../../services/public.service';
 import { MetaService } from '../../../services/meta.service';
 import { AudioPlayerService, AudioPlayerState, PlayableTrack } from '../../../services/audio-player.service';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface ReleasePlayerData {
   release: {
@@ -37,7 +38,7 @@ export interface ReleasePlayerData {
 
 @Component({
   selector: 'app-release-player',
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './release-player.component.html',
   styleUrls: ['./release-player.component.scss']
 })

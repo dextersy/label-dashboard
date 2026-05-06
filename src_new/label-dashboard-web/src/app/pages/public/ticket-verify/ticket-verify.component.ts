@@ -16,6 +16,7 @@ import { MatDividerModule } from '@angular/material/divider';
 
 // QR Code scanner
 import { Html5Qrcode, Html5QrcodeResult } from 'html5-qrcode';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-ticket-verify',
@@ -29,7 +30,7 @@ import { Html5Qrcode, Html5QrcodeResult } from 'html5-qrcode';
         MatCardModule,
         MatIconModule,
         MatDividerModule
-    ],
+, IconComponent],
     templateUrl: './ticket-verify.component.html',
     styleUrls: ['./ticket-verify.component.scss']
 })

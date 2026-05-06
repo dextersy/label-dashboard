@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-paper-plane tw-mr-2"></i>
+          <app-icon name="paper-plane" class="tw-mr-2" />
           Send Test Email
         </h5>
         <button type="button" class="btn-close" (click)="hide()" [disabled]="loading"></button>
@@ -38,7 +38,7 @@
               
               <div *ngIf="getInvalidEmails().length > 0" class="tw-text-danger tw-mt-1">
                 <small>
-                  <i class="fas fa-exclamation-triangle tw-mr-1"></i>
+                  <app-icon name="warning" class="tw-mr-1" />
                   Invalid emails: {{ getInvalidEmails().join(', ') }}
                 </small>
               </div>
@@ -68,7 +68,7 @@
 
           <!-- Warning Note -->
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
-            <i class="fas fa-info-circle tw-mr-2"></i>
+            <app-icon name="info" class="tw-mr-2" />
             <strong>Note:</strong> Test emails will be sent with the same content as your main email, 
             but only to the addresses specified above. The actual recipients won't receive these test emails.
           </div>
@@ -89,7 +89,7 @@
           (click)="onSendTest()"
           [disabled]="!isFormValid() || loading">
           <span *ngIf="loading" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
-          <i *ngIf="!loading" class="fas fa-paper-plane tw-mr-2"></i>
+          <app-icon name="paper-plane" class="tw-mr-2" *ngIf="!loading" />
           <span *ngIf="loading">Sending Test...</span>
           <span *ngIf="!loading">Send Test to {{ getEmailCount() }} Recipients</span>
         </button>

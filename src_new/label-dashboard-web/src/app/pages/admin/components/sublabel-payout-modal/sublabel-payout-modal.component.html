@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-money-bill-wave tw-mr-2"></i>
+          <app-icon name="currency" class="tw-mr-2" />
           Pay Out to {{ sublabel?.brand_name }}
         </h5>
         <button type="button" class="btn-close" (click)="onClose()" [disabled]="submitting"></button>
@@ -24,11 +24,11 @@
                 <strong [class.tw-text-success]="hasEnoughWalletBalance()" [class.tw-text-danger]="!hasEnoughWalletBalance()">
                   ₱{{ walletBalance | number:'1.2-2' }}
                 </strong>
-                <i class="fas fa-check-circle tw-text-success tw-ml-1" *ngIf="hasEnoughWalletBalance()"></i>
-                <i class="fas fa-times-circle tw-text-danger tw-ml-1" *ngIf="!hasEnoughWalletBalance()"></i>
+                <app-icon name="check-circle" class="tw-text-success tw-ml-1" *ngIf="hasEnoughWalletBalance()" />
+                <app-icon name="x-circle" class="tw-text-danger tw-ml-1" *ngIf="!hasEnoughWalletBalance()" />
               </span>
               <span *ngIf="loadingWalletBalance" class="tw-text-muted">
-                <i class="fas fa-spinner fa-spin tw-mr-1"></i>Loading...
+                <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" />Loading...
               </span>
             </div>
           </div>
@@ -102,7 +102,7 @@
               </option>
             </select>
             <div class="form-text" *ngIf="loadingPaymentMethods">
-              <i class="fas fa-spinner fa-spin tw-mr-1"></i> Loading payment methods...
+              <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" /> Loading payment methods...
             </div>
           </div>
 
@@ -120,16 +120,15 @@
                 [title]="shouldDisableOfflineToggle() ? getInsufficientBalanceTooltip() : ''">
               <label class="form-check-label" for="offlinePayment">
                 This is an offline payment
-                <i class="fas fa-info-circle tw-text-warning tw-ml-1" 
-                   *ngIf="shouldDisableOfflineToggle()" 
-                   [title]="getInsufficientBalanceTooltip()"></i>
+                <app-icon name="info" class="tw-text-warning tw-ml-1" *ngIf="shouldDisableOfflineToggle()" 
+                   [title]="getInsufficientBalanceTooltip()" />
               </label>
             </div>
           </div>
 
           <!-- Manual Payment Selection Message -->
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal alert-primary text-dark tw-text-gray-900" *ngIf="isManualSelected()">
-            <i class="fas fa-info-circle"></i> Manual payments are automatically processed as offline payments.
+            <app-icon name="info" /> Manual payments are automatically processed as offline payments.
           </div>
 
           <!-- Manual Payment Details (shown when manual payment is selected) -->
@@ -215,11 +214,11 @@
         </button>
         <button type="button" class="btn-primary" (click)="onSubmit()" [disabled]="submitting">
           <span *ngIf="!submitting">
-            <i class="fas fa-money-bill-wave tw-mr-1"></i>
+            <app-icon name="currency" class="tw-mr-1" />
             Pay Out ₱{{ payoutData.amount | number:'1.2-2' }}
           </span>
           <span *ngIf="submitting">
-            <i class="fas fa-spinner fa-spin tw-mr-1"></i>
+            <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" />
             Processing Payment...
           </span>
         </button>

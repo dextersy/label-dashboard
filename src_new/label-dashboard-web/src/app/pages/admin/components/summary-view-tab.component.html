@@ -2,7 +2,7 @@
 <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-overflow-hidden tw-mb-6">
   <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
     <h3 class="tw-mb-2">
-      <i class="fas fa-chart-bar tw-mr-2"></i>
+      <app-icon name="chart-bar" class="tw-mr-2" />
       Music Earnings
     </h3>
     <p class="tw-mb-0 tw-text-muted">Overview of earnings across all artists and releases.</p>
@@ -53,22 +53,22 @@
         <div class="financial-summary-item">
           <span class="financial-item-label">Physical</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.physical_earnings)">{{ formatCurrency(earningsSummary.physical_earnings) }}</span>
-          <i class="financial-item-icon fas fa-shopping-bag"></i>
+          <app-icon name="cart" class="financial-item-icon" />
         </div>
         <div class="financial-summary-item">
           <span class="financial-item-label">Downloads</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.download_earnings)">{{ formatCurrency(earningsSummary.download_earnings) }}</span>
-          <i class="financial-item-icon fas fa-download"></i>
+          <app-icon name="download" class="financial-item-icon" />
         </div>
         <div class="financial-summary-item">
           <span class="financial-item-label">Streaming</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.streaming_earnings)">{{ formatCurrency(earningsSummary.streaming_earnings) }}</span>
-          <i class="financial-item-icon fas fa-headphones"></i>
+          <app-icon name="headphones" class="financial-item-icon" />
         </div>
         <div class="financial-summary-item">
           <span class="financial-item-label">Sync</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.sync_earnings)">{{ formatCurrency(earningsSummary.sync_earnings) }}</span>
-          <i class="financial-item-icon fas fa-film"></i>
+          <app-icon name="film" class="financial-item-icon" />
         </div>
       </div>
     </div>

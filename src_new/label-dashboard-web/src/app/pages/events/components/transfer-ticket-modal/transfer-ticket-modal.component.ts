@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventTicket } from '../event-tickets-tab/event-tickets-tab.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface TransferData {
   name: string;
@@ -11,7 +12,7 @@ export interface TransferData {
 
 @Component({
     selector: 'app-transfer-ticket-modal',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './transfer-ticket-modal.component.html',
     styleUrl: './transfer-ticket-modal.component.scss'
 })

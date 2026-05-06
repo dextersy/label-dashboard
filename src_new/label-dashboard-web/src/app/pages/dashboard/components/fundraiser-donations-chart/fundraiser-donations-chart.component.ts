@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface FundraiserDonations {
   id: number;
@@ -15,7 +16,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-fundraiser-donations-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './fundraiser-donations-chart.component.html',
   styleUrl: './fundraiser-donations-chart.component.scss'
 })

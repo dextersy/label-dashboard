@@ -5,13 +5,13 @@
     <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-flex-col sm:tw-flex-row sm:tw-justify-between sm:tw-items-start tw-gap-3">
       <div>
         <h3 class="tw-mb-2">
-          <i class="fas fa-user-cog tw-mr-2"></i>
+          <app-icon name="settings" class="tw-mr-2" />
           Profile Settings
         </h3>
         <p class="tw-mb-0 tw-text-muted">Update your name and account password.</p>
       </div>
       <button class="btn-sm btn-secondary tw-shrink-0" (click)="goBack()">
-        <i class="fa fa-arrow-left tw-mr-1"></i> Back to Dashboard
+        <app-icon name="arrow-left" class="tw-mr-1" /> Back to Dashboard
       </button>
     </div>
   </div>
@@ -39,7 +39,7 @@
           <div class="tw-flex tw-items-center tw-gap-2">
             <span class="tw-inline-flex tw-items-center tw-px-2 tw-py-0.5 tw-rounded tw-text-xs tw-font-semibold tw-bg-green-100 tw-text-green-700">Active</span>
             <span *ngIf="profile.is_admin" class="tw-inline-flex tw-items-center tw-gap-1 tw-px-2 tw-py-0.5 tw-rounded tw-text-xs tw-font-semibold tw-text-white" style="background-color: var(--brand-color, #3b82f6)">
-              <i class="fa fa-shield tw-text-xs"></i> Administrator
+              <app-icon name="shield" class="tw-text-xs" /> Administrator
             </span>
           </div>
         </div>
@@ -119,7 +119,7 @@
             class="btn-primary"
             [disabled]="saving">
             <span *ngIf="saving" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
-            <i *ngIf="!saving" class="fa fa-save tw-mr-2"></i>
+            <app-icon name="save" class=" tw-mr-2" *ngIf="!saving" />
             {{ saving ? 'Saving...' : 'Save Changes' }}
           </button>
         </div>
@@ -144,7 +144,7 @@
           type="button"
           class="btn-secondary btn-sm"
           (click)="togglePasswordChange()">
-          <i class="fa fa-key tw-mr-2"></i>Change Password
+          <app-icon name="key" class="tw-mr-2" />Change Password
         </button>
       </div>
 
@@ -170,7 +170,7 @@
               (click)="toggleCurrentPasswordVisibility()"
               tabindex="-1"
               aria-label="Toggle password visibility">
-              <i [class]="showCurrentPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              <app-icon [name]="showCurrentPassword ? 'eye-off' : 'eye'" />
             </button>
           </div>
           <p *ngIf="errors.current_password" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.current_password }}</p>
@@ -195,7 +195,7 @@
               (click)="toggleNewPasswordVisibility()"
               tabindex="-1"
               aria-label="Toggle password visibility">
-              <i [class]="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              <app-icon [name]="showNewPassword ? 'eye-off' : 'eye'" />
             </button>
           </div>
           <p *ngIf="errors.new_password" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.new_password }}</p>
@@ -221,7 +221,7 @@
               (click)="toggleConfirmPasswordVisibility()"
               tabindex="-1"
               aria-label="Toggle password visibility">
-              <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              <app-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" />
             </button>
           </div>
           <p *ngIf="errors.confirm_password" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.confirm_password }}</p>
@@ -241,7 +241,7 @@
             class="btn-primary"
             [disabled]="changingPassword">
             <span *ngIf="changingPassword" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
-            <i *ngIf="!changingPassword" class="fa fa-key tw-mr-2"></i>
+            <app-icon name="key" class="tw-mr-2" *ngIf="!changingPassword" />
             {{ changingPassword ? 'Changing...' : 'Change Password' }}
           </button>
         </div>

@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface PaymentArtist {
   id: number;
@@ -9,7 +10,7 @@ export interface PaymentArtist {
 
 @Component({
     selector: 'app-payment-confirmation-dialog',
-    imports: [CommonModule],
+    imports: [CommonModule, IconComponent],
     template: `
     <div class="payment-modal-overlay modal fade show d-block" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-lg" role="document">
@@ -17,12 +18,12 @@ export interface PaymentArtist {
           <div class="modal-header">
             <h4 class="modal-title">Confirm Payment</h4>
             <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cancel.emit()">
-              <i class="fas fa-times"></i>
+              <app-icon name="x" />
             </button>
           </div>
           <div class="modal-body">
             <div class="alert alert-info">
-              <i class="fas fa-info-circle"></i>
+              <app-icon name="info" />
               Are you sure you want to pay the following balances totaling <strong>{{ formatCurrency(totalAmount) }}</strong>?
             </div>
             
@@ -50,7 +51,7 @@ export interface PaymentArtist {
             </div>
 
             <div class="alert alert-warning mt-3" *ngIf="availableBalance < totalAmount">
-              <i class="fas fa-exclamation-triangle"></i>
+              <app-icon name="warning" />
               <strong>Warning:</strong> Insufficient wallet balance. 
               Available: {{ formatCurrency(availableBalance) }}, Required: {{ formatCurrency(totalAmount) }}
             </div>
@@ -62,7 +63,7 @@ export interface PaymentArtist {
                     [disabled]="availableBalance < totalAmount || processing"
                     (click)="confirm.emit()">
               <span *ngIf="processing" class="spinner-border spinner-border-sm me-2"></span>
-              <i class="fas fa-credit-card" *ngIf="!processing"></i>
+              <app-icon name="credit-card" *ngIf="!processing" />
               {{ processing ? 'Processing...' : 'Pay Now' }}
             </button>
           </div>

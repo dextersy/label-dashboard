@@ -11,6 +11,7 @@ import { ReleaseService } from '../../../../services/release.service';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { PaginatedTableComponent, TableAction, TableColumn, HeaderAction } from '../../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface ArtistRelease {
   id: number;
@@ -38,7 +39,7 @@ export interface ArtistRelease {
 
 @Component({
     selector: 'app-artist-releases-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent],
     templateUrl: './artist-releases-tab.component.html',
     styleUrl: './artist-releases-tab.component.scss'
 })
@@ -127,14 +128,14 @@ export class ArtistReleasesTabComponent {
           const statusClass = this.getStatusClass(release.status);
           let html = `<span class="${statusClass}">${release.status}</span>`;
           if (release.exclude_from_epk) {
-            html += ` <i class="fa fa-eye-slash text-muted ms-2" title="Hidden from EPK"></i>`;
+            html += ` <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-gray-400" style="display:inline-block;vertical-align:middle;margin-left:6px" title="Hidden from EPK"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
           }
           if (this.hasValidationIssues(release)) {
             const tooltip = this.getValidationTooltip(release).replace(/"/g, '&quot;');
             if (this.hasValidationErrors(release)) {
-              html += ` <i class="fa fa-exclamation-circle text-danger ms-2" title="${tooltip}"></i>`;
+              html += ` <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-red-500" style="display:inline-block;vertical-align:middle;margin-left:6px" title="${tooltip}"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
             } else {
-              html += ` <i class="fa fa-exclamation-triangle text-warning ms-2" title="${tooltip}"></i>`;
+              html += ` <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-amber-500" style="display:inline-block;vertical-align:middle;margin-left:6px" title="${tooltip}"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
             }
           }
           return html;
@@ -146,7 +147,7 @@ export class ArtistReleasesTabComponent {
   get headerActions(): HeaderAction[] {
     if (!this.artist) return [];
     return [{
-      icon: () => this.isAdmin ? 'fas fa-plus' : 'fas fa-upload',
+      icon: () => this.isAdmin ? 'plus' : 'upload',
       label: () => this.isAdmin ? 'Create Release' : 'Submit Release',
       handler: () => this.navigateToCreateRelease(),
       title: () => this.isAdmin ? 'Create new release' : 'Submit release for review',
@@ -157,57 +158,57 @@ export class ArtistReleasesTabComponent {
   get releaseActions(): TableAction[] {
     return [
       {
-        icon: 'fa-solid fa-paper-plane',
+        icon: 'paper-plane',
         label: 'Submit for Review',
         type: 'primary',
         handler: (release: ArtistRelease) => this.onSubmitForReview(release),
         hidden: (release: ArtistRelease) => !this.canSubmitForReview(release)
       },
       {
-        icon: 'fa-solid fa-edit',
+        icon: 'edit',
         label: 'Edit Release',
         handler: (release: ArtistRelease) => this.onEditRelease(release),
         hidden: (release: ArtistRelease) => !this.canEditRelease(release)
       },
       {
-        icon: 'fa-solid fa-eye',
+        icon: 'eye',
         label: 'View Release',
         handler: (release: ArtistRelease) => this.onEditRelease(release),
         hidden: (release: ArtistRelease) => this.canEditRelease(release)
       },
       {
-        icon: 'fa-solid fa-music',
+        icon: 'music',
         label: 'Manage Track List',
         handler: (release: ArtistRelease) => this.onManageTrackList(release),
         hidden: (release: ArtistRelease) => !this.canEditRelease(release)
       },
       {
-        icon: 'fa-solid fa-download',
+        icon: 'download',
         label: 'Download Masters',
         handler: (release: ArtistRelease) => this.onDownloadMasters(release),
         hidden: (release: ArtistRelease) => !this.hasMasters(release) || this.downloadingMastersId === release.id
       },
       {
-        icon: 'fa-solid fa-spinner fa-spin',
+        icon: 'spinner',
         label: 'Downloading...',
         type: 'secondary',
         handler: () => {},
         hidden: (release: ArtistRelease) => this.downloadingMastersId !== release.id
       },
       {
-        icon: 'fa-solid fa-globe',
+        icon: 'globe',
         label: 'Include in EPK',
         handler: (release: ArtistRelease) => this.toggleExcludeFromEPK(release),
         hidden: (release: ArtistRelease) => !release.exclude_from_epk
       },
       {
-        icon: 'fa-solid fa-eye-slash',
+        icon: 'eye-off',
         label: 'Exclude from EPK',
         handler: (release: ArtistRelease) => this.toggleExcludeFromEPK(release),
         hidden: (release: ArtistRelease) => !!release.exclude_from_epk
       },
       {
-        icon: 'fa-solid fa-trash',
+        icon: 'trash',
         label: 'Delete',
         type: 'danger',
         handler: (release: ArtistRelease) => this.onDeleteRelease(release),
@@ -303,12 +304,12 @@ export class ArtistReleasesTabComponent {
 
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'Live': return 'fa-check-circle';
-      case 'For Submission': return 'fa-paper-plane';
-      case 'Pending': return 'fa-clock';
-      case 'Draft': return 'fa-file';
-      case 'Taken Down': return 'fa-ban';
-      default: return 'fa-question-circle';
+      case 'Live': return 'check-circle';
+      case 'For Submission': return 'paper-plane';
+      case 'Pending': return 'clock';
+      case 'Draft': return 'file';
+      case 'Taken Down': return 'ban';
+      default: return 'question-circle';
     }
   }
 

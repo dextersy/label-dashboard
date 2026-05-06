@@ -5,11 +5,11 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
-          <i class="fas fa-plus tw-mr-2"></i>
+          <app-icon name="plus" class="tw-mr-2" />
           Add New Sublabel
         </h5>
         <button type="button" class="btn-close" aria-label="Close" (click)="onClose()">
-          <i class="fas fa-times"></i>
+          <app-icon name="x" />
         </button>
       </div>
 
@@ -17,7 +17,7 @@
         <form #addSublabelForm="ngForm" (ngSubmit)="false" novalidate>
         <div class="modal-body">
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-            <i class="fas fa-info-circle tw-mr-2"></i>
+            <app-icon name="info" class="tw-mr-2" />
             This will create a new sublabel under your current brand, along with a domain and admin user account.
           </div>
 
@@ -63,7 +63,7 @@
             </div>
             
             <div class="form-text tw-text-muted">
-              <i class="fas fa-info-circle tw-mr-1"></i>
+              <app-icon name="info" class="tw-mr-1" />
               This will create a subdomain under spindly.app. You can add custom domains later in brand settings.
             </div>
             
@@ -77,7 +77,7 @@
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50">
             <div class="tw-px-card-pad tw-pb-card-pad">
               <h6 class="card-title">
-                <i class="fas fa-list tw-mr-2"></i>
+                <app-icon name="list" class="tw-mr-2" />
                 What will be created:
               </h6>
               <ul class="tw-mb-0 small tw-text-sm">
@@ -100,7 +100,7 @@
             (click)="onSubmit(addSublabelForm)"
             [disabled]="!addSublabelForm.form.valid || submitting">
             <span *ngIf="submitting" class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>
-            <i *ngIf="!submitting" class="fas fa-plus tw-mr-2"></i>
+            <app-icon name="plus" class="tw-mr-2" *ngIf="!submitting" />
             {{ submitting ? 'Creating...' : 'Create Sublabel' }}
           </button>
         </div>

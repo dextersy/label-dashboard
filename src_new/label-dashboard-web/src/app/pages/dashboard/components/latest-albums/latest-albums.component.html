@@ -17,7 +17,7 @@
         <span class="tw-font-bold tw-text-sm tw-text-gray-800 tw-truncate tw-w-full tw-leading-snug"
               [title]="release.title">{{ release.title }}</span>
         <a class="btn-ghost btn-sm tw-p-0 tw-text-xs" style="cursor: pointer;" (click)="goToRelease(release)">
-          See release <i class="far fa-arrow-alt-circle-right"></i>
+          See release <app-icon name="arrow-right" />
         </a>
       </div>
     </div>
@@ -25,7 +25,7 @@
 
   <div class="tw-px-6 tw-py-4 tw-border-t tw-border-gray-100 tw-text-right">
     <a (click)="goToReleases()" class="btn-ghost" style="cursor: pointer;">
-      Go to releases <i class="far fa-arrow-alt-circle-right"></i>
+      Go to releases <app-icon name="arrow-right" />
     </a>
   </div>
 </div>

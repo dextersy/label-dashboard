@@ -19,6 +19,7 @@ import { ValidationResult } from '../../../services/release-validation.service';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { ReleaseSubmittedService } from '../../../services/release-submitted.service';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
@@ -33,7 +34,7 @@ export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
         TrackListSectionComponent,
         SubmissionSectionComponent,
         ReleaseViewComponent
-    ],
+, IconComponent],
     templateUrl: './release-submission.component.html',
     styleUrl: './release-submission.component.scss'
 })
@@ -318,15 +319,15 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   get navTabs(): InPageNavTab[] {
     const s = (v: 'completed' | 'warning' | 'error' | 'none') => v === 'none' ? null : v;
     const tabs: InPageNavTab[] = [
-      { id: 'info',    label: 'Release Info',   icon: 'fa fa-info-circle', status: s(this.releaseInfoStatus),    tooltip: this.releaseInfoTooltip },
-      { id: 'credits', label: 'Album Credits',  icon: 'fa fa-users',       status: s(this.albumCreditsStatus),  tooltip: this.albumCreditsTooltip, disabled: !this.canProceedToCredits },
-      { id: 'tracks',  label: 'Track List',     icon: 'fa fa-music',       status: s(this.trackListStatus),     tooltip: this.trackListTooltip,    disabled: !this.canProceedToTracks },
+      { id: 'info',    label: 'Release Info',   icon: 'info', status: s(this.releaseInfoStatus),    tooltip: this.releaseInfoTooltip },
+      { id: 'credits', label: 'Album Credits',  icon: 'users',       status: s(this.albumCreditsStatus),  tooltip: this.albumCreditsTooltip, disabled: !this.canProceedToCredits },
+      { id: 'tracks',  label: 'Track List',     icon: 'music',       status: s(this.trackListStatus),     tooltip: this.trackListTooltip,    disabled: !this.canProceedToTracks },
     ];
     if (this.isDraftStatus) {
-      tabs.push({ id: 'submit', label: 'Submit', icon: 'fa fa-paper-plane', disabled: !this.canProceedToSubmit });
+      tabs.push({ id: 'submit', label: 'Submit', icon: 'paper-plane', disabled: !this.canProceedToSubmit });
     }
     if (this.canCancelToViewMode) {
-      tabs.push({ id: 'cancel', label: 'Cancel', icon: 'fa fa-times', color: 'danger' });
+      tabs.push({ id: 'cancel', label: 'Cancel', icon: 'x', color: 'danger' });
     }
     return tabs;
   }

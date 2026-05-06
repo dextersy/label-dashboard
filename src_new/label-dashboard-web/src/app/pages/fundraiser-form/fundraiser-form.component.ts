@@ -12,6 +12,7 @@ import { FundraiserSelectionComponent } from '../fundraisers/components/fundrais
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
+import { IconComponent } from '../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-fundraiser-form',
@@ -23,7 +24,7 @@ import { FloatingActionBarComponent } from '../../components/shared/floating-act
     FundraiserSelectionComponent,
     QuillModule,
     FloatingActionBarComponent
-  ],
+, IconComponent],
   templateUrl: './fundraiser-form.component.html',
   styleUrl: './fundraiser-form.component.scss'
 })

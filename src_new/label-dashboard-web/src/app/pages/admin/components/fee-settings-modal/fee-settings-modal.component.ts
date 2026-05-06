@@ -4,10 +4,11 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AdminService, FeeSettings, FeeSettingsSection } from '../../../../services/admin.service';
 import { NotificationService } from '../../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../../directives/modal-to-body.directive';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-fee-settings-modal',
-    imports: [CommonModule, ReactiveFormsModule, ModalToBodyDirective],
+    imports: [CommonModule, ReactiveFormsModule, ModalToBodyDirective, IconComponent],
     templateUrl: './fee-settings-modal.component.html',
     styleUrls: ['./fee-settings-modal.component.scss']
 })

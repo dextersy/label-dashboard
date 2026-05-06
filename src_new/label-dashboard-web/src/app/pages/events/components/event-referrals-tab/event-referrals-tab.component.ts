@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventReferrer as ServiceEventReferrer } from '../../../../services/event.service';
 import { downloadQRCode } from '../../../../utils/qr-utils';
+import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface EventReferrer {
   id: number;
@@ -23,7 +24,7 @@ export interface ReferrerForm {
 
 @Component({
     selector: 'app-event-referrals-tab',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconComponent],
     templateUrl: './event-referrals-tab.component.html',
     styleUrl: './event-referrals-tab.component.scss'
 })
