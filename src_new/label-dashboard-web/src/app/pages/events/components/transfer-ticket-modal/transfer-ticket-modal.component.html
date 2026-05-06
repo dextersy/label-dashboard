@@ -8,9 +8,7 @@
           <app-icon name="transfer" class="tw-mr-2" />
           Transfer Ticket
         </h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="hide()">
-          <app-icon name="x" />
-        </button>
+        <button type="button" class="btn-close" aria-label="Close" (click)="hide()"></button>
       </div>
       
       <form (ngSubmit)="onTransfer()" #transferForm="ngForm" *ngIf="ticket">
