@@ -1,83 +1,199 @@
 
 .event-email-tab {
-  .page-header {
-    h4 {
-      color: #495057;
-      font-weight: 600;
+
+  // ── Two-column layout (desktop only) ──────────────────────────────────
+  .email-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+
+    &__main {
+      flex: 1;
+      max-width: 640px;
+      min-width: 0;
+    }
+
+    &__sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+
+      &__main {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      &__sidebar {
+        display: none;
+      }
     }
   }
 
-  .alert-info {
-    background-color: #e3f2fd;
-    border-color: #2196f3;
-    color: #0d47a1;
+  // ── Sidebar cards ──────────────────────────────────────────────────────
+  .sidebar-card {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 14px 16px;
+    background: #ffffff;
+
+    &__label {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    &__count {
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 1.1;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    &__subtitle {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    &__divider {
+      margin: 10px 0;
+      border-color: #eee;
+    }
+
+    &__note {
+      font-size: 12px;
+      color: #999;
+      line-height: 1.5;
+    }
   }
 
-  .form-label {
+  .sidebar-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: #6c757d;
+    line-height: 1.5;
+    margin-top: 8px;
+
+    &__icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: #ccc;
+      font-size: 12px;
+    }
+  }
+
+  // ── Form labels ────────────────────────────────────────────────────────
+  label.tw-label {
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #495057;
-    margin-bottom: 0.5rem;
   }
 
-  .form-control {
-    border-radius: 0.5rem;
-    border: 2px solid #e9ecef;
-    background-color: #ffffff;
-    color: #495057;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-
-    &:focus {
-      border-color: var(--brand-color, #3b82f6);
-      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--brand-color, #3b82f6) 25%, transparent);
-      background-color: #ffffff;
-      color: #495057;
-    }
-
-    &:disabled {
-      background-color: #f8f9fa;
-      opacity: 0.65;
-    }
-  }
-
-  .form-check {
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
+  // ── Banner toggle row (4) ──────────────────────────────────────────────
+  .banner-toggle-row {
+    border: none !important;
+    padding: 0 !important;
 
     .form-check-input {
-      margin-top: 0.1rem;
+      cursor: pointer;
+    }
+  }
+
+  // ── Quill editor wrap (5) ──────────────────────────────────────────────
+  .email-editor-wrap {
+    position: relative;
+    width: 100%;
+
+    // "⋯" button overlaid on the right side of the toolbar
+    .more-tools-btn {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      z-index: 10;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 22px;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: none;
+      color: #555;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+
+      &:hover {
+        background-color: #e2e6ea;
+        color: #111;
+      }
+
+      &.active {
+        background-color: #dee2e6;
+        color: #111;
+        border-color: #ced4da;
+      }
     }
 
-    .form-check-label {
-      font-weight: 500;
-      color: #495057;
+    // Hide secondary ql-formats groups (4th onwards) by default
+    ::ng-deep .ql-toolbar .ql-formats:nth-child(n+4) {
+      display: none;
+    }
+
+    // Show secondary groups when .show-more is on the wrapper
+    &.show-more ::ng-deep .ql-toolbar .ql-formats:nth-child(n+4) {
+      display: inline-block;
     }
   }
 
   .email-editor {
-    .ql-container {
+    display: block;
+    width: 100%;
+
+    ::ng-deep .ql-toolbar {
+      border-radius: 0.5rem 0.5rem 0 0;
+      border-color: #e9ecef;
+      background-color: #f8f9fa !important;
+    }
+
+    ::ng-deep .ql-container {
       min-height: 300px;
       border-radius: 0 0 0.5rem 0.5rem;
+      border-color: #e9ecef;
+      background-color: #ffffff !important;
     }
 
-    .ql-toolbar {
-      border-radius: 0.5rem 0.5rem 0 0;
-      border-bottom: 1px solid #ccc;
-    }
-
-    .ql-editor {
+    ::ng-deep .ql-editor {
       min-height: 300px;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 14px;
       line-height: 1.6;
+      background-color: #ffffff !important;
+      color: #495057 !important;
     }
 
-    .ql-editor.ql-blank::before {
-      color: #999;
+    ::ng-deep .ql-editor.ql-blank::before {
+      color: #adb5bd !important;
       font-style: italic;
     }
   }
 
+  // ── Misc ──────────────────────────────────────────────────────────────
   .btn-primary {
     background: linear-gradient(135deg, var(--brand-color, #3b82f6) 0%, color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000) 100%);
     border: none;
@@ -88,7 +204,6 @@
     box-shadow: 0 2px 4px color-mix(in srgb, var(--brand-color, #3b82f6) 30%, transparent);
 
     &:hover:not(:disabled) {
-      background: linear-gradient(135deg, color-mix(in srgb, var(--brand-color, #3b82f6) 82%, #000000) 0%, color-mix(in srgb, var(--brand-color, #3b82f6) 70%, #000000) 100%);
       box-shadow: 0 4px 8px color-mix(in srgb, var(--brand-color, #3b82f6) 40%, transparent);
       transform: translateY(-1px);
     }
@@ -106,62 +221,7 @@
     height: 1rem;
   }
 
-  .text-muted {
-    color: #6c757d !important;
-  }
-
-  .text-danger {
-    color: #dc3545 !important;
-  }
-
   .text-primary {
     color: var(--brand-color, #3b82f6) !important;
-  }
-
-  .fw-bold {
-    font-weight: 600 !important;
-  }
-
-  // Force light theme for form controls to ensure readability
-  .form-control {
-    background-color: #ffffff !important;
-    color: #495057 !important;
-    border-color: #e9ecef;
-
-    &:focus {
-      background-color: #ffffff !important;
-      color: #495057 !important;
-      border-color: var(--brand-color, #3b82f6);
-    }
-
-    &::placeholder {
-      color: #6c757d !important;
-    }
-
-    &:disabled {
-      background-color: #f8f9fa !important;
-      color: #6c757d !important;
-    }
-  }
-
-  .email-editor {
-    .ql-container {
-      background-color: #ffffff !important;
-      border-color: #e9ecef;
-    }
-
-    .ql-toolbar {
-      background-color: #f8f9fa !important;
-      border-color: #e9ecef;
-    }
-
-    .ql-editor {
-      background-color: #ffffff !important;
-      color: #495057 !important;
-    }
-
-    .ql-editor.ql-blank::before {
-      color: #6c757d !important;
-    }
   }
 }

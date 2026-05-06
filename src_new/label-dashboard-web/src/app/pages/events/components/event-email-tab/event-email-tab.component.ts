@@ -32,26 +32,26 @@ export class EventEmailTabComponent implements OnInit, OnDestroy, OnChanges {
 
   private subscription = new Subscription();
 
-  // Rich text editor configuration for better formatting options
+  showMoreTools: boolean = false;
+
   quillConfig = {
     toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block'],
-      [{ 'header': 1 }, { 'header': 2 }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'direction': 'rtl' }],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['clean'],
-      ['link', 'image']
+      ['bold', 'italic', 'underline'],
+      [{ list: 'bullet' }, { list: 'ordered' }],
+      ['link', 'image'],
+      // secondary (hidden until "more" is toggled)
+      [{ header: 1 }, { header: 2 }],
+      ['strike', 'code-block'],
+      [{ script: 'sub' }, { script: 'super' }],
+      [{ indent: '-1' }, { indent: '+1' }],
+      [{ direction: 'rtl' }],
     ],
     theme: 'snow'
   };
+
+  toggleMoreTools(): void {
+    this.showMoreTools = !this.showMoreTools;
+  }
 
   constructor(private eventService: EventService) {}
 

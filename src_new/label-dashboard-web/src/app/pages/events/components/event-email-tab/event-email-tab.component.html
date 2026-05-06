@@ -1,33 +1,36 @@
 <div class="event-email-tab">
-  
-  <div *ngIf="selectedEvent">
-    <!-- Recipients Info -->
-    <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-      <div class="tw-col-span-12">
-        <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-flex tw-items-center">
-          <app-icon name="info" class="tw-mr-2" />
-          <div>
-            <strong>To:</strong> 
-            <span *ngIf="loadingCount">Loading recipients...</span>
-            <span *ngIf="!loadingCount" class="text-primary tw-font-bold">
-              {{ recipientsCount }} confirmed ticket holder{{ recipientsCount !== 1 ? 's' : '' }}
-            </span>
-            <small class="tw-block tw-mt-1 tw-text-muted">
-              Only confirmed ticket holders (with "Payment Confirmed" or "Ticket sent" status) will receive this email.
-            </small>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Email Form -->
-    <form #emailForm="ngForm" (ngSubmit)="sendEmail()">
-      <!-- Subject Line -->
-      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-        <div class="tw-col-span-12">
-          <label for="emailSubject" class="tw-label tw-font-bold">
-            Subject Line <span class="tw-text-danger">*</span>
-          </label>
+  <div *ngIf="selectedEvent" class="email-layout">
+
+    <!-- Left column -->
+    <div class="email-layout__main">
+
+      <!-- Recipients strip -->
+      <div class="recipient-strip tw-flex tw-items-center tw-gap-2 tw-px-3 tw-py-2 tw-mb-3 tw-rounded-md tw-border tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-text-sm">
+        <app-icon name="info" class="tw-flex-shrink-0 tw-text-blue-500" />
+        <span>
+          <strong>To:</strong>
+          <span *ngIf="loadingCount"> Loading recipients...</span>
+          <span *ngIf="!loadingCount">
+            <strong class="tw-text-blue-900"> {{ recipientsCount }} confirmed ticket holder{{ recipientsCount !== 1 ? 's' : '' }}</strong>
+          </span>
+          <span class="tw-text-blue-600"> · Payment Confirmed or Ticket Sent</span>
+        </span>
+      </div>
+
+      <!-- Email Form -->
+      <form #emailForm="ngForm" (ngSubmit)="sendEmail()">
+
+        <!-- Subject -->
+        <div class="tw-mb-3">
+          <div class="tw-flex tw-justify-between tw-items-baseline tw-mb-1">
+            <label for="emailSubject" class="tw-label tw-font-bold tw-mb-0">
+              Subject Line <span class="tw-text-danger">*</span>
+            </label>
+            <span class="tw-text-xs" [class.tw-text-warning]="subject.length > 400" [class.tw-text-muted]="subject.length <= 400">
+              {{ subject.length }} / 500
+            </span>
+          </div>
           <input
             type="text"
             id="emailSubject"
@@ -38,73 +41,92 @@
             required
             maxlength="500"
             [disabled]="sending">
-          <small class="form-text tw-text-muted">
-            <span [class]="subject.length > 400 ? 'tw-text-warning' : 'tw-text-muted'">
-              {{ subject.length }}/500 characters
-            </span>
-            <span *ngIf="subject.length > 500" class="tw-text-danger tw-ml-2">
-              <app-icon name="warning" /> Too long!
-            </span>
-          </small>
         </div>
-      </div>
 
-      <!-- Banner Option -->
-      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-        <div class="tw-col-span-12">
-          <div class="form-check">
-            <input
-              type="checkbox"
-              id="includeBanner"
-              name="includeBanner"
-              class="form-check-input"
-              [(ngModel)]="includeBanner"
-              [disabled]="sending">
-            <label for="includeBanner" class="form-check-label">
-              Include email banner with event branding
-            </label>
-            <small class="form-text tw-block tw-text-muted">
-              Adds a branded header with your label's logo and event title
-            </small>
-          </div>
+        <!-- Banner toggle -->
+        <div class="banner-toggle-row tw-flex tw-items-center tw-gap-3 tw-mb-3 tw-px-3 tw-py-2 tw-rounded-md tw-border">
+          <input
+            type="checkbox"
+            id="includeBanner"
+            name="includeBanner"
+            class="form-check-input tw-flex-shrink-0 tw-m-0"
+            [(ngModel)]="includeBanner"
+            [disabled]="sending">
+          <label for="includeBanner" class="tw-flex-1 tw-mb-0 tw-text-sm tw-font-medium tw-cursor-pointer tw-flex tw-items-center tw-gap-1">
+            Include event banner
+            <app-icon name="info" class="tw-text-muted" title="Adds a branded header with your label's logo and event title" style="cursor:default" />
+          </label>
         </div>
-      </div>
 
-      <!-- Message Editor -->
-      <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-        <div class="tw-col-span-12">
+        <!-- Message Editor -->
+        <div class="tw-mb-4">
           <label for="emailMessage" class="tw-label tw-font-bold">
             Message <span class="tw-text-danger">*</span>
           </label>
-          <quill-editor
-            [(ngModel)]="message"
-            name="emailMessage"
-            [modules]="quillConfig"
-            placeholder="Type your message here..."
-            class="email-editor"
-            [style]="{ 'min-height': '300px' }"
-            [disabled]="sending">
-          </quill-editor>
-          <div class="form-text tw-text-muted">
-            <div class="tw-mb-2">
-              Use the toolbar above for rich text formatting, links, and images. Images will be automatically uploaded and included in the email.
-              <br><strong>Image limits:</strong> Maximum 10 images, 5MB per image. Supported formats: JPEG, PNG, GIF, WebP.
-            </div>
+
+          <div class="email-editor-wrap" [class.show-more]="showMoreTools">
+            <button type="button" class="more-tools-btn" (click)="toggleMoreTools()" [class.active]="showMoreTools" title="More formatting options">⋯</button>
+            <quill-editor
+              [(ngModel)]="message"
+              name="emailMessage"
+              [modules]="quillConfig"
+              placeholder="Type your message here..."
+              class="email-editor"
+              [style]="{ 'min-height': '300px' }"
+              [disabled]="sending">
+            </quill-editor>
+          </div>
+
+          <div class="form-text tw-text-muted tw-mt-1">
             <div class="tw-flex tw-justify-between tw-items-center">
+              <span class="tw-text-xs">Images: max 10, 5 MB each (JPEG, PNG, GIF, WebP)</span>
               <span>
-                <strong>Content size:</strong> 
                 <span [class]="getContentSizeClass()">{{ getContentSizeText() }}</span>
-              </span>
-              <span *ngIf="isContentTooLarge()" class="tw-text-danger">
-                <app-icon name="warning" /> Content too large!
+                <span *ngIf="isContentTooLarge()" class="tw-text-danger tw-ml-2">
+                  <app-icon name="warning" /> Too large!
+                </span>
               </span>
             </div>
           </div>
         </div>
-      </div>
 
       </form>
     </div>
+
+    <!-- Right sidebar (desktop only) -->
+    <aside class="email-layout__sidebar">
+
+      <!-- Recipient stat card -->
+      <div class="sidebar-card">
+        <div class="sidebar-card__label">Sending to</div>
+        <div class="sidebar-card__count">
+          <span *ngIf="loadingCount">—</span>
+          <span *ngIf="!loadingCount">{{ recipientsCount }}</span>
+        </div>
+        <div class="sidebar-card__subtitle">confirmed ticket holder{{ recipientsCount !== 1 ? 's' : '' }}</div>
+        <hr class="sidebar-card__divider">
+        <div class="sidebar-card__note">Payment Confirmed or Ticket Sent status only</div>
+      </div>
+
+      <!-- Tips card -->
+      <div class="sidebar-card">
+        <div class="sidebar-card__label">Tips</div>
+        <div class="sidebar-tip">
+          <app-icon name="image" class="sidebar-tip__icon" />
+          <span>Images are auto-hosted and embedded</span>
+        </div>
+        <div class="sidebar-tip">
+          <app-icon name="flask" class="sidebar-tip__icon" />
+          <span>Use Send test email to preview first</span>
+        </div>
+        <div class="sidebar-tip">
+          <app-icon name="clock" class="sidebar-tip__icon" />
+          <span>Sent one by one to avoid spam filters</span>
+        </div>
+      </div>
+
+    </aside>
+  </div>
 
   <!-- No Event Selected -->
   <div class="tw-py-5 tw-text-center" *ngIf="!selectedEvent">
@@ -115,7 +137,7 @@
 </div>
 
 <!-- Floating Action Bar -->
-<app-floating-action-bar *ngIf="selectedEvent">
+<app-floating-action-bar *ngIf="selectedEvent" variant="strip">
   <span floatingStart class="tw-text-muted">
     <small><app-icon name="clock" class="tw-mr-1" />Emails will be sent one by one to preserve deliverability</small>
   </span>
@@ -141,7 +163,7 @@
 </app-floating-action-bar>
 
 <!-- Test Email Modal -->
-<app-test-email-modal 
+<app-test-email-modal
   #testEmailModal
   (testEmailConfirmed)="onTestEmailConfirmed($event)">
 </app-test-email-modal>
