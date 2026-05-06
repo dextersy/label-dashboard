@@ -89,7 +89,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       if (item.payment_reference) str += ` (${item.payment_reference})`;
       return str;
     }},
-    { key: 'total_amount', label: 'Amount', sortable: true, type: 'number', align: 'right', formatter: (item) => this.formatWalkInPrice(item.total_amount) },
+    { key: 'total_amount', label: 'Amount', sortable: true, type: 'number', align: 'right', formatter: (item) => '₱' + (Number(item.total_amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
     { key: 'registeredBy', label: 'Registered By', formatter: (item) => item.registeredByUser?.first_name || 'System' },
   ];
 
