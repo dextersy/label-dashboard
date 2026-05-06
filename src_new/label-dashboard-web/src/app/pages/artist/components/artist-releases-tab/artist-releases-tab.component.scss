@@ -22,12 +22,9 @@
     }
 
     @media (min-width: 1200px) {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
     }
 
-    @media (max-width: 479px) {
-      grid-template-columns: 1fr;
-    }
   }
 }
 
@@ -90,36 +87,42 @@
     display: block;
   }
 
-  // Gradient + chips overlay at the bottom of the cover art
+  // Overlay — alert dots only, no gradient
   &__overlay {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 32px 8px 8px;
-    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%);
+    top: 6px;
+    right: 6px;
     display: flex;
-    flex-wrap: nowrap;
     gap: 4px;
-    align-items: flex-end;
   }
 
   &__body {
-    padding: 10px 12px 12px;
+    padding: 8px 10px 10px;
     flex: 1;
-    padding-right: 36px;
+    padding-right: 32px;
     min-width: 0; // enables ellipsis on flex children
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
   }
 
   // Title — always ellipsis, never wraps
   &__title {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     color: #111827;
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    @media (min-width: 1200px) {
+      font-size: 15px;
+    }
   }
 
   &__meta {
@@ -130,8 +133,12 @@
   }
 
   &__date {
-    font-size: 13px;
+    font-size: 11px;
     color: #6b7280;
+
+    @media (min-width: 1200px) {
+      font-size: 13px;
+    }
   }
 
   // UPC/catalog ref — muted, smaller, clearly secondary
@@ -185,14 +192,14 @@
   color: #fff;
 
   &--catalog {
-    background: rgba(0,0,0,0.40);
-    color: rgba(255,255,255,0.88);
+    background: #e5e7eb;
+    color: #374151;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
   }
 
   &--epk {
-    background: rgba(0,0,0,0.35);
-    color: rgba(255,255,255,0.7);
+    background: #e5e7eb;
+    color: #6b7280;
   }
 
   // Status — consistent semantic palette, flat tag shape

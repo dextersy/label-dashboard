@@ -12,6 +12,7 @@ import { downloadFromResponse } from '../../../../utils/file-utils';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { PaginatedTableComponent, TableAction, TableColumn, HeaderAction } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { InPageNavComponent, InPageNavTab } from '../../../../components/shared/in-page-nav/in-page-nav.component';
 
 export interface ArtistRelease {
   id: number;
@@ -39,7 +40,7 @@ export interface ArtistRelease {
 
 @Component({
     selector: 'app-artist-releases-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent],
+    imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent, InPageNavComponent],
     templateUrl: './artist-releases-tab.component.html',
     styleUrl: './artist-releases-tab.component.scss'
 })
@@ -48,6 +49,7 @@ export class ArtistReleasesTabComponent {
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   releases: ArtistRelease[] = [];
   epkFilter: 'all' | 'visible' | 'hidden' = 'all';
+  activeStatus: string = '';
   loading = false;
   isAdmin = false;
   downloadingMastersId: number | null = null;
@@ -72,14 +74,34 @@ export class ArtistReleasesTabComponent {
     }
   }
 
+  private readonly statusOrder = ['Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'];
+
+  private readonly statusIcons: Record<string, string> = {
+    'Draft': 'file',
+    'For Submission': 'paper-plane',
+    'Pending': 'clock',
+    'Live': 'globe',
+    'Taken Down': 'ban',
+  };
+
+  get statusTabs(): InPageNavTab[] {
+    return this.statusOrder
+      .filter(status => this.releases.some(r => r.status === status))
+      .map(status => ({ id: status, label: status, icon: this.statusIcons[status] ?? 'circle' }));
+  }
+
   get filteredReleases(): ArtistRelease[] {
-    if (this.epkFilter === 'all') {
-      return this.releases;
-    } else if (this.epkFilter === 'visible') {
-      return this.releases.filter(release => !release.exclude_from_epk);
-    } else { // 'hidden'
-      return this.releases.filter(release => release.exclude_from_epk);
+    let releases = this.releases.filter(r => r.status === this.activeStatus);
+    if (this.epkFilter === 'visible') {
+      releases = releases.filter(r => !r.exclude_from_epk);
+    } else if (this.epkFilter === 'hidden') {
+      releases = releases.filter(r => r.exclude_from_epk);
     }
+    return releases;
+  }
+
+  onStatusTabChange(id: string): void {
+    this.activeStatus = id;
   }
 
   get releaseColumns(): TableColumn[] {
@@ -236,6 +258,9 @@ export class ArtistReleasesTabComponent {
         this.releases = data.releases;
         this.isAdmin = data.isAdmin;
         this.loading = false;
+        if (!this.activeStatus || !this.releases.some(r => r.status === this.activeStatus)) {
+          this.activeStatus = this.statusTabs[0]?.id ?? '';
+        }
       },
       error: (error) => {
         console.error('Error loading releases:', error);
