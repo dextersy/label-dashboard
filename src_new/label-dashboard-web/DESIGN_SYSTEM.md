@@ -7,29 +7,115 @@ This document describes the design system conventions used in the Angular fronte
 ## Typography
 
 ### Fonts
-- **Body:** `"Source Sans 3"`, fallback `-apple-system, BlinkMacSystemFont, "Segoe UI"` — loaded via `index.html`
-- **Headings:** `"Plus Jakarta Sans"`, fallback `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI"`
-- **Base size:** `13px` on `html` and `body` (reduced from browser default)
+- **Body:** `"Source Sans 3"`, fallback `-apple-system, BlinkMacSystemFont, "Segoe UI"` — Tailwind token: `tw-font-sans`
+- **Headings:** `"Inter"`, fallback `-apple-system, BlinkMacSystemFont, "Segoe UI"` — Tailwind token: `tw-font-heading`
+- **Base size:** `13px` globally
 
-### Scale
-| Tag | Size | Weight | Letter-spacing |
-|-----|------|--------|---------------|
-| `h1` | 1.8rem | 700 | -0.035em |
-| `h2` | 1.6rem | 700 | -0.03em |
-| `h3` | 1.4rem | 600 | -0.025em |
-| `h4` | 1.2rem | 600 | — |
-| `h5` | 1.1rem | 600 | — |
-| `h6` | 1.0rem | 500 | — |
+### Heading scale (global CSS in `styles.scss`)
+| Tag | Size | Weight | Letter-spacing | Color |
+|-----|------|--------|----------------|-------|
+| `h1` | 2.25rem | 700 | -0.03em | `#111827` |
+| `h2` | 1.875rem | 700 | -0.025em | `#111827` |
+| `h3` | 1.5rem | 700 | -0.02em | `#111827` |
+| `h4` | 1.25rem | 700 | -0.015em | `#111827` |
+| `h5` | 1rem | 600 | -0.01em | `#1f2937` |
+| `h6` | 0.8125rem (13px) | 600 | +0.04em | `#6b7280` — uppercase |
 
-Card titles (`.card-header h5`) render at `20px / 500` weight with `letter-spacing: -0.025em`.
+> `h6` is styled as a small uppercase section label — commonly used for sidebar section headings and form group separators.
 
 ### Body colors
-| Use | Value |
-|-----|-------|
-| Body text | `#4a5568` |
-| Heading text | `#2d3748` |
-| Muted / labels | `#9ca3af` |
-| Table cells | `#495057` |
+| Use | Value | Tailwind class |
+|-----|-------|----------------|
+| Body text | `#4a5568` | `tw-text-body` |
+| Heading text | `#111827` | — |
+| Muted / labels | `#9ca3af` | `tw-text-muted` |
+| Table cells / form elements | `#495057` | — |
+
+---
+
+## Tailwind CSS
+
+Tailwind is configured with the `tw-` prefix to prevent conflicts with Bootstrap. All Tailwind utilities are available as `tw-{utility}`, e.g. `tw-flex`, `tw-text-sm`, `tw-mb-4`.
+
+**Config:** `tailwind.config.js` — breakpoints match Bootstrap 5 exactly.
+
+### Breakpoints
+| Name | px | Bootstrap equivalent |
+|------|----|----------------------|
+| `sm` | 576px | `sm` |
+| `md` | 768px | `md` |
+| `lg` | 992px | `lg` |
+| `xl` | 1200px | `xl` |
+| `2xl` | 1400px | `xxl` |
+
+Use responsive prefixes as `md:tw-grid-cols-2`, `lg:tw-hidden`, etc.
+
+### Semantic color classes
+These map to the Tailwind `extend.colors` config and are used as `tw-text-{name}`, `tw-bg-{name}`, `tw-border-{name}`:
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `body` | `#4a5568` | Body text |
+| `heading` | `#2d3748` | Heading text |
+| `muted` | `#9ca3af` | Muted text, secondary labels |
+| `success` | `#16a34a` | Positive states |
+| `warning` | `#d97706` | Warning states |
+| `danger` | `#ef4444` | Error text, destructive |
+| `danger-dark` | `#dc2626` | Danger button borders |
+| `info` | `#0891b2` | Info states |
+| `input-bg` | `#f9fafb` | Input default background |
+| `input-bg-focus` | `#ffffff` | Input focused background |
+| `input-bg-hover` | `#f3f4f6` | Input hovered background |
+| `surface` | `#ffffff` | Card/modal backgrounds |
+| `border-subtle` | `#e5e7eb` | Subtle dividers and borders |
+| `border-default` | `#dee2e6` | Default input/card borders |
+
+### Font family classes
+| Class | Font |
+|-------|------|
+| `tw-font-sans` | "Source Sans 3" (body) |
+| `tw-font-heading` | "Inter" (headings) |
+
+### Border radius tokens
+| Class | Value | Use |
+|-------|-------|-----|
+| `tw-rounded-card` | `12px` | Cards |
+| `tw-rounded-card-mobile` | `8px` | Cards on mobile |
+| `tw-rounded-input` | `8px` | Inputs, selects |
+| `tw-rounded-btn` | `8px` | Buttons |
+| `tw-rounded-badge` | `12px` | Badges, chips |
+
+### Box shadow tokens
+| Class | Use |
+|-------|-----|
+| `tw-shadow-card` | Default card shadow |
+| `tw-shadow-card-hover` | Card hover lift |
+| `tw-shadow-dropdown` | Dropdowns, popovers |
+| `tw-shadow-modal` | Modal overlay |
+| `tw-shadow-focus-ring` | Focus ring (brand-color-aware) |
+
+### Spacing tokens
+| Class | Value | Use |
+|-------|-------|-----|
+| `tw-px-card-pad` / `tw-py-card-pad` | `20px` | Card body padding |
+| `tw-px-card-pad-mobile` | `10px` | Card body padding on mobile |
+| `tw-gap-grid-gap` | `12px` | Grid column gap |
+| `tw-gap-grid-gap-mobile` | `8px` | Grid column gap on mobile |
+| `tw-h-navbar-height` | `50px` | Navbar height offset |
+| `tw-w-sidebar-width` | `260px` | Expanded sidebar width |
+| `tw-w-sidebar-collapsed-width` | `86px` | Collapsed sidebar width |
+| `tw-h-mobile-nav-height` | `72px` | Mobile bottom nav height |
+
+### Z-index tokens
+| Class | Value | Use |
+|-------|-------|-----|
+| `tw-z-sidebar` | 1000 | Sidebar |
+| `tw-z-navbar` | 1001 | Top navbar |
+| `tw-z-dropdown` | 1050 | Dropdowns |
+| `tw-z-modal-bd` | 1040 | Modal backdrop |
+| `tw-z-modal` | 1050 | Modal panel |
+| `tw-z-mobile-nav` | 1100 | Mobile bottom nav |
+| `tw-z-overlay` | 9999 | Full-screen overlays |
 
 ---
 
@@ -42,14 +128,19 @@ The system is **multi-brand**: all primary actions use CSS custom properties so 
 | `--brand-color` | `#3b82f6` | Primary buttons, active states, focus rings |
 | `--brand-color-text` | `#ffffff` | Text on primary button background |
 
-### Semantic colors (hardcoded)
-| Name | Hex | Usage |
-|------|-----|-------|
-| Success | `#28a745` | Positive balance, badge-success |
-| Warning | `#ffc107` | Warning badges |
-| Danger | `#ef4444` / `#dc2626` | Danger buttons, error text, negative amounts |
-| Info | `#17a2b8` | Info badges |
-| Secondary | `#6c757d` | Muted text, secondary badges |
+### Semantic colors
+Prefer the Tailwind semantic classes above (`tw-text-danger`, `tw-text-muted`, etc.) over raw hex values in new code. Raw hex is acceptable in component SCSS files where Tailwind utilities are not practical.
+
+| Name | Hex | Tailwind class |
+|------|-----|----------------|
+| Body text | `#4a5568` | `tw-text-body` |
+| Heading | `#2d3748` | `tw-text-heading` |
+| Muted | `#9ca3af` | `tw-text-muted` |
+| Success | `#16a34a` | `tw-text-success` |
+| Warning | `#d97706` | `tw-text-warning` |
+| Danger | `#ef4444` | `tw-text-danger` |
+| Info | `#0891b2` | `tw-text-info` |
+| Table cells / labels | `#495057` | — (Bootstrap convention) |
 
 ---
 
@@ -171,15 +262,30 @@ Replaces `.sticky-bottom-panel`. A standalone Angular component that renders a s
 | Secondary | default slot (any child without `fab-primary-btn`) | Both — inline on desktop; collapses into drawer on mobile |
 | Primary | `class="... fab-primary-btn"` | Both — always visible |
 
+### `variant` input
+
+| Value | Behaviour |
+|-------|-----------|
+| `'drawer'` (default) | On mobile, secondary buttons collapse into a pull-tab slide-up drawer |
+| `'strip'` | All buttons always visible, stacked in a column on mobile. Desktop layout is unchanged. Use when the action bar contains multiple equally-important actions that must all remain visible (e.g. the email send screen). |
+
+```html
+<app-floating-action-bar variant="strip">
+  <button class="btn btn-secondary" (click)="preview()">Send Test Email</button>
+  <button class="btn btn-primary fab-primary-btn" (click)="send()">Send Email</button>
+</app-floating-action-bar>
+```
+
 ### Drawer behaviour (mobile ≤768px)
 
 | Condition | Mobile behaviour |
 |-----------|-----------------|
-| `.fab-primary-btn` present **and** default slot has children | Drawer mode — secondary content collapses into a slide-up drawer with a tab caret toggle |
-| Only `.fab-primary-btn` (no secondary) | Single primary button, no toggle |
-| Only default slot (no `.fab-primary-btn`) | All content stacks vertically |
+| `variant="drawer"` (default), `.fab-primary-btn` present **and** default slot has children | Drawer mode — secondary content collapses into a slide-up drawer with a tab caret toggle |
+| `variant="drawer"`, only `.fab-primary-btn` (no secondary) | Single primary button, no toggle |
+| `variant="drawer"`, only default slot (no `.fab-primary-btn`) | All content stacks vertically |
+| `variant="strip"` | All buttons stacked full-width, no drawer, no toggle. `floatingStart` content shown above the buttons. |
 
-Drawer mode is **auto-detected** via `MutationObserver` on projected content — no `@Input()` needed.
+Drawer mode is **auto-detected** via `MutationObserver` on projected content. `variant="strip"` suppresses drawer mode regardless of slot content.
 
 ### Usage examples
 
@@ -235,16 +341,39 @@ Drawer mode is **auto-detected** via `MutationObserver` on projected content —
 
 ## Forms
 
-### `.form-group`
-- `margin-bottom: 20px`
-- `label`: 12px, weight 500, color `#374151`
+Use `tw-input` / `tw-label` for all new form fields. The older `form-control` / `form-label` Bootstrap classes still work but should not be used in new code.
 
-### `.form-control`
-- Background: `#f9fafb` (rest), `#ffffff` (focus), `#f3f4f6` (hover)
-- Border: **none** — uses background color change to signal state
-- Focus ring: `box-shadow: 0 0 0 3px rgba(59,130,246,0.1)`
-- Padding: `12px 16px`, `border-radius: 8px`
-- Font size: `13px` (global override)
+### `tw-label`
+Defined in `src/styles.scss`. Applied to `<label>` elements.
+- `display: block`, `margin-bottom: 6px`
+- `font-size: 0.875rem (14px)`, `font-weight: 500`, `color: #374151`
+
+```html
+<label for="title" class="tw-label">Title <span class="tw-text-danger">*</span></label>
+```
+
+### `tw-input`
+Defined in `src/styles.scss`. Applied to `<input>`, `<select>`, `<textarea>`.
+- Background: `#f9fafb` (rest) → `#f3f4f6` (hover) → `#ffffff` (focus)
+- Border: `1px solid` brand-color-tinted (`color-mix(brand 15%, #e5e7eb)`)
+- Focus: border becomes `--brand-color`, focus ring `0 0 0 3px brand 15%`
+- `border-radius: 8px`, `padding: 10px 14px`, `width: 100%`
+- Invalid state: `border-color: #FCA5A5`, no focus ring
+
+```html
+<input type="text" class="tw-input" id="title" [(ngModel)]="value" placeholder="...">
+<select class="tw-input" [(ngModel)]="selected">...</select>
+<textarea class="tw-input" rows="3" [(ngModel)]="text"></textarea>
+```
+
+### `tw-input-sm`
+Compact variant — `padding: 6px 10px`, `font-size: 0.75rem`. Replaces `form-control-sm`.
+
+### `tw-input-lg`
+Large variant — `padding: 10px 16px`, `font-size: 1rem`. Replaces `form-control-lg`.
+
+### `.form-group` (legacy Bootstrap)
+- `margin-bottom: 20px`
 
 ### `.form-actions`
 - `text-align: right` (mobile: center, button full-width up to 300px)
