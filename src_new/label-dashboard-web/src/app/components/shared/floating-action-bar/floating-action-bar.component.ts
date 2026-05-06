@@ -4,6 +4,7 @@ import {
   Component,
   ElementRef,
   HostBinding,
+  Input,
   NgZone,
   OnDestroy,
   ViewChild,
@@ -19,6 +20,12 @@ import { IconComponent } from '../icon/icon.component';
   styleUrl: './floating-action-bar.component.scss',
 })
 export class FloatingActionBarComponent implements AfterViewInit, OnDestroy {
+  /**
+   * 'drawer' (default) — on mobile, secondary buttons collapse into a pull-tab drawer.
+   * 'strip'            — amber bar; all buttons always visible, no drawer.
+   */
+  @Input() variant: 'drawer' | 'strip' = 'drawer';
+
   /** True when both the secondary (default) slot and primary slot have content. */
   drawerMode = false;
   /** Whether the secondary-button drawer is currently open (mobile only). */
@@ -27,6 +34,8 @@ export class FloatingActionBarComponent implements AfterViewInit, OnDestroy {
   showFabEnd = false;
   /** Hides the host element when both slots are empty. */
   @HostBinding('style.display') hostDisplay = 'none';
+
+  @HostBinding('class.fab--strip') get isStrip() { return this.variant === 'strip'; }
 
   @ViewChild('secondarySlot') private secondarySlot!: ElementRef<HTMLElement>;
   @ViewChild('primarySlot') private primarySlot!: ElementRef<HTMLElement>;
@@ -53,7 +62,7 @@ export class FloatingActionBarComponent implements AfterViewInit, OnDestroy {
   private updateState() {
     const hasSecondary = this.secondarySlot.nativeElement.children.length > 0;
     const hasPrimary = this.primarySlot.nativeElement.children.length > 0;
-    this.drawerMode = hasPrimary && hasSecondary;
+    this.drawerMode = this.variant !== 'strip' && hasPrimary && hasSecondary;
     this.showFabEnd = hasPrimary;
     this.hostDisplay = hasPrimary || hasSecondary ? '' : 'none';
     if (!this.drawerMode) {
