@@ -3,7 +3,7 @@
   <!-- ── Filled state (Google place selected) ─────────────────────────────── -->
   <div class="venue-filled" *ngIf="selectedVenue && selectedVenue.google_place_id">
     <div class="venue-filled-icon">
-      <app-icon name="map-pin" />
+      <app-icon name="map-pin" iconOnly />
     </div>
     <div class="venue-filled-body">
       <p class="venue-filled-name">{{ selectedVenue.venue }}</p>
@@ -19,7 +19,7 @@
       </div>
     </div>
     <button type="button" class="venue-dismiss" (click)="clearSelection()" [disabled]="disabled" title="Remove venue">
-      <app-icon name="x" />
+      <app-icon name="x" iconOnly />
     </button>
   </div>
 
@@ -47,7 +47,7 @@
            *ngIf="!isFocused && !displayValue"
            aria-hidden="true">
         <div class="venue-empty-icon">
-          <app-icon name="map-pin" />
+          <app-icon name="map-pin" iconOnly />
         </div>
         <div class="venue-empty-text">
           <span class="venue-hint-primary">Search for a venue</span>

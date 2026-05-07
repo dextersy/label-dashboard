@@ -59,7 +59,7 @@
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
           <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="tw-text-center tw-text-muted">
-            <app-icon name="credit-card" [size]="48" class="tw-mb-3" />
+            <app-icon name="credit-card" [size]="48" class="tw-mb-3" iconOnly />
             <p>No payment methods configured yet.</p>
             <button class="btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
               <app-icon name="plus" class="tw-mr-1" />Add Payment Method

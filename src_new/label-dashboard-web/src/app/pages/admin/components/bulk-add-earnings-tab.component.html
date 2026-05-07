@@ -233,7 +233,7 @@
        (dragleave)="onDragLeave($event)" 
        (drop)="onDrop($event)">
     <div class="tw-mb-3">
-      <app-icon name="upload" [size]="48" class="tw-mb-3 tw-text-muted" />
+      <app-icon name="upload" [size]="48" class="tw-mb-3 tw-text-muted" iconOnly />
       <h3>Upload CSV File</h3>
       <p class="tw-text-muted">
         Drag and drop a CSV file here, or click to select a file.<br>
@@ -308,7 +308,7 @@
       </div>
       <div class="tw-px-card-pad tw-pb-card-pad">
         <div *ngIf="csvData.length === 0; else showTable" class="tw-py-4 tw-text-center">
-          <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" />
+          <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" iconOnly />
           <h5 class="tw-text-muted">No matches found in the CSV file.</h5>
           <p class="tw-text-muted">
             Please check that your CSV contains valid catalog numbers or release titles that match existing releases in your system.

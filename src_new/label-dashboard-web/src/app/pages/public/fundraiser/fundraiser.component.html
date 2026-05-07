@@ -8,7 +8,7 @@
   <div *ngIf="isError && !isLoading" class="wrapper tw-h-full tw-flex tw-justify-center tw-items-center">
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-text-center" style="max-width: 500px;">
       <div class="tw-px-card-pad tw-pb-card-pad tw-py-5">
-        <app-icon name="warning" [size]="48" class="tw-text-danger tw-mb-3" />
+        <app-icon name="warning" [size]="48" class="tw-text-danger tw-mb-3" iconOnly />
         <h1 class="tw-text-danger" style="font-size: 1.5rem;">Error</h1>
         <p class="tw-text-muted">{{ errorMessage }}</p>
       </div>
@@ -28,7 +28,7 @@
       <!-- Body Section -->
       <div class="body-section tw-text-center">
         <div class="closed-message tw-py-5">
-          <app-icon name="heart" class="fa-4x" style="color: var(--brand-color);" />
+          <app-icon name="heart" class="fa-4x" style="color: var(--brand-color);" iconOnly />
           <h1 class="tw-mb-3" style="font-size: 3rem;">Thank You!</h1>
           <p class="tw-mb-4 tw-text-muted">
             <strong>{{ fundraiser.title }}</strong> fundraiser has ended and is no longer accepting donations.

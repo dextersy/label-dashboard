@@ -85,13 +85,13 @@
           <button class="btn-sm btn-outline-secondary"
                   [disabled]="currentPage === 0"
                   (click)="prevPage()">
-            <app-icon name="chevron-left" />
+            <app-icon name="chevron-left" iconOnly />
           </button>
           <span class="pagination-info">{{ currentPage + 1 }} / {{ totalPages }}</span>
           <button class="btn-sm btn-outline-secondary"
                   [disabled]="currentPage === totalPages - 1"
                   (click)="nextPage()">
-            <app-icon name="chevron-right" />
+            <app-icon name="chevron-right" iconOnly />
           </button>
         </div>
 

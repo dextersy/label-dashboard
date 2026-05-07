@@ -24,15 +24,15 @@
         <div class="payment-methods-grid">
           <div class="payment-method-card">
             <input type="checkbox" id="walkInCash" [(ngModel)]="eventData.walk_in_supports_cash">
-            <label for="walkInCash"><app-icon name="currency" /><span>Cash</span></label>
+            <label for="walkInCash"><app-icon name="currency" iconOnly /><span>Cash</span></label>
           </div>
           <div class="payment-method-card">
             <input type="checkbox" id="walkInGcash" [(ngModel)]="eventData.walk_in_supports_gcash">
-            <label for="walkInGcash"><app-icon name="mobile" /><span>GCash</span></label>
+            <label for="walkInGcash"><app-icon name="mobile" iconOnly /><span>GCash</span></label>
           </div>
           <div class="payment-method-card">
             <input type="checkbox" id="walkInCard" [(ngModel)]="eventData.walk_in_supports_card">
-            <label for="walkInCard"><app-icon name="credit-card" /><span>Credit Card</span></label>
+            <label for="walkInCard"><app-icon name="credit-card" iconOnly /><span>Credit Card</span></label>
           </div>
         </div>
       </div>

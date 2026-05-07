@@ -14,21 +14,21 @@
           class="btn-secondary btn-sm tw-mr-2"
           (click)="downloadDocument()"
           title="Download">
-          <app-icon name="download" />
+          <app-icon name="download" iconOnly />
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn-secondary btn-sm tw-mr-2"
           (click)="openInNewTab()"
           title="Open in new tab">
-          <app-icon name="external-link" />
+          <app-icon name="external-link" iconOnly />
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           class="btn-secondary btn-sm"
           (click)="onClose()"
           title="Close">
-          <app-icon name="x" />
+          <app-icon name="x" iconOnly />
         </button>
       </div>
     </div>
@@ -69,7 +69,7 @@
       <!-- Office Documents -->
       <div *ngIf="documentType === 'office'" class="office-viewer">
         <div class="office-preview">
-          <app-icon [name]="getFileIcon()" [size]="48" />
+          <app-icon [name]="getFileIcon()" [size]="48" iconOnly />
           <h3 class="tw-mt-3">{{ document?.title }}</h3>
           <p class="tw-text-muted">Office documents cannot be previewed directly.</p>
           <div class="tw-mt-3">
@@ -106,7 +106,7 @@
       <!-- Unsupported Documents -->
       <div *ngIf="documentType === 'unsupported'" class="unsupported-viewer">
         <div class="unsupported-preview">
-          <app-icon name="file" class="fa-5x tw-text-muted" />
+          <app-icon name="file" class="fa-5x tw-text-muted" iconOnly />
           <h3 class="tw-mt-3">{{ document?.title }}</h3>
           <p class="tw-text-muted">This file type cannot be previewed.</p>
           <div class="tw-mt-3">

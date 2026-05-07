@@ -8,7 +8,7 @@
   <!-- Error -->
   <div *ngIf="isError" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-6">
     <div class="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-text-center tw-max-w-sm tw-w-full tw-p-10">
-      <app-icon name="warning" [size]="48" class="tw-text-red-400 tw-mb-4 tw-block" />
+      <app-icon name="warning" [size]="48" class="tw-text-red-400 tw-mb-4 tw-block" iconOnly />
       <h2 class="tw-text-xl tw-font-bold tw-text-gray-800 tw-mb-2">Ticket Not Found</h2>
       <p class="tw-text-gray-500 tw-text-base tw-mb-6">We couldn't find your ticket details. The link may have expired.</p>
       <button class="btn-primary" (click)="goToEventPage()">

@@ -41,7 +41,7 @@
               [class.active]="mobileActionsOpen"
               (click)="toggleMobileActions($event)"
               title="Actions">
-              <app-icon name="more-vertical" />
+              <app-icon name="more-vertical" iconOnly />
             </button>
 
             <!-- Desktop header action buttons (≥ 576px) -->
@@ -68,12 +68,12 @@
               [class.search-active]="showSearchFilters"
               (click)="toggleSearchFilters()"
               title="Search">
-              <app-icon name="search" />
+              <app-icon name="search" iconOnly />
             </button>
           </div>
         </div>
       </div>
-      
+
       <!-- Search bar -->
       <div *ngIf="showSearch && displayColumns.length > 0 && showSearchFilters" class="search-bar-panel">
         <app-icon name="search" class="search-bar-icon" />
@@ -115,10 +115,10 @@
           </div>
         </div>
         <button *ngIf="hasActiveFilters()" type="button" class="btn-icon search-bar-clear" (click)="clearFilters()" title="Clear filters">
-          <app-icon name="filter-x" />
+          <app-icon name="filter-x" iconOnly />
         </button>
         <button type="button" class="btn-icon search-bar-close" (click)="toggleSearchFilters()" title="Hide search">
-          <app-icon name="x" />
+          <app-icon name="x" iconOnly />
         </button>
       </div>
       <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
@@ -234,7 +234,7 @@
                           target="_blank"
                           *ngIf="item[column.key]"
                           class="btn-sm btn-secondary">
-                          <app-icon name="external-link" />
+                          <app-icon name="external-link" iconOnly />
                         </a>
                         <span *ngIf="!item[column.key]" class="tw-text-muted">-</span>
                       </span>
@@ -249,7 +249,7 @@
                                 (click)="onBreakdownButtonClick(item, column.key)"
                                 title="View breakdown"
                                 style="border: none; box-shadow: none;">
-                          <app-icon name="chart-pie" />
+                          <app-icon name="chart-pie" iconOnly />
                         </button>
                       </div>
 
@@ -283,7 +283,7 @@
                         <button class="kebab-btn" type="button"
                                 (click)="toggleKebab(item, $event)"
                                 [class.active]="isKebabOpen(item)">
-                          <app-icon name="more-vertical" />
+                          <app-icon name="more-vertical" iconOnly />
                         </button>
                       </div>
                     </td>

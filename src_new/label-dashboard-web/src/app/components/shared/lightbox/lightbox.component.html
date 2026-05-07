@@ -8,7 +8,7 @@
           (click)="closeLightbox()" 
           type="button"
           aria-label="Close lightbox">
-    <app-icon name="x" />
+    <app-icon name="x" iconOnly />
   </button>
   
   <!-- Zoom controls -->
@@ -17,20 +17,20 @@
             (click)="zoomIn()" 
             type="button"
             title="Zoom in (+)">
-      <app-icon name="plus" />
+      <app-icon name="plus" iconOnly />
     </button>
     <span class="zoom-level">{{ (currentZoom * 100).toFixed(0) }}%</span>
     <button class="control-btn" 
             (click)="zoomOut()" 
             type="button"
             title="Zoom out (-)">
-      <app-icon name="minus" />
+      <app-icon name="minus" iconOnly />
     </button>
     <button class="control-btn" 
             (click)="resetZoomAndPosition()" 
             type="button"
             title="Reset zoom (0)">
-      <app-icon name="move" />
+      <app-icon name="move" iconOnly />
     </button>
   </div>
   

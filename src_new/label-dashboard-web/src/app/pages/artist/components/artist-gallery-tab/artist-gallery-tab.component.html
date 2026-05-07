@@ -56,13 +56,13 @@
       </div>
 
       <div *ngIf="!loading && photos.length === 0" class="empty-gallery tw-text-center tw-text-muted">
-        <app-icon name="camera" [size]="48" />
+        <app-icon name="camera" [size]="48" iconOnly />
         <p>No photos uploaded yet</p>
         <small>Upload your first photo to get started!</small>
       </div>
 
       <div *ngIf="!loading && photos.length > 0 && filteredPhotos.length === 0" class="empty-gallery tw-text-center tw-text-muted">
-        <app-icon name="filter" [size]="48" />
+        <app-icon name="filter" [size]="48" iconOnly />
         <p>No photos match the current filter</p>
         <small>Try changing the EPK visibility filter above</small>
       </div>
@@ -165,7 +165,7 @@
                accept="image/jpeg,image/jpg,image/png,image/gif"
                (change)="onFilesSelected($event)">
         <label for="photoUpload" class="upload-label">
-          <app-icon name="upload" [size]="48" />
+          <app-icon name="upload" [size]="48" iconOnly />
           <p>Click to select photos or drag and drop</p>
           <small>Supported formats: JPEG, PNG, GIF (Max 10MB each)</small>
         </label>

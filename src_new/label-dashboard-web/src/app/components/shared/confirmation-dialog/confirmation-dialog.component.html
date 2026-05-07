@@ -26,7 +26,7 @@
             'cd-icon-warning': data?.type === 'warning',
             'cd-icon-danger':  data?.type === 'danger'
           }">
-            <app-icon [name]="(data?.type === 'danger' || data?.type === 'warning') ? 'warning' : 'info'" />
+            <app-icon [name]="(data?.type === 'danger' || data?.type === 'warning') ? 'warning' : 'info'" iconOnly />
           </span>
           <h5 class="cd-modal-title" id="confirmation-dialog-title">{{ data?.title }}</h5>
         </div>

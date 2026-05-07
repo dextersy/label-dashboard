@@ -1,4 +1,4 @@
-import { Component, Input, HostBinding, OnChanges, inject } from '@angular/core';
+import { Component, Input, HostBinding, OnChanges, inject, booleanAttribute } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ICON_REGISTRY } from './icon.registry';
@@ -15,11 +15,15 @@ import { ICON_REGISTRY } from './icon.registry';
       vertical-align: -0.125em;
       margin-right: 0.3em;
     }
+    :host(.icon-only) {
+      margin-right: 0;
+    }
   `]
 })
 export class IconComponent implements OnChanges {
   @Input() name: string = '';
   @Input() size: number | null = null;
+  @Input({ transform: booleanAttribute }) @HostBinding('class.icon-only') iconOnly: boolean = false;
 
   @HostBinding('innerHTML') html: SafeHtml = '';
 

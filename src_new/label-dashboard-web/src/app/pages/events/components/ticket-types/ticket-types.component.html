@@ -58,7 +58,7 @@
             <div class="input-group">
               <input type="datetime-local" class="tw-input" [(ngModel)]="ticketType.start_date">
               <button type="button" class="btn-secondary btn-sm" [disabled]="!ticketType.start_date" (click)="clearEditTicketStartDate(ticketType)" title="Clear start date">
-                <app-icon name="x" />
+                <app-icon name="x" iconOnly />
               </button>
             </div>
           </div>
@@ -67,7 +67,7 @@
             <div class="input-group">
               <input type="datetime-local" class="tw-input" [(ngModel)]="ticketType.end_date">
               <button type="button" class="btn-secondary btn-sm" [disabled]="!ticketType.end_date" (click)="clearEditTicketEndDate(ticketType)" title="Clear end date">
-                <app-icon name="x" />
+                <app-icon name="x" iconOnly />
               </button>
             </div>
           </div>
@@ -88,10 +88,10 @@
       </div>
       <div class="tw-flex tw-gap-2 tw-justify-end">
         <button type="button" class="btn-primary btn-sm" (click)="saveEdit(i)" title="Save changes">
-          <app-icon name="check" />
+          <app-icon name="check" iconOnly />
         </button>
         <button type="button" class="btn-secondary btn-sm" (click)="cancelEdit()" title="Cancel editing">
-          <app-icon name="x" />
+          <app-icon name="x" iconOnly />
         </button>
       </div>
     </div>
@@ -137,7 +137,7 @@
                   *ngIf="!ticketType.sold_tickets && !ticketType.pending_tickets"
                   [disabled]="editingIndex !== null || showNewForm"
                   (click)="confirmDelete(ticketType, i)" title="Delete ticket type">
-            <app-icon name="trash" class="tw-text-xs" />
+            <app-icon name="trash" class="tw-text-xs" iconOnly />
           </button>
         </ng-container>
         <button *ngIf="ticketType.disabled" type="button" class="btn-secondary btn-sm"
@@ -199,7 +199,7 @@
           <div class="input-group">
             <input type="datetime-local" class="tw-input" [(ngModel)]="newTicketType.start_date">
             <button type="button" class="btn-secondary btn-sm" [disabled]="!newTicketType.start_date" (click)="clearNewTicketStartDate()" title="Clear start date">
-              <app-icon name="x" />
+              <app-icon name="x" iconOnly />
             </button>
           </div>
         </div>
@@ -208,7 +208,7 @@
           <div class="input-group">
             <input type="datetime-local" class="tw-input" [(ngModel)]="newTicketType.end_date">
             <button type="button" class="btn-secondary btn-sm" [disabled]="!newTicketType.end_date" (click)="clearNewTicketEndDate()" title="Clear end date">
-              <app-icon name="x" />
+              <app-icon name="x" iconOnly />
             </button>
           </div>
         </div>
@@ -229,10 +229,10 @@
     </div>
     <div class="tw-flex tw-gap-2 tw-justify-end">
       <button type="button" class="btn-primary btn-sm" [disabled]="!newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)" (click)="saveNewTicketType()" title="Save new ticket type">
-        <app-icon name="check" />
+        <app-icon name="check" iconOnly />
       </button>
       <button type="button" class="btn-secondary btn-sm" (click)="cancelNewTicketType()" title="Cancel adding ticket type">
-        <app-icon name="x" />
+        <app-icon name="x" iconOnly />
       </button>
     </div>
   </div>

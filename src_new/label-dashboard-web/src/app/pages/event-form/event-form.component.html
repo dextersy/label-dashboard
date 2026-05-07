@@ -219,7 +219,7 @@
                    (keydown)="onPosterUploadKeydown($event)"
                    aria-label="Upload event poster image">
                 <div class="ef-poster-icon">
-                  <app-icon name="upload" />
+                  <app-icon name="upload" iconOnly />
                 </div>
                 <p class="ef-poster-label">Tap to upload a poster</p>
                 <small class="ef-poster-hint">JPG or PNG · Max 5MB</small>
@@ -358,31 +358,31 @@
               <div class="payment-methods-grid">
                 <div class="payment-method-card">
                   <input type="checkbox" id="gcash" [(ngModel)]="eventData.supports_gcash" [disabled]="isEventPast()">
-                  <label for="gcash"><app-icon name="mobile" /><span>GCash</span></label>
+                  <label for="gcash"><app-icon name="mobile" iconOnly /><span>GCash</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="qrph" [(ngModel)]="eventData.supports_qrph" [disabled]="isEventPast()">
-                  <label for="qrph"><app-icon name="scan" /><span>QR Ph</span></label>
+                  <label for="qrph"><app-icon name="scan" iconOnly /><span>QR Ph</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="card" [(ngModel)]="eventData.supports_card" [disabled]="isEventPast()">
-                  <label for="card"><app-icon name="credit-card" /><span>Credit / Debit Card</span></label>
+                  <label for="card"><app-icon name="credit-card" iconOnly /><span>Credit / Debit Card</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="ubp" [(ngModel)]="eventData.supports_ubp" [disabled]="isEventPast()">
-                  <label for="ubp"><app-icon name="bank" /><span>UnionBank</span></label>
+                  <label for="ubp"><app-icon name="bank" iconOnly /><span>UnionBank</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="maya" [(ngModel)]="eventData.supports_maya" [disabled]="isEventPast()">
-                  <label for="maya"><app-icon name="wallet" /><span>Maya</span></label>
+                  <label for="maya"><app-icon name="wallet" iconOnly /><span>Maya</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="grabpay" [(ngModel)]="eventData.supports_grabpay" [disabled]="isEventPast()">
-                  <label for="grabpay"><app-icon name="car" /><span>GrabPay</span></label>
+                  <label for="grabpay"><app-icon name="car" iconOnly /><span>GrabPay</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="dob" [(ngModel)]="eventData.supports_dob" [disabled]="isEventPast()">
-                  <label for="dob"><app-icon name="bank" /><span>Direct Online Banking</span></label>
+                  <label for="dob"><app-icon name="bank" iconOnly /><span>Direct Online Banking</span></label>
                 </div>
               </div>
               <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))"
@@ -463,12 +463,12 @@
                         class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                         (click)="copyVerificationPIN()" title="Copy PIN"
                         [disabled]="!eventData.verification_pin">
-                  <app-icon name="copy" class="tw-text-sm" />
+                  <app-icon name="copy" class="tw-text-sm" iconOnly />
                 </button>
                 <button type="button"
                         class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                         (click)="generateVerificationPIN()" title="Generate random PIN">
-                  <app-icon name="refresh" class="tw-text-sm" />
+                  <app-icon name="refresh" class="tw-text-sm" iconOnly />
                 </button>
               </div>
               <p class="tw-text-xs tw-text-muted tw-mt-1.5">6-digit PIN for ticket scanners</p>
