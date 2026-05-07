@@ -268,7 +268,7 @@
                     <button type="button" class="btn-secondary tw-flex-1 sm:tw-flex-none"
                             (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
                             title="Download QR Code">
-                      <app-icon name="scan" />
+                      <app-icon name="qr-code" />
                     </button>
                   </div>
                 </div>
@@ -362,7 +362,7 @@
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="qrph" [(ngModel)]="eventData.supports_qrph" [disabled]="isEventPast()">
-                  <label for="qrph"><app-icon name="scan" iconOnly /><span>QR Ph</span></label>
+                  <label for="qrph"><app-icon name="qr-code" iconOnly /><span>QR Ph</span></label>
                 </div>
                 <div class="payment-method-card">
                   <input type="checkbox" id="card" [(ngModel)]="eventData.supports_card" [disabled]="isEventPast()">
