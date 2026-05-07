@@ -211,4 +211,20 @@ export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy 
   getAmountClass(amount: number | undefined): string {
     return amount !== undefined && amount < 0 ? 'text-danger' : '';
   }
+
+  private readonly avatarColors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+
+  getAvatarColor(name: string): string {
+    if (!name) return this.avatarColors[0];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return this.avatarColors[Math.abs(hash) % this.avatarColors.length];
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
 }

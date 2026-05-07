@@ -1,67 +1,106 @@
 <div class="event-referrals-tab">
   <!-- Info Message -->
   <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal alert-primary">
-    <h6><strong>Get those tickets moving! 🎫🎟️🚀</strong></h6>
-    <p class="tw-mb-0">
-      Create referral links for lineup artists or other promoters to share your event.<br>
-      Purchases made through referral links will be logged under the referrer, so you can give them incentives (or not — up to you, really)!
-    </p>
+    <p class="tw-font-semibold tw-mb-1"><app-icon name="rocket" />Get those tickets moving</p>
+    <p class="tw-mb-0">Create referral links for artists or promoters to share your event. Sales through referral links are tracked per referrer.</p>
   </div>
 
-  <!-- Referrers Table -->
-  <div class="table-responsive" *ngIf="referrers.length > 0; else noReferrers">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Referral Code</th>
-          <th class="tw-text-center">Tickets Sold</th>
-          <th class="tw-text-right">Gross Sales</th>
-          <th class="tw-text-right">Net Sales</th>
-          <th class="tw-text-center">Referral Link</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let referrer of referrers">
-          <td data-label="Name">{{ referrer.name }}</td>
-          <td data-label="Referral Code"><code>{{ referrer.referral_code }}</code></td>
-          <td class="tw-text-center" data-label="Tickets Sold">{{ referrer.tickets_sold }}</td>
-          <td class="tw-text-right" data-label="Gross Sales" [ngClass]="getAmountClass(referrer.gross_amount_sold)">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
-          <td class="tw-text-right" data-label="Net Sales" [ngClass]="getAmountClass(referrer.net_amount_sold)">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
-          <td class="tw-text-center" data-label="Referral Link">
-            <button
-              class="btn-sm btn-secondary tw-mr-1"
-              (click)="copyToClipboard(referrer.referral_shortlink)"
-              title="Copy referral link">
-              <app-icon name="copy" />
+  <ng-container *ngIf="referrers.length > 0; else noReferrers">
+    <p class="ef-section-label">Referrers</p>
+
+    <!-- Mobile card list (hidden on md+) -->
+    <div class="tw-block md:tw-hidden tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-4">
+      <div class="tw-divide-y tw-divide-gray-100">
+        <div *ngFor="let referrer of referrers"
+             class="tw-px-4 tw-py-3 tw-flex tw-items-center tw-gap-3">
+          <!-- Avatar -->
+          <div class="referrer-avatar tw-shrink-0" [style.background-color]="getAvatarColor(referrer.name)">
+            {{ getInitials(referrer.name) }}
+          </div>
+          <!-- Name + meta -->
+          <div class="tw-min-w-0 tw-flex-1">
+            <div class="tw-flex tw-items-center tw-gap-2 tw-mb-0.5 tw-flex-wrap">
+              <span class="tw-font-semibold tw-text-sm tw-text-gray-800 tw-truncate">{{ referrer.name }}</span>
+              <code class="tw-text-xs tw-bg-gray-100 tw-px-1.5 tw-py-0.5 tw-rounded">{{ referrer.referral_code }}</code>
+            </div>
+            <div class="tw-text-xs tw-text-gray-400">
+              <span>{{ referrer.tickets_sold }} ticket<span *ngIf="referrer.tickets_sold !== 1">s</span></span>
+              <span class="tw-mx-1">·</span>
+              <span [ngClass]="getAmountClass(referrer.gross_amount_sold)">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }} gross</span>
+              <span class="tw-mx-1">·</span>
+              <span [ngClass]="getAmountClass(referrer.net_amount_sold)">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }} net</span>
+            </div>
+          </div>
+          <!-- Actions -->
+          <div class="tw-flex tw-items-center tw-gap-1.5 tw-shrink-0">
+            <button class="btn-sm btn-secondary" (click)="copyToClipboard(referrer.referral_shortlink)" title="Copy referral link">
+              <app-icon name="copy" iconOnly />
             </button>
-            <button
-              class="btn-sm btn-secondary"
-              (click)="downloadReferralQR(referrer.referral_shortlink, referrer.referral_code)"
-              title="Download QR code">
-              <app-icon name="scan" />
+            <button class="btn-sm btn-secondary" (click)="downloadReferralQR(referrer.referral_shortlink, referrer.referral_code)" title="Download QR code">
+              <app-icon name="qr-code" iconOnly />
             </button>
-          </td>
-        </tr>
-      </tbody>
-      <tfoot *ngIf="referrers.length > 1">
-        <tr class="table-info">
-          <th>Total</th>
-          <th></th>
-          <th class="tw-text-center">{{ getTotalTicketsSold() }}</th>
-          <th class="tw-text-right" [ngClass]="getAmountClass(getTotalGrossSales())">{{ getTotalGrossSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
-          <th class="tw-text-right" [ngClass]="getAmountClass(getTotalNetSales())">{{ getTotalNetSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
-          <th></th>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop table (hidden on mobile) -->
+    <div class="tw-hidden md:tw-block table-responsive tw-mb-4">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Referral Code</th>
+            <th class="tw-text-center">Tickets Sold</th>
+            <th class="tw-text-right">Gross Sales</th>
+            <th class="tw-text-right">Net Sales</th>
+            <th class="tw-text-center">Referral Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let referrer of referrers">
+            <td data-label="Name">
+              <div class="tw-flex tw-items-center tw-gap-2">
+                <div class="referrer-avatar tw-shrink-0" [style.background-color]="getAvatarColor(referrer.name)">{{ getInitials(referrer.name) }}</div>
+                {{ referrer.name }}
+              </div>
+            </td>
+            <td data-label="Referral Code"><code>{{ referrer.referral_code }}</code></td>
+            <td class="tw-text-center" data-label="Tickets Sold">{{ referrer.tickets_sold }}</td>
+            <td class="tw-text-right" data-label="Gross Sales" [ngClass]="getAmountClass(referrer.gross_amount_sold)">{{ referrer.gross_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
+            <td class="tw-text-right" data-label="Net Sales" [ngClass]="getAmountClass(referrer.net_amount_sold)">{{ referrer.net_amount_sold | currency:'PHP':'symbol':'1.2-2' }}</td>
+            <td class="tw-text-center" data-label="Referral Link">
+              <button class="btn-sm btn-secondary tw-mr-1" (click)="copyToClipboard(referrer.referral_shortlink)" title="Copy referral link">
+                <app-icon name="copy" />
+              </button>
+              <button class="btn-sm btn-secondary" (click)="downloadReferralQR(referrer.referral_shortlink, referrer.referral_code)" title="Download QR code">
+                <app-icon name="qr-code" iconOnly />
+              </button>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="referrers.length > 1">
+          <tr class="table-info">
+            <th>Total</th>
+            <th></th>
+            <th class="tw-text-center">{{ getTotalTicketsSold() }}</th>
+            <th class="tw-text-right" [ngClass]="getAmountClass(getTotalGrossSales())">{{ getTotalGrossSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
+            <th class="tw-text-right" [ngClass]="getAmountClass(getTotalNetSales())">{{ getTotalNetSales() | currency:'PHP':'symbol':'1.2-2' }}</th>
+            <th></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </ng-container>
 
   <ng-template #noReferrers>
-    <div class="tw-py-5 tw-text-center">
-      <app-icon name="user-plus" [size]="48" class="tw-mb-3 tw-text-muted" />
-      <h3>No Referrers Yet</h3>
-      <p class="tw-text-muted">No referrers have been added for this event.</p>
+    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-4">
+      <div class="tw-px-card-pad tw-pb-card-pad tw-p-5 tw-text-center">
+        <app-icon name="user-plus" class="fa-4x tw-mb-3 tw-text-muted" iconOnly />
+        <h4>No Referrers Yet</h4>
+        <p class="tw-text-muted tw-mb-0">No referrers have been added for this event.</p>
+      </div>
     </div>
   </ng-template>
 
@@ -70,9 +109,9 @@
     <div class="md:tw-col-span-6">
       <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
         <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-          <h3><app-icon name="plus" class="tw-mr-2" />Add Referrer</h3>
+          <p class="ef-section-label">Add Referrer</p>
         </div>
-        <div class="tw-px-card-pad tw-pb-card-pad">
+        <div class="sm:tw-px-card-pad tw-pb-card-pad">
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3" *ngIf="isEventPast()">
             <app-icon name="lock" class="tw-mr-2" />
             Cannot add referrers to past events
@@ -133,28 +172,28 @@
     </div>
 
     <!-- Instructions Column -->
-    <div class="md:tw-col-span-6">
-      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 border-info">
-        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-text-[#0891b2]">
+    <div class="tw-col-span-1 md:tw-col-span-6">
+      <div class="tw-rounded-card tw-overflow-hidden tw-mb-8 tw-bg-blue-50 tw-border tw-border-blue-200">
+        <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-text-blue-700">
           <h6 class="tw-mb-0"><app-icon name="info" class="tw-mr-2" />How Referrals Work</h6>
         </div>
         <div class="tw-px-card-pad tw-pb-card-pad">
           <ol class="list-unstyled">
-            <li class="tw-mb-2">
-              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
-              <strong>Create a referrer</strong> for each person promoting your event
+            <li class="tw-mb-2 tw-flex tw-items-start tw-gap-2">
+              <span class="tw-flex-shrink-0 tw-w-5 tw-h-5 tw-rounded-full tw-bg-blue-600 tw-text-white tw-text-xs tw-font-bold tw-flex tw-items-center tw-justify-center tw-mt-0.5">1</span>
+              <span><strong>Create a referrer</strong> for each person promoting your event</span>
             </li>
-            <li class="tw-mb-2">
-              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
-              <strong>Share the referral link</strong> with them to promote
+            <li class="tw-mb-2 tw-flex tw-items-start tw-gap-2">
+              <span class="tw-flex-shrink-0 tw-w-5 tw-h-5 tw-rounded-full tw-bg-blue-600 tw-text-white tw-text-xs tw-font-bold tw-flex tw-items-center tw-justify-center tw-mt-0.5">2</span>
+              <span><strong>Share the referral link</strong> with them to promote</span>
             </li>
-            <li class="tw-mb-2">
-              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
-              <strong>Track their sales</strong> in the table above
+            <li class="tw-mb-2 tw-flex tw-items-start tw-gap-2">
+              <span class="tw-flex-shrink-0 tw-w-5 tw-h-5 tw-rounded-full tw-bg-blue-600 tw-text-white tw-text-xs tw-font-bold tw-flex tw-items-center tw-justify-center tw-mt-0.5">3</span>
+              <span><strong>Track their sales</strong> in the table above</span>
             </li>
-            <li class="tw-mb-2">
-              <app-icon name="check-circle" class="tw-text-success tw-mr-2" />
-              <strong>Reward them</strong> based on their performance
+            <li class="tw-mb-2 tw-flex tw-items-start tw-gap-2">
+              <span class="tw-flex-shrink-0 tw-w-5 tw-h-5 tw-rounded-full tw-bg-blue-600 tw-text-white tw-text-xs tw-font-bold tw-flex tw-items-center tw-justify-center tw-mt-0.5">4</span>
+              <span><strong>Reward them</strong> based on their performance</span>
             </li>
           </ol>
           
