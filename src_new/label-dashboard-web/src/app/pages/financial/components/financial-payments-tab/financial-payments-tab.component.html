@@ -29,47 +29,50 @@
         <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payment Methods</h3>
       </div>
       <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
-        <div *ngFor="let method of paymentMethods" class="payment-method-item">
-          <div class="payment-method-avatar"
-               [style.background]="getBankColor(method.type)">
-            {{ getBankInitials(method.type) }}
-          </div>
-          <div class="payment-method-info">
-            <div class="payment-method-type">{{ method.type }}</div>
-            <div class="payment-method-name">{{ method.account_name }}</div>
-            <div class="payment-method-number">{{ method.account_number_or_email }}</div>
-          </div>
-          <div class="payment-method-actions">
-            <div *ngIf="method.is_default_for_artist" class="badge badge-primary tw-mb-2">Default</div>
-            <div class="tw-flex tw-gap-1">
-              <button
-                type="button"
-                class="btn-secondary btn-sm btn-icon"
-                [disabled]="method.is_default_for_artist"
-                (click)="setDefaultPaymentMethod(method.id)"
-                title="Set as default">
-                <app-icon [name]="method.is_default_for_artist ? 'star-filled' : 'star'" [class.tw-text-yellow-400]="method.is_default_for_artist" [class.tw-text-gray-300]="!method.is_default_for_artist" />
-              </button>
-              <button
-                type="button"
-                class="btn-danger btn-sm btn-icon"
-                [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
-                (click)="deletePaymentMethod(method.id)"
-                [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
-                <app-icon name="trash" />
-              </button>
+        <div *ngIf="paymentMethods.length === 0" class="tw-text-center tw-text-muted tw-py-4">
+          <app-icon name="credit-card" [size]="40" class="tw-mb-2 tw-opacity-40" iconOnly />
+          <p class="tw-text-sm tw-mb-0">No payment methods added yet.</p>
+        </div>
+        <div *ngIf="paymentMethods.length > 0">
+          <div class="list-group list-group-flush">
+            <div class="list-group-item tw-px-0 tw-py-3" *ngFor="let method of paymentMethods">
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <div class="payment-method-icon-container">
+                  <app-icon [name]="getPaymentMethodIcon(method.type)" iconOnly />
+                </div>
+                <div class="tw-flex-1 tw-min-w-0">
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <strong>{{ method.type }}</strong>
+                    <span *ngIf="method.is_default_for_artist" class="badge bg-success">Default</span>
+                  </div>
+                  <div class="tw-text-sm tw-text-muted">{{ method.account_name }}</div>
+                  <div class="tw-text-sm tw-text-muted">{{ maskAccountNumber(method.account_number_or_email) }}</div>
+                </div>
+                <div class="tw-flex tw-gap-1 tw-shrink-0">
+                  <button *ngIf="!method.is_default_for_artist"
+                          type="button"
+                          class="btn-icon payment-method-action-btn"
+                          (click)="setDefaultPaymentMethod(method.id)"
+                          title="Set as default">
+                    <app-icon name="star" />
+                  </button>
+                  <button type="button"
+                          class="btn-icon payment-method-action-btn payment-method-delete-btn"
+                          [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
+                          (click)="deletePaymentMethod(method.id)"
+                          [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
+                    <app-icon name="trash" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
-        <div *ngIf="paymentMethods.length === 0" class="tw-text-center tw-text-muted">
-          No payment methods added yet.
-        </div>
-        
-        <div class="tw-mt-4 tw-pt-4 tw-border-t tw-border-gray-100">
-          <button type="button" class="btn-ghost btn-sm tw-w-full" (click)="toggleAddPaymentMethodCollapse()">
-            <app-icon [name]="isAddPaymentMethodCollapsed ? 'plus' : 'x'" class="tw-mr-1" />
-            {{ isAddPaymentMethodCollapsed ? 'Add Payment Method' : 'Cancel' }}
+        <div class="tw-mt-3">
+          <button type="button" class="btn-ghost-dashed" (click)="toggleAddPaymentMethodCollapse()">
+            <app-icon [name]="isAddPaymentMethodCollapsed ? 'plus' : 'x'" class="tw-mr-1.5" />
+            {{ isAddPaymentMethodCollapsed ? 'Add payment method' : 'Cancel' }}
           </button>
         </div>
 

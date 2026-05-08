@@ -2,76 +2,37 @@
   margin-bottom: 20px;
 }
 
-.payment-method-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.payment-method-avatar {
+.payment-method-icon-container {
+  @apply tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-rounded-card-mobile tw-bg-gray-100 tw-text-muted;
   width: 36px;
   height: 36px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
 }
 
-.payment-method-info {
-  flex: 1;
-  min-width: 0;
+.payment-method-action-btn {
+  @apply tw-rounded-btn tw-border tw-border-border-subtle;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+
+  &.payment-method-delete-btn {
+    @apply tw-text-danger tw-border-danger-dark;
+  }
 }
 
-.payment-method-type {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--brand-color, #3b82f6);
-  margin-bottom: 2px;
-}
+.btn-ghost-dashed {
+  @apply tw-flex tw-items-center tw-justify-center tw-w-full tw-text-muted tw-rounded-btn tw-font-medium;
+  padding: 11px 16px;
+  font-size: 0.875rem;
+  background: transparent;
+  border: 1.5px dashed;
+  @apply tw-border-border-subtle;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  min-height: 44px;
 
-.payment-method-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.payment-method-number {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.payment-method-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-
-.badge {
-  font-size: 0.7em;
-}
-
-.badge-primary {
-  background-color: var(--brand-color, #3b82f6);
+  &:hover {
+    @apply tw-text-body tw-border-border-default;
+  }
 }
 
 .form-group {

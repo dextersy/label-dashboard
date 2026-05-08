@@ -86,21 +86,20 @@ export class FinancialPaymentsTabComponent {
     this.isAddPaymentMethodCollapsed = !this.isAddPaymentMethodCollapsed;
   }
 
-  getBankInitials(name: string): string {
-    if (!name) return '?';
-    const words = name.trim().split(/\s+/);
-    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-    return (words[0][0] + words[1][0]).toUpperCase();
+    getPaymentMethodIcon(type: string): string {
+    if (!type) return 'credit-card';
+    const lower = type.toLowerCase();
+    if (lower.includes('bank') || lower.includes('savings') || lower.includes('checking')) {
+      return 'bank';
+    }
+    return 'wallet';
   }
 
-  getBankColor(name: string): string {
-    const palette = [
-      '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b',
-      '#10b981', '#06b6d4', '#f97316', '#6366f1',
-    ];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    return palette[Math.abs(hash) % palette.length];
+  maskAccountNumber(account: string): string {
+    if (!account) return '';
+    const trimmed = account.trim();
+    if (trimmed.length <= 4) return trimmed;
+    return '···· ' + trimmed.slice(-4);
   }
 
 }
