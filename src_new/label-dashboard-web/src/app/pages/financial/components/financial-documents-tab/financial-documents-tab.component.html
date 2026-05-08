@@ -21,6 +21,27 @@
       [showSortableHeaders]="true"
       [showActionsColumn]="true"
       [actions]="docActions">
+
+      <ng-template #mobileRowTemplate let-doc let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+        <div class="doc-mobile-row">
+          <div class="doc-mobile-badge-col">
+            <span class="doc-mobile-badge" [style.background]="getFileTypeInfo(doc.filename).bgColor">
+              {{ getFileTypeInfo(doc.filename).label }}
+            </span>
+          </div>
+          <div class="doc-mobile-body">
+            <div class="doc-mobile-title">{{ doc.title }}</div>
+            <div class="doc-mobile-filename">{{ doc.filename }}</div>
+            <div class="doc-mobile-date">{{ formatDate(doc.upload_date) }}</div>
+          </div>
+          <div class="doc-mobile-actions" (click)="$event.stopPropagation()">
+            <button class="kebab-btn" type="button" (click)="toggleKebab($event)" [class.active]="isKebabOpen">
+              <app-icon name="more-vertical" iconOnly />
+            </button>
+          </div>
+        </div>
+      </ng-template>
+
     </app-paginated-table>
   </div>
   
@@ -29,26 +50,31 @@
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
         <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Document</h3>
       </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
+      <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
         <form (ngSubmit)="onUploadDocument()">
           <div class="tw-mb-5 tw-mb-3">
             <label for="documentTitle" class="tw-label">Document Title</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="documentTitle"
-              class="tw-input" 
-              [(ngModel)]="documentUploadForm.title" 
-              name="documentTitle" 
+              class="tw-input"
+              [(ngModel)]="documentUploadForm.title"
+              name="documentTitle"
               placeholder="Enter document title"
               required>
           </div>
-          
+
           <div class="tw-mb-5 tw-mb-3">
             <label for="documentFile" class="tw-label">Choose File</label>
-            <input 
-              type="file" 
+            <input
+              type="file"
               id="documentFile"
-              class="tw-input" 
+              class="tw-block tw-w-full tw-text-sm tw-text-gray-500
+                     file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
+                     file:tw-rounded file:tw-border-0
+                     file:tw-text-sm file:tw-font-medium
+                     file:tw-bg-gray-100 file:tw-text-gray-700
+                     hover:file:tw-bg-gray-200 tw-cursor-pointer"
               (change)="onFileSelected($event)"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
               required>

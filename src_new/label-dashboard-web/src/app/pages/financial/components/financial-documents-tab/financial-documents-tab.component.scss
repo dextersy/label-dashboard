@@ -58,17 +58,84 @@
   .table-responsive {
     font-size: 0.875rem;
   }
-  
+
   .btn-group-sm .btn {
     padding: 0.25rem 0.4rem;
     font-size: 0.775rem;
   }
-  
+
   .document-actions {
     white-space: nowrap;
   }
-  
+
   .form-group {
     margin-bottom: 1rem;
   }
+}
+
+// Mobile document row
+.doc-mobile-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 8px 10px;
+  gap: 10px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.doc-mobile-badge-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.doc-mobile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.doc-mobile-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-mobile-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-mobile-filename {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-mobile-date {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.doc-mobile-actions {
+  flex-shrink: 0;
 }
