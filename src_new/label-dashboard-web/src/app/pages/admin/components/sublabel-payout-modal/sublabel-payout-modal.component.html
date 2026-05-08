@@ -24,8 +24,8 @@
                 <strong [class.tw-text-success]="hasEnoughWalletBalance()" [class.tw-text-danger]="!hasEnoughWalletBalance()">
                   ₱{{ walletBalance | number:'1.2-2' }}
                 </strong>
-                <app-icon name="check-circle" class="tw-text-success tw-ml-1" *ngIf="hasEnoughWalletBalance()" />
-                <app-icon name="x-circle" class="tw-text-danger tw-ml-1" *ngIf="!hasEnoughWalletBalance()" />
+                <app-icon name="check-circle" iconOnly class="tw-text-success tw-ml-1" *ngIf="hasEnoughWalletBalance()" />
+                <app-icon name="x-circle" iconOnly class="tw-text-danger tw-ml-1" *ngIf="!hasEnoughWalletBalance()" />
               </span>
               <span *ngIf="loadingWalletBalance" class="tw-text-muted">
                 <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" />Loading...
@@ -120,7 +120,7 @@
                 [title]="shouldDisableOfflineToggle() ? getInsufficientBalanceTooltip() : ''">
               <label class="form-check-label" for="offlinePayment">
                 This is an offline payment
-                <app-icon name="info" class="tw-text-warning tw-ml-1" *ngIf="shouldDisableOfflineToggle()" 
+                <app-icon name="info" iconOnly class="tw-text-warning tw-ml-1" *ngIf="shouldDisableOfflineToggle()"
                    [title]="getInsufficientBalanceTooltip()" />
               </label>
             </div>

@@ -53,22 +53,22 @@
         <div class="financial-summary-item">
           <span class="financial-item-label">Physical</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.physical_earnings)">{{ formatCurrency(earningsSummary.physical_earnings) }}</span>
-          <app-icon name="cart" class="financial-item-icon" />
+          <app-icon name="cart" iconOnly class="financial-item-icon" />
         </div>
         <div class="financial-summary-item">
           <span class="financial-item-label">Downloads</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.download_earnings)">{{ formatCurrency(earningsSummary.download_earnings) }}</span>
-          <app-icon name="download" class="financial-item-icon" />
+          <app-icon name="download" iconOnly class="financial-item-icon" />
         </div>
         <div class="financial-summary-item">
           <span class="financial-item-label">Streaming</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.streaming_earnings)">{{ formatCurrency(earningsSummary.streaming_earnings) }}</span>
-          <app-icon name="headphones" class="financial-item-icon" />
+          <app-icon name="headphones" iconOnly class="financial-item-icon" />
         </div>
         <div class="financial-summary-item">
           <span class="financial-item-label">Sync</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.sync_earnings)">{{ formatCurrency(earningsSummary.sync_earnings) }}</span>
-          <app-icon name="film" class="financial-item-icon" />
+          <app-icon name="film" iconOnly class="financial-item-icon" />
         </div>
       </div>
     </div>

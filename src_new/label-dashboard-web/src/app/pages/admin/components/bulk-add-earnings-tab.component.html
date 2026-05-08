@@ -191,8 +191,8 @@
       <button type="button"
               class="btn-secondary btn-sm dropdown-toggle dropdown-toggle-split"
               (click)="toggleAddRowsDropdown()">
-        <app-icon name="caret-up" *ngIf="showAddRowsDropdown" />
-        <app-icon name="caret-down" *ngIf="!showAddRowsDropdown" />
+        <app-icon name="caret-up" iconOnly *ngIf="showAddRowsDropdown" />
+        <app-icon name="caret-down" iconOnly *ngIf="!showAddRowsDropdown" />
       </button>
     </div>
     <div class="dropdown-menu-wrapper" *ngIf="showAddRowsDropdown">

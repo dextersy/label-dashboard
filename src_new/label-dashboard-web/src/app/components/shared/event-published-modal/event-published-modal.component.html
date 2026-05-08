@@ -27,7 +27,7 @@
               class="btn-primary tw-flex-1 sm:tw-flex-none"
               type="button"
               (click)="copyLink()">
-              <app-icon [name]="copySuccess ? 'check' : 'copy'" />
+              <app-icon [name]="copySuccess ? 'check' : 'copy'" iconOnly />
               {{ copySuccess ? 'Copied!' : 'Copy' }}
             </button>
             <button
@@ -35,7 +35,7 @@
               type="button"
               (click)="downloadBuyLinkQR()"
               title="Download QR Code">
-              <app-icon name="qr-code" />
+              <app-icon name="qr-code" iconOnly />
             </button>
           </div>
         </div>

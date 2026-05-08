@@ -6,7 +6,7 @@
   <button type="button" class="close" (click)="closeNotification($event)">
     <span aria-hidden="true">&times;</span>
   </button>
-  <app-icon [name]="getNotificationIcon()" />
+  <app-icon [name]="getNotificationIcon()" iconOnly />
   <strong *ngIf="getNotificationCaption()">{{ getNotificationCaption() }}</strong>
   {{ currentNotification.message }}
 </div>

@@ -20,7 +20,7 @@
     <button class="switch-workspace-btn"
             *ngIf="availableWorkspaceInfos.length > 1"
             (click)="openWorkspaceSwitchModal()">
-      <app-icon name="shuffle" />
+      <app-icon name="shuffle" iconOnly />
       <span>Switch workspace</span>
     </button>
 
@@ -94,7 +94,7 @@
            [title]="isCollapsed && !isMobileView ? item.title : ''">
           <span class="nav-icon"><app-icon [name]="item.icon" iconOnly /></span>
           <span class="nav-label">{{ item.title }}</span>
-          <app-icon name="chevron-down" class="submenu-arrow" [class.rotated]="isSubmenuExpanded(item.route)" />
+          <app-icon name="chevron-down" iconOnly class="submenu-arrow" [class.rotated]="isSubmenuExpanded(item.route)" />
         </a>
 
         <!-- Submenu -->
@@ -154,8 +154,8 @@
                   class="workspace-option-btn"
                   [class.active]="info.type === currentWorkspace"
                   (click)="switchWorkspace(info.type)">
-            <app-icon name="check" class="workspace-option-check" *ngIf="info.type === currentWorkspace" />
-            <app-icon [name]="info.icon" class="workspace-option-icon" />
+            <app-icon name="check" iconOnly class="workspace-option-check" *ngIf="info.type === currentWorkspace" />
+            <app-icon [name]="info.icon" iconOnly class="workspace-option-icon" />
             <span class="workspace-option-name">{{ info.label }}</span>
             <span class="workspace-option-desc">{{ info.description }}</span>
           </button>

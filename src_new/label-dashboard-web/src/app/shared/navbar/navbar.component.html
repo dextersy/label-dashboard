@@ -31,7 +31,7 @@
           [class]="'workspace-tab-' + workspace"
           [class.active]="currentWorkspace === workspace"
           (click)="selectWorkspace(workspace)">
-          <app-icon [name]="getWorkspaceIcon(workspace)" [size]="18" />
+          <app-icon [name]="getWorkspaceIcon(workspace)" iconOnly [size]="18" />
           <span class="workspace-label">{{ getWorkspaceLabel(workspace) }}</span>
         </button>
       </div>
@@ -40,7 +40,7 @@
     <!-- User menu (rightmost) -->
     <div class="user-menu" [class.open]="userDropdownOpen">
       <button class="user-menu-trigger" (click)="toggleUserDropdown()">
-        <app-icon name="user" class="fa-solid" />
+        <app-icon name="user" iconOnly class="fa-solid" />
         <span class="user-name">Welcome, <strong>{{ userFirstName }}</strong>!</span>
         <span *ngIf="isSuperadmin" class="superadmin-chip">
           <app-icon name="crown" class="fa-solid" /> Superadmin
@@ -48,7 +48,7 @@
         <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
           <app-icon name="shield" class="fa-solid" /> Admin
         </span>
-        <app-icon name="chevron-down" class="fa-solid user-menu-arrow" />
+        <app-icon name="chevron-down" iconOnly class="fa-solid user-menu-arrow" />
       </button>
 
       <div class="user-dropdown-menu" *ngIf="userDropdownOpen">
@@ -86,7 +86,7 @@
     [class]="'mobile-workspace-btn-' + workspace"
     [class.active]="currentWorkspace === workspace"
     (click)="selectWorkspace(workspace)">
-    <app-icon [name]="getWorkspaceIcon(workspace)" [size]="24" />
+    <app-icon [name]="getWorkspaceIcon(workspace)" iconOnly [size]="24" />
     <span class="mobile-workspace-label">{{ getWorkspaceLabel(workspace) }}</span>
   </button>
   <!-- Blank spacer to prevent chat widget overlap -->

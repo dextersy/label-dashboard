@@ -76,7 +76,7 @@
 
       <!-- Search bar -->
       <div *ngIf="showSearch && displayColumns.length > 0 && showSearchFilters" class="search-bar-panel">
-        <app-icon name="search" class="search-bar-icon" />
+        <app-icon name="search" iconOnly class="search-bar-icon" />
         <div class="search-fields-row">
           <div class="search-field" *ngFor="let column of displayColumns" [hidden]="column.searchable === false">
             <input

@@ -46,8 +46,8 @@
           class="btn-primary"
           (click)="onNext()">
           {{ isLastStep ? 'Get Started' : 'Next' }}
-          <app-icon name="arrow-right" *ngIf="!isLastStep" />
-          <app-icon name="check" *ngIf="isLastStep" />
+          <app-icon name="arrow-right" iconOnly *ngIf="!isLastStep" />
+          <app-icon name="check" iconOnly *ngIf="isLastStep" />
         </button>
       </div>
     </div>

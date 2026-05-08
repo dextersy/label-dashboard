@@ -163,7 +163,7 @@
           [disabled]="saving || !isFormValid()"
           (click)="saveProfile()">
     <div class="loading-spinner" *ngIf="saving"></div>
-    <app-icon name="save" class="" *ngIf="!saving" />
+    <app-icon name="save" iconOnly class="" *ngIf="!saving" />
     {{ saving ? 'Saving...' : 'Save Changes' }}
   </button>
 </app-floating-action-bar>

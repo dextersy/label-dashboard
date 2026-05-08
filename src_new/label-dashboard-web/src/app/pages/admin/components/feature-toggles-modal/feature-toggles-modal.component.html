@@ -11,7 +11,7 @@
       <div class="modal-body">
         <!-- Loading state -->
         <div class="tw-py-5 tw-text-center" *ngIf="loading">
-          <app-icon name="spinner" [size]="32" class="tw-text-muted tw-animate-spin" />
+          <app-icon name="spinner" iconOnly [size]="32" class="tw-text-muted tw-animate-spin" />
           <p class="tw-mt-2 tw-mb-0 tw-text-muted">Loading feature settings...</p>
         </div>
 
@@ -34,10 +34,10 @@
                 Disabled
               </div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_music_workspace">
-                <app-icon name="check" />
+                <app-icon name="check" iconOnly />
               </div>
               <div class="feature-icon">
-                <app-icon name="music" />
+                <app-icon name="music" iconOnly />
               </div>
               <div class="feature-name">Music Workspace</div>
               <div class="feature-desc">Artist info, releases, and financial</div>
@@ -53,10 +53,10 @@
                 Disabled
               </div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_campaigns_workspace">
-                <app-icon name="check" />
+                <app-icon name="check" iconOnly />
               </div>
               <div class="feature-icon">
-                <app-icon name="bullhorn" />
+                <app-icon name="bullhorn" iconOnly />
               </div>
               <div class="feature-name">Campaigns Workspace</div>
               <div class="feature-desc">Events and fundraisers</div>
@@ -72,10 +72,10 @@
                 Disabled
               </div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_sublabels">
-                <app-icon name="check" />
+                <app-icon name="check" iconOnly />
               </div>
               <div class="feature-icon">
-                <app-icon name="tags" />
+                <app-icon name="tags" iconOnly />
               </div>
               <div class="feature-name">Sublabels</div>
               <div class="feature-desc">Sublabels management in Labels workspace</div>

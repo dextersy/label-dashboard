@@ -13,9 +13,9 @@
         (click)="onTabClick(tab)">
         <app-icon [name]="tab.icon" />
         <span>{{ tab.label }}</span>
-        <app-icon name="check-circle" class="status-icon status-completed" *ngIf="tab.status === 'completed'" />
-        <app-icon name="warning" class="status-icon status-warning" *ngIf="tab.status === 'warning'" />
-        <app-icon name="warning" class="status-icon status-error" *ngIf="tab.status === 'error'" />
+        <app-icon name="check-circle" iconOnly class="status-icon status-completed" *ngIf="tab.status === 'completed'" />
+        <app-icon name="warning" iconOnly class="status-icon status-warning" *ngIf="tab.status === 'warning'" />
+        <app-icon name="warning" iconOnly class="status-icon status-error" *ngIf="tab.status === 'error'" />
       </button>
     </div>
   </nav>

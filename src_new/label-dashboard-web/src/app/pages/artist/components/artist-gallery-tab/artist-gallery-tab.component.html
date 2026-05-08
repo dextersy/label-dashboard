@@ -81,11 +81,11 @@
                  (dblclick)="onPhotoDoubleClick(photo)">
 
             <div class="drag-handle" *ngIf="reorderMode" cdkDragHandle>
-              <app-icon name="drag" />
+              <app-icon name="drag" iconOnly />
             </div>
 
             <div class="hidden-badge" *ngIf="photo.exclude_from_epk" title="Hidden from EPK">
-              <app-icon name="eye-off" />
+              <app-icon name="eye-off" iconOnly />
             </div>
 
             <div class="photo-overlay" *ngIf="!reorderMode">
@@ -93,29 +93,29 @@
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="openLightbox(photo)"
                         title="View photo">
-                  <app-icon name="eye" />
+                  <app-icon name="eye" iconOnly />
                 </button>
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="setAsProfilePhoto(photo)"
                         title="Set as profile photo">
-                  <app-icon name="user" />
+                  <app-icon name="user" iconOnly />
                 </button>
                 <button class="btn-sm btn-icon"
                         [ngClass]="photo.exclude_from_epk ? 'btn-secondary' : 'btn-secondary'"
                         (click)="toggleExcludeFromEPK(photo)"
                         [title]="photo.exclude_from_epk ? 'Excluded from EPK (click to include)' : 'Included in EPK (click to exclude)'">
-                  <app-icon [name]="photo.exclude_from_epk ? 'eye-off' : 'globe'" />
+                  <app-icon [name]="photo.exclude_from_epk ? 'eye-off' : 'globe'" iconOnly />
                 </button>
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="startEditingCaption(photo)"
                         *ngIf="!editingCaptions[photo.id]"
                         title="Edit caption">
-                  <app-icon name="edit" />
+                  <app-icon name="edit" iconOnly />
                 </button>
                 <button class="btn-sm btn-danger btn-icon"
                         (click)="deletePhoto(photo)"
                         title="Delete photo">
-                  <app-icon name="trash" />
+                  <app-icon name="trash" iconOnly />
                 </button>
               </div>
             </div>

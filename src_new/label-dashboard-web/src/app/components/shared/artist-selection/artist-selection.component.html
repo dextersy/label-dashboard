@@ -46,7 +46,7 @@
         <!-- Search + Create New Artist -->
         <div class="artist-modal-search tw-mb-3">
           <div class="search-input-wrapper">
-            <app-icon name="search" class="search-icon" />
+            <app-icon name="search" iconOnly class="search-icon" />
             <input type="text"
                    class="artist-search-input tw-input"
                    [(ngModel)]="searchTerm"
@@ -59,14 +59,14 @@
         <!-- Artist list -->
         <div class="artist-modal-list">
           <button *ngIf="isAdmin" class="artist-modal-item create-artist-item" (click)="addNewArtist()">
-            <app-icon name="plus" class="artist-modal-plus" />
+            <app-icon name="plus" iconOnly class="artist-modal-plus" />
             <span class="artist-modal-name">Create new artist</span>
           </button>
           <button *ngFor="let artist of pagedArtists"
                   class="artist-modal-item"
                   [class.active]="selectedArtist?.id === artist.id"
                   (click)="selectArtist(artist, true)">
-            <app-icon name="check" class="artist-modal-check" *ngIf="selectedArtist?.id === artist.id" />
+            <app-icon name="check" iconOnly class="artist-modal-check" *ngIf="selectedArtist?.id === artist.id" />
             <img [src]="getProfilePhotoUrl(artist)"
                  class="artist-modal-photo"
                  [alt]="artist.name"

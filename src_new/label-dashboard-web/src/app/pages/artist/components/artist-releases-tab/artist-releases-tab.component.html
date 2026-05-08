@@ -78,7 +78,7 @@
               <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
               <span class="release-chip release-chip--status" [ngClass]="getStatusChipClass(release.status)">{{ release.status }}</span>
               <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
-                <app-icon name="eye-off" />
+                <app-icon name="eye-off" iconOnly />
               </span>
             </div>
           </div>
@@ -88,7 +88,7 @@
                   type="button"
                   (click)="toggleKebab($event)"
                   [class.active]="isKebabOpen">
-            <app-icon name="more-vertical" />
+            <app-icon name="more-vertical" iconOnly />
           </button>
         </div>
       </ng-template>

@@ -67,11 +67,11 @@
                 <td class="mobile-narrow mobile-number tw-text-right tw-font-bold" data-label="Balance"><span [ngClass]="{'tw-text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
                 <td class="mobile-hide tw-text-right" data-label="Payout point"><span [ngClass]="{'tw-text-danger': artist.payout_point < 0}">{{ formatCurrency(artist.payout_point) }}</span></td>
                 <td class="mobile-narrow tw-text-center" data-label="Due for payment">
-                  <app-icon name="check" class="tw-text-success" *ngIf="artist.due_for_payment" />
+                  <app-icon name="check" iconOnly class="tw-text-success" *ngIf="artist.due_for_payment" />
                   <span *ngIf="!artist.due_for_payment" class="tw-text-muted">-</span>
                 </td>
                 <td class="mobile-hide tw-text-center" data-label="Payouts paused">
-                  <app-icon name="pause-circle" class="tw-text-warning" *ngIf="artist.hold_payouts" />
+                  <app-icon name="pause-circle" iconOnly class="tw-text-warning" *ngIf="artist.hold_payouts" />
                   <span *ngIf="!artist.hold_payouts" class="tw-text-muted">-</span>
                 </td>
               </tr>
@@ -90,7 +90,7 @@
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-success tw-opacity-80">
-          <app-icon name="coins" />
+          <app-icon name="coins" iconOnly />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : '#333'">
@@ -105,7 +105,7 @@
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-warning tw-opacity-80">
-          <app-icon name="clock" />
+          <app-icon name="clock" iconOnly />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
@@ -120,7 +120,7 @@
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
       <div class="tw-flex tw-items-center">
         <div class="tw-text-3xl tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
-          <app-icon name="wallet" />
+          <app-icon name="wallet" iconOnly />
         </div>
         <div class="tw-flex-1">
           <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
@@ -128,7 +128,7 @@
           </div>
           <div class="tw-text-sm tw-text-gray-500 tw-mt-1">
             Ready to Pay
-            <app-icon name="info" class="tw-ml-1" title="Due for payment and has bank account" />
+            <app-icon name="info" iconOnly class="tw-ml-1" title="Due for payment and has bank account" />
           </div>
         </div>
       </div>

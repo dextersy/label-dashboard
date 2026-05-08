@@ -27,7 +27,7 @@
     </div>
     <!-- Mobile: single compact row -->
     <div class="md:tw-hidden tw-flex tw-items-center tw-justify-center tw-gap-2">
-      <app-icon name="clock" style="font-size: 10px; opacity: 0.7;" />
+      <app-icon name="clock" iconOnly style="font-size: 10px; opacity: 0.7;" />
       <span class="mobile-countdown-inline">
         Closes in
         <ng-container *ngIf="timeLeft.days > 0"><strong>{{ timeLeft.days }}d</strong> </ng-container><strong>{{ timeLeft.hours.toString().padStart(2, '0') }}h {{ timeLeft.minutes.toString().padStart(2, '0') }}m {{ timeLeft.seconds.toString().padStart(2, '0') }}s</strong>

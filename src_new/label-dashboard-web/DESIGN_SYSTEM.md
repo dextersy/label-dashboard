@@ -577,17 +577,67 @@ Modals must escape the `.wrapper` / `.main-panel` positioning context to display
 
 ## Icons
 
-Font Awesome Free (v6) — imported globally via `styles.scss`.
+Icons are rendered via the `<app-icon>` component (selector: `app-icon`). It renders an inline SVG from the icon registry.
 
-Common patterns:
-- `fas fa-ellipsis-v` — kebab/row actions
-- `fas fa-th` — mobile bento actions
-- `fa fa-search` — search toggle
-- `fa fa-filter-circle-xmark` — clear filters
-- `fa fa-times` — close/dismiss
-- `fa fa-sort` / `fa-sort-up` / `fa-sort-down` — sortable columns
-- `fas fa-sync` (+ `fa-spin`) — refresh / loading
-- `fas fa-chart-pie` — breakdown button
+### Basic usage
+
+```html
+<!-- Icon next to text — default, has right margin -->
+<app-icon name="upload" class="tw-mr-1" /> Upload Document
+
+<!-- Standalone icon — no sibling text -->
+<app-icon name="x" iconOnly />
+```
+
+### `iconOnly` flag
+
+**Always add `iconOnly` when the icon has no visible text sibling in the same element.**
+
+The component applies `margin-right: 0.3em` by default so icons sit flush before text. `iconOnly` removes that trailing margin when there is no text following.
+
+**Use `iconOnly` when the icon is:**
+- The sole content of a button (`btn-icon`, `kebab-btn`, etc.)
+- A standalone decorative or status icon (check, warning, spinner, chevron toggle, etc.)
+- Inside a layout slot with no adjacent text node
+
+**Do NOT use `iconOnly` when the icon is:**
+- Immediately followed by text in the same parent (`<app-icon name="plus" class="tw-mr-1" /> Add Item`)
+- Inside a heading or paragraph alongside text
+
+```html
+<!-- ✅ Correct -->
+<button class="btn-icon"><app-icon name="search" iconOnly /></button>
+<app-icon name="check" class="tw-text-success" iconOnly *ngIf="saved" />
+<app-icon name="chevron-down" iconOnly />
+
+<!-- ❌ Wrong — iconOnly on an icon that precedes text -->
+<app-icon name="plus" iconOnly /> Add Item
+
+<!-- ❌ Wrong — missing iconOnly on a standalone icon -->
+<button class="btn-icon"><app-icon name="x" /></button>
+```
+
+### Available icons
+
+Icons are registered in `icon.registry.ts`. Common names used across the app:
+
+- `more-vertical` — kebab/row actions
+- `search` — search toggle
+- `filter-x` — clear filters
+- `x` — close/dismiss
+- `sort` / `sort-asc` / `sort-desc` — sortable column headers
+- `refresh` / `spinner` (+ `tw-animate-spin`) — refresh / loading
+- `chart-pie` — breakdown button
+- `check`, `check-circle` — success/confirmed state
+- `warning` — alert/warning state
+- `eye` / `eye-off` — show/hide toggle
+- `upload`, `download` — file actions
+- `trash` — delete
+- `plus` — add/create
+- `edit` / `save` — edit actions
+- `folder` — file/document context
+- `calendar` — date picker
+- `chevron-down` / `chevron-up` — collapse/expand toggles
 
 ---
 
