@@ -42,31 +42,33 @@
   }
 }
 
-.balance-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white !important;
-  margin-bottom: 8px;
+// Small muted caption above the balance amount
+.balance-eyebrow {
+  @apply tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-inline-flex tw-items-center tw-gap-1;
+  color: rgba(255, 255, 255, 0.65) !important;
+  margin-bottom: 4px;
   margin-top: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+}
+
+.balance-eyebrow__info {
+  color: rgba(255, 255, 255, 0.5) !important;
+  cursor: help;
 }
 
 .balance-amount {
   font-size: 3rem;
   font-weight: 800;
   color: white !important;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   margin-top: 0;
   line-height: 1.1;
 }
 
 .balance-subtitle {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8) !important;
-  margin-bottom: 15px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75) !important;
+  margin-bottom: 12px;
   margin-top: 0;
-  font-style: italic;
   line-height: 1.3;
 }
 
@@ -105,22 +107,31 @@
   &:last-child {
     cursor: default;
   }
+
+  // "Paid out" success-tinted card
+  &.financial-item--paid-out {
+    @apply tw-bg-success/10;
+
+    &:hover {
+      @apply tw-bg-success/15;
+    }
+  }
 }
 
 .financial-item-label {
-  font-size: 12px;
-  color: #999;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  font-weight: 500;
+  @apply tw-text-xs tw-font-medium tw-tracking-wide tw-text-muted;
 }
 
 .financial-item-value {
   font-size: 24px;
   font-weight: bold;
-  color: #1a1a2e;
+  @apply tw-text-heading;
   line-height: 1.1;
   margin: 0;
+
+  &.financial-item-value--success {
+    @apply tw-text-success;
+  }
 }
 
 .financial-item-link {
@@ -136,8 +147,119 @@
 
 .financial-item-sublabel {
   font-size: 0.78rem;
-  color: #aaa;
+  @apply tw-text-muted;
+
+  &.financial-item-sublabel--success {
+    @apply tw-text-success;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
 }
+
+// Payment method row icon container
+.payment-method-icon-container {
+  @apply tw-flex tw-items-center tw-justify-center tw-shrink-0 tw-rounded-card-mobile tw-bg-gray-100 tw-text-muted;
+  width: 36px;
+  height: 36px;
+}
+
+// Action buttons on payment method rows
+.payment-method-action-btn {
+  @apply tw-rounded-btn tw-border tw-border-border-subtle;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+
+  &.payment-method-delete-btn {
+    @apply tw-text-danger tw-border-danger-dark;
+  }
+}
+
+// Full-width dashed ghost "Add" button
+.btn-ghost-dashed {
+  @apply tw-flex tw-items-center tw-justify-center tw-w-full tw-text-muted tw-rounded-btn tw-font-medium;
+  padding: 11px 16px;
+  font-size: 0.875rem;
+  background: transparent;
+  border: 1.5px dashed;
+  @apply tw-border-border-subtle;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  min-height: 44px;
+
+  &:hover {
+    @apply tw-text-body tw-border-border-default;
+  }
+}
+
+// ── Mobile payment history cards ──────────────────────────────────────────────
+// Rendered via #mobileRowTemplate at ≤575px inside the paginated table
+
+.phc {
+  @apply tw-bg-white tw-rounded-card-mobile tw-shadow-card tw-overflow-hidden;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.phc__date {
+  @apply tw-text-xs tw-text-muted;
+  margin: 0 0 4px;
+}
+
+.phc__top {
+  @apply tw-flex tw-items-center tw-justify-between;
+  margin-bottom: 8px;
+}
+
+.phc__amount {
+  @apply tw-text-heading tw-font-semibold;
+  font-size: 1.2rem;
+}
+
+.phc__status {
+  @apply tw-inline-flex tw-items-center tw-gap-1 tw-rounded-badge tw-font-semibold tw-shrink-0;
+  font-size: 0.75rem;
+  padding: 3px 9px;
+
+  &.phc__status--success {
+    @apply tw-bg-success/10 tw-text-success;
+  }
+
+  &.phc__status--danger {
+    @apply tw-bg-danger/10 tw-text-danger;
+  }
+
+  &.phc__status--warning {
+    @apply tw-bg-warning/10 tw-text-warning;
+  }
+}
+
+.phc__method {
+  @apply tw-flex tw-items-center tw-gap-1.5 tw-text-sm tw-text-muted;
+}
+
+.phc__method-icon {
+  @apply tw-shrink-0;
+}
+
+.phc__description {
+  @apply tw-text-xs tw-text-muted;
+  margin: 4px 0 0;
+}
+
+.phc__error {
+  @apply tw-text-sm tw-text-danger tw-rounded-card-mobile;
+  @apply tw-bg-danger/10;
+  margin-top: 8px;
+  padding: 7px 10px;
+}
+
+.phc__hash {
+  @apply tw-text-xs tw-text-muted tw-font-mono tw-truncate;
+  margin: 6px 0 0;
+}
+
+// ── end mobile payment history cards ──────────────────────────────────────────
 
 .card {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -188,34 +310,41 @@
 
 @media (max-width: 768px) {
   .balance-amount {
-    font-size: 2rem;
+    font-size: 2.25rem;
   }
 
   .financial-item-value {
     font-size: 18px;
   }
 
+  // On mobile: dissolve the outer card — each item becomes its own card
   .financial-summary-card {
     flex-wrap: wrap;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    gap: 8px;
   }
 
   .financial-summary-item {
-    flex: 0 0 50%;
+    flex: 0 0 calc(50% - 4px); // 4px = half of 8px gap
+    padding: 1rem 0.75rem;
+    background: #fff;
+    border-radius: 8px; // tw-rounded-card-mobile
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04); // tw-shadow-card
 
+    // Remove all divider borders — each card is self-contained
     & + .financial-summary-item {
       border-left: none;
     }
 
     &:nth-child(odd) {
-      border-right: 1px solid #eee;
-    }
-
-    &:last-child:nth-child(odd) {
       border-right: none;
     }
 
     &:nth-child(-n+2) {
-      border-bottom: 1px solid #eee;
+      border-bottom: none;
     }
   }
 }

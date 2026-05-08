@@ -11,74 +11,91 @@
   </div>
 
   <!-- Dashboard Metrics: full-width stacked on mobile, 1/3 + 2/3 at lg -->
-  <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4 tw-mb-4 tw-items-center">
+  <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4 tw-mb-6 tw-items-center">
     <div>
       <div class="current-balance-section tw-p-4 tw-text-center">
-        <h2 class="balance-title">Receivable Balance</h2>
+        <p class="balance-eyebrow">
+          Receivable balance
+          <app-icon name="info" [size]="13" class="balance-eyebrow__info" title="Net earnings minus payments received" iconOnly />
+        </p>
         <h1 class="balance-amount" [ngClass]="getAmountClass(dashboard?.receivable_balance ?? 0)">₱{{ (dashboard?.receivable_balance ?? 0) | number:'1.2-2' }}</h1>
-        <p class="balance-subtitle">Net earnings - payments received</p>
       </div>
     </div>
 
     <div class="lg:tw-col-span-2">
       <div class="financial-summary-card">
         <div class="financial-summary-item" (click)="showBreakdown('music')">
-          <span class="financial-item-label">Net Music Earnings</span>
+          <span class="financial-item-label">Music</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.net_music_earnings ?? 0)">₱{{ (dashboard?.net_music_earnings ?? 0) | number:'1.2-2' }}</span>
-          <a class="financial-item-link">View Details</a>
+          <a class="financial-item-link">View details →</a>
         </div>
         <div class="financial-summary-item" (click)="showBreakdown('event')">
-          <span class="financial-item-label">Net Event Earnings</span>
+          <span class="financial-item-label">Events</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.net_event_earnings ?? 0)">₱{{ (dashboard?.net_event_earnings ?? 0) | number:'1.2-2' }}</span>
-          <a class="financial-item-link">View Details</a>
+          <a class="financial-item-link">View details →</a>
         </div>
         <div class="financial-summary-item" (click)="showBreakdown('fundraiser')">
-          <span class="financial-item-label">Net Fundraiser Earnings</span>
+          <span class="financial-item-label">Fundraiser</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.net_fundraiser_earnings ?? 0)">₱{{ (dashboard?.net_fundraiser_earnings ?? 0) | number:'1.2-2' }}</span>
-          <a class="financial-item-link">View Details</a>
+          <a class="financial-item-link">View details →</a>
         </div>
-        <div class="financial-summary-item">
-          <span class="financial-item-label">Total Payments</span>
-          <span class="financial-item-value" [ngClass]="getAmountClass(dashboard?.total_payments ?? 0)">₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</span>
-          <span class="financial-item-sublabel">Payments received</span>
+        <div class="financial-summary-item financial-item--paid-out">
+          <span class="financial-item-label">Paid out</span>
+          <span class="financial-item-value financial-item-value--success">₱{{ (dashboard?.total_payments ?? 0) | number:'1.2-2' }}</span>
+          <span class="financial-item-sublabel financial-item-sublabel--success">{{ paymentCount }} {{ paymentCount === 1 ? 'payment' : 'payments' }}</span>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Payment Methods and Payment History Section: 1/3 + 2/3 at lg -->
-  <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4">
+  <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-6 lg:tw-gap-4">
     <!-- Payment Methods -->
-    <div class="tw-mb-4 lg:tw-mb-0">
-      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-h-full">
-        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
-          <h3 class="tw-mb-0">Payment Methods</h3>
-          <button class="btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
-            <app-icon name="plus" class="tw-mr-1" />Add
-          </button>
+    <div>
+      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-h-full">
+        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payment methods</h3>
         </div>
-        <div class="tw-px-card-pad tw-pb-card-pad">
-          <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="tw-text-center tw-text-muted">
-            <app-icon name="credit-card" [size]="48" class="tw-mb-3" iconOnly />
-            <p>No payment methods configured yet.</p>
-            <button class="btn-primary btn-sm" (click)="openAddPaymentMethodModal()">
-              <app-icon name="plus" class="tw-mr-1" />Add Payment Method
-            </button>
+        <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+          <div *ngIf="!paymentMethods || paymentMethods.length === 0" class="tw-text-center tw-text-muted tw-py-4">
+            <app-icon name="credit-card" [size]="40" class="tw-mb-2 tw-opacity-40" iconOnly />
+            <p class="tw-text-sm tw-mb-0">No payment methods configured yet.</p>
           </div>
           <div *ngIf="paymentMethods && paymentMethods.length > 0">
             <div class="list-group list-group-flush">
-              <div class="list-group-item tw-px-0" *ngFor="let method of paymentMethods">
-                <div class="tw-flex tw-justify-between tw-items-start">
-                  <div>
-                    <strong>{{ method.type }}</strong>
-                    <span *ngIf="method.is_default_for_brand" class="badge bg-success tw-ml-2">Default</span>
-                    <div class="small tw-text-sm tw-text-muted">{{ method.account_name }}</div>
-                    <div class="small tw-text-sm tw-text-muted">{{ method.account_number_or_email }}</div>
+              <div class="list-group-item tw-px-0 tw-py-3" *ngFor="let method of paymentMethods">
+                <div class="tw-flex tw-items-center tw-gap-3">
+                  <div class="payment-method-icon-container">
+                    <app-icon [name]="getPaymentMethodIcon(method.type)" iconOnly />
+                  </div>
+                  <div class="tw-flex-1 tw-min-w-0">
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <strong>{{ method.type }}</strong>
+                      <span *ngIf="method.is_default_for_brand" class="badge bg-success">Default</span>
+                    </div>
+                    <div class="tw-text-sm tw-text-muted">{{ method.account_name }}</div>
+                    <div class="tw-text-sm tw-text-muted">{{ maskAccountNumber(method.account_number_or_email) }}</div>
+                  </div>
+                  <div class="tw-flex tw-gap-1 tw-shrink-0">
+                    <button *ngIf="!method.is_default_for_brand"
+                            class="btn-icon payment-method-action-btn"
+                            title="Set as default"
+                            (click)="setDefaultPaymentMethod(method)">
+                      <app-icon name="star" iconOnly />
+                    </button>
+                    <button class="btn-icon payment-method-action-btn payment-method-delete-btn"
+                            title="Remove"
+                            (click)="deletePaymentMethod(method)">
+                      <app-icon name="trash" iconOnly />
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          <button class="btn-ghost-dashed tw-mt-3" (click)="openAddPaymentMethodModal()">
+            <app-icon name="plus" class="tw-mr-1.5" />Add payment method
+          </button>
         </div>
       </div>
     </div>
@@ -95,6 +112,42 @@
         [showSortableHeaders]="true"
         [responsiveMode]="'card'"
         (pageChange)="onPaymentsPageChange($event)">
+
+        <ng-template #mobileRowTemplate let-payment>
+          <div class="phc">
+            <!-- Date -->
+            <p class="phc__date">{{ formatPaymentDate(payment.date_paid) }}</p>
+            <!-- Amount + status pill -->
+            <div class="phc__top">
+              <span class="phc__amount">{{ formatCurrency(payment.amount) }}</span>
+              <span class="phc__status phc__status--success" *ngIf="payment.status !== 'failed' && payment.status !== 'pending'">
+                <app-icon name="check-circle" [size]="13" iconOnly />Paid
+              </span>
+              <span class="phc__status phc__status--warning" *ngIf="payment.status === 'pending'">
+                <app-icon name="clock" [size]="13" iconOnly />Pending
+              </span>
+              <span class="phc__status phc__status--danger" *ngIf="payment.status === 'failed'">
+                <app-icon name="x-circle" [size]="13" iconOnly />Failed
+              </span>
+            </div>
+            <!-- Payment method row -->
+            <div class="phc__method">
+              <app-icon [name]="getHistoryPaymentIcon(payment)" [size]="14" class="phc__method-icon" iconOnly />
+              <span>{{ getHistoryPaymentLabel(payment) }}</span>
+            </div>
+            <!-- Optional payout title -->
+            <p class="phc__description" *ngIf="payment.description">{{ payment.description }}</p>
+            <!-- Error block (failed only) -->
+            <div class="phc__error" *ngIf="payment.status === 'failed' && payment.failure_reason">
+              {{ simplifyFailureReason(payment.failure_reason) }}
+            </div>
+            <!-- Transaction hash (failed only, when valid) -->
+            <p class="phc__hash" *ngIf="payment.status === 'failed' && isHashValid(payment.reference_number)">
+              {{ payment.reference_number }}
+            </p>
+          </div>
+        </ng-template>
+
       </app-paginated-table>
     </div>
   </div>

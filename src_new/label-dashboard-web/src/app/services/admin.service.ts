@@ -1016,8 +1016,17 @@ export class AdminService {
   setDefaultLabelPaymentMethod(methodId: number): Observable<any> {
     const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = user.brand_id;
-    
+
     return this.http.put(`${environment.apiUrl}/brands/${brandId}/payment-methods/${methodId}/set-default`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  deleteLabelPaymentMethod(methodId: number): Observable<any> {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+
+    return this.http.delete(`${environment.apiUrl}/brands/${brandId}/payment-methods/${methodId}`, {
       headers: this.getAuthHeaders()
     });
   }

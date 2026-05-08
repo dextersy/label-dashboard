@@ -7,6 +7,7 @@ import { LabelFinanceService, LabelFinanceDashboard, LabelFinanceBreakdown, Labe
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { ModalToBodyDirective } from '../../../directives/modal-to-body.directive';
 import { PaginatedTableComponent, PaginationInfo, SortInfo, TableColumn, HeaderAction } from '../../../components/shared/paginated-table/paginated-table.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
@@ -100,7 +101,8 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     private labelFinanceService: LabelFinanceService,
     private adminService: AdminService,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -331,13 +333,47 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Note: Delete functionality not available in AdminService yet
-  // deletePaymentMethod(id: number): void {
-  //   if (!confirm('Are you sure you want to delete this payment method?')) {
-  //     return;
-  //   }
-  //   // Implementation would go here when delete method is available
-  // }
+  setDefaultPaymentMethod(method: LabelPaymentMethod): void {
+    if (method.is_default_for_brand) return;
+
+    this.subscriptions.add(
+      this.adminService.setDefaultLabelPaymentMethod(method.id).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Default payment method updated');
+          this.loadPaymentMethods();
+        },
+        error: (error) => {
+          console.error('Error setting default payment method:', error);
+          this.notificationService.showError('Failed to update default payment method');
+        }
+      })
+    );
+  }
+
+  deletePaymentMethod(method: LabelPaymentMethod): void {
+    this.confirmationService.confirm({
+      title: 'Remove Payment Method',
+      message: `Remove "${method.type} - ${method.account_name}"? This cannot be undone.`,
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      type: 'danger',
+    }).then(confirmed => {
+      if (!confirmed) return;
+
+      this.subscriptions.add(
+        this.adminService.deleteLabelPaymentMethod(method.id).subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Payment method removed');
+            this.loadPaymentMethods();
+          },
+          error: (error) => {
+            console.error('Error deleting payment method:', error);
+            this.notificationService.showError('Failed to remove payment method');
+          }
+        })
+      );
+    });
+  }
 
 formatPaymentMethod(payment: LabelPayment): string {
     // Prioritize PaymentMethod data over legacy paid_thru_* fields
@@ -393,5 +429,63 @@ formatPaymentMethod(payment: LabelPayment): string {
 
   getAmountClass(amount: number | undefined): string {
     return amount !== undefined && amount < 0 ? 'text-danger' : '';
+  }
+
+  get paymentCount(): number {
+    return this.paymentsResponse?.pagination?.total_count ?? 0;
+  }
+
+  maskAccountNumber(account: string): string {
+    if (!account) return '';
+    const trimmed = account.trim();
+    if (trimmed.length <= 4) return trimmed;
+    return '···· ' + trimmed.slice(-4);
+  }
+
+  getPaymentMethodIcon(type: string): string {
+    if (!type) return 'credit-card';
+    const lower = type.toLowerCase();
+    if (lower.includes('bank') || lower.includes('savings') || lower.includes('checking')) {
+      return 'bank';
+    }
+    return 'wallet';
+  }
+
+  formatPaymentDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  isHashValid(hash: string | undefined): boolean {
+    return !!hash && hash !== 'N/A' && hash.trim().length > 0;
+  }
+
+  simplifyFailureReason(reason: string | undefined): string {
+    if (!reason) return 'Payment failed';
+    return reason
+      .replace(/^account_not_found:\s*/i, 'Account not found — ')
+      .replace(/^([a-z_]+):\s*/i, (_: string, code: string) =>
+        code.replace(/_/g, ' ').replace(/^./, (c: string) => c.toUpperCase()) + ' — '
+      )
+      .replace(/^./, (c: string) => c.toUpperCase());
+  }
+
+  getHistoryPaymentIcon(payment: LabelPayment): string {
+    const type = payment.paymentMethod?.type || payment.paid_thru_type || '';
+    return this.getPaymentMethodIcon(type);
+  }
+
+  getHistoryPaymentLabel(payment: LabelPayment): string {
+    if (payment.paymentMethod) {
+      const { type, account_number_or_email } = payment.paymentMethod;
+      const masked = this.maskAccountNumber(account_number_or_email);
+      return type ? `${type} · ${masked}` : masked;
+    }
+    if (payment.paid_thru_type) {
+      const masked = payment.paid_thru_account_number
+        ? this.maskAccountNumber(payment.paid_thru_account_number)
+        : '';
+      return masked ? `${payment.paid_thru_type} · ${masked}` : payment.paid_thru_type;
+    }
+    return 'Manual payment';
   }
 }
