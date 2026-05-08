@@ -45,7 +45,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   get headerActions(): HeaderAction[] {
     const actions: HeaderAction[] = [{
       icon: () => this.loading ? 'spinner' : 'refresh',
-      label: '',
+      label: 'Refresh',
       handler: () => this.refresh.emit(),
       type: 'secondary',
       title: 'Refresh payments',

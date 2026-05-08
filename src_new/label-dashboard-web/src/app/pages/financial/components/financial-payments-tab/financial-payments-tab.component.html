@@ -54,14 +54,14 @@
                           class="btn-icon payment-method-action-btn"
                           (click)="setDefaultPaymentMethod(method.id)"
                           title="Set as default">
-                    <app-icon name="star" />
+                    <app-icon name="star" iconOnly />
                   </button>
                   <button type="button"
                           class="btn-icon payment-method-action-btn payment-method-delete-btn"
                           [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                           (click)="deletePaymentMethod(method.id)"
                           [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
-                    <app-icon name="trash" />
+                    <app-icon name="trash" iconOnly />
                   </button>
                 </div>
               </div>
