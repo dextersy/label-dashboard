@@ -61,7 +61,19 @@
             </thead>
             <tbody>
               <tr *ngFor="let artist of data" [class.table-success]="artist.ready_for_payment">
-                <td class="mobile-text" data-label="Artist">{{ artist.name }}</td>
+                <td class="mobile-text" data-label="Artist">
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <img *ngIf="getProfilePhotoUrl(artist.profile_photo)"
+                         [src]="getProfilePhotoUrl(artist.profile_photo)"
+                         [alt]="artist.name"
+                         class="tw-w-11 tw-h-11 tw-min-w-[2.75rem] tw-rounded-full tw-object-cover tw-flex-shrink-0">
+                    <div *ngIf="!getProfilePhotoUrl(artist.profile_photo)"
+                         class="tw-w-11 tw-h-11 tw-min-w-[2.75rem] tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-xs tw-font-bold tw-flex-shrink-0 tw-bg-gray-200 tw-text-gray-600">
+                      {{ getInitials(artist.name) }}
+                    </div>
+                    <span>{{ artist.name }}</span>
+                  </div>
+                </td>
                 <td class="mobile-hide tablet-hide tw-text-right" data-label="Total royalties"><span [ngClass]="{'tw-text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span></td>
                 <td class="mobile-hide tablet-hide tw-text-right" data-label="Total payments"><span [ngClass]="{'tw-text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span></td>
                 <td class="mobile-narrow mobile-number tw-text-right tw-font-bold" data-label="Balance"><span [ngClass]="{'tw-text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
@@ -88,8 +100,8 @@
 
     <!-- Total Balance -->
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
-      <div class="tw-flex tw-items-center">
-        <div class="tw-text-3xl tw-mr-5 tw-text-success tw-opacity-80">
+      <div class="tw-flex tw-flex-col tw-items-center tw-text-center sm:tw-flex-row sm:tw-items-center sm:tw-text-left">
+        <div class="tw-text-3xl tw-mb-2 sm:tw-mb-0 sm:tw-mr-5 tw-text-success tw-opacity-80">
           <app-icon name="coins" iconOnly />
         </div>
         <div class="tw-flex-1">
@@ -103,8 +115,8 @@
 
     <!-- Total Due For Payment -->
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
-      <div class="tw-flex tw-items-center">
-        <div class="tw-text-3xl tw-mr-5 tw-text-warning tw-opacity-80">
+      <div class="tw-flex tw-flex-col tw-items-center tw-text-center sm:tw-flex-row sm:tw-items-center sm:tw-text-left">
+        <div class="tw-text-3xl tw-mb-2 sm:tw-mb-0 sm:tw-mr-5 tw-text-warning tw-opacity-80">
           <app-icon name="clock" iconOnly />
         </div>
         <div class="tw-flex-1">
@@ -118,8 +130,8 @@
 
     <!-- Ready to Pay -->
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
-      <div class="tw-flex tw-items-center">
-        <div class="tw-text-3xl tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
+      <div class="tw-flex tw-flex-col tw-items-center tw-text-center sm:tw-flex-row sm:tw-items-center sm:tw-text-left">
+        <div class="tw-text-3xl tw-mb-2 sm:tw-mb-0 sm:tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
           <app-icon name="wallet" iconOnly />
         </div>
         <div class="tw-flex-1">

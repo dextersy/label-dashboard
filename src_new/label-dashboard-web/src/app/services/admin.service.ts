@@ -143,6 +143,7 @@ export interface EarningsSummary {
 export interface ArtistBalance {
   id: number;
   name: string;
+  profile_photo?: string;
   total_royalties: number;
   total_payments: number;
   total_balance: number;

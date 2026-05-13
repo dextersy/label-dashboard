@@ -1890,6 +1890,7 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
         return {
           id: artist.id,
           name: artist.name,
+          profile_photo: artist.profile_photo || null,
           total_royalties: totalRoyalties,
           total_payments: totalPayments,
           total_balance: totalBalance,

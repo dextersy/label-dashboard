@@ -171,6 +171,15 @@ export class BalanceSummaryTabComponent implements OnInit {
     this.isProcessingPayment = false;
   }
 
+  getInitials(name: string): string {
+    return (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  }
+
+  getProfilePhotoUrl(profilePhoto: string | undefined): string | null {
+    if (!profilePhoto || !profilePhoto.startsWith('http')) return null;
+    return profilePhoto;
+  }
+
   // Utility methods
   formatCurrency(amount: number): string {
     return '₱' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
