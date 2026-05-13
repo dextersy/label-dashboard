@@ -404,20 +404,49 @@ Large variant — `padding: 10px 16px`, `font-size: 1rem`. Replaces `form-contro
 - `.mobile-text` — wrappable text cell
 - `.tablet-hide` / `.tablet-narrow` — same for `≤768px`
 
-### Status Dots (in tables)
+### Status Badge (pill) — preferred
+
+```html
+<span class="status-badge status-success">Succeeded</span>
+```
+
+The standard status indicator. A rounded pill with a soft tinted background and matching colored text. Use this for all new status displays and when updating existing ones. Defined in `src/styles/components.scss`.
+
+| Modifier | Text color | Background | Use |
+|----------|------------|------------|-----|
+| `status-success`   | green `#16a34a`  | green 12% tint  | Succeeded, Live, Paid, Accepted |
+| `status-warning`   | amber `#d97706`  | amber 12% tint  | Pending, Draft, Awaiting |
+| `status-danger`    | red `#dc2626`    | red 12% tint    | Failed, Taken Down |
+| `status-secondary` | gray `#6b7280`   | gray 12% tint   | Canceled, Refunded, Unknown |
+| `status-info`      | cyan `#0891b2`   | cyan 12% tint   | For Submission, Informational |
+
+Style: `font-size: 11px`, `padding: 3px 9px`, `border-radius: 999px`, `font-weight: 500`. Include a Font Awesome `<i>` icon before the label text — the badge styles it to `10px`. Choose an icon appropriate to the semantic:
+
+The icon is injected automatically via the CSS `::before` pseudo-element — **no icon markup is needed in the HTML**. Each variant has its own Feather icon baked in as an SVG data URI in `components.scss`:
+
+| Variant | Icon |
+|---------|------|
+| `status-success`   | `check-circle` (green) |
+| `status-danger`    | `x-circle` (red) |
+| `status-warning`   | `clock` (amber) |
+| `status-secondary` | `minus-circle` (gray) |
+| `status-info`      | `info` (cyan) |
+
+```html
+<!-- No icon markup needed — just the span + class -->
+<span class="status-badge status-success">Succeeded</span>
+<span class="status-badge status-danger">Failed</span>
+<span class="status-badge status-warning">Pending</span>
+```
+
+> **Why CSS, not inline SVG?** Angular's `[innerHTML]` sanitizer strips SVG elements from formatter output. The `::before` + SVG data URI approach works in all contexts.
+
+### Status Dot (legacy)
 
 ```html
 <span class="status-dot status-success">Active</span>
 ```
-A small colored circle (`7px`) beside colored text. Both circle and text share the same semantic color. Defined in `src/styles/components.scss`.
-
-| Modifier | Color | Use |
-|----------|-------|-----|
-| `status-success`   | green `#16a34a`  | Succeeded, Live, Paid, Accepted |
-| `status-warning`   | amber `#d97706`  | Pending, Draft, Awaiting |
-| `status-danger`    | red `#dc2626`    | Failed, Taken Down |
-| `status-secondary` | gray `#6b7280`   | Canceled, Refunded, Unknown |
-| `status-info`      | cyan `#0891b2`   | For Submission, Informational |
+A small colored circle (`9px`) beside colored text. Defined in `src/styles/components.scss`. **Prefer `.status-badge` for new code.** The status dot variants share the same modifier names as the badge (see table above).
 
 ---
 

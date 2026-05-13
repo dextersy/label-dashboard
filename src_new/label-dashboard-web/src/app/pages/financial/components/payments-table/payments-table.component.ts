@@ -201,16 +201,16 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
 
   formatStatus(status: string | undefined, failureReason?: string): string {
     switch (status) {
-      case 'pending':   return '<span class="status-dot status-warning">Pending</span>';
+      case 'pending':   return '<span class="status-badge status-warning">Pending</span>';
       case 'failed': {
-        let html = '<span class="status-dot status-danger">Failed</span>';
+        let html = '<span class="status-badge status-danger">Failed</span>';
         if (failureReason) {
-          html += `<br><span class="text-muted small">${failureReason}</span>`;
+          html += `<br><span class="payment-failure-reason">${failureReason}</span>`;
         }
         return html;
       }
       case 'succeeded':
-      default:          return '<span class="status-dot status-success">Succeeded</span>';
+      default:          return '<span class="status-badge status-success">Succeeded</span>';
     }
   }
 
