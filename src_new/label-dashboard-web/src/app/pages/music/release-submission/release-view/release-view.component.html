@@ -210,40 +210,86 @@
           <span class="track-actions"></span>
         </div>
 
-        <div class="track-row" *ngFor="let song of release.songs; let i = index">
-          <span class="track-num">{{ song.track_number || (i + 1) }}</span>
-          <span class="track-play">
-            <button
-              *ngIf="song.audio_file"
-              class="btn-icon btn-sm"
-              [class.tw-text-warning]="isPlaying(song.id)"
-              [class.tw-text-info]="isPaused(song.id)"
-              [class.tw-text-success]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"
-              [disabled]="isLoading(song.id)"
-              (click)="togglePlay(song)"
-              [title]="isPlaying(song.id) ? 'Pause' : isPaused(song.id) ? 'Resume' : isLoading(song.id) ? 'Loading...' : 'Play'">
-              <app-icon [name]="isLoading(song.id) ? 'spinner' : isPlaying(song.id) ? 'pause' : 'play'"
-                        [class.tw-animate-spin]="isLoading(song.id)" />
-            </button>
-            <span *ngIf="!song.audio_file" class="tw-text-muted">
-              <app-icon name="ban" title="No audio file" />
+        <div class="track-item" *ngFor="let song of release.songs; let i = index"
+             [class.expanded]="expandedTrackIds.has(song.id)">
+          <div class="track-row">
+            <span class="track-num">{{ song.track_number || (i + 1) }}</span>
+            <span class="track-play" (click)="$event.stopPropagation()">
+              <button
+                *ngIf="song.audio_file"
+                class="btn-icon btn-sm"
+                [class.tw-text-warning]="isPlaying(song.id)"
+                [class.tw-text-info]="isPaused(song.id)"
+                [class.tw-text-success]="!isPlaying(song.id) && !isPaused(song.id) && !isLoading(song.id)"
+                [disabled]="isLoading(song.id)"
+                (click)="togglePlay(song)"
+                [title]="isPlaying(song.id) ? 'Pause' : isPaused(song.id) ? 'Resume' : isLoading(song.id) ? 'Loading...' : 'Play'">
+                <app-icon [name]="isLoading(song.id) ? 'spinner' : isPlaying(song.id) ? 'pause' : 'play'"
+                          [class.tw-animate-spin]="isLoading(song.id)" />
+              </button>
+              <span *ngIf="!song.audio_file" class="tw-text-muted">
+                <app-icon name="ban" title="No audio file" />
+              </span>
             </span>
-          </span>
-          <span class="track-title">
-            <span class="song-name">{{ song.title }}</span>
-            <span class="song-isrc" *ngIf="song.isrc">{{ song.isrc }}</span>
-          </span>
-          <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
-          <span class="track-duration">{{ formatDuration(song.duration) }}</span>
-          <span class="track-actions" *ngIf="song.audio_file || song.audio_file_mp3 || song.lyrics">
-            <div class="kebab-container" (click)="$event.stopPropagation()">
-              <button class="kebab-btn" type="button"
-                      (click)="toggleTrackKebab(song, $event)"
-                      [class.active]="openTrackKebabItem === song">
-                <app-icon name="more-vertical" />
+            <span class="track-title">
+              <span class="song-name">{{ song.title }}</span>
+              <span class="song-isrc" *ngIf="song.isrc">{{ song.isrc }}</span>
+            </span>
+            <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
+            <span class="track-duration">{{ formatDuration(song.duration) }}</span>
+            <span class="track-actions">
+              <button class="track-expand-btn" (click)="toggleTrackExpand(song.id)">
+                <app-icon [name]="expandedTrackIds.has(song.id) ? 'chevron-up' : 'chevron-down'" />
+              </button>
+              <div class="kebab-container track-kebab-desktop"
+                   *ngIf="song.audio_file || song.audio_file_mp3 || song.lyrics"
+                   (click)="$event.stopPropagation()">
+                <button class="kebab-btn" type="button"
+                        (click)="toggleTrackKebab(song, $event)"
+                        [class.active]="openTrackKebabItem === song">
+                  <app-icon name="more-vertical" />
+                </button>
+              </div>
+            </span>
+          </div>
+
+          <!-- Mobile expanded details panel -->
+          <div class="track-expand-panel" *ngIf="expandedTrackIds.has(song.id)">
+            <div class="expand-detail" *ngIf="getSongCollaborators(song) !== '—'">
+              <span class="expand-label">Collaborators</span>
+              <span class="expand-value">{{ getSongCollaborators(song) }}</span>
+            </div>
+            <div class="expand-detail" *ngIf="song.isrc">
+              <span class="expand-label">ISRC</span>
+              <span class="expand-value expand-value--mono">{{ song.isrc }}</span>
+            </div>
+            <div class="expand-detail">
+              <span class="expand-label">Duration</span>
+              <span class="expand-value">{{ formatDuration(song.duration) }}</span>
+            </div>
+            <div class="expand-actions" *ngIf="song.lyrics || song.audio_file || song.audio_file_mp3">
+              <button *ngIf="song.lyrics" class="btn-secondary btn-sm"
+                      (click)="openLyricsModal(song)">
+                <app-icon name="paragraph" class="tw-mr-1" />Lyrics
+              </button>
+              <button *ngIf="song.audio_file" class="btn-secondary btn-sm"
+                      (click)="onDownloadSongMaster(song)"
+                      [disabled]="downloadingSongMaster[song.id]">
+                <app-icon [name]="downloadingSongMaster[song.id] ? 'spinner' : 'download'"
+                          class="tw-mr-1"
+                          [class.tw-animate-spin]="downloadingSongMaster[song.id]" />
+                {{ downloadingSongMaster[song.id] ? 'Downloading...' : 'WAV' }}
+              </button>
+              <button *ngIf="song.audio_file_mp3" class="btn-secondary btn-sm"
+                      (click)="onDownloadSongMp3(song)"
+                      [disabled]="downloadingSongMp3[song.id]">
+                <app-icon [name]="downloadingSongMp3[song.id] ? 'spinner' : 'music'"
+                          class="tw-mr-1"
+                          [class.tw-animate-spin]="downloadingSongMp3[song.id]" />
+                {{ downloadingSongMp3[song.id] ? 'Downloading...' : 'MP3' }}
               </button>
             </div>
-          </span>
+          </div>
         </div>
       </div>
       <ng-template #noTracks>

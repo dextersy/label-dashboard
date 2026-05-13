@@ -63,6 +63,9 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   descriptionExpanded = false;
   linerNotesExpanded = false;
 
+  // Mobile track expand state
+  expandedTrackIds = new Set<number>();
+
   private subscription: Subscription | null = null;
 
   constructor(
@@ -180,6 +183,14 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
         top: rect.bottom + 2,
         right: document.documentElement.clientWidth - rect.right
       };
+    }
+  }
+
+  toggleTrackExpand(songId: number): void {
+    if (this.expandedTrackIds.has(songId)) {
+      this.expandedTrackIds.delete(songId);
+    } else {
+      this.expandedTrackIds.add(songId);
     }
   }
 
