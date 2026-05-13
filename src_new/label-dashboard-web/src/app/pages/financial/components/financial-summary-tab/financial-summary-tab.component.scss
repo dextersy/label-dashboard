@@ -103,28 +103,25 @@
 .pay-now-btn {
   background-color: white;
   border-color: white;
-  color: var(--brand-color, var(--brand-color, #3b82f6));
+  color: var(--brand-color, #3b82f6);
   font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  font-size: 0.8rem;
+  padding: 4px 16px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
     background-color: rgba(255, 255, 255, 0.9);
     border-color: rgba(255, 255, 255, 0.9);
-    transform: translateY(-1px);
   }
 
   &:focus:not(:disabled) {
-    background-color: rgba(255, 255, 255, 0.9);
-    border-color: rgba(255, 255, 255, 0.9);
     box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.3);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background-color: white;
-    border-color: white;
   }
 }
 
@@ -230,9 +227,21 @@
 }
 
 @media (max-width: 768px) {
-  .balance-amount {
-    font-size: 2rem;
+  .current-balance-section {
+    min-height: 0;
+    border-radius: 12px;
   }
+
+  .balance-title {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+  }
+
+  .balance-amount {
+    font-size: 1.875rem;
+    margin-bottom: 4px;
+  }
+
 
   .financial-item-value {
     font-size: 18px;
