@@ -8,12 +8,13 @@ import { TrackListData } from '../track-list-section/track-list-section.componen
 import { ValidationResult } from '../../../../services/release-validation.service';
 import { AuthService } from '../../../../services/auth.service';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
 
 export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
 
 @Component({
     selector: 'app-submission-section',
-    imports: [CommonModule, FormsModule, IconComponent],
+    imports: [CommonModule, FormsModule, IconComponent, FloatingActionBarComponent],
     templateUrl: './submission-section.component.html',
     styleUrl: './submission-section.component.scss'
 })

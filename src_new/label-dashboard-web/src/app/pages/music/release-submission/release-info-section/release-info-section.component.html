@@ -117,17 +117,17 @@
       </small>
     </div>
 
-    <!-- Save Information Button -->
-    <div class="save-info-section tw-mt-5">
-      <button
-        type="button"
-        class="btn-primary save-info-btn"
-        [disabled]="savingRelease"
-        (click)="saveRelease()">
-        <app-icon name="save" class=" tw-mr-2" *ngIf="!savingRelease" />
-        <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="savingRelease" />
-        {{ savingRelease ? 'Saving...' : 'Save Information' }}
-      </button>
-    </div>
   </form>
 </div>
+
+<!-- Floating Action Bar (mobile) -->
+<app-floating-action-bar>
+  <button type="button"
+          class="btn-primary fab-primary-btn"
+          [disabled]="savingRelease"
+          (click)="saveRelease()">
+    <app-icon name="save" class="tw-mr-2" *ngIf="!savingRelease" />
+    <app-icon name="spinner" class="tw-animate-spin tw-mr-2" *ngIf="savingRelease" />
+    {{ savingRelease ? 'Saving...' : 'Save Information' }}
+  </button>
+</app-floating-action-bar>

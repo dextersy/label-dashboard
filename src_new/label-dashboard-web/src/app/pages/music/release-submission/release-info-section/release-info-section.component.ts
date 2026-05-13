@@ -9,6 +9,7 @@ import { ApiService } from '../../../../services/api.service';
 import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
 import { QuillModule } from 'ngx-quill';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
 
 export interface ReleaseInfoData {
   title: string;
@@ -24,7 +25,7 @@ export interface ReleaseInfoData {
 
 @Component({
     selector: 'app-release-info-section',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent, FloatingActionBarComponent],
     templateUrl: './release-info-section.component.html',
     styleUrl: './release-info-section.component.scss'
 })

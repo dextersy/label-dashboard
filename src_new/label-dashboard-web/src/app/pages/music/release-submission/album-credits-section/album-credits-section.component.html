@@ -233,17 +233,17 @@
       </div>
     </div>
 
-    <!-- Save Changes Button -->
-    <div class="save-credits-section tw-mt-5" *ngIf="editingRelease">
-      <button
-        type="button"
-        class="btn-primary save-changes-btn"
-        [disabled]="savingCredits || !creditsForm.valid"
-        (click)="saveCredits()">
-        <app-icon name="save" class=" tw-mr-2" *ngIf="!savingCredits" />
-        <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="savingCredits" />
-        {{ savingCredits ? 'Saving...' : 'Save Changes' }}
-      </button>
-    </div>
   </form>
 </div>
+
+<!-- Floating Action Bar (mobile) -->
+<app-floating-action-bar *ngIf="editingRelease">
+  <button type="button"
+          class="btn-primary fab-primary-btn"
+          [disabled]="savingCredits || !creditsForm.valid"
+          (click)="saveCredits()">
+    <app-icon name="save" class="tw-mr-2" *ngIf="!savingCredits" />
+    <app-icon name="spinner" class="tw-animate-spin tw-mr-2" *ngIf="savingCredits" />
+    {{ savingCredits ? 'Saving...' : 'Save Changes' }}
+  </button>
+</app-floating-action-bar>

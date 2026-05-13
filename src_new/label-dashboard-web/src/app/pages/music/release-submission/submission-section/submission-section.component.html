@@ -1,5 +1,33 @@
 <div class="submission-section">
 
+  <!-- Success state when no issues -->
+  <div *ngIf="allErrors.length === 0 && allWarnings.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-green-200 tw-bg-green-50 tw-text-success">
+    <app-icon name="check-circle" class="tw-mr-2" />
+    <strong>All validations passed — ready for submission</strong>
+  </div>
+
+  <!-- Errors -->
+  <div *ngIf="allErrors.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-danger tw-bg-red-50 tw-text-danger">
+    <div class="tw-flex tw-items-center tw-mb-2">
+      <app-icon name="warning" class="tw-mr-2" />
+      <strong>The following {{ allErrors.length }} error{{ allErrors.length !== 1 ? 's' : '' }} need to be fixed before submitting.</strong>
+    </div>
+    <ul class="tw-mb-0 tw-pl-5 tw-list-disc">
+      <li *ngFor="let error of allErrors">{{ error }}</li>
+    </ul>
+  </div>
+
+  <!-- Warnings -->
+  <div *ngIf="allWarnings.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-amber-300 tw-bg-amber-50 tw-text-warning">
+    <div class="tw-flex tw-items-center tw-mb-2">
+      <app-icon name="warning" class="tw-mr-2" />
+      <strong>Consider fixing these {{ allWarnings.length }} warning{{ allWarnings.length !== 1 ? 's' : '' }} before submitting.</strong>
+    </div>
+    <ul class="tw-mb-0 tw-pl-5 tw-list-disc">
+      <li *ngFor="let warning of allWarnings">{{ warning }}</li>
+    </ul>
+  </div>
+
   <!-- Release Information Summary -->
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden" *ngIf="releaseInfoData">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
@@ -145,7 +173,10 @@
   <!-- Track List Summary -->
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden" *ngIf="trackListData">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h5 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h5>
+      <h5 class="tw-mb-0">
+        Track List ({{ trackListData.songs.length || 0 }} tracks)
+        <app-icon *ngIf="getFieldError('No tracks in tracklist')" name="warning" class="tw-text-danger tw-ml-1" [title]="getFieldError('No tracks in tracklist')!" />
+      </h5>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('tracks')">
         <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
@@ -188,67 +219,35 @@
   <!-- Section divider -->
   <hr class="tw-border-0 tw-border-t tw-border-border-subtle tw-my-0">
 
-  <!-- Submission area -->
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-pt-4">
-    <div class="sm:tw-px-card-pad sm:tw-py-card-pad">
-
-      <!-- Success state when no issues -->
-      <div *ngIf="allErrors.length === 0 && allWarnings.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-green-200 tw-bg-green-50 tw-text-success">
-        <app-icon name="check-circle" class="tw-mr-2" />
-        <strong>All validations passed — ready for submission</strong>
-      </div>
-
-      <!-- Errors -->
-      <div *ngIf="allErrors.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-danger tw-bg-red-50 tw-text-danger">
-        <div class="tw-flex tw-items-center tw-mb-2">
-          <app-icon name="warning" class="tw-mr-2" />
-          <strong>The following {{ allErrors.length }} error{{ allErrors.length !== 1 ? 's' : '' }} need to be fixed before submitting.</strong>
-        </div>
-        <ul class="tw-mb-0 tw-pl-5 tw-list-disc">
-          <li *ngFor="let error of allErrors">{{ error }}</li>
-        </ul>
-      </div>
-
-      <!-- Warnings -->
-      <div *ngIf="allWarnings.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-amber-300 tw-bg-amber-50 tw-text-warning">
-        <div class="tw-flex tw-items-center tw-mb-2">
-          <app-icon name="warning" class="tw-mr-2" />
-          <strong>Consider fixing these {{ allWarnings.length }} warning{{ allWarnings.length !== 1 ? 's' : '' }} before submitting.</strong>
-        </div>
-        <ul class="tw-mb-0 tw-pl-5 tw-list-disc">
-          <li *ngFor="let warning of allWarnings">{{ warning }}</li>
-        </ul>
-      </div>
-
-      <!-- Acknowledgement -->
-      <div *ngIf="allErrors.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-blue-200 tw-bg-blue-50">
-        <div class="tw-flex tw-items-start tw-gap-2 tw-mb-2">
-          <app-icon name="info" class="tw-text-info tw-flex-shrink-0 tw-mt-px" />
-          <strong class="tw-text-info">Important</strong>
-        </div>
-        <div class="tw-flex tw-items-start tw-gap-2">
-          <input
-            class="form-check-input tw-flex-shrink-0 tw-mt-px"
-            type="checkbox"
-            id="acknowledgeSubmission"
-            [(ngModel)]="hasAcknowledged">
-          <label class="tw-text-body tw-mb-0" for="acknowledgeSubmission">
-            I acknowledge that once submitted, this release will be sent for processing and distribution, and that all information is correct and complete.
-          </label>
-        </div>
-      </div>
-
-      <!-- Submit Button -->
-      <button
-        type="button"
-        class="btn-primary tw-w-full"
-        [disabled]="allErrors.length > 0 || isSubmitting || !hasAcknowledged"
-        (click)="onSubmit()">
-        <app-icon name="paper-plane" class="tw-mr-2" [class]="isSubmitting ? 'fa-spinner fa-spin' : ''" />
-        {{ isSubmitting ? 'Submitting...' : 'Submit Release' }}
-      </button>
-
-    </div>
-  </div>
 
 </div>
+
+<!-- Floating Action Bar -->
+<app-floating-action-bar variant="strip">
+  <!-- Acknowledgement: left on desktop, stacked above button on mobile (strip shows floatingStart on both) -->
+  <div *ngIf="allErrors.length === 0" floatingStart class="tw-px-4 tw-py-3 tw-border tw-rounded-card-mobile tw-text-sm tw-border-blue-200 tw-bg-blue-50 tw-w-full">
+    <div class="tw-flex tw-items-start tw-gap-2 tw-mb-2">
+      <app-icon name="info" class="tw-text-info tw-flex-shrink-0 tw-mt-px" />
+      <strong class="tw-text-info">Important</strong>
+    </div>
+    <div class="tw-flex tw-items-start tw-gap-2">
+      <input
+        class="form-check-input tw-flex-shrink-0 tw-mt-px"
+        type="checkbox"
+        id="acknowledgeSubmission"
+        [(ngModel)]="hasAcknowledged">
+      <label class="tw-text-body tw-mb-0" for="acknowledgeSubmission">
+        I acknowledge that once submitted, this release will be sent for processing and distribution, and that all information is correct and complete.
+      </label>
+    </div>
+  </div>
+  <!-- Submit button (primary slot) -->
+  <button type="button"
+          class="btn-primary fab-primary-btn"
+          [disabled]="allErrors.length > 0 || isSubmitting || !hasAcknowledged"
+          (click)="onSubmit()">
+    <app-icon name="paper-plane" class="tw-mr-2" *ngIf="!isSubmitting" />
+    <app-icon name="spinner" class="tw-animate-spin tw-mr-2" *ngIf="isSubmitting" />
+    {{ isSubmitting ? 'Submitting...' : 'Submit Release' }}
+  </button>
+</app-floating-action-bar>
