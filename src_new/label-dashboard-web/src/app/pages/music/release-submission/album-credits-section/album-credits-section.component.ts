@@ -129,6 +129,7 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
       artists: formValue.royaltyArtists?.map((artist: any) => ({
         artist_id: artist.artist_id,
         artist_name: this.getArtistName(artist.artist_id),
+        profile_photo: this.getArtistPhoto(artist.artist_id),
         // Convert from display percentage (0-100) to decimal (0-1) for storage/API
         streaming_royalty_percentage: (artist.streaming_royalty_percentage || 0) / 100,
         sync_royalty_percentage: (artist.sync_royalty_percentage || 0) / 100,

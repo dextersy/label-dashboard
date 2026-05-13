@@ -199,8 +199,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         
         // Initialize the form data from the loaded release
         this.initReleaseInfoFromRelease(response.release);
-
-        // Don't set albumCreditsData here - let the album-credits-section component process and emit it
+        this.initAlbumCreditsFromRelease(response.release);
         
         // Mark as valid since we're editing existing data
         this.isReleaseInfoValid = true;
@@ -450,7 +449,8 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
     // Final confirmation
     const confirmed = await this.confirmationService.confirm({
       title: 'Submit Release',
-      message: 'Are you sure you want to submit this release?\n\nOnce submitted, it will be processed for distribution.\n\n⚠️ You won\'t be able to make any changes after this point. You may still contact your label representative if you need to make any changes.',
+      message: 'Are you sure you want to submit this release? Once submitted, it will be processed for distribution.',
+      warning: 'You won\'t be able to make any changes after this point. You may still contact your label representative if you need to make any changes.',
       confirmText: 'Submit',
       cancelText: 'Cancel',
       type: 'info'
@@ -638,6 +638,23 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
    * Initialize releaseInfoData from a Release object.
    * Extracted to avoid code duplication between loadRelease() and onEnableEditMode().
    */
+  private initAlbumCreditsFromRelease(release: any): void {
+    this.albumCreditsData = {
+      liner_notes: release.liner_notes || '',
+      artists: (release.artists || []).map((artist: any) => ({
+        artist_id: artist.id,
+        name: artist.name,
+        artist_name: artist.name,
+        profile_photo: artist.profile_photo || null,
+        streaming_royalty_percentage: artist.ReleaseArtist?.streaming_royalty_percentage ?? artist.streaming_royalty_percentage ?? 0,
+        sync_royalty_percentage: artist.ReleaseArtist?.sync_royalty_percentage ?? artist.sync_royalty_percentage ?? 0,
+        download_royalty_percentage: artist.ReleaseArtist?.download_royalty_percentage ?? artist.download_royalty_percentage ?? 0,
+        physical_royalty_percentage: artist.ReleaseArtist?.physical_royalty_percentage ?? artist.physical_royalty_percentage ?? 0,
+        ReleaseArtist: artist.ReleaseArtist
+      }))
+    };
+  }
+
   private initReleaseInfoFromRelease(release: Release): void {
     this.releaseInfoData = {
       title: release.title,

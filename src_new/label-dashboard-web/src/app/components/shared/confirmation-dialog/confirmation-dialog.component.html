@@ -36,6 +36,10 @@
       <!-- Body -->
       <div class="modal-body cd-modal-body">
         <p id="confirmation-dialog-message" class="cd-primary-text">{{ data?.message }}</p>
+        <div *ngIf="data?.warning" class="tw-flex tw-items-start tw-gap-2 tw-mt-3 tw-px-3 tw-py-2 tw-rounded tw-border tw-border-amber-300 tw-bg-amber-50 tw-text-warning tw-text-sm">
+          <app-icon name="warning" class="tw-flex-shrink-0 tw-mt-px" />
+          <span>{{ data?.warning }}</span>
+        </div>
       </div>
 
       <!-- Footer -->

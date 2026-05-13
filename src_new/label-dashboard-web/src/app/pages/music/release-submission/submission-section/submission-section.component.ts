@@ -129,6 +129,59 @@ export class SubmissionSectionComponent implements OnChanges {
     this.navigateToSection.emit(section as ReleaseSubmissionSection);
   }
 
+  // Returns the tooltip string if the given message prefix matches an error, otherwise null
+  getFieldError(messagePrefix: string): string | null {
+    const match = this.allErrors.find(e => e.startsWith(messagePrefix));
+    return match ?? null;
+  }
+
+  // Returns the tooltip string if the given message prefix matches a warning, otherwise null
+  getFieldWarning(messagePrefix: string): string | null {
+    const match = this.allWarnings.find(w => w.startsWith(messagePrefix));
+    return match ?? null;
+  }
+
+  // Returns errors that apply to a specific track number
+  getSongErrors(trackNumber: number): string[] {
+    if (!this.trackListValidation?.errors) return [];
+    return this.trackListValidation.errors
+      .filter(e => e.trackNumbers?.includes(trackNumber))
+      .map(e => e.message);
+  }
+
+  // Returns warnings that apply to a specific track number
+  getSongWarnings(trackNumber: number): string[] {
+    if (!this.trackListValidation?.warnings) return [];
+    return this.trackListValidation.warnings
+      .filter(w => w.trackNumbers?.includes(trackNumber))
+      .map(w => w.message);
+  }
+
+  getArtistErrors(artistName: string | undefined | null): string {
+    if (!artistName) return '';
+    return this.allErrors.filter(e => e.includes(artistName)).join('; ');
+  }
+
+  hasArtistErrors(artistName: string | undefined | null): boolean {
+    if (!artistName) return false;
+    return this.allErrors.some(e => e.startsWith('Invalid') && e.includes(artistName));
+  }
+
+  get hasUnnamedArtists(): boolean {
+    if (!this.albumCreditsData?.artists) return false;
+    return this.albumCreditsData.artists.some(a => !a.name && !a.artist_name);
+  }
+
+  getInitials(name: string | undefined | null): string {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .filter(w => w.length > 0)
+      .slice(0, 2)
+      .map(w => w[0].toUpperCase())
+      .join('');
+  }
+
   getCollaboratorNames(song: any): string {
     if (!song.collaborators || song.collaborators.length === 0) {
       return '';

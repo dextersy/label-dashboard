@@ -1,91 +1,135 @@
 <div class="submission-section">
-  <h3>Release Summary</h3>
 
-  <!-- Release Information Summary - Full Width -->
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="releaseInfoData">
+  <!-- Release Information Summary -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden" *ngIf="releaseInfoData">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h3 class="tw-mb-0">Release Information</h3>
+      <h5 class="tw-mb-0">Release Information</h5>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('info')">
         <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-        <div class="md:tw-col-span-6">
-          <p><strong>Title:</strong> {{ releaseInfoData.title || 'Not specified' }}</p>
-          <p><strong>Catalog Number:</strong> {{ releaseInfoData.catalog_no || 'Not specified' }}</p>
-          <p><strong>UPC:</strong> {{ releaseInfoData.UPC || 'Not specified' }}</p>
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad tw-pb-4">
+      <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-x-6 tw-gap-y-4">
+        <div>
+          <p class="field-label">Title</p>
+          <p class="field-value">{{ releaseInfoData.title || '—' }}</p>
         </div>
-        <div class="md:tw-col-span-6">
-          <p><strong>Release Date:</strong> {{ formatDate(releaseInfoData.release_date) || 'Not specified' }}</p>
-          <p><strong>Cover Art:</strong>
-            <span *ngIf="releaseInfoData.cover_art_preview || releaseInfoData.cover_art"> ✓ Uploaded</span>
-            <span *ngIf="!releaseInfoData.cover_art_preview && !releaseInfoData.cover_art" class="tw-text-warning"> Not uploaded</span>
+        <div>
+          <p class="field-label">Catalog Number</p>
+          <p class="field-value">{{ releaseInfoData.catalog_no || '—' }}</p>
+        </div>
+        <div>
+          <p class="field-label">UPC</p>
+          <p class="field-value">{{ releaseInfoData.UPC || '—' }}</p>
+        </div>
+        <div>
+          <p class="field-label">Release Date</p>
+          <p class="field-value">{{ formatDate(releaseInfoData.release_date) || '—' }}</p>
+        </div>
+        <div>
+          <p class="field-label">
+            Cover Art
+            <app-icon *ngIf="getFieldError('No cover art')" name="warning" class="tw-text-danger tw-ml-1" [title]="getFieldError('No cover art')!" />
+          </p>
+          <p class="field-value">
+            <span *ngIf="releaseInfoData.cover_art_preview || releaseInfoData.cover_art">✓ Uploaded</span>
+            <span *ngIf="!releaseInfoData.cover_art_preview && !releaseInfoData.cover_art" class="tw-text-warning">Not uploaded</span>
           </p>
         </div>
       </div>
 
-      <div class="tw-mt-3" *ngIf="releaseInfoData.description">
-        <strong>Description:</strong>
-        <div class="tw-mt-1" [innerHTML]="getSafeHtml(releaseInfoData.description)"></div>
+      <div class="tw-mt-4" *ngIf="releaseInfoData.description">
+        <p class="field-label">
+          Description
+          <app-icon *ngIf="getFieldWarning('No release description')" name="warning" class="tw-text-warning tw-ml-1" [title]="getFieldWarning('No release description')!" />
+        </p>
+        <div class="field-value" [innerHTML]="getSafeHtml(releaseInfoData.description)"></div>
+      </div>
+      <div class="tw-mt-4" *ngIf="!releaseInfoData.description && getFieldWarning('No release description')">
+        <p class="field-label">
+          Description
+          <app-icon name="warning" class="tw-text-warning tw-ml-1" [title]="getFieldWarning('No release description')!" />
+        </p>
+        <p class="field-value tw-text-muted">—</p>
       </div>
     </div>
   </div>
 
-  <!-- Album Credits Summary - Full Width -->
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="albumCreditsData">
+  <!-- Section divider -->
+  <hr class="tw-border-0 tw-border-t tw-border-border-subtle tw-my-0">
+
+  <!-- Album Credits Summary -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden" *ngIf="albumCreditsData">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h3 class="tw-mb-0">Album Credits</h3>
+      <h5 class="tw-mb-0">Album Credits</h5>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('credits')">
         <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
-      <div *ngIf="albumCreditsData.artists && albumCreditsData.artists.length > 0">
-        <h6>Artists & Royalties</h6>
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+      <div *ngIf="albumCreditsData.artists && albumCreditsData.artists.length > 0" class="ro-artists-list">
+        <div *ngFor="let artist of albumCreditsData.artists" class="ro-artist-card">
+          <div class="ro-card-body">
 
-        <!-- Admin view: detailed table with percentages -->
-        <div *ngIf="isAdmin" class="table-responsive">
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>Artist</th>
-                <th>Streaming</th>
-                <th>Download</th>
-                <th>Physical</th>
-                <th>Sync</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let artist of albumCreditsData.artists">
-                <td>{{ artist.name || 'Unknown Artist' }}</td>
-                <td>{{ ((artist.streaming_royalty_percentage ?? artist.ReleaseArtist?.streaming_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
-                <td>{{ ((artist.download_royalty_percentage ?? artist.ReleaseArtist?.download_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
-                <td>{{ ((artist.physical_royalty_percentage ?? artist.ReleaseArtist?.physical_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
-                <td>{{ ((artist.sync_royalty_percentage ?? artist.ReleaseArtist?.sync_royalty_percentage ?? 0) * 100).toFixed(0) }}%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Non-admin view: simple list -->
-        <div *ngIf="!isAdmin">
-          <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-            <div class="md:tw-col-span-12">
-              <p class="tw-mb-2"><strong>Artists:</strong></p>
-              <ul class="list-unstyled">
-                <li *ngFor="let artist of albumCreditsData.artists" class="tw-mb-1">
-                  <app-icon name="user" class="tw-mr-2" />{{ artist.artist_name || artist.name || 'Unknown Artist' }}
-                </li>
-              </ul>
+            <!-- Artist identity -->
+            <div class="ro-card-header">
+              <span class="ac-field-label">Artist</span>
+              <div class="ro-artist-fixed">
+                <img *ngIf="artist.profile_photo"
+                     [src]="artist.profile_photo"
+                     class="ro-artist-avatar" alt="">
+                <span *ngIf="!artist.profile_photo" class="ro-artist-avatar ro-artist-avatar--placeholder">
+                  {{ getInitials(artist.name || artist.artist_name) }}
+                </span>
+                <p class="ro-artist-name" [class.tw-text-muted]="!artist.name && !artist.artist_name">
+                  {{ artist.name || artist.artist_name || 'Unknown Artist' }}
+                  <app-icon *ngIf="getFieldWarning('No royalty percentages set for ' + (artist.name || artist.artist_name))"
+                            name="warning" class="tw-text-warning tw-ml-1"
+                            [title]="getFieldWarning('No royalty percentages set for ' + (artist.name || artist.artist_name))!" />
+                  <app-icon *ngIf="hasArtistErrors(artist.name || artist.artist_name)"
+                            name="warning" class="tw-text-danger tw-ml-1"
+                            [title]="getArtistErrors(artist.name || artist.artist_name)" />
+                </p>
+              </div>
             </div>
+
+            <!-- Royalty tiles (admin only) -->
+            <div *ngIf="isAdmin" class="ac-splits-grid ac-splits-grid--card">
+              <div class="ac-split-tile">
+                <span class="ac-split-label">Streaming</span>
+                <span class="ro-split-value">{{ ((artist.streaming_royalty_percentage ?? artist.ReleaseArtist?.streaming_royalty_percentage ?? 0) * 100).toFixed(0) }}%</span>
+              </div>
+              <div class="ac-split-tile">
+                <span class="ac-split-label">Sync</span>
+                <span class="ro-split-value">{{ ((artist.sync_royalty_percentage ?? artist.ReleaseArtist?.sync_royalty_percentage ?? 0) * 100).toFixed(0) }}%</span>
+              </div>
+              <div class="ac-split-tile">
+                <span class="ac-split-label">Download</span>
+                <span class="ro-split-value">{{ ((artist.download_royalty_percentage ?? artist.ReleaseArtist?.download_royalty_percentage ?? 0) * 100).toFixed(0) }}%</span>
+              </div>
+              <div class="ac-split-tile">
+                <span class="ac-split-label">Physical</span>
+                <span class="ro-split-value">{{ ((artist.physical_royalty_percentage ?? artist.ReleaseArtist?.physical_royalty_percentage ?? 0) * 100).toFixed(0) }}%</span>
+              </div>
+            </div>
+
           </div>
         </div>
+
+        <!-- Note when any artist name is missing -->
+        <p *ngIf="hasUnnamedArtists" class="tw-text-sm tw-text-muted tw-mt-2 tw-mb-0">
+          Artist names not yet assigned —
+          <button type="button" class="btn-link tw-text-sm tw-p-0" (click)="onNavigateToSection('credits')">go to Credits to assign them</button>
+        </p>
       </div>
 
-      <div class="tw-mt-3" *ngIf="albumCreditsData.liner_notes">
-        <strong>Liner Notes:</strong>
-        <div class="tw-mt-1" [innerHTML]="getSafeHtml(albumCreditsData.liner_notes)"></div>
+      <div class="tw-mt-3">
+        <p class="field-label">
+          Liner Notes
+          <app-icon *ngIf="getFieldWarning('No liner notes')" name="warning" class="tw-text-warning tw-ml-1" [title]="getFieldWarning('No liner notes')!" />
+        </p>
+        <div *ngIf="albumCreditsData.liner_notes" class="field-value" [innerHTML]="getSafeHtml(albumCreditsData.liner_notes)"></div>
+        <p *ngIf="!albumCreditsData.liner_notes" class="field-value tw-text-muted">—</p>
       </div>
 
       <div *ngIf="!albumCreditsData.artists || albumCreditsData.artists.length === 0" class="tw-py-3 tw-text-center tw-text-muted">
@@ -95,21 +139,31 @@
     </div>
   </div>
 
-  <!-- Track List Summary - Full Width -->
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-4" *ngIf="trackListData">
+  <!-- Section divider -->
+  <hr class="tw-border-0 tw-border-t tw-border-border-subtle tw-my-0">
+
+  <!-- Track List Summary -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden" *ngIf="trackListData">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
-      <h3 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h3>
+      <h5 class="tw-mb-0">Track List ({{ trackListData.songs.length || 0 }} tracks)</h5>
       <button type="button" class="btn-sm btn-secondary" (click)="onNavigateToSection('tracks')">
         <app-icon name="edit" class="tw-mr-1" />Edit
       </button>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
       <div *ngIf="trackListData.songs && trackListData.songs.length > 0">
         <div class="track-summary" *ngFor="let song of trackListData.songs; let i = index">
           <div class="tw-flex tw-justify-between tw-items-center">
-            <div>
+            <div class="tw-flex tw-items-center tw-gap-2">
               <strong>{{ i + 1 }}. {{ song.title || 'Untitled' }}</strong>
-              <span class="tw-ml-2 tw-text-muted" *ngIf="song.duration">({{ Math.floor(song.duration / 60) }}:{{ (song.duration % 60).toString().padStart(2, '0') }})</span>
+              <span class="tw-ml-1 tw-text-muted" *ngIf="song.duration">({{ Math.floor(song.duration / 60) }}:{{ (song.duration % 60).toString().padStart(2, '0') }})</span>
+              <!-- Per-track error icons -->
+              <ng-container *ngFor="let err of getSongErrors(i + 1)">
+                <app-icon name="warning" class="tw-text-danger" [title]="err" />
+              </ng-container>
+              <ng-container *ngFor="let warn of getSongWarnings(i + 1)">
+                <app-icon name="warning" class="tw-text-warning" [title]="warn" />
+              </ng-container>
             </div>
             <div>
               <span class="badge tw-text-white" [style.background-color]="song.audio_file ? '#28a745' : '#ffc107'">
@@ -131,63 +185,55 @@
     </div>
   </div>
 
-  <!-- Bottom Section: Validation and Submit -->
-  <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-    <div class="md:tw-col-span-6">
-      <!-- Validation Summary -->
-      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
-        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-          <h3 class="tw-mb-0">Validation Summary</h3>
-        </div>
-        <div class="tw-px-card-pad tw-pb-card-pad">
-          <!-- Errors -->
-          <div *ngIf="allErrors.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-mb-3">
-            <div class="tw-flex tw-items-center tw-mb-2">
-              <app-icon name="warning" class="tw-mr-2" />
-              <strong>{{ allErrors.length }} error{{ allErrors.length !== 1 ? 's' : '' }} found</strong>
-            </div>
-            <ul class="tw-mb-0 small tw-text-sm">
-              <li *ngFor="let error of allErrors">{{ error }}</li>
-            </ul>
-          </div>
+  <!-- Section divider -->
+  <hr class="tw-border-0 tw-border-t tw-border-border-subtle tw-my-0">
 
-          <!-- Warnings -->
-          <div *ngIf="allWarnings.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3">
-            <div class="tw-flex tw-items-center tw-mb-2">
-              <app-icon name="warning" class="tw-mr-2" />
-              <strong>{{ allWarnings.length }} warning{{ allWarnings.length !== 1 ? 's' : '' }}</strong>
-            </div>
-            <ul class="tw-mb-0 small tw-text-sm">
-              <li *ngFor="let warning of allWarnings">{{ warning }}</li>
-            </ul>
-          </div>
+  <!-- Submission area -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-pt-4">
+    <div class="sm:tw-px-card-pad sm:tw-py-card-pad">
 
-          <!-- Success -->
-          <div *ngIf="allErrors.length === 0 && allWarnings.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-green-200 tw-bg-green-50 tw-text-green-800 tw-mb-0">
-            <app-icon name="check-circle" class="tw-mr-2" />
-            <strong>All validations passed!</strong>
-            <div class="small tw-mt-1 tw-text-sm">Ready for submission</div>
-          </div>
-        </div>
+      <!-- Success state when no issues -->
+      <div *ngIf="allErrors.length === 0 && allWarnings.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-green-200 tw-bg-green-50 tw-text-success">
+        <app-icon name="check-circle" class="tw-mr-2" />
+        <strong>All validations passed — ready for submission</strong>
       </div>
-    </div>
 
-    <div class="md:tw-col-span-6">
-      <!-- Submission Warning -->
-      <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
-        <app-icon name="warning" class="tw-mr-2" />
-        <strong>Important:</strong> Once submitted, this release will be sent for processing and distribution.
-        Make sure all information is correct and complete.
+      <!-- Errors -->
+      <div *ngIf="allErrors.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-danger tw-bg-red-50 tw-text-danger">
+        <div class="tw-flex tw-items-center tw-mb-2">
+          <app-icon name="warning" class="tw-mr-2" />
+          <strong>The following {{ allErrors.length }} error{{ allErrors.length !== 1 ? 's' : '' }} need to be fixed before submitting.</strong>
+        </div>
+        <ul class="tw-mb-0 tw-pl-5 tw-list-disc">
+          <li *ngFor="let error of allErrors">{{ error }}</li>
+        </ul>
+      </div>
 
-        <!-- Acknowledgment Checkbox - Only show when no errors -->
-        <div *ngIf="allErrors.length === 0" class="form-check tw-mt-3">
+      <!-- Warnings -->
+      <div *ngIf="allWarnings.length > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-amber-300 tw-bg-amber-50 tw-text-warning">
+        <div class="tw-flex tw-items-center tw-mb-2">
+          <app-icon name="warning" class="tw-mr-2" />
+          <strong>Consider fixing these {{ allWarnings.length }} warning{{ allWarnings.length !== 1 ? 's' : '' }} before submitting.</strong>
+        </div>
+        <ul class="tw-mb-0 tw-pl-5 tw-list-disc">
+          <li *ngFor="let warning of allWarnings">{{ warning }}</li>
+        </ul>
+      </div>
+
+      <!-- Acknowledgement -->
+      <div *ngIf="allErrors.length === 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-card-mobile tw-text-sm tw-border-blue-200 tw-bg-blue-50">
+        <div class="tw-flex tw-items-start tw-gap-2 tw-mb-2">
+          <app-icon name="info" class="tw-text-info tw-flex-shrink-0 tw-mt-px" />
+          <strong class="tw-text-info">Important</strong>
+        </div>
+        <div class="tw-flex tw-items-start tw-gap-2">
           <input
-            class="form-check-input"
+            class="form-check-input tw-flex-shrink-0 tw-mt-px"
             type="checkbox"
             id="acknowledgeSubmission"
             [(ngModel)]="hasAcknowledged">
-          <label class="form-check-label" for="acknowledgeSubmission">
-            <strong>I understand and wish to proceed</strong>
+          <label class="tw-text-body tw-mb-0" for="acknowledgeSubmission">
+            I acknowledge that once submitted, this release will be sent for processing and distribution, and that all information is correct and complete.
           </label>
         </div>
       </div>
@@ -195,34 +241,14 @@
       <!-- Submit Button -->
       <button
         type="button"
-        class="btn-primary btn-lg tw-w-full"
-        style="font-size: 1.25rem; padding: 1rem 2rem; font-weight: 600; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
+        class="btn-primary tw-w-full"
         [disabled]="allErrors.length > 0 || isSubmitting || !hasAcknowledged"
         (click)="onSubmit()">
-        <app-icon name="info" [size]="32" class="tw-mr-3" [class]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'" style="vertical-align: middle;" />
-        <span style="vertical-align: middle;">{{ isSubmitting ? 'Submitting...' : 'Submit Release' }}</span>
+        <app-icon name="paper-plane" class="tw-mr-2" [class]="isSubmitting ? 'fa-spinner fa-spin' : ''" />
+        {{ isSubmitting ? 'Submitting...' : 'Submit Release' }}
       </button>
 
-      <div *ngIf="allErrors.length > 0" class="tw-mt-2 tw-text-center">
-        <small class="tw-text-danger">
-          <app-icon name="warning" class="tw-mr-1" />
-          Please fix all errors before submitting
-        </small>
-      </div>
-
-      <div *ngIf="allErrors.length === 0 && !hasAcknowledged" class="tw-mt-2 tw-text-center">
-        <small class="tw-text-muted">
-          <app-icon name="info" class="tw-mr-1" />
-          Please check the acknowledgment box to enable submission
-        </small>
-      </div>
-
-      <div *ngIf="allErrors.length === 0 && hasAcknowledged && allWarnings.length > 0" class="tw-mt-2 tw-text-center">
-        <small class="tw-text-warning">
-          <app-icon name="warning" class="tw-mr-1" />
-          Warnings detected - you can still submit, but consider addressing them first
-        </small>
-      </div>
     </div>
   </div>
+
 </div>

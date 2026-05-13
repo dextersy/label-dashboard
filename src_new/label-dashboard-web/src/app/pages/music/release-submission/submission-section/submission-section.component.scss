@@ -1,155 +1,166 @@
+// ── Read-only artist cards (mirrors album-credits-section layout) ─────────────
+.ro-artists-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ro-artist-card {
+  border: 0.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+
+  &:last-of-type { margin-bottom: 0; }
+}
+
+.ro-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.ro-card-header {
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 220px;
+    flex-shrink: 0;
+  }
+}
+
+.ro-artist-fixed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ro-artist-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    color: #2d3748;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+}
+
+.ro-artist-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  margin: 0;
+}
+
+.ro-split-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+// Reused ac-* classes from album-credits-section (scoped copy)
+.ac-field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.ac-splits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex: 1;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.ac-split-tile {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ac-split-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin: 0;
+}
+
+// ── Submission section ────────────────────────────────────────────────────────
 .submission-section {
-  .row {
-    margin-bottom: 2rem;
+  .field-label app-icon,
+  .ro-artist-name app-icon {
+    font-size: 0.75rem;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    cursor: default;
+  }
 
-    .col-md-8 {
-      .card {
-        margin-bottom: 1.5rem;
+  .field-label {
+    font-size: 0.8125rem; // h6 scale — 13px
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9ca3af; // tw-text-muted
+    margin-bottom: 0.2rem;
+  }
 
-        .card-header {
-          background-color: #f8f9fa;
-          border-bottom: 1px solid #dee2e6;
+  .field-value {
+    font-size: 0.9375rem;
+    color: #4a5568; // tw-text-body
+    margin-bottom: 0;
+  }
 
-          h5 {
-            margin: 0;
-            font-weight: 600;
-            color: #495057;
-          }
-        }
+  .track-summary {
+    padding: 0.75rem;
+    border: 1px solid var(--tw-border-border-subtle, #e5e7eb);
+    border-radius: 8px; // tw-rounded-input
+    margin-bottom: 0.5rem;
+    background-color: var(--tw-bg-input-bg, #f9fafb);
+  }
 
-        .card-body {
-          .row {
-            margin-bottom: 1rem;
-
-            .col-md-6 {
-              p {
-                margin-bottom: 0.5rem;
-                font-size: 0.9rem;
-
-                strong {
-                  color: #495057;
-                  font-weight: 600;
-                }
-              }
-            }
-          }
-
-          .track-summary {
-            padding: 0.75rem;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-            background-color: #f8f9fa;
-
-            .d-flex {
-              align-items: center;
-
-              strong {
-                color: #495057;
-              }
-
-              .badge {
-                font-size: 0.75rem;
-
-                &.badge-success {
-                  background-color: #28a745;
-                }
-
-                &.badge-warning {
-                  background-color: #ffc107;
-                  color: #212529;
-                }
-              }
-            }
-
-            .text-muted {
-              font-size: 0.85rem;
-              margin-top: 0.25rem;
-            }
-          }
-
-          .text-center {
-            padding: 2rem;
-            color: #6c757d;
-
-            i {
-              font-size: 3rem;
-              margin-bottom: 1rem;
-              opacity: 0.5;
-            }
-          }
-        }
-      }
-    }
-
-    .col-md-4 {
-      .card {
-        margin-bottom: 1.5rem;
-
-        .card-header {
-          background-color: #f8f9fa;
-          border-bottom: 1px solid #dee2e6;
-
-          h5 {
-            margin: 0;
-            font-weight: 600;
-            color: #495057;
-          }
-        }
-
-        .card-body {
-          .alert {
-            margin-bottom: 0;
-
-            &.alert-danger {
-              background-color: #f8d7da;
-              border-color: #f5c6cb;
-              color: #721c24;
-            }
-
-            &.alert-warning {
-              background-color: #fff3cd;
-              border-color: #ffeaa7;
-              color: #856404;
-            }
-
-            &.alert-success {
-              background-color: #d4edda;
-              border-color: #c3e6cb;
-              color: #155724;
-            }
-          }
-        }
-      }
-
-      .alert-warning {
-        background-color: #fff3cd;
-        border-color: #ffeaa7;
-        color: #856404;
-        border-radius: 6px;
-      }
-
-      .btn-primary {
-        background-color: var(--brand-color, #3b82f6);
-        border-color: var(--brand-color, #3b82f6);
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-
-        &:disabled {
-          background-color: #6c757d;
-          border-color: #6c757d;
-          opacity: 0.65;
-        }
-
-        i {
-          margin-right: 0.5rem;
-        }
-      }
-
-      small {
-        color: #6c757d;
-        font-style: italic;
-      }
-    }
+  .artist-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: #e5e7eb; // border-subtle token
+    color: #2d3748; // heading token
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    user-select: none;
   }
 }

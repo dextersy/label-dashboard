@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 export interface ConfirmationDialogData {
   title: string;
   message: string;
+  warning?: string;
   confirmText?: string;
   cancelText?: string;
   type?: 'danger' | 'warning' | 'info';
