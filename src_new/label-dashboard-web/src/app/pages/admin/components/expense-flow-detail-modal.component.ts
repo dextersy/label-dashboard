@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
-import { PaginatedTableComponent, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn } from '../../../components/shared/paginated-table/paginated-table.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
@@ -22,6 +22,30 @@ export class ExpenseFlowDetailModalComponent implements OnChanges {
   expenses: any[] = [];
   pagination: PaginationInfo | null = null;
   loading = false;
+
+  columns: TableColumn[] = [
+    {
+      key: 'date_recorded', label: 'Date', type: 'date',
+      mobileGroup: 'summary',
+      mobileClass: 'mobile-narrow'
+    },
+    {
+      key: 'expense_description', label: 'Description', type: 'text',
+      mobileGroup: 'summary', mobileGroupMain: true,
+      mobileClass: 'mobile-text'
+    },
+    {
+      key: 'expense_amount', label: 'Amount', type: 'number',
+      align: 'right',
+      renderHtml: true,
+      formatter: (item) => {
+        const cls = item.expense_amount < 0 ? 'tw-text-danger' : 'tw-text-success';
+        const prefix = item.expense_amount < 0 ? '-' : '';
+        return `<span class="${cls}">${prefix}${this.formatCurrency(item.expense_amount)}</span>`;
+      },
+      mobileClass: 'mobile-narrow mobile-number'
+    }
+  ];
 
   constructor(
     private adminService: AdminService,
@@ -71,9 +95,4 @@ export class ExpenseFlowDetailModalComponent implements OnChanges {
     return '₱' + Math.abs(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  }
 }
