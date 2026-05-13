@@ -307,23 +307,23 @@ export class ArtistReleasesTabComponent {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'Live':           return 'status-dot status-success';
-      case 'For Submission': return 'status-dot status-info';
-      case 'Pending':        return 'status-dot status-warning';
-      case 'Draft':          return 'status-dot status-secondary';
-      case 'Taken Down':     return 'status-dot status-danger';
-      default:               return 'status-dot status-secondary';
+      case 'Live':           return 'status-badge status-success';
+      case 'For Submission': return 'status-badge status-info';
+      case 'Pending':        return 'status-badge status-warning';
+      case 'Draft':          return 'status-badge status-secondary';
+      case 'Taken Down':     return 'status-badge status-danger';
+      default:               return 'status-badge status-secondary';
     }
   }
 
   getStatusChipClass(status: string): string {
     switch (status) {
-      case 'Live':           return 'release-chip--status-live';
-      case 'For Submission': return 'release-chip--status-submission';
-      case 'Pending':        return 'release-chip--status-pending';
-      case 'Draft':          return 'release-chip--status-draft';
-      case 'Taken Down':     return 'release-chip--status-takendown';
-      default:               return 'release-chip--status-draft';
+      case 'Live':           return 'status-badge status-success';
+      case 'For Submission': return 'status-badge status-info';
+      case 'Pending':        return 'status-badge status-warning';
+      case 'Draft':          return 'status-badge status-secondary';
+      case 'Taken Down':     return 'status-badge status-danger';
+      default:               return 'status-badge status-secondary';
     }
   }
 

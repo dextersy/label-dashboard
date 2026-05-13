@@ -76,7 +76,7 @@
             <!-- Chips row -->
             <div class="release-card__chips">
               <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
-              <span class="release-chip release-chip--status" [ngClass]="getStatusChipClass(release.status)">{{ release.status }}</span>
+              <span [class]="getStatusChipClass(release.status)">{{ release.status }}</span>
               <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
                 <app-icon name="eye-off" iconOnly />
               </span>

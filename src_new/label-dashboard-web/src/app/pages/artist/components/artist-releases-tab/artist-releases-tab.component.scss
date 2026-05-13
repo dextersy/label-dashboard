@@ -193,14 +193,6 @@
     color: #6b7280;
   }
 
-  // Status — consistent semantic palette, flat tag shape
-  &--status {
-    &.release-chip--status-live       { background: rgba(16,  185, 129, 0.88); }
-    &.release-chip--status-submission { background: rgba(59,  130, 246, 0.88); }
-    &.release-chip--status-pending    { background: rgba(245, 158,  11, 0.88); }
-    &.release-chip--status-draft      { background: rgba(107, 114, 128, 0.80); }
-    &.release-chip--status-takendown  { background: rgba(239,  68,  68, 0.88); }
-  }
 
   // Alert dot — 16px circle, single icon, far right
   &--alert {

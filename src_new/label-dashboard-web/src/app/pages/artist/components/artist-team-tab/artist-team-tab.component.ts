@@ -283,7 +283,7 @@ export class ArtistTeamTabComponent {
   }
 
   getStatusClass(status: string): string {
-    return status === 'Accepted' ? 'status-dot status-success' : 'status-dot status-warning';
+    return status === 'Accepted' ? 'status-badge status-success' : 'status-badge status-warning';
   }
 
   getStatusIcon(status: string): string {
