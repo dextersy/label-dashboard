@@ -169,9 +169,6 @@
 
             <!-- Domain name + primary badge -->
             <span class="tw-text-sm tw-flex tw-items-center tw-gap-1.5 tw-min-w-0">
-              <span style="width:8px; height:8px; border-radius:50%; flex-shrink:0; display:inline-block;"
-                    [style.background]="domain.status === 'Connected' ? '#16a34a' : domain.status === 'Pending' ? '#0891b2' : domain.status === 'No SSL' ? '#f59e0b' : '#ef4444'"
-                    [title]="getStatusTooltip(domain.status)"></span>
               <span [class.tw-text-muted]="domain.status !== 'Connected'"
                     style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;"
                     [title]="domain.domain_name">{{ domain.domain_name }}</span>
@@ -182,11 +179,11 @@
             </span>
 
             <!-- Connection status -->
-            <span class="tw-text-sm tw-whitespace-nowrap">
-              <span *ngIf="domain.status === 'Connected'" class="tw-text-green-600" [title]="getStatusTooltip(domain.status)">✓ Connected</span>
-              <span *ngIf="domain.status === 'Pending'" class="tw-text-[#0891b2]" [title]="getStatusTooltip(domain.status)"><app-icon name="clock" class="tw-text-xs tw-animate-spin" /> Processing…</span>
-              <span *ngIf="domain.status === 'No SSL'" class="tw-text-amber-500" [title]="getStatusTooltip(domain.status)">✓ No SSL</span>
-              <span *ngIf="domain.status === 'Unverified'" class="tw-text-red-500" [title]="getStatusTooltip(domain.status)">✕ Unverified</span>
+            <span class="tw-whitespace-nowrap">
+              <span *ngIf="domain.status === 'Connected'" class="status-badge status-success" [title]="getStatusTooltip(domain.status)">Connected</span>
+              <span *ngIf="domain.status === 'Pending'" class="status-badge status-info" [title]="getStatusTooltip(domain.status)">Processing…</span>
+              <span *ngIf="domain.status === 'No SSL'" class="status-badge status-warning" [title]="getStatusTooltip(domain.status)">No SSL</span>
+              <span *ngIf="domain.status === 'Unverified'" class="status-badge status-danger" [title]="getStatusTooltip(domain.status)">Unverified</span>
             </span>
 
           </span>

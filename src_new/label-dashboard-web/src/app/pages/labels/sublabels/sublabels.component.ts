@@ -91,18 +91,12 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       formatter: (item: ChildBrand) => {
         const status = item.status || 'Unknown';
         switch (status) {
-          case 'OK':
-            return '<span title="All the domains are connected and SSL certified." class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span class="tw-text-green-600">OK</span></span>';
-          case 'Pending':
-            return '<span title="Working on it. Please check again in a few minutes." class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-cyan-600"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="tw-text-cyan-600">Pending</span></span>';
-          case 'Warning':
-            return '<span title="Some domains are unverified or have SSL issues" class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-amber-500"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tw-text-amber-500">Warning</span></span>';
-          case 'Unverified':
-            return '<span title="You don\'t have any verified domains for this sublabel." class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-red-500"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span class="tw-text-red-500">Unverified</span></span>';
-          case 'No domains':
-            return '<span class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-gray-400"><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="tw-text-gray-400">No domains</span></span>';
-          default:
-            return '<span class="tw-inline-flex tw-items-center tw-gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-gray-400"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span class="tw-text-gray-400">Unknown</span></span>';
+          case 'OK':         return '<span class="status-badge status-success" title="All the domains are connected and SSL certified.">OK</span>';
+          case 'Pending':    return '<span class="status-badge status-info" title="Working on it. Please check again in a few minutes.">Pending</span>';
+          case 'Warning':    return '<span class="status-badge status-warning" title="Some domains are unverified or have SSL issues">Warning</span>';
+          case 'Unverified': return '<span class="status-badge status-danger" title="You don\'t have any verified domains for this sublabel.">Unverified</span>';
+          case 'No domains': return '<span class="status-badge status-secondary">No domains</span>';
+          default:           return '<span class="status-badge status-secondary">Unknown</span>';
         }
       }
     },
@@ -761,14 +755,14 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     return colors[this.getAvatarColorIndex(name)];
   }
 
-  getStatusSlug(status: string | undefined): string {
+  getStatusBadgeClass(status: string | undefined): string {
     switch (status) {
-      case 'OK':         return 'ok';
-      case 'Pending':    return 'pending';
-      case 'Warning':    return 'warning';
-      case 'Unverified': return 'unverified';
-      case 'No domains': return 'no-domains';
-      default:           return 'unknown';
+      case 'OK':         return 'status-badge status-success';
+      case 'Pending':    return 'status-badge status-info';
+      case 'Warning':    return 'status-badge status-warning';
+      case 'Unverified': return 'status-badge status-danger';
+      case 'No domains': return 'status-badge status-secondary';
+      default:           return 'status-badge status-secondary';
     }
   }
 

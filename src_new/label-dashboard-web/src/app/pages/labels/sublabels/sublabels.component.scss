@@ -170,36 +170,6 @@
     margin-top: 4px;
   }
 
-  &__status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 20px;
-
-    &--ok           { background: #d1fae5; color: #065f46; }
-    &--pending      { background: #dbeafe; color: #1e40af; }
-    &--warning      { background: #fef3c7; color: #92400e; }
-    &--unverified   { background: #fee2e2; color: #991b1b; }
-    &--no-domains   { background: #f3f4f6; color: #6b7280; }
-    &--unknown      { background: #f3f4f6; color: #6b7280; }
-  }
-
-  &__status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-
-    .brand-card__status-badge--ok         & { background: #10b981; }
-    .brand-card__status-badge--pending    & { background: #3b82f6; }
-    .brand-card__status-badge--warning    & { background: #f59e0b; }
-    .brand-card__status-badge--unverified & { background: #ef4444; }
-    .brand-card__status-badge--no-domains & { background: #9ca3af; }
-    .brand-card__status-badge--unknown    & { background: #9ca3af; }
-  }
 
   &__menu {
     background: none;

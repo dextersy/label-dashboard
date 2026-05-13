@@ -32,9 +32,7 @@
           <div class="brand-card__info">
             <div class="brand-card__name">{{ brand.brand_name }}</div>
             <div class="brand-card__status-row">
-              <span class="brand-card__status-badge brand-card__status-badge--{{ getStatusSlug(brand.status) }}">
-                <span class="brand-card__status-dot"></span>{{ brand.status || 'Unknown' }}
-              </span>
+              <span [class]="getStatusBadgeClass(brand.status)">{{ brand.status || 'Unknown' }}</span>
             </div>
           </div>
           <button *ngIf="visibleActions.length > 0"
