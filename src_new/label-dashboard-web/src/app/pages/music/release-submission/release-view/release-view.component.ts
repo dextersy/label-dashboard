@@ -59,6 +59,10 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   lyricsModalSong: any = null;
   lyricsCopied = false;
 
+  // Expand/collapse state for long text fields
+  descriptionExpanded = false;
+  linerNotesExpanded = false;
+
   private subscription: Subscription | null = null;
 
   constructor(

@@ -3,7 +3,7 @@
   <div class="release-view-header">
     <h2 class="release-title">{{ release.title }}</h2>
     <!-- Desktop action buttons -->
-    <div class="header-actions tw-hidden md:tw-flex">
+    <div class="header-actions">
       <button *ngIf="canSubmitRelease()"
               class="btn-primary btn-sm"
               (click)="onSubmitRelease()"
@@ -28,7 +28,7 @@
     </div>
 
     <!-- Mobile kebab menu -->
-    <div class="kebab-menu md:tw-hidden" *ngIf="isAdmin || canSubmitRelease()">
+    <div class="kebab-menu" *ngIf="isAdmin || canSubmitRelease()">
       <button class="kebab-toggle" (click)="kebabOpen = !kebabOpen">
         <app-icon name="more-vertical" />
       </button>
@@ -56,7 +56,6 @@
     <section class="view-section">
       <h3 class="section-title">
         <app-icon name="info" class="tw-mr-2" />Release Information
-        <span class="badge tw-ml-2" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
       </h3>
       
       <div class="info-grid">
@@ -91,11 +90,19 @@
           </div>
           <div class="detail-row">
             <span class="detail-label">Release Date</span>
-            <span class="detail-value">{{ formatDate(release.release_date) }}</span>
+            <span class="detail-value tw-flex tw-items-center tw-gap-2">
+              {{ formatDate(release.release_date) }}
+              <span class="badge" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
+            </span>
           </div>
           <div class="detail-row" *ngIf="release.description">
             <span class="detail-label">Description</span>
-            <span class="detail-value description" [innerHTML]="sanitizeHtml(release.description)"></span>
+            <span class="detail-value">
+              <span class="expandable-text" [class.expanded]="descriptionExpanded" [innerHTML]="sanitizeHtml(release.description)"></span>
+              <a class="read-more-link" (click)="descriptionExpanded = !descriptionExpanded">
+                {{ descriptionExpanded ? 'Show less' : 'Read more' }}
+              </a>
+            </span>
           </div>
         </div>
       </div>
@@ -159,7 +166,10 @@
       <!-- Liner Notes -->
       <div class="liner-notes" *ngIf="release.liner_notes">
         <h3 class="subsection-title">Liner Notes</h3>
-        <div class="liner-notes-text" [innerHTML]="sanitizeHtml(release.liner_notes)"></div>
+        <span class="expandable-text" [class.expanded]="linerNotesExpanded" [innerHTML]="sanitizeHtml(release.liner_notes)"></span>
+        <a class="read-more-link" (click)="linerNotesExpanded = !linerNotesExpanded">
+          {{ linerNotesExpanded ? 'Show less' : 'Read more' }}
+        </a>
       </div>
     </section>
 

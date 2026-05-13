@@ -66,9 +66,13 @@
     }
 
     .header-actions {
-      display: flex;
+      display: none;
       align-items: center;
       gap: 0.5rem;
+
+      @media (min-width: 768px) {
+        display: flex;
+      }
     }
 
     .edit-btn {
@@ -88,6 +92,10 @@
 
     .kebab-menu {
       position: relative;
+
+      @media (min-width: 768px) {
+        display: none;
+      }
 
       .kebab-toggle {
         background: none;
@@ -176,7 +184,7 @@
   // Release Information Section
   .info-grid {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 240px 1fr;
     gap: 1.5rem;
     align-items: start;
     
@@ -187,22 +195,34 @@
   
   .cover-art-container {
     .cover-art {
-      width: 180px;
-      height: 180px;
+      width: 240px;
+      height: 240px;
       object-fit: cover;
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+      @media (max-width: 768px) {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+      }
     }
-    
+
     .cover-art-placeholder {
-      width: 180px;
-      height: 180px;
+      width: 240px;
+      height: 240px;
       background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
+      @media (max-width: 768px) {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+      }
+
       i {
         font-size: 3rem;
         color: #bdbdbd;
@@ -233,11 +253,6 @@
         font-size: 1rem;
         color: var(--text-color, #333);
         
-        &.description {
-          white-space: pre-wrap;
-          line-height: 1.5;
-          overflow: hidden;
-        }
       }
     }
   }
@@ -389,17 +404,41 @@
     }
   }
   
+  .expandable-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: pre-wrap;
+    line-height: 1.6;
+
+    &.expanded {
+      display: block;
+      -webkit-line-clamp: unset;
+      overflow: visible;
+    }
+  }
+
+  .read-more-link {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--primary-color, #5bc0de);
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
   .liner-notes {
     margin-top: 1rem;
-    
-    .liner-notes-text {
-      white-space: pre-wrap;
-      line-height: 1.6;
-      color: var(--text-color, #333);
+
+    .expandable-text {
       padding: 1rem;
       background: var(--bg-light, #f9f9f9);
       border-radius: 8px;
-      margin: 0;
     }
   }
   
