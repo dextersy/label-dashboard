@@ -55,25 +55,6 @@
     flex-shrink: 0;
   }
 
-  &__badge {
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: 4px;
-    padding: 2px 8px;
-    background: #f3f4f6;
-    color: #6b7280;
-
-    &--success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    &--danger {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-  }
-
   &__menu {
     background: none;
     border: none;

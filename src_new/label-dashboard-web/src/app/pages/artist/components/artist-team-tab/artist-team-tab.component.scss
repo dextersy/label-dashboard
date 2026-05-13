@@ -56,26 +56,6 @@
     text-overflow: ellipsis;
   }
 
-  &__badge {
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: 4px;
-    padding: 2px 8px;
-    background: #f3f4f6;
-    color: #6b7280;
-    flex-shrink: 0;
-
-    &--success {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    &--pending {
-      background: #fef3c7;
-      color: #92400e;
-    }
-  }
-
   &__menu {
     background: none;
     border: none;

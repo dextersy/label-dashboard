@@ -351,6 +351,11 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.01em;
   gap: 4px;
 
+  @media (min-width: 768px) {
+    font-size: 0.8125rem; // 13px
+    padding: 5px 11px;
+  }
+
   // Icon injected via ::before so it works inside [innerHTML] (Angular sanitizer strips SVG elements)
   &::before {
     content: '';

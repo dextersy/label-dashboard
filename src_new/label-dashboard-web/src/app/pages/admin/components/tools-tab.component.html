@@ -36,9 +36,10 @@
               <div class="email-log-card__recipients">{{ email.recipients }}</div>
             </div>
             <div class="email-log-card__badges">
-              <span class="email-log-card__badge"
-                    [class.email-log-card__badge--success]="email.result === 'Success' || email.result === 'Successful'"
-                    [class.email-log-card__badge--danger]="email.result === 'Failed'">
+              <span class="status-badge"
+                    [class.status-success]="email.result === 'Success' || email.result === 'Successful'"
+                    [class.status-danger]="email.result === 'Failed'"
+                    [class.status-secondary]="email.result !== 'Success' && email.result !== 'Successful' && email.result !== 'Failed'">
                 {{ email.result }}
               </span>
             </div>
@@ -78,9 +79,10 @@
           <div>{{ selectedEmail.subject }}</div>
           <div><strong>Result:</strong></div>
           <div>
-            <span class="badge"
-                  [class.bg-success]="selectedEmail.result === 'Success'"
-                  [class.bg-danger]="selectedEmail.result === 'Failed'">
+            <span class="status-badge"
+                  [class.status-success]="selectedEmail.result === 'Success'"
+                  [class.status-danger]="selectedEmail.result === 'Failed'"
+                  [class.status-secondary]="selectedEmail.result !== 'Success' && selectedEmail.result !== 'Failed'">
               {{ selectedEmail.result }}
             </span>
           </div>

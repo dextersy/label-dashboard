@@ -38,8 +38,8 @@
               <div class="user-card__email">{{ user.email_address }}</div>
             </div>
             <div class="user-card__badges">
-              <span *ngIf="user.is_admin" class="user-card__badge user-card__badge--admin">Admin</span>
-              <span *ngIf="user.has_pending_invite" class="user-card__badge user-card__badge--pending">Pending</span>
+              <span *ngIf="user.is_admin" class="status-badge status-info">Admin</span>
+              <span *ngIf="user.has_pending_invite" class="status-badge status-warning">Pending</span>
             </div>
             <button *ngIf="visibleActions.length > 0"
                     class="user-card__menu kebab-btn"
@@ -83,9 +83,10 @@
               <div class="user-card__email">{{ attempt.name }}</div>
             </div>
             <div class="user-card__badges">
-              <span class="user-card__badge"
-                    [class.user-card__badge--success]="attempt.result === 'Success' || attempt.result === 'Successful'"
-                    [class.user-card__badge--danger]="attempt.result === 'Failed'">
+              <span class="status-badge"
+                    [class.status-success]="attempt.result === 'Success' || attempt.result === 'Successful'"
+                    [class.status-danger]="attempt.result === 'Failed'"
+                    [class.status-secondary]="attempt.result !== 'Success' && attempt.result !== 'Successful' && attempt.result !== 'Failed'">
                 {{ attempt.result }}
               </span>
             </div>

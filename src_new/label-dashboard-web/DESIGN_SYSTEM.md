@@ -420,7 +420,7 @@ The standard status indicator. A rounded pill with a soft tinted background and 
 | `status-secondary` | gray `#6b7280`   | gray 12% tint   | Canceled, Refunded, Unknown |
 | `status-info`      | cyan `#0891b2`   | cyan 12% tint   | For Submission, Informational |
 
-Style: `font-size: 11px`, `padding: 3px 9px`, `border-radius: 999px`, `font-weight: 500`. Include a Font Awesome `<i>` icon before the label text — the badge styles it to `10px`. Choose an icon appropriate to the semantic:
+Style: `font-size: 11px` (mobile) / `13px` (≥768px), `padding: 3px 9px` (mobile) / `5px 11px` (≥768px), `border-radius: 999px`, `font-weight: 500`. Include a Font Awesome `<i>` icon before the label text — the badge styles it to `10px`. Choose an icon appropriate to the semantic:
 
 The icon is injected automatically via the CSS `::before` pseudo-element — **no icon markup is needed in the HTML**. Each variant has its own Feather icon baked in as an SVG data URI in `components.scss`:
 

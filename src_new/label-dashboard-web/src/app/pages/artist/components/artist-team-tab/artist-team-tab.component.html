@@ -32,9 +32,10 @@
             <div class="member-card__name">{{ member.name }}</div>
             <div class="member-card__email">{{ member.email }}</div>
           </div>
-          <span class="member-card__badge"
-                [class.member-card__badge--success]="member.status === 'Accepted'"
-                [class.member-card__badge--pending]="member.status === 'Pending'">
+          <span class="status-badge"
+                [class.status-success]="member.status === 'Accepted'"
+                [class.status-warning]="member.status === 'Pending'"
+                [class.status-secondary]="member.status !== 'Accepted' && member.status !== 'Pending'">
             {{ member.status }}
           </span>
           <button *ngIf="visibleActions.length > 0"
