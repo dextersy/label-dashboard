@@ -48,21 +48,23 @@
     </div>
   </div>
   <!-- 3 Stat Cards -->
-  <div class="lg:tw-col-span-8 tw-grid tw-grid-cols-2 lg:tw-grid-cols-3 tw-gap-4">
-    <div class="stat-card" (click)="viewEarningsDetails.emit()">
-      <span class="financial-item-label">Total Earnings</span>
-      <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</span>
-      <a class="financial-item-link">View all</a>
-    </div>
-    <div class="stat-card" (click)="viewRoyaltiesDetails.emit()">
-      <span class="financial-item-label">Total Royalties</span>
-      <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</span>
-      <a class="financial-item-link">View all</a>
-    </div>
-    <div class="stat-card tw-col-span-2 lg:tw-col-span-1" (click)="viewPaymentsDetails.emit()">
-      <span class="financial-item-label">Total Payments</span>
-      <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
-      <a class="financial-item-link">View all</a>
+  <div class="lg:tw-col-span-8 tw-flex tw-items-center">
+    <div class="financial-summary-card tw-w-full">
+      <div class="financial-summary-item financial-item--earnings" (click)="viewEarningsDetails.emit()">
+        <span class="financial-item-label">Total Earnings</span>
+        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</span>
+        <a class="financial-item-link">View all</a>
+      </div>
+      <div class="financial-summary-item" (click)="viewRoyaltiesDetails.emit()">
+        <span class="financial-item-label">Total Royalties</span>
+        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</span>
+        <a class="financial-item-link">View all</a>
+      </div>
+      <div class="financial-summary-item" (click)="viewPaymentsDetails.emit()">
+        <span class="financial-item-label">Total Payments</span>
+        <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
+        <a class="financial-item-link">View all</a>
+      </div>
     </div>
   </div>
 
