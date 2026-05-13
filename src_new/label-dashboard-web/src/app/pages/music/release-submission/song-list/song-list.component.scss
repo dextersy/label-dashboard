@@ -56,3 +56,130 @@ tbody.cdk-drop-list-dragging .song-row:not(.cdk-drag-placeholder) {
   opacity: 0.3;
   background: #f8f9fa;
 }
+
+// Mobile card list
+.song-card-list {
+  flex-direction: column;
+}
+
+.song-card {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #e5e7eb; // border-subtle token
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.song-card-placeholder {
+  height: 56px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  border: 1px dashed #d1d5db;
+  grid-column: 1 / -1;
+}
+
+.song-card-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  flex-shrink: 0;
+
+  .btn-icon {
+    font-size: 1.25rem;
+    padding: 4px;
+  }
+}
+
+.song-card-no-audio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.song-card-info {
+  min-width: 0; // allow text truncation
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.song-card-num {
+  font-size: 0.6875rem; // 11px
+  color: #9ca3af; // tw-text-muted
+  line-height: 1.2;
+}
+
+.song-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #2d3748; // heading
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-card-meta {
+  font-size: 0.75rem;
+  color: #9ca3af; // tw-text-muted
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-card-links {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 1px;
+}
+
+.song-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.song-card-duration {
+  font-size: 0.75rem;
+  color: #9ca3af; // tw-text-muted
+  white-space: nowrap;
+}
+
+.kebab-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 14px;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  border: none;
+  background: none;
+  outline: none;
+  box-shadow: none;
+  border-radius: 0;
+  cursor: pointer;
+  color: inherit;
+
+  &:hover:not(:disabled) {
+    background-color: #f8f9fa;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--danger {
+    color: #ef4444;
+  }
+}

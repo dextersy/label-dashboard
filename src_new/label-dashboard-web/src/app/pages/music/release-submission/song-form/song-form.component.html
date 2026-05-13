@@ -23,7 +23,7 @@
 
         <form (ngSubmit)="onSubmit()" #songFormRef="ngForm">
           <!-- Basic Information -->
-          <h3 class="tw-mb-3">Basic Information</h3>
+          <p class="rs-section-label">Basic Information</p>
 
           <div class="tw-mb-5">
             <label for="songTitle" class="tw-label">Song Title <span class="tw-text-danger">*</span></label>
@@ -84,7 +84,7 @@
 
           <!-- Streaming Links -->
           <div *ngIf="isAdmin">
-            <h3 class="tw-mb-3 tw-mt-4">Streaming Links</h3>
+            <p class="rs-section-label tw-mt-4">Streaming Links</p>
 
             <div class="tw-mb-5">
               <label for="spotifyLink" class="tw-label">Spotify Link</label>
@@ -124,12 +124,12 @@
           </div>
 
           <!-- Collaborators -->
-          <h3 class="tw-mb-3 tw-mt-4">Collaborators (Artists)</h3>
+          <p class="rs-section-label tw-mt-4">Collaborators (Artists)</p>
           <p class="small tw-mb-3 tw-text-muted tw-text-sm">
             Indicate performing artists that are involved in this track. If the artist you collaborated with does not appear, inform your label administrator.
           </p>
 
-          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-3" [class.z-index-high]="showCollaboratorDropdown" [class.z-index-collaborators]="!showCollaboratorDropdown">
+          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-relative tw-mb-3" [class.chip-section-active]="showCollaboratorDropdown" [class.chip-section-collaborators]="!showCollaboratorDropdown">
             <div class="tw-px-card-pad tw-pb-card-pad overflow-visible">
               <div class="chip-input-wrapper">
                 <div class="chip-input-field"
@@ -181,12 +181,12 @@
           </div>
 
           <!-- Authors -->
-          <h3 class="tw-mb-3 tw-mt-4">Authors (Lyricists)</h3>
+          <p class="rs-section-label tw-mt-4">Authors (Lyricists)</p>
           <p class="small tw-mb-3 tw-text-muted tw-text-sm">
             <strong>Use full legal names.</strong> Indicate people who contributed to the lyrics of this song. Select from the list of songwriters in our database or add a new songwriter.
           </p>
 
-          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-3" [class.z-index-high]="showAuthorDropdown || isCreatingNewAuthor" [class.z-index-authors]="!showAuthorDropdown && !isCreatingNewAuthor">
+          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-relative tw-mb-3" [class.chip-section-active]="showAuthorDropdown || isCreatingNewAuthor" [class.chip-section-authors]="!showAuthorDropdown && !isCreatingNewAuthor">
             <div class="tw-px-card-pad tw-pb-card-pad overflow-visible">
               <!-- Chip input with search -->
               <div class="chip-input-wrapper">
@@ -311,12 +311,12 @@
           </div>
 
           <!-- Composers -->
-          <h3 class="tw-mb-3 tw-mt-4">Composers</h3>
+          <p class="rs-section-label tw-mt-4">Composers</p>
           <p class="small tw-mb-3 tw-text-muted tw-text-sm">
             <strong>Use full legal names.</strong> Indicate who contributed to the music for each track. Generally, "composer" refers to who made the main melody of the song (the tune that is sung), but you can take liberty to decide who should be credited for the music. Select from the list of songwriters in our database or add a new songwriter.
           </p>
 
-          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mb-3" [class.z-index-high]="showComposerDropdown || isCreatingNewComposer" [class.z-index-composers]="!showComposerDropdown && !isCreatingNewComposer">
+          <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-relative tw-mb-3" [class.chip-section-active]="showComposerDropdown || isCreatingNewComposer" [class.chip-section-composers]="!showComposerDropdown && !isCreatingNewComposer">
             <div class="tw-px-card-pad tw-pb-card-pad overflow-visible">
               <!-- Chip input with search -->
               <div class="chip-input-wrapper">

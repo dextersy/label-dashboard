@@ -45,13 +45,13 @@
         <app-icon name="more-vertical" />
       </button>
       <div class="kebab-dropdown" *ngIf="mobileMenuOpen" (click)="mobileMenuOpen = false">
-        <button class="btn-ghost" (click)="onDownloadMasters()" [disabled]="downloadingMasters">
+        <button type="button" (click)="onDownloadMasters()" [disabled]="downloadingMasters">
           <app-icon name="download" class="tw-mr-2" />{{ downloadingMasters ? 'Downloading...' : 'Download Masters' }}
         </button>
-        <button class="btn-ghost" (click)="onAddExistingSong()" [disabled]="isRestrictedMode()">
+        <button type="button" (click)="onAddExistingSong()" [disabled]="isRestrictedMode()">
           <app-icon name="link" class="tw-mr-2" />Add Existing
         </button>
-        <button class="btn-ghost" (click)="onAddSong()" [disabled]="isRestrictedMode()">
+        <button type="button" (click)="onAddSong()" [disabled]="isRestrictedMode()">
           <app-icon name="plus" class="tw-mr-2" />Add Song
         </button>
       </div>

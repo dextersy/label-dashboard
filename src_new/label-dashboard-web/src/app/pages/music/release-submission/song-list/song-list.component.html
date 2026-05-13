@@ -1,94 +1,174 @@
-<div class="table-responsive" *ngIf="songs.length > 0">
+<ng-container *ngIf="songs.length > 0">
+
   <div *ngIf="!isRestrictedMode()" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 tw-mb-3">
     <app-icon name="move" class="mr-2" />
     Drag and drop rows to reorder tracks
   </div>
 
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th *ngIf="!isRestrictedMode()" style="width: 30px;"></th>
-        <th>#</th>
-        <th style="width: 30px;"></th>
-        <th>Title</th>
-        <th>Duration</th>
-        <th>Collaborators</th>
-        <th>ISRC</th>
-        <th>Links</th>
-        <th class="actions-column"></th>
-      </tr>
-    </thead>
-    <tbody cdkDropList (cdkDropListDropped)="onDrop($event)" [cdkDropListDisabled]="isRestrictedMode()">
-      <tr *ngFor="let song of songs; let i = index" cdkDrag [cdkDragDisabled]="isRestrictedMode()" class="song-row">
-        <td *ngIf="!isRestrictedMode()" class="drag-handle-cell">
-          <div class="drag-handle" cdkDragHandle>
-            <app-icon name="drag" class="tw-text-muted" />
-          </div>
-        </td>
-        <td>{{ i + 1 }}</td>
-        <td>
-          <button
-            *ngIf="song.audio_file"
-            class="btn-icon btn-sm"
-            [class.tw-text-warning]="playingSongId === song.id"
-            [class.tw-text-info]="pausedSongId === song.id"
-            [class.tw-text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
-            [disabled]="loadingSongId === song.id"
-            (click)="onPlayAudio(song)"
-            [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
-            <app-icon [name]="loadingSongId === song.id ? 'spinner' : playingSongId === song.id ? 'pause' : pausedSongId === song.id ? 'play-circle' : 'play'"
-                      [class.tw-animate-spin]="loadingSongId === song.id" />
-          </button>
-        </td>
-        <td>
-          <strong>{{ song.title }}</strong>
-          <div *ngIf="!song.audio_file && !isUploading(song.id)" class="tw-text-danger small tw-text-sm">
-            <app-icon name="warning" class="tw-mr-1" />
-            <strong>No audio master</strong>
-          </div>
-          <div *ngIf="isUploading(song.id)" class="tw-mt-2">
-            <div class="progress" style="height: 6px;">
-              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
-                   role="progressbar"
-                   [style.width.%]="getUploadProgress(song.id)"
-                   [attr.aria-valuenow]="getUploadProgress(song.id)"
-                   aria-valuemin="0"
-                   aria-valuemax="100">
-              </div>
+  <!-- Desktop table (md+) -->
+  <div class="table-responsive tw-hidden md:tw-block">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th *ngIf="!isRestrictedMode()" style="width: 30px;"></th>
+          <th>#</th>
+          <th style="width: 30px;"></th>
+          <th>Title</th>
+          <th>Duration</th>
+          <th>Collaborators</th>
+          <th>ISRC</th>
+          <th>Links</th>
+          <th class="actions-column"></th>
+        </tr>
+      </thead>
+      <tbody cdkDropList (cdkDropListDropped)="onDrop($event)" [cdkDropListDisabled]="isRestrictedMode()">
+        <tr *ngFor="let song of songs; let i = index" cdkDrag [cdkDragDisabled]="isRestrictedMode()" class="song-row">
+          <td *ngIf="!isRestrictedMode()" class="drag-handle-cell">
+            <div class="drag-handle" cdkDragHandle>
+              <app-icon name="drag" class="tw-text-muted" />
             </div>
-            <small class="tw-text-muted">Uploading... {{ getUploadProgress(song.id) }}%</small>
-          </div>
-        </td>
-        <td>{{ formatDuration(song.duration) }}</td>
-        <td>{{ getCollaboratorNames(song) }}</td>
-        <td><small>{{ song.isrc || '-' }}</small></td>
-        <td>
-          <div class="tw-flex tw-items-center tw-gap-0">
-            <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn-icon btn-sm tw-text-success" title="Spotify">
-              <app-icon name="spotify" />
-            </a>
-            <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn-icon btn-sm" title="Apple Music">
-              <app-icon name="apple" />
-            </a>
-            <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn-icon btn-sm tw-text-danger" title="YouTube">
-              <app-icon name="youtube" />
-            </a>
-          </div>
-          <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="tw-text-muted">-</span>
-        </td>
-        <td class="actions-column">
-          <div class="kebab-container" (click)="$event.stopPropagation()">
-            <button class="kebab-btn" type="button"
-                    (click)="toggleKebab(song, $event)"
-                    [class.active]="openKebabItem === song">
-              <app-icon name="more-vertical" />
+          </td>
+          <td>{{ i + 1 }}</td>
+          <td>
+            <button
+              *ngIf="song.audio_file"
+              class="btn-icon btn-sm"
+              [class.tw-text-warning]="playingSongId === song.id"
+              [class.tw-text-info]="pausedSongId === song.id"
+              [class.tw-text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
+              [disabled]="loadingSongId === song.id"
+              (click)="onPlayAudio(song)"
+              [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
+              <app-icon [name]="loadingSongId === song.id ? 'spinner' : playingSongId === song.id ? 'pause' : pausedSongId === song.id ? 'play-circle' : 'play'"
+                        [class.tw-animate-spin]="loadingSongId === song.id" />
             </button>
+          </td>
+          <td>
+            <strong>{{ song.title }}</strong>
+            <div *ngIf="!song.audio_file && !isUploading(song.id)" class="tw-text-danger small tw-text-sm">
+              <app-icon name="warning" class="tw-mr-1" />
+              <strong>No audio master</strong>
+            </div>
+            <div *ngIf="isUploading(song.id)" class="tw-mt-2">
+              <div class="progress" style="height: 6px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                     role="progressbar"
+                     [style.width.%]="getUploadProgress(song.id)"
+                     [attr.aria-valuenow]="getUploadProgress(song.id)"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                </div>
+              </div>
+              <small class="tw-text-muted">Uploading... {{ getUploadProgress(song.id) }}%</small>
+            </div>
+          </td>
+          <td>{{ formatDuration(song.duration) }}</td>
+          <td>{{ getCollaboratorNames(song) }}</td>
+          <td><small>{{ song.isrc || '-' }}</small></td>
+          <td>
+            <div class="tw-flex tw-items-center tw-gap-0">
+              <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn-icon btn-sm tw-text-success" title="Spotify">
+                <app-icon name="spotify" />
+              </a>
+              <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn-icon btn-sm" title="Apple Music">
+                <app-icon name="apple" />
+              </a>
+              <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn-icon btn-sm tw-text-danger" title="YouTube">
+                <app-icon name="youtube" />
+              </a>
+            </div>
+            <span *ngIf="!song.spotify_link && !song.apple_music_link && !song.youtube_link" class="tw-text-muted">-</span>
+          </td>
+          <td class="actions-column">
+            <div class="kebab-container" (click)="$event.stopPropagation()">
+              <button class="kebab-btn" type="button"
+                      (click)="toggleKebab(song, $event)"
+                      [class.active]="openKebabItem === song">
+                <app-icon name="more-vertical" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile card list (below md) -->
+  <div class="song-card-list tw-flex md:tw-hidden"
+       cdkDropList
+       (cdkDropListDropped)="onDrop($event)"
+       [cdkDropListDisabled]="isRestrictedMode()">
+    <div *ngFor="let song of songs; let i = index"
+         class="song-card"
+         cdkDrag
+         [cdkDragDisabled]="isRestrictedMode()">
+
+      <!-- drag placeholder -->
+      <div *cdkDragPlaceholder class="song-card-placeholder"></div>
+
+      <!-- col 1: play button -->
+      <div class="song-card-play">
+        <button
+          *ngIf="song.audio_file"
+          class="btn-icon"
+          [class.tw-text-warning]="playingSongId === song.id"
+          [class.tw-text-info]="pausedSongId === song.id"
+          [class.tw-text-success]="playingSongId !== song.id && pausedSongId !== song.id && loadingSongId !== song.id"
+          [disabled]="loadingSongId === song.id"
+          (click)="onPlayAudio(song)"
+          [title]="playingSongId === song.id ? 'Pause' : pausedSongId === song.id ? 'Resume' : loadingSongId === song.id ? 'Loading...' : 'Play'">
+          <app-icon [name]="loadingSongId === song.id ? 'spinner' : playingSongId === song.id ? 'pause' : pausedSongId === song.id ? 'play-circle' : 'play'"
+                    [class.tw-animate-spin]="loadingSongId === song.id" />
+        </button>
+        <span *ngIf="!song.audio_file" class="song-card-no-audio">
+          <app-icon name="warning" class="tw-text-warning" />
+        </span>
+      </div>
+
+      <!-- col 2: info stack -->
+      <div class="song-card-info">
+        <div class="song-card-num">{{ i + 1 }}</div>
+        <div class="song-card-title">{{ song.title }}</div>
+        <div *ngIf="hasCollaborators(song)" class="song-card-meta">{{ getCollaboratorNames(song) }}</div>
+        <div *ngIf="song.isrc" class="song-card-meta">{{ song.isrc }}</div>
+        <div *ngIf="hasLinks(song)" class="song-card-links">
+          <a *ngIf="song.spotify_link" [href]="song.spotify_link" target="_blank" class="btn-icon btn-sm tw-text-success" title="Spotify">
+            <app-icon name="spotify" />
+          </a>
+          <a *ngIf="song.apple_music_link" [href]="song.apple_music_link" target="_blank" class="btn-icon btn-sm" title="Apple Music">
+            <app-icon name="apple" />
+          </a>
+          <a *ngIf="song.youtube_link" [href]="song.youtube_link" target="_blank" class="btn-icon btn-sm tw-text-danger" title="YouTube">
+            <app-icon name="youtube" />
+          </a>
+        </div>
+        <div *ngIf="isUploading(song.id)" class="tw-mt-1">
+          <div class="progress" style="height: 4px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                 role="progressbar"
+                 [style.width.%]="getUploadProgress(song.id)">
+            </div>
           </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+          <small class="tw-text-muted">{{ getUploadProgress(song.id) }}%</small>
+        </div>
+      </div>
+
+      <!-- col 3: duration + kebab -->
+      <div class="song-card-right">
+        <span class="song-card-duration">{{ formatDuration(song.duration) }}</span>
+        <div class="kebab-container" (click)="$event.stopPropagation()">
+          <button class="kebab-btn" type="button"
+                  (click)="toggleKebab(song, $event)"
+                  [class.active]="openKebabItem === song">
+            <app-icon name="more-vertical" />
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</ng-container>
 
 <!-- Kebab dropdown — rendered outside the table to avoid overflow clipping -->
 <div class="kebab-dropdown"
@@ -96,26 +176,26 @@
      [style.top.px]="dropdownPosition.top"
      [style.right.px]="dropdownPosition.right"
      (click)="$event.stopPropagation()">
-  <button class="btn-ghost" (click)="onEdit(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id)">
+  <button class="kebab-item" (click)="onEdit(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id)">
     <app-icon name="edit" class="tw-mr-2" /> Edit Song
   </button>
-  <button class="btn-ghost" (click)="onUploadAudio(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id) || isRestrictedMode()">
+  <button class="kebab-item" (click)="onUploadAudio(openKebabItem); closeKebab()" [disabled]="isUploading(openKebabItem.id) || isRestrictedMode()">
     <app-icon [name]="isUploading(openKebabItem.id) ? 'spinner' : 'upload'" class="tw-mr-2" [class.tw-animate-spin]="isUploading(openKebabItem.id)" />
     {{ isUploading(openKebabItem.id) ? 'Uploading...' : openKebabItem.audio_file ? 'Replace Audio' : 'Upload Audio' }}
   </button>
-  <button *ngIf="openKebabItem.audio_file" class="btn-ghost"
+  <button *ngIf="openKebabItem.audio_file" class="kebab-item"
           (click)="onDownloadMaster(openKebabItem); closeKebab()"
           [disabled]="downloadingSongMaster[openKebabItem.id!]">
     <app-icon [name]="downloadingSongMaster[openKebabItem.id!] ? 'spinner' : 'download'" class="tw-mr-2" [class.tw-animate-spin]="downloadingSongMaster[openKebabItem.id!]" />
     {{ downloadingSongMaster[openKebabItem.id!] ? 'Downloading...' : 'Download WAV' }}
   </button>
-  <button *ngIf="openKebabItem.audio_file_mp3" class="btn-ghost"
+  <button *ngIf="openKebabItem.audio_file_mp3" class="kebab-item"
           (click)="onDownloadMp3(openKebabItem); closeKebab()"
           [disabled]="downloadingSongMp3[openKebabItem.id!]">
     <app-icon [name]="downloadingSongMp3[openKebabItem.id!] ? 'spinner' : 'music'" class="tw-mr-2" [class.tw-animate-spin]="downloadingSongMp3[openKebabItem.id!]" />
     {{ downloadingSongMp3[openKebabItem.id!] ? 'Downloading...' : 'Download MP3' }}
   </button>
-  <button *ngIf="!isRestrictedMode()" class="btn-ghost tw-text-danger"
+  <button *ngIf="!isRestrictedMode()" class="kebab-item kebab-item--danger"
           (click)="onDelete(openKebabItem); closeKebab()">
     <app-icon name="trash" class="tw-mr-2" /> Delete Song
   </button>

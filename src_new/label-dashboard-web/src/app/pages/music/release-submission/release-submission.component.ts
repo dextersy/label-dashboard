@@ -319,9 +319,9 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   get navTabs(): InPageNavTab[] {
     const s = (v: 'completed' | 'warning' | 'error' | 'none') => v === 'none' ? null : v;
     const tabs: InPageNavTab[] = [
-      { id: 'info',    label: 'Release Info',   icon: 'info', status: s(this.releaseInfoStatus),    tooltip: this.releaseInfoTooltip },
-      { id: 'credits', label: 'Album Credits',  icon: 'users',       status: s(this.albumCreditsStatus),  tooltip: this.albumCreditsTooltip, disabled: !this.canProceedToCredits },
-      { id: 'tracks',  label: 'Track List',     icon: 'music',       status: s(this.trackListStatus),     tooltip: this.trackListTooltip,    disabled: !this.canProceedToTracks },
+      { id: 'info',    label: 'Info',    icon: 'info',        status: s(this.releaseInfoStatus),   tooltip: this.releaseInfoTooltip },
+      { id: 'credits', label: 'Credits', icon: 'users',       status: s(this.albumCreditsStatus), tooltip: this.albumCreditsTooltip, disabled: !this.canProceedToCredits },
+      { id: 'tracks',  label: 'Tracks',  icon: 'music',       status: s(this.trackListStatus),    tooltip: this.trackListTooltip,    disabled: !this.canProceedToTracks },
     ];
     if (this.isDraftStatus) {
       tabs.push({ id: 'submit', label: 'Submit', icon: 'paper-plane', disabled: !this.canProceedToSubmit });

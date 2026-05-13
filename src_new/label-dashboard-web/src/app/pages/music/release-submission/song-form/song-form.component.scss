@@ -3,30 +3,35 @@
   max-width: 900px;
 }
 
-.card {
-  background-color: #f8f9fa;
+// Section label — matches rs-section-label / ef-section-label pattern
+.rs-section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 30%, #9ca3af);
+  margin-bottom: 14px;
+}
+
+// Chip section z-index stacking (overflow must NOT be hidden on these containers)
+.chip-section-active {
+  z-index: 30;
   position: relative;
+}
 
-  &.z-index-high {
-    z-index: 1000 !important;
-    overflow: visible !important;
+.chip-section-collaborators {
+  z-index: 15;
+  position: relative;
+}
 
-    .card-body {
-      overflow: visible !important;
-    }
-  }
+.chip-section-authors {
+  z-index: 10;
+  position: relative;
+}
 
-  &.z-index-collaborators {
-    z-index: 15 !important;
-  }
-
-  &.z-index-authors {
-    z-index: 10 !important;
-  }
-
-  &.z-index-composers {
-    z-index: 5 !important;
-  }
+.chip-section-composers {
+  z-index: 5;
+  position: relative;
 }
 
 // Modal display

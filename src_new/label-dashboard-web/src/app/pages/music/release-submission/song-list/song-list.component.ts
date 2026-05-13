@@ -105,6 +105,14 @@ export class SongListComponent implements OnInit, OnDestroy {
       .join(', ');
   }
 
+  hasCollaborators(song: Song): boolean {
+    return !!(song.collaborators && song.collaborators.length > 0);
+  }
+
+  hasLinks(song: Song): boolean {
+    return !!(song.spotify_link || song.apple_music_link || song.youtube_link);
+  }
+
   isUploading(songId?: number): boolean {
     return songId !== undefined && this.uploadProgress[songId] !== undefined;
   }
