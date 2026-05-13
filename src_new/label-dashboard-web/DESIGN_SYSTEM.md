@@ -11,6 +11,18 @@ This document describes the design system conventions used in the Angular fronte
 - **Headings:** `"Inter"`, fallback `-apple-system, BlinkMacSystemFont, "Segoe UI"` — Tailwind token: `tw-font-heading`
 - **Base size:** `13px` globally
 
+### Tab Section Heading
+
+Used to separate named sections within a tab or page body (e.g. "Earnings Summary", "Payment Overview"). Renders as a small muted uppercase label — distinct from card titles.
+
+```html
+<h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Section Name</h3>
+```
+
+Use a native `<h3>` tag with Tailwind utility classes — do **not** use a custom CSS class for this pattern. The `h3` tag provides correct semantic hierarchy; the utilities override its default size and color. Always include `tw-mb-3` for spacing below.
+
+---
+
 ### Heading scale (global CSS in `styles.scss`)
 | Tag | Size | Weight | Letter-spacing | Color |
 |-----|------|--------|----------------|-------|

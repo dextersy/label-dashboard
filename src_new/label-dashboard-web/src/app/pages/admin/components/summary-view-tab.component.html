@@ -33,17 +33,23 @@
 <div *ngIf="!loading">
 
   <!-- ── Earnings Summary ─────────────────────────────────────────── -->
-  <h3 class="section-heading">Earnings Summary</h3>
+  <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Earnings Summary</h3>
 
   <div class="tw-mb-4 tw-items-center tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="earningsSummary">
     <!-- Dominant total card -->
     <div class="tw-mb-3 mb-lg-0 lg:tw-col-span-4 md:tw-col-span-12">
       <div class="current-balance-section tw-p-4 tw-text-center">
-        <h2 class="balance-title">Total Earnings</h2>
+        <div class="balance-header">
+          <h2 class="balance-title">Total Earnings</h2>
+          <button class="btn btn-icon btn-sm balance-info-btn"
+            matTooltip="Across all earning types (physical, downloads, streaming, and sync)"
+            matTooltipPosition="above">
+            <app-icon name="info" iconOnly />
+          </button>
+        </div>
         <h1 class="balance-amount">
           {{ formatCurrency(earningsSummary.physical_earnings + earningsSummary.download_earnings + earningsSummary.streaming_earnings + earningsSummary.sync_earnings) }}
         </h1>
-        <p class="balance-subtitle">Across all earning types</p>
       </div>
     </div>
 
@@ -89,6 +95,29 @@
     (pageChange)="onEarningsPageChange($event)"
     (filtersChange)="onEarningsFiltersChange($event)"
     (sortChange)="onEarningsSortChange($event)">
+
+    <ng-template #mobileHeaderTemplate>
+      <div class="fin-mobile-header">
+        <div class="fin-mobile-header-release">Release / Description</div>
+        <div class="fin-mobile-header-amount">Amount</div>
+      </div>
+    </ng-template>
+
+    <ng-template #mobileRowTemplate let-item>
+      <div class="fin-mobile-row">
+        <img [src]="item.cover_art || coverArtPlaceholder" alt="" class="fin-mobile-cover">
+        <div class="fin-mobile-body">
+          <div class="fin-mobile-date">{{ item.date_recorded | date:'MMM d, yyyy' }}</div>
+          <div class="fin-mobile-release">{{ item.release_title || '(None)' }}</div>
+          <div class="fin-mobile-desc">{{ item.description }}</div>
+          <div class="fin-mobile-type">
+            <span class="status-badge status-info">{{ item.type }}</span>
+          </div>
+        </div>
+        <div class="fin-mobile-amount" [class.text-danger]="item.amount < 0">{{ formatCurrency(item.amount) }}</div>
+      </div>
+    </ng-template>
+
   </app-paginated-table>
 
 </div>

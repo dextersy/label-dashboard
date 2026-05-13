@@ -1588,7 +1588,7 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
 
     const { count, rows } = await (Earning as any).findAndCountAll({
       where: earningsWhere,
-      include: [{ model: Release, as: 'release', attributes: ['title', 'catalog_no'] }],
+      include: [{ model: Release, as: 'release', attributes: ['title', 'catalog_no', 'cover_art'] }],
       order: [[orderColumn, orderDir]],
       limit: pageSize,
       offset
@@ -1601,6 +1601,7 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
         date_recorded: e.date_recorded,
         release_title: e.release?.title || '',
         catalog_no: e.release?.catalog_no || '',
+        cover_art: e.release?.cover_art || null,
         description: e.description,
         type: e.type,
         amount: parseFloat(e.amount || 0)

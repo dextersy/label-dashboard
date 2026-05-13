@@ -1,23 +1,32 @@
 // Enhanced Summary View Tab Styling
 
-// ── Section Heading ─────────────────────────────────────────────────────────
-.section-heading {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 1.1rem;
+// ── Current Balance Section (dominant card) ──────────────────────────────────
+.balance-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
 
-  i {
-    opacity: 0.8;
+.balance-info-btn {
+  color: rgba(255, 255, 255, 0.7) !important;
+  padding: 2px !important;
+  line-height: 1;
+
+  &:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    transform: none !important;
   }
 }
 
-// ── Current Balance Section (dominant card) ──────────────────────────────────
 .current-balance-section {
   background: var(--brand-color, #667eea);
   position: relative;
   color: white;
   border-radius: 16px;
-  min-height: 180px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -222,10 +231,106 @@
   }
 }
 
+// ── Mobile Earnings Row ───────────────────────────────────────────────────────
+.fin-mobile-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.fin-mobile-header-release {
+  flex: 1;
+}
+
+.fin-mobile-header-amount {
+  flex-shrink: 0;
+}
+
+.fin-mobile-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 8px 10px;
+  gap: 10px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.fin-mobile-cover {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+  border-radius: 6px;
+}
+
+.fin-mobile-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.fin-mobile-date {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-bottom: 1px;
+}
+
+.fin-mobile-release {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fin-mobile-desc {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fin-mobile-type {
+  margin-top: 4px;
+}
+
+.fin-mobile-amount {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+}
+
 // ── Responsive ───────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
   .balance-amount {
-    font-size: 2rem;
+    font-size: 1.75rem;
+  }
+
+  .current-balance-section {
+    min-height: 120px;
+    padding: 16px !important;
+  }
+
+  .balance-title {
+    font-size: 1rem;
+    margin-bottom: 4px;
   }
 
   .financial-item-value {

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AdminService, EarningsSummary } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
@@ -9,7 +11,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-summary-view-tab',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, IconComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, IconComponent, MatTooltipModule],
     templateUrl: './summary-view-tab.component.html',
     styleUrls: ['./summary-view-tab.component.scss']
 })
@@ -27,16 +29,26 @@ export class SummaryViewTabComponent implements OnInit {
   earningsSort: SortInfo | null = null;
 
   earningsColumns: TableColumn[] = [
-    { key: 'date_recorded', label: 'Date', type: 'text', searchable: false, sortable: true, mobileGroup: 'details' },
-    { key: 'release_title', label: 'Release', type: 'text', searchable: true, sortable: false, mobileGroup: 'details' },
-    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: false, mobileGroup: 'details', mobileGroupMain: true },
-    { key: 'type', label: 'Type', type: 'text', searchable: true, sortable: true },
-    { key: 'amount', label: 'Amount (₱)', type: 'number', searchable: false, sortable: true, align: 'right', formatter: (item) => this.formatCurrency(item.amount) }
+    { key: 'date_recorded', label: 'Date', type: 'text', searchable: false, sortable: true, mobileClass: 'mobile-narrow' },
+    { key: 'release_title', label: 'Release', type: 'text', searchable: true, sortable: false, renderHtml: true, formatter: (item: any) => this.formatReleaseCell(item) },
+    { key: 'description', label: 'Description', type: 'text', searchable: true, sortable: false },
+    { key: 'type', label: 'Type', type: 'text', searchable: true, sortable: true, mobileClass: 'mobile-hide' },
+    { key: 'amount', label: 'Amount (₱)', type: 'number', searchable: false, sortable: true, align: 'right', formatter: (item: any) => this.formatCurrency(item.amount) }
   ];
+
+  formatReleaseCell(item: any): any {
+    const title = item.release_title || '(None)';
+    const src = item.cover_art || this.coverArtPlaceholder;
+    const html = `<span style="display:inline-flex;align-items:center;gap:8px"><img src="${src}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">${title}</span>`;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  readonly coverArtPlaceholder = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="#e5e7eb" rx="4"/><text x="20" y="28" font-size="18" text-anchor="middle" fill="#9ca3af">♪</text></svg>')}`;
 
   constructor(
     private adminService: AdminService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
