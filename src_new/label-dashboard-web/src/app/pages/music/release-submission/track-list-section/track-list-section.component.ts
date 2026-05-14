@@ -126,13 +126,10 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
     if (!song.id || !this.releaseId) return;
 
     const songTitle = song.title || 'this track';
-    const confirmMessage = `Are you sure you want to remove "${songTitle}" from this release?\n\n` +
-      `If the song is not part of any other release, it will be permanently deleted along with its master audio file.\n\n` +
-      `💡 IMPORTANT: Make sure you have a copy of the master audio file before proceeding.`;
-
     const confirmed = await this.confirmationService.confirm({
       title: 'Remove Track',
-      message: confirmMessage,
+      message: `Are you sure you want to remove "${songTitle}" from this release? If the song is not part of any other release, it will be permanently deleted along with its master audio file.`,
+      warning: 'Make sure you have a copy of the master audio file before proceeding.',
       confirmText: 'Remove',
       cancelText: 'Cancel',
       type: 'danger'
