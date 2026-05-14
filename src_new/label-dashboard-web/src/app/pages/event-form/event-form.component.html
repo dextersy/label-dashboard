@@ -29,7 +29,7 @@
     </div>
     <div class="new-event-progress">
       <div class="new-event-progress-labels">
-        <span>{{ completedSections() }} of 4 sections complete</span>
+        <span>{{ completedSections() }} of 5 sections complete</span>
         <span>{{ progressPercent() }}%</span>
       </div>
       <div class="new-event-progress-track">
@@ -401,8 +401,8 @@
             </div>
 
             <div class="tw-mt-4 tw-text-right">
-              <button type="button" class="btn-ghost" (click)="goToNextTab()" *ngIf="!isEventDraft()">
-                Next: Scanner <app-icon name="arrow-right" class="tw-ml-1" />
+              <button type="button" class="btn-ghost" (click)="goToNextTab()">
+                Next: Walk-in <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
           </div>
@@ -422,12 +422,17 @@
           </div>
 
           <!-- Walk-In Settings Section -->
-          <div class="form-section" *ngIf="activeSection === 'walk-in' && !isNewEvent">
+          <div class="form-section" *ngIf="activeSection === 'walk-in'">
             <app-event-walk-in-settings
               [eventData]="eventData"
               [isAdmin]="isAdmin"
               [(walkInTypes)]="walkInTypes">
             </app-event-walk-in-settings>
+            <div class="tw-mt-4 tw-text-right">
+              <button type="button" class="btn-ghost" (click)="goToNextTab()">
+                Next: Listing <app-icon name="arrow-right" class="tw-ml-1" />
+              </button>
+            </div>
           </div>
 
           <!-- Scanner Section -->
@@ -479,8 +484,13 @@
           </div>
 
           <!-- Listing Section -->
-          <div class="form-section" *ngIf="!isNewEvent" [hidden]="activeSection !== 'listing'">
+          <div class="form-section" [hidden]="activeSection !== 'listing'">
             <app-event-listing-tab [selectedEvent]="event" [isAdmin]="isAdmin" (eventUpdated)="event = $event"></app-event-listing-tab>
+            <div class="tw-mt-4 tw-text-right" *ngIf="!isEventDraft()">
+              <button type="button" class="btn-ghost" (click)="goToNextTab()">
+                Next: Scanner <app-icon name="arrow-right" class="tw-ml-1" />
+              </button>
+            </div>
           </div>
         </div>
     </div>

@@ -27,6 +27,14 @@ interface AuthRequest extends Request {
 
 const paymentService = new PaymentService();
 
+// Parse boolean from JSON body (boolean) or FormData body ('0'/'1'/'true'/'false')
+const parseBool = (val: any, defaultVal: boolean): boolean => {
+  if (val === undefined || val === null) return defaultVal;
+  if (val === false || val === 'false' || val === '0') return false;
+  if (val === true || val === 'true' || val === '1') return true;
+  return !!val;
+};
+
 // Helper function to generate verification PIN
 const generateVerificationPIN = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -348,7 +356,13 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       ticketing_enabled,
       external_ticket_link,
       listed_on_ticketing,
-      tags
+      tags,
+      walk_in_enabled,
+      walk_in_supports_cash,
+      walk_in_supports_gcash,
+      walk_in_supports_card,
+      walk_in_max_count,
+      walkInTypes
     } = req.body;
 
     // Parse ticketTypes if it's a string (from FormData)
@@ -358,8 +372,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
         parsedTicketTypes = JSON.parse(ticketTypes);
       } catch (error) {
         console.error('Failed to parse ticketTypes JSON:', error);
-        return res.status(400).json({ 
-          error: 'Invalid ticketTypes format' 
+        return res.status(400).json({
+          error: 'Invalid ticketTypes format'
         });
       }
     }
@@ -460,6 +474,11 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       ticketing_enabled: ticketing_enabled !== undefined ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true) : true,
       external_ticket_link: external_ticket_link || null,
       listed_on_ticketing: listed_on_ticketing !== undefined ? (listed_on_ticketing === 'false' || listed_on_ticketing === false ? false : true) : true,
+      walk_in_enabled: parseBool(walk_in_enabled, false),
+      walk_in_supports_cash: parseBool(walk_in_supports_cash, true),
+      walk_in_supports_gcash: parseBool(walk_in_supports_gcash, false),
+      walk_in_supports_card: parseBool(walk_in_supports_card, false),
+      walk_in_max_count: walk_in_max_count !== undefined ? parseInt(walk_in_max_count) : 0,
     });
 
     // Only generate shortlinks if event is being published    
@@ -527,6 +546,22 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
         end_date: null,
         disabled: false
       });
+    }
+
+    // Create walk-in types if provided
+    let parsedWalkInTypesCreate = walkInTypes;
+    if (typeof walkInTypes === 'string') {
+      try { parsedWalkInTypesCreate = JSON.parse(walkInTypes); } catch { parsedWalkInTypesCreate = []; }
+    }
+    if (parsedWalkInTypesCreate && Array.isArray(parsedWalkInTypesCreate)) {
+      for (const wt of parsedWalkInTypesCreate) {
+        await WalkInType.create({
+          event_id: event.id,
+          name: wt.name?.trim() || '',
+          price: wt.price !== undefined ? parseFloat(wt.price) : 0,
+          max_slots: wt.max_slots !== undefined ? parseInt(wt.max_slots) : 0
+        });
+      }
     }
 
     res.status(201).json({

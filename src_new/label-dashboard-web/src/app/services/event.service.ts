@@ -356,6 +356,24 @@ export class EventService {
         formData.append('ticketTypes', JSON.stringify(formEventData.ticketTypes));
       }
 
+      // Add walk-in settings
+      const d = formEventData as any;
+      formData.append('walk_in_enabled', boolToInt(d.walk_in_enabled, false));
+      formData.append('walk_in_supports_cash', boolToInt(d.walk_in_supports_cash));
+      formData.append('walk_in_supports_gcash', boolToInt(d.walk_in_supports_gcash, false));
+      formData.append('walk_in_supports_card', boolToInt(d.walk_in_supports_card, false));
+      formData.append('walk_in_max_count', (d.walk_in_max_count ?? 0).toString());
+      if (d.walkInTypes && Array.isArray(d.walkInTypes)) {
+        formData.append('walkInTypes', JSON.stringify(d.walkInTypes));
+      }
+
+      // Add listing settings
+      if (d.event_type) formData.append('event_type', d.event_type);
+      formData.append('listed_on_ticketing', boolToInt(d.listed_on_ticketing));
+      if (d.tags && Array.isArray(d.tags)) {
+        formData.append('tags', JSON.stringify(d.tags));
+      }
+
       // Add the poster file
       formData.append('poster', formEventData.poster_file);
       

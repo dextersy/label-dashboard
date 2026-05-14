@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, of, Observable } from 'rxjs';
 import { EventService, Event } from '../../services/event.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -329,11 +329,9 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       { id: 'details', label: 'Details', icon: 'info' },
       { id: 'pricing', label: 'Pricing', icon: 'ticket' },
       { id: 'purchase', label: 'Buy page', icon: 'cart' },
+      { id: 'walk-in', label: 'Walk-in', icon: 'walking' },
+      { id: 'listing', label: 'Listing', icon: 'globe' }
     ];
-    if (!this.isNewEvent) {
-      tabs.push({ id: 'walk-in', label: 'Walk-in', icon: 'walking' });
-      tabs.push({ id: 'listing', label: 'Listing', icon: 'globe' });
-    }
     if (!this.isEventDraft()) {
       tabs.push({ id: 'scanner', label: 'Scanner', icon: 'scan' });
     }
@@ -355,19 +353,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   goToNextTab(): void {
-    const tabOrder: EventFormSection[] = ['details', 'pricing', 'purchase', 'walk-in', 'scanner'];
+    const tabOrder: EventFormSection[] = ['details', 'pricing', 'purchase', 'walk-in', 'listing', 'scanner'];
     const currentIndex = tabOrder.indexOf(this.activeSection);
 
     if (currentIndex >= 0 && currentIndex < tabOrder.length - 1) {
       const nextTab = tabOrder[currentIndex + 1];
-      // Skip walk-in tab for new events
-      if (nextTab === 'walk-in' && this.isNewEvent) {
-        // Jump to scanner if not draft, otherwise stay
-        if (!this.isEventDraft()) {
-          this.setActiveSection('scanner');
-        }
-        return;
-      }
       // Skip scanner tab if event is draft
       if (nextTab === 'scanner' && this.isEventDraft()) {
         return;
@@ -391,6 +381,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     const isPublished = this.isEventPublished();
     const status = isPublished ? 'published' : 'draft';
     const formData = this.prepareFormData(status);
+    // Capture listing state synchronously before the async API call
+    const capturedListingState = this.isNewEvent && this.listingTabRef ? {
+      listed_on_ticketing: this.listingTabRef.listedOnTicketing,
+      event_type: this.listingTabRef.eventType || null,
+      tags: [...this.listingTabRef.selectedTagIds]
+    } : null;
 
     const saveObservable = this.isNewEvent
       ? this.eventService.createEvent(formData)
@@ -405,9 +401,25 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           this.notificationService.showSuccess(message);
           this.saving = false;
           if (this.isNewEvent) {
-            // Set the newly created event as selected and navigate to details
-            this.eventService.setSelectedEvent(event);
-            this.router.navigate(['/campaigns/events/details']);
+            // Reset dirty state so the unsaved-changes guard doesn't trigger
+            this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+            this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+            this.originalWalkInTypes = JSON.parse(JSON.stringify(this.walkInTypes));
+            this.selectedPosterFile = null;
+            // Save listing settings then navigate (wait so tags are in DB before loadEvent runs)
+            const listingSave$: Observable<Event | null> = capturedListingState
+              ? this.eventService.updateEventListing(event.id, capturedListingState)
+              : of(null);
+            this.subscriptions.add(listingSave$.subscribe({
+              next: () => {
+                this.eventService.setSelectedEvent(event);
+                this.router.navigate(['/campaigns/events/details']);
+              },
+              error: () => {
+                this.eventService.setSelectedEvent(event);
+                this.router.navigate(['/campaigns/events/details']);
+              }
+            }));
           } else {
             // Save listing settings before updating this.event so the listing tab
             // still has its local state when populateFromEvent() is triggered by ngOnChanges
@@ -457,6 +469,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
     this.saving = true;
     const formData = this.prepareFormData('published');
+    // Capture listing state synchronously before the async API call
+    const capturedListingStatePublish = this.isNewEvent && this.listingTabRef ? {
+      listed_on_ticketing: this.listingTabRef.listedOnTicketing,
+      event_type: this.listingTabRef.eventType || null,
+      tags: [...this.listingTabRef.selectedTagIds]
+    } : null;
 
     const saveObservable = this.isNewEvent
       ? this.eventService.createEvent(formData)
@@ -480,8 +498,19 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           }
           
           if (this.isNewEvent) {
-            // Navigate to details view for newly published events
-            this.router.navigate(['/campaigns/events/details']);
+            // Reset dirty state so the unsaved-changes guard doesn't trigger
+            this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+            this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+            this.originalWalkInTypes = JSON.parse(JSON.stringify(this.walkInTypes));
+            this.selectedPosterFile = null;
+            // Save listing settings then navigate (wait so tags are in DB before loadEvent runs)
+            const listingSavePublish$: Observable<Event | null> = capturedListingStatePublish
+              ? this.eventService.updateEventListing(event.id, capturedListingStatePublish)
+              : of(null);
+            this.subscriptions.add(listingSavePublish$.subscribe({
+              next: () => { this.router.navigate(['/campaigns/events/details']); },
+              error: () => { this.router.navigate(['/campaigns/events/details']); }
+            }));
           } else {
             this.populateFormFromEvent(event);
           }
@@ -732,11 +761,13 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     if (this.eventData.date_and_time) n++;
     if (this.eventData.venue?.trim()) n++;
     if (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price))) n++;
+    // Walk-in and listing sections are always considered complete (optional settings)
+    n++;
     return n;
   }
 
   progressPercent(): number {
-    return Math.round((this.completedSections() / 4) * 100);
+    return Math.round((this.completedSections() / 5) * 100);
   }
 
   isNewEventValid(): boolean {
@@ -915,7 +946,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       walk_in_supports_gcash: this.eventData.walk_in_supports_gcash,
       walk_in_supports_card: this.eventData.walk_in_supports_card,
       walk_in_max_count: this.eventData.walk_in_max_count || 0,
-      walkInTypes: this.walkInTypes
+      walkInTypes: this.walkInTypes,
+      // Listing settings (read from listing tab if available)
+      event_type: this.listingTabRef ? (this.listingTabRef.eventType || null) : null,
+      listed_on_ticketing: this.listingTabRef ? this.listingTabRef.listedOnTicketing : true,
+      tags: this.listingTabRef ? this.listingTabRef.selectedTagIds : []
     };
 
     if (this.currentVenueSelection) {
