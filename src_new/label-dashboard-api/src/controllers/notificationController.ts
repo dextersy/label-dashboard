@@ -43,7 +43,7 @@ export const markNotificationRead = async (req: AuthRequest, res: Response) => {
     const brandId = req.user.brand_id;
 
     const notification = await Notification.findOne({
-      where: { id: parseInt(id, 10), user_id: userId, brand_id: brandId }
+      where: { id: parseInt(id as string, 10), user_id: userId, brand_id: brandId }
     });
 
     if (!notification) {
