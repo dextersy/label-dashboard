@@ -371,8 +371,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   onSave(): void {
-    // Always validate with publishing rules to ensure consistency
-    if (!this.validateForm(true)) {
+    // Use publishing validation only when saving an already-published event
+    if (!this.validateForm(this.isEventPublished())) {
       return;
     }
 
@@ -457,9 +457,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Publish Event',
-      message: 'Are you sure you want to publish this event?\n\n' +
-        '⚠️ WARNING: Once published, the shortlinks can no longer be changed and the event will be visible to the public.\n\n' +
-        'Click \'Publish\' to proceed with publishing.',
+      message: 'Are you sure you want to publish this event?',
+      warning: 'Once published, the shortlinks can no longer be changed and the event will be visible to the public.',
       confirmText: 'Publish',
       cancelText: 'Cancel',
       type: 'info'

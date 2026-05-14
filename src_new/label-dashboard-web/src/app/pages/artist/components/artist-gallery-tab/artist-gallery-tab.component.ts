@@ -252,7 +252,8 @@ export class ArtistGalleryTabComponent {
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Delete Photo',
-      message: 'Are you sure you want to delete this photo? This action cannot be undone.',
+      message: 'Are you sure you want to delete this photo?',
+      warning: 'This action cannot be undone.',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       type: 'danger'

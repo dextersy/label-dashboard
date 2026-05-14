@@ -370,20 +370,19 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     // Show different confirmation messages based on ticket status
-    let confirmMessage = '';
     let confirmTitle = 'Cancel Ticket';
     let confirmType: 'danger' | 'warning' = 'warning';
+    let confirmWarning: string | undefined;
 
     if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
-      confirmMessage = 'WARNING: This ticket is already paid and sent to the customer. The customer will receive a cancellation email.\n\nAre you sure you want to cancel this ticket?';
+      confirmWarning = 'This ticket is already paid and sent to the customer. The customer will receive a cancellation email.';
       confirmType = 'danger';
-    } else {
-      confirmMessage = 'Are you sure you want to cancel this ticket?';
     }
 
     const confirmed = await this.confirmationService.confirm({
       title: confirmTitle,
-      message: confirmMessage,
+      message: 'Are you sure you want to cancel this ticket?',
+      warning: confirmWarning,
       confirmText: 'Cancel Ticket',
       cancelText: 'Keep Ticket',
       type: confirmType
@@ -431,7 +430,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Refund Ticket',
-      message: 'WARNING: This will process a refund through Paymongo and return the ticket price to the customer.\n\nIMPORTANT: Platform fees and processing fees will be RETAINED and NOT refunded.\n\nThis action cannot be undone. Are you sure you want to refund this ticket?',
+      message: 'Are you sure you want to refund this ticket? This will process a refund through Paymongo and return the ticket price to the customer.',
+      warning: 'Platform fees and processing fees will be RETAINED and NOT refunded. This action cannot be undone.',
       confirmText: 'Refund Ticket',
       cancelText: 'Cancel',
       type: 'danger'

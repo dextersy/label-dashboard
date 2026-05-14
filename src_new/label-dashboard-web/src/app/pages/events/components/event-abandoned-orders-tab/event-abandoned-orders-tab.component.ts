@@ -362,7 +362,8 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Cancel All Unpaid Orders',
-      message: 'Are you sure you want to cancel ALL unpaid orders?\n\nThis action cannot be undone.',
+      message: 'Are you sure you want to cancel ALL unpaid orders?',
+      warning: 'This action cannot be undone.',
       confirmText: 'Cancel All',
       cancelText: 'Keep Orders',
       type: 'danger'
@@ -665,7 +666,8 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Cancel Multiple Orders',
-      message: `Are you sure you want to cancel ${eligibleOrders.length} order(s)?\n\nThis action cannot be undone.`,
+      message: `Are you sure you want to cancel ${eligibleOrders.length} order(s)?`,
+      warning: 'This action cannot be undone.',
       confirmText: `Cancel ${eligibleOrders.length} Order${eligibleOrders.length > 1 ? 's' : ''}`,
       cancelText: 'Keep Orders',
       type: 'danger'

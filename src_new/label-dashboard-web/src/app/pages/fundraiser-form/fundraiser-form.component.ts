@@ -284,7 +284,8 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
 
     const confirmed = await this.confirmationService.confirm({
       title: 'Unpublish Fundraiser',
-      message: 'Are you sure you want to unpublish this fundraiser? It will no longer be visible to the public and donations will stop.',
+      message: 'Are you sure you want to unpublish this fundraiser?',
+      warning: 'It will no longer be visible to the public and donations will stop.',
       confirmText: 'Unpublish',
       cancelText: 'Cancel',
       type: 'warning'

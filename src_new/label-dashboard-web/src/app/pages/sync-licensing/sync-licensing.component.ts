@@ -340,7 +340,8 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   async deletePitch(pitch: SyncLicensingPitch): Promise<void> {
     const confirmed = await this.confirmationService.confirm({
       title: 'Delete Pitch',
-      message: `Are you sure you want to delete "${pitch.title}"? This action cannot be undone.`,
+      message: `Are you sure you want to delete "${pitch.title}"?`,
+      warning: 'This action cannot be undone.',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       type: 'danger'

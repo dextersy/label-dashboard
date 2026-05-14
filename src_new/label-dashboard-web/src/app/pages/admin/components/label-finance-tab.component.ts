@@ -353,7 +353,8 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   deletePaymentMethod(method: LabelPaymentMethod): void {
     this.confirmationService.confirm({
       title: 'Remove Payment Method',
-      message: `Remove "${method.type} - ${method.account_name}"? This cannot be undone.`,
+      message: `Remove "${method.type} - ${method.account_name}"?`,
+      warning: 'This cannot be undone.',
       confirmText: 'Remove',
       cancelText: 'Cancel',
       type: 'danger',
