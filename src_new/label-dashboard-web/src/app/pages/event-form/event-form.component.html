@@ -535,18 +535,31 @@
     <span *ngIf="saving">Unpublishing...</span>
   </button>
 
-  <!-- Primary: New Event — "Create event" (disabled until valid) -->
+  <!-- Secondary: New Event — "Save Draft" -->
+  <button
+    type="button"
+    class="btn-secondary"
+    (click)="onSave()"
+    [disabled]="saving"
+    *ngIf="isNewEvent">
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
+    <app-icon name="save" *ngIf="!saving" />
+    <span *ngIf="!saving">Save Draft</span>
+    <span *ngIf="saving">Saving...</span>
+  </button>
+
+  <!-- Primary: New Event — "Publish" -->
   <button
     type="button"
     class="btn-primary fab-primary-btn ef-create-btn"
     (click)="onPublish()"
-    [disabled]="saving || !isNewEventValid()"
+    [disabled]="saving"
     [class.ef-create-btn--disabled]="!isNewEventValid()"
     *ngIf="isNewEvent">
     <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
     <app-icon name="rocket" *ngIf="!saving" />
-    <span *ngIf="!saving">Create event</span>
-    <span *ngIf="saving">Creating...</span>
+    <span *ngIf="!saving">Publish</span>
+    <span *ngIf="saving">Publishing...</span>
   </button>
 
   <!-- Primary: Edit Draft — "Publish" -->

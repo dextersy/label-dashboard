@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService } from '../../../../services/confirmation.service';
@@ -84,7 +84,20 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   // Track which ticket is being edited (by index), or null if none
   editingIndex: number | null = null;
 
-  constructor(public confirmationService: ConfirmationService, private cdr: ChangeDetectorRef) {}
+  constructor(public confirmationService: ConfirmationService, private cdr: ChangeDetectorRef, private el: ElementRef) {}
+
+  focusAddButton(): void {
+    const btn = this.el.nativeElement.querySelector('button[class*="btn-secondary"]');
+    btn?.focus();
+  }
+
+  focusTicketField(index: number, field: 'name' | 'price'): void {
+    this.startEdit(index);
+    this.cdr.detectChanges();
+    const inputs = this.el.nativeElement.querySelectorAll('.tw-py-3 input[type="text"], .tw-py-3 input[type="number"]');
+    const target = field === 'name' ? inputs[0] : inputs[1];
+    target?.focus();
+  }
   // Wrapper for delete confirmation to be used in template
   confirmDelete(ticketType: TicketType, index: number): void {
     this.confirmationService.confirm({
@@ -165,10 +178,16 @@ export class TicketTypesComponent implements OnInit, OnChanges {
 
   saveEdit(index: number): void {
     const ticketType = this.ticketTypes[index];
-    
+
     // Validate that ticket has a name
     if (!ticketType.name || !ticketType.name.trim()) {
-      // Don't save if no name - stay in edit mode
+      return;
+    }
+
+    // Validate price unless ticket is free
+    const priceValid = ticketType.isFree ||
+      (ticketType.price != null && ticketType.price !== ('' as any) && typeof ticketType.price === 'number' && isFinite(ticketType.price) && ticketType.price >= 0);
+    if (!priceValid) {
       return;
     }
     
@@ -225,7 +244,9 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   private _editBackup: TicketType | null = null;
 
   addTicketType(): void {
-    if (!this.newTicketType.name.trim() || (!this.newTicketType.isFree && this.newTicketType.price < 0)) {
+    const priceValid = this.newTicketType.isFree ||
+      (this.newTicketType.price != null && this.newTicketType.price !== ('' as any) && !isNaN(Number(this.newTicketType.price)) && Number(this.newTicketType.price) >= 0);
+    if (!this.newTicketType.name.trim() || !priceValid) {
       return;
     }
 

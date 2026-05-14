@@ -71,6 +71,8 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 
 })
 export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   @ViewChild(EventListingTabComponent) listingTabRef?: EventListingTabComponent;
+  @ViewChild(VenueAutocompleteComponent) venueAutocompleteRef?: VenueAutocompleteComponent;
+  @ViewChild(TicketTypesComponent) ticketTypesRef?: TicketTypesComponent;
 
   eventId: number | null = null;
   event: any = null;
@@ -350,6 +352,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       queryParams: { section },
       queryParamsHandling: 'merge'
     });
+  }
+
+  private focusFieldAfterSwitch(action: () => void): void {
+    // Wait one tick for *ngIf to render the section before focusing
+    setTimeout(action, 0);
   }
 
   goToNextTab(): void {
@@ -828,40 +835,76 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
   private validateForm(isPublishing: boolean = false): boolean {
     if (!this.eventData.title || !this.eventData.title.trim()) {
-      this.notificationService.showError('Event title is required');
+      this.notificationService.showError('Event title is required — check the Details tab');
       this.setActiveSection('details');
+      this.focusFieldAfterSwitch(() => (document.getElementById('eventTitle') as HTMLElement)?.focus());
       return false;
     }
 
     if (!this.eventData.date_and_time) {
-      this.notificationService.showError('Event date and time is required');
+      this.notificationService.showError('Event date and time is required — check the Details tab');
       this.setActiveSection('details');
+      this.focusFieldAfterSwitch(() => (document.getElementById('eventDateTime') as HTMLElement)?.focus());
       return false;
     }
 
     if (!this.eventData.venue || !this.eventData.venue.trim()) {
-      this.notificationService.showError('Venue is required');
+      this.notificationService.showError('Venue is required — check the Details tab');
       this.setActiveSection('details');
+      this.focusFieldAfterSwitch(() => this.venueAutocompleteRef?.focus());
       return false;
     }
 
     if (this.descriptionCharCount > this.descriptionCharLimit) {
-      this.notificationService.showError(`Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit`);
+      this.notificationService.showError(`Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit — check the Details tab`);
       this.setActiveSection('details');
+      this.focusFieldAfterSwitch(() => (document.getElementById('eventDescription') as HTMLElement)?.focus());
       return false;
     }
 
     // Slug is only required for draft/new events, not for published events being updated
     if (this.isEventDraft() && (!this.eventData.slug || !this.eventData.slug.trim())) {
-      this.notificationService.showError('Slug is required');
+      this.notificationService.showError('URL slug is required — check the Details tab');
       this.setActiveSection('details');
+      this.focusFieldAfterSwitch(() => (document.getElementById('urlSlug') as HTMLElement)?.focus());
       return false;
+    }
+
+    // Validate any ticket types that exist, regardless of draft/publish state
+    for (let i = 0; i < this.ticketTypes.length; i++) {
+      const ticketType = this.ticketTypes[i];
+      const idx = i;
+      if (!ticketType.name || !ticketType.name.trim()) {
+        this.notificationService.showError('Every ticket type needs a name — check the Pricing tab');
+        this.setActiveSection('pricing');
+        this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'name'));
+        return false;
+      }
+      if (typeof ticketType.price !== 'number' || !isFinite(ticketType.price)) {
+        this.notificationService.showError(`"${ticketType.name || 'Unnamed ticket'}" is missing a price — check the Pricing tab`);
+        this.setActiveSection('pricing');
+        this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'price'));
+        return false;
+      }
+      if (ticketType.price < 0) {
+        this.notificationService.showError(`"${ticketType.name}" has a negative price — check the Pricing tab`);
+        this.setActiveSection('pricing');
+        this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'price'));
+        return false;
+      }
+      if (ticketType.max_tickets < 0) {
+        this.notificationService.showError(`"${ticketType.name}" has an invalid ticket limit — check the Pricing tab`);
+        this.setActiveSection('pricing');
+        this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'name'));
+        return false;
+      }
     }
 
     if (isPublishing) {
       if (this.ticketTypes.length === 0) {
-        this.notificationService.showError('At least one ticket type is required to publish');
+        this.notificationService.showError('Add at least one ticket type in the Pricing tab before publishing');
         this.setActiveSection('pricing');
+        this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusAddButton());
         return false;
       }
 
@@ -875,32 +918,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
                                !!this.eventData.supports_grabpay;
 
       if (!hasPaymentMethod) {
-        this.notificationService.showError('At least one payment method must be enabled to publish');
+        this.notificationService.showError('Enable at least one payment method in the Purchase tab before publishing');
         this.setActiveSection('purchase');
+        this.focusFieldAfterSwitch(() => (document.getElementById('gcash') as HTMLElement)?.focus());
         return false;
-      }
-
-      for (const ticketType of this.ticketTypes) {
-        if (!ticketType.name || !ticketType.name.trim()) {
-          this.notificationService.showError('All ticket types must have a name');
-          this.setActiveSection('pricing');
-          return false;
-        }
-        if (ticketType.price === null || ticketType.price === undefined || isNaN(ticketType.price)) {
-          this.notificationService.showError('All ticket types must have a valid ticket price');
-          this.setActiveSection('pricing');
-          return false;
-        }
-        if (ticketType.price < 0) {
-          this.notificationService.showError('Ticket prices cannot be negative');
-          this.setActiveSection('pricing');
-          return false;
-        }
-        if (ticketType.max_tickets < 0) {
-          this.notificationService.showError('Max tickets cannot be negative');
-          this.setActiveSection('pricing');
-          return false;
-        }
       }
     }
 

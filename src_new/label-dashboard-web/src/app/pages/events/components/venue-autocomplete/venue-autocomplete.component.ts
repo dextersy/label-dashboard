@@ -252,6 +252,10 @@ export class VenueAutocompleteComponent implements OnInit, OnDestroy, ControlVal
     private elementRef: ElementRef
   ) {}
   
+  focus(): void {
+    this.searchInput.nativeElement.focus();
+  }
+
   ngOnInit(): void {
     this.setupSearch();
     this.setupWindowEvents();
