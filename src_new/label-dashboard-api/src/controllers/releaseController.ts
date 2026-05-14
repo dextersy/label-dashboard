@@ -481,7 +481,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
         // Create in-app notifications for brand admins
         const adminIds = await getBrandAdminUserIds(req.user.brand_id);
-        await createNotificationsForUsers(adminIds, req.user.brand_id, 'release_submitted', `Release submitted: ${updatedRelease!.title}`, `By ${artistNames}`, `/releases`);
+        await createNotificationsForUsers(adminIds, req.user.brand_id, 'release_submitted', `Release submitted: ${updatedRelease!.title}`, `By ${artistNames}`, `/music/releases/edit/${updatedRelease!.id}`);
       } catch (emailError) {
         console.error('Error sending release submission notification:', emailError);
         // Don't fail the request if email fails
@@ -534,7 +534,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
         // Create in-app notifications for artist team members
         const uniqueTeamIds = [...new Set(artistAccessRecords.map((a: any) => a.user_id))];
-        await createNotificationsForUsers(uniqueTeamIds, req.user.brand_id, 'release_pending', `Release is on the way: ${updatedRelease!.title}`, undefined, `/releases`);
+        await createNotificationsForUsers(uniqueTeamIds, req.user.brand_id, 'release_pending', `Release is on the way: ${updatedRelease!.title}`, undefined, `/music/releases/edit/${updatedRelease!.id}`);
       } catch (emailError) {
         console.error('Error sending release pending notification:', emailError);
         // Don't fail the request if email fails
