@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
 import { sendEarningsNotification } from '../utils/emailService';
+import { createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { PaymentService } from '../utils/paymentService';
 import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -1006,6 +1007,21 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Create in-app notifications for artist team members
+    try {
+      const notifyUserIds = await getArtistTeamUserIds(artistIdNum);
+      await createNotificationsForUsers(
+        notifyUserIds,
+        req.user.brand_id,
+        'payment_made',
+        `Payment made to ${artist.name}`,
+        `Amount: ${finalAmount}`,
+        '/financial/payments'
+      );
+    } catch (notifyError) {
+      console.error('Failed to create payment notification:', notifyError);
+    }
+
     res.status(201).json({
       message: 'Payment added successfully',
       payment
@@ -1826,6 +1842,17 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
         release.brand_id,
         !hasPaymentMethod,
         paymentScreenUrl
+      );
+
+      // Create in-app notifications for artist team + admins
+      const notifyUserIds = await getArtistTeamAndAdminUserIds(releaseArtist.artist.id, release.brand_id);
+      await createNotificationsForUsers(
+        notifyUserIds,
+        release.brand_id,
+        'earnings_posted',
+        `New earnings posted for ${release.title || 'Unknown Release'}`,
+        `${earning.type} earnings of ${earning.amount}`,
+        '/financial/earnings'
       );
     }
 

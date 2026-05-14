@@ -4,6 +4,7 @@ import path from 'path';
 import archiver from 'archiver';
 import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
+import { createNotificationsForUsers, getBrandAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
 interface AuthRequest extends Request {
@@ -477,6 +478,10 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
           artistNames,
           req.user.brand_id
         );
+
+        // Create in-app notifications for brand admins
+        const adminIds = await getBrandAdminUserIds(req.user.brand_id);
+        await createNotificationsForUsers(adminIds, req.user.brand_id, 'release_submitted', `Release submitted: ${updatedRelease!.title}`, `By ${artistNames}`, `/releases`);
       } catch (emailError) {
         console.error('Error sending release submission notification:', emailError);
         // Don't fail the request if email fails
@@ -526,6 +531,10 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
           teamEmails,
           req.user.brand_id
         );
+
+        // Create in-app notifications for artist team members
+        const uniqueTeamIds = [...new Set(artistAccessRecords.map((a: any) => a.user_id))];
+        await createNotificationsForUsers(uniqueTeamIds, req.user.brand_id, 'release_pending', `Release is on the way: ${updatedRelease!.title}`, undefined, `/releases`);
       } catch (emailError) {
         console.error('Error sending release pending notification:', emailError);
         // Don't fail the request if email fails

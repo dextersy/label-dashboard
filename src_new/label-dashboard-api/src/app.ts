@@ -139,7 +139,8 @@ const startServer = async () => {
       { name: 'songs', path: './routes/songs' },
       { name: 'songwriters', path: './routes/songwriters' },
       { name: 'syncLicensing', path: './routes/syncLicensing' },
-      { name: 'scanner', path: './routes/scanner' }
+      { name: 'scanner', path: './routes/scanner' },
+      { name: 'notifications', path: './routes/notifications' }
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -193,6 +194,7 @@ const startServer = async () => {
     const songwriterRoutes = routes.songwriters;
     const syncLicensingRoutes = routes.syncLicensing;
     const scannerRoutes = routes.scanner;
+    const notificationRoutes = routes.notifications;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -218,6 +220,9 @@ const startServer = async () => {
 
     // Scanner API Routes (login is public, other routes use scanner JWT middleware)
     app.use('/api/scanner', scannerRoutes);
+
+    // Notification API Routes
+    app.use('/api/notifications', notificationRoutes);
 
     // System API Routes (system user authentication required)
     app.use('/api/system', systemRoutes);

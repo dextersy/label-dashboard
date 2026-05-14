@@ -10,10 +10,12 @@ import { Artist } from '../../models/artist.model';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
+import { InAppNotificationService } from '../../services/in-app-notification.service';
 
 @Component({
     selector: 'app-navbar',
-    imports: [CommonModule, RouterModule, IconComponent],
+    imports: [CommonModule, RouterModule, IconComponent, NotificationBellComponent],
     templateUrl: './navbar.component.html',
     styleUrl: './navbar.component.scss'
 })
@@ -32,13 +34,16 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private workspaceSubscription: Subscription = new Subscription();
   private brandSubscription: Subscription = new Subscription();
 
+  isLoggedIn = false;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private sidebarService: SidebarService,
     private artistStateService: ArtistStateService,
     private workspaceService: WorkspaceService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private inAppNotificationService: InAppNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -49,6 +54,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
           this.userFirstName = user.first_name || 'User';
           this.isAdmin = user.is_admin || false;
           this.isSuperadmin = user.is_superadmin || false;
+          this.isLoggedIn = true;
 
           // Note: Workspace is now automatically restored from localStorage by WorkspaceService
           // No need to force it to 'music' here
@@ -56,10 +62,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
           this.refreshAvailableWorkspaces();
           // Update body class based on whether mobile nav is shown
           this.updateMobileNavClass();
+
+          // Start polling for notifications
+          this.inAppNotificationService.startPolling();
         } else {
           this.userFirstName = 'User';
           this.isAdmin = false;
           this.isSuperadmin = false;
+          this.isLoggedIn = false;
+          this.inAppNotificationService.stopPolling();
         }
       })
     );

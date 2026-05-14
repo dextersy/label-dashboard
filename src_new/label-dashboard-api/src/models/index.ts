@@ -36,6 +36,7 @@ import SyncLicensingPitchSong from './SyncLicensingPitchSong';
 import WalkInType from './WalkInType';
 import WalkInTransaction from './WalkInTransaction';
 import WalkInTransactionItem from './WalkInTransactionItem';
+import Notification from './Notification';
 
 // Define relationships
 // Brand relationships
@@ -252,6 +253,11 @@ Song.belongsToMany(SyncLicensingPitch, {
 // Brand relationships to SyncLicensingPitch
 Brand.hasMany(SyncLicensingPitch, { foreignKey: 'brand_id', as: 'syncLicensingPitches' });
 
+// Notification relationships
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Notification.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'notifications' });
+
 // WalkInType relationships
 WalkInType.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 WalkInType.hasMany(WalkInTransactionItem, { foreignKey: 'walk_in_type_id', as: 'transactionItems' });
@@ -303,6 +309,7 @@ export {
   WalkInType,
   WalkInTransaction,
   WalkInTransactionItem,
+  Notification,
 };
 
 // Initialize database connection

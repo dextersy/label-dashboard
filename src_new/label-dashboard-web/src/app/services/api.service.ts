@@ -85,4 +85,21 @@ export class ApiService {
   getPendingInvites(): Observable<any> {
     return this.http.get(`${this.baseUrl}/invite/pending`, { headers: this.getAuthHeaders() });
   }
+
+  // Notifications
+  getNotifications(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/notifications`, { headers: this.getAuthHeaders() });
+  }
+
+  markNotificationRead(id: number): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/notifications/${id}/read`, {}, { headers: this.getAuthHeaders() });
+  }
+
+  markAllNotificationsRead(): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/notifications/read-all`, {}, { headers: this.getAuthHeaders() });
+  }
+
+  getUnreadNotificationCount(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/notifications/unread-count`, { headers: this.getAuthHeaders() });
+  }
 }

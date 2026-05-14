@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
+import { createNotification, createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
 import multer from 'multer';
@@ -460,7 +461,18 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
         } catch (emailError) {
           console.error('Failed to send artist update notifications:', emailError);
         }
+
       }
+    }
+
+    // Create in-app notifications for artist profile update (runs regardless of notify_changes flag)
+    try {
+      const notifyUserIds = await getArtistTeamAndAdminUserIds(artistId, req.user.brand_id);
+      console.log(`[Notification] artist_updated — artistId=${artistId} brandId=${req.user.brand_id} userIds=${JSON.stringify(notifyUserIds)}`);
+      await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'artist_updated', `Artist profile updated: ${artist.name}`, undefined, `/artist/profile`);
+      console.log(`[Notification] artist_updated inserted for ${notifyUserIds.length} user(s)`);
+    } catch (notifyError) {
+      console.error('Failed to create artist update notifications:', notifyError);
     }
 
     // Fetch updated artist with all relationships for the response
@@ -637,6 +649,10 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
             artist.brand
           );
         }
+
+        // Create in-app notifications
+        const notifyUserIds = await getArtistTeamAndAdminUserIds(artist.id, req.user.brand_id);
+        await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'payout_point_updated', `Payout threshold updated for ${artist.name}`, undefined, `/artist/profile`);
       } catch (emailError) {
         console.error('Failed to send payout point notification:', emailError);
         // Continue with the process even if email fails
@@ -1475,8 +1491,8 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       await sendTeamInviteEmail(
         user.email_address,
         artist.name,
-        req.user.first_name && req.user.last_name 
-          ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+        req.user.first_name && req.user.last_name
+          ? `${req.user.first_name} ${req.user.last_name}`.trim()
           : req.user.email_address,
         inviteUrl,
         {
@@ -1488,6 +1504,9 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       console.error('Failed to send invitation email:', emailError);
       // Continue with the process even if email fails
     }
+
+    // Create in-app notification for invited user
+    await createNotification(user.id, req.user.brand_id, 'team_invite', `You've been invited to join ${artist.name}'s team`, undefined, `/invite/accept?hash=${inviteHash}`);
 
     const teamMember = {
       id: user.id,
@@ -1739,6 +1758,10 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
           updaterName,
           brand
         );
+
+        // Create in-app notifications
+        const notifyUserIds = await getArtistTeamAndAdminUserIds(artist.id, req.user.brand_id);
+        await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'payment_method_updated', `Payment method updated for ${artist.name}`, undefined, `/artist/profile`);
       }
     } catch (emailError) {
       console.error('Failed to send payment method notification:', emailError);

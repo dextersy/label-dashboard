@@ -675,6 +675,9 @@ Icons are registered in `icon.registry.ts`. Common names used across the app:
 - `upload`, `download` — file actions
 - `trash` — delete
 - `plus` — add/create
+- `bell` — notification bell (registered as a Feather-style inline SVG path)
+
+> **Notification bell:** Always render the notification bell in `NotificationBellComponent` using `<app-icon name="bell" iconOnly />` (inline SVG via the icon registry). Do **not** use a Font Awesome `fa-bell` class for this component. The `bell` icon is registered in `icon.registry.ts` as a Feather-style inline SVG path.
 - `edit` / `save` — edit actions
 - `folder` — file/document context
 - `calendar` — date picker

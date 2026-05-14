@@ -234,6 +234,14 @@
   }
 }
 
+/* Right group: bell + user menu */
+.navbar-right-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 /* User menu (rightmost, trigger + dropdown) */
 .user-menu {
   position: relative;

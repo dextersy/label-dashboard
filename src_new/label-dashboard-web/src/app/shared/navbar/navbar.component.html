@@ -1,5 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light fixed" [style.background]="navbarBg">
   <div class="container-fluid">
+
     <!-- Burger and Context Icons Container -->
     <div class="navbar-left-group">
       <button class="navbar-toggle" type="button" (click)="toggleSidebar()" aria-label="Toggle navigation">
@@ -37,44 +38,53 @@
       </div>
     </div>
 
-    <!-- User menu (rightmost) -->
-    <div class="user-menu" [class.open]="userDropdownOpen">
-      <button class="user-menu-trigger" (click)="toggleUserDropdown()">
-        <app-icon name="user" iconOnly class="fa-solid" />
-        <span class="user-name">Welcome, <strong>{{ userFirstName }}</strong>!</span>
-        <span *ngIf="isSuperadmin" class="superadmin-chip">
-          <app-icon name="crown" class="fa-solid" /> Superadmin
-        </span>
-        <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
-          <app-icon name="shield" class="fa-solid" /> Admin
-        </span>
-        <app-icon name="chevron-down" iconOnly class="fa-solid user-menu-arrow" />
-      </button>
+    <!-- Right group: Notification Bell + User menu -->
+    <div class="navbar-right-group">
 
-      <div class="user-dropdown-menu" *ngIf="userDropdownOpen">
-        <div class="user-dropdown-header">
-          <span class="user-dropdown-welcome">Welcome, <strong>{{ userFirstName }}</strong>!</span>
+      <!-- Notification Bell -->
+      <app-notification-bell *ngIf="isLoggedIn"></app-notification-bell>
+
+      <!-- User menu -->
+      <div class="user-menu" [class.open]="userDropdownOpen">
+        <button class="user-menu-trigger" (click)="toggleUserDropdown()">
+          <app-icon name="user" iconOnly class="fa-solid" />
+          <span class="user-name">Welcome, <strong>{{ userFirstName }}</strong>!</span>
           <span *ngIf="isSuperadmin" class="superadmin-chip">
             <app-icon name="crown" class="fa-solid" /> Superadmin
           </span>
           <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
             <app-icon name="shield" class="fa-solid" /> Admin
           </span>
+          <app-icon name="chevron-down" iconOnly class="fa-solid user-menu-arrow" />
+        </button>
+
+        <div class="user-dropdown-menu" *ngIf="userDropdownOpen">
+          <div class="user-dropdown-header">
+            <span class="user-dropdown-welcome">Welcome, <strong>{{ userFirstName }}</strong>!</span>
+            <span *ngIf="isSuperadmin" class="superadmin-chip">
+              <app-icon name="crown" class="fa-solid" /> Superadmin
+            </span>
+            <span *ngIf="isAdmin && !isSuperadmin" class="admin-chip">
+              <app-icon name="shield" class="fa-solid" /> Admin
+            </span>
+          </div>
+          <a *ngIf="isAdmin" class="user-dropdown-item" (click)="selectWorkspace('admin'); closeUserDropdown()" style="cursor: pointer;">
+            <app-icon name="settings" /> Administration
+          </a>
+          <a class="user-dropdown-item" routerLink="/profile" (click)="closeUserDropdown()">
+            <app-icon name="user" class="fa-solid" /> Edit profile
+          </a>
+          <a class="user-dropdown-item" (click)="logout(); closeUserDropdown()" style="cursor: pointer;">
+            <app-icon name="logout" class="fa-solid" /> Log out
+          </a>
         </div>
-        <a *ngIf="isAdmin" class="user-dropdown-item" (click)="selectWorkspace('admin'); closeUserDropdown()" style="cursor: pointer;">
-          <app-icon name="settings" /> Administration
-        </a>
-        <a class="user-dropdown-item" routerLink="/profile" (click)="closeUserDropdown()">
-          <app-icon name="user" class="fa-solid" /> Edit profile
-        </a>
-        <a class="user-dropdown-item" (click)="logout(); closeUserDropdown()" style="cursor: pointer;">
-          <app-icon name="logout" class="fa-solid" /> Log out
-        </a>
       </div>
+
     </div>
 
     <!-- Backdrop to close user dropdown -->
     <div class="user-menu-backdrop" *ngIf="userDropdownOpen" (click)="closeUserDropdown()"></div>
+
   </div>
 </nav>
 

@@ -1,0 +1,59 @@
+<div class="notification-bell-wrapper">
+  <button class="bell-btn" (click)="toggle()" [class.has-unread]="unreadCount > 0" aria-label="Notifications">
+    <app-icon name="bell" iconOnly />
+    <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+  </button>
+
+  <div class="notification-dropdown" *ngIf="isOpen">
+    <div class="dropdown-header">
+      <span class="dropdown-title">Notifications</span>
+      <button class="mark-all-btn" *ngIf="unreadCount > 0" (click)="markAllRead()">Mark all read</button>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="notifications.length === 0">
+      <app-icon name="bell" iconOnly />
+      <span>No notifications</span>
+    </div>
+
+    <!-- Grouped unread -->
+    <div class="notification-section" *ngIf="groupedUnread.length > 0">
+      <div class="section-label">Unread</div>
+      <div
+        class="notification-row unread"
+        *ngFor="let group of groupedUnread"
+        (click)="onGroupedClick(group)"
+      >
+        <div class="notif-icon">
+          <app-icon [name]="getTypeIcon(group.type)" iconOnly />
+        </div>
+        <div class="notif-body">
+          <div class="notif-title">{{ group.title }}</div>
+          <div class="notif-time">{{ getRelativeTime(group.latestDate) }}</div>
+        </div>
+        <span class="unread-dot" *ngIf="group.count > 0"></span>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="dropdown-divider" *ngIf="groupedUnread.length > 0 && recentRead.length > 0"></div>
+
+    <!-- Recent read -->
+    <div class="notification-section" *ngIf="recentRead.length > 0">
+      <div class="section-label" *ngIf="groupedUnread.length > 0">Earlier</div>
+      <div
+        class="notification-row"
+        *ngFor="let notif of recentRead"
+        (click)="onNotificationClick(notif)"
+      >
+        <div class="notif-icon muted">
+          <app-icon [name]="getTypeIcon(notif.type)" iconOnly />
+        </div>
+        <div class="notif-body">
+          <div class="notif-title muted">{{ notif.title }}</div>
+          <div class="notif-time">{{ getRelativeTime(notif.created_at) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

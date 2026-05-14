@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { User, Brand, LoginAttempt } from '../models';
 import { sendEmail } from '../utils/emailService';
+import { createNotification } from '../utils/notificationService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { hashPassword, hasPassword } from '../utils/passwordUtils';
@@ -212,6 +213,8 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
     );
 
     if (emailSent) {
+      // Create in-app notification for the invited user
+      await createNotification(user.id, user.brand_id, 'user_invite', `You've been invited to the dashboard`, undefined, inviteLink);
       res.json({ message: 'Invitation sent successfully' });
     } else {
       res.status(500).json({ error: 'Failed to send invitation email' });
@@ -858,7 +861,9 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
     );
 
     if (emailSent) {
-      res.json({ 
+      // Create in-app notification for the invited admin user
+      await createNotification(user.id, user.brand_id, 'user_invite', `You've been invited as an admin`, undefined, inviteLink);
+      res.json({
         message: 'Admin invitation sent successfully',
         user: {
           id: user.id,

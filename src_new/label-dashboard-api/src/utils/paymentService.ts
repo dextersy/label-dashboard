@@ -12,6 +12,7 @@ import Payment from '../models/Payment';
 import LabelPayment from '../models/LabelPayment';
 import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification } from './emailService';
+import { createNotificationsForUsers, getArtistTeamUserIds, getBrandAdminUserIds } from './notificationService';
 import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
 
 interface PayMongoLinkData {
@@ -387,12 +388,18 @@ export class PaymentService {
             { name: brand.brand_name, brand_color: brand.brand_color, logo_url: brand.logo_url, id: brand.id }
           );
         }
+        // In-app notifications for team members
+        const teamIds = await getArtistTeamUserIds(payment.artist_id);
+        await createNotificationsForUsers(teamIds, brand.id, 'payment_made', `Payment made to ${artist.name}`, `Amount: ${payment.amount}`, '/financial/payments');
       } else if (status === 'failed') {
         await sendPaymentFailedAdminNotification(
           brand.id,
           artist.name,
           { amount: parseFloat(payment.amount), description: payment.description, reference_number: payment.reference_number }
         );
+        // In-app notifications for admins
+        const adminIds = await getBrandAdminUserIds(brand.id);
+        await createNotificationsForUsers(adminIds, brand.id, 'payment_failed', `Payment failed for ${artist.name}`, `Amount: ${payment.amount}`);
       }
     } catch (error) {
       console.error('Failed to send artist payment status notification:', error);
@@ -422,6 +429,10 @@ export class PaymentService {
             { name: parentBrand.brand_name, brand_color: parentBrand.brand_color, logo_url: parentBrand.logo_url, id: parentBrand.id }
           );
         }
+        // In-app notifications for sublabel admins
+        const sublabelAdminIds = await getBrandAdminUserIds(sublabelBrand.id);
+        const parentBrandName = sublabelBrand.parentBrand?.brand_name || 'parent label';
+        await createNotificationsForUsers(sublabelAdminIds, sublabelBrand.id, 'sublabel_payment', `Payment received from ${parentBrandName}`, `Amount: ${labelPayment.amount}`, '/labels/earnings');
       } else if (status === 'failed') {
         const parentBrand = sublabelBrand.parentBrand;
         if (parentBrand) {
@@ -430,6 +441,9 @@ export class PaymentService {
             sublabelBrand.brand_name,
             { amount: parseFloat(labelPayment.amount), description: labelPayment.description, reference_number: labelPayment.reference_number }
           );
+          // In-app notifications for parent brand admins
+          const parentAdminIds = await getBrandAdminUserIds(parentBrand.id);
+          await createNotificationsForUsers(parentAdminIds, parentBrand.id, 'payment_failed', `Label payment failed for ${sublabelBrand.brand_name}`, `Amount: ${labelPayment.amount}`);
         }
       }
     } catch (error) {
@@ -977,6 +991,17 @@ export class PaymentService {
 
       // Send branded email to all admins (handles loop + grouped logging internally)
       await sendBrandedEmail(adminEmails, 'ticket_admin_notification', templateData, event.brand_id);
+
+      // Create in-app notifications for brand admins
+      const adminIds = await getBrandAdminUserIds(event.brand_id);
+      await createNotificationsForUsers(
+        adminIds,
+        event.brand_id,
+        'ticket_purchased',
+        `New ticket sold: ${event.title}`,
+        `${ticket.name} — ${ticketTypeName} x${ticket.number_of_entries}`,
+        '/campaigns/events/tickets'
+      );
 
       return true;
     } catch (error) {

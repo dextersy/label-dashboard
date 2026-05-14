@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 import { User, Brand, Domain, LoginAttempt } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
+import { createNotification, createNotificationsForUsers, getBrandAdminUserIds } from '../utils/notificationService';
 import { getBrandIdFromDomain, getBrandFrontendUrl } from '../utils/brandUtils';
 import { verifyPassword, migrateUserPassword, hashPassword, validatePassword } from '../utils/passwordUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
@@ -70,6 +71,10 @@ export const login = async (req: Request, res: Response) => {
       const isLocked = await checkLoginLock(user.id);
       if (isLocked) {
         await sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id);
+        if (user.brand_id) {
+          const brandIdForAlert = user.brand_id;
+          getBrandAdminUserIds(brandIdForAlert).then(adminIds => createNotificationsForUsers(adminIds, brandIdForAlert, 'login_failed_alert', `Failed login alert for ${user.email_address}`, `From IP: ${remoteIp}`)).catch(() => {});
+        }
         const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
         return res.status(423).json({
           error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.`
@@ -183,6 +188,7 @@ export const login = async (req: Request, res: Response) => {
       console.error('Failed to send login notification:', error);
       // Don't fail login if email fails
     });
+
 
     // Check if user is superadmin based on admin email env variable
     const adminEmail = process.env.ADMIN_EMAIL;
@@ -746,6 +752,7 @@ async function completeLoginForUser(
   ).catch(error => {
     console.error('Failed to send login notification:', error);
   });
+
 
   const adminEmail = process.env.ADMIN_EMAIL;
   const isSuperadmin = adminEmail && user.email_address === adminEmail;
