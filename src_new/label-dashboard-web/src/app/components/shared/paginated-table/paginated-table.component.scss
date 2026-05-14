@@ -320,6 +320,12 @@ tr.text-muted {
   }
 }
 
+// Tables without a mobile row layout — no left padding on cells
+div:not(.has-mobile-template) .table th,
+div:not(.has-mobile-template) .table td {
+  padding-left: 0 !important;
+}
+
 // Mobile row template support — hide table on mobile, show card list
 .mobile-card-list {
   display: none; // hidden on desktop; shown on mobile via the media query below
