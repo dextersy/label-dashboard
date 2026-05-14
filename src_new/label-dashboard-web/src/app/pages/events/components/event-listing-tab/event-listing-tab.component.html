@@ -1,0 +1,78 @@
+<div class="form-section">
+
+  <!-- Visibility toggle -->
+  <p class="ef-section-label">Visibility</p>
+  <div class="tw-mb-5">
+    <div class="form-check form-switch tw-mb-1">
+      <input class="form-check-input" type="checkbox" role="switch"
+             id="listedOnTicketing"
+             [(ngModel)]="listedOnTicketing">
+      <label class="form-check-label" for="listedOnTicketing">
+        List on YourScene.live
+      </label>
+    </div>
+    <p class="tw-text-xs tw-text-muted">Controls whether this event appears on the public events listing.</p>
+  </div>
+
+  <!-- Conditional fields -->
+  <ng-container *ngIf="listedOnTicketing">
+
+    <!-- Event Type -->
+    <p class="ef-section-label">Event details</p>
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
+      <div>
+        <label for="eventType" class="tw-label">Event Type</label>
+        <select id="eventType" [(ngModel)]="eventType" class="tw-input">
+          <option *ngFor="let opt of eventTypeOptions" [value]="opt.value">{{ opt.label }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <p class="ef-section-label">Tags</p>
+    <div class="tw-mb-5">
+      <div class="tw-flex tw-flex-wrap tw-gap-2 tw-mb-3">
+        <button
+          *ngFor="let tag of availableTags"
+          type="button"
+          (click)="toggleTag(tag.id)"
+          class="tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-badge tw-border tw-transition-colors"
+          [class.tw-text-white]="isTagSelected(tag.id)"
+          [class.tw-border-transparent]="isTagSelected(tag.id)"
+          [class.tw-bg-white]="!isTagSelected(tag.id)"
+          [class.tw-text-body]="!isTagSelected(tag.id)"
+          [class.tw-border-border-default]="!isTagSelected(tag.id)"
+          [style.background-color]="isTagSelected(tag.id) ? 'var(--brand-color)' : null"
+          [style.border-color]="isTagSelected(tag.id) ? 'var(--brand-color)' : null">
+          {{ tag.name }}
+        </button>
+      </div>
+      <!-- Custom tag input -->
+      <div class="tw-flex tw-gap-2">
+        <input
+          type="text"
+          [(ngModel)]="newTagInput"
+          placeholder="Add custom tag..."
+          class="tw-input tw-flex-1"
+          (keyup.enter)="addCustomTag()">
+        <button
+          type="button"
+          (click)="addCustomTag()"
+          [disabled]="!newTagInput.trim()"
+          class="btn-primary btn-sm">
+          <app-icon name="plus" /> Add
+        </button>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Not listed notice -->
+  <div *ngIf="!listedOnTicketing"
+       class="tw-px-4 tw-py-3 tw-mb-5 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-gray-200 tw-bg-gray-50 tw-text-gray-600">
+    <app-icon name="eye-off" class="tw-mr-2" />
+    This event will not appear on the public events listing.
+  </div>
+
+
+</div>

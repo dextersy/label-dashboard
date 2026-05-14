@@ -37,6 +37,8 @@ interface PublicEventView {
     color?: string;
     logo_url?: string;
   } | null;
+  event_type?: string | null;
+  tags?: { id: number; name: string }[];
 }
 
 @Component({
@@ -128,6 +130,18 @@ interface PublicEventView {
                         </a>
                       }
                     </div>
+                  </div>
+                }
+
+                <!-- Event type + tags -->
+                @if (event()!.event_type || (event()!.tags && event()!.tags!.length > 0)) {
+                  <div class="flex flex-wrap gap-1.5 mb-5">
+                    @if (event()!.event_type) {
+                      <span class="px-2.5 py-1 text-xs font-mono text-yellow-400/80 border border-yellow-400/30 uppercase tracking-wide">{{ event()!.event_type!.replace('_', ' ') }}</span>
+                    }
+                    @for (tag of (event()!.tags || []); track tag.id) {
+                      <span class="px-2.5 py-1 text-xs font-mono text-white/40 border border-white/15">{{ tag.name }}</span>
+                    }
                   </div>
                 }
 

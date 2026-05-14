@@ -17,6 +17,8 @@ interface PublicEvent {
   is_closed: boolean;
   tickets_sold?: number;
   brand_name?: string;
+  event_type?: string | null;
+  tags?: { id: number; name: string }[];
 }
 
 interface PublicBrand {
@@ -170,9 +172,21 @@ interface PublicBrand {
 
                   <!-- Venue -->
                   @if (event.venue) {
-                    <p class="font-mono text-white/35 text-xs mb-4 truncate">{{ event.venue }}</p>
+                    <p class="font-mono text-white/35 text-xs mb-2 truncate">{{ event.venue }}</p>
                   } @else {
-                    <div class="mb-4"></div>
+                    <div class="mb-2"></div>
+                  }
+
+                  <!-- Event type + tags -->
+                  @if (event.event_type || (event.tags && event.tags.length > 0)) {
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                      @if (event.event_type) {
+                        <span class="px-2 py-0.5 text-xs font-mono text-yellow-400/80 border border-yellow-400/30 uppercase tracking-wide">{{ event.event_type.replace('_', ' ') }}</span>
+                      }
+                      @for (tag of (event.tags || []); track tag.id) {
+                        <span class="px-2 py-0.5 text-xs font-mono text-white/40 border border-white/15">{{ tag.name }}</span>
+                      }
+                    </div>
                   }
 
                   <!-- Attending count -->

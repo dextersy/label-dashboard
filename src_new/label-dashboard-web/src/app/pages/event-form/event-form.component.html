@@ -477,6 +477,11 @@
               </small>
             </div>
           </div>
+
+          <!-- Listing Section -->
+          <div class="form-section" *ngIf="!isNewEvent" [hidden]="activeSection !== 'listing'">
+            <app-event-listing-tab [selectedEvent]="event" [isAdmin]="isAdmin" (eventUpdated)="event = $event"></app-event-listing-tab>
+          </div>
         </div>
     </div>
 

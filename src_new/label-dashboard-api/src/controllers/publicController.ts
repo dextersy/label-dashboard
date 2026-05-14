@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag } from '../models';
 import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
@@ -100,6 +100,12 @@ export const getEventForPublic = async (req: Request, res: Response) => {
           model: Brand,
           as: 'brand',
           attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+        },
+        {
+          model: EventTag,
+          as: 'tags',
+          through: { attributes: [] },
+          attributes: ['id', 'name', 'is_custom']
         }
       ]
     });
@@ -219,6 +225,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         tickets_sold: totalSold,
         walk_in_enabled: event.walk_in_enabled || false,
         walkInTypes,
+        event_type: event.event_type || null,
+        tags: (event as any).tags || [],
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
@@ -1551,7 +1559,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
       where: {
         brand_id: { [Op.in]: brandIds },
         date_and_time: { [Op.gte]: new Date() }, // Only future events
-        status: 'published' // Only published events
+        status: 'published', // Only published events
+        listed_on_ticketing: true // Only events listed on the ticketing platform
       },
       include: [
         {
@@ -1563,7 +1572,15 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
           model: TicketType,
           as: 'ticketTypes',
           attributes: ['id', 'name', 'price'],
-          where: { disabled: false }
+          where: { disabled: false },
+          required: false
+        },
+        {
+          model: EventTag,
+          as: 'tags',
+          through: { attributes: [] },
+          attributes: ['id', 'name', 'is_custom'],
+          required: false
         }
       ],
       order: [['date_and_time', 'ASC']]
@@ -1607,7 +1624,9 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
             ticket_naming: event.ticket_naming,
             buy_shortlink: event.buy_shortlink,
             is_closed: new Date() > new Date(event.close_time || event.date_and_time),
-            tickets_sold: ticketCounts[event.id] || 0
+            tickets_sold: ticketCounts[event.id] || 0,
+            event_type: event.event_type || null,
+            tags: (event as any).tags || []
           };
         });
 

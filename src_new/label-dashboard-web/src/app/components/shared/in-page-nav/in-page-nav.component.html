@@ -1,6 +1,9 @@
 <div class="ipn-layout" [class.ipn-stack]="stackLayout">
 
-  <nav class="ipn-sidebar">
+  <div class="ipn-sidebar-wrap" [class.ipn-sidebar-wrap--fade-right]="showRightFade" [class.ipn-sidebar-wrap--fade-left]="showLeftFade">
+    <span class="ipn-scroll-hint ipn-scroll-hint--left" *ngIf="showLeftFade">‹</span>
+    <span class="ipn-scroll-hint ipn-scroll-hint--right" *ngIf="showRightFade">›</span>
+  <nav class="ipn-sidebar" #sidebarEl (scroll)="onSidebarScroll()">
     <div class="ipn-items">
       <button
         *ngFor="let tab of tabs; trackBy: trackByTabId"
@@ -19,6 +22,7 @@
       </button>
     </div>
   </nav>
+  </div>
 
   <div class="ipn-main">
     <ng-content></ng-content>

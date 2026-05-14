@@ -10,6 +10,11 @@
   align-items: flex-start;
 }
 
+.ipn-sidebar-wrap {
+  flex: 0 0 200px;
+  // Fade only applies in horizontal (tablet/mobile) mode — see media query below
+}
+
 .ipn-sidebar {
   flex: 0 0 200px;
   position: sticky;
@@ -112,6 +117,50 @@
   .ipn-layout {
     flex-direction: column;
     gap: 0;
+  }
+
+  .ipn-sidebar-wrap {
+    flex: none;
+    width: 100%;
+    position: relative;
+
+    &--fade-right::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 64px;
+      background: linear-gradient(to right, transparent, #fff 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    &--fade-left::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 64px;
+      background: linear-gradient(to left, transparent, #fff 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+  }
+
+  .ipn-scroll-hint {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    line-height: 1;
+    color: #6b7280;
+    pointer-events: none;
+    z-index: 2;
+
+    &--left  { left: 4px; }
+    &--right { right: 4px; }
   }
 
   .ipn-sidebar {

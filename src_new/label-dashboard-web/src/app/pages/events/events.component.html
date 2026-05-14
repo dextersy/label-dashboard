@@ -62,6 +62,16 @@
             (alertMessage)="onAlertMessage($event)">
           </app-event-email-tab>
         </div>
+
+        <!-- Listing Tab -->
+        <div *ngIf="activeTab === 'listing'">
+          <app-event-listing-tab
+            [selectedEvent]="selectedEvent"
+            [isAdmin]="isAdmin"
+            (alertMessage)="onAlertMessage($event)"
+            (eventUpdated)="onEventUpdated($event)">
+          </app-event-listing-tab>
+        </div>
         
       </div>
     </div>

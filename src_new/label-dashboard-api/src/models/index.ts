@@ -37,6 +37,8 @@ import WalkInType from './WalkInType';
 import WalkInTransaction from './WalkInTransaction';
 import WalkInTransactionItem from './WalkInTransactionItem';
 import Notification from './Notification';
+import EventTag from './EventTag';
+import EventTagMapping from './EventTagMapping';
 
 // Define relationships
 // Brand relationships
@@ -111,6 +113,12 @@ Release.hasMany(ReleaseSong, { foreignKey: 'release_id', as: 'releaseSongs' });
 // ReleaseArtist relationships
 ReleaseArtist.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 ReleaseArtist.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+
+// EventTag / EventTagMapping relationships
+Event.belongsToMany(EventTag, { through: EventTagMapping, foreignKey: 'event_id', otherKey: 'tag_id', as: 'tags' });
+EventTag.belongsToMany(Event, { through: EventTagMapping, foreignKey: 'tag_id', otherKey: 'event_id', as: 'events' });
+EventTag.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Brand.hasMany(EventTag, { foreignKey: 'brand_id', as: 'eventTags' });
 
 // Event relationships
 Event.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
@@ -310,6 +318,8 @@ export {
   WalkInTransaction,
   WalkInTransactionItem,
   Notification,
+  EventTag,
+  EventTagMapping,
 };
 
 // Initialize database connection

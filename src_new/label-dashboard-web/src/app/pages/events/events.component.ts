@@ -13,11 +13,12 @@ import { EventTicketsTabComponent } from './components/event-tickets-tab/event-t
 import { EventAbandonedOrdersTabComponent } from './components/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
 import { EventReferralsTabComponent } from './components/event-referrals-tab/event-referrals-tab.component';
 import { EventEmailTabComponent } from './components/event-email-tab/event-email-tab.component';
+import { EventListingTabComponent } from './components/event-listing-tab/event-listing-tab.component';
 import { EventSelectionComponent } from './components/event-selection/event-selection.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 
-export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email';
+export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email' | 'listing';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -38,6 +39,7 @@ export type EventSelection = Event;
         EventAbandonedOrdersTabComponent,
         EventReferralsTabComponent,
         EventEmailTabComponent,
+        EventListingTabComponent,
         EventSelectionComponent,
         BreadcrumbComponent
 , IconComponent],
@@ -64,7 +66,8 @@ export class EventsComponent implements OnInit, OnDestroy {
     { id: 'tickets' as EventsTabType, label: 'Tickets & Walk-Ins', icon: 'ticket' },
     { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'cart' },
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'user-plus' },
-    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope', adminOnly: true }
+    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope', adminOnly: true },
+    { id: 'listing' as EventsTabType, label: 'Listing', icon: 'globe', adminOnly: true }
   ];
 
   constructor(

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -233,7 +233,8 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
         { model: EventReferrer, as: 'referrers' },
-        { model: TicketType, as: 'ticketTypes' }
+        { model: TicketType, as: 'ticketTypes' },
+        { model: EventTag, as: 'tags', through: { attributes: [] } }
       ],
       order: [['date_and_time', 'DESC']]
     });
@@ -255,15 +256,16 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
     }
 
     const event = await Event.findOne({
-      where: { 
+      where: {
         id: eventId,
-        brand_id: req.user.brand_id 
+        brand_id: req.user.brand_id
       },
       include: [
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
         { model: EventReferrer, as: 'referrers' },
-        { model: TicketType, as: 'ticketTypes' }
+        { model: TicketType, as: 'ticketTypes' },
+        { model: EventTag, as: 'tags', through: { attributes: [] } }
       ]
     });
 
@@ -341,7 +343,12 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       venue_website,
       venue_maps_url,
       status,
-      ticketTypes
+      ticketTypes,
+      event_type,
+      ticketing_enabled,
+      external_ticket_link,
+      listed_on_ticketing,
+      tags
     } = req.body;
 
     // Parse ticketTypes if it's a string (from FormData)
@@ -448,7 +455,11 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       venue_phone: venue_phone || null,
       venue_website: venue_website || null,
       venue_maps_url: venue_maps_url || null,
-      status: status || 'draft'
+      status: status || 'draft',
+      event_type: event_type || null,
+      ticketing_enabled: ticketing_enabled !== undefined ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true) : true,
+      external_ticket_link: external_ticket_link || null,
+      listed_on_ticketing: listed_on_ticketing !== undefined ? (listed_on_ticketing === 'false' || listed_on_ticketing === false ? false : true) : true,
     });
 
     // Only generate shortlinks if event is being published    
@@ -480,6 +491,13 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
         // Event was created but URL generation failed - still return success but log error
         console.warn('Event created but shortlink generation failed:', error.message);
       }
+    }
+
+    // Assign tags if provided (supports both `tags` JSON array and `tags[]` FormData array)
+    const rawTags = tags ?? req.body['tags[]'];
+    if (rawTags !== undefined) {
+      const tagIds = Array.isArray(rawTags) ? rawTags.map(Number).filter(Boolean) : [];
+      await (event as any).setTags(tagIds);
     }
 
     // Create ticket types
@@ -572,7 +590,12 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       walk_in_supports_cash,
       walk_in_supports_gcash,
       walk_in_supports_card,
-      walk_in_max_count
+      walk_in_max_count,
+      event_type,
+      ticketing_enabled,
+      external_ticket_link,
+      listed_on_ticketing,
+      tags
     } = req.body;
 
     // Parse ticketTypes if it's a JSON string (from FormData)
@@ -703,12 +726,23 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_website: venue_website !== undefined ? (venue_website === '' ? null : venue_website) : event.venue_website,
       venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url,
       status: status !== undefined ? status : event.status,
+      event_type: event_type !== undefined ? (event_type === '' ? null : event_type) : event.event_type,
+      ticketing_enabled: ticketing_enabled !== undefined ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true) : event.ticketing_enabled,
+      external_ticket_link: external_ticket_link !== undefined ? (external_ticket_link === '' ? null : external_ticket_link) : event.external_ticket_link,
+      listed_on_ticketing: listed_on_ticketing !== undefined ? (listed_on_ticketing === 'false' || listed_on_ticketing === false ? false : true) : event.listed_on_ticketing,
       walk_in_enabled: walk_in_enabled !== undefined ? walk_in_enabled : event.walk_in_enabled,
       walk_in_supports_cash: walk_in_supports_cash !== undefined ? walk_in_supports_cash : event.walk_in_supports_cash,
       walk_in_supports_gcash: walk_in_supports_gcash !== undefined ? walk_in_supports_gcash : event.walk_in_supports_gcash,
       walk_in_supports_card: walk_in_supports_card !== undefined ? walk_in_supports_card : event.walk_in_supports_card,
       walk_in_max_count: walk_in_max_count !== undefined ? walk_in_max_count : event.walk_in_max_count
     });
+
+    // Update tags if provided (supports both `tags` JSON array and `tags[]` FormData array)
+    const rawTagsUpdate = tags ?? req.body['tags[]'];
+    if (rawTagsUpdate !== undefined) {
+      const tagIds = Array.isArray(rawTagsUpdate) ? rawTagsUpdate.map(Number).filter(Boolean) : [];
+      await (event as any).setTags(tagIds);
+    }
 
     // Update ticket types if provided in request
     if (parsedTicketTypes && Array.isArray(parsedTicketTypes)) {
@@ -819,14 +853,15 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Reload the event with tickets to return complete data
+    // Reload the event with tickets and tags to return complete data
     const updatedEventWithTickets = await Event.findByPk(event.id, {
       include: [
         {
           model: require('../models').Ticket,
           as: 'tickets',
           attributes: ['id', 'name', 'status', 'number_of_entries']
-        }
+        },
+        { model: EventTag, as: 'tags', through: { attributes: [] } }
       ]
     });
 

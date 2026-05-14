@@ -39,8 +39,20 @@ export interface Event {
   walk_in_supports_gcash: boolean;
   walk_in_supports_card: boolean;
   walk_in_max_count: number;
+  // Tagging & listing
+  event_type?: 'concert' | 'festival' | 'club_night' | 'open_mic' | 'dj_set' | 'listening_party' | 'album_launch' | 'workshop' | 'meetup' | 'other' | null;
+  ticketing_enabled?: boolean;
+  external_ticket_link?: string | null;
+  listed_on_ticketing?: boolean;
+  tags?: EventTag[];
   created_at?: string;
   updated_at?: string;
+}
+
+export interface EventTag {
+  id: number;
+  name: string;
+  is_custom: boolean;
 }
 
 export interface EventFormData {
@@ -66,6 +78,11 @@ export interface EventFormData {
   walk_in_supports_gcash?: boolean;
   walk_in_supports_card?: boolean;
   walk_in_max_count?: number;
+  // Tagging & listing
+  event_type?: string;
+  ticketing_enabled?: boolean;
+  external_ticket_link?: string;
+  tags?: number[]; // array of tag IDs
   // Google Places venue fields
   google_place_id?: string;
   venue_address?: string;

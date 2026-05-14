@@ -44,12 +44,17 @@ import {
   deleteWalkInType,
   getWalkInTransactions
 } from '../controllers/walkInController';
+import { getTags, createTag } from '../controllers/eventTagController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Tag operations (before /:id routes)
+router.get('/tags', getTags);
+router.post('/tags', requireAdmin, createTag);
 
 // Event CRUD operations
 router.get('/', getEvents);

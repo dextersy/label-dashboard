@@ -10,6 +10,7 @@ import { TicketTypeService } from '../../../services/ticket-type.service';
 import { GooglePlacesService, GooglePlacesPrediction, VenueSelection } from '../../../services/google-places.service';
 import { AuthService } from '../../../services/auth.service';
 import { OrganizationService, EventFeeSettings } from '../../../services/organization.service';
+import { EventTag } from '../../../models/event.model';
 
 interface TicketTypeFormItem {
   id?: number;
@@ -155,6 +156,49 @@ function newTicketTypeItem(): TicketTypeFormItem {
               }
             </div>
 
+            <!-- Event Type -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Event Type</label>
+              <select formControlName="event_type"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                <option value="">— Select type —</option>
+                <option value="concert">Concert</option>
+                <option value="festival">Festival</option>
+                <option value="club_night">Club Night</option>
+                <option value="open_mic">Open Mic</option>
+                <option value="dj_set">DJ Set</option>
+                <option value="listening_party">Listening Party</option>
+                <option value="album_launch">Album Launch</option>
+                <option value="workshop">Workshop</option>
+                <option value="meetup">Meetup</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Tags -->
+            <div class="md:col-span-2">
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Tags</label>
+              <div class="flex flex-wrap gap-2 mb-2">
+                @for (tag of availableTags(); track tag.id) {
+                  <button type="button" (click)="toggleTag(tag.id)"
+                    [class]="isTagSelected(tag.id)
+                      ? 'px-2.5 py-1 text-xs font-mono bg-yellow-400 text-black border border-yellow-400 uppercase tracking-wider'
+                      : 'px-2.5 py-1 text-xs font-mono bg-white text-gray-500 border border-gray-300 hover:border-gray-500 uppercase tracking-wider transition-colors'">
+                    {{ tag.name }}
+                  </button>
+                }
+              </div>
+              <div class="flex gap-2 mt-1">
+                <input type="text" [(ngModel)]="newTagInput" [ngModelOptions]="{standalone:true}"
+                  placeholder="Custom tag..."
+                  class="flex-1 px-3 py-1.5 bg-white border border-gray-300 text-gray-900 text-xs placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors">
+                <button type="button" (click)="addCustomTag()" [disabled]="!newTagInput.trim()"
+                  class="px-3 py-1.5 text-xs font-black bg-yellow-400 hover:bg-yellow-300 text-black uppercase tracking-wider disabled:opacity-40 transition-colors">
+                  Add
+                </button>
+              </div>
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Description</label>
               <textarea formControlName="description" rows="4"
@@ -173,7 +217,30 @@ function newTicketTypeItem(): TicketTypeFormItem {
           </div>
         </div>
 
+        <!-- ===== TICKETING TOGGLE ===== -->
+        <div class="bg-white border border-gray-200 p-6 mb-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticketing</h2>
+              <p class="text-xs font-mono text-gray-400 mt-0.5">Sell tickets through this platform</p>
+            </div>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" formControlName="ticketing_enabled" class="w-4 h-4 accent-yellow-400">
+              <span class="text-xs font-mono text-gray-500">Enable ticketing</span>
+            </label>
+          </div>
+          @if (!form.get('ticketing_enabled')?.value) {
+            <div class="mt-4 pt-4 border-t border-gray-200">
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">External Ticket Link</label>
+              <input type="url" formControlName="external_ticket_link"
+                class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="https://...">
+            </div>
+          }
+        </div>
+
         <!-- ===== TICKET TYPES ===== -->
+        @if (form.get('ticketing_enabled')?.value) {
         <div class="bg-white border border-gray-200 p-6 mb-4">
           <div class="flex items-center justify-between mb-5">
             <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticket Types</h2>
@@ -343,7 +410,10 @@ function newTicketTypeItem(): TicketTypeFormItem {
           }
         </div>
 
+        } <!-- end @if ticketing_enabled: Ticket Types -->
+
         <!-- ===== PAYMENT METHODS ===== -->
+        @if (form.get('ticketing_enabled')?.value) {
         <div class="bg-white border border-gray-200 p-6 space-y-4 mb-4">
           <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Payment Methods</h2>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -357,7 +427,10 @@ function newTicketTypeItem(): TicketTypeFormItem {
           </div>
         </div>
 
+        } <!-- end @if ticketing_enabled: Payment Methods -->
+
         <!-- ===== PURCHASE SETTINGS ===== -->
+        @if (form.get('ticketing_enabled')?.value) {
         <div class="bg-white border border-gray-200 p-6 space-y-5 mb-4">
           <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Purchase Settings</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -387,6 +460,7 @@ function newTicketTypeItem(): TicketTypeFormItem {
             </div>
           </div>
         </div>
+        } <!-- end @if ticketing_enabled: Purchase Settings -->
 
         <!-- ===== WALK-IN SETTINGS ===== -->
         <div class="bg-white border border-gray-200 p-6 space-y-5 mb-4">
@@ -472,6 +546,11 @@ export class EventFormComponent implements OnInit, OnDestroy {
   // Ticket types
   ticketTypes: TicketTypeFormItem[] = [];
 
+  // Tags
+  availableTags = signal<EventTag[]>([]);
+  selectedTagIds = signal<number[]>([]);
+  newTagInput = '';
+
   // Close time
   closeAtShowTime = true;
   closeTimeSuggestions = [
@@ -517,6 +596,9 @@ export class EventFormComponent implements OnInit, OnDestroy {
       close_time: [''],
       venue: [''],
       description: [''],
+      event_type: [''],
+      ticketing_enabled: [true],
+      external_ticket_link: [''],
       supports_gcash: [true], supports_qrph: [true], supports_card: [true],
       supports_ubp: [true], supports_dob: [true], supports_maya: [true], supports_grabpay: [true],
       countdown_display: ['always'],
@@ -537,6 +619,12 @@ export class EventFormComponent implements OnInit, OnDestroy {
         error: () => {} // silently ignore — fee info is informational only
       });
     }
+
+    // Load available tags
+    this.eventsService.getTags().subscribe({
+      next: (tags) => this.availableTags.set(tags),
+      error: () => {} // silently ignore
+    });
 
     // Venue search debounce
     this.venueSearch$.pipe(
@@ -569,6 +657,9 @@ export class EventFormComponent implements OnInit, OnDestroy {
             close_time: event.close_time?.slice(0, 16) || '',
             venue: event.venue || '',
             description: event.description || '',
+            event_type: event.event_type || '',
+            ticketing_enabled: event.ticketing_enabled !== undefined ? event.ticketing_enabled : true,
+            external_ticket_link: event.external_ticket_link || '',
             supports_gcash: event.supports_gcash ?? false,
             supports_qrph: event.supports_qrph ?? false,
             supports_card: event.supports_card ?? false,
@@ -589,6 +680,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
           this.closeAtShowTime = !event.close_time;
           if (event.poster_url) this.posterPreview.set(event.poster_url);
           if (event.verification_pin) this.verificationPin.set(event.verification_pin);
+          if (event.tags) this.selectedTagIds.set(event.tags.map(t => t.id));
         }
       });
       // Load existing ticket types
@@ -654,6 +746,33 @@ export class EventFormComponent implements OnInit, OnDestroy {
   removeTicketType(i: number): void {
     if (this.ticketTypes.length <= 1) return;
     this.ticketTypes.splice(i, 1);
+  }
+
+  // ---- Tags ----
+  isTagSelected(tagId: number): boolean {
+    return this.selectedTagIds().includes(tagId);
+  }
+
+  toggleTag(tagId: number): void {
+    const current = this.selectedTagIds();
+    if (current.includes(tagId)) {
+      this.selectedTagIds.set(current.filter(id => id !== tagId));
+    } else {
+      this.selectedTagIds.set([...current, tagId]);
+    }
+  }
+
+  addCustomTag(): void {
+    const name = this.newTagInput.trim();
+    if (!name) return;
+    this.eventsService.createTag(name).subscribe({
+      next: (tag) => {
+        this.availableTags.set([...this.availableTags(), tag]);
+        this.selectedTagIds.set([...this.selectedTagIds(), tag.id]);
+        this.newTagInput = '';
+      },
+      error: () => {} // silently ignore duplicates
+    });
   }
 
   // ---- Close time ----
@@ -746,17 +865,18 @@ export class EventFormComponent implements OnInit, OnDestroy {
   submit(): void {
     if (this.form.invalid) return;
 
-    // Validate ticket types
-    const unsaved = this.ticketTypes.filter(tt => tt.isEditing);
+    // Validate ticket types only when ticketing is enabled
+    const ticketingEnabled = this.form.get('ticketing_enabled')?.value !== false;
+    const unsaved = ticketingEnabled ? this.ticketTypes.filter(tt => tt.isEditing) : [];
     if (unsaved.length > 0) {
       this.ticketTypeError.set('Please finish editing all ticket types before saving.');
       return;
     }
-    if (this.ticketTypes.length === 0) {
+    if (ticketingEnabled && this.ticketTypes.length === 0) {
       this.ticketTypeError.set('At least one ticket type is required.');
       return;
     }
-    const unnamed = this.ticketTypes.find(tt => !tt.name.trim());
+    const unnamed = ticketingEnabled ? this.ticketTypes.find(tt => !tt.name.trim()) : null;
     if (unnamed) {
       this.ticketTypeError.set('All ticket types must have a name.');
       return;
@@ -772,8 +892,11 @@ export class EventFormComponent implements OnInit, OnDestroy {
     // Close time
     if (this.closeAtShowTime) data.close_time = '';
 
+    // Include tags
+    data.tags = this.selectedTagIds();
+
     // Build ticketTypes for API
-    const ticketTypesForApi = this.ticketTypes.map(tt => ({
+    const ticketTypesForApi = ticketingEnabled ? this.ticketTypes.map(tt => ({
       ...(tt.id ? { id: tt.id } : {}),
       name: tt.name.trim(),
       price: tt.isFree ? 0 : Number(tt.price),
@@ -783,7 +906,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       disabled: tt.disabled ?? false,
       special_instructions: tt.special_instructions || null,
       special_instructions_for_scanner: tt.special_instructions_for_scanner || null,
-    }));
+    })) : [];
     data.ticketTypes = JSON.stringify(ticketTypesForApi);
     data.ticket_price = String(ticketTypesForApi[0]?.price ?? 0);
 

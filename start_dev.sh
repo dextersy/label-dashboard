@@ -92,9 +92,9 @@ echo "API server started (PID: $API_PID)"
 echo "Starting Web server (localhost:80)..."
 cd "$WEB_DIR"
 if [ -n "$NGROK_DOMAIN" ]; then
-    npx ng serve -c local --host localhost --port 80 > "$WEB_LOG" 2>&1 &
+    NO_COLOR=1 npx ng serve -c local --host localhost --port 80 > "$WEB_LOG" 2>&1 &
 else
-    npx ng serve --host localhost --port 80 > "$WEB_LOG" 2>&1 &
+    NO_COLOR=1 npx ng serve --host localhost --port 80 > "$WEB_LOG" 2>&1 &
 fi
 WEB_PID=$!
 echo "Web server started (PID: $WEB_PID)"
@@ -103,9 +103,9 @@ echo "Web server started (PID: $WEB_PID)"
 echo "Starting Web server subbrand (localhost.subbrand:80)..."
 cd "$WEB_DIR"
 if [ -n "$NGROK_DOMAIN" ]; then
-    npx ng serve -c local --host localhost.subbrand --port 80 > "$WEB_SUBBRAND_LOG" 2>&1 &
+    NO_COLOR=1 npx ng serve -c local --host localhost.subbrand --port 80 > "$WEB_SUBBRAND_LOG" 2>&1 &
 else
-    npx ng serve --host localhost.subbrand --port 80 > "$WEB_SUBBRAND_LOG" 2>&1 &
+    NO_COLOR=1 npx ng serve --host localhost.subbrand --port 80 > "$WEB_SUBBRAND_LOG" 2>&1 &
 fi
 WEB_SUBBRAND_PID=$!
 echo "Web server subbrand started (PID: $WEB_SUBBRAND_PID)"
@@ -113,7 +113,7 @@ echo "Web server subbrand started (PID: $WEB_SUBBRAND_PID)"
 # Start Spindly public site
 echo "Starting Spindly public site..."
 cd "$SPINDLY_DIR"
-npx ng serve --port 1234 > "$SPINDLY_LOG" 2>&1 &
+NO_COLOR=1 npx ng serve --port 1234 > "$SPINDLY_LOG" 2>&1 &
 SPINDLY_PID=$!
 echo "Spindly site started (PID: $SPINDLY_PID)"
 

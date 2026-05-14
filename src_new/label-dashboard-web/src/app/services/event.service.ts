@@ -76,6 +76,18 @@ export interface Event {
   venue_phone?: string | null;
   venue_website?: string | null;
   venue_maps_url?: string | null;
+  // Tagging & listing
+  event_type?: string | null;
+  ticketing_enabled?: boolean;
+  external_ticket_link?: string | null;
+  listed_on_ticketing?: boolean;
+  tags?: EventTag[];
+}
+
+export interface EventTag {
+  id: number;
+  name: string;
+  is_custom: boolean;
 }
 
 export interface EventTicket {
@@ -882,6 +894,33 @@ export class EventService {
     );
   }
   
+  getTags(): Observable<EventTag[]> {
+    return this.http.get<{ tags: EventTag[] }>(`${environment.apiUrl}/events/tags`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.tags),
+      catchError(this.handleError)
+    );
+  }
+
+  createTag(name: string): Observable<EventTag> {
+    return this.http.post<{ tag: EventTag }>(`${environment.apiUrl}/events/tags`, { name }, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.tag),
+      catchError(this.handleError)
+    );
+  }
+
+  updateEventListing(eventId: number, data: { listed_on_ticketing: boolean; event_type?: string | null; tags?: number[] }): Observable<Event> {
+    return this.http.put<{ event: Event }>(`${environment.apiUrl}/events/${eventId}`, data, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.event),
+      catchError(this.handleError)
+    );
+  }
+
   getPaymentConfig(): Observable<{ min_card: number | null; min_dob: number | null }> {
     return this.http.get<{ min_card: number | null; min_dob: number | null }>(
       `${environment.apiUrl}/events/payment-config`,

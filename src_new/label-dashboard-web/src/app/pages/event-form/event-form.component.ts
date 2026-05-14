@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,6 +19,7 @@ import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-pag
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 import { EventWalkInSettingsComponent } from '../events/components/event-walk-in-settings/event-walk-in-settings.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { EventListingTabComponent } from '../events/components/event-listing-tab/event-listing-tab.component';
 
 export interface TicketType {
   id?: number;
@@ -46,7 +47,7 @@ export function createDefaultTicketType(): TicketType {
   };
 }
 
-export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 'walk-in';
+export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 'walk-in' | 'listing';
 
 @Component({
   selector: 'app-event-form',
@@ -61,12 +62,16 @@ export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 
     QuillModule,
     InPageNavComponent,
     FloatingActionBarComponent,
-    EventWalkInSettingsComponent
-, IconComponent],
+    EventWalkInSettingsComponent,
+    IconComponent,
+    EventListingTabComponent
+  ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
 })
 export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges {
+  @ViewChild(EventListingTabComponent) listingTabRef?: EventListingTabComponent;
+
   eventId: number | null = null;
   event: any = null;
   loading = false;
@@ -195,9 +200,14 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       this.subscriptions.add(
         this.eventService.selectedEvent$.subscribe(event => {
           if (event) {
+            const isEventSwitch = event.id !== this.eventId;
             this.event = event;
             this.eventId = event.id;
-            this.loadEvent();
+            // Only reload from server when switching to a different event,
+            // not when setSelectedEvent is called after a save on the same event
+            if (isEventSwitch) {
+              this.loadEvent();
+            }
           } else if (this.availableEvents.length > 0) {
             // Auto-select first event if none selected
             const firstEvent = this.availableEvents[0];
@@ -322,6 +332,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     ];
     if (!this.isNewEvent) {
       tabs.push({ id: 'walk-in', label: 'Walk-in', icon: 'walking' });
+      tabs.push({ id: 'listing', label: 'Listing', icon: 'globe' });
     }
     if (!this.isEventDraft()) {
       tabs.push({ id: 'scanner', label: 'Scanner', icon: 'scan' });
@@ -398,9 +409,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
             this.eventService.setSelectedEvent(event);
             this.router.navigate(['/campaigns/events/details']);
           } else {
+            // Save listing settings before updating this.event so the listing tab
+            // still has its local state when populateFromEvent() is triggered by ngOnChanges
+            this.listingTabRef?.save(true);
             // Update the event object and reset dirty tracking without repopulating form
             this.event = event;
-            this.eventService.setSelectedEvent(event);
             // Update originalEventData to match current form state (what was just saved)
             this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
             this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));

@@ -125,6 +125,7 @@ export const routes: Routes = [
       { path: 'events/referrals', component: EventsComponent, data: { tab: 'referrals' } },
       { path: 'events/walk-in', redirectTo: 'events/tickets', pathMatch: 'full' },
       { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
+      { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
       // Fundraisers
       { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },
@@ -143,6 +144,7 @@ export const routes: Routes = [
   { path: 'events/abandoned', redirectTo: 'campaigns/events/abandoned', pathMatch: 'full' },
   { path: 'events/referrals', redirectTo: 'campaigns/events/referrals', pathMatch: 'full' },
   { path: 'events/email', redirectTo: 'campaigns/events/email', pathMatch: 'full' },
+  { path: 'events/listing', redirectTo: 'campaigns/events/listing', pathMatch: 'full' },
   { path: 'events/custom-ticket', redirectTo: 'campaigns/events/custom-ticket', pathMatch: 'full' },
 
   {

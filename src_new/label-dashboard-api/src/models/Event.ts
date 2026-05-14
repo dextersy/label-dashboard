@@ -34,6 +34,10 @@ interface EventAttributes {
   venue_website?: string;
   venue_maps_url?: string;
   status: 'draft' | 'published';
+  event_type?: 'concert' | 'festival' | 'club_night' | 'open_mic' | 'dj_set' | 'listening_party' | 'album_launch' | 'workshop' | 'meetup' | 'other' | null;
+  ticketing_enabled: boolean;
+  external_ticket_link?: string | null;
+  listed_on_ticketing: boolean;
   walk_in_enabled: boolean;
   walk_in_supports_cash: boolean;
   walk_in_supports_gcash: boolean;
@@ -76,6 +80,10 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public venue_website?: string;
   public venue_maps_url?: string;
   public status!: 'draft' | 'published';
+  public event_type?: 'concert' | 'festival' | 'club_night' | 'open_mic' | 'dj_set' | 'listening_party' | 'album_launch' | 'workshop' | 'meetup' | 'other' | null;
+  public ticketing_enabled!: boolean;
+  public external_ticket_link?: string | null;
+  public listed_on_ticketing!: boolean;
   public walk_in_enabled!: boolean;
   public walk_in_supports_cash!: boolean;
   public walk_in_supports_gcash!: boolean;
@@ -240,6 +248,29 @@ Event.init(
       type: DataTypes.ENUM('draft', 'published'),
       allowNull: false,
       defaultValue: 'draft',
+    },
+    event_type: {
+      type: DataTypes.ENUM(
+        'concert', 'festival', 'club_night', 'open_mic', 'dj_set',
+        'listening_party', 'album_launch', 'workshop', 'meetup', 'other'
+      ),
+      allowNull: true,
+      defaultValue: null,
+    },
+    ticketing_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    external_ticket_link: {
+      type: DataTypes.STRING(1024),
+      allowNull: true,
+      defaultValue: null,
+    },
+    listed_on_ticketing: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
     walk_in_enabled: {
       type: DataTypes.BOOLEAN,

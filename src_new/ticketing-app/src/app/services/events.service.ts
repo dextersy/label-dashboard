@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Event, EventFormData } from '../models/event.model';
+import { Event, EventFormData, EventTag } from '../models/event.model';
 
 @Injectable({ providedIn: 'root' })
 export class EventsService {
@@ -35,6 +35,14 @@ export class EventsService {
 
   unpublishEvent(id: number): Observable<any> {
     return this.http.post(`${this.base}/${id}/unpublish`, {});
+  }
+
+  getTags(): Observable<EventTag[]> {
+    return this.http.get<{ tags: EventTag[] }>(`${this.base}/tags`).pipe(map(r => r.tags));
+  }
+
+  createTag(name: string): Observable<EventTag> {
+    return this.http.post<{ tag: EventTag }>(`${this.base}/tags`, { name }).pipe(map(r => r.tag));
   }
 
   refreshPin(id: number): Observable<{ verification_pin: string }> {
@@ -95,6 +103,8 @@ export class EventsService {
           fd.append(key, value);
         } else if (typeof value === 'boolean') {
           fd.append(key, value ? '1' : '0');
+        } else if (Array.isArray(value)) {
+          value.forEach(item => fd.append(key + '[]', String(item)));
         } else {
           fd.append(key, String(value));
         }
