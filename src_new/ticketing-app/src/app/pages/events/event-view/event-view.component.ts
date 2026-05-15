@@ -39,6 +39,8 @@ interface PublicEventView {
   } | null;
   event_type?: string | null;
   tags?: { id: number; name: string }[];
+  ticketing_enabled?: boolean;
+  listed_on_ticketing?: boolean;
 }
 
 @Component({
@@ -146,7 +148,12 @@ interface PublicEventView {
                 }
 
                 <!-- Status / CTA -->
-                @if (event()!.is_closed) {
+                @if (event()!.ticketing_enabled === false) {
+                  <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
+                    <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
+                    Listing Only
+                  </div>
+                } @else if (event()!.is_closed) {
                   <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
                     <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                     Tickets Closed
@@ -159,7 +166,9 @@ interface PublicEventView {
                 }
 
                 <!-- Price -->
-                <p class="text-white/30 font-mono text-xs mt-3 uppercase tracking-wider">{{ event()!.ticket_price_display }}</p>
+                @if (event()!.ticketing_enabled !== false) {
+                  <p class="text-white/30 font-mono text-xs mt-3 uppercase tracking-wider">{{ event()!.ticket_price_display }}</p>
+                }
 
                 <!-- Attending count -->
                 @if (event()!.tickets_sold && event()!.tickets_sold! > 0) {
@@ -191,7 +200,7 @@ interface PublicEventView {
                 </div>
               }
 
-              @if (event()!.ticketTypes && event()!.ticketTypes!.length > 0) {
+              @if (event()!.ticketing_enabled !== false && event()!.ticketTypes && event()!.ticketTypes!.length > 0) {
                 <div>
                   <h2 class="text-xs font-mono text-white/30 uppercase tracking-widest mb-4">Ticket Types</h2>
                   <div class="space-y-2">
@@ -319,6 +328,11 @@ export class EventViewComponent implements OnInit, OnDestroy {
 
     this.http.get<{ event: PublicEventView }>(`${environment.apiUrl}/public/events/${id}`).subscribe({
       next: (res) => {
+        if (res.event.listed_on_ticketing === false) {
+          this.error.set(true);
+          this.loading.set(false);
+          return;
+        }
         this.event.set(res.event);
         this.loading.set(false);
         this.updateSEOTags(res.event);

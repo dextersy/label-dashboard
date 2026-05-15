@@ -19,6 +19,8 @@ interface PublicEvent {
   brand_name?: string;
   event_type?: string | null;
   tags?: { id: number; name: string }[];
+  ticketing_enabled?: boolean;
+  external_ticket_link?: string | null;
 }
 
 interface PublicBrand {
@@ -202,13 +204,23 @@ interface PublicBrand {
                   <!-- Footer -->
                   <div class="flex items-center justify-between pt-3 border-t border-white/10">
                     <span class="text-sm font-black text-white">{{ event.ticket_price_display }}</span>
-                    @if (event.buy_shortlink && !event.is_closed) {
+                    @if (event.external_ticket_link && !event.is_closed) {
+                      <a [href]="event.external_ticket_link" target="_blank" rel="noopener"
+                        class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-bold uppercase tracking-wider transition-colors">
+                        tickets →
+                      </a>
+                    } @else if (event.buy_shortlink && !event.is_closed && event.ticketing_enabled !== false) {
                       <a [href]="event.buy_shortlink" target="_blank" rel="noopener"
                         class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-bold uppercase tracking-wider transition-colors">
                         tickets →
                       </a>
+                    } @else if (event.is_closed) {
+                      <span class="text-xs text-white/20 font-mono uppercase">closed</span>
                     } @else {
-                      <span class="text-xs text-white/20 font-mono uppercase">{{ event.is_closed ? 'closed' : 'no link' }}</span>
+                      <a [routerLink]="['/events', event.id]"
+                        class="inline-flex items-center gap-1 px-3 py-1 border border-white/20 hover:border-white/50 text-white/50 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors">
+                        view →
+                      </a>
                     }
                   </div>
                 </div>
