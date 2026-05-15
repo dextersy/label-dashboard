@@ -10,7 +10,7 @@ interface EventAttributes {
   description?: string;
   poster_url?: string;
   rsvp_link?: string;
-  ticket_price: number;
+  ticket_price: number | null;
   buy_shortlink?: string;
   close_time?: Date;
   verification_pin: string;
@@ -56,7 +56,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public description?: string;
   public poster_url?: string;
   public rsvp_link?: string;
-  public ticket_price!: number;
+  public ticket_price!: number | null;
   public buy_shortlink?: string;
   public close_time?: Date;
   public verification_pin!: string;
@@ -133,8 +133,8 @@ Event.init(
       allowNull: true,
     },
     ticket_price: {
-      type: DataTypes.DECIMAL(10, 0),
-      allowNull: false,
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
       get() {
         // Force conversion to number when reading from database
         const value = this.getDataValue('ticket_price');

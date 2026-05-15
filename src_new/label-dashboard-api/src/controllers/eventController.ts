@@ -378,34 +378,41 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Parse ticketing_enabled early so we can skip ticket-related validation when disabled
+    const isTicketingEnabled = ticketing_enabled !== undefined
+      ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true)
+      : true;
+
     // Validate basic fields
     if (!title || !date_and_time || !venue) {
-      return res.status(400).json({ 
-        error: 'Title, date/time, and venue are required' 
+      return res.status(400).json({
+        error: 'Title, date/time, and venue are required'
       });
     }
 
-    // Validate ticket types - ensure at least one is provided
-    if (!parsedTicketTypes || !Array.isArray(parsedTicketTypes) || parsedTicketTypes.length === 0) {
-      // Fallback to legacy ticket_price approach if ticketTypes not provided
-      if (!ticket_price && ticket_price !== 0) {
-        return res.status(400).json({ 
-          error: 'At least one ticket type is required' 
-        });
-      }
-    } else {
-      // Validate ticket types structure
-      for (let i = 0; i < parsedTicketTypes.length; i++) {
-        const ticketType = parsedTicketTypes[i];
-        if (!ticketType.name || ticketType.price === undefined) {
-          return res.status(400).json({ 
-            error: `Ticket type ${i + 1}: Name and price are required` 
+    // Only validate ticket types when ticketing is enabled
+    if (isTicketingEnabled) {
+      if (!parsedTicketTypes || !Array.isArray(parsedTicketTypes) || parsedTicketTypes.length === 0) {
+        // Fallback to legacy ticket_price approach if ticketTypes not provided
+        if (!ticket_price && ticket_price !== 0) {
+          return res.status(400).json({
+            error: 'At least one ticket type is required'
           });
         }
-        if (isNaN(parseFloat(ticketType.price)) || parseFloat(ticketType.price) < 0) {
-          return res.status(400).json({ 
-            error: `Ticket type ${i + 1}: Invalid price` 
-          });
+      } else {
+        // Validate ticket types structure
+        for (let i = 0; i < parsedTicketTypes.length; i++) {
+          const ticketType = parsedTicketTypes[i];
+          if (!ticketType.name || ticketType.price === undefined) {
+            return res.status(400).json({
+              error: `Ticket type ${i + 1}: Name and price are required`
+            });
+          }
+          if (isNaN(parseFloat(ticketType.price)) || parseFloat(ticketType.price) < 0) {
+            return res.status(400).json({
+              error: `Ticket type ${i + 1}: Invalid price`
+            });
+          }
         }
       }
     }
@@ -443,7 +450,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       date_and_time: new Date(date_and_time),
       venue,
       description,
-      ticket_price,
+      ticket_price: ticket_price ?? 0,
       close_time: close_time ? new Date(close_time) : null,
       poster_url: finalPosterUrl,
       rsvp_link,
@@ -519,33 +526,36 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       await (event as any).setTags(tagIds);
     }
 
-    // Create ticket types
-    if (parsedTicketTypes && Array.isArray(parsedTicketTypes) && parsedTicketTypes.length > 0) {
-      // Create provided ticket types, including start_date and end_date
-      for (const ticketType of parsedTicketTypes) {
+    // Create ticket types only when ticketing is enabled
+    // When disabled, ticket types are skipped now and can be added when ticketing is later enabled
+    if (isTicketingEnabled) {
+      if (parsedTicketTypes && Array.isArray(parsedTicketTypes) && parsedTicketTypes.length > 0) {
+        // Create provided ticket types, including start_date and end_date
+        for (const ticketType of parsedTicketTypes) {
+          await TicketType.create({
+            event_id: event.id,
+            name: ticketType.name.trim(),
+            price: parseFloat(ticketType.price),
+            max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : 0,
+            start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
+            end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
+            disabled: ticketType.disabled !== undefined ? ticketType.disabled : false,
+            special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null,
+            special_instructions_for_scanner: ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null
+          });
+        }
+      } else {
+        // Create default ticket type using legacy ticket_price and ticket_naming
         await TicketType.create({
           event_id: event.id,
-          name: ticketType.name.trim(),
-          price: parseFloat(ticketType.price),
-          max_tickets: ticketType.max_tickets !== undefined ? ticketType.max_tickets : 0,
-          start_date: ticketType.start_date ? new Date(ticketType.start_date) : null,
-          end_date: ticketType.end_date ? new Date(ticketType.end_date) : null,
-          disabled: ticketType.disabled !== undefined ? ticketType.disabled : false,
-          special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null,
-          special_instructions_for_scanner: ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null
+          name: ticket_naming || 'Regular',
+          price: parseFloat(ticket_price),
+          max_tickets: 0,
+          start_date: null,
+          end_date: null,
+          disabled: false
         });
       }
-    } else {
-      // Create default ticket type using legacy ticket_price and ticket_naming
-      await TicketType.create({
-        event_id: event.id,
-        name: ticket_naming || 'Regular',
-        price: parseFloat(ticket_price),
-        max_tickets: 0,
-        start_date: null,
-        end_date: null,
-        disabled: false
-      });
     }
 
     // Create walk-in types if provided
@@ -799,8 +809,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
 
       // Only allow deletion if not last ticket type and no tickets exist for that type
       for (const id of idsToDelete) {
-        // Check if this is the last ticket type
-        if (existingIds.length <= 1) {
+        // Check if this is the last ticket type (skip when ticketing is disabled)
+        if (newTicketingEnabled && existingIds.length <= 1) {
           return res.status(400).json({ error: 'Cannot delete the last ticket type. Events must have at least one ticket type.' });
         }
         // Check if confirmed/sold tickets exist for this type
