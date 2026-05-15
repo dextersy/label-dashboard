@@ -29,7 +29,7 @@
     </div>
     <div class="new-event-progress">
       <div class="new-event-progress-labels">
-        <span>{{ completedSections() }} of 5 sections complete</span>
+        <span>{{ completedSections() }} of 4 sections complete</span>
         <span>{{ progressPercent() }}%</span>
       </div>
       <div class="new-event-progress-track">
@@ -246,177 +246,185 @@
             </div>
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-ghost" (click)="goToNextTab()">
-                Next: Pricing <app-icon name="arrow-right" class="tw-ml-1" />
+                Next: Ticketing <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
           </div>
 
-          <!-- Buy Page Section -->
-          <div class="form-section" *ngIf="activeSection === 'purchase'">
+          <!-- Ticketing Section (merged Pricing + Buy Page) -->
+          <div class="form-section" *ngIf="activeSection === 'ticketing'">
 
-            <!-- Purchase link -->
-            <p class="ef-section-label">Purchase link</p>
-            <div class="tw-mb-5">
-              <div *ngIf="event && event.buy_shortlink">
-                <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
-                  <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [value]="event.buy_shortlink" readonly>
-                  <div class="tw-flex tw-gap-2 tw-shrink-0">
-                    <button type="button" class="btn-primary tw-flex-1 sm:tw-flex-none"
-                            (click)="copyToClipboard(event.buy_shortlink)" title="Copy to clipboard">
-                      <app-icon name="copy" class="tw-mr-2" />Copy Link
-                    </button>
-                    <button type="button" class="btn-secondary tw-flex-1 sm:tw-flex-none"
-                            (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
-                            title="Download QR Code">
-                      <app-icon name="qr-code" />
-                    </button>
-                  </div>
-                </div>
-                <p class="tw-text-xs tw-text-muted tw-mt-1.5">Share this link for customers to purchase tickets</p>
+            <!-- Do not sell tickets toggle -->
+            <div class="tw-mb-5 tw-pb-5 tw-border-b tw-border-gray-200">
+              <div class="form-check form-switch tw-mb-0">
+                <input class="form-check-input" type="checkbox" role="switch"
+                       id="noTicketSales"
+                       [ngModel]="!eventData.ticketing_enabled"
+                       (ngModelChange)="eventData.ticketing_enabled = !$event"
+                       [disabled]="isEventPast()">
+                <label class="form-check-label" for="noTicketSales">Do not sell tickets for this event</label>
               </div>
-              <div *ngIf="!event || !event.buy_shortlink"
-                   class="tw-px-4 tw-py-3 tw-border tw-rounded-lg tw-text-sm tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
-                <app-icon name="info" class="tw-mr-2" />The ticket purchase link will be generated after publishing the event.
-              </div>
+              <p class="tw-text-xs tw-text-muted tw-mt-1">When enabled, no ticket purchase link will be created. The event will be listing-only.</p>
             </div>
 
-            <!-- Sales settings -->
-            <p class="ef-section-label">Sales settings</p>
-            <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-5">
+            <!-- Ticket types (only when ticketing is enabled) -->
+            <ng-container *ngIf="eventData.ticketing_enabled">
+              <app-ticket-types
+                [(ticketTypes)]="ticketTypes"
+                [isAdmin]="isAdmin"
+                (ticketTypesChange)="onTicketTypesChanged()">
+              </app-ticket-types>
 
-              <div>
-                <label for="maxTickets" class="tw-label">Maximum tickets</label>
-                <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-mb-1">
-                  <div class="form-check form-switch tw-mb-0 tw-shrink-0">
-                    <input class="form-check-input" type="checkbox" role="switch"
-                           [(ngModel)]="isMaxTicketsUnlimited"
-                           (ngModelChange)="eventData.max_tickets = $event ? 0 : eventData.max_tickets"
-                           [disabled]="isEventPast()"
-                           id="unlimitedMaxTickets">
-                    <label class="form-check-label" for="unlimitedMaxTickets">Unlimited</label>
+              <!-- Purchase link -->
+              <p class="ef-section-label tw-mt-5">Purchase link</p>
+              <div class="tw-mb-5">
+                <div *ngIf="event && event.buy_shortlink">
+                  <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
+                    <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [value]="event.buy_shortlink" readonly>
+                    <div class="tw-flex tw-gap-2 tw-shrink-0">
+                      <button type="button" class="btn-primary tw-flex-1 sm:tw-flex-none"
+                              (click)="copyToClipboard(event.buy_shortlink)" title="Copy to clipboard">
+                        <app-icon name="copy" class="tw-mr-2" />Copy Link
+                      </button>
+                      <button type="button" class="btn-secondary tw-flex-1 sm:tw-flex-none"
+                              (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
+                              title="Download QR Code">
+                        <app-icon name="qr-code" />
+                      </button>
+                    </div>
                   </div>
-                  <input *ngIf="!isMaxTicketsUnlimited" type="number" id="maxTickets"
-                         class="tw-grow tw-input tw-min-w-0"
-                         [(ngModel)]="eventData.max_tickets"
-                         [disabled]="isEventPast()" min="1" placeholder="Max tickets">
+                  <p class="tw-text-xs tw-text-muted tw-mt-1.5">Share this link for customers to purchase tickets</p>
                 </div>
-                <p class="tw-text-xs tw-text-muted">Limits across all ticket types. Type-specific limits still apply.</p>
-              </div>
-
-              <div>
-                <label for="closeTime" class="tw-label">Ticket sales close</label>
-                <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-mb-1">
-                  <div class="form-check form-switch tw-mb-0 tw-shrink-0">
-                    <input class="form-check-input" type="checkbox" role="switch"
-                           [(ngModel)]="closeAtEventStart"
-                           (ngModelChange)="onCloseAtEventStartChange($event)"
-                           [disabled]="isEventPast()"
-                           id="closeAtEventStart">
-                    <label class="form-check-label" for="closeAtEventStart">At show start</label>
-                  </div>
-                  <input *ngIf="!closeAtEventStart" type="datetime-local" id="closeTime"
-                         class="tw-grow tw-input tw-min-w-0"
-                         [(ngModel)]="eventData.close_time"
-                         [disabled]="isEventPast()">
-                </div>
-                <div class="tw-flex tw-flex-wrap tw-gap-1.5" *ngIf="!closeAtEventStart">
-                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
-                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
-                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
-                  <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
+                <div *ngIf="!event || !event.buy_shortlink"
+                     class="tw-px-4 tw-py-3 tw-border tw-rounded-lg tw-text-sm tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
+                  <app-icon name="info" class="tw-mr-2" />The ticket purchase link will be generated after publishing the event.
                 </div>
               </div>
 
-              <div>
-                <label class="tw-label">Show tickets remaining</label>
-                <div class="form-check form-switch">
-                  <input type="checkbox" class="form-check-input" id="showTicketsRemaining" role="switch"
-                         [(ngModel)]="eventData.show_tickets_remaining"
-                         [disabled]="isEventPast()">
-                  <label class="form-check-label" for="showTicketsRemaining">Display on purchase page</label>
-                </div>
-                <p class="tw-text-xs tw-text-muted tw-mt-1">Shows customers how many tickets are still available</p>
-              </div>
+              <!-- Sales settings -->
+              <p class="ef-section-label">Sales settings</p>
+              <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-5">
 
-              <div>
-                <label for="countdownDisplay" class="tw-label">Countdown timer</label>
-                <select id="countdownDisplay" class="form-select tw-input" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
-                  <option value="always">Always show</option>
-                  <option value="1_week">1 week before</option>
-                  <option value="3_days">3 days before</option>
-                  <option value="1_day">1 day before</option>
-                  <option value="never">Never show</option>
-                </select>
-                <p class="tw-text-xs tw-text-muted tw-mt-1">When to display a countdown on the ticket purchase page</p>
-              </div>
-
-            </div>
-
-            <!-- Accepted payment methods -->
-            <p class="ef-section-label">Accepted payment methods</p>
-            <div class="tw-mb-5">
-              <div class="payment-methods-grid">
-                <div class="payment-method-card">
-                  <input type="checkbox" id="gcash" [(ngModel)]="eventData.supports_gcash" [disabled]="isEventPast()">
-                  <label for="gcash"><app-icon name="mobile" iconOnly /><span>GCash</span></label>
-                </div>
-                <div class="payment-method-card">
-                  <input type="checkbox" id="qrph" [(ngModel)]="eventData.supports_qrph" [disabled]="isEventPast()">
-                  <label for="qrph"><app-icon name="qr-code" iconOnly /><span>QR Ph</span></label>
-                </div>
-                <div class="payment-method-card">
-                  <input type="checkbox" id="card" [(ngModel)]="eventData.supports_card" [disabled]="isEventPast()">
-                  <label for="card"><app-icon name="credit-card" iconOnly /><span>Credit / Debit Card</span></label>
-                </div>
-                <div class="payment-method-card">
-                  <input type="checkbox" id="ubp" [(ngModel)]="eventData.supports_ubp" [disabled]="isEventPast()">
-                  <label for="ubp"><app-icon name="bank" iconOnly /><span>UnionBank</span></label>
-                </div>
-                <div class="payment-method-card">
-                  <input type="checkbox" id="maya" [(ngModel)]="eventData.supports_maya" [disabled]="isEventPast()">
-                  <label for="maya"><app-icon name="wallet" iconOnly /><span>Maya</span></label>
-                </div>
-                <div class="payment-method-card">
-                  <input type="checkbox" id="grabpay" [(ngModel)]="eventData.supports_grabpay" [disabled]="isEventPast()">
-                  <label for="grabpay"><app-icon name="car" iconOnly /><span>GrabPay</span></label>
-                </div>
-                <div class="payment-method-card">
-                  <input type="checkbox" id="dob" [(ngModel)]="eventData.supports_dob" [disabled]="isEventPast()">
-                  <label for="dob"><app-icon name="bank" iconOnly /><span>Direct Online Banking</span></label>
-                </div>
-              </div>
-              <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))"
-                   class="tw-inline-flex tw-items-start tw-gap-2 tw-text-sm tw-text-violet-700 tw-mt-3">
-                <app-icon name="info" class="tw-mt-0.5 tw-shrink-0" />
                 <div>
-                  <strong class="tw-font-semibold">Minimum transaction requirements</strong> —
-                  <span *ngIf="paymentConfig?.min_card && eventData.supports_card">
-                    Credit card payments are available for transactions of {{ formatMinAmount(paymentConfig!.min_card!) }} and above.
-                  </span>
-                  <span *ngIf="paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob)">
-                    UnionBank &amp; Direct Online Banking are available for transactions of {{ formatMinAmount(paymentConfig!.min_dob!) }} and above.
-                  </span>
+                  <label for="maxTickets" class="tw-label">Maximum tickets</label>
+                  <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-mb-1">
+                    <div class="form-check form-switch tw-mb-0 tw-shrink-0">
+                      <input class="form-check-input" type="checkbox" role="switch"
+                             [(ngModel)]="isMaxTicketsUnlimited"
+                             (ngModelChange)="eventData.max_tickets = $event ? 0 : eventData.max_tickets"
+                             [disabled]="isEventPast()"
+                             id="unlimitedMaxTickets">
+                      <label class="form-check-label" for="unlimitedMaxTickets">Unlimited</label>
+                    </div>
+                    <input *ngIf="!isMaxTicketsUnlimited" type="number" id="maxTickets"
+                           class="tw-grow tw-input tw-min-w-0"
+                           [(ngModel)]="eventData.max_tickets"
+                           [disabled]="isEventPast()" min="1" placeholder="Max tickets">
+                  </div>
+                  <p class="tw-text-xs tw-text-muted">Limits across all ticket types. Type-specific limits still apply.</p>
+                </div>
+
+                <div>
+                  <label for="closeTime" class="tw-label">Ticket sales close</label>
+                  <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2 tw-mb-1">
+                    <div class="form-check form-switch tw-mb-0 tw-shrink-0">
+                      <input class="form-check-input" type="checkbox" role="switch"
+                             [(ngModel)]="closeAtEventStart"
+                             (ngModelChange)="onCloseAtEventStartChange($event)"
+                             [disabled]="isEventPast()"
+                             id="closeAtEventStart">
+                      <label class="form-check-label" for="closeAtEventStart">At show start</label>
+                    </div>
+                    <input *ngIf="!closeAtEventStart" type="datetime-local" id="closeTime"
+                           class="tw-grow tw-input tw-min-w-0"
+                           [(ngModel)]="eventData.close_time"
+                           [disabled]="isEventPast()">
+                  </div>
+                  <div class="tw-flex tw-flex-wrap tw-gap-1.5" *ngIf="!closeAtEventStart">
+                    <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('1h')" [disabled]="isEventPast()">1h before</button>
+                    <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('3h')" [disabled]="isEventPast()">3h before</button>
+                    <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('1d')" [disabled]="isEventPast()">1 day before</button>
+                    <button type="button" class="tw-px-2.5 tw-py-0.5 tw-text-xs tw-rounded-full tw-border tw-border-gray-300 tw-bg-white tw-text-gray-600 hover:tw-bg-gray-50 disabled:tw-opacity-40 disabled:tw-cursor-not-allowed" (click)="setSuggestedCloseTime('3d')" [disabled]="isEventPast()">3 days before</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="tw-label">Show tickets remaining</label>
+                  <div class="form-check form-switch">
+                    <input type="checkbox" class="form-check-input" id="showTicketsRemaining" role="switch"
+                           [(ngModel)]="eventData.show_tickets_remaining"
+                           [disabled]="isEventPast()">
+                    <label class="form-check-label" for="showTicketsRemaining">Display on purchase page</label>
+                  </div>
+                  <p class="tw-text-xs tw-text-muted tw-mt-1">Shows customers how many tickets are still available</p>
+                </div>
+
+                <div>
+                  <label for="countdownDisplay" class="tw-label">Countdown timer</label>
+                  <select id="countdownDisplay" class="form-select tw-input" [(ngModel)]="eventData.countdown_display" [disabled]="isEventPast()">
+                    <option value="always">Always show</option>
+                    <option value="1_week">1 week before</option>
+                    <option value="3_days">3 days before</option>
+                    <option value="1_day">1 day before</option>
+                    <option value="never">Never show</option>
+                  </select>
+                  <p class="tw-text-xs tw-text-muted tw-mt-1">When to display a countdown on the ticket purchase page</p>
+                </div>
+
+              </div>
+
+              <!-- Accepted payment methods -->
+              <p class="ef-section-label">Accepted payment methods</p>
+              <div class="tw-mb-5">
+                <div class="payment-methods-grid">
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="gcash" [(ngModel)]="eventData.supports_gcash" [disabled]="isEventPast()">
+                    <label for="gcash"><app-icon name="mobile" iconOnly /><span>GCash</span></label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="qrph" [(ngModel)]="eventData.supports_qrph" [disabled]="isEventPast()">
+                    <label for="qrph"><app-icon name="qr-code" iconOnly /><span>QR Ph</span></label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="card" [(ngModel)]="eventData.supports_card" [disabled]="isEventPast()">
+                    <label for="card"><app-icon name="credit-card" iconOnly /><span>Credit / Debit Card</span></label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="ubp" [(ngModel)]="eventData.supports_ubp" [disabled]="isEventPast()">
+                    <label for="ubp"><app-icon name="bank" iconOnly /><span>UnionBank</span></label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="maya" [(ngModel)]="eventData.supports_maya" [disabled]="isEventPast()">
+                    <label for="maya"><app-icon name="wallet" iconOnly /><span>Maya</span></label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="grabpay" [(ngModel)]="eventData.supports_grabpay" [disabled]="isEventPast()">
+                    <label for="grabpay"><app-icon name="car" iconOnly /><span>GrabPay</span></label>
+                  </div>
+                  <div class="payment-method-card">
+                    <input type="checkbox" id="dob" [(ngModel)]="eventData.supports_dob" [disabled]="isEventPast()">
+                    <label for="dob"><app-icon name="bank" iconOnly /><span>Direct Online Banking</span></label>
+                  </div>
+                </div>
+                <div *ngIf="(paymentConfig?.min_card && eventData.supports_card) || (paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob))"
+                     class="tw-inline-flex tw-items-start tw-gap-2 tw-text-sm tw-text-violet-700 tw-mt-3">
+                  <app-icon name="info" class="tw-mt-0.5 tw-shrink-0" />
+                  <div>
+                    <strong class="tw-font-semibold">Minimum transaction requirements</strong> —
+                    <span *ngIf="paymentConfig?.min_card && eventData.supports_card">
+                      Credit card payments are available for transactions of {{ formatMinAmount(paymentConfig!.min_card!) }} and above.
+                    </span>
+                    <span *ngIf="paymentConfig?.min_dob && (eventData.supports_ubp || eventData.supports_dob)">
+                      UnionBank &amp; Direct Online Banking are available for transactions of {{ formatMinAmount(paymentConfig!.min_dob!) }} and above.
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ng-container>
 
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-ghost" (click)="goToNextTab()">
                 Next: Walk-in <app-icon name="arrow-right" class="tw-ml-1" />
-              </button>
-            </div>
-          </div>
-
-          <!-- Pricing Section -->
-          <div class="form-section" *ngIf="activeSection === 'pricing'">
-            <app-ticket-types
-              [(ticketTypes)]="ticketTypes"
-              [isAdmin]="isAdmin"
-              (ticketTypesChange)="onTicketTypesChanged()">
-            </app-ticket-types>
-            <div class="tw-mt-4 tw-text-right">
-              <button type="button" class="btn-ghost" (click)="goToNextTab()">
-                Next: Buy Page <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
           </div>
@@ -505,7 +513,7 @@
     type="button"
     class="btn-secondary"
     (click)="previewBuyPage()"
-    *ngIf="!isNewEvent && eventId && isEventDraft()">
+    *ngIf="!isNewEvent && eventId && isEventDraft() && eventData.ticketing_enabled">
     <app-icon name="eye" /> Preview Buy Page
   </button>
 

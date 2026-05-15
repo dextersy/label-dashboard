@@ -1,6 +1,6 @@
 
 <!-- Section header -->
-<div class="tw-flex tw-items-center tw-justify-between tw-border-b tw-border-gray-200 tw-pb-2 tw-mb-3">
+<div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
   <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-mb-0">Ticket types</p>
   <div *ngIf="isAdmin && editingIndex === null && !showNewForm" class="tw-flex tw-gap-2">
     <button type="button" class="btn-secondary btn-sm" (click)="startAddNew()">
@@ -13,12 +13,13 @@
 </div>
 
 <!-- Ticket list -->
-<div class="tw-divide-y tw-divide-gray-100 tw-mb-4">
-  <div *ngFor="let ticketType of ticketTypes; let i = index">
+<div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-3 lg:tw-grid-cols-4 tw-gap-2 tw-mb-4">
+  <div *ngFor="let ticketType of ticketTypes; let i = index"
+       [class.tw-col-span-full]="editingIndex === i">
 
     <!-- Editing state: card form -->
     <div *ngIf="editingIndex === i"
-         class="tw-py-3 tw-bg-white tw-rounded-lg tw-border tw-border-gray-200 tw-ring-2 tw-my-2 tw-p-4"
+         class="tw-bg-white tw-rounded-lg tw-border tw-border-gray-200 tw-ring-2 tw-p-4"
          [style.--tw-ring-color]="'var(--brand-color, #3b82f6)'">
       <div class="tw-mb-3">
         <label class="tw-label">Ticket Name</label>
@@ -96,54 +97,54 @@
       </div>
     </div>
 
-    <!-- Static row -->
+    <!-- Static card (grid) -->
     <div *ngIf="editingIndex !== i"
-         class="tw-py-3 tw-flex tw-items-center tw-justify-between tw-gap-3"
+         class="tw-flex tw-flex-col tw-h-full tw-bg-white tw-border tw-border-gray-200 tw-rounded-lg tw-overflow-hidden"
          [class.tw-opacity-40]="ticketType.disabled">
-      <!-- Left: name + badge + meta -->
-      <div class="tw-min-w-0 tw-flex-1">
-        <div class="tw-flex tw-items-center tw-gap-2 tw-mb-0.5 tw-flex-wrap">
-          <span class="tw-font-semibold tw-text-base tw-text-gray-800 tw-truncate">{{ ticketType.name }}</span>
-          <span class="badge bg-primary tw-text-xs" *ngIf="ticketType.isFree">FREE</span>
+      <!-- Main content -->
+      <div class="tw-flex-1 tw-px-3 tw-pt-3 tw-pb-2 tw-text-center">
+        <div class="tw-text-base tw-font-bold tw-text-gray-900 tw-leading-snug tw-mb-2">{{ ticketType.name }}</div>
+        <div class="tw-mb-1">
           <span class="badge bg-success tw-text-xs" *ngIf="!ticketType.isFree">₱{{ ticketType.price | number:'1.2-2' }}</span>
-          <span class="badge bg-secondary tw-text-xs" *ngIf="ticketType.disabled">Hidden</span>
+          <span class="badge bg-primary tw-text-xs" *ngIf="ticketType.isFree">Free</span>
+          <span class="badge bg-secondary tw-text-xs tw-ml-1" *ngIf="ticketType.disabled">Hidden</span>
         </div>
-        <div class="tw-text-xs tw-text-gray-400">
-          <span *ngIf="ticketType.isUnlimited">Unlimited</span>
+        <div class="tw-text-xs tw-text-gray-400 tw-leading-snug">
+          <span *ngIf="ticketType.isUnlimited">Unlimited slots</span>
           <span *ngIf="!ticketType.isUnlimited">{{ ticketType.max_tickets }} max</span>
-          ·
+        </div>
+        <div class="tw-text-xs tw-text-gray-400 tw-mt-0.5" *ngIf="ticketType.start_date || ticketType.end_date">
           <span *ngIf="ticketType.start_date && ticketType.end_date">{{ ticketType.start_date | date:'shortDate' }} – {{ ticketType.end_date | date:'shortDate' }}</span>
           <span *ngIf="ticketType.start_date && !ticketType.end_date">From {{ ticketType.start_date | date:'shortDate' }}</span>
           <span *ngIf="!ticketType.start_date && ticketType.end_date">Until {{ ticketType.end_date | date:'shortDate' }}</span>
-          <span *ngIf="!ticketType.start_date && !ticketType.end_date">Always available</span>
         </div>
       </div>
-      <!-- Right: actions -->
-      <div class="tw-flex tw-items-center tw-gap-1.5 tw-shrink-0" *ngIf="isAdmin">
+      <!-- Actions -->
+      <div class="tw-flex tw-items-center tw-justify-center tw-gap-0.5 tw-h-9 tw-border-t tw-border-gray-100 tw-bg-gray-50" *ngIf="isAdmin">
         <ng-container *ngIf="!ticketType.disabled">
           <button type="button" class="btn-secondary btn-sm"
                   [disabled]="editingIndex !== null || showNewForm"
                   (click)="startEdit(i)" title="Edit ticket type">
-            <app-icon name="edit" /> Edit
+            <app-icon name="edit" iconOnly />
           </button>
           <button type="button" class="btn-secondary btn-sm"
                   [disabled]="editingIndex !== null || showNewForm"
                   (click)="toggleTicketTypeDisabled(ticketType, i)"
                   title="Disable ticket type">
-            <app-icon name="eye-off" /> Disable
+            <app-icon name="eye-off" iconOnly />
           </button>
           <button type="button"
-                  class="tw-w-7 tw-h-7 tw-flex tw-items-center tw-justify-center tw-rounded tw-bg-red-50 tw-text-red-500 tw-border-0 tw-cursor-pointer hover:tw-bg-red-100 tw-transition-colors disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                  class="tw-w-7 tw-h-7 tw-flex tw-items-center tw-justify-center tw-rounded tw-bg-transparent tw-text-red-400 tw-border-0 tw-cursor-pointer hover:tw-bg-red-50 tw-transition-colors disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
                   *ngIf="!ticketType.sold_tickets && !ticketType.pending_tickets"
                   [disabled]="editingIndex !== null || showNewForm"
                   (click)="confirmDelete(ticketType, i)" title="Delete ticket type">
-            <app-icon name="trash" class="tw-text-xs" iconOnly />
+            <app-icon name="trash" iconOnly />
           </button>
         </ng-container>
         <button *ngIf="ticketType.disabled" type="button" class="btn-secondary btn-sm"
                 [disabled]="editingIndex !== null || showNewForm"
                 (click)="toggleTicketTypeDisabled(ticketType, i)">
-          <app-icon name="eye" class="tw-mr-1" />Enable
+          <app-icon name="eye" iconOnly />
         </button>
       </div>
     </div>

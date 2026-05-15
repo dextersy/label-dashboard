@@ -47,7 +47,7 @@ export function createDefaultTicketType(): TicketType {
   };
 }
 
-export type EventFormSection = 'details' | 'pricing' | 'purchase' | 'scanner' | 'walk-in' | 'listing';
+export type EventFormSection = 'details' | 'ticketing' | 'scanner' | 'walk-in' | 'listing';
 
 @Component({
   selector: 'app-event-form',
@@ -101,6 +101,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     venue_phone: '',
     venue_website: '',
     venue_maps_url: '',
+    // Ticketing
+    ticketing_enabled: true,
     // Ticket purchase settings
     max_tickets: 0,
     close_time: '',
@@ -314,6 +316,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       verification_pin: '',
       ticket_naming: 'ticket',
       status: 'draft',
+      // Ticketing
+      ticketing_enabled: true,
       // Walk-in settings
       walk_in_enabled: false,
       walk_in_supports_cash: true,
@@ -329,8 +333,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   get navTabs(): InPageNavTab[] {
     const tabs: InPageNavTab[] = [
       { id: 'details', label: 'Details', icon: 'info' },
-      { id: 'pricing', label: 'Pricing', icon: 'ticket' },
-      { id: 'purchase', label: 'Buy page', icon: 'cart' },
+      { id: 'ticketing', label: 'Ticketing', icon: 'ticket' },
       { id: 'walk-in', label: 'Walk-in', icon: 'walking' },
       { id: 'listing', label: 'Listing', icon: 'globe' }
     ];
@@ -360,7 +363,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   goToNextTab(): void {
-    const tabOrder: EventFormSection[] = ['details', 'pricing', 'purchase', 'walk-in', 'listing', 'scanner'];
+    const tabOrder: EventFormSection[] = ['details', 'ticketing', 'walk-in', 'listing', 'scanner'];
     const currentIndex = tabOrder.indexOf(this.activeSection);
 
     if (currentIndex >= 0 && currentIndex < tabOrder.length - 1) {
@@ -766,21 +769,22 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     if (this.eventData.title?.trim()) n++;
     if (this.eventData.date_and_time) n++;
     if (this.eventData.venue?.trim()) n++;
-    if (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price))) n++;
-    // Walk-in and listing sections are always considered complete (optional settings)
-    n++;
+    if (!this.eventData.ticketing_enabled || (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price)))) n++;
     return n;
   }
 
   progressPercent(): number {
-    return Math.round((this.completedSections() / 5) * 100);
+    return Math.round((this.completedSections() / 4) * 100);
   }
 
   isNewEventValid(): boolean {
-    return !!(
+    const baseValid = !!(
       this.eventData.title?.trim() &&
       this.eventData.date_and_time &&
-      this.eventData.venue?.trim() &&
+      this.eventData.venue?.trim()
+    );
+    if (!this.eventData.ticketing_enabled) return baseValid;
+    return baseValid && (
       this.ticketTypes.length > 0 &&
       this.ticketTypes.every(t => t.name?.trim() && t.price !== null && t.price !== undefined && !isNaN(t.price) && t.price >= 0)
     );
@@ -870,31 +874,36 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       return false;
     }
 
+    // Skip ticket type and payment validation if ticketing is disabled
+    if (!this.eventData.ticketing_enabled) {
+      return true;
+    }
+
     // Validate any ticket types that exist, regardless of draft/publish state
     for (let i = 0; i < this.ticketTypes.length; i++) {
       const ticketType = this.ticketTypes[i];
       const idx = i;
       if (!ticketType.name || !ticketType.name.trim()) {
-        this.notificationService.showError('Every ticket type needs a name — check the Pricing tab');
-        this.setActiveSection('pricing');
+        this.notificationService.showError('Every ticket type needs a name — check the Ticketing tab');
+        this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'name'));
         return false;
       }
       if (typeof ticketType.price !== 'number' || !isFinite(ticketType.price)) {
-        this.notificationService.showError(`"${ticketType.name || 'Unnamed ticket'}" is missing a price — check the Pricing tab`);
-        this.setActiveSection('pricing');
+        this.notificationService.showError(`"${ticketType.name || 'Unnamed ticket'}" is missing a price — check the Ticketing tab`);
+        this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'price'));
         return false;
       }
       if (ticketType.price < 0) {
-        this.notificationService.showError(`"${ticketType.name}" has a negative price — check the Pricing tab`);
-        this.setActiveSection('pricing');
+        this.notificationService.showError(`"${ticketType.name}" has a negative price — check the Ticketing tab`);
+        this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'price'));
         return false;
       }
       if (ticketType.max_tickets < 0) {
-        this.notificationService.showError(`"${ticketType.name}" has an invalid ticket limit — check the Pricing tab`);
-        this.setActiveSection('pricing');
+        this.notificationService.showError(`"${ticketType.name}" has an invalid ticket limit — check the Ticketing tab`);
+        this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusTicketField(idx, 'name'));
         return false;
       }
@@ -903,7 +912,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     if (isPublishing) {
       if (this.ticketTypes.length === 0) {
         this.notificationService.showError('Add at least one ticket type in the Pricing tab before publishing');
-        this.setActiveSection('pricing');
+        this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusAddButton());
         return false;
       }
@@ -918,8 +927,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
                                !!this.eventData.supports_grabpay;
 
       if (!hasPaymentMethod) {
-        this.notificationService.showError('Enable at least one payment method in the Purchase tab before publishing');
-        this.setActiveSection('purchase');
+        this.notificationService.showError('Enable at least one payment method in the Ticketing tab before publishing');
+        this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => (document.getElementById('gcash') as HTMLElement)?.focus());
         return false;
       }
@@ -960,6 +969,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       verification_pin: this.eventData.verification_pin || '',
       ticket_naming: this.eventData.ticket_naming || 'ticket',
       ticketTypes: ticketTypesForApi,
+      ticketing_enabled: this.eventData.ticketing_enabled !== undefined ? this.eventData.ticketing_enabled : true,
       // Walk-in settings
       walk_in_enabled: this.eventData.walk_in_enabled,
       walk_in_supports_cash: this.eventData.walk_in_supports_cash,
@@ -1042,6 +1052,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       verification_pin: this.eventData.verification_pin || '',
       ticket_naming: this.eventData.ticket_naming || 'ticket',
       ticketTypes: ticketTypesForApi,
+      ticketing_enabled: this.eventData.ticketing_enabled !== undefined ? this.eventData.ticketing_enabled : true,
       // Walk-in settings
       walk_in_enabled: this.eventData.walk_in_enabled,
       walk_in_supports_cash: this.eventData.walk_in_supports_cash,
@@ -1098,6 +1109,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       verification_pin: event.verification_pin || '',
       ticket_naming: event.ticket_naming || 'ticket',
       status: (event as any).status || 'draft',
+      // Ticketing
+      ticketing_enabled: event.ticketing_enabled !== undefined ? event.ticketing_enabled : true,
       // Walk-in settings
       walk_in_enabled: !!event.walk_in_enabled,
       walk_in_supports_cash: !!event.walk_in_supports_cash,

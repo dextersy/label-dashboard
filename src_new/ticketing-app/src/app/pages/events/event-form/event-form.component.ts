@@ -597,7 +597,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue: [''],
       description: [''],
       event_type: [''],
-      ticketing_enabled: [true],
+      ticketing_enabled: [false],
       external_ticket_link: [''],
       supports_gcash: [true], supports_qrph: [true], supports_card: [true],
       supports_ubp: [true], supports_dob: [true], supports_maya: [true], supports_grabpay: [true],

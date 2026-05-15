@@ -159,7 +159,12 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       }
     }
 
-    // Event is closed if time has passed OR no ticket types are available
+    // Return 404 if ticketing is disabled for this event
+    if (!event.ticketing_enabled) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Event is closed if time has passed or no ticket types are available
     const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
 
     // Calculate remaining tickets if max_tickets is set

@@ -493,10 +493,10 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
           finalVerificationLink = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
         }
         
-        if (!buy_shortlink || buy_shortlink.trim() === '') {
+        if (event.ticketing_enabled && (!buy_shortlink || buy_shortlink.trim() === '')) {
           finalBuyLink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
         }
-        
+
         // Update event with generated shortlinks
         await event.update({
           verification_link: finalVerificationLink || '',
@@ -707,19 +707,27 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     // Handle URL generation if new URLs are being set
     let updatedVerificationLink = verification_link || event.verification_link;
     let updatedBuyLink = buy_shortlink || event.buy_shortlink;
-    
+
+    // Resolve ticketing_enabled after update
+    const newTicketingEnabled = ticketing_enabled !== undefined
+      ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true)
+      : event.ticketing_enabled;
+
     // Only regenerate URLs for published events
     const isPublished = (status !== undefined ? status : event.status) === 'published';
     const needsUrlRegeneration = isPublished && (slug || (title && title !== event.title)) && (!verification_link || !buy_shortlink);
+    // Also generate buy link if ticketing is being turned on for a published event with no buy link
+    const ticketingTurnedOn = isPublished && newTicketingEnabled && !event.ticketing_enabled && !event.buy_shortlink;
 
-    if (needsUrlRegeneration) {
+    if (needsUrlRegeneration || ticketingTurnedOn) {
       try {
         const newSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title || event.title);
-        
+
         if (!verification_link) {
           updatedVerificationLink = await generateVerificationLink(event.id, newSlug, req.user.brand_id);
         }
-        if (!buy_shortlink) {
+        // Only generate buy link if ticketing is enabled and there is no existing/provided buy link
+        if (newTicketingEnabled && !buy_shortlink && !event.buy_shortlink) {
           updatedBuyLink = await generateBuyLink(event.id, newSlug, req.user.brand_id);
         }
       } catch (error) {
@@ -3002,7 +3010,7 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
         console.log('Generated verification link:', updatedFields.verification_link);
       }
       
-      if (!event.buy_shortlink) {
+      if (event.ticketing_enabled && !event.buy_shortlink) {
         console.log('Generating buy link...');
         updatedFields.buy_shortlink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
         console.log('Generated buy link:', updatedFields.buy_shortlink);
