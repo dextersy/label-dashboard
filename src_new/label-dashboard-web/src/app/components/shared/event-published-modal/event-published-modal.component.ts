@@ -18,6 +18,7 @@ export class EventPublishedModalComponent implements OnInit, OnDestroy {
   isVisible = false;
   data: EventPublishedModalData | null = null;
   copySuccess = false;
+  copyListingSuccess = false;
 
   constructor(private eventPublishedService: EventPublishedService) {}
 
@@ -27,7 +28,8 @@ export class EventPublishedModalComponent implements OnInit, OnDestroy {
       .subscribe((state: EventPublishedModalState) => {
         this.isVisible = state.isVisible;
         this.data = state.data;
-        this.copySuccess = false; // Reset copy success when modal opens
+        this.copySuccess = false;
+        this.copyListingSuccess = false;
       });
   }
 
@@ -50,6 +52,19 @@ export class EventPublishedModalComponent implements OnInit, OnDestroy {
       }, 2000);
     }).catch(err => {
       console.error('Failed to copy link:', err);
+    });
+  }
+
+  copyListingUrl() {
+    if (!this.data?.listingUrl) return;
+
+    navigator.clipboard.writeText(this.data.listingUrl).then(() => {
+      this.copyListingSuccess = true;
+      setTimeout(() => {
+        this.copyListingSuccess = false;
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy listing URL:', err);
     });
   }
 

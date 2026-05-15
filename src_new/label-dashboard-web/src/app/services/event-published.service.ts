@@ -4,6 +4,9 @@ import { BehaviorSubject } from 'rxjs';
 export interface EventPublishedModalData {
   eventTitle: string;
   buyLink: string;
+  listingUrl: string;
+  ticketingEnabled: boolean;
+  listingEnabled: boolean;
 }
 
 export interface EventPublishedModalState {

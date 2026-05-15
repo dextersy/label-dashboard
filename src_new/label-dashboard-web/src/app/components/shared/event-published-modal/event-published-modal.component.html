@@ -6,66 +6,189 @@
         <div class="celebration-icon tw-mb-1">
           <span role="img" aria-label="Celebration">🎊</span>
         </div>
-        
-        <h2 class="tw-mb-2 tw-font-bold">Your event is now live!</h2>
-        
-        <p class="tw-mb-4">
-          Copy the link below and share it to start selling tickets.
-        </p>
 
-        <!-- Link Copy Box -->
-        <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2 tw-mb-2">
-          <input
-            type="text"
-            class="tw-input tw-flex-1 tw-min-w-0"
-            [value]="data?.buyLink || ''"
-            readonly
-            aria-label="Event ticket purchase link"
-            #linkInput>
-          <div class="tw-flex tw-gap-2 tw-shrink-0">
+        <h4 class="tw-mb-1 tw-font-bold">Your event is now live!</h4>
+
+        <!-- Scenario: both ticketing and listing disabled -->
+        <ng-container *ngIf="!data?.ticketingEnabled && !data?.listingEnabled">
+          <div class="alert alert-warning tw-mt-3 tw-mb-4 tw-text-sm tw-text-left">
+            <strong>No links available.</strong> Ticket sales and event listing are both disabled. Enable at least one in the event settings to share your event.
+          </div>
+          <button type="button" class="btn-primary" (click)="close()">Got it</button>
+        </ng-container>
+
+        <!-- Scenario: ticketing enabled, listing disabled -->
+        <ng-container *ngIf="data?.ticketingEnabled && !data?.listingEnabled">
+          <p class="tw-text-sm tw-mb-1">
+            Copy the link below and share it to start selling tickets.
+          </p>
+          <p class="tw-text-xs tw-text-muted tw-mb-3">
+            This event is not listed publicly — only people with the link can buy tickets.
+          </p>
+
+          <!-- Buy link row -->
+          <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Ticket link</p>
+          <div class="tw-flex tw-gap-2 tw-mb-1" style="align-items: stretch;">
+            <input
+              type="text"
+              class="tw-input tw-flex-1 tw-min-w-0"
+              style="height: 2.5rem;"
+              [value]="data?.buyLink || ''"
+              readonly
+              aria-label="Event ticket purchase link"
+              #linkInput>
+            <div class="tw-flex tw-gap-1 tw-shrink-0">
+              <button
+                class="btn-primary"
+                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+                type="button"
+                (click)="copyLink()">
+                <app-icon [name]="copySuccess ? 'check' : 'copy'" iconOnly />
+              </button>
+              <button
+                class="btn-secondary"
+                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+                type="button"
+                (click)="downloadBuyLinkQR()"
+                title="Download QR Code">
+                <app-icon name="qr-code" iconOnly />
+              </button>
+            </div>
+          </div>
+          <p class="tw-text-xs tw-mb-3 tw-text-left tw-text-muted">
+            Link can also be found in the "Ticketing" tab
+          </p>
+
+          <!-- Footer row: share + close -->
+          <hr class="tw-my-3">
+          <div class="tw-flex tw-items-center tw-justify-center tw-gap-2 tw-pb-2">
+            <span class="tw-text-sm tw-text-muted tw-mr-1">Share to</span>
             <button
-              class="btn-primary tw-flex-1 sm:tw-flex-none"
-              type="button"
-              (click)="copyLink()">
-              <app-icon [name]="copySuccess ? 'check' : 'copy'" iconOnly />
-              {{ copySuccess ? 'Copied!' : 'Copy' }}
+              class="btn-secondary"
+              style="background-color: #1877f2; border-color: #1877f2; color: white; height: 2rem; width: 7rem; padding: 0;"
+              (click)="shareOnFacebook()">
+              <app-icon name="facebook" class="tw-mr-1" />Facebook
             </button>
             <button
-              class="btn-secondary tw-flex-1 sm:tw-flex-none"
-              type="button"
-              (click)="downloadBuyLinkQR()"
-              title="Download QR Code">
-              <app-icon name="qr-code" iconOnly />
+              class="btn-secondary"
+              style="background-color: #212529; border-color: #212529; color: white; height: 2rem; width: 7rem; padding: 0;"
+              (click)="shareOnTwitter()">
+              <app-icon name="twitter" class="tw-mr-1" />X
+            </button>
+            <button type="button" class="btn-ghost tw-text-muted" style="height: 2rem; width: 7rem; padding: 0;" (click)="close()">
+              Close
             </button>
           </div>
-        </div>
-        
-        <p class="small tw-mb-4 tw-text-muted tw-text-sm">
-          (Link can also be found in the "Buy Page" tab)
-        </p>
+        </ng-container>
 
-        <!-- Share Buttons -->
-        <div class="tw-flex tw-gap-2 tw-justify-center tw-mb-4">
-          <button 
-            class="btn-lg"
-            style="background-color: #1877f2; border-color: #1877f2; color: white;"
-            (click)="shareOnFacebook()">
-            <app-icon name="facebook" class="tw-mr-2" />Share to Facebook
-          </button>
-          <button 
-            class="btn-lg"
-            style="background-color: #1da1f2; border-color: #1da1f2; color: white;"
-            (click)="shareOnTwitter()">
-            <app-icon name="twitter" class="tw-mr-2" />Share to X
-          </button>
-        </div>
+        <!-- Scenario: ticketing enabled, listing enabled -->
+        <ng-container *ngIf="data?.ticketingEnabled && data?.listingEnabled">
+          <p class="tw-text-sm tw-mb-3">
+            Copy the link below and share it to start selling tickets.
+          </p>
 
-        <!-- Close Button -->
-        <div class="tw-text-right tw-pb-3 tw-pr-3">
-          <button type="button" class="btn-ghost tw-text-muted" (click)="close()">
-            <app-icon name="x" class="tw-mr-1" />Close
-          </button>
-        </div>
+          <!-- Buy link row -->
+          <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Ticket link</p>
+          <div class="tw-flex tw-gap-2 tw-mb-1" style="align-items: stretch;">
+            <input
+              type="text"
+              class="tw-input tw-flex-1 tw-min-w-0"
+              style="height: 2.5rem;"
+              [value]="data?.buyLink || ''"
+              readonly
+              aria-label="Event ticket purchase link"
+              #linkInput>
+            <div class="tw-flex tw-gap-1 tw-shrink-0">
+              <button
+                class="btn-primary"
+                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+                type="button"
+                (click)="copyLink()">
+                <app-icon [name]="copySuccess ? 'check' : 'copy'" iconOnly />
+              </button>
+              <button
+                class="btn-secondary"
+                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+                type="button"
+                (click)="downloadBuyLinkQR()"
+                title="Download QR Code">
+                <app-icon name="qr-code" iconOnly />
+              </button>
+            </div>
+          </div>
+          <p class="tw-text-xs tw-mb-3 tw-text-left tw-text-muted">
+            Link can also be found in the "Ticketing" tab
+          </p>
+
+          <!-- Listing URL row -->
+          <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Event listing</p>
+          <div class="tw-flex tw-gap-2 tw-mb-3" style="align-items: stretch;">
+            <input
+              type="text"
+              class="tw-input tw-flex-1 tw-min-w-0"
+              style="height: 2.5rem;"
+              [value]="data?.listingUrl || ''"
+              readonly
+              aria-label="Event listing URL">
+            <button
+              class="btn-secondary"
+              style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+              type="button"
+              (click)="copyListingUrl()">
+              <app-icon [name]="copyListingSuccess ? 'check' : 'copy'" iconOnly />
+            </button>
+          </div>
+
+          <!-- Footer row: share + close -->
+          <hr class="tw-my-3">
+          <div class="tw-flex tw-items-center tw-justify-center tw-gap-2 tw-pb-2">
+            <span class="tw-text-sm tw-text-muted tw-mr-1">Share to</span>
+            <button
+              class="btn-secondary"
+              style="background-color: #1877f2; border-color: #1877f2; color: white; height: 2rem; width: 7rem; padding: 0;"
+              (click)="shareOnFacebook()">
+              <app-icon name="facebook" class="tw-mr-1" />Facebook
+            </button>
+            <button
+              class="btn-secondary"
+              style="background-color: #212529; border-color: #212529; color: white; height: 2rem; width: 7rem; padding: 0;"
+              (click)="shareOnTwitter()">
+              <app-icon name="twitter" class="tw-mr-1" />X
+            </button>
+            <button type="button" class="btn-ghost tw-text-muted" style="height: 2rem; width: 7rem; padding: 0;" (click)="close()">
+              Close
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- Scenario: ticketing disabled, listing enabled -->
+        <ng-container *ngIf="!data?.ticketingEnabled && data?.listingEnabled">
+          <p class="tw-text-sm tw-mb-3">
+            Your event is now visible on listings.<br>
+            Ticket sales are disabled — set up the "Ticketing" tab to sell tickets.
+          </p>
+
+          <!-- Listing URL row -->
+          <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Event listing</p>
+          <div class="tw-flex tw-gap-2 tw-mb-4" style="align-items: stretch;">
+            <input
+              type="text"
+              class="tw-input tw-flex-1 tw-min-w-0"
+              style="height: 2.5rem;"
+              [value]="data?.listingUrl || ''"
+              readonly
+              aria-label="Event listing URL">
+            <button
+              class="btn-secondary"
+              style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+              type="button"
+              (click)="copyListingUrl()">
+              <app-icon [name]="copyListingSuccess ? 'check' : 'copy'" iconOnly />
+            </button>
+          </div>
+
+          <button type="button" class="btn-primary" (click)="close()">Got it</button>
+        </ng-container>
       </div>
     </div>
   </div>

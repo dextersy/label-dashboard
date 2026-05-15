@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -499,10 +500,16 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           this.eventService.setSelectedEvent(event);
           
           // Show the event published modal
-          if (event.buy_shortlink) {
+          if (event.buy_shortlink || !event.ticketing_enabled) {
+            const listingEnabled = this.isNewEvent
+              ? (capturedListingStatePublish?.listed_on_ticketing ?? true)
+              : (this.listingTabRef ? this.listingTabRef.listedOnTicketing : event.listed_on_ticketing !== false);
             this.eventPublishedService.show({
               eventTitle: event.title,
-              buyLink: event.buy_shortlink
+              buyLink: event.buy_shortlink || '',
+              listingUrl: `${environment.ticketingAppUrl}/events/${event.id}`,
+              ticketingEnabled: !!event.ticketing_enabled,
+              listingEnabled: !!listingEnabled
             });
           }
           
@@ -521,6 +528,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
               error: () => { this.router.navigate(['/campaigns/events/details']); }
             }));
           } else {
+            this.listingTabRef?.save(true);
             this.populateFormFromEvent(event);
           }
         },
@@ -911,7 +919,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
     if (isPublishing) {
       if (this.ticketTypes.length === 0) {
-        this.notificationService.showError('Add at least one ticket type in the Pricing tab before publishing');
+        this.notificationService.showError('Add at least one ticket type in the Ticketing tab before publishing');
         this.setActiveSection('ticketing');
         this.focusFieldAfterSwitch(() => this.ticketTypesRef?.focusAddButton());
         return false;
