@@ -34,6 +34,7 @@ export interface PublicEvent {
   venue_website?: string;
   venue_maps_url?: string;
   walk_in_enabled?: boolean;
+  ticketing_enabled?: boolean;
   walkInTypes?: Array<{
     name: string;
     price: number;

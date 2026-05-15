@@ -277,6 +277,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     // In preview mode, always show the form
     if (this.isPreview) return true;
 
+    // Ticketing is disabled for this event
+    if (this.event.ticketing_enabled === false) return false;
+
     // Event is explicitly closed
     if (this.event.is_closed) return false;
 

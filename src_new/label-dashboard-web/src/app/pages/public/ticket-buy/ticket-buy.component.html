@@ -335,8 +335,14 @@
           <div class="closed-icon-circle">
             <app-icon name="ticket" class="tw-text-gray-400" style="font-size: 18px;" />
           </div>
-          <h2 class="closed-title">Online Sales Ended</h2>
-          <p class="closed-subtitle">Online ticket sales for this event have closed. Walk-in tickets are still available at the venue.</p>
+          <ng-container *ngIf="event && event.ticketing_enabled === false; else salesEndedHeader">
+            <h2 class="closed-title">Listing Only</h2>
+            <p class="closed-subtitle">Online ticket sales are not available for this event.</p>
+          </ng-container>
+          <ng-template #salesEndedHeader>
+            <h2 class="closed-title">Online Sales Ended</h2>
+            <p class="closed-subtitle">Online ticket sales for this event have closed. Walk-in tickets are still available at the venue.</p>
+          </ng-template>
         </div>
 
         <!-- Card 1: Walk-in ticket tiers -->
