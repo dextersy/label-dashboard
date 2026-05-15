@@ -159,11 +159,6 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       }
     }
 
-    // Return 404 if ticketing is disabled for this event
-    if (!event.ticketing_enabled) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
     // Event is closed if time has passed or no ticket types are available
     const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
 
@@ -229,6 +224,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         venue_maps_url: event.venue_maps_url,
         tickets_sold: totalSold,
         walk_in_enabled: event.walk_in_enabled || false,
+        ticketing_enabled: event.ticketing_enabled !== false,
+        listed_on_ticketing: event.listed_on_ticketing !== false,
         walkInTypes,
         event_type: event.event_type || null,
         tags: (event as any).tags || [],
@@ -1631,7 +1628,9 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
             is_closed: new Date() > new Date(event.close_time || event.date_and_time),
             tickets_sold: ticketCounts[event.id] || 0,
             event_type: event.event_type || null,
-            tags: (event as any).tags || []
+            tags: (event as any).tags || [],
+            ticketing_enabled: event.ticketing_enabled !== false,
+            external_ticket_link: event.external_ticket_link || null
           };
         });
 
