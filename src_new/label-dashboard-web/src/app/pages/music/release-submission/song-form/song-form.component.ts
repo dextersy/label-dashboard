@@ -87,17 +87,20 @@ export class SongFormComponent implements OnChanges, OnInit {
     if (changes['releaseArtists'] && this.isVisible && this.song) {
       // Reload song data if we're currently editing a song to re-filter collaborators
       this.loadSongData();
+      this.ensureSongwritersForSong();
     }
 
     if (changes['isVisible']) {
       if (this.isVisible) {
         document.body.classList.add('modal-open');
         this.resetForm();
-        if (this.song) {
-          this.loadSongData();
-        }
-        // Reload songwriters when modal opens to ensure fresh data
-        this.loadSongwriters();
+        // Reload songwriters first, then load song data so existing songwriter IDs can be resolved
+        this.loadSongwriters().then(() => {
+          if (this.song) {
+            this.loadSongData();
+            this.ensureSongwritersForSong();
+          }
+        });
       } else {
         document.body.classList.remove('modal-open');
       }
@@ -115,17 +118,37 @@ export class SongFormComponent implements OnChanges, OnInit {
     });
   }
 
-  loadSongwriters(search?: string): void {
-    this.songwriterService.searchSongwriters(search).subscribe({
-      next: (response) => {
-        this.songwriters = response.songwriters || [];
-        this.filteredAuthorSongwriters = this.songwriters;
-        this.filteredComposerSongwriters = this.songwriters;
-      },
-      error: (error) => {
-        console.error('Error loading songwriters:', error);
-      }
+  loadSongwriters(search?: string): Promise<void> {
+    return firstValueFrom(this.songwriterService.searchSongwriters(search)).then((response) => {
+      this.songwriters = response.songwriters || [];
+      this.filteredAuthorSongwriters = this.songwriters;
+      this.filteredComposerSongwriters = this.songwriters;
+    }).catch((error) => {
+      console.error('Error loading songwriters:', error);
     });
+  }
+
+  private async ensureSongwritersForSong(): Promise<void> {
+    const songwriterIds = [
+      ...this.songForm.authors.map((a: SongAuthor) => a.songwriter_id),
+      ...this.songForm.composers.map((c: SongComposer) => c.songwriter_id)
+    ].filter((id): id is number => !!id && id > 0);
+
+    const missingIds = songwriterIds.filter(id => !this.songwriters.some(s => s.id === id));
+
+    await Promise.all(missingIds.map(async (id) => {
+      try {
+        const response = await firstValueFrom(this.songwriterService.getSongwriter(id));
+        if (response.songwriter && !this.songwriters.some(s => s.id === response.songwriter.id)) {
+          this.songwriters = [...this.songwriters, response.songwriter];
+        }
+      } catch (error) {
+        console.error(`Error loading songwriter ${id}:`, error);
+      }
+    }));
+
+    this.filteredAuthorSongwriters = this.songwriters;
+    this.filteredComposerSongwriters = this.songwriters;
   }
 
   onAuthorNameChange(): void {
