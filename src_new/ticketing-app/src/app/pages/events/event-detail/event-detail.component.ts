@@ -69,11 +69,22 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                    : 'border-green-400/30 text-green-400/70 hover:text-green-400 hover:border-green-400/60'">
                 {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
               </button>
-              @if (event()?.buy_shortlink) {
+              @if (event()?.external_ticket_link) {
+                <a [href]="event()?.external_ticket_link" target="_blank" rel="noopener noreferrer"
+                   class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors"
+                   title="External ticketing link">
+                  Ticket Page ↗
+                </a>
+              } @else if (event()?.buy_shortlink) {
                 <a [href]="event()?.buy_shortlink" target="_blank"
                    class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
                   Ticket Page →
                 </a>
+              }
+              @if (event()?.ticketing_enabled === false) {
+                <span class="px-3 py-1.5 border border-gray-300 text-gray-400 text-xs font-mono uppercase tracking-wider">
+                  Listing Only
+                </span>
               }
             </div>
           </div>
@@ -91,12 +102,15 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- Tab Nav -->
       <div class="flex gap-0 border-b border-gray-200 overflow-x-auto mb-6">
         @for (tab of tabs; track tab.id) {
-          <button (click)="activeTab.set(tab.id)"
+          <button (click)="onTabChange(tab.id)"
             class="px-4 py-2.5 text-xs font-mono uppercase tracking-widest whitespace-nowrap border-b-2 transition-colors"
             [class]="activeTab() === tab.id
               ? 'border-yellow-400 text-yellow-500'
               : 'border-transparent text-gray-400 hover:text-gray-900'">
             {{ tab.label }}
+            @if (tab.ticketingOnly && isTicketingDisabled()) {
+              <span class="ml-1 text-gray-300" title="Ticketing disabled">⊘</span>
+            }
           </button>
         }
       </div>
@@ -105,13 +119,35 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       @if (activeTab() === 'overview') {
         <div>
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white border border-gray-200 p-5">
-              <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Tickets Sold</p>
-              <p class="text-2xl font-black text-gray-900">{{ event()?.tickets_sold || 0 }}</p>
+            <div class="relative p-5"
+              [class]="isTicketingDisabled() && !hasExistingTickets()
+                ? 'bg-gray-50 border border-dashed border-gray-200'
+                : 'bg-white border border-gray-200'">
+              <p class="text-xs font-mono uppercase tracking-widest mb-2"
+                [class]="isTicketingDisabled() && !hasExistingTickets() ? 'text-gray-300' : 'text-gray-400'">Tickets Sold</p>
+              @if (isTicketingDisabled() && !hasExistingTickets()) {
+                <p class="text-2xl font-black text-gray-200">—</p>
+              } @else {
+                <p class="text-2xl font-black text-gray-900">{{ event()?.tickets_sold || 0 }}</p>
+              }
+              @if (isTicketingDisabled() && hasExistingTickets()) {
+                <span class="absolute top-2 right-2 text-xs font-mono text-gray-300 uppercase tracking-wider">historical</span>
+              }
             </div>
-            <div class="bg-white border border-gray-200 p-5">
-              <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Revenue</p>
-              <p class="text-2xl font-black text-yellow-500">{{ (event()?.total_revenue || 0) | currency:'PHP':'symbol':'1.0-0' }}</p>
+            <div class="relative p-5"
+              [class]="isTicketingDisabled() && !hasExistingTickets()
+                ? 'bg-gray-50 border border-dashed border-gray-200'
+                : 'bg-white border border-gray-200'">
+              <p class="text-xs font-mono uppercase tracking-widest mb-2"
+                [class]="isTicketingDisabled() && !hasExistingTickets() ? 'text-gray-300' : 'text-gray-400'">Revenue</p>
+              @if (isTicketingDisabled() && !hasExistingTickets()) {
+                <p class="text-2xl font-black text-gray-200">—</p>
+              } @else {
+                <p class="text-2xl font-black text-yellow-500">{{ (event()?.total_revenue || 0) | currency:'PHP':'symbol':'1.0-0' }}</p>
+              }
+              @if (isTicketingDisabled() && hasExistingTickets()) {
+                <span class="absolute top-2 right-2 text-xs font-mono text-gray-300 uppercase tracking-wider">historical</span>
+              }
             </div>
             <div class="bg-white border border-gray-200 p-5">
               <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-2">Status</p>
@@ -137,7 +173,14 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                 <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Venue</dt>
                 <dd class="text-sm font-mono text-gray-600">{{ event()?.venue || '—' }}</dd>
               </div>
-              @if (event()?.buy_shortlink) {
+              @if (event()?.external_ticket_link) {
+                <div>
+                  <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Ticket Link <span class="text-gray-300">(External)</span></dt>
+                  <dd class="text-sm font-mono text-yellow-500 truncate">
+                    <a [href]="event()?.external_ticket_link" target="_blank" rel="noopener noreferrer">{{ event()?.external_ticket_link }}</a>
+                  </dd>
+                </div>
+              } @else if (event()?.buy_shortlink) {
                 <div>
                   <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Buy Link</dt>
                   <dd class="text-sm font-mono text-yellow-500 truncate">
@@ -153,307 +196,103 @@ import { EventReferrer } from '../../../models/event-referrer.model';
               }
             </dl>
           </div>
-        </div>
-      }
 
-      <!-- ====== TICKETS TAB ====== -->
-      @if (activeTab() === 'tickets') {
-        <div>
-          <div class="flex items-center justify-between mb-4 gap-3">
-            <input type="text" [(ngModel)]="ticketSearch" (input)="loadTickets()"
-              class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
-              placeholder="Search by name...">
-            <a [href]="ticketsService.exportCsvUrl({ event_id: routeEventId() })"
-               class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
-              Export CSV
-            </a>
-          </div>
-
-          <div class="border border-gray-200 overflow-hidden bg-white">
-            @if (ticketsLoading()) {
-              <div class="flex items-center justify-center py-12">
-                <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
-              </div>
-            } @else if (tickets().length === 0) {
-              <div class="text-center py-12 text-gray-400 text-xs font-mono">No tickets found.</div>
-            } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200 bg-zinc-50">
-                    <tr>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Attendee</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Type</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Entries</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Amount</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
-                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100">
-                    @for (ticket of tickets(); track ticket.id) {
-                      <tr class="hover:bg-zinc-50 transition-colors">
-                        <td class="px-6 py-3.5">
-                          <p class="font-bold text-gray-900 text-sm">{{ ticket.name }}</p>
-                          <p class="text-xs font-mono text-gray-400 mt-0.5">{{ ticket.email_address }}</p>
-                        </td>
-                        <td class="px-6 py-3.5 text-sm text-gray-500 font-mono">{{ ticket.ticket_type_name }}</td>
-                        <td class="px-6 py-3.5 text-sm text-gray-500 font-mono">{{ ticket.number_of_entries }}</td>
-                        <td class="px-6 py-3.5 text-sm font-black text-gray-900">{{ ticket.amount | currency:'PHP':'symbol':'1.2-2' }}</td>
-                        <td class="px-6 py-3.5">
-                          <span class="text-xs font-mono uppercase px-2 py-0.5 border"
-                            [class]="ticketStatusClass(ticket.status)">
-                            {{ ticketStatusLabel(ticket.status) }}
-                          </span>
-                        </td>
-                        <td class="px-6 py-3.5">
-                          <div class="flex items-center justify-end gap-3">
-                            <button (click)="resendTicket(ticket)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Resend</button>
-                            @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
-                              <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
-                              <button (click)="confirmAction('refund', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Refund</button>
-                            }
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- ====== TICKET TYPES TAB ====== -->
-      @if (activeTab() === 'ticket-types') {
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticket Types</h2>
-            <button (click)="openTicketTypeModal()"
-              class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
-              + Add Type
-            </button>
-          </div>
-
-          <div class="border border-gray-200 overflow-hidden bg-white">
-            @if (ticketTypes().length === 0) {
-              <div class="text-center py-12 text-gray-400 text-xs font-mono">No ticket types yet.</div>
-            } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200 bg-zinc-50">
-                    <tr>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Price</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Max</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Pending</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Left</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
-                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100">
-                    @for (tt of ticketTypes(); track tt.id) {
-                      <tr class="hover:bg-zinc-50">
-                        <td class="px-6 py-3 font-bold text-gray-900 uppercase text-sm">{{ tt.name }}</td>
-                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
-                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.max_tickets === 0 ? '∞' : tt.max_tickets }}</td>
-                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.sold_tickets || 0 }}</td>
-                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.pending_tickets || 0 }}</td>
-                        <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ tt.remaining_tickets == null ? '∞' : tt.remaining_tickets }}</td>
-                        <td class="px-6 py-3">
-                          <span class="text-xs font-mono uppercase px-2 py-0.5 border"
-                            [class]="tt.disabled ? 'border-red-300 text-red-600 bg-red-50' : 'border-green-300 text-green-700 bg-green-50'">
-                            {{ tt.disabled ? 'Off' : 'On' }}
-                          </span>
-                        </td>
-                        <td class="px-6 py-3">
-                          <div class="flex items-center justify-end gap-3">
-                            <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
-                            <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- ====== PENDING ORDERS TAB ====== -->
-      @if (activeTab() === 'pending') {
-        <div>
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <input type="text" [(ngModel)]="pendingSearch" (input)="loadPendingTickets()"
-              class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
-              placeholder="Search by name...">
-            <div class="flex items-center gap-2">
-              <a [href]="eventsService.getPendingCsvUrl(routeEventId())"
-                 class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
-                CSV
-              </a>
-              <button (click)="verifyPayments()"
-                class="px-3 py-2 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
-                Verify Payments
-              </button>
-              <button (click)="cancelAllUnpaid()"
-                class="px-3 py-2 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
-                Cancel All Unpaid
-              </button>
-            </div>
-          </div>
-
-          <div class="border border-gray-200 overflow-hidden bg-white">
-            @if (pendingLoading()) {
-              <div class="flex items-center justify-center py-12">
-                <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
-              </div>
-            } @else if (pendingTickets().length === 0) {
-              <div class="text-center py-12 text-gray-400 text-xs font-mono">No pending orders.</div>
-            } @else {
-              <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <thead class="border-b border-gray-200 bg-zinc-50">
-                    <tr>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Buyer</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Ticket</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Entries</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
-                      <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Ordered</th>
-                      <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-100">
-                    @for (ticket of pendingTickets(); track ticket.id) {
-                      <tr class="hover:bg-zinc-50 transition-colors">
-                        <td class="px-6 py-3.5">
-                          <p class="font-bold text-gray-900 text-sm">{{ ticket.name }}</p>
-                          <p class="text-xs font-mono text-gray-400 mt-0.5">{{ ticket.email_address }}{{ ticket.contact_number ? ' · ' + ticket.contact_number : '' }}</p>
-                        </td>
-                        <td class="px-6 py-3.5 text-sm font-mono text-gray-500">{{ ticket.ticket_type_name }}</td>
-                        <td class="px-6 py-3.5 text-sm font-mono text-gray-500">{{ ticket.number_of_entries }}</td>
-                        <td class="px-6 py-3.5">
-                          <span class="text-xs font-mono uppercase px-2 py-0.5 border"
-                            [class]="ticketStatusClass(ticket.status)">
-                            {{ ticketStatusLabel(ticket.status) }}
-                          </span>
-                        </td>
-                        <td class="px-6 py-3.5 text-xs font-mono text-gray-400">{{ ticket.order_timestamp | date:'short' }}</td>
-                        <td class="px-6 py-3.5">
-                          <div class="flex items-center justify-end gap-3">
-                            <button (click)="markPaid(ticket)" class="text-xs font-mono text-green-400 hover:text-green-300 uppercase tracking-wider">Mark Paid</button>
-                            <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Cancel</button>
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- ====== WALK-IN TAB ====== -->
-      @if (activeTab() === 'walk-in') {
-        <div>
-          <div class="flex gap-0 border-b border-gray-200 mb-5">
-            <button (click)="walkInView.set('types')"
-              class="px-4 py-2 text-xs font-mono uppercase tracking-widest border-b-2 transition-colors"
-              [class]="walkInView() === 'types' ? 'border-yellow-400 text-yellow-500' : 'border-transparent text-gray-400 hover:text-gray-900'">
-              Types
-            </button>
-            <button (click)="walkInView.set('transactions'); loadWalkInTransactions()"
-              class="px-4 py-2 text-xs font-mono uppercase tracking-widest border-b-2 transition-colors"
-              [class]="walkInView() === 'transactions' ? 'border-yellow-400 text-yellow-500' : 'border-transparent text-gray-400 hover:text-gray-900'">
-              Transactions
-            </button>
-          </div>
-
-          @if (walkInView() === 'types') {
-            <div>
+          <!-- Ticket Types -->
+          @if (!isTicketingDisabled() || hasExistingTickets()) {
+            <div class="border border-gray-200 bg-white p-6">
               <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Walk-In Types</h2>
-                <button (click)="openWalkInTypeModal()"
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticket Types</h3>
+                <button (click)="openTicketTypeModal()"
                   class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
                   + Add Type
                 </button>
               </div>
-              <div class="border border-gray-200 overflow-hidden bg-white">
-                @if (walkInTypes().length === 0) {
-                  <div class="text-center py-12 text-gray-400 text-xs font-mono">No walk-in types yet.</div>
-                } @else {
+              @if (ticketTypes().length === 0) {
+                <p class="text-xs font-mono text-gray-400 py-4 text-center">No ticket types yet.</p>
+              } @else {
+                <div class="overflow-x-auto">
                   <table class="w-full text-sm">
                     <thead class="border-b border-gray-200 bg-zinc-50">
                       <tr>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Price</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Max</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Left</th>
-                        <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Price</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Max</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Pending</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Left</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
+                        <th class="text-right px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                      @for (wt of walkInTypes(); track wt.id) {
+                      @for (tt of ticketTypes(); track tt.id) {
                         <tr class="hover:bg-zinc-50">
-                          <td class="px-6 py-3 font-bold text-gray-900 uppercase text-sm">{{ wt.name }}</td>
-                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
-                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.max_slots === 0 ? '∞' : wt.max_slots }}</td>
-                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.sold_count || 0 }}</td>
-                          <td class="px-6 py-3 text-sm font-mono text-gray-500">{{ wt.remaining_slots == null ? '∞' : wt.remaining_slots }}</td>
-                          <td class="px-6 py-3">
+                          <td class="px-4 py-2.5 font-bold text-gray-900 uppercase text-sm">{{ tt.name }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ tt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ tt.max_tickets === 0 ? '∞' : tt.max_tickets }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ tt.sold_tickets || 0 }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ tt.pending_tickets || 0 }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ tt.remaining_tickets == null ? '∞' : tt.remaining_tickets }}</td>
+                          <td class="px-4 py-2.5">
+                            <span class="text-xs font-mono uppercase px-2 py-0.5 border"
+                              [class]="tt.disabled ? 'border-red-300 text-red-600 bg-red-50' : 'border-green-300 text-green-700 bg-green-50'">
+                              {{ tt.disabled ? 'Off' : 'On' }}
+                            </span>
+                          </td>
+                          <td class="px-4 py-2.5">
                             <div class="flex items-center justify-end gap-3">
-                              <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
-                              <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                              <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                              <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
                             </div>
                           </td>
                         </tr>
                       }
                     </tbody>
                   </table>
-                }
-              </div>
+                </div>
+              }
             </div>
           }
 
-          @if (walkInView() === 'transactions') {
-            <div class="border border-gray-200 overflow-hidden bg-white">
-              @if (walkInTransactionsLoading()) {
-                <div class="flex items-center justify-center py-12">
-                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
-                </div>
-              } @else if (walkInTransactions().length === 0) {
-                <div class="text-center py-12 text-gray-400 text-xs font-mono">No walk-in transactions yet.</div>
+          <!-- Walk-In Types -->
+          @if (event()?.walk_in_enabled) {
+            <div class="border border-gray-200 bg-white p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Walk-In Types</h3>
+                <button (click)="openWalkInTypeModal()"
+                  class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                  + Add Type
+                </button>
+              </div>
+              @if (walkInTypes().length === 0) {
+                <p class="text-xs font-mono text-gray-400 py-4 text-center">No walk-in types yet.</p>
               } @else {
                 <div class="overflow-x-auto">
                   <table class="w-full text-sm">
                     <thead class="border-b border-gray-200 bg-zinc-50">
                       <tr>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Date</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Items</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Payment</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Amount</th>
-                        <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">By</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Name</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Price</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Max</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Sold</th>
+                        <th class="text-left px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Left</th>
+                        <th class="text-right px-4 py-2.5 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                      @for (tx of walkInTransactions(); track tx.id) {
+                      @for (wt of walkInTypes(); track wt.id) {
                         <tr class="hover:bg-zinc-50">
-                          <td class="px-6 py-3 text-xs font-mono text-gray-400">{{ tx.created_at | date:'short' }}</td>
-                          <td class="px-6 py-3 text-sm font-mono text-gray-500">
-                            @for (item of tx.items; track item.id) {
-                              <div>{{ item.quantity }}× {{ item.walk_in_type_name }}</div>
-                            }
+                          <td class="px-4 py-2.5 font-bold text-gray-900 uppercase text-sm">{{ wt.name }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ wt.price | currency:'PHP':'symbol':'1.2-2' }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ wt.max_slots === 0 ? '∞' : wt.max_slots }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ wt.sold_count || 0 }}</td>
+                          <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ wt.remaining_slots == null ? '∞' : wt.remaining_slots }}</td>
+                          <td class="px-4 py-2.5">
+                            <div class="flex items-center justify-end gap-3">
+                              <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                              <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                            </div>
                           </td>
-                          <td class="px-6 py-3 text-sm font-mono text-gray-500 capitalize">{{ tx.payment_method }}</td>
-                          <td class="px-6 py-3 text-sm font-black text-gray-900">{{ tx.total_amount | currency:'PHP':'symbol':'1.2-2' }}</td>
-                          <td class="px-6 py-3 text-xs font-mono text-gray-400">{{ tx.registered_by_name || tx.registered_by }}</td>
                         </tr>
                       }
                     </tbody>
@@ -465,9 +304,315 @@ import { EventReferrer } from '../../../models/event-referrer.model';
         </div>
       }
 
+      <!-- ====== SALES TAB ====== -->
+      @if (activeTab() === 'sales') {
+        <div class="space-y-8">
+
+          <!-- ---- Tickets Section ---- -->
+          <div>
+            <div class="flex items-center gap-3 mb-4">
+              <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Tickets</h2>
+              <div class="flex-1 border-t border-gray-200"></div>
+              @if (isTicketingDisabled()) {
+                <span class="text-xs font-mono px-2 py-0.5 border"
+                  [class]="event()?.external_ticket_link ? 'border-blue-200 text-blue-500 bg-blue-50' : 'border-amber-200 text-amber-500 bg-amber-50'">
+                  {{ event()?.external_ticket_link ? 'External' : 'Disabled' }}
+                </span>
+              }
+            </div>
+
+            @if (isTicketingDisabled()) {
+              <div class="mb-4 px-4 py-3 border flex items-start gap-3"
+                [class]="event()?.external_ticket_link ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'">
+                <span class="text-lg leading-none mt-0.5">{{ event()?.external_ticket_link ? '↗' : '⊘' }}</span>
+                <p class="text-xs font-mono"
+                  [class]="event()?.external_ticket_link ? 'text-blue-600' : 'text-amber-600'">
+                  @if (hasExistingTickets()) {
+                    Ticketing is currently {{ event()?.external_ticket_link ? 'handled externally' : 'disabled' }}. Records below reflect tickets sold while platform ticketing was active.
+                  } @else {
+                    {{ event()?.external_ticket_link ? 'Tickets are sold through an external provider — no platform records.' : 'Ticketing is disabled for this event.' }}
+                  }
+                </p>
+              </div>
+            }
+
+            @if (ticketSummary()) {
+              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Sold</p>
+                  <p class="text-xl font-black text-gray-900">{{ ticketSummary().total_tickets_sold }}</p>
+                </div>
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Checked In</p>
+                  <p class="text-xl font-black text-gray-900">{{ ticketSummary().total_checked_in }}</p>
+                </div>
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Revenue</p>
+                  <p class="text-xl font-black text-yellow-500">{{ ticketSummary().total_revenue | currency:'PHP':'symbol':'1.0-0' }}</p>
+                </div>
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Processing</p>
+                  <p class="text-xl font-black text-gray-500">{{ ticketSummary().total_processing_fee | currency:'PHP':'symbol':'1.0-0' }}</p>
+                </div>
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Platform</p>
+                  <p class="text-xl font-black text-gray-500">{{ ticketSummary().platform_fee | currency:'PHP':'symbol':'1.0-0' }}</p>
+                </div>
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Net</p>
+                  <p class="text-xl font-black text-gray-900">{{ ticketSummary().net_revenue | currency:'PHP':'symbol':'1.0-0' }}</p>
+                </div>
+                <div class="bg-white border border-gray-200 p-4">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Tax (0.5%)</p>
+                  <p class="text-xl font-black text-gray-500">{{ ticketSummary().tax | currency:'PHP':'symbol':'1.0-0' }}</p>
+                </div>
+              </div>
+            }
+
+            <div class="flex items-center justify-between mb-3 gap-3">
+              <input type="text" [(ngModel)]="ticketSearch" (input)="loadTickets()"
+                class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                placeholder="Search by name...">
+              <div class="flex items-center gap-2">
+                <button (click)="openCreateTicketModal()"
+                  class="px-3 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                  + Create Ticket
+                </button>
+                <a [href]="ticketsService.exportCsvUrl({ event_id: routeEventId() })"
+                   class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
+                  Export CSV
+                </a>
+              </div>
+            </div>
+
+            <div class="border border-gray-200 overflow-hidden bg-white">
+              @if (ticketsLoading()) {
+                <div class="flex items-center justify-center py-12">
+                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
+                </div>
+              } @else if (tickets().length === 0) {
+                <div class="text-center py-12 text-gray-400 text-xs font-mono">No tickets found.</div>
+              } @else {
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="border-b border-gray-200 bg-zinc-50">
+                      <tr>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Attendee</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Code</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Type</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Entries</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Amount</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Referrer</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Date Paid</th>
+                        <th class="text-left px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
+                        <th class="text-right px-4 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                      @for (ticket of tickets(); track ticket.id) {
+                        <tr class="hover:bg-zinc-50 transition-colors">
+                          <td class="px-4 py-3.5">
+                            <p class="font-bold text-gray-900 text-sm">{{ ticket.name }}</p>
+                            <p class="text-xs font-mono text-gray-400 mt-0.5">{{ ticket.email_address }}</p>
+                            @if (ticket.contact_number) {
+                              <p class="text-xs font-mono text-gray-400">{{ ticket.contact_number }}</p>
+                            }
+                          </td>
+                          <td class="px-4 py-3.5 text-sm font-mono text-yellow-600 font-bold">{{ ticket.ticket_code || '—' }}</td>
+                          <td class="px-4 py-3.5 text-sm text-gray-500 font-mono">{{ ticket.ticket_type_name }}</td>
+                          <td class="px-4 py-3.5 text-sm text-gray-500 font-mono">
+                            {{ ticket.number_of_entries }}
+                            @if (ticket.number_of_claimed_entries != null) {
+                              <span class="text-gray-400"> / {{ ticket.number_of_claimed_entries }} in</span>
+                            }
+                          </td>
+                          <td class="px-4 py-3.5 text-sm font-black text-gray-900">{{ ticket.amount | currency:'PHP':'symbol':'1.2-2' }}</td>
+                          <td class="px-4 py-3.5 text-xs font-mono text-gray-400">{{ ticket.referrer_name || '—' }}</td>
+                          <td class="px-4 py-3.5 text-xs font-mono text-gray-400">{{ ticket.date_paid ? (ticket.date_paid | date:'MMM d, y') : '—' }}</td>
+                          <td class="px-4 py-3.5">
+                            <span class="text-xs font-mono uppercase px-2 py-0.5 border"
+                              [class]="ticketStatusClass(ticket.status)">
+                              {{ ticketStatusLabel(ticket.status) }}
+                            </span>
+                          </td>
+                          <td class="px-4 py-3.5">
+                            <div class="flex items-center justify-end gap-3">
+                              <button (click)="resendTicket(ticket)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Resend</button>
+                              @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
+                                <button (click)="openTransferModal(ticket)" class="text-xs font-mono text-blue-500 hover:text-blue-600 uppercase tracking-wider">Transfer</button>
+                                <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
+                                <button (click)="confirmAction('refund', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Refund</button>
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- ---- Pending Orders Section ---- -->
+          <div>
+            <div class="flex items-center gap-3 mb-4">
+              <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Pending Orders</h2>
+              <div class="flex-1 border-t border-gray-200"></div>
+              @if (isTicketingDisabled()) {
+                <span class="text-xs font-mono px-2 py-0.5 border"
+                  [class]="event()?.external_ticket_link ? 'border-blue-200 text-blue-500 bg-blue-50' : 'border-amber-200 text-amber-500 bg-amber-50'">
+                  {{ event()?.external_ticket_link ? 'External' : 'Disabled' }}
+                </span>
+              }
+            </div>
+
+            @if (isTicketingDisabled() && !hasExistingTickets()) {
+              <p class="text-xs font-mono text-gray-400 py-4">
+                {{ event()?.external_ticket_link ? 'Orders are managed by the external provider.' : 'Ticketing is disabled — no orders will be placed.' }}
+              </p>
+            } @else {
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <input type="text" [(ngModel)]="pendingSearch" (input)="loadPendingTickets()"
+                  class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                  placeholder="Search by name...">
+                <div class="flex items-center gap-2">
+                  <a [href]="eventsService.getPendingCsvUrl(routeEventId())"
+                     class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
+                    CSV
+                  </a>
+                  <button (click)="verifyPayments()"
+                    class="px-3 py-2 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                    Verify Payments
+                  </button>
+                  <button (click)="cancelAllUnpaid()"
+                    class="px-3 py-2 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                    Cancel All Unpaid
+                  </button>
+                </div>
+              </div>
+              <div class="border border-gray-200 overflow-hidden bg-white">
+                @if (pendingLoading()) {
+                  <div class="flex items-center justify-center py-12">
+                    <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
+                  </div>
+                } @else if (pendingTickets().length === 0) {
+                  <div class="text-center py-12 text-gray-400 text-xs font-mono">No pending orders.</div>
+                } @else {
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead class="border-b border-gray-200 bg-zinc-50">
+                        <tr>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Buyer</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Ticket</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Entries</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Status</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Ordered</th>
+                          <th class="text-right px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        @for (ticket of pendingTickets(); track ticket.id) {
+                          <tr class="hover:bg-zinc-50 transition-colors">
+                            <td class="px-6 py-3.5">
+                              <p class="font-bold text-gray-900 text-sm">{{ ticket.name }}</p>
+                              <p class="text-xs font-mono text-gray-400 mt-0.5">{{ ticket.email_address }}{{ ticket.contact_number ? ' · ' + ticket.contact_number : '' }}</p>
+                            </td>
+                            <td class="px-6 py-3.5 text-sm font-mono text-gray-500">{{ ticket.ticket_type_name }}</td>
+                            <td class="px-6 py-3.5 text-sm font-mono text-gray-500">{{ ticket.number_of_entries }}</td>
+                            <td class="px-6 py-3.5">
+                              <span class="text-xs font-mono uppercase px-2 py-0.5 border"
+                                [class]="ticketStatusClass(ticket.status)">
+                                {{ ticketStatusLabel(ticket.status) }}
+                              </span>
+                            </td>
+                            <td class="px-6 py-3.5 text-xs font-mono text-gray-400">{{ ticket.order_timestamp | date:'short' }}</td>
+                            <td class="px-6 py-3.5">
+                              <div class="flex items-center justify-end gap-3">
+                                <button (click)="markPaid(ticket)" class="text-xs font-mono text-green-400 hover:text-green-300 uppercase tracking-wider">Mark Paid</button>
+                                <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Cancel</button>
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- ---- Walk-In Section ---- -->
+          @if (event()?.walk_in_enabled) {
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Walk-In</h2>
+                <div class="flex-1 border-t border-gray-200"></div>
+              </div>
+              <div class="border border-gray-200 overflow-hidden bg-white">
+                @if (walkInTransactionsLoading()) {
+                  <div class="flex items-center justify-center py-12">
+                    <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
+                  </div>
+                } @else if (walkInTransactions().length === 0) {
+                  <div class="text-center py-12 text-gray-400 text-xs font-mono">No walk-in transactions yet.</div>
+                } @else {
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                      <thead class="border-b border-gray-200 bg-zinc-50">
+                        <tr>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Date</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Items</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Payment</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">Amount</th>
+                          <th class="text-left px-6 py-3 text-xs font-mono text-gray-400 uppercase tracking-widest">By</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-100">
+                        @for (tx of walkInTransactions(); track tx.id) {
+                          <tr class="hover:bg-zinc-50">
+                            <td class="px-6 py-3 text-xs font-mono text-gray-400">{{ tx.created_at | date:'short' }}</td>
+                            <td class="px-6 py-3 text-sm font-mono text-gray-500">
+                              @for (item of tx.items; track item.id) {
+                                <div>{{ item.quantity }}× {{ item.walk_in_type_name }}</div>
+                              }
+                            </td>
+                            <td class="px-6 py-3 text-sm font-mono text-gray-500 capitalize">{{ tx.payment_method }}</td>
+                            <td class="px-6 py-3 text-sm font-black text-gray-900">{{ tx.total_amount | currency:'PHP':'symbol':'1.2-2' }}</td>
+                            <td class="px-6 py-3 text-xs font-mono text-gray-400">{{ tx.registered_by_name || tx.registered_by }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+        </div>
+      }
+
       <!-- ====== REFERRALS TAB ====== -->
       @if (activeTab() === 'referrals') {
         <div>
+          @if (isTicketingDisabled()) {
+            <div class="mb-4 px-4 py-3 border flex items-start gap-3"
+              [class]="event()?.external_ticket_link ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'">
+              <span class="text-lg leading-none mt-0.5">{{ event()?.external_ticket_link ? '↗' : '⊘' }}</span>
+              <div>
+                <p class="text-xs font-black uppercase tracking-widest mb-0.5"
+                  [class]="event()?.external_ticket_link ? 'text-blue-700' : 'text-amber-700'">
+                  {{ event()?.external_ticket_link ? 'External Ticketing' : 'Ticketing Disabled' }}
+                </p>
+                <p class="text-xs font-mono"
+                  [class]="event()?.external_ticket_link ? 'text-blue-600' : 'text-amber-600'">
+                  {{ hasExistingTickets() ? 'Referral stats below reflect activity while platform ticketing was active.' : (event()?.external_ticket_link ? 'Referrals are not tracked for external ticketing.' : 'Ticketing is disabled — referral tracking is not applicable.') }}
+                </p>
+              </div>
+            </div>
+          }
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Referrers</h2>
             <button (click)="openReferrerModal()"
@@ -510,6 +655,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                           <div class="flex items-center justify-end gap-3">
                             @if (ref.referral_shortlink) {
                               <button (click)="copyLink(ref.referral_shortlink)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Copy</button>
+                              <button (click)="downloadQrCode(ref.referral_shortlink, ref.name)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">QR</button>
                             }
                             <button (click)="deleteReferrer(ref)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
                           </div>
@@ -577,6 +723,99 @@ import { EventReferrer } from '../../../models/event-referrer.model';
         </div>
       }
 
+      <!-- ====== SCANNER TAB ====== -->
+      @if (activeTab() === 'scanner') {
+        <div class="max-w-2xl space-y-4">
+
+          @if (isTicketingDisabled()) {
+            <div class="px-4 py-3 border flex items-start gap-3"
+              [class]="event()?.external_ticket_link ? 'border-blue-200 bg-blue-50' : 'border-amber-200 bg-amber-50'">
+              <span class="text-lg leading-none mt-0.5">{{ event()?.external_ticket_link ? '↗' : '⊘' }}</span>
+              <div>
+                <p class="text-xs font-black uppercase tracking-widest mb-0.5"
+                  [class]="event()?.external_ticket_link ? 'text-blue-700' : 'text-amber-700'">
+                  {{ event()?.external_ticket_link ? 'External Ticketing' : 'Ticketing Disabled' }}
+                </p>
+                <p class="text-xs font-mono"
+                  [class]="event()?.external_ticket_link ? 'text-blue-600' : 'text-amber-600'">
+                  {{ hasExistingTickets() ? 'The scanner can still be used to check in tickets sold while platform ticketing was active.' : (event()?.external_ticket_link ? 'Ticket scanning is not applicable — tickets are managed externally.' : 'Ticketing is disabled. The scanner is only useful if tickets were previously sold through the platform.') }}
+                </p>
+              </div>
+            </div>
+          }
+
+          @if (!event()?.verification_link && !event()?.verification_pin) {
+            <div class="border border-yellow-200 bg-yellow-50 p-4 text-xs font-mono text-yellow-700">
+              Publish this event first to generate scanner credentials.
+            </div>
+          }
+
+          <!-- Verification Link -->
+          @if (event()?.verification_link) {
+            <div class="border border-gray-200 bg-white p-6">
+              <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Scanner Link</h3>
+              <p class="text-xs font-mono text-gray-400 mb-3">Share this link with your scanner operators. They will enter the PIN below to log in.</p>
+              <div class="flex items-center gap-3">
+                <code class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 text-sm font-mono text-gray-700 truncate">{{ event()?.verification_link }}</code>
+                <button (click)="copyToClipboard(event()?.verification_link || '', 'link')"
+                  class="px-3 py-2 border text-xs font-mono uppercase tracking-wider transition-colors"
+                  [class]="linkCopied() ? 'border-green-300 text-green-600 bg-green-50' : 'border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-500'">
+                  {{ linkCopied() ? 'Copied!' : 'Copy' }}
+                </button>
+                <a [href]="event()?.verification_link" target="_blank"
+                  class="px-3 py-2 border border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-500 text-xs font-mono uppercase tracking-wider transition-colors">
+                  Open →
+                </a>
+              </div>
+            </div>
+          }
+
+          <!-- Verification PIN -->
+          <div class="border border-gray-200 bg-white p-6">
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Verification PIN</h3>
+            <p class="text-xs font-mono text-gray-400 mb-4">Scanners enter this PIN to authenticate. Keep it private — only share with authorized staff.</p>
+            <div class="flex items-center gap-4 mb-4">
+              <div class="flex-1">
+                @if (event()?.verification_pin) {
+                  <div class="text-4xl font-black text-gray-900 font-mono tracking-[0.5em] py-3">{{ event()?.verification_pin }}</div>
+                } @else {
+                  <div class="text-sm font-mono text-gray-400 italic">Not generated yet — publish the event first.</div>
+                }
+              </div>
+              @if (event()?.verification_pin) {
+                <button (click)="copyToClipboard(event()?.verification_pin || '', 'pin')"
+                  class="px-3 py-2 border text-xs font-mono uppercase tracking-wider transition-colors"
+                  [class]="pinCopied() ? 'border-green-300 text-green-600 bg-green-50' : 'border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-500'">
+                  {{ pinCopied() ? 'Copied!' : 'Copy PIN' }}
+                </button>
+              }
+            </div>
+            <div class="pt-4 border-t border-gray-100">
+              <button (click)="refreshPin()" [disabled]="pinRefreshing()"
+                class="px-4 py-2 border border-red-200 text-red-500 hover:text-red-700 hover:border-red-400 text-xs font-mono uppercase tracking-wider disabled:opacity-50 transition-colors">
+                {{ pinRefreshing() ? 'Regenerating...' : 'Regenerate PIN' }}
+              </button>
+              <p class="mt-2 text-xs font-mono text-gray-400">Warning: regenerating will invalidate any currently active scanner sessions.</p>
+            </div>
+          </div>
+
+          <!-- QR code for scanner link -->
+          @if (event()?.verification_link) {
+            <div class="border border-gray-200 bg-white p-6">
+              <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Scanner Link QR Code</h3>
+              <p class="text-xs font-mono text-gray-400 mb-4">Print or display this QR code for scanners to quickly open the scanner page.</p>
+              <div class="flex items-start gap-5">
+                <img [src]="qrUrl(event()!.verification_link!)" alt="Scanner QR Code" class="w-32 h-32 border border-gray-200">
+                <button (click)="downloadQrCode(event()!.verification_link!, 'scanner-' + event()!.id)"
+                  class="mt-2 px-3 py-2 border border-gray-300 text-gray-500 hover:text-gray-900 hover:border-gray-500 text-xs font-mono uppercase tracking-wider transition-colors">
+                  Download QR
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <!-- ====== TICKET TYPE MODAL ====== -->
       @if (ticketTypeModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -598,7 +837,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                     class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div>
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Tickets <span class="normal-case text-gray-400">(0=unlimited)</span></label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Tickets (0=∞)</label>
                   <input type="number" formControlName="max_tickets" min="0"
                     class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
@@ -613,22 +852,19 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                     class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Special Instructions</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Special Instructions (Buyer)</label>
                   <textarea formControlName="special_instructions" rows="2"
-                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"
-                    placeholder="Shown to buyer at checkout..."></textarea>
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"></textarea>
                 </div>
                 <div class="col-span-2">
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Instructions for Scanner</label>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Scanner Instructions</label>
                   <textarea formControlName="special_instructions_for_scanner" rows="2"
-                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"
-                    placeholder="Shown to scanner staff..."></textarea>
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors resize-none"></textarea>
                 </div>
-                <div class="col-span-2">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" formControlName="disabled" class="w-4 h-4 accent-yellow-400">
-                    <span class="text-xs font-mono text-gray-500">Disable this ticket type</span>
-                  </label>
+                <div class="col-span-2 flex items-center gap-2">
+                  <input type="checkbox" formControlName="disabled" id="tt-disabled"
+                    class="w-4 h-4 border-gray-300 focus:ring-yellow-400">
+                  <label for="tt-disabled" class="text-xs font-mono text-gray-600 uppercase tracking-widest">Disabled</label>
                 </div>
               </div>
               @if (ticketTypeError()) {
@@ -653,7 +889,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       @if (walkInTypeModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div class="fixed inset-0 bg-black/50" (click)="walkInTypeModal.set(null)"></div>
-          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-sm">
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-md">
             <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-4">
               {{ walkInTypeModal()!.id ? 'Edit Walk-In Type' : 'Add Walk-In Type' }}
             </h3>
@@ -669,7 +905,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                   class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
               <div>
-                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Slots <span class="normal-case text-gray-400">(0=unlimited)</span></label>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Max Slots (0=∞)</label>
                 <input type="number" formControlName="max_slots" min="0"
                   class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
@@ -695,7 +931,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       @if (referrerModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div class="fixed inset-0 bg-black/50" (click)="referrerModal.set(false)"></div>
-          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-sm">
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-md">
             <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-4">Add Referrer</h3>
             <form [formGroup]="referrerForm" (ngSubmit)="saveReferrer()" class="space-y-4">
               <div>
@@ -752,6 +988,118 @@ import { EventReferrer } from '../../../models/event-referrer.model';
           </div>
         </div>
       }
+
+      <!-- ====== TRANSFER MODAL ====== -->
+      @if (transferModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div class="fixed inset-0 bg-black/50" (click)="transferModal.set(null)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-1">Transfer Ticket</h3>
+            <p class="text-xs font-mono text-gray-400 mb-4">
+              Transfer ticket <strong class="text-yellow-500">{{ transferModal()!.ticket_code }}</strong> from
+              <strong class="text-gray-700">{{ transferModal()!.name }}</strong> to a new attendee.
+              The original ticket will be cancelled and a new one sent.
+            </p>
+            <form [formGroup]="transferForm" (ngSubmit)="executeTransfer()" class="space-y-4">
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">New Attendee Name *</label>
+                <input type="text" formControlName="name"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Email *</label>
+                <input type="email" formControlName="email_address"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Contact Number *</label>
+                <input type="text" formControlName="contact_number"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+              </div>
+              @if (transferError()) {
+                <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ transferError() }}</div>
+              }
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-200">
+                <button type="button" (click)="transferModal.set(null)"
+                  class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" [disabled]="transferForm.invalid || transferSaving()"
+                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
+                  {{ transferSaving() ? 'Transferring...' : 'Transfer Ticket' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- ====== CREATE CUSTOM TICKET MODAL ====== -->
+      @if (createTicketModal()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div class="fixed inset-0 bg-black/50" (click)="createTicketModal.set(false)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-lg overflow-y-auto max-h-[90vh]">
+            <h3 class="text-sm font-black text-gray-900 uppercase tracking-tight mb-1">Create Custom Ticket</h3>
+            <p class="text-xs font-mono text-gray-400 mb-4">Manually issue a ticket to an attendee. Use for comps, replacements, or offline payments.</p>
+            <form [formGroup]="createTicketForm" (ngSubmit)="saveCustomTicket()" class="space-y-4">
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Ticket Type *</label>
+                <select formControlName="ticket_type_id"
+                  class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                  <option value="">Select ticket type...</option>
+                  @for (tt of ticketTypes(); track tt.id) {
+                    <option [value]="tt.id">{{ tt.name }} — {{ tt.price | currency:'PHP':'symbol':'1.2-2' }}</option>
+                  }
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Full Name *</label>
+                  <input type="text" formControlName="name"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Email *</label>
+                  <input type="email" formControlName="email_address"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Contact Number *</label>
+                  <input type="text" formControlName="contact_number"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Entries</label>
+                  <input type="number" formControlName="number_of_entries" min="1"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                </div>
+                <div>
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Price Override (PHP)</label>
+                  <input type="number" formControlName="price_per_ticket" min="0" step="0.01" placeholder="Leave blank to use ticket type price"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" formControlName="send_email" id="ct-send-email" class="w-4 h-4 border-gray-300 focus:ring-yellow-400">
+                <label for="ct-send-email" class="text-xs font-mono text-gray-600 uppercase tracking-widest">Send ticket email to attendee</label>
+              </div>
+              @if (createTicketError()) {
+                <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ createTicketError() }}</div>
+              }
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-200">
+                <button type="button" (click)="createTicketModal.set(false)"
+                  class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" [disabled]="createTicketForm.invalid || createTicketSaving()"
+                  class="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
+                  {{ createTicketSaving() ? 'Creating...' : 'Create Ticket' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -764,6 +1112,10 @@ export class EventDetailComponent implements OnInit {
   tickets = signal<Ticket[]>([]);
   ticketsLoading = signal(false);
   ticketSearch = '';
+
+  // Ticket summary
+  ticketSummary = signal<any>(null);
+  ticketSummaryLoading = signal(false);
 
   // Ticket types tab
   ticketTypes = signal<TicketType[]>([]);
@@ -778,7 +1130,6 @@ export class EventDetailComponent implements OnInit {
   pendingSearch = '';
 
   // Walk-in tab
-  walkInView = signal<'types' | 'transactions'>('types');
   walkInTypes = signal<WalkInType[]>([]);
   walkInTypeModal = signal<Partial<WalkInType> | null>(null);
   walkInTypeForm: FormGroup;
@@ -803,18 +1154,48 @@ export class EventDetailComponent implements OnInit {
   emailError = signal('');
   ticketHoldersCount = signal<number | null>(null);
 
+  // Transfer modal
+  transferModal = signal<Ticket | null>(null);
+  transferForm: FormGroup;
+  transferSaving = signal(false);
+  transferError = signal('');
+
+  // Create custom ticket modal
+  createTicketModal = signal(false);
+  createTicketForm: FormGroup;
+  createTicketSaving = signal(false);
+  createTicketError = signal('');
+
+  // Scanner tab
+  pinRefreshing = signal(false);
+  pinCopied = signal(false);
+  linkCopied = signal(false);
+
   // Shared
   confirmModal = signal<{ action: string; ticket: Ticket } | null>(null);
 
   tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'tickets', label: 'Tickets' },
-    { id: 'ticket-types', label: 'Ticket Types' },
-    { id: 'pending', label: 'Pending Orders' },
-    { id: 'walk-in', label: 'Walk-In' },
-    { id: 'referrals', label: 'Referrals' },
-    { id: 'email', label: 'Email' },
+    { id: 'overview', label: 'Overview', ticketingOnly: false },
+    { id: 'sales', label: 'Sales', ticketingOnly: false },
+    { id: 'referrals', label: 'Referrals', ticketingOnly: true },
+    { id: 'email', label: 'Email', ticketingOnly: false },
+    { id: 'scanner', label: 'Scanner', ticketingOnly: true },
   ];
+
+  onTabChange(tabId: string): void {
+    this.activeTab.set(tabId);
+    if (tabId === 'sales') {
+      this.loadWalkInTransactions();
+    }
+  }
+
+  isTicketingDisabled(): boolean {
+    return this.event()?.ticketing_enabled === false;
+  }
+
+  hasExistingTickets(): boolean {
+    return (this.event()?.tickets_sold || 0) > 0;
+  }
 
   routeEventId(): number {
     return +(this.route.snapshot.paramMap.get('id') || 0);
@@ -850,12 +1231,29 @@ export class EventDetailComponent implements OnInit {
       name: ['', Validators.required],
       referral_code: ['', Validators.required],
     });
+
+    this.transferForm = this.fb.group({
+      name: ['', Validators.required],
+      email_address: ['', [Validators.required, Validators.email]],
+      contact_number: ['', Validators.required],
+    });
+
+    this.createTicketForm = this.fb.group({
+      ticket_type_id: ['', Validators.required],
+      name: ['', Validators.required],
+      email_address: ['', [Validators.required, Validators.email]],
+      contact_number: ['', Validators.required],
+      number_of_entries: [1, [Validators.required, Validators.min(1)]],
+      price_per_ticket: [null],
+      send_email: [true],
+    });
   }
 
   ngOnInit(): void {
     const id = this.routeEventId();
     this.eventsService.getEvent(id).subscribe({ next: (e) => this.event.set(e) });
     this.loadTickets();
+    this.loadTicketSummary();
     this.loadTicketTypes();
     this.loadPendingTickets();
     this.loadWalkInTypes();
@@ -874,6 +1272,15 @@ export class EventDetailComponent implements OnInit {
     }).subscribe({
       next: (res) => { this.tickets.set(res.tickets); this.ticketsLoading.set(false); },
       error: () => this.ticketsLoading.set(false)
+    });
+  }
+
+  // ---- Ticket Summary ----
+  loadTicketSummary(): void {
+    this.ticketSummaryLoading.set(true);
+    this.eventsService.getTicketSummary({ event_id: this.routeEventId() }).subscribe({
+      next: (res) => { this.ticketSummary.set(res.summary); this.ticketSummaryLoading.set(false); },
+      error: () => this.ticketSummaryLoading.set(false)
     });
   }
 
@@ -1113,6 +1520,174 @@ export class EventDetailComponent implements OnInit {
     });
   }
 
+  // ---- Transfer ----
+  openTransferModal(ticket: Ticket): void {
+    this.transferError.set('');
+    this.transferModal.set(ticket);
+    this.transferForm.patchValue({
+      name: ticket.name,
+      email_address: ticket.email_address,
+      contact_number: ticket.contact_number || '',
+    });
+  }
+
+  executeTransfer(): void {
+    const original = this.transferModal();
+    if (!original || this.transferForm.invalid) return;
+    this.transferSaving.set(true);
+    this.transferError.set('');
+
+    const transferData = this.transferForm.value;
+    const newTicketData = {
+      event_id: original.event_id,
+      ticket_type_id: original.ticket_type_id,
+      name: transferData.name,
+      email_address: transferData.email_address,
+      contact_number: transferData.contact_number,
+      number_of_entries: original.number_of_entries,
+      price_per_ticket: original.price_per_ticket,
+      payment_processing_fee: original.payment_processing_fee,
+      platform_fee: original.platform_fee ?? 0,
+      ticket_paid: true,
+      send_email: false,
+      order_timestamp: original.order_timestamp,
+    };
+
+    // Step 1: create new ticket
+    this.ticketsService.addTicket(newTicketData).subscribe({
+      next: (createRes) => {
+        const newTicketId = createRes.ticket?.id;
+        if (!newTicketId) {
+          this.transferError.set('Failed to create new ticket.');
+          this.transferSaving.set(false);
+          return;
+        }
+        // Step 2: resend (send actual ticket email)
+        this.ticketsService.resendTicket(newTicketId).subscribe({
+          next: () => {
+            // Step 3: cancel original
+            this.ticketsService.cancelTicket(original.id).subscribe({
+              next: () => {
+                this.transferModal.set(null);
+                this.transferSaving.set(false);
+                this.loadTickets();
+                this.loadTicketSummary();
+                alert(`Ticket transferred! New ticket code: ${createRes.ticket?.ticket_code || 'N/A'}`);
+              },
+              error: (err) => {
+                this.transferError.set(err.error?.error || 'New ticket created but failed to cancel original.');
+                this.transferSaving.set(false);
+              }
+            });
+          },
+          error: (err) => {
+            this.transferError.set(err.error?.error || 'Ticket created but failed to send email.');
+            this.transferSaving.set(false);
+          }
+        });
+      },
+      error: (err) => {
+        this.transferError.set(err.error?.error || 'Failed to create new ticket.');
+        this.transferSaving.set(false);
+      }
+    });
+  }
+
+  // ---- Create Custom Ticket ----
+  openCreateTicketModal(): void {
+    this.createTicketError.set('');
+    this.createTicketForm.reset({
+      ticket_type_id: '',
+      name: '',
+      email_address: '',
+      contact_number: '',
+      number_of_entries: 1,
+      price_per_ticket: null,
+      send_email: true,
+    });
+    this.createTicketModal.set(true);
+  }
+
+  saveCustomTicket(): void {
+    if (this.createTicketForm.invalid) return;
+    this.createTicketSaving.set(true);
+    this.createTicketError.set('');
+
+    const v = this.createTicketForm.value;
+    const data: any = {
+      event_id: this.routeEventId(),
+      ticket_type_id: +v.ticket_type_id,
+      name: v.name,
+      email_address: v.email_address,
+      contact_number: v.contact_number,
+      number_of_entries: v.number_of_entries,
+      ticket_paid: true,
+      send_email: v.send_email,
+    };
+    if (v.price_per_ticket != null && v.price_per_ticket !== '') {
+      data.price_per_ticket = +v.price_per_ticket;
+    }
+
+    this.ticketsService.addTicket(data).subscribe({
+      next: (res) => {
+        this.createTicketModal.set(false);
+        this.createTicketSaving.set(false);
+        this.loadTickets();
+        this.loadTicketSummary();
+        alert(`Ticket created! Code: ${res.ticket?.ticket_code || 'N/A'}`);
+      },
+      error: (err) => {
+        this.createTicketError.set(err.error?.error || 'Failed to create ticket.');
+        this.createTicketSaving.set(false);
+      }
+    });
+  }
+
+  // ---- Scanner ----
+  refreshPin(): void {
+    if (!confirm('Regenerate the verification PIN? This will invalidate all active scanner sessions for this event.')) return;
+    this.pinRefreshing.set(true);
+    this.eventsService.refreshPin(this.routeEventId()).subscribe({
+      next: (res) => {
+        const e = this.event();
+        if (e) this.event.set({ ...e, verification_pin: res.verification_pin });
+        this.pinRefreshing.set(false);
+      },
+      error: () => this.pinRefreshing.set(false)
+    });
+  }
+
+  copyToClipboard(text: string, field: 'pin' | 'link'): void {
+    navigator.clipboard.writeText(text).then(() => {
+      if (field === 'pin') {
+        this.pinCopied.set(true);
+        setTimeout(() => this.pinCopied.set(false), 2000);
+      } else {
+        this.linkCopied.set(true);
+        setTimeout(() => this.linkCopied.set(false), 2000);
+      }
+    });
+  }
+
+  qrUrl(url: string): string {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(url)}`;
+  }
+
+  downloadQrCode(url: string, name: string): void {
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(url)}`;
+    fetch(qrUrl)
+      .then(r => r.blob())
+      .then(blob => {
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = `${name.replace(/\s+/g, '-')}-qr.png`;
+        link.click();
+        URL.revokeObjectURL(objectUrl);
+      })
+      .catch(() => window.open(qrUrl, '_blank'));
+  }
+
   // ---- Shared ----
   togglePublish(): void {
     const e = this.event();
@@ -1138,6 +1713,7 @@ export class EventDetailComponent implements OnInit {
         this.confirmModal.set(null);
         this.loadTickets();
         this.loadPendingTickets();
+        this.loadTicketSummary();
       }
     });
   }
