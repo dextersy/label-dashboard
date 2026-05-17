@@ -1,22 +1,8 @@
-.artist-releases-tab {
-  .filter-controls {
-    display: flex;
-    align-items: center;
-  }
-}
-
-// Force card view at all breakpoints
-.artist-releases-tab ::ng-deep {
-  .has-mobile-template .table-responsive {
-    display: none !important;
-  }
-
-  .mobile-card-list {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 14px;
-    padding: 4px 0 8px;
-  }
+.release-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 4px 0 8px;
 }
 
 // Filter button group — dark fill active, subtle border inactive
@@ -69,6 +55,11 @@
     aspect-ratio: 1 / 1;
     background: #f3f4f6;
     overflow: hidden;
+    cursor: pointer;
+
+    &:hover .release-card__img {
+      opacity: 0.85;
+    }
   }
 
   &__img {
@@ -76,6 +67,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: opacity 0.15s ease;
   }
 
   // Overlay — alert dots only, no gradient
@@ -141,6 +133,40 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  &__actions {
+    position: fixed; // escapes overflow:hidden and stacking contexts entirely
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+    min-width: 190px;
+    padding: 4px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.12s;
+
+    &:hover { background: #f3f4f6; }
+    &--primary { color: var(--brand-color, #3b82f6); }
+    &--danger  { color: #dc3545; }
   }
 
   &__menu {

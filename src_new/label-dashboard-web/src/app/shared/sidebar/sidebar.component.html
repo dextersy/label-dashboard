@@ -120,7 +120,8 @@
 <!-- Flyout (collapsed desktop) -->
 <div class="flyout-panel"
      *ngIf="isCollapsed && !isMobileView && flyoutMenu"
-     [style.top.px]="flyoutTop">
+     [style.top.px]="flyoutTop"
+     (mouseleave)="closeFlyout()">
   <p class="flyout-title">{{ flyoutMenu.title }}</p>
   <ul class="flyout-list">
     <li *ngFor="let child of flyoutMenu.children">
@@ -137,7 +138,8 @@
 
 <div class="flyout-backdrop"
      *ngIf="isCollapsed && !isMobileView && flyoutMenu"
-     (click)="closeFlyout()">
+     (click)="closeFlyout()"
+     (mouseenter)="closeFlyout()">
 </div>
 
 <!-- Workspace Switch Modal -->

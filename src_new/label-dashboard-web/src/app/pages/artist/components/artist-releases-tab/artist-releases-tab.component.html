@@ -16,20 +16,11 @@
     [activeTab]="activeStatus"
     (tabChange)="onStatusTabChange($event)">
 
-    <app-paginated-table
-      title=""
-      [data]="filteredReleases"
-      [pagination]="null"
-      [loading]="loading"
-      [columns]="releaseColumns"
-      [showSearch]="false"
-      [showSortableHeaders]="true"
-      [showActionsColumn]="true"
-      [actions]="releaseActions"
-      [headerActions]="headerActions">
+    <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-5">
 
-      <ng-template #customButtons>
-        <div class="filter-controls tw-flex tw-items-center tw-flex-1">
+      <!-- Header: filter group + Create Release button -->
+      <div class="tw-pt-3 tw-pb-3 tw-px-3 sm:tw-px-card-pad">
+        <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-center tw-gap-3">
           <div class="release-filter-group" role="group">
             <button type="button"
                     class="release-filter-btn"
@@ -48,52 +39,91 @@
               <app-icon name="eye-off" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
             </button>
           </div>
-        </div>
-      </ng-template>
-
-      <ng-template #mobileRowTemplate let-release let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
-        <div class="release-card">
-          <!-- Cover art with overlay chips -->
-          <div class="release-card__cover">
-            <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-card__img">
-            <!-- Alert dots only remain on overlay -->
-            <div class="release-card__overlay">
-              <span class="release-chip release-chip--alert release-chip--alert-error tw-ml-auto"
-                    *ngIf="hasValidationErrors(release)"
-                    [title]="getValidationTooltip(release)">!</span>
-              <span class="release-chip release-chip--alert release-chip--alert-warning tw-ml-auto"
-                    *ngIf="!hasValidationErrors(release) && hasValidationIssues(release)"
-                    [title]="getValidationTooltip(release)">⚠</span>
-            </div>
-          </div>
-          <!-- Card body -->
-          <div class="release-card__body">
-            <div class="release-card__title">{{ release.title }}</div>
-            <div class="release-card__meta">
-              <span class="release-card__date">Released on {{ formatDate(release.release_date) }}</span>
-            </div>
-            <div *ngIf="release.UPC" class="release-card__id">{{ release.UPC }}</div>
-            <!-- Chips row -->
-            <div class="release-card__chips">
-              <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
-              <span [class]="getStatusChipClass(release.status)">{{ release.status }}</span>
-              <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
-                <app-icon name="eye-off" iconOnly />
-              </span>
-            </div>
-          </div>
-          <!-- Kebab menu -->
-          <button *ngIf="visibleActions.length > 0"
-                  class="release-card__menu kebab-btn"
-                  type="button"
-                  (click)="toggleKebab($event)"
-                  [class.active]="isKebabOpen">
-            <app-icon name="more-vertical" iconOnly />
+          <button *ngIf="artist" type="button" class="btn-sm btn-primary" (click)="navigateToCreateRelease()">
+            <app-icon [name]="isAdmin ? 'plus' : 'upload'" />
+            <span class="tw-ml-1">{{ isAdmin ? 'Create Release' : 'Submit Release' }}</span>
           </button>
         </div>
-      </ng-template>
+      </div>
 
-    </app-paginated-table>
+      <!-- Loading -->
+      <div *ngIf="loading" class="tw-p-4 tw-text-center">
+        <div class="loading-dots">
+          <div></div><div></div><div></div>
+        </div>
+      </div>
+
+      <!-- Card grid -->
+      <div *ngIf="!loading" class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+        <div class="release-card-grid">
+          <div *ngIf="filteredReleases.length === 0" class="tw-col-span-full tw-text-center tw-py-8 tw-text-muted">
+            No releases in this category.
+          </div>
+          <div *ngFor="let release of filteredReleases"
+               class="release-card"
+               [class.release-card--open]="openKebabRelease === release"
+               (click)="$event.stopPropagation()">
+
+            <!-- Cover art — clickable -->
+            <div class="release-card__cover" (click)="onEditRelease(release)">
+              <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-card__img">
+              <div class="release-card__overlay">
+                <span class="release-chip release-chip--alert release-chip--alert-error tw-ml-auto"
+                      *ngIf="hasValidationErrors(release)"
+                      [title]="getValidationTooltip(release)">!</span>
+                <span class="release-chip release-chip--alert release-chip--alert-warning tw-ml-auto"
+                      *ngIf="!hasValidationErrors(release) && hasValidationIssues(release)"
+                      [title]="getValidationTooltip(release)">⚠</span>
+              </div>
+            </div>
+
+            <!-- Card body -->
+            <div class="release-card__body">
+              <div class="release-card__title">{{ release.title }}</div>
+              <div class="release-card__meta">
+                <span class="release-card__date">Released on {{ formatDate(release.release_date) }}</span>
+              </div>
+              <div *ngIf="release.UPC" class="release-card__id">{{ release.UPC }}</div>
+              <div class="release-card__chips">
+                <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
+                <span [class]="getStatusChipClass(release.status)">{{ release.status }}</span>
+                <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
+                  <app-icon name="eye-off" iconOnly />
+                </span>
+              </div>
+            </div>
+
+            <!-- Floating action menu (position: fixed to escape overflow/stacking issues) -->
+            <div *ngIf="openKebabRelease === release && menuPosition"
+                 class="release-card__actions"
+                 [style.bottom.px]="menuPosition!.bottom"
+                 [style.right.px]="menuPosition!.right"
+                 (click)="$event.stopPropagation()">
+              <button *ngFor="let action of openKebabActions"
+                      type="button"
+                      class="release-card__action-btn"
+                      [class.release-card__action-btn--primary]="action.type === 'primary'"
+                      [class.release-card__action-btn--danger]="action.type === 'danger'"
+                      (click)="onActionClick(action, openKebabRelease!, $event)">
+                <app-icon [name]="action.icon" class="tw-mr-2 tw-shrink-0" />{{ action.label }}
+              </button>
+            </div>
+
+            <!-- Kebab toggle button -->
+            <button *ngIf="getVisibleActions(release).length > 0"
+                    class="release-card__menu kebab-btn"
+                    type="button"
+                    (click)="toggleKebab(release, $event)"
+                    [class.active]="openKebabRelease === release">
+              <app-icon [name]="openKebabRelease === release ? 'x' : 'more-vertical'" iconOnly />
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
 
   </app-in-page-nav>
+
 </div>
