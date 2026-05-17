@@ -41,6 +41,7 @@ interface PublicEventView {
   tags?: { id: number; name: string }[];
   ticketing_enabled?: boolean;
   listed_on_ticketing?: boolean;
+  external_ticket_link?: string | null;
 }
 
 @Component({
@@ -158,6 +159,14 @@ interface PublicEventView {
                     <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                     Tickets Closed
                   </div>
+                } @else if (event()!.external_ticket_link) {
+                  <div>
+                    <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
+                      class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors shadow-lg">
+                      Get Tickets ↗
+                    </a>
+                    <p class="text-white/30 font-mono text-xs mt-2 uppercase tracking-wider">External ticketing site</p>
+                  </div>
                 } @else if (event()!.buy_shortlink) {
                   <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
                     class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors shadow-lg">
@@ -230,12 +239,20 @@ interface PublicEventView {
                   </div>
 
                   <!-- CTA below ticket types -->
-                  @if (!event()!.is_closed && event()!.buy_shortlink) {
+                  @if (!event()!.is_closed && (event()!.external_ticket_link || event()!.buy_shortlink)) {
                     <div class="mt-6">
-                      <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
-                        class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors">
-                        Get Tickets →
-                      </a>
+                      @if (event()!.external_ticket_link) {
+                        <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
+                          class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors">
+                          Get Tickets ↗
+                        </a>
+                        <p class="text-white/30 font-mono text-xs mt-2 uppercase tracking-wider">External ticketing site</p>
+                      } @else {
+                        <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
+                          class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors">
+                          Get Tickets →
+                        </a>
+                      }
                     </div>
                   }
                 </div>

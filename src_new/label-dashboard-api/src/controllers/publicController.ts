@@ -226,6 +226,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         walk_in_enabled: event.walk_in_enabled || false,
         ticketing_enabled: event.ticketing_enabled !== false,
         listed_on_ticketing: event.listed_on_ticketing !== false,
+        external_ticket_link: event.external_ticket_link || null,
         walkInTypes,
         event_type: event.event_type || null,
         tags: (event as any).tags || [],
