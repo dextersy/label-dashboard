@@ -3,6 +3,7 @@ import {
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  markNotificationsReadByType,
   getUnreadNotificationCount
 } from '../controllers/notificationController';
 import { authenticateToken } from '../middleware/auth';
@@ -14,6 +15,7 @@ router.use(authenticateToken);
 router.get('/', getNotifications);
 router.get('/unread-count', getUnreadNotificationCount);
 router.patch('/read-all', markAllNotificationsRead);
+router.patch('/read-by-type/:type', markNotificationsReadByType);
 router.patch('/:id/read', markNotificationRead);
 
 export default router;

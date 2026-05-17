@@ -53,6 +53,13 @@ export class InAppNotificationService implements OnDestroy {
     });
   }
 
+  markTypeAsRead(type: string): void {
+    this.apiService.markNotificationsReadByType(type).subscribe({
+      next: () => this.fetchNotifications(),
+      error: (err: any) => console.error('Failed to mark notifications as read by type:', err)
+    });
+  }
+
   startPolling(intervalMs: number = 30000): void {
     this.pollUnreadCount();
     if (!this.pollingInterval) {

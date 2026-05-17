@@ -63,9 +63,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   }
 
   onGroupedClick(group: GroupedNotification): void {
-    for (const id of group.notificationIds) {
-      this.notificationService.markAsRead(id);
-    }
+    this.notificationService.markTypeAsRead(group.type);
     this.isOpen = false;
     if (group.link) {
       this.router.navigateByUrl(group.link);

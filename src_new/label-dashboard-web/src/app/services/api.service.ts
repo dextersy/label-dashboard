@@ -99,6 +99,10 @@ export class ApiService {
     return this.http.patch(`${this.baseUrl}/notifications/read-all`, {}, { headers: this.getAuthHeaders() });
   }
 
+  markNotificationsReadByType(type: string): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/notifications/read-by-type/${encodeURIComponent(type)}`, {}, { headers: this.getAuthHeaders() });
+  }
+
   getUnreadNotificationCount(): Observable<any> {
     return this.http.get(`${this.baseUrl}/notifications/unread-count`, { headers: this.getAuthHeaders() });
   }
