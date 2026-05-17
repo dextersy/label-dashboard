@@ -379,9 +379,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
     }
 
     // Parse ticketing_enabled early so we can skip ticket-related validation when disabled
-    const isTicketingEnabled = ticketing_enabled !== undefined
-      ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true)
-      : true;
+    const isTicketingEnabled = parseBool(ticketing_enabled, true);
 
     // Validate basic fields
     if (!title || !date_and_time || !venue) {
@@ -478,9 +476,9 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       venue_maps_url: venue_maps_url || null,
       status: status || 'draft',
       event_type: event_type || null,
-      ticketing_enabled: ticketing_enabled !== undefined ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true) : true,
+      ticketing_enabled: parseBool(ticketing_enabled, true),
       external_ticket_link: external_ticket_link || null,
-      listed_on_ticketing: listed_on_ticketing !== undefined ? (listed_on_ticketing === 'false' || listed_on_ticketing === false ? false : true) : true,
+      listed_on_ticketing: parseBool(listed_on_ticketing, true),
       walk_in_enabled: parseBool(walk_in_enabled, false),
       walk_in_supports_cash: parseBool(walk_in_supports_cash, true),
       walk_in_supports_gcash: parseBool(walk_in_supports_gcash, false),
@@ -720,7 +718,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
 
     // Resolve ticketing_enabled after update
     const newTicketingEnabled = ticketing_enabled !== undefined
-      ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true)
+      ? parseBool(ticketing_enabled, true)
       : event.ticketing_enabled;
 
     // Only regenerate URLs for published events
@@ -780,9 +778,9 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       venue_maps_url: venue_maps_url !== undefined ? (venue_maps_url === '' ? null : venue_maps_url) : event.venue_maps_url,
       status: status !== undefined ? status : event.status,
       event_type: event_type !== undefined ? (event_type === '' ? null : event_type) : event.event_type,
-      ticketing_enabled: ticketing_enabled !== undefined ? (ticketing_enabled === 'false' || ticketing_enabled === false ? false : true) : event.ticketing_enabled,
+      ticketing_enabled: ticketing_enabled !== undefined ? parseBool(ticketing_enabled, true) : event.ticketing_enabled,
       external_ticket_link: external_ticket_link !== undefined ? (external_ticket_link === '' ? null : external_ticket_link) : event.external_ticket_link,
-      listed_on_ticketing: listed_on_ticketing !== undefined ? (listed_on_ticketing === 'false' || listed_on_ticketing === false ? false : true) : event.listed_on_ticketing,
+      listed_on_ticketing: listed_on_ticketing !== undefined ? parseBool(listed_on_ticketing, true) : event.listed_on_ticketing,
       walk_in_enabled: walk_in_enabled !== undefined ? walk_in_enabled : event.walk_in_enabled,
       walk_in_supports_cash: walk_in_supports_cash !== undefined ? walk_in_supports_cash : event.walk_in_supports_cash,
       walk_in_supports_gcash: walk_in_supports_gcash !== undefined ? walk_in_supports_gcash : event.walk_in_supports_gcash,
