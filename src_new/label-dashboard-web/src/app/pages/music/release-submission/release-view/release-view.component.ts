@@ -247,32 +247,38 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
     return 'play';
   }
 
-  // Get collaborators for a song
+  hasSongCredits(song: any): boolean {
+    return !!(song.collaborators?.length || song.authors?.length || song.composers?.length);
+  }
+
+  getSongArtistNames(song: any): string {
+    if (!song.collaborators?.length) return '';
+    return song.collaborators.map((c: any) => c.artist?.name || 'Unknown').join(', ');
+  }
+
+  getSongAuthorNames(song: any): string {
+    if (!song.authors?.length) return '';
+    return song.authors.map((a: any) => a.songwriter?.name || 'Unknown').join(', ');
+  }
+
+  getSongComposerNames(song: any): string {
+    if (!song.composers?.length) return '';
+    return song.composers.map((c: any) => c.songwriter?.name || 'Unknown').join(', ');
+  }
+
+  // Kept for mobile expand panel fallback — returns flat string
   getSongCollaborators(song: any): string {
-    const collaborators: string[] = [];
-
+    const parts: string[] = [];
     if (song.collaborators?.length) {
-      song.collaborators.forEach((c: any) => {
-        const name = c.artist?.name || 'Unknown';
-        collaborators.push(name);
-      });
+      parts.push(song.collaborators.map((c: any) => c.artist?.name || 'Unknown').join(', '));
     }
-
     if (song.authors?.length) {
-      song.authors.forEach((a: any) => {
-        const name = a.songwriter?.name || 'Unknown';
-        collaborators.push(`${name} (Author)`);
-      });
+      parts.push(song.authors.map((a: any) => `${a.songwriter?.name || 'Unknown'} (Author)`).join(', '));
     }
-
     if (song.composers?.length) {
-      song.composers.forEach((c: any) => {
-        const name = c.songwriter?.name || 'Unknown';
-        collaborators.push(`${name} (Composer)`);
-      });
+      parts.push(song.composers.map((c: any) => `${c.songwriter?.name || 'Unknown'} (Composer)`).join(', '));
     }
-
-    return collaborators.join(', ') || '—';
+    return parts.join(', ') || '—';
   }
 
   hasMasters(): boolean {

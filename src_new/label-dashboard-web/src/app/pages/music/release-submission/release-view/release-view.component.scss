@@ -497,11 +497,27 @@
       border-top: 1px solid var(--border-light, #eee);
 
       @media (max-width: 768px) {
-        display: block; // shown on mobile when *ngIf is true
+        display: block;
       }
 
       @media (min-width: 769px) {
-        display: none !important; // always hidden on desktop regardless of *ngIf
+        display: none !important;
+      }
+
+      .expand-credits {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border-light, #eee);
+
+        .expand-credit-group {
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 0.5rem;
+        }
       }
 
       .expand-detail {
@@ -583,12 +599,8 @@
 
       @media (max-width: 768px) {
         grid-template-columns: 32px 36px 1fr 60px 36px;
-
-        .track-collaborators {
-          display: none;
-        }
       }
-      
+
       .track-num {
         font-size: 0.9rem;
         color: var(--text-muted, #888);
@@ -632,11 +644,45 @@
       }
       
       .track-collaborators {
-        font-size: 0.9rem;
-        color: var(--text-muted, #666);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+
+        @media (max-width: 768px) {
+          display: none;
+        }
+
+        .track-collab-artists {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--text-color, #333);
+        }
+
+        .track-collab-songwriters {
+          display: flex;
+          flex-direction: column;
+          gap: 0.1rem;
+
+          span {
+            font-size: 0.8rem;
+            color: var(--text-muted, #888);
+
+            .credit-role {
+              font-style: normal;
+              font-size: 0.7rem;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              color: var(--text-muted, #aaa);
+              margin-left: 0.25rem;
+            }
+          }
+        }
+
+        .track-collab-empty {
+          font-size: 0.9rem;
+          color: var(--text-muted, #ccc);
+        }
       }
       
       .track-duration {

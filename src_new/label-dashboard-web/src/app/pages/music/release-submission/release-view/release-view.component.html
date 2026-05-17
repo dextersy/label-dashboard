@@ -235,7 +235,14 @@
               <span class="song-name">{{ song.title }}</span>
               <span class="song-isrc" *ngIf="song.isrc">{{ song.isrc }}</span>
             </span>
-            <span class="track-collaborators">{{ getSongCollaborators(song) }}</span>
+            <span class="track-collaborators">
+              <span class="track-collab-artists" *ngIf="getSongArtistNames(song)">{{ getSongArtistNames(song) }}</span>
+              <span class="track-collab-songwriters" *ngIf="getSongAuthorNames(song) || getSongComposerNames(song)">
+                <span *ngIf="getSongAuthorNames(song)">{{ getSongAuthorNames(song) }} <em class="credit-role">Author</em></span>
+                <span *ngIf="getSongComposerNames(song)">{{ getSongComposerNames(song) }} <em class="credit-role">Composer</em></span>
+              </span>
+              <span class="track-collab-empty" *ngIf="!hasSongCredits(song)">—</span>
+            </span>
             <span class="track-duration">{{ formatDuration(song.duration) }}</span>
             <span class="track-actions">
               <button class="track-expand-btn" (click)="toggleTrackExpand(song.id)">
@@ -253,11 +260,21 @@
             </span>
           </div>
 
-          <!-- Mobile expanded details panel -->
+          <!-- Expanded details panel (mobile always, desktop on demand) -->
           <div class="track-expand-panel" *ngIf="expandedTrackIds.has(song.id)">
-            <div class="expand-detail" *ngIf="getSongCollaborators(song) !== '—'">
-              <span class="expand-label">Collaborators</span>
-              <span class="expand-value">{{ getSongCollaborators(song) }}</span>
+            <div class="expand-credits" *ngIf="hasSongCredits(song)">
+              <div class="expand-credit-group" *ngIf="getSongArtistNames(song)">
+                <span class="expand-label">Artists</span>
+                <span class="expand-value">{{ getSongArtistNames(song) }}</span>
+              </div>
+              <div class="expand-credit-group" *ngIf="getSongAuthorNames(song)">
+                <span class="expand-label">Authors</span>
+                <span class="expand-value">{{ getSongAuthorNames(song) }}</span>
+              </div>
+              <div class="expand-credit-group" *ngIf="getSongComposerNames(song)">
+                <span class="expand-label">Composers</span>
+                <span class="expand-value">{{ getSongComposerNames(song) }}</span>
+              </div>
             </div>
             <div class="expand-detail" *ngIf="song.isrc">
               <span class="expand-label">ISRC</span>
