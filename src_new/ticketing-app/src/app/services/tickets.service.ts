@@ -34,6 +34,23 @@ export class TicketsService {
     return this.http.post(`${this.base}/resend`, { ticket_id: id });
   }
 
+  addTicket(data: {
+    event_id: number;
+    ticket_type_id: number;
+    name: string;
+    email_address: string;
+    contact_number: string;
+    number_of_entries?: number;
+    price_per_ticket?: number;
+    payment_processing_fee?: number;
+    platform_fee?: number;
+    ticket_paid?: boolean;
+    send_email?: boolean;
+    order_timestamp?: string;
+  }): Observable<any> {
+    return this.http.post(this.base, data);
+  }
+
   exportCsvUrl(params?: { event_id?: number }): string {
     let query = '';
     if (params?.event_id) query = `?event_id=${params.event_id}`;

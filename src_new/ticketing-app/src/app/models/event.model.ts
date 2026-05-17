@@ -11,6 +11,7 @@ export interface Event {
   tickets_sold?: number;
   total_revenue?: number;
   verification_pin?: string;
+  verification_link?: string;
   buy_shortlink?: string;
   rsvp_link?: string;
   // Venue details

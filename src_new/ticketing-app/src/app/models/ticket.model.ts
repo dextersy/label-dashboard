@@ -15,6 +15,7 @@ export interface Ticket {
   status: 'New' | 'Payment Confirmed' | 'Ticket sent.' | 'Canceled' | 'Refunded';
   ticket_code?: string;
   referrer_id?: number;
+  referrer_name?: string;
   order_timestamp?: string;
   date_paid?: string;
   payment_link?: string;
