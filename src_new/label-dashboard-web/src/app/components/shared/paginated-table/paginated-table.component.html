@@ -2,7 +2,7 @@
   <div class="md:tw-col-span-12">
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-5">
       <div class="tw-pt-3 tw-pb-3">
-        <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-start tw-gap-3">
+        <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-center tw-gap-3">
           <div>
             <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">{{ title }}</h3>
             <div class="pagination-info tw-mt-0" *ngIf="pagination">
@@ -19,23 +19,23 @@
               <ng-container *ngTemplateOutlet="customButtons"></ng-container>
             </ng-container>
 
-            <!-- Mobile: single action — show button directly; multiple actions — bento dropdown -->
-            <ng-container *ngIf="headerActions.length === 1 && !isHeaderActionHidden(headerActions[0])">
+            <!-- Primary actions: always visible on all viewports -->
+            <ng-container *ngFor="let action of headerActions">
               <button
+                *ngIf="action.type === 'primary' && !isHeaderActionHidden(action)"
                 type="button"
-                class="btn-sm sm:tw-hidden"
-                [class.btn-secondary]="!headerActions[0].type || headerActions[0].type === 'secondary'"
-                [class.btn-primary]="headerActions[0].type === 'primary'"
-                [class.btn-danger]="headerActions[0].type === 'danger'"
-                [disabled]="isHeaderActionDisabled(headerActions[0])"
-                [title]="resolveHeaderActionTitle(headerActions[0])"
-                (click)="headerActions[0].handler()">
-                <app-icon [name]="resolveHeaderActionIcon(headerActions[0])" />
-                <span class="tw-ml-1">{{ resolveHeaderActionLabel(headerActions[0]) }}</span>
+                class="btn-sm btn-primary"
+                [disabled]="isHeaderActionDisabled(action)"
+                [title]="resolveHeaderActionTitle(action)"
+                (click)="action.handler()">
+                <app-icon [name]="resolveHeaderActionIcon(action)" />
+                <span class="tw-ml-1">{{ resolveHeaderActionLabel(action) }}</span>
               </button>
             </ng-container>
+
+            <!-- Mobile: secondary/danger actions in bento (hidden on sm+) -->
             <button
-              *ngIf="headerActions.length > 1"
+              *ngIf="hasNonPrimaryVisibleHeaderActions()"
               type="button"
               class="kebab-btn sm:tw-hidden"
               [class.active]="mobileActionsOpen"
@@ -44,14 +44,12 @@
               <app-icon name="more-vertical" iconOnly />
             </button>
 
-            <!-- Desktop header action buttons (≥ 576px) -->
-            <div class="tw-hidden sm:tw-flex tw-items-center tw-gap-2" *ngIf="headerActions.length > 0">
+            <!-- Desktop (sm+): secondary/danger actions as buttons -->
+            <div class="tw-hidden sm:tw-flex tw-items-center tw-gap-2" *ngIf="hasNonPrimaryVisibleHeaderActions()">
               <ng-container *ngFor="let action of headerActions">
                 <button
-                  *ngIf="!isHeaderActionHidden(action)"
-                  class="btn-sm"
-                  [class.btn-secondary]="!action.type || action.type === 'secondary'"
-                  [class.btn-primary]="action.type === 'primary'"
+                  *ngIf="action.type !== 'primary' && !isHeaderActionHidden(action)"
+                  class="btn-sm btn-secondary"
                   [class.btn-danger]="action.type === 'danger'"
                   [disabled]="isHeaderActionDisabled(action)"
                   [title]="resolveHeaderActionTitle(action)"

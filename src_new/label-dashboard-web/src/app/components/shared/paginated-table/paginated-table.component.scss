@@ -194,13 +194,6 @@
 // Responsive table header actions
 .table-actions {
   min-width: 0; // Allow flexbox to shrink below content size
-
-  .btn, .btn-sm, [class^="btn-"] {
-    white-space: nowrap; // Prevent button text from wrapping
-    font-size: 12px !important;
-    padding: 4px 10px !important;
-    line-height: 1.4 !important;
-  }
 }
 
 // Card header responsive improvements

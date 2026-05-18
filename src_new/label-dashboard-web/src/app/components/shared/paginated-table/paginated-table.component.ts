@@ -186,6 +186,10 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
     return action.disabled ? action.disabled() : false;
   }
 
+  hasNonPrimaryVisibleHeaderActions(): boolean {
+    return this.headerActions.some(a => a.type !== 'primary' && !this.isHeaderActionHidden(a));
+  }
+
   hasActionsColumn(): boolean {
     return this.showActionsColumn || this.actions.length > 0;
   }
