@@ -41,8 +41,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
   csvTotalCount: number = 0;
   csvTotalUnmatched: number = 0;
   csvCalculateRoyalties: boolean = true;
-  csvEarningType: string = 'Streaming';
-  csvDescription: string = 'Import from CSV';
+  csvEarningType: string = '';
+  csvDescription: string = '';
   mobileFormCollapsed: boolean = true;
   manualFormCollapsed: boolean = true;
   csvProcessingResult: CsvProcessingResult | null = null;
@@ -57,27 +57,29 @@ export class BulkAddEarningsTabComponent implements OnInit {
   };
 
   csvTableColumns: TableColumn[] = [
-    { 
-      key: 'matched_release', 
-      label: 'Catalog No', 
-      searchable: true, 
+    {
+      key: 'matched_release',
+      label: 'Catalog No.',
+      searchable: true,
       sortable: true,
-      formatter: (item) => item.matched_release?.catalog_no || ''
+      renderHtml: true,
+      formatter: (item) => `<span style="font-family:monospace;font-size:12px;">${item.matched_release?.catalog_no || ''}</span>`
     },
-    { 
-      key: 'matched_release', 
-      label: 'Release Title', 
-      searchable: true, 
+    {
+      key: 'matched_release',
+      label: 'Release Title',
+      searchable: true,
       sortable: true,
       formatter: (item) => item.matched_release?.title || ''
     },
-    { 
-      key: 'earning_amount', 
-      label: 'Earning Amount', 
-      type: 'number', 
-      searchable: false, 
-      sortable: true, 
-      formatter: (item) => this.formatCurrency(item.earning_amount) 
+    {
+      key: 'earning_amount',
+      label: 'Earning Amount',
+      type: 'number',
+      searchable: false,
+      sortable: true,
+      align: 'right',
+      formatter: (item) => this.formatCurrency(item.earning_amount)
     }
   ];
 

@@ -145,6 +145,128 @@
   }
 }
 
+// ── CSV preview: stat cards ───────────────────────────────────────────────────
+.csv-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.csv-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.csv-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-family: "Inter", sans-serif;
+}
+
+.csv-stat-download-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.15s;
+
+  &:hover {
+    color: #374151;
+  }
+}
+
+
+.csv-file-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  &--danger {
+    color: #ef4444;
+
+    &:hover {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+  }
+}
+
+// ── CSV FAB: label above each control ─────────────────────────────────────────
+.csv-fab-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin-bottom: 5px;
+  white-space: nowrap;
+}
+
+// Toggle group: label + switch, baseline-aligned with sibling inputs
+// The label takes the same height as other labels; the switch sits where
+// the input would be, vertically centred in the remaining space.
+.csv-fab-toggle-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.csv-fab-toggle-input {
+  // Match the height of a tw-input (38px) so the group aligns on the same
+  // baseline as Description and Type when tw-items-end is on the parent.
+  height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+// Import button: never clip the label, always show full text
+.csv-import-btn {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  flex: 1;
+  justify-content: center;
+  min-width: 0; // allow flex to size it, but content won't wrap
+}
+
+
+// ── CSV view width cap ────────────────────────────────────────────────────────
+.csv-view-body {
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 // ── CSV upload area ───────────────────────────────────────────────────────────
 .csv-upload-area {
   border: 2px dashed #dee2e6;

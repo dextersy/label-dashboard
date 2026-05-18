@@ -400,6 +400,7 @@
 
 <!-- CSV Import View -->
 <div *ngIf="currentView === 'csv'">
+  <div class="csv-view-body">
   <!-- CSV Upload Section -->
   <div *ngIf="!csvFile" class="csv-upload-area"
        (dragover)="onDragOver($event)"
@@ -408,181 +409,226 @@
     <div class="tw-mb-3">
       <app-icon name="upload" [size]="48" class="tw-mb-3 tw-text-muted" iconOnly />
       <h3>Upload CSV File</h3>
-      <p class="tw-text-muted">
-        Drag and drop a CSV file here, or click to select a file.<br>
-        Expected columns: Catalog Number (or similar), Release Title (or similar), Earning Amount (or similar)<br>
-        <small class="tw-text-[#0891b2]">Column names are matched using fuzzy matching - variations in naming are supported</small>
-      </p>
+      <p class="tw-text-muted">Drag and drop a CSV file here, or click to select a file.</p>
       <input type="file"
              class="tw-hidden tw-input"
              id="csvFileInput"
              accept=".csv"
              (change)="onFileSelected($event)">
-      <button type="button" class="btn-primary" (click)="openFileDialog()">
-        <app-icon name="folder" class="tw-mr-2" />Select CSV File
-      </button>
+      <div class="tw-my-4">
+        <button type="button" class="btn-primary" (click)="openFileDialog()">
+          <app-icon name="folder" class="tw-mr-2" />Select CSV File
+        </button>
+      </div>
+      <div class="tw-inline-block tw-text-left tw-mb-0" style="font-size:12px;">
+        <div class="tw-flex tw-items-start tw-gap-1.5 tw-text-muted tw-mb-1">
+          <app-icon name="info" class="tw-flex-shrink-0 tw-mt-px" iconOnly />
+          <span>CSV files only &middot; Max 5 MB &middot; UTF-8 or UTF-16 encoding</span>
+        </div>
+        <div class="tw-flex tw-items-start tw-gap-1.5 tw-text-muted">
+          <app-icon name="info" class="tw-flex-shrink-0 tw-mt-px" iconOnly />
+          <span>Expected columns: Catalog Number, Release Title, Earning Amount &middot; <span class="tw-text-[#0891b2]">Fuzzy matching supported</span></span>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- CSV Preview Section -->
   <div *ngIf="csvFile && csvProcessingResult">
-    <!-- Summary Information -->
-    <div class="tw-mb-4 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
-      <div >
-        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-            <h3 class="card-title text-primary">{{ csvTotalCount - csvTotalUnmatched }}</h3>
-            <p class="card-text tw-text-muted">Total Matched Rows</p>
-          </div>
-        </div>
+
+    <!-- 1. File name header -->
+    <div class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-mb-2">
+      <div class="tw-flex tw-items-center tw-gap-2 tw-min-w-0">
+        <app-icon name="file" class="tw-text-muted tw-flex-shrink-0" iconOnly />
+        <span class="tw-font-medium tw-text-sm tw-truncate">{{ csvFile.name }}</span>
+        <span class="tw-text-muted tw-flex-shrink-0" style="font-size:11px;">{{ (csvFile.size / 1024).toFixed(1) }} KB</span>
       </div>
-      <div >
-        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-            <h5 class="card-title tw-text-success" [ngClass]="getAmountClass(csvTotalAmount)">{{ formatCurrency(csvTotalAmount) }}</h5>
-            <p class="card-text tw-text-muted">Total Matched Amount</p>
-          </div>
-        </div>
-      </div>
-      <div >
-        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-            <h3 class="card-title tw-text-danger">{{ csvTotalUnmatched }}</h3>
-            <p class="card-text tw-text-muted">Unmatched Rows</p>
-            <button
-              type="button"
-              class="btn-danger btn-sm tw-mt-2"
-              (click)="downloadUnmatchedCsv()"
-              *ngIf="csvTotalUnmatched > 0">
-              <app-icon name="download" class="tw-mr-1" />Download CSV
-            </button>
-          </div>
-        </div>
-      </div>
-      <div >
-        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
-          <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
-            <h6 class="card-title">{{ csvFile.name }}</h6>
-            <p class="card-text tw-text-muted">
-              <small>{{ (csvFile.size / 1024).toFixed(1) }} KB</small>
-            </p>
-          </div>
-        </div>
-      </div>
+      <button type="button" class="csv-file-bar-btn csv-file-bar-btn--danger tw-flex-shrink-0"
+              (click)="removeCsvFile()">
+        <app-icon name="x" class="tw-mr-1" />Remove file
+      </button>
     </div>
 
-    <!-- CSV Data Table -->
-    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
-      <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
-        <h6 class="tw-mb-0">CSV Preview</h6>
-        <button type="button" class="btn-danger btn-sm" (click)="removeCsvFile()">
-          <app-icon name="x" class="tw-mr-2" />Remove File
+    <!-- 2. Stats grid: 4 equal-width cards -->
+    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
+
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Matched Rows</span>
+        <span class="csv-stat-value tw-text-[#2563eb]">{{ csvTotalCount - csvTotalUnmatched }}</span>
+      </div>
+
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Matched Amount</span>
+        <span class="csv-stat-value tw-text-[#16a34a]">{{ formatCurrency(csvTotalAmount) }}</span>
+      </div>
+
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Unmatched Rows</span>
+        <span class="csv-stat-value tw-text-[#ef4444]">{{ csvTotalUnmatched }}</span>
+        <button type="button" class="csv-stat-download-btn"
+                *ngIf="csvTotalUnmatched > 0"
+                (click)="downloadUnmatchedCsv()">
+          <app-icon name="download" class="tw-mr-1" />Download as CSV
         </button>
       </div>
-      <div class="tw-px-card-pad tw-pb-card-pad">
-        <div *ngIf="csvData.length === 0; else showTable" class="tw-py-4 tw-text-center">
-          <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" iconOnly />
-          <h5 class="tw-text-muted">No matches found in the CSV file.</h5>
-          <p class="tw-text-muted">
-            Please check that your CSV contains valid catalog numbers or release titles that match existing releases in your system.
-          </p>
-        </div>
-        <ng-template #showTable>
-          <app-paginated-table
-            [data]="csvData"
-            [columns]="csvTableColumns"
-            [pagination]="csvPagination"
-            [loading]="loading"
-            [showSearch]="true"
-            [showSortableHeaders]="true"
-            [title]="'Matched Releases'"
-            (pageChange)="onCsvPageChange($event)">
-          </app-paginated-table>
-        </ng-template>
+
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Total Rows</span>
+        <span class="csv-stat-value tw-text-body">{{ csvTotalCount }}</span>
       </div>
+
     </div>
+
+    <!-- 3. CSV Data Table -->
+    <div *ngIf="csvData.length === 0; else showTable" class="tw-py-4 tw-text-center">
+      <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" iconOnly />
+      <h5 class="tw-text-muted">No matches found in the CSV file.</h5>
+      <p class="tw-text-muted">
+        Please check that your CSV contains valid catalog numbers or release titles that match existing releases in your system.
+      </p>
+    </div>
+    <ng-template #showTable>
+      <app-paginated-table
+        [data]="csvData"
+        [columns]="csvTableColumns"
+        [pagination]="csvPagination"
+        [loading]="loading"
+        [showSearch]="true"
+        [showSortableHeaders]="true"
+        [title]="'Matched Releases'"
+        (pageChange)="onCsvPageChange($event)">
+      </app-paginated-table>
+    </ng-template>
 
   </div>
 
-<!-- Floating Action Bar - CSV Import -->
-<app-floating-action-bar *ngIf="csvFile && csvProcessingResult">
+  </div><!-- /csv-view-body -->
 
-  <!-- Desktop left: form fields -->
-  <div floatingStart class="tw-hidden lg:tw-flex tw-items-end tw-gap-3">
-    <div class="tw-mb-5 tw-mb-0">
-      <label for="csvDescriptionDesktop" class="tw-label">Description</label>
+<!-- Floating Action Bar - CSV Import -->
+<app-floating-action-bar *ngIf="csvFile && csvProcessingResult" variant="strip">
+
+  <!-- Desktop left: controls + warning banner as a wrapped second row (hidden on mobile) -->
+  <div floatingStart class="tw-hidden md:tw-flex md:tw-flex-wrap tw-items-end tw-gap-x-3 tw-gap-y-2">
+    <div>
+      <label for="csvDescriptionDesktop" class="csv-fab-label">Description</label>
       <input type="text"
              class="tw-input"
              id="csvDescriptionDesktop"
              [(ngModel)]="csvDescription"
-             placeholder="Enter description for imported earnings"
-             style="min-width: 200px;">
+             placeholder="e.g. Q1 Streaming"
+             style="min-width: 180px;">
     </div>
-    <div class="tw-mb-5 tw-mb-0">
-      <label for="csvEarningTypeDesktop" class="tw-label">Type</label>
+    <div>
+      <label for="csvEarningTypeDesktop" class="csv-fab-label">Type</label>
       <select class="form-select tw-input"
               id="csvEarningTypeDesktop"
               [(ngModel)]="csvEarningType"
               style="min-width: 120px;">
+        <option value="" disabled>Select type</option>
         <option value="Sync">Sync</option>
         <option value="Streaming">Streaming</option>
         <option value="Downloads">Downloads</option>
         <option value="Physical">Physical</option>
       </select>
     </div>
-    <div class="tw-mb-5 tw-mb-0">
-      <div class="form-check form-switch" style="margin-top: 32px;">
+    <div class="csv-fab-toggle-group">
+      <label for="csvCalculateRoyaltiesDesktop" class="csv-fab-label">Calculate Royalties</label>
+      <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
         <input class="form-check-input" type="checkbox" id="csvCalculateRoyaltiesDesktop" [(ngModel)]="csvCalculateRoyalties">
-        <label class="form-check-label" for="csvCalculateRoyaltiesDesktop">Calculate Royalties</label>
+        <label class="form-check-label tw-text-muted" for="csvCalculateRoyaltiesDesktop">Enabled</label>
       </div>
     </div>
-    <div *ngIf="csvTotalUnmatched > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-0 tw-ml-3" style="font-size: 12px; padding: 6px 12px; margin-top: 32px;">
-      <app-icon name="warning" class="tw-mr-1" />{{ csvTotalUnmatched }} unmatched
-    </div>
   </div>
 
-  <!-- Mobile bar: always-visible import summary -->
-  <span floatingBarInfo class="tw-text-muted">
-    {{ csvTotalCount - csvTotalUnmatched }} rows • {{ csvEarningType }}
-  </span>
+  <!-- Mobile layout: stacked controls + action row (hidden on desktop) -->
+  <div class="md:tw-hidden tw-flex tw-flex-col tw-gap-2.5 tw-w-full tw-px-4 tw-py-3">
 
-  <!-- Mobile drawer: form fields (hidden on desktop) -->
-  <div class="lg:tw-hidden">
-    <label class="tw-label small tw-mb-1 tw-text-sm">Description</label>
-    <input type="text" class="tw-input-sm tw-input" [(ngModel)]="csvDescription" placeholder="Description">
-  </div>
-  <div class="lg:tw-hidden tw-flex tw-gap-2 tw-items-end">
-    <div class="tw-flex-1">
-      <label class="tw-label small tw-mb-1 tw-text-sm">Type</label>
-      <select class="form-select form-select-sm tw-input" [(ngModel)]="csvEarningType">
-        <option value="Sync">Sync</option>
-        <option value="Streaming">Streaming</option>
-        <option value="Downloads">Downloads</option>
-        <option value="Physical">Physical</option>
-      </select>
+    <!-- 1. Description + Type (always visible) -->
+    <div class="tw-flex tw-gap-2">
+      <div class="tw-flex-1 tw-min-w-0">
+        <label class="csv-fab-label">Description</label>
+        <input type="text" class="tw-input" style="height:38px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 Streaming">
+      </div>
+      <div class="tw-flex-shrink-0">
+        <label class="csv-fab-label">Type</label>
+        <select class="form-select tw-input" style="height:38px;" [(ngModel)]="csvEarningType">
+          <option value="" disabled>Select type</option>
+          <option value="Sync">Sync</option>
+          <option value="Streaming">Streaming</option>
+          <option value="Downloads">Downloads</option>
+          <option value="Physical">Physical</option>
+        </select>
+      </div>
     </div>
-    <div class="form-check form-switch tw-mb-1">
-      <input class="form-check-input" type="checkbox" id="csvCalcRoyaltiesMobile" [(ngModel)]="csvCalculateRoyalties">
-      <label class="form-check-label small tw-text-sm" for="csvCalcRoyaltiesMobile">Royalties</label>
-    </div>
-  </div>
-  <div *ngIf="csvTotalUnmatched > 0" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-0 lg:tw-hidden" style="font-size: 12px; padding: 8px 12px;">
-    <app-icon name="warning" class="tw-mr-1" />{{ csvTotalUnmatched }} rows will be skipped
-  </div>
-  <!-- Cancel: visible on both desktop (in secondary bar) and mobile (in drawer) -->
-  <button type="button" class="btn-secondary" (click)="removeCsvFile()">
-    <app-icon name="x" class="tw-mr-2" />Cancel
-  </button>
 
-  <!-- Primary: Import -->
-  <button type="button"
-          class="btn-primary fab-primary-btn"
-          (click)="saveCsvEarnings()"
-          [disabled]="loading || csvData.length === 0">
-    <app-icon name="save" class=" tw-mr-2" />
-    <span *ngIf="csvData.length > 0">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
-    <span *ngIf="csvData.length === 0">No Earnings to Import</span>
-  </button>
+    <!-- 2. Warning (compact, always visible if unmatched) -->
+    <div *ngIf="csvTotalUnmatched > 0"
+         class="tw-flex tw-items-center tw-gap-2 tw-px-3 tw-py-1.5 tw-rounded tw-border tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800"
+         style="font-size:12px;">
+      <app-icon name="warning" class="tw-flex-shrink-0" iconOnly />
+      <span><strong>{{ csvTotalUnmatched }}</strong> row{{ csvTotalUnmatched === 1 ? '' : 's' }} unmatched</span>
+    </div>
+
+    <!-- 3. Import (always visible) -->
+    <button type="button"
+            class="btn-primary csv-import-btn"
+            (click)="saveCsvEarnings()"
+            [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType">
+      <app-icon name="save" class="tw-mr-2 tw-flex-shrink-0" />
+      <span *ngIf="csvData.length > 0" class="tw-whitespace-nowrap">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
+      <span *ngIf="csvData.length === 0" class="tw-whitespace-nowrap">No Earnings to Import</span>
+    </button>
+
+    <!-- 3. More settings toggle -->
+    <button type="button"
+            class="tw-flex tw-items-center tw-justify-between tw-w-full tw-bg-transparent tw-border-0 tw-p-0 tw-mt-1"
+            (click)="toggleMobileForm()">
+      <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500">More Settings</span>
+      <app-icon [name]="mobileFormCollapsed ? 'chevron-down' : 'chevron-up'" class="tw-text-gray-400" iconOnly />
+    </button>
+
+    <!-- Collapsible: Type, Royalties, Warning, Cancel -->
+    <ng-container *ngIf="!mobileFormCollapsed">
+
+      <!-- Royalties toggle -->
+      <div class="csv-fab-toggle-group">
+        <label for="csvCalcRoyaltiesMobile" class="csv-fab-label">Calculate Royalties</label>
+        <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
+          <input class="form-check-input" type="checkbox" id="csvCalcRoyaltiesMobile" [(ngModel)]="csvCalculateRoyalties">
+          <label class="form-check-label tw-text-muted" for="csvCalcRoyaltiesMobile">Enabled</label>
+        </div>
+      </div>
+
+      <!-- Cancel -->
+      <button type="button" class="btn-secondary tw-w-full" (click)="removeCsvFile()">
+        <app-icon name="x" class="tw-mr-2" />Cancel
+      </button>
+
+    </ng-container>
+
+  </div>
+
+  <!-- Desktop right column: warning (if any) + Cancel + Import (hidden on mobile) -->
+  <div class="tw-hidden md:tw-flex md:tw-flex-col tw-gap-2 tw-items-end tw-pr-20">
+    <div *ngIf="csvTotalUnmatched > 0"
+         class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2 tw-rounded tw-border tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-text-sm tw-w-full">
+      <app-icon name="warning" class="tw-flex-shrink-0" iconOnly />
+      <span><strong>{{ csvTotalUnmatched }}</strong> row{{ csvTotalUnmatched === 1 ? '' : 's' }} could not be matched. Review before importing.</span>
+    </div>
+    <div class="tw-flex tw-gap-2 tw-items-center">
+      <button type="button" class="btn-secondary" (click)="removeCsvFile()">
+        <app-icon name="x" class="tw-mr-2" />Cancel
+      </button>
+      <button type="button"
+              class="btn-primary csv-import-btn"
+              (click)="saveCsvEarnings()"
+              [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType">
+        <app-icon name="save" class="tw-mr-2 tw-flex-shrink-0" />
+        <span *ngIf="csvData.length > 0" class="tw-whitespace-nowrap">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
+        <span *ngIf="csvData.length === 0" class="tw-whitespace-nowrap">No Earnings to Import</span>
+      </button>
+    </div>
+  </div>
 
 </app-floating-action-bar>
 
