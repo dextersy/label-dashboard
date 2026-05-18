@@ -2,6 +2,7 @@ export const ICON_REGISTRY: Record<string, string> = {
 
   // Navigation
   'chevron-down': `<polyline points="6 9 12 15 18 9"/>`,
+  'chevrons-down': `<polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/>`,
   'chevron-up': `<polyline points="18 15 12 9 6 15"/>`,
   'chevron-left': `<polyline points="15 18 9 12 15 6"/>`,
   'chevron-right': `<polyline points="9 18 15 12 9 6"/>`,

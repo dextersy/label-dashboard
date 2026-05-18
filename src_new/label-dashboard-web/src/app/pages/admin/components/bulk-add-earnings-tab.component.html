@@ -39,170 +39,343 @@
 <!-- Manual Entry View -->
 <div *ngIf="currentView === 'manual'">
 
-  <div class="table-responsive">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Release</th>
-        <th>Earning Date</th>
-        <th>Earning Type</th>
-        <th>Earning Description</th>
-        <th>Earning Amount</th>
-        <th>Calculate royalties</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Apply to all row -->
-      <tr style="background-color:#f1f1f1;">
-        <td><em>Apply to all</em></td>
-        <td>
-          <input type="date" class="tw-input" #applyAllDateInput 
-                 (change)="applyAllDate(applyAllDateInput.value)">
-        </td>
-        <td>
-          <select class="tw-input" #applyAllTypeInput 
-                  (change)="applyAllType(applyAllTypeInput.value)">
+  <!-- ── DESKTOP TABLE (lg+) ─────────────────────────────────────────────── -->
+  <div class="table-responsive tw-hidden lg:tw-block">
+    <table class="table earnings-table">
+      <thead class="earnings-sticky-head">
+        <tr>
+          <th class="row-num-col">#</th>
+          <th>Release</th>
+          <th>Earning Date</th>
+          <th>Earning Type</th>
+          <th>Earning Description</th>
+          <th>Earning Amount</th>
+          <th>Calculate Royalties</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Apply-to-all row -->
+        <tr class="apply-all-row">
+          <td class="row-num-col"></td>
+          <td>
+            <div>
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">
+              <app-icon name="chevrons-down" class="tw-mr-1" />Apply to all
+            </h3>
+            <small class="tw-text-muted" style="font-size:11px;">Sets value on every row below</small>
+          </div>
+          </td>
+          <td>
+            <input type="date" class="tw-input" #applyAllDateInput
+                   (change)="applyAllDate(applyAllDateInput.value)">
+          </td>
+          <td>
+            <select class="tw-input" #applyAllTypeInput
+                    (change)="applyAllType(applyAllTypeInput.value)">
+              <option value="Sync">Sync</option>
+              <option value="Streaming">Streaming</option>
+              <option value="Downloads">Downloads</option>
+              <option value="Physical">Physical</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="tw-input" #applyAllDescInput placeholder="Description"
+                   (change)="applyAllDescription(applyAllDescInput.value); applyAllDescInput.value = ''">
+          </td>
+          <td></td>
+          <td>
+            <div class="apply-all-royalties">
+              <label class="apply-all-royalties-label" for="applyAllCalcDesktop">
+                Calculate royalties for all rows
+              </label>
+              <div class="form-check form-switch tw-mb-0">
+                <input type="checkbox" class="form-check-input" id="applyAllCalcDesktop"
+                       #applyAllCalcInput checked
+                       (change)="applyAllCalculateRoyalties(applyAllCalcInput.checked)">
+              </div>
+            </div>
+          </td>
+          <td></td>
+        </tr>
+
+        <!-- Data rows -->
+        <tr *ngFor="let earning of bulkEarnings; let i = index">
+          <td class="row-num-col tw-text-muted tw-font-medium">{{ i + 1 }}</td>
+          <td>
+            <div class="tw-relative">
+              <div class="release-search-wrap">
+                <app-icon name="search" class="release-search-icon" iconOnly />
+                <input type="text"
+                       class="tw-input release-search-input"
+                       [(ngModel)]="searchTerms[i]"
+                       (input)="onReleaseSearch(i, searchTerms[i])"
+                       (focus)="onInputFocus(i)"
+                       (blur)="onInputBlur(i)"
+                       placeholder="Search releases..."
+                       autocomplete="off">
+              </div>
+
+              <!-- Autocomplete dropdown -->
+              <div *ngIf="showDropdown[i]"
+                   class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
+                   style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                <div *ngIf="filteredReleases.length > 0; else noResultsDesktop">
+                  <div *ngFor="let release of filteredReleases"
+                       class="tw-p-2 release-option"
+                       style="cursor: pointer; border-bottom: 1px solid #eee;"
+                       (click)="selectRelease(i, release)">
+                    <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
+                  </div>
+                </div>
+                <ng-template #noResultsDesktop>
+                  <div class="tw-p-2 tw-text-muted">No releases found</div>
+                </ng-template>
+              </div>
+
+              <!-- Selected release hint -->
+              <div *ngIf="earning.release_id > 0 && !searchTerms[i]" class="small tw-text-muted tw-text-sm">
+                Selected: {{ getSelectedRelease(earning.release_id)?.catalog_no }}: {{ getSelectedRelease(earning.release_id)?.title }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <input type="date" class="tw-input" [(ngModel)]="earning.date_recorded">
+          </td>
+          <td>
+            <select class="tw-input" [(ngModel)]="earning.type">
+              <option value="Sync">Sync</option>
+              <option value="Streaming">Streaming</option>
+              <option value="Downloads">Downloads</option>
+              <option value="Physical">Physical</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="tw-input" [(ngModel)]="earning.description"
+                   placeholder="Description">
+          </td>
+          <td>
+            <div class="amount-input-container">
+              <span class="peso-sign">₱</span>
+              <input type="number" class="amount-input tw-input" step="0.01" min="0"
+                     [(ngModel)]="earning.amount" placeholder="Amount"
+                     (ngModelChange)="onBulkAmountChange()">
+            </div>
+          </td>
+          <td>
+            <div class="form-check form-switch">
+              <input type="checkbox" class="form-check-input"
+                     [(ngModel)]="earning.calculate_royalties">
+            </div>
+          </td>
+          <td>
+            <button type="button"
+                    class="btn-danger btn-sm"
+                    (click)="removeRow(i)"
+                    title="Remove row">
+              ×
+            </button>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── MOBILE CARD LIST (below lg) ────────────────────────────────────── -->
+  <div class="lg:tw-hidden tw-flex tw-flex-col tw-gap-3">
+
+    <!-- Apply-to-all card -->
+    <div class="apply-all-card">
+      <div class="apply-all-card-header">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Apply to all</h3>
+        <div class="form-check form-switch tw-mb-0 tw-flex tw-items-center tw-gap-2">
+          <input type="checkbox" class="form-check-input" id="applyAllCalcMobile"
+                 #applyAllCalcMobileInput checked
+                 (change)="applyAllCalculateRoyalties(applyAllCalcMobileInput.checked)">
+          <label class="form-check-label tw-text-sm" for="applyAllCalcMobile">
+            Calculate royalties
+          </label>
+        </div>
+      </div>
+      <div class="tw-grid tw-grid-cols-2 tw-gap-2 tw-mt-3">
+        <div>
+          <label class="tw-label tw-text-xs">Date</label>
+          <input type="date" class="tw-input" #applyAllDateMobileInput
+                 (change)="applyAllDate(applyAllDateMobileInput.value)">
+        </div>
+        <div>
+          <label class="tw-label tw-text-xs">Type</label>
+          <select class="tw-input" #applyAllTypeMobileInput
+                  (change)="applyAllType(applyAllTypeMobileInput.value)">
             <option value="Sync">Sync</option>
             <option value="Streaming">Streaming</option>
             <option value="Downloads">Downloads</option>
             <option value="Physical">Physical</option>
           </select>
-        </td>
-        <td>
-          <input type="text" class="tw-input" #applyAllDescInput placeholder="Description" 
-                 (change)="applyAllDescription(applyAllDescInput.value); applyAllDescInput.value = ''">
-        </td>
-        <td></td>
-        <td>
-          <div class="form-check form-switch">
-            <input type="checkbox" class="form-check-input" #applyAllCalcInput 
-                   checked (change)="applyAllCalculateRoyalties(applyAllCalcInput.checked)">
-          </div>
-        </td>
-        <td></td>
-      </tr>
+        </div>
+        <div class="tw-col-span-2">
+          <label class="tw-label tw-text-xs">Description</label>
+          <input type="text" class="tw-input" #applyAllDescMobileInput placeholder="Description"
+                 (change)="applyAllDescription(applyAllDescMobileInput.value); applyAllDescMobileInput.value = ''">
+        </div>
+      </div>
+    </div>
 
-      <!-- Data rows -->
-      <tr *ngFor="let earning of bulkEarnings; let i = index">
-        <td>
+    <!-- Data row cards -->
+    <div *ngFor="let earning of bulkEarnings; let i = index" class="earning-card">
+
+      <!-- Card header -->
+      <div class="earning-card-header">
+        <span class="earning-card-num">#{{ i + 1 }}</span>
+        <span class="earning-card-release">
+          <ng-container *ngIf="earning.release_id > 0; else noReleaseMobile">
+            {{ getSelectedRelease(earning.release_id)?.catalog_no }}: {{ getSelectedRelease(earning.release_id)?.title }}
+          </ng-container>
+          <ng-template #noReleaseMobile>
+            <span class="tw-text-muted tw-italic">No release selected</span>
+          </ng-template>
+        </span>
+        <div class="earning-card-royalties" [class.is-active]="earning.calculate_royalties">
+          <div class="form-check form-switch tw-mb-0">
+            <input type="checkbox" class="form-check-input"
+                   [(ngModel)]="earning.calculate_royalties"
+                   [id]="'calc-royalties-' + i">
+          </div>
+          <label class="earning-royalties-label" [for]="'calc-royalties-' + i">Royalties</label>
+        </div>
+        <button type="button" class="btn-danger btn-sm tw-ml-1 tw-flex-shrink-0"
+                (click)="removeRow(i)" title="Remove row">
+          ×
+        </button>
+      </div>
+
+      <!-- Card fields -->
+      <div class="earning-card-body">
+
+        <!-- Release search -->
+        <div class="tw-col-span-2">
+          <label class="tw-label tw-text-xs">Release</label>
           <div class="tw-relative">
-            <input type="text" 
-                   class="tw-input" 
-                   [(ngModel)]="searchTerms[i]"
-                   (input)="onReleaseSearch(i, searchTerms[i])"
-                   (focus)="onInputFocus(i)"
-                   (blur)="onInputBlur(i)"
-                   placeholder="Search releases..."
-                   autocomplete="off">
-            
-            <!-- Dropdown for autocomplete results -->
-            <div *ngIf="showDropdown[i]" 
-                 class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm" 
+            <div class="release-search-wrap">
+              <app-icon name="search" class="release-search-icon" iconOnly />
+              <input type="text"
+                     class="tw-input release-search-input"
+                     [(ngModel)]="searchTerms[i]"
+                     (input)="onReleaseSearch(i, searchTerms[i])"
+                     (focus)="onInputFocus(i)"
+                     (blur)="onInputBlur(i)"
+                     placeholder="Search releases..."
+                     autocomplete="off">
+            </div>
+            <div *ngIf="showDropdown[i]"
+                 class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
                  style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-              <div *ngIf="filteredReleases.length > 0; else noResults">
-                <div *ngFor="let release of filteredReleases" 
+              <div *ngIf="filteredReleases.length > 0; else noResultsMobile">
+                <div *ngFor="let release of filteredReleases"
                      class="tw-p-2 release-option"
                      style="cursor: pointer; border-bottom: 1px solid #eee;"
                      (click)="selectRelease(i, release)">
                   <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
                 </div>
               </div>
-              <ng-template #noResults>
-                <div class="tw-p-2 tw-text-muted">
-                  No releases found
-                </div>
+              <ng-template #noResultsMobile>
+                <div class="tw-p-2 tw-text-muted">No releases found</div>
               </ng-template>
             </div>
-            
-            <!-- Show selected release if one is selected -->
-            <div *ngIf="earning.release_id > 0 && !searchTerms[i]" class="small tw-text-muted tw-text-sm">
-              Selected: {{ getSelectedRelease(earning.release_id)?.catalog_no }}: {{ getSelectedRelease(earning.release_id)?.title }}
-            </div>
           </div>
-        </td>
-        <td>
+        </div>
+
+        <!-- Date + Type -->
+        <div>
+          <label class="tw-label tw-text-xs">Date</label>
           <input type="date" class="tw-input" [(ngModel)]="earning.date_recorded">
-        </td>
-        <td>
+        </div>
+        <div>
+          <label class="tw-label tw-text-xs">Type</label>
           <select class="tw-input" [(ngModel)]="earning.type">
             <option value="Sync">Sync</option>
             <option value="Streaming">Streaming</option>
             <option value="Downloads">Downloads</option>
             <option value="Physical">Physical</option>
           </select>
-        </td>
-        <td>
-          <input type="text" class="tw-input" [(ngModel)]="earning.description" 
+        </div>
+
+        <!-- Description -->
+        <div class="tw-col-span-2">
+          <label class="tw-label tw-text-xs">Description</label>
+          <input type="text" class="tw-input" [(ngModel)]="earning.description"
                  placeholder="Description">
-        </td>
-        <td>
+        </div>
+
+        <!-- Amount -->
+        <div class="tw-col-span-2">
+          <label class="tw-label tw-text-xs">Amount</label>
           <div class="amount-input-container">
             <span class="peso-sign">₱</span>
-            <input type="number" class="amount-input tw-input" step="0.01" min="0" 
-                   [(ngModel)]="earning.amount" placeholder="Amount" 
+            <input type="number" class="amount-input tw-input" step="0.01" min="0"
+                   [(ngModel)]="earning.amount" placeholder="Amount"
                    (ngModelChange)="onBulkAmountChange()">
           </div>
-        </td>
-        <td>
-          <div class="form-check form-switch">
-            <input type="checkbox" class="form-check-input" 
-                   [(ngModel)]="earning.calculate_royalties">
-          </div>
-        </td>
-        <td>
-          <button type="button" 
-                  class="btn-danger btn-sm" 
-                  (click)="removeRow(i)"
-                  title="Remove row">
-            ×
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile add-row button -->
+    <button type="button" class="mobile-add-row-btn" (click)="addRows(1)">
+      <app-icon name="plus" class="tw-mr-2" />Add Row
+    </button>
+
+  </div>
 
 </div>
 
 <!-- Floating Action Bar - Manual Entry -->
 <app-floating-action-bar *ngIf="currentView === 'manual'">
 
-  <!-- Desktop left: totals and rows count -->
-  <div floatingStart class="tw-hidden lg:tw-flex tw-items-center tw-gap-4">
-    <div>
-      <strong>Current total earnings:</strong>
-      <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span>
+  <!-- Desktop left: totals, rows count, and add-rows control -->
+  <div floatingStart class="tw-hidden lg:tw-flex tw-items-center tw-gap-5">
+    <div class="fab-stat">
+      <span class="fab-stat-label">Total earnings</span>
+      <span class="fab-stat-value" [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span>
     </div>
-    <div class="tw-text-muted">Total rows: {{ bulkEarnings.length }}</div>
-  </div>
-
-  <!-- Mobile bar: always-visible total summary -->
-  <span floatingBarInfo class="tw-text-muted">
-    Total: <span [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span> • {{ bulkEarnings.length }} rows
-  </span>
-
-  <!-- Desktop: btn-group with dropdown (hidden on mobile to avoid overflow clip in drawer) -->
-  <div class="add-rows-container tw-hidden lg:tw-flex">
-    <div class="btn-group add-rows-dropdown" role="group">
-      <button type="button" class="btn-secondary btn-sm" (click)="addRows(1)">
-        Add Row
-      </button>
-      <button type="button"
-              class="btn-secondary btn-sm dropdown-toggle dropdown-toggle-split"
-              (click)="toggleAddRowsDropdown()">
-        <app-icon name="caret-up" iconOnly *ngIf="showAddRowsDropdown" />
-        <app-icon name="caret-down" iconOnly *ngIf="!showAddRowsDropdown" />
-      </button>
+    <div class="fab-stat-divider"></div>
+    <div class="fab-stat">
+      <span class="fab-stat-label">Rows</span>
+      <span class="fab-stat-value tw-text-body">{{ bulkEarnings.length }}</span>
     </div>
-    <div class="dropdown-menu-wrapper" *ngIf="showAddRowsDropdown">
-      <div class="dropdown-menu-simple">
-        <div class="dropdown-item" (click)="addRows(5); hideAddRowsDropdown()">Add 5 Rows</div>
-        <div class="dropdown-item" (click)="addRows(10); hideAddRowsDropdown()">Add 10 Rows</div>
+    <div class="add-rows-container tw-flex">
+      <div class="btn-group add-rows-dropdown" role="group">
+        <button type="button" class="btn-secondary btn-sm" (click)="addRows(1)">
+          Add Row
+        </button>
+        <button type="button"
+                class="btn-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                (click)="toggleAddRowsDropdown()">
+          <app-icon name="caret-up" iconOnly *ngIf="showAddRowsDropdown" />
+          <app-icon name="caret-down" iconOnly *ngIf="!showAddRowsDropdown" />
+        </button>
+      </div>
+      <div class="dropdown-menu-wrapper" *ngIf="showAddRowsDropdown">
+        <div class="dropdown-menu-simple">
+          <div class="dropdown-item" (click)="addRows(5); hideAddRowsDropdown()">Add 5 Rows</div>
+          <div class="dropdown-item" (click)="addRows(10); hideAddRowsDropdown()">Add 10 Rows</div>
+        </div>
       </div>
     </div>
   </div>
-  <!-- Mobile: flat buttons in drawer (no popup dropdowns inside overflow:hidden) -->
+
+  <!-- Mobile bar: always-visible total summary (two-line to prevent truncation) -->
+  <span floatingBarInfo>
+    <span class="fab-info-two-line">
+      <span class="fab-info-amount" [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</span>
+      <span class="fab-info-count">{{ bulkEarnings.length }} {{ bulkEarnings.length === 1 ? 'row' : 'rows' }}</span>
+    </span>
+  </span>
+
+  <!-- Mobile drawer: add rows (hidden on desktop — desktop uses the btn-group above) -->
   <button type="button" class="btn-secondary lg:tw-hidden" (click)="addRows(1)">
     <app-icon name="plus" class="tw-mr-2" />Add 1 Row
   </button>
@@ -228,9 +401,9 @@
 <!-- CSV Import View -->
 <div *ngIf="currentView === 'csv'">
   <!-- CSV Upload Section -->
-  <div *ngIf="!csvFile" class="csv-upload-area" 
-       (dragover)="onDragOver($event)" 
-       (dragleave)="onDragLeave($event)" 
+  <div *ngIf="!csvFile" class="csv-upload-area"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
        (drop)="onDrop($event)">
     <div class="tw-mb-3">
       <app-icon name="upload" [size]="48" class="tw-mb-3 tw-text-muted" iconOnly />
@@ -240,10 +413,10 @@
         Expected columns: Catalog Number (or similar), Release Title (or similar), Earning Amount (or similar)<br>
         <small class="tw-text-[#0891b2]">Column names are matched using fuzzy matching - variations in naming are supported</small>
       </p>
-      <input type="file" 
-             class="tw-hidden tw-input" 
-             id="csvFileInput" 
-             accept=".csv" 
+      <input type="file"
+             class="tw-hidden tw-input"
+             id="csvFileInput"
+             accept=".csv"
              (change)="onFileSelected($event)">
       <button type="button" class="btn-primary" (click)="openFileDialog()">
         <app-icon name="folder" class="tw-mr-2" />Select CSV File
@@ -276,9 +449,9 @@
           <div class="tw-px-card-pad tw-pb-card-pad tw-text-center">
             <h3 class="card-title tw-text-danger">{{ csvTotalUnmatched }}</h3>
             <p class="card-text tw-text-muted">Unmatched Rows</p>
-            <button 
-              type="button" 
-              class="btn-danger btn-sm tw-mt-2" 
+            <button
+              type="button"
+              class="btn-danger btn-sm tw-mt-2"
               (click)="downloadUnmatchedCsv()"
               *ngIf="csvTotalUnmatched > 0">
               <app-icon name="download" class="tw-mr-1" />Download CSV
