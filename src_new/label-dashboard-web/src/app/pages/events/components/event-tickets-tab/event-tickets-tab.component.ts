@@ -752,8 +752,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   formatWalkInPrice(price: number): string {
-    if (!price || price === 0) return 'FREE';
-    return '₱' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return '₱' + (price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   formatWalkInDate(dateString: string): string {
