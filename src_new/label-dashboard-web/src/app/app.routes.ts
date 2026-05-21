@@ -19,6 +19,7 @@ import { DomainNotFoundComponent } from './pages/domain-not-found/domain-not-fou
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { SetProfileComponent } from './pages/set-profile/set-profile.component';
+import { GoogleCallbackComponent } from './pages/google-callback/google-callback.component';
 import { InviteComponent } from './pages/invite/invite.component';
 import { AdminInviteComponent } from './pages/admin-invite/admin-invite.component';
 import { AdminSetupComponent } from './pages/admin-setup/admin-setup.component';
@@ -45,6 +46,7 @@ export const routes: Routes = [
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'set-profile', component: SetProfileComponent }, // No auth guard - standalone (also used for profile completion)
+  { path: 'google-callback', component: GoogleCallbackComponent }, // Google OAuth callback landing page
   { path: 'invite', component: InviteComponent }, // No auth guard - standalone
   { path: 'invite/accept', component: InviteComponent }, // Legacy route - alias for /invite
   { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone

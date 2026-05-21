@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 export interface User {
   id: number;
@@ -96,6 +96,26 @@ export class AuthService {
       this.currentUserSubject.next(response.user);
       return response;
     }));
+  }
+
+  /**
+   * Redeems the one-time exchange code issued by the Google OAuth callback.
+   * The code is posted to the backend which returns a JWT in the response body,
+   * keeping all tokens out of URLs, logs, and browser history.
+   */
+  exchangeGoogleCode(code: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/dashboard/google/exchange`, { code }).pipe(
+      tap((response: LoginResponse) => {
+        if (response.status === 'profile_incomplete') {
+          localStorage.setItem('temp_auth_token', response.token);
+          localStorage.setItem('temp_user_data', JSON.stringify(response.user));
+        } else if (response.token) {
+          localStorage.setItem('auth_token', response.token);
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          this.currentUserSubject.next(response.user);
+        }
+      })
+    );
   }
 
   getTempUserData(): ProfileIncompleteUser | null {

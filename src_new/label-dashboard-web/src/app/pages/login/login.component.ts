@@ -7,6 +7,7 @@ import { BrandService } from '../../services/brand.service';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService, WorkspaceType } from '../../services/workspace.service';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-login',
@@ -25,6 +26,8 @@ export class LoginComponent implements OnInit {
   redirectUrl: string = '';
   showResetSuccess: boolean = false;
   lockTimeMinutes: number = 0;
+
+  googleAuthEnabled: boolean = environment.googleAuthEnabled;
 
   // Password visibility toggle
   showPassword: boolean = false;
@@ -55,6 +58,18 @@ export class LoginComponent implements OnInit {
       // Handle redirect URL
       if (params['url']) {
         this.redirectUrl = params['url'];
+      }
+
+      // Handle Google OAuth errors
+      const googleError = params['error'];
+      if (googleError === 'google_account_not_found') {
+        this.errorMessage = 'No account found for that Google account. Please contact your label admin.';
+      } else if (googleError === 'google_cancelled') {
+        this.errorMessage = 'Google sign-in was cancelled.';
+      } else if (googleError === 'google_unverified_email') {
+        this.errorMessage = 'Your Google account email is not verified.';
+      } else if (googleError === 'google_auth_failed' || googleError === 'invalid_state' || googleError === 'missing_code') {
+        this.errorMessage = 'Google sign-in failed. Please try again.';
       }
     });
 
@@ -185,6 +200,11 @@ export class LoginComponent implements OnInit {
         }
       }
     });
+  }
+
+  googleSignIn(): void {
+    if (this.brandId === null) return;
+    window.location.href = `${environment.apiUrl}/auth/dashboard/google?brand_id=${this.brandId}`;
   }
 
   togglePasswordVisibility(): void {
