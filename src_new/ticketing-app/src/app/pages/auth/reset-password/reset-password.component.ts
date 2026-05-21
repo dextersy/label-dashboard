@@ -108,7 +108,7 @@ export class ResetPasswordComponent implements OnInit {
       this.tokenValid.set(false);
       return;
     }
-    this.http.get(`${environment.apiUrl}/auth/validate-reset-hash/${this.resetCode}`).subscribe({
+    this.http.get(`${environment.apiUrl}/auth/ticketing/validate-reset-hash/${this.resetCode}`).subscribe({
       next: () => { this.tokenValid.set(true); this.validating.set(false); },
       error: () => { this.tokenValid.set(false); this.validating.set(false); }
     });

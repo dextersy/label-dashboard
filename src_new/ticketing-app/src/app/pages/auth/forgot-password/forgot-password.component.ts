@@ -56,7 +56,7 @@ export class ForgotPasswordComponent {
   submit(): void {
     if (this.form.invalid) return;
     this.loading.set(true);
-    this.http.post(`${environment.apiUrl}/auth/forgot-password`, this.form.value).subscribe({
+    this.http.post(`${environment.apiUrl}/auth/ticketing/forgot-password`, this.form.value).subscribe({
       next: () => { this.sent.set(true); this.loading.set(false); },
       error: () => { this.sent.set(true); this.loading.set(false); }
     });
