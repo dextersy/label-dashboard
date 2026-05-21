@@ -22,6 +22,7 @@ export class ForgotPasswordComponent implements OnInit {
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
+  brandId: number | null = null;
 
   constructor(
     private router: Router,
@@ -39,7 +40,8 @@ export class ForgotPasswordComponent implements OnInit {
         this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
-        
+        this.brandId = brandSettings.id;
+
         // Apply brand styling to the page
         BrandService.setCssVars(this.brandColor);
         document.title = `${this.brandName} - Forgot Password`;
@@ -68,7 +70,7 @@ export class ForgotPasswordComponent implements OnInit {
     this.loading = true;
     this.message = '';
 
-    this.apiService.forgotPassword(this.email).subscribe({
+    this.apiService.forgotPassword(this.email, this.brandId!).subscribe({
       next: (response) => {
         this.loading = false;
         // Use backend message or fallback to generic success message

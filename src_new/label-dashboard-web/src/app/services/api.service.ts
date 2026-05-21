@@ -34,16 +34,17 @@ export class ApiService {
   }
 
   // Password Reset
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/forgot-password`, { email });
+  forgotPassword(email: string, brandId: number): Observable<any> {
+    return this.http.post(`${this.baseUrl}/auth/forgot-password`, { email, brand_id: brandId });
   }
 
   resetPassword(token: string, password: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/auth/reset-password`, { token, password });
   }
 
-  validateResetHash(hash: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/auth/validate-reset-hash/${hash}`);
+  validateResetHash(hash: string, brandId?: number): Observable<any> {
+    const params: Record<string, string> = brandId ? { brand_id: brandId.toString() } : {};
+    return this.http.get(`${this.baseUrl}/auth/validate-reset-hash/${hash}`, { params });
   }
 
   // Profile Management

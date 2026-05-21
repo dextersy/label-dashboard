@@ -29,6 +29,7 @@ export class ResetPasswordComponent implements OnInit {
   brandLogo: string = 'assets/img/Your Logo Here.png';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
+  brandId: number | null = null;
 
   constructor(
     private router: Router,
@@ -41,34 +42,25 @@ export class ResetPasswordComponent implements OnInit {
     // Get reset code from URL
     this.route.queryParams.subscribe(params => {
       this.resetCode = params['code'];
-      if (!this.resetCode) {
-        this.error = true;
-        this.errorMessage = 'Invalid or expired reset link';
-        this.loadBrandSettings();
-      } else {
-        // Validate reset hash like original PHP
-        this.validateResetHash();
-      }
 
       // Handle mismatch error from URL
       if (params['err'] === 'mismatch') {
         this.errorMessage = 'The passwords you input were mismatched. Please try again.';
       }
+
+      // Load brand first to get brandId, then validate the hash with it
+      this.loadBrandSettings();
     });
   }
 
   validateResetHash(): void {
-    this.apiService.validateResetHash(this.resetCode).subscribe({
-      next: (response) => {
-        // Hash is valid, load brand settings and show form
+    this.apiService.validateResetHash(this.resetCode, this.brandId ?? undefined).subscribe({
+      next: () => {
         this.error = false;
-        this.loadBrandSettings();
       },
       error: (error) => {
-        // Hash is invalid, show error with backend message
         this.error = true;
         this.errorMessage = error.error?.error || 'Invalid or expired reset link';
-        this.loadBrandSettings();
       }
     });
   }
@@ -79,10 +71,19 @@ export class ResetPasswordComponent implements OnInit {
         this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
         this.brandName = brandSettings.name;
         this.brandColor = brandSettings.brand_color;
+        this.brandId = brandSettings.id;
         
         // Apply brand styling to the page
         BrandService.setCssVars(this.brandColor);
         document.title = `${this.brandName} - Reset Password`;
+
+        // Now that we have brandId, validate the reset hash
+        if (this.resetCode) {
+          this.validateResetHash();
+        } else {
+          this.error = true;
+          this.errorMessage = 'Invalid or expired reset link';
+        }
       },
       error: (error) => {
         console.error('Error loading brand settings:', error);
