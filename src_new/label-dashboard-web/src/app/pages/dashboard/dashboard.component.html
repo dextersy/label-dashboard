@@ -23,12 +23,13 @@
 
       <!-- Top bar: workspace info + submit button -->
       <div class="tw-flex tw-items-center tw-justify-between tw-gap-4 tw-mb-6 tw-flex-wrap sm:tw-flex-nowrap">
-        <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">
-          Music<span *ngIf="brandName"> · {{ brandName }}</span>
-          · {{ dashboardData.stats?.totalArtists || 0 }} artists
-          · {{ dashboardData.stats?.totalReleases || 0 }} releases
+        <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0 tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
+          <span class="tw-hidden sm:tw-inline">Music<span *ngIf="brandName"> · {{ brandName }}</span> ·</span>
+          <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="user" class="tw-opacity-60" /> {{ dashboardData.stats?.totalArtists || 0 }} artists</span>
+          <span class="tw-text-gray-300">·</span>
+          <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="music" class="tw-opacity-60" /> {{ dashboardData.stats?.totalReleases || 0 }} releases</span>
         </p>
-        <a routerLink="/music/releases/new" class="btn btn-primary btn-sm tw-flex-shrink-0 tw-no-underline">
+        <a routerLink="/music/releases/new" class="btn btn-primary btn-sm tw-w-full sm:tw-w-auto sm:tw-flex-shrink-0 tw-no-underline tw-text-center">
           + Submit a release
         </a>
       </div>
@@ -37,52 +38,52 @@
       <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-3">
 
         <!-- Draft -->
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad">
-          <div class="tw-text-[2rem] tw-mr-4 tw-opacity-60 tw-text-gray-400">
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0">
+          <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-60 tw-text-gray-400 tw-flex-shrink-0">
             <app-icon name="file" />
           </div>
-          <div>
-            <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ getPipelineStageCount('Draft') }}</div>
-            <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Draft</div>
-            <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1">{{ getPipelinePct('Draft') }}%</div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ getPipelineStageCount('Draft') }}</div>
+            <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Draft</div>
+            <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1 tw-hidden sm:tw-block">{{ getPipelinePct('Draft') }}%</div>
           </div>
         </div>
 
         <!-- For Submission -->
         <a routerLink="/music/releases"
-           class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
-          <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80" style="color: #3b82f6;">
+           class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
+          <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-flex-shrink-0" style="color: #3b82f6;">
             <app-icon name="paper-plane" />
           </div>
-          <div>
-            <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #3b82f6;">{{ getPipelineStageCount('For Submission') }}</div>
-            <div class="tw-text-sm tw-mt-0.5" style="color: #666;">For Submission</div>
-            <div class="tw-text-xs tw-font-mono tw-mt-1" style="color: #3b82f6;">{{ getPipelinePct('For Submission') }}% · Submit →</div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #3b82f6;">{{ getPipelineStageCount('For Submission') }}</div>
+            <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">For Submission</div>
+            <div class="tw-text-xs tw-font-mono tw-mt-1 tw-hidden sm:tw-block" style="color: #3b82f6;">{{ getPipelinePct('For Submission') }}% · Submit →</div>
           </div>
         </a>
 
         <!-- Pending -->
         <a routerLink="/music/releases"
-           class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad hover:tw-shadow-md tw-transition-shadow">
-          <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-warning">
+           class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
+          <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-warning tw-flex-shrink-0">
             <app-icon name="clock" />
           </div>
-          <div>
-            <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #f59e0b;">{{ getPipelineStageCount('Pending') }}</div>
-            <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Pending</div>
-            <div class="tw-text-xs tw-font-mono tw-mt-1" style="color: #f59e0b;">{{ getPipelinePct('Pending') }}% · Review →</div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #f59e0b;">{{ getPipelineStageCount('Pending') }}</div>
+            <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Pending</div>
+            <div class="tw-text-xs tw-font-mono tw-mt-1 tw-hidden sm:tw-block" style="color: #f59e0b;">{{ getPipelinePct('Pending') }}% · Review →</div>
           </div>
         </a>
 
         <!-- Live -->
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-card-pad tw-pb-card-pad">
-          <div class="tw-text-[2rem] tw-mr-4 tw-opacity-80 tw-text-success">
+        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0">
+          <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-success tw-flex-shrink-0">
             <app-icon name="globe" />
           </div>
-          <div>
-            <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #10b981;">{{ getPipelineStageCount('Live') }}</div>
-            <div class="tw-text-sm tw-mt-0.5" style="color: #666;">Live</div>
-            <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1">{{ getPipelinePct('Live') }}%</div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #10b981;">{{ getPipelineStageCount('Live') }}</div>
+            <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Live</div>
+            <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1 tw-hidden sm:tw-block">{{ getPipelinePct('Live') }}%</div>
           </div>
         </div>
 
@@ -125,26 +126,37 @@
 
         <div *ngIf="dashboardData.latestReleases?.length" style="border-top: 0.5px solid #e5e7eb;">
           <div *ngFor="let release of dashboardData.latestReleases"
-               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5"
-               style="border-bottom: 0.5px solid #e5e7eb;">
+               class="tw-flex tw-items-center tw-gap-3 tw-py-3 sm:tw-py-3.5 tw-cursor-pointer hover:tw-bg-gray-50 tw-transition-colors"
+               style="border-bottom: 0.5px solid #e5e7eb;"
+               (click)="goToRelease(release)">
 
             <!-- Thumbnail -->
             <img [src]="getCoverArtUrl(release.cover_art)"
                  [alt]="release.title"
                  class="tw-object-cover tw-flex-shrink-0 tw-bg-gray-100"
-                 style="width: 48px; height: 48px; border-radius: 4px;">
+                 style="width: 44px; height: 44px; border-radius: 4px;">
 
             <!-- Info -->
             <div class="tw-flex-1 tw-min-w-0">
               <div class="tw-text-sm tw-font-medium tw-text-gray-900 tw-truncate">{{ release.title }}</div>
-              <div class="tw-text-sm tw-font-mono tw-text-muted tw-mt-1">
-                {{ release.release_date | date:'MMM d, y' }} · {{ release.status }}
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mt-0.5">
+                <span class="tw-text-xs tw-font-mono tw-text-muted">{{ release.release_date | date:'MMM d, y' }}</span>
+                <!-- Status chip inline (desktop only) -->
+                <span class="tw-text-xs tw-font-medium tw-px-2 tw-py-0.5 tw-rounded-full tw-whitespace-nowrap tw-hidden sm:tw-inline-block"
+                      [ngClass]="getReleaseStatusClass(release.status)">
+                  {{ release.status }}
+                </span>
               </div>
             </div>
 
-            <!-- See release -->
-            <a (click)="goToRelease(release)"
-               class="btn btn-ghost btn-sm tw-flex-shrink-0 tw-whitespace-nowrap tw-cursor-pointer tw-no-underline">
+            <!-- Status chip (mobile only, right-aligned) -->
+            <span class="tw-flex-shrink-0 tw-text-xs tw-font-medium tw-px-2 tw-py-0.5 tw-rounded-full tw-whitespace-nowrap sm:tw-hidden"
+                  [ngClass]="getReleaseStatusClass(release.status)">
+              {{ release.status }}
+            </span>
+
+            <!-- See release (desktop only) -->
+            <a class="btn btn-ghost btn-sm tw-flex-shrink-0 tw-whitespace-nowrap tw-no-underline tw-hidden sm:tw-inline-flex">
               See release →
             </a>
 

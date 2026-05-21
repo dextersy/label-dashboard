@@ -259,6 +259,16 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/music/releases']);
   }
 
+  getReleaseStatusClass(status: string): string {
+    switch (status) {
+      case 'Live': return 'tw-bg-green-100 tw-text-green-700';
+      case 'Pending': return 'tw-bg-amber-100 tw-text-amber-700';
+      case 'For Submission': return 'tw-bg-blue-100 tw-text-blue-700';
+      case 'Taken Down': return 'tw-bg-red-100 tw-text-red-700';
+      default: return 'tw-bg-gray-100 tw-text-gray-600';
+    }
+  }
+
   goToRelease(release: LatestRelease): void {
     if (release.artist_id) {
       localStorage.setItem('selected_artist_id', release.artist_id.toString());
