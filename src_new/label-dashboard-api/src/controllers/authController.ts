@@ -249,48 +249,46 @@ export const checkAuth = async (req: any, res: Response) => {
 
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
-    const { email } = req.body;
+    const { email, brand_id: bodyBrandId } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Get brand ID from referer URL (frontend domain)
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    if (!refererUrl) {
-      return res.status(400).json({ error: 'Unable to determine frontend domain from request' });
-    }
-    
-    let brandId = await getBrandIdFromDomain(refererUrl);
+    // brand_id is required — sent explicitly by the dashboard frontend.
+    // Fall back to Referer-based resolution for legacy clients only.
+    let brandId: number | null = bodyBrandId ? parseInt(bodyBrandId) : null;
 
-    // In dev, both apps share the same hostname (localhost) so the port is the only
-    // differentiator — but getBrandIdFromDomain strips ports.  If the referer origin
-    // matches TICKETING_FRONTEND_URL, use TICKETING_PARENT_BRAND_ID directly.
-    const ticketingFrontendUrl = process.env.TICKETING_FRONTEND_URL;
-    const ticketingParentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (ticketingFrontendUrl && ticketingParentBrandId) {
-      try {
-        if (new URL(refererUrl).origin === new URL(ticketingFrontendUrl).origin) {
-          brandId = ticketingParentBrandId;
-        }
-      } catch {}
+    if (!brandId) {
+      const refererUrl = req.get('referer') || req.get('referrer') || '';
+      if (!refererUrl) {
+        return res.status(400).json({ error: 'Unable to determine brand from request' });
+      }
+      brandId = await getBrandIdFromDomain(refererUrl);
     }
 
     if (!brandId) {
       return res.status(400).json({ error: 'Invalid domain or brand not found' });
     }
 
-    // Include sub-brands in the search so that organizer sub-brand users
-    // (whose brand_id differs from the domain's brand_id) can still reset their password
-    const subBrands = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'] });
-    const brandIds = [brandId, ...subBrands.map((b: any) => b.id)];
+    // Build reset URL base from the Referer origin so the link returns the user to the
+    // exact host:port they came from. Brand identity is determined by brand_id above,
+    // not by this URL, so a spoofed Referer cannot redirect the reset to the wrong account.
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let frontendBaseUrl: string;
+    if (refererUrl) {
+      try {
+        frontendBaseUrl = new URL(refererUrl).origin;
+      } catch {
+        frontendBaseUrl = await getBrandFrontendUrl(brandId);
+      }
+    } else {
+      frontendBaseUrl = await getBrandFrontendUrl(brandId);
+    }
 
-    // Find user by email across this brand and its sub-brands
+    // Dashboard: exact brand match only — consistent with how dashboard login works.
     const user = await User.findOne({
-      where: {
-        email_address: email,
-        brand_id: brandIds
-      },
+      where: { email_address: email, brand_id: brandId },
       include: [{ model: Brand, as: 'brand' }]
     });
 
@@ -317,7 +315,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
         emailBrand?.brand_color || user.brand?.brand_color || '#5fbae9',
         emailBrand?.logo_url || user.brand?.logo_url || '',
         brandId,
-        refererUrl // Pass the frontend domain
+        frontendBaseUrl
       ).catch(error => {
         console.error('Failed to send reset email:', error);
         // Don't expose email failure to client
@@ -862,23 +860,6 @@ export const organizerSignup = async (req: Request, res: Response) => {
       fundraiser_fee_revenue_type: parentBrand.fundraiser_fee_revenue_type ?? 'net',
     });
 
-    // Copy the parent brand's primary domain to the new organizer brand so that
-    // getBrandFrontendUrl works for event verification/buy links
-    const parentDomain = await Domain.findOne({
-      where: { brand_id: parentBrandId, is_primary: true },
-    }) || await Domain.findOne({
-      where: { brand_id: parentBrandId },
-      order: [['is_primary', 'DESC']],
-    });
-    if (parentDomain) {
-      await Domain.create({
-        brand_id: newBrand.id,
-        domain_name: parentDomain.domain_name,
-        status: parentDomain.status,
-        is_primary: true,
-      });
-    }
-
     // Hash password with bcrypt
     const password_hash = await hashPassword(password);
 
@@ -1029,20 +1010,11 @@ export const organizerLogin = async (req: Request, res: Response) => {
 
 /**
  * Derive the ticketing frontend base URL for post-auth redirects.
- * Priority:
- *   1. TICKETING_FRONTEND_URL env var — set this for local dev (http://localhost:4201)
- *      and for any deployment where the frontend URL differs from the brand DB domain.
- *   2. Parent brand's primary domain from the DB — used in production when the env var
- *      is not set.
- *   3. Hard-coded localhost fallback.
+ * Requires TICKETING_FRONTEND_URL to be set in the environment.
  */
-async function getTicketingFrontendUrl(): Promise<string> {
+function getTicketingFrontendUrl(): string {
   if (process.env.TICKETING_FRONTEND_URL) return process.env.TICKETING_FRONTEND_URL;
-  try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (parentBrandId) return await getBrandFrontendUrl(parentBrandId);
-  } catch {}
-  return 'http://localhost:4201';
+  throw new Error('TICKETING_FRONTEND_URL environment variable is required');
 }
 
 /**
@@ -1102,7 +1074,7 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
   // Always derive frontendUrl from brand config — never from state or any client-supplied
   // value.  This prevents open-redirect attacks where a spoofed Origin header encodes a
   // malicious URL into the state and the callback redirects the victim's token there.
-  const frontendUrl = await getTicketingFrontendUrl();
+  const frontendUrl = getTicketingFrontendUrl();
 
   if (state && process.env.JWT_SECRET) {
     try {
@@ -1194,18 +1166,6 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
       feature_campaigns_workspace: false,
     });
 
-    // Copy parent brand domain so getBrandFrontendUrl works for this sub-brand
-    const parentDomain = await Domain.findOne({ where: { brand_id: parentBrandId, is_primary: true } })
-      || await Domain.findOne({ where: { brand_id: parentBrandId }, order: [['is_primary', 'DESC']] });
-    if (parentDomain) {
-      await Domain.create({
-        brand_id: newBrand.id,
-        domain_name: parentDomain.domain_name,
-        status: parentDomain.status,
-        is_primary: true,
-      });
-    }
-
     const newUser = await User.create({
       email_address: email,
       google_id: googleId,
@@ -1271,26 +1231,17 @@ export const organizerGoogleExchange = async (req: Request, res: Response) => {
 };
 
 // Helper functions matching original PHP implementation
-async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number, refererUrl: string): Promise<boolean> {
+async function sendResetLink(emailAddress: string, resetHash: string, brandName: string, brandColor: string, brandLogo: string, brandId: number, frontendBaseUrl: string): Promise<boolean> {
   const subject = "Here's the link to reset your password!";
-  const emailContent = generateEmailFromTemplate(resetHash, brandName, brandColor, brandLogo, refererUrl);
+  const emailContent = generateEmailFromTemplate(resetHash, brandName, brandColor, brandLogo, frontendBaseUrl);
   return await sendEmail([emailAddress], subject, emailContent, brandId);
 }
 
-function generateEmailFromTemplate(resetHash: string, brandName: string, brandColor: string, brandLogo: string, refererUrl: string): string {
-  // refererUrl is now required - no fallback logic
-  if (!refererUrl) {
-    throw new Error('Frontend URL is required to generate reset password email');
+function generateEmailFromTemplate(resetHash: string, brandName: string, brandColor: string, brandLogo: string, frontendBaseUrl: string): string {
+  if (!frontendBaseUrl) {
+    throw new Error('Frontend base URL is required to generate reset password email');
   }
 
-  let frontendBaseUrl: string;
-  try {
-    const url = new URL(refererUrl);
-    frontendBaseUrl = `${url.protocol}//${url.hostname}${url.port ? ':' + url.port : ''}`;
-  } catch (error) {
-    throw new Error(`Invalid referer URL: ${refererUrl}`);
-  }
-  
   const resetUrl = `${frontendBaseUrl}/reset-password?code=${resetHash}`;
   try {
     const templatePath = path.join(__dirname, '../assets/templates/reset_password_email.html');
@@ -1339,6 +1290,125 @@ async function sendAdminNotification(user: any, remoteIp: string, proxyIp: strin
   return await sendEmail([adminEmail], subject, body, user.brand_id);
 }
 
+// ─── Ticketing password reset ─────────────────────────────────────────────────
+// Mirrors forgotPassword / validateResetHash but scoped to the ticketing parent
+// brand and all of its organizer sub-brands. The ticketing app calls these
+// dedicated endpoints instead of the dashboard ones.
+
+export const ticketingForgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId) {
+      throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
+    }
+
+    // Build reset URL base from the Referer origin so the link returns the user to the
+    // exact host:port they came from (preserves dev port numbers like :4201).
+    const refererUrl = req.get('referer') || req.get('referrer') || '';
+    let frontendBaseUrl: string;
+    if (refererUrl) {
+      try {
+        frontendBaseUrl = new URL(refererUrl).origin;
+      } catch {
+        frontendBaseUrl = await getBrandFrontendUrl(parentBrandId);
+      }
+    } else {
+      frontendBaseUrl = await getBrandFrontendUrl(parentBrandId);
+    }
+
+    // Search the ticketing parent brand and all organizer sub-brands.
+    const subBrands = await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] });
+    const brandIds = [parentBrandId, ...subBrands.map((b: any) => b.id)];
+
+    const user = await User.findOne({
+      where: { email_address: email, brand_id: brandIds },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (user) {
+      const resetHash = generateSecureToken();
+      await user.update({ reset_hash: resetHash });
+
+      // Use the parent brand for email branding so organizer sub-brand users
+      // (who have no logo on their own brand) get the platform branding.
+      const emailBrand = await Brand.findByPk(parentBrandId);
+
+      await sendResetLink(
+        user.email_address,
+        resetHash,
+        emailBrand?.brand_name || user.brand?.brand_name || 'Label Dashboard',
+        emailBrand?.brand_color || user.brand?.brand_color || '#5fbae9',
+        emailBrand?.logo_url || user.brand?.logo_url || '',
+        parentBrandId,
+        frontendBaseUrl
+      ).catch(error => {
+        console.error('Failed to send ticketing reset email:', error);
+      });
+
+      await sendAdminNotification(user, req.ip || 'unknown', req.get('X-Forwarded-For') || 'unknown')
+        .catch(error => {
+          console.error('Failed to send admin notification:', error);
+        });
+    } else {
+      console.warn('Ticketing password reset requested for non-existent email', {
+        email,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+    }
+
+    res.json({
+      message: 'If an account exists with this email address, password reset instructions have been sent.'
+    });
+  } catch (error) {
+    console.error('Ticketing forgot password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const ticketingValidateResetHash = async (req: Request, res: Response) => {
+  try {
+    const { hash } = req.params;
+
+    if (!hash) {
+      return res.status(400).json({ valid: false, error: 'Reset hash is required' });
+    }
+
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId) {
+      throw new Error('TICKETING_PARENT_BRAND_ID environment variable is required');
+    }
+
+    // Search across the ticketing parent brand and all organizer sub-brands.
+    const subBrands = await Brand.findAll({ where: { parent_brand: parentBrandId }, attributes: ['id'] });
+    const brandIds = [parentBrandId, ...subBrands.map((b: any) => b.id)];
+
+    const user = await User.findOne({
+      where: { reset_hash: hash, brand_id: brandIds }
+    });
+
+    if (!user) {
+      console.warn('Invalid ticketing reset hash validation attempt', {
+        hash,
+        ip: req.ip,
+        timestamp: new Date()
+      });
+      return res.status(400).json({ valid: false, error: 'Invalid or expired reset token' });
+    }
+
+    res.json({ valid: true, message: 'Reset hash is valid' });
+  } catch (error) {
+    console.error('Ticketing validate reset hash error:', error);
+    res.status(500).json({ valid: false, error: 'Internal server error' });
+  }
+};
+
 // Validate reset hash (matching original PHP fromResetHash validation)
 export const validateResetHash = async (req: Request, res: Response) => {
   try {
@@ -1348,39 +1418,25 @@ export const validateResetHash = async (req: Request, res: Response) => {
       return res.status(400).json({ valid: false, error: 'Reset hash is required' });
     }
 
-    // Get brand ID from referer URL (frontend domain)
-    const refererUrl = req.get('referer') || req.get('referrer') || '';
-    if (!refererUrl) {
-      return res.status(400).json({ valid: false, error: 'Unable to determine frontend domain from request' });
-    }
-    
-    let brandId = await getBrandIdFromDomain(refererUrl);
+    // brand_id is required — sent explicitly by the dashboard frontend.
+    // Fall back to Referer-based resolution for legacy clients only.
+    let brandId: number | null = req.query.brand_id ? parseInt(req.query.brand_id as string) : null;
 
-    // Same localhost/port fix as forgotPassword — ticketing app shares hostname with dashboard in dev
-    const ticketingFrontendUrlForValidate = process.env.TICKETING_FRONTEND_URL;
-    const ticketingParentBrandIdForValidate = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (ticketingFrontendUrlForValidate && ticketingParentBrandIdForValidate) {
-      try {
-        if (new URL(refererUrl).origin === new URL(ticketingFrontendUrlForValidate).origin) {
-          brandId = ticketingParentBrandIdForValidate;
-        }
-      } catch {}
+    if (!brandId) {
+      const refererUrl = req.get('referer') || req.get('referrer') || '';
+      if (!refererUrl) {
+        return res.status(400).json({ valid: false, error: 'Unable to determine brand from request' });
+      }
+      brandId = await getBrandIdFromDomain(refererUrl);
     }
 
     if (!brandId) {
       return res.status(400).json({ valid: false, error: 'Invalid domain or brand not found' });
     }
 
-    // Include sub-brands so organizer sub-brand users can validate their reset hash
-    const subBrandsForValidate = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'] });
-    const brandIdsForValidate = [brandId, ...subBrandsForValidate.map((b: any) => b.id)];
-
-    // Find user with valid reset hash across this brand and its sub-brands
+    // Dashboard: exact brand match only.
     const user = await User.findOne({
-      where: {
-        reset_hash: hash,
-        brand_id: brandIdsForValidate
-      }
+      where: { reset_hash: hash, brand_id: brandId }
     });
 
     if (!user) {
@@ -1403,6 +1459,236 @@ export const validateResetHash = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Validate reset hash error:', error);
     res.status(500).json({ valid: false, error: 'Internal server error' });
+  }
+};
+
+// ─── Dashboard Google OAuth ───────────────────────────────────────────────────
+
+/**
+ * Step 1 — redirect the browser to Google's OAuth consent screen for the dashboard.
+ * The brand_id is encoded in the signed state token so the callback can derive the
+ * correct brand frontend URL from the database.
+ */
+export const dashboardGoogleRedirect = async (req: Request, res: Response) => {
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      return res.status(501).json({ error: 'Google Sign-In is not configured on this server' });
+    }
+
+    const brandId = parseInt(req.query.brand_id as string || '0');
+    if (!brandId) {
+      return res.status(400).json({ error: 'brand_id is required' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    // Capture the frontend origin from the Referer/Origin header (set by the browser).
+    // This lets us redirect back to whatever host:port the frontend is actually running on
+    // (e.g. http://localhost:80 in dev, https://brand.com in production) without a hardcoded
+    // env variable. The origin is signed into the state so it cannot be tampered with.
+    let frontendOrigin: string | undefined;
+    const referer = req.get('referer') || req.get('origin');
+    if (referer) {
+      try {
+        const u = new URL(referer);
+        frontendOrigin = u.origin; // scheme + host + port only
+      } catch {}
+    }
+
+    // Encode brandId and frontendOrigin in the signed state for CSRF protection and URL lookup.
+    const state = jwt.sign(
+      { nonce: crypto.randomBytes(16).toString('hex'), brandId, frontendOrigin },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const redirectUri = `${serverUrl}/api/auth/dashboard/google/callback`;
+
+    const googleUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    googleUrl.searchParams.set('client_id', clientId);
+    googleUrl.searchParams.set('redirect_uri', redirectUri);
+    googleUrl.searchParams.set('response_type', 'code');
+    googleUrl.searchParams.set('scope', 'openid email profile');
+    googleUrl.searchParams.set('state', state);
+    googleUrl.searchParams.set('access_type', 'online');
+
+    return res.redirect(googleUrl.toString());
+  } catch (error) {
+    console.error('Dashboard Google redirect error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Step 2 — handle Google's redirect back to the server for the dashboard.
+ * Looks up existing users only (dashboard users are invited by admins, never auto-created).
+ * Issues a one-time exchange code redeemed by the frontend.
+ */
+export const dashboardGoogleCallback = async (req: Request, res: Response) => {
+  const { code, state, error: googleError } = req.query as Record<string, string>;
+
+  const devFallbackUrl = 'http://localhost:4200';
+
+  // Extract and verify the signed state JWT to get brandId and the captured frontend origin
+  let brandId = 0;
+  let frontendUrl = devFallbackUrl;
+  if (state && process.env.JWT_SECRET) {
+    try {
+      const payload = jwt.verify(state, process.env.JWT_SECRET) as any;
+      brandId = payload.brandId || 0;
+      // frontendOrigin was captured server-side from the Referer/Origin header at redirect time.
+      // It is signed in the state so it cannot be tampered with by the client.
+      // In non-production, prefer the captured frontendOrigin (from the Referer header
+      // at redirect time) so that local dev port numbers (e.g. :4200) are preserved.
+      // The DB domain for a local brand won't include the dev server port, causing a
+      // "refused to connect" error if used directly.
+      // In production, always derive the URL from the DB to prevent open-redirect attacks.
+      if (process.env.NODE_ENV !== 'production' && payload.frontendOrigin) {
+        frontendUrl = payload.frontendOrigin;
+      } else {
+        try {
+          frontendUrl = await getBrandFrontendUrl(brandId);
+        } catch {
+          // No domain configured — fall back to devFallbackUrl
+        }
+      }
+    } catch {
+      return res.redirect(`${devFallbackUrl}/login?error=invalid_state`);
+    }
+  } else {
+    return res.redirect(`${devFallbackUrl}/login?error=invalid_state`);
+  }
+
+  if (googleError) {
+    return res.redirect(`${frontendUrl}/login?error=google_cancelled`);
+  }
+
+  if (!code) {
+    return res.redirect(`${frontendUrl}/login?error=missing_code`);
+  }
+
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID!;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const redirectUri = `${serverUrl}/api/auth/dashboard/google/callback`;
+
+    const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    });
+
+    const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokenRes.data.access_token}` },
+    });
+
+    const { sub: googleId, email, email_verified } = userInfoRes.data;
+
+    if (!email_verified) {
+      return res.redirect(`${frontendUrl}/login?error=google_unverified_email`);
+    }
+
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+
+    // Find existing user by google_id first, then fall back to email match within the brand
+    let user = await User.findOne({
+      where: { google_id: googleId, brand_id: brandId },
+      include: [{ model: Brand, as: 'brand' }]
+    });
+
+    if (!user) {
+      user = await User.findOne({
+        where: { email_address: email, brand_id: brandId },
+        include: [{ model: Brand, as: 'brand' }]
+      });
+      if (user) {
+        await user.update({ google_id: googleId });
+      }
+    }
+
+    if (!user) {
+      // Dashboard users are invited/created by admins — no auto-creation via Google
+      return res.redirect(`${frontendUrl}/login?error=google_account_not_found`);
+    }
+
+    await user.update({ last_logged_in: new Date() });
+
+    if (!user.username) {
+      const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: true, needsTerms: false, needsBrandName: false });
+      return res.redirect(`${frontendUrl}/google-callback?code=${exchangeCode}`);
+    }
+
+    const exchangeCode = createExchangeCode({ userId: user.id, brandId: user.brand_id, profileIncomplete: false, needsTerms: false, needsBrandName: false });
+    return res.redirect(`${frontendUrl}/google-callback?code=${exchangeCode}`);
+  } catch (error) {
+    console.error('Dashboard Google callback error:', error);
+    return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+  }
+};
+
+/**
+ * Step 3 — exchange the one-time code for a real JWT (dashboard version).
+ */
+export const dashboardGoogleExchange = async (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+    if (!code || typeof code !== 'string') {
+      return res.status(400).json({ error: 'code is required' });
+    }
+
+    const entry = oauthExchangeCodes.get(code);
+    if (!entry || entry.expiresAt < Date.now()) {
+      return res.status(400).json({ error: 'Invalid or expired exchange code' });
+    }
+    oauthExchangeCodes.delete(code); // single-use — invalidate immediately
+
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+
+    const user = await User.findByPk(entry.userId, { include: [{ model: Brand, as: 'brand' }] });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (entry.profileIncomplete) {
+      const tempToken = jwt.sign(
+        { userId: user.id, email: user.email_address, brandId: user.brand_id, profileIncomplete: true },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+      return res.json({ status: 'profile_incomplete', token: tempToken });
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const isSuperadmin = adminEmail && user.email_address === adminEmail;
+
+    const token = jwt.sign(
+      { userId: user.id, username: user.username, brandId: user.brand_id },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        username: user.username,
+        is_admin: user.is_admin,
+        is_superadmin: isSuperadmin,
+        brand_id: user.brand_id,
+        onboarding_completed: user.onboarding_completed,
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard Google exchange error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
