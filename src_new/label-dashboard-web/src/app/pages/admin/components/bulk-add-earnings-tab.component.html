@@ -571,7 +571,7 @@
 
     <!-- 3. Import (always visible) -->
     <button type="button"
-            class="btn-primary csv-import-btn"
+            class="btn-primary btn-sm csv-import-btn"
             (click)="saveCsvEarnings()"
             [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType">
       <app-icon name="save" class="tw-mr-2 tw-flex-shrink-0" />
@@ -600,7 +600,7 @@
       </div>
 
       <!-- Cancel -->
-      <button type="button" class="btn-secondary tw-w-full" (click)="removeCsvFile()">
+      <button type="button" class="btn-secondary btn-sm tw-w-full" (click)="removeCsvFile()">
         <app-icon name="x" class="tw-mr-2" />Cancel
       </button>
 
