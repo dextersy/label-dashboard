@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventService, Event, EventTag } from '../../../../services/event.service';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-event-listing-tab',
@@ -24,6 +25,8 @@ export class EventListingTabComponent implements OnInit, OnChanges {
   listedOnTicketing = true;
   eventType: string = '';
   saving = false;
+
+  readonly ticketingAppUrl = environment.ticketingAppUrl;
 
   readonly eventTypeOptions = [
     { value: '', label: '— None —' },

@@ -12,6 +12,13 @@
       </label>
     </div>
     <p class="tw-text-xs tw-text-muted">Controls whether this event appears on the public events listing.</p>
+    <a *ngIf="listedOnTicketing && selectedEvent"
+       [href]="ticketingAppUrl + '/events/' + selectedEvent.id"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="tw-text-xs tw-inline-flex tw-items-center tw-gap-1 tw-mt-1">
+      <app-icon name="external-link" /> Go to listing page
+    </a>
   </div>
 
   <!-- Conditional fields -->
