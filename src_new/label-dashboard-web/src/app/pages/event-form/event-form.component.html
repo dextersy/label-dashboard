@@ -279,19 +279,21 @@
               <p class="ef-section-label tw-mt-5">Purchase link</p>
               <div class="tw-mb-5">
                 <div *ngIf="event && event.buy_shortlink">
-                  <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
+                  <div class="tw-flex tw-items-center tw-gap-2">
                     <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [value]="event.buy_shortlink" readonly>
-                    <div class="tw-flex tw-gap-2 tw-shrink-0">
-                      <button type="button" class="btn-primary tw-flex-1 sm:tw-flex-none"
-                              (click)="copyToClipboard(event.buy_shortlink)" title="Copy to clipboard">
-                        <app-icon name="copy" class="tw-mr-2" />Copy Link
-                      </button>
-                      <button type="button" class="btn-secondary tw-flex-1 sm:tw-flex-none"
-                              (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
-                              title="Download QR Code">
-                        <app-icon name="qr-code" />
-                      </button>
-                    </div>
+                    <button type="button"
+                            class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+                            (click)="copyToClipboard(event.buy_shortlink)" title="Copy to clipboard">
+                      <app-icon name="copy" class="tw-text-sm" iconOnly />
+                      <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">Copy</span>
+                    </button>
+                    <button type="button"
+                            class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+                            (click)="downloadLinkQR(event.buy_shortlink, 'Tickets-' + (eventData.title || 'Event'))"
+                            title="Download QR Code">
+                      <app-icon name="qr-code" class="tw-text-sm" iconOnly />
+                      <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">QR Code</span>
+                    </button>
                   </div>
                   <p class="tw-text-xs tw-text-muted tw-mt-1.5">Share this link for customers to purchase tickets</p>
                 </div>
@@ -450,11 +452,13 @@
             <p class="ef-section-label">Verification link</p>
             <div class="tw-mb-5">
               <div *ngIf="event && event.verification_link">
-                <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-2">
+                <div class="tw-flex tw-items-center tw-gap-2">
                   <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [value]="event.verification_link" readonly>
-                  <button type="button" class="btn-primary tw-shrink-0"
+                  <button type="button"
+                          class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                           (click)="copyToClipboard(event.verification_link)" title="Copy to clipboard">
-                    <app-icon name="copy" class="tw-mr-2" />Copy Link
+                    <app-icon name="copy" class="tw-text-sm" iconOnly />
+                    <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">Copy</span>
                   </button>
                 </div>
                 <p class="tw-text-xs tw-text-muted tw-mt-1.5">Share with ticket scanners</p>
@@ -473,15 +477,17 @@
                        [(ngModel)]="eventData.verification_pin"
                        placeholder="6-digit PIN" maxlength="6" pattern="[0-9]{6}">
                 <button type="button"
-                        class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+                        class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                         (click)="copyVerificationPIN()" title="Copy PIN"
                         [disabled]="!eventData.verification_pin">
                   <app-icon name="copy" class="tw-text-sm" iconOnly />
+                  <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">Copy</span>
                 </button>
                 <button type="button"
-                        class="tw-w-8 tw-h-8 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+                        class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
                         (click)="generateVerificationPIN()" title="Generate random PIN">
                   <app-icon name="refresh" class="tw-text-sm" iconOnly />
+                  <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">Generate</span>
                 </button>
               </div>
               <p class="tw-text-xs tw-text-muted tw-mt-1.5">6-digit PIN for ticket scanners</p>

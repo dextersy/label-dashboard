@@ -28,32 +28,30 @@
 
           <!-- Buy link row -->
           <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Ticket link</p>
-          <div class="tw-flex tw-gap-2 tw-mb-1" style="align-items: stretch;">
+          <div class="tw-flex tw-items-center tw-gap-2 tw-mb-1">
             <input
               type="text"
               class="tw-input tw-flex-1 tw-min-w-0"
-              style="height: 2.5rem;"
               [value]="data?.buyLink || ''"
               readonly
               aria-label="Event ticket purchase link"
               #linkInput>
-            <div class="tw-flex tw-gap-1 tw-shrink-0">
-              <button
-                class="btn-primary"
-                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
-                type="button"
-                (click)="copyLink()">
-                <app-icon [name]="copySuccess ? 'check' : 'copy'" iconOnly />
-              </button>
-              <button
-                class="btn-secondary"
-                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
-                type="button"
-                (click)="downloadBuyLinkQR()"
-                title="Download QR Code">
-                <app-icon name="qr-code" iconOnly />
-              </button>
-            </div>
+            <button
+              class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+              type="button"
+              (click)="copyLink()"
+              title="Copy link">
+              <app-icon [name]="copySuccess ? 'check' : 'copy'" class="tw-text-sm" iconOnly />
+              <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">{{ copySuccess ? 'Copied' : 'Copy' }}</span>
+            </button>
+            <button
+              class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+              type="button"
+              (click)="downloadBuyLinkQR()"
+              title="Download QR Code">
+              <app-icon name="qr-code" class="tw-text-sm" iconOnly />
+              <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">QR Code</span>
+            </button>
           </div>
           <p class="tw-text-xs tw-mb-3 tw-text-left tw-text-muted">
             Link can also be found in the "Ticketing" tab
@@ -89,32 +87,30 @@
 
           <!-- Buy link row -->
           <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Ticket link</p>
-          <div class="tw-flex tw-gap-2 tw-mb-1" style="align-items: stretch;">
+          <div class="tw-flex tw-items-center tw-gap-2 tw-mb-1">
             <input
               type="text"
               class="tw-input tw-flex-1 tw-min-w-0"
-              style="height: 2.5rem;"
               [value]="data?.buyLink || ''"
               readonly
               aria-label="Event ticket purchase link"
               #linkInput>
-            <div class="tw-flex tw-gap-1 tw-shrink-0">
-              <button
-                class="btn-primary"
-                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
-                type="button"
-                (click)="copyLink()">
-                <app-icon [name]="copySuccess ? 'check' : 'copy'" iconOnly />
-              </button>
-              <button
-                class="btn-secondary"
-                style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
-                type="button"
-                (click)="downloadBuyLinkQR()"
-                title="Download QR Code">
-                <app-icon name="qr-code" iconOnly />
-              </button>
-            </div>
+            <button
+              class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+              type="button"
+              (click)="copyLink()"
+              title="Copy link">
+              <app-icon [name]="copySuccess ? 'check' : 'copy'" class="tw-text-sm" iconOnly />
+              <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">{{ copySuccess ? 'Copied' : 'Copy' }}</span>
+            </button>
+            <button
+              class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
+              type="button"
+              (click)="downloadBuyLinkQR()"
+              title="Download QR Code">
+              <app-icon name="qr-code" class="tw-text-sm" iconOnly />
+              <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">QR Code</span>
+            </button>
           </div>
           <p class="tw-text-xs tw-mb-3 tw-text-left tw-text-muted">
             Link can also be found in the "Ticketing" tab
@@ -122,20 +118,20 @@
 
           <!-- Listing URL row -->
           <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Event listing</p>
-          <div class="tw-flex tw-gap-2 tw-mb-3" style="align-items: stretch;">
+          <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
             <input
               type="text"
               class="tw-input tw-flex-1 tw-min-w-0"
-              style="height: 2.5rem;"
               [value]="data?.listingUrl || ''"
               readonly
               aria-label="Event listing URL">
             <button
-              class="btn-secondary"
-              style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+              class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
               type="button"
-              (click)="copyListingUrl()">
-              <app-icon [name]="copyListingSuccess ? 'check' : 'copy'" iconOnly />
+              (click)="copyListingUrl()"
+              title="Copy link">
+              <app-icon [name]="copyListingSuccess ? 'check' : 'copy'" class="tw-text-sm" iconOnly />
+              <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">{{ copyListingSuccess ? 'Copied' : 'Copy' }}</span>
             </button>
           </div>
 
@@ -170,20 +166,20 @@
 
           <!-- Listing URL row -->
           <p class="tw-text-xs tw-font-medium tw-text-left tw-text-muted tw-mb-1">Event listing</p>
-          <div class="tw-flex tw-gap-2 tw-mb-4" style="align-items: stretch;">
+          <div class="tw-flex tw-items-center tw-gap-2 tw-mb-4">
             <input
               type="text"
               class="tw-input tw-flex-1 tw-min-w-0"
-              style="height: 2.5rem;"
               [value]="data?.listingUrl || ''"
               readonly
               aria-label="Event listing URL">
             <button
-              class="btn-secondary"
-              style="height: 2.5rem; width: 2.5rem; min-width: 2.5rem; padding: 0; display: flex; align-items: center; justify-content: center; box-sizing: border-box;"
+              class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
               type="button"
-              (click)="copyListingUrl()">
-              <app-icon [name]="copyListingSuccess ? 'check' : 'copy'" iconOnly />
+              (click)="copyListingUrl()"
+              title="Copy link">
+              <app-icon [name]="copyListingSuccess ? 'check' : 'copy'" class="tw-text-sm" iconOnly />
+              <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">{{ copyListingSuccess ? 'Copied' : 'Copy' }}</span>
             </button>
           </div>
 
