@@ -33,6 +33,8 @@ function hashName(name: string): number {
 })
 export class BalanceTableComponent {
   @Input() artists: ArtistBalance[] = [];
+  @Input() ctaLabel: string = 'View financial overview →';
+  @Input() ctaRoute: string = '/financial';
 
   constructor(private router: Router) {}
 
@@ -67,6 +69,6 @@ export class BalanceTableComponent {
   }
 
   goToFinancial(): void {
-    this.router.navigate(['/financial']);
+    this.router.navigate([this.ctaRoute]);
   }
 }

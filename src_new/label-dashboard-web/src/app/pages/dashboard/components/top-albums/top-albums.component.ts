@@ -19,6 +19,8 @@ export interface TopEarningRelease {
 })
 export class TopAlbumsComponent {
   @Input() releases: TopEarningRelease[] = [];
+  @Input() ctaLabel: string = 'View all release earnings →';
+  @Input() ctaRoute: string = '/financial/release';
 
   constructor(private router: Router) {}
 
@@ -52,6 +54,6 @@ export class TopAlbumsComponent {
   }
 
   goToFinancial(): void {
-    this.router.navigate(['/financial/release']);
+    this.router.navigate([this.ctaRoute]);
   }
 }
