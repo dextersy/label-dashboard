@@ -93,7 +93,7 @@ export class GoogleCallbackComponent implements OnInit {
       case 'labels':
         return '/labels/earnings';
       case 'admin':
-        return '/admin/reports/music-earnings';
+        return '/admin/users';
       default:
         return '/dashboard';
     }

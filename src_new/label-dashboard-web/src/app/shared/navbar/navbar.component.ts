@@ -177,10 +177,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.router.navigate(['/campaigns/dashboard']);
         break;
       case 'labels':
-        this.router.navigate(['/labels/earnings']);
+        const labelsSettings = this.brandService.getCurrentBrandSettings();
+        const labelsDefault = labelsSettings?.feature_music_workspace !== false ? '/labels/dashboard' : '/labels/earnings';
+        this.router.navigate([labelsDefault]);
         break;
       case 'admin':
-        this.router.navigate(['/admin/reports/music-earnings']);
+        this.router.navigate(['/admin/users']);
         break;
       default:
         this.router.navigate(['/dashboard']);

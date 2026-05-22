@@ -38,6 +38,7 @@ import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
 import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
+import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
@@ -153,12 +154,12 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'reports/music-earnings', pathMatch: 'full' },
+      { path: '', redirectTo: 'users', pathMatch: 'full' },
       { path: 'settings', redirectTo: '/labels/setup', pathMatch: 'full' },
-      { path: 'reports/music-earnings', component: AdminComponent, data: { tab: 'reports-music-earnings' } },
-      { path: 'reports/artist-balances', component: AdminComponent, data: { tab: 'reports-artist-balances' } },
-      { path: 'reports/payments-royalties', component: AdminComponent, data: { tab: 'reports-payments-royalties' } },
-      { path: 'reports/recuperable-expense-balance', component: AdminComponent, data: { tab: 'reports-recuperable-expense-balance' } },
+      { path: 'reports/music-earnings', redirectTo: '/labels/reports/music-earnings', pathMatch: 'full' },
+      { path: 'reports/artist-balances', redirectTo: '/labels/reports/artist-balances', pathMatch: 'full' },
+      { path: 'reports/payments-royalties', redirectTo: '/labels/reports/payments-royalties', pathMatch: 'full' },
+      { path: 'reports/recuperable-expense-balance', redirectTo: '/labels/reports/recuperable-expense-balance', pathMatch: 'full' },
       { path: 'tools/email-logs', component: AdminComponent, data: { tab: 'tools-email-logs' } },
       { path: 'tools/bulk-add-earnings', component: AdminComponent, data: { tab: 'tools-bulk-add-earnings' } },
       { path: 'users', component: AdminComponent, data: { tab: 'users' } }
@@ -170,10 +171,15 @@ export const routes: Routes = [
     path: 'labels',
     canActivate: [adminGuard],
     children: [
-      { path: '', redirectTo: 'earnings', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: LabelsDashboardComponent },
       { path: 'earnings', component: LabelsComponent },
       { path: 'sublabels', component: LabelsSubLabelsComponent },
-      { path: 'setup', component: LabelSetupComponent }
+      { path: 'setup', component: LabelSetupComponent },
+      { path: 'reports/music-earnings', component: AdminComponent, data: { tab: 'reports-music-earnings' } },
+      { path: 'reports/artist-balances', component: AdminComponent, data: { tab: 'reports-artist-balances' } },
+      { path: 'reports/payments-royalties', component: AdminComponent, data: { tab: 'reports-payments-royalties' } },
+      { path: 'reports/recuperable-expense-balance', component: AdminComponent, data: { tab: 'reports-recuperable-expense-balance' } },
     ]
   },
 

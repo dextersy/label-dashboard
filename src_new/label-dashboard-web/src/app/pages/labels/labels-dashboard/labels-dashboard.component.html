@@ -1,0 +1,271 @@
+<app-breadcrumb></app-breadcrumb>
+
+<!-- Music feature not enabled -->
+<div *ngIf="!featureMusicWorkspace && !loading" class="tw-px-4 tw-py-12 tw-text-center tw-text-sm tw-text-muted">
+  The Music feature is not enabled for this brand.
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="tw-py-12 tw-text-center tw-px-4">
+  <div class="loading-dots"><div></div><div></div><div></div></div>
+</div>
+
+<!-- Error -->
+<div *ngIf="error" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-3 tw-m-4 tw-rounded-lg tw-border tw-border-red-200 tw-bg-red-50 tw-text-red-800 tw-text-sm" role="alert">
+  <span><app-icon name="warning" class="tw-mr-2" />{{ error }}</span>
+  <button class="btn-sm btn-danger" (click)="loadDashboardData()">
+    <app-icon name="refresh" class="tw-mr-1" /> Retry
+  </button>
+</div>
+
+<ng-container *ngIf="featureMusicWorkspace && !loading && !error && dashboardData">
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- ZONE 1: HERO STRIP                                      -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="tw-bg-white" style="border-bottom: 0.5px solid #e5e7eb;">
+    <div class="tw-px-4 tw-pt-6 tw-pb-0 sm:tw-px-8 sm:tw-pt-8" style="max-width: 1100px; margin: 0 auto;">
+
+      <!-- Workspace info -->
+      <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-6 tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
+        <span class="tw-hidden sm:tw-inline">Labels<span *ngIf="brandName"> · {{ brandName }}</span> ·</span>
+        <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="user" class="tw-opacity-60" /> {{ dashboardData.stats?.totalArtists || 0 }} artists</span>
+        <span class="tw-text-gray-300">·</span>
+        <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="music" class="tw-opacity-60" /> {{ dashboardData.stats?.totalReleases || 0 }} releases</span>
+      </p>
+
+      <!-- Desktop: artists left, pipeline right. Mobile: stacked (artists first) -->
+      <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-6 lg:tw-gap-10 tw-items-start">
+
+        <!-- Recently updated artists (full width mobile, 1/3 desktop) -->
+        <div *ngIf="dashboardData.recentArtists?.length">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-3">Recently updated</p>
+          <div class="tw-grid tw-grid-cols-4 tw-gap-3">
+            <button *ngFor="let artist of dashboardData.recentArtists | slice:0:4"
+                    (click)="selectArtist(artist)"
+                    class="tw-flex tw-flex-col tw-items-center tw-gap-1.5 tw-bg-transparent tw-border-0 tw-p-0 tw-cursor-pointer tw-group tw-min-w-0">
+              <div class="tw-rounded-full tw-overflow-hidden tw-ring-2 tw-ring-transparent group-hover:tw-ring-[var(--brand-color,#667eea)] tw-transition-all tw-w-full tw-aspect-square tw-flex tw-items-center tw-justify-center"
+                   [style.background]="hasArtistPhoto(artist.profile_photo) ? 'transparent' : getAvatarBg(artist.name)">
+                <img *ngIf="hasArtistPhoto(artist.profile_photo)"
+                     [src]="getArtistPhotoUrl(artist.profile_photo)"
+                     [alt]="artist.name"
+                     class="tw-w-full tw-h-full tw-object-cover">
+                <span *ngIf="!hasArtistPhoto(artist.profile_photo)"
+                      class="tw-text-sm tw-font-bold tw-leading-none"
+                      [style.color]="getAvatarColor(artist.name)">
+                  {{ getArtistInitials(artist.name) }}
+                </span>
+              </div>
+              <span class="tw-text-xs tw-text-gray-600 tw-text-center tw-leading-tight tw-truncate tw-w-full group-hover:tw-text-gray-900 tw-transition-colors">{{ artist.name }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Release Pipeline (full width mobile, 2/3 desktop) -->
+        <div class="lg:tw-col-span-2">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-3">Release Pipeline</p>
+          <!-- Pipeline cards: 2×2 on mobile, 4 columns on sm+ -->
+          <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 lg:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-3">
+
+            <!-- Draft -->
+            <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0">
+              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-60 tw-text-gray-400 tw-flex-shrink-0">
+                <app-icon name="file" />
+              </div>
+              <div class="tw-min-w-0">
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ getPipelineStageCount('Draft') }}</div>
+                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Draft</div>
+                <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1 tw-hidden sm:tw-block">{{ getPipelinePct('Draft') }}%</div>
+              </div>
+            </div>
+
+            <!-- For Submission -->
+            <a routerLink="/music/releases"
+               class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
+              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-flex-shrink-0" style="color: #3b82f6;">
+                <app-icon name="paper-plane" />
+              </div>
+              <div class="tw-min-w-0">
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #3b82f6;">{{ getPipelineStageCount('For Submission') }}</div>
+                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">For Submission</div>
+                <div class="tw-text-xs tw-font-mono tw-mt-1 tw-hidden sm:tw-block" style="color: #3b82f6;">{{ getPipelinePct('For Submission') }}% · Submit →</div>
+              </div>
+            </a>
+
+            <!-- Pending -->
+            <a routerLink="/music/releases"
+               class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
+              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-warning tw-flex-shrink-0">
+                <app-icon name="clock" />
+              </div>
+              <div class="tw-min-w-0">
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #f59e0b;">{{ getPipelineStageCount('Pending') }}</div>
+                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Pending</div>
+                <div class="tw-text-xs tw-font-mono tw-mt-1 tw-hidden sm:tw-block" style="color: #f59e0b;">{{ getPipelinePct('Pending') }}% · Review →</div>
+              </div>
+            </a>
+
+            <!-- Live -->
+            <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0">
+              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-success tw-flex-shrink-0">
+                <app-icon name="globe" />
+              </div>
+              <div class="tw-min-w-0">
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #10b981;">{{ getPipelineStageCount('Live') }}</div>
+                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Live</div>
+                <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1 tw-hidden sm:tw-block">{{ getPipelinePct('Live') }}%</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Segmented bar -->
+          <div class="tw-flex tw-overflow-hidden tw-rounded-b tw-mt-3" style="height: 4px;">
+            <div *ngIf="getPipelineStageCount('Draft') > 0"
+                 [style.flex-grow]="getPipelineStageCount('Draft')"
+                 style="flex-shrink: 0; flex-basis: 0; background: #9ca3af;"></div>
+            <div *ngIf="getPipelineStageCount('For Submission') > 0"
+                 [style.flex-grow]="getPipelineStageCount('For Submission')"
+                 style="flex-shrink: 0; flex-basis: 0; background: #3b82f6;"></div>
+            <div *ngIf="getPipelineStageCount('Pending') > 0"
+                 [style.flex-grow]="getPipelineStageCount('Pending')"
+                 style="flex-shrink: 0; flex-basis: 0; background: #f59e0b;"></div>
+            <div *ngIf="getPipelineStageCount('Live') > 0"
+                 [style.flex-grow]="getPipelineStageCount('Live')"
+                 style="flex-shrink: 0; flex-basis: 0; background: #10b981;"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────────────────── -->
+  <!-- ZONE 2: MAIN BODY — 60/40 on desktop, stacked on mobile -->
+  <!-- ─────────────────────────────────────────────────────── -->
+  <div class="tw-px-4 tw-py-7 sm:tw-px-8 sm:tw-py-8" style="max-width: 1100px; margin: 0 auto;">
+    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-5 tw-gap-6 lg:tw-gap-10 tw-items-start">
+
+      <!-- Left: latest releases list (3/5 on desktop) -->
+      <div class="lg:tw-col-span-3">
+
+        <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-0" style="border-top: 0.5px solid #e5e7eb; padding-top: 20px;">Latest Releases</p>
+
+        <div *ngIf="!dashboardData.latestReleases?.length"
+             class="tw-py-8 tw-text-sm tw-text-gray-400">
+          No releases yet.
+        </div>
+
+        <div *ngIf="dashboardData.latestReleases?.length">
+          <div *ngFor="let release of dashboardData.latestReleases"
+               class="tw-flex tw-items-center tw-gap-3 tw-py-3 sm:tw-py-3.5 tw-cursor-pointer hover:tw-bg-gray-50 tw-transition-colors"
+               style="border-bottom: 0.5px solid #e5e7eb;"
+               (click)="goToRelease(release)">
+
+            <!-- Thumbnail -->
+            <img [src]="getCoverArtUrl(release.cover_art)"
+                 [alt]="release.title"
+                 class="tw-object-cover tw-flex-shrink-0 tw-bg-gray-100"
+                 style="width: 44px; height: 44px; border-radius: 4px;">
+
+            <!-- Info -->
+            <div class="tw-flex-1 tw-min-w-0">
+              <div class="tw-text-sm tw-font-medium tw-text-gray-900 tw-truncate">{{ release.title }}</div>
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mt-0.5">
+                <span class="tw-text-xs tw-font-mono tw-text-muted">{{ release.release_date | date:'MMM d, y' }}</span>
+                <span class="tw-text-xs tw-font-medium tw-px-2 tw-py-0.5 tw-rounded-full tw-whitespace-nowrap tw-hidden sm:tw-inline-block"
+                      [ngClass]="getReleaseStatusClass(release.status)">
+                  {{ release.status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Status chip (mobile only) -->
+            <span class="tw-flex-shrink-0 tw-text-xs tw-font-medium tw-px-2 tw-py-0.5 tw-rounded-full tw-whitespace-nowrap sm:tw-hidden"
+                  [ngClass]="getReleaseStatusClass(release.status)">
+              {{ release.status }}
+            </span>
+
+            <!-- See release (desktop only) -->
+            <a class="btn btn-ghost btn-sm tw-flex-shrink-0 tw-whitespace-nowrap tw-no-underline tw-hidden sm:tw-inline-flex">
+              See release →
+            </a>
+
+          </div>
+        </div>
+
+        <div *ngIf="dashboardData.latestReleases?.length" class="tw-text-right tw-mt-5">
+          <a (click)="goToReleases()" class="btn btn-ghost btn-sm tw-cursor-pointer tw-no-underline">
+            All releases →
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Right: quick links (2/5 on desktop) -->
+      <div class="lg:tw-col-span-2">
+        <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-0" style="border-top: 0.5px solid #e5e7eb; padding-top: 20px;">Quick Links</p>
+
+        <a routerLink="/labels/earnings"
+           class="tw-flex tw-items-center tw-justify-between tw-py-4 tw-no-underline hover:tw-bg-gray-50 tw-transition-colors"
+           style="border-bottom: 0.5px solid #e5e7eb;">
+          <div class="tw-min-w-0 tw-mr-3">
+            <div class="tw-text-sm tw-font-medium tw-text-gray-900">Financials</div>
+            <div class="tw-text-sm tw-text-muted tw-mt-1">Revenue, royalties &amp; statements</div>
+          </div>
+          <span class="tw-text-gray-400 tw-flex-shrink-0">→</span>
+        </a>
+
+        <a routerLink="/music/releases"
+           class="tw-flex tw-items-center tw-justify-between tw-py-4 tw-no-underline hover:tw-bg-gray-50 tw-transition-colors"
+           style="border-bottom: 0.5px solid #e5e7eb;">
+          <div class="tw-min-w-0 tw-mr-3">
+            <div class="tw-text-sm tw-font-medium tw-text-gray-900">Manage releases</div>
+            <div class="tw-text-sm tw-text-muted tw-mt-1">Review and submit releases</div>
+          </div>
+          <span class="tw-text-gray-400 tw-flex-shrink-0">→</span>
+        </a>
+
+        <a routerLink="/labels/sublabels"
+           class="tw-flex tw-items-center tw-justify-between tw-py-4 tw-no-underline hover:tw-bg-gray-50 tw-transition-colors"
+           style="border-bottom: 0.5px solid #e5e7eb;">
+          <div class="tw-min-w-0 tw-mr-3">
+            <div class="tw-text-sm tw-font-medium tw-text-gray-900">Manage sublabels</div>
+            <div class="tw-text-sm tw-text-muted tw-mt-1">Add and configure sublabels</div>
+          </div>
+          <span class="tw-text-gray-400 tw-flex-shrink-0">→</span>
+        </a>
+
+        <a routerLink="/labels/setup"
+           class="tw-flex tw-items-center tw-justify-between tw-py-4 tw-no-underline hover:tw-bg-gray-50 tw-transition-colors"
+           style="border-bottom: 0.5px solid #e5e7eb;">
+          <div class="tw-min-w-0 tw-mr-3">
+            <div class="tw-text-sm tw-font-medium tw-text-gray-900">Settings</div>
+            <div class="tw-text-sm tw-text-muted tw-mt-1">Configure label settings &amp; branding</div>
+          </div>
+          <span class="tw-text-gray-400 tw-flex-shrink-0">→</span>
+        </a>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Earnings section -->
+  <div class="tw-px-4 tw-pb-8 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
+    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-4 tw-items-start">
+      <app-top-albums
+        [releases]="dashboardData.topEarningReleases"
+        ctaLabel="View Music Earnings Report →"
+        ctaRoute="/labels/reports/music-earnings">
+      </app-top-albums>
+      <app-balance-table
+        [artists]="dashboardData.balanceSummary"
+        ctaLabel="View Balance Report →"
+        ctaRoute="/labels/reports/artist-balances">
+      </app-balance-table>
+    </div>
+  </div>
+
+</ng-container>

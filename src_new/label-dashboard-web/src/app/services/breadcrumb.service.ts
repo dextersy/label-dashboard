@@ -77,11 +77,6 @@ export class BreadcrumbService {
 
     // Admin section
     '/admin': { label: 'Admin', icon: 'settings' },
-    '/admin/reports': { label: 'Reports', parent: '/admin' },
-    '/admin/reports/music-earnings': { label: 'Music Earnings', parent: '/admin/reports' },
-    '/admin/reports/artist-balances': { label: 'Artist Balances', parent: '/admin/reports' },
-    '/admin/reports/payments-royalties': { label: 'Payments & Royalties', parent: '/admin/reports' },
-    '/admin/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/admin/reports' },
     '/admin/tools': { label: 'Tools', parent: '/admin' },
     '/admin/tools/email-logs': { label: 'Email Logs', parent: '/admin/tools' },
     '/admin/tools/bulk-add-earnings': { label: 'Bulk Add Earnings', parent: '/admin/tools' },
@@ -89,9 +84,14 @@ export class BreadcrumbService {
 
     // Labels section
     '/labels': { label: 'Labels', icon: 'tags' },
-    '/labels/earnings': { label: 'My Label Earnings', parent: '/labels' },
+    '/labels/earnings': { label: 'Financials', parent: '/labels' },
     '/labels/sublabels': { label: 'Sublabels', parent: '/labels' },
-    '/labels/setup': { label: 'Label Setup', parent: '/labels' },
+    '/labels/setup': { label: 'Settings', parent: '/labels' },
+    '/labels/reports': { label: 'Reports', parent: '/labels' },
+    '/labels/reports/music-earnings': { label: 'Music Earnings', parent: '/labels/reports' },
+    '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },
+    '/labels/reports/payments-royalties': { label: 'Payments & Royalties', parent: '/labels/reports' },
+    '/labels/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/labels/reports' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

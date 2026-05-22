@@ -65,6 +65,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   // Feature toggle state (from brand settings)
   featureSublabels: boolean = true;
+  featureMusicWorkspace: boolean = true;
 
   // Workspace switch modal
   showWorkspaceSwitchModal = false;
@@ -81,7 +82,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     {
       id: 'dashboard',
       items: [
-        { route: '/dashboard', icon: 'chart-line', title: 'Dashboard', adminOnly: false }
+        { route: '/dashboard', icon: 'chart-bar', title: 'Dashboard', adminOnly: false }
       ]
     },
     {
@@ -165,8 +166,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
           title: 'Labels',
           adminOnly: true,
           children: [
-            { route: '/labels/setup', title: 'Label Setup', adminOnly: true },
-            { route: '/labels/earnings', title: 'My Label Earnings', adminOnly: true },
+            { route: '/labels/dashboard', title: 'Dashboard', adminOnly: true },
+            { route: '/labels/setup', title: 'Settings', adminOnly: true },
+            { route: '/labels/earnings', title: 'Financials', adminOnly: true },
             { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true }
           ]
         }
@@ -183,16 +185,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           children: [
             {
-              route: '/admin/reports',
+              route: '/labels/reports',
               title: 'Reports',
               adminOnly: true,
               children: [
-                { route: '/admin/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
-                { route: '/admin/reports/artist-balances', title: 'Artist Balances', adminOnly: true },
-                { route: '/admin/reports/payments-royalties', title: 'Payments & Royalties', adminOnly: true },
-                { route: '/admin/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
+                { route: '/labels/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
+                { route: '/labels/reports/artist-balances', title: 'Artist Balances', adminOnly: true },
+                { route: '/labels/reports/payments-royalties', title: 'Payments & Royalties', adminOnly: true },
+                { route: '/labels/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
               ]
             },
+            { route: '/admin/users', title: 'Users', adminOnly: true },
             {
               route: '/admin/tools',
               title: 'Tools',
@@ -201,8 +204,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 { route: '/admin/tools/email-logs', title: 'Email Logs', adminOnly: true },
                 { route: '/admin/tools/bulk-add-earnings', title: 'Bulk Add Earnings', adminOnly: true }
               ]
-            },
-            { route: '/admin/users', title: 'Users', adminOnly: true }
+            }
           ]
         }
       ]
@@ -233,7 +235,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       case 'campaigns':
         // For campaigns workspace, show dashboard first, then events and fundraisers menu items
         const campaignsSection = this.sections.find(section => section.id === 'campaigns');
-        const campaignsDashboardItem = { route: '/campaigns/dashboard', icon: 'chart-line', title: 'Dashboard', adminOnly: true };
+        const campaignsDashboardItem = { route: '/campaigns/dashboard', icon: 'chart-bar', title: 'Dashboard', adminOnly: true };
         if (campaignsSection && campaignsSection.items.length > 0) {
           this.visibleSections = [
             {
@@ -261,38 +263,40 @@ export class SidebarComponent implements OnInit, OnDestroy {
         const labelsSection = this.sections.find(section => section.id === 'labels');
         if (labelsSection && labelsSection.items.length > 0) {
           const labelsItem = labelsSection.items[0];
-          this.visibleSections = [
-            {
-              id: 'labels-top-level',
-              items: (labelsItem.children || [])
-                .filter(child => {
-                  // Hide Sublabels item when feature is disabled
-                  if (child.route === '/labels/sublabels' && !this.featureSublabels) {
-                    return false;
-                  }
-                  return true;
-                })
-                .map(child => {
-                  // Assign appropriate icons based on the route
-                  let icon = 'tags'; // default
-                  switch (child.route) {
-                    case '/labels/earnings':
-                      icon = 'coins';
-                      break;
-                    case '/labels/sublabels':
-                      icon = 'layers';
-                      break;
-                    case '/labels/setup':
-                      icon = 'settings';
-                      break;
-                  }
-                  return {
-                    ...child,
-                    icon: icon
-                  };
-                })
+          const labelsCoreItems = (labelsItem.children || [])
+            .filter(child => {
+              if (child.route === '/labels/dashboard' && !this.featureMusicWorkspace) return false;
+              if (child.route === '/labels/sublabels' && !this.featureSublabels) return false;
+              return true;
+            })
+            .map(child => {
+              let icon = 'tags';
+              switch (child.route) {
+                case '/labels/dashboard': icon = 'chart-bar'; break;
+                case '/labels/earnings':  icon = 'coins';     break;
+                case '/labels/sublabels': icon = 'layers';    break;
+                case '/labels/setup':     icon = 'settings';  break;
+              }
+              return { ...child, icon };
+            });
+
+          this.visibleSections = [{ id: 'labels-top-level', items: labelsCoreItems }];
+
+          // Reports — shown only when Music feature is enabled
+          if (this.featureMusicWorkspace) {
+            const adminSection = this.sections.find(s => s.id === 'admin');
+            const reportsChild = adminSection?.items[0]?.children?.find(c => c.route === '/labels/reports');
+            if (reportsChild) {
+              this.visibleSections.push({
+                id: 'labels-reports',
+                items: [{
+                  ...reportsChild,
+                  icon: 'chart-bar',
+                  title: 'Reports'
+                }]
+              });
             }
-          ];
+          }
         } else {
           this.visibleSections = [];
         }
@@ -305,13 +309,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [
             {
               id: 'admin-top-level',
-              items: adminItem.children?.map(child => {
+              items: (adminItem.children || []).filter(child => child.route !== '/labels/reports').map(child => {
                 // Assign appropriate icons based on the route
                 let icon = 'settings'; // default
                 switch (child.route) {
-                  case '/admin/reports':
-                    icon = 'chart-bar';
-                    break;
                   case '/admin/tools':
                     icon = 'wrench';
                     break;
@@ -493,6 +494,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     // Apply feature flags
     this.featureSublabels = settings.feature_sublabels !== false;
+    this.featureMusicWorkspace = settings.feature_music_workspace !== false;
 
     // Refresh available workspaces (feature flags may affect which workspaces are visible)
     this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
@@ -746,8 +748,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     switch (workspace) {
       case 'music':     this.router.navigate(['/dashboard']); break;
       case 'campaigns': this.router.navigate(['/campaigns/dashboard']); break;
-      case 'labels':    this.router.navigate(['/labels/earnings']); break;
-      case 'admin':     this.router.navigate(['/admin/reports/music-earnings']); break;
+      case 'labels':    this.router.navigate([this.featureMusicWorkspace ? '/labels/dashboard' : '/labels/earnings']); break;
+      case 'admin':     this.router.navigate(['/admin/users']); break;
     }
   }
 }

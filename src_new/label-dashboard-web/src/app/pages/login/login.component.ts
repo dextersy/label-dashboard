@@ -248,9 +248,9 @@ export class LoginComponent implements OnInit {
       case 'campaigns':
         return '/campaigns/dashboard';
       case 'labels':
-        return '/labels/earnings';
+        return '/labels/dashboard';
       case 'admin':
-        return '/admin/reports/music-earnings';
+        return '/admin/users';
       default:
         return '/dashboard';
     }
