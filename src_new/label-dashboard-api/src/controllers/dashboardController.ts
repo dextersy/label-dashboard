@@ -289,10 +289,14 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
       releasePipeline
     };
 
-    // Add event sales for admin users
+    // Add event sales and recent artists for admin users
     if (req.user.is_admin) {
-      const eventSales = await getEventSalesData(req);
+      const [eventSales, recentArtists] = await Promise.all([
+        getEventSalesData(req),
+        getRecentArtistsData(req)
+      ]);
       dashboardData.eventSales = eventSales;
+      dashboardData.recentArtists = recentArtists;
     }
 
     res.json(dashboardData);
@@ -935,4 +939,19 @@ async function getReleasePipelineData(req: AuthRequest) {
   });
 
   return STATUSES.map(status => ({ status, count: counts[status] }));
+}
+
+async function getRecentArtistsData(req: AuthRequest) {
+  const artists = await Artist.findAll({
+    where: { brand_id: req.user.brand_id },
+    attributes: ['id', 'name', 'profile_photo'],
+    order: [['updatedAt', 'DESC']],
+    limit: 4
+  });
+
+  return artists.map(artist => ({
+    id: artist.id,
+    name: artist.name,
+    profile_photo: artist.profile_photo || null
+  }));
 }

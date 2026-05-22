@@ -128,7 +128,7 @@ Artist.init(
   {
     sequelize,
     tableName: 'artist',
-    timestamps: false,
+    timestamps: true,
   }
 );
 
