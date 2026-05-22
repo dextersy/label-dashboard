@@ -81,8 +81,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     {
       id: 'dashboard',
       items: [
-        { route: '/dashboard', icon: 'chart-line', title: 'Dashboard', adminOnly: false },
-        { route: '/music/sync-licensing', icon: 'file', title: 'Sync Licensing', adminOnly: true }
+        { route: '/dashboard', icon: 'chart-line', title: 'Dashboard', adminOnly: false }
       ]
     },
     {
@@ -152,7 +151,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/campaigns/fundraisers/details', title: 'Manage fundraisers', adminOnly: true },
             { route: '/campaigns/fundraisers/donations', title: 'Donations', adminOnly: true }
           ]
-        }
+        },
+        { route: '/campaigns/sync-licensing', icon: 'file', title: 'Sync Licensing', adminOnly: true }
       ]
     },
     {

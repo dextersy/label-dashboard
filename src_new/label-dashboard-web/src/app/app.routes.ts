@@ -89,7 +89,7 @@ export const routes: Routes = [
     ]
   },
   // Sync Licensing (admin only, not artist-specific)
-  { path: 'music/sync-licensing', component: SyncLicensingComponent, canActivate: [adminGuard] },
+  { path: 'campaigns/sync-licensing', component: SyncLicensingComponent, canActivate: [adminGuard] },
   { path: 'team', component: ArtistComponent, canActivate: [authGuard, artistSelectedGuard], data: { tab: 'team' } },
   { 
     path: 'financial', 
