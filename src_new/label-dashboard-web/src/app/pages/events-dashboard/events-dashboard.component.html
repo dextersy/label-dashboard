@@ -88,12 +88,12 @@
             </div>
 
             <!-- Action buttons -->
-            <div class="tw-flex tw-flex-row sm:tw-flex-col tw-gap-2">
-              <button class="btn btn-primary btn-sm tw-whitespace-nowrap"
+            <div class="tw-flex tw-flex-row sm:tw-flex-col tw-gap-2 tw-w-full sm:tw-w-auto">
+              <button class="btn btn-primary btn-sm tw-whitespace-nowrap tw-flex-1 sm:tw-flex-none"
                       (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
                 View tickets
               </button>
-              <button class="btn btn-sm tw-whitespace-nowrap"
+              <button class="btn btn-sm tw-whitespace-nowrap tw-flex-1 sm:tw-flex-none"
                       [class.btn-ghost]="!dashboardData.upcomingEvents[0].poster_url"
                       [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.15)' : null"
                       [style.color]="dashboardData.upcomingEvents[0].poster_url ? '#fff' : null"
@@ -133,8 +133,9 @@
 
           <!-- Event rows -->
           <div *ngFor="let event of dashboardData.upcomingEvents"
-               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5"
-               style="border-bottom: 0.5px solid #e5e7eb;">
+               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5 tw-cursor-pointer sm:tw-cursor-default hover:tw-bg-gray-50 sm:hover:tw-bg-transparent tw-transition-colors"
+               style="border-bottom: 0.5px solid #e5e7eb;"
+               (click)="navigateToEvent(event, 'details')">
             <span class="tw-text-sm tw-font-mono tw-flex-shrink-0 tw-text-gray-500"
                   style="background: #f3f4f6; padding: 3px 8px 4px; border-radius: 3px;">Event</span>
             <div class="tw-flex-1 tw-min-w-0">
@@ -143,18 +144,19 @@
                 {{ event.date_and_time | date:'MMM d · h:mm a' }}<span *ngIf="event.venue"> · {{ event.venue }}</span> · {{ event.tickets_sold }} sold · {{ formatCurrency(event.net_earnings) }} net
               </div>
             </div>
-            <div class="tw-flex tw-gap-2 tw-flex-shrink-0">
-              <button class="btn btn-ghost btn-sm tw-whitespace-nowrap tw-hidden sm:tw-inline-flex"
-                      (click)="navigateToEvent(event, 'tickets')">Tickets</button>
+            <div class="tw-hidden sm:tw-flex tw-gap-2 tw-flex-shrink-0">
               <button class="btn btn-ghost btn-sm tw-whitespace-nowrap"
-                      (click)="navigateToEvent(event, 'details')">Manage</button>
+                      (click)="navigateToEvent(event, 'tickets'); $event.stopPropagation()">Tickets</button>
+              <button class="btn btn-ghost btn-sm tw-whitespace-nowrap"
+                      (click)="navigateToEvent(event, 'details'); $event.stopPropagation()">Manage</button>
             </div>
           </div>
 
           <!-- Fundraiser rows -->
           <div *ngFor="let fundraiser of dashboardData.ongoingFundraisers?.items"
-               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5"
-               style="border-bottom: 0.5px solid #e5e7eb;">
+               class="tw-flex tw-items-center tw-gap-4 tw-py-3.5 tw-cursor-pointer sm:tw-cursor-default hover:tw-bg-gray-50 sm:hover:tw-bg-transparent tw-transition-colors"
+               style="border-bottom: 0.5px solid #e5e7eb;"
+               (click)="navigateToFundraiser(fundraiser)">
             <span class="tw-text-sm tw-font-mono tw-flex-shrink-0 tw-text-gray-500"
                   style="background: #f3f4f6; padding: 3px 8px 4px; border-radius: 3px;">Fundraiser</span>
             <div class="tw-flex-1 tw-min-w-0">
@@ -163,8 +165,9 @@
                 <span class="tw-text-green-700 tw-font-semibold tw-mr-2">Live</span>{{ formatCurrency(fundraiser.total_raised) }} raised
               </div>
             </div>
-            <div class="tw-flex-shrink-0">
-              <button class="btn btn-ghost btn-sm" (click)="navigateToFundraiser(fundraiser)">Manage</button>
+            <div class="tw-hidden sm:tw-flex tw-flex-shrink-0">
+              <button class="btn btn-ghost btn-sm"
+                      (click)="navigateToFundraiser(fundraiser); $event.stopPropagation()">Manage</button>
             </div>
           </div>
 
@@ -191,12 +194,12 @@
           <!-- Events card -->
           <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex">
             <a routerLink="/campaigns/events/details"
-               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-card">
-              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-[var(--brand-color,#667eea)]">
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-3 tw-py-2 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-card">
+              <div class="tw-text-xl sm:tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-[var(--brand-color,#667eea)]">
                 <app-icon name="calendar" />
               </div>
               <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
-                <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
                 <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Active Events</div>
               </div>
             </a>
@@ -204,12 +207,12 @@
               <app-icon name="chevron-right" />
             </div>
             <a routerLink="/campaigns/events/tickets"
-               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-card">
-              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-warning">
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-3 tw-py-2 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-card">
+              <div class="tw-text-xl sm:tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-warning">
                 <app-icon name="ticket" />
               </div>
               <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
-                <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
                 <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Ticket Sales</div>
               </div>
             </a>
@@ -218,12 +221,12 @@
           <!-- Fundraisers card -->
           <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-flex">
             <a routerLink="/campaigns/fundraisers/details"
-               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-card">
-              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-success">
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-3 tw-py-2 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-l-card">
+              <div class="tw-text-xl sm:tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-success">
                 <app-icon name="heart" />
               </div>
               <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
-                <div class="tw-text-2xl tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
                 <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Active Fundraisers</div>
               </div>
             </a>
@@ -231,12 +234,12 @@
               <app-icon name="chevron-right" />
             </div>
             <a routerLink="/campaigns/fundraisers/donations"
-               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-4 tw-py-3 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-card">
-              <div class="tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-[#0891b2]">
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-min-w-0 tw-px-3 tw-py-2 sm:tw-px-5 sm:tw-py-4 hover:tw-bg-gray-50 tw-transition-colors tw-rounded-r-card">
+              <div class="tw-text-xl sm:tw-text-[1.75rem] tw-mb-1 sm:tw-mb-0 sm:tw-mr-3 tw-flex-shrink-0 tw-opacity-80 tw-text-[#0891b2]">
                 <app-icon name="currency" />
               </div>
               <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
-                <div class="tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>
+                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>
                 <div class="tw-text-sm tw-mt-0.5" style="color:#666;">Amount Raised</div>
               </div>
             </a>
