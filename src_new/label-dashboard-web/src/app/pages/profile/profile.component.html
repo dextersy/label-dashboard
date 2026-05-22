@@ -2,7 +2,7 @@
 
   <!-- Page Header -->
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
-    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-flex-col sm:tw-flex-row sm:tw-justify-between sm:tw-items-start tw-gap-3">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-flex-col-reverse sm:tw-flex-row sm:tw-justify-between sm:tw-items-start tw-gap-5 sm:tw-gap-3">
       <div>
         <h3 class="tw-mb-2">
           <app-icon name="settings" class="tw-mr-2" />
@@ -27,10 +27,10 @@
 
   <!-- Profile Information Card -->
   <div *ngIf="!loading && profile" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
-    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-pb-3 sm:tw-pb-4">
       <h4 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Profile Information</h4>
     </div>
-    <div class="tw-p-6 tw-space-y-5">
+    <div class="sm:tw-p-6 tw-space-y-5">
 
       <!-- Read-only info row -->
       <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5">
@@ -116,7 +116,7 @@
         <div class="tw-flex tw-justify-end">
           <button
             type="submit"
-            class="btn-primary"
+            class="btn-primary tw-w-full sm:tw-w-auto"
             [disabled]="saving">
             <span *ngIf="saving" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
             <app-icon name="save" class=" tw-mr-2" *ngIf="!saving" />
@@ -129,10 +129,10 @@
 
   <!-- Password Card -->
   <div *ngIf="!loading && profile" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden">
-    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-pb-3 sm:tw-pb-4">
       <h4 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Password</h4>
     </div>
-    <div class="tw-p-6">
+    <div class="sm:tw-p-6">
 
       <!-- Password display (not changing) -->
       <div *ngIf="!showPasswordChange" class="tw-flex tw-justify-between tw-items-center">
