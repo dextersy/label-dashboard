@@ -395,6 +395,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     // Capture listing state synchronously before the async API call
     const capturedListingState = this.isNewEvent && this.listingTabRef ? {
       listed_on_ticketing: this.listingTabRef.listedOnTicketing,
+      show_attendee_count: this.listingTabRef.showAttendeeCount,
       event_type: this.listingTabRef.eventType || null,
       tags: [...this.listingTabRef.selectedTagIds]
     } : null;
@@ -482,6 +483,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     // Capture listing state synchronously before the async API call
     const capturedListingStatePublish = this.isNewEvent && this.listingTabRef ? {
       listed_on_ticketing: this.listingTabRef.listedOnTicketing,
+      show_attendee_count: this.listingTabRef.showAttendeeCount,
       event_type: this.listingTabRef.eventType || null,
       tags: [...this.listingTabRef.selectedTagIds]
     } : null;

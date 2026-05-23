@@ -21,6 +21,20 @@
     </a>
   </div>
 
+  <!-- Show attendee count toggle -->
+  <p class="ef-section-label">Attendees</p>
+  <div class="tw-mb-5">
+    <div class="form-check form-switch tw-mb-1">
+      <input class="form-check-input" type="checkbox" role="switch"
+             id="showAttendeeCount"
+             [(ngModel)]="showAttendeeCount">
+      <label class="form-check-label" for="showAttendeeCount">
+        Show number of attendees
+      </label>
+    </div>
+    <p class="tw-text-xs tw-text-muted">Controls whether the attendee count is shown publicly on the event listing.</p>
+  </div>
+
   <!-- Conditional fields -->
   <ng-container *ngIf="listedOnTicketing">
 

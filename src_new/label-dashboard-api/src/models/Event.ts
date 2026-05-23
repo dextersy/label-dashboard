@@ -38,6 +38,7 @@ interface EventAttributes {
   ticketing_enabled: boolean;
   external_ticket_link?: string | null;
   listed_on_ticketing: boolean;
+  show_attendee_count: boolean;
   walk_in_enabled: boolean;
   walk_in_supports_cash: boolean;
   walk_in_supports_gcash: boolean;
@@ -84,6 +85,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public ticketing_enabled!: boolean;
   public external_ticket_link?: string | null;
   public listed_on_ticketing!: boolean;
+  public show_attendee_count!: boolean;
   public walk_in_enabled!: boolean;
   public walk_in_supports_cash!: boolean;
   public walk_in_supports_gcash!: boolean;
@@ -268,6 +270,11 @@ Event.init(
       defaultValue: null,
     },
     listed_on_ticketing: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    show_attendee_count: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,

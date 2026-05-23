@@ -81,6 +81,7 @@ export interface Event {
   ticketing_enabled?: boolean;
   external_ticket_link?: string | null;
   listed_on_ticketing?: boolean;
+  show_attendee_count?: boolean;
   tags?: EventTag[];
 }
 
@@ -930,7 +931,7 @@ export class EventService {
     );
   }
 
-  updateEventListing(eventId: number, data: { listed_on_ticketing: boolean; event_type?: string | null; tags?: number[] }): Observable<Event> {
+  updateEventListing(eventId: number, data: { listed_on_ticketing: boolean; show_attendee_count: boolean; event_type?: string | null; tags?: number[] }): Observable<Event> {
     return this.http.put<{ event: Event }>(`${environment.apiUrl}/events/${eventId}`, data, {
       headers: this.getAuthHeaders()
     }).pipe(

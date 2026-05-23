@@ -23,6 +23,7 @@ export class EventListingTabComponent implements OnInit, OnChanges {
   newTagInput = '';
 
   listedOnTicketing = true;
+  showAttendeeCount = true;
   eventType: string = '';
   saving = false;
 
@@ -67,6 +68,7 @@ export class EventListingTabComponent implements OnInit, OnChanges {
   private populateFromEvent(): void {
     if (!this.selectedEvent) return;
     this.listedOnTicketing = this.selectedEvent.listed_on_ticketing !== false;
+    this.showAttendeeCount = this.selectedEvent.show_attendee_count !== false;
     this.eventType = this.selectedEvent.event_type || '';
     this.selectedTagIds = this.selectedEvent.tags?.map(t => t.id) || [];
   }
@@ -104,6 +106,7 @@ export class EventListingTabComponent implements OnInit, OnChanges {
 
     this.eventService.updateEventListing(this.selectedEvent.id, {
       listed_on_ticketing: this.listedOnTicketing,
+      show_attendee_count: this.showAttendeeCount,
       event_type: this.eventType || null,
       tags: this.selectedTagIds
     }).subscribe({

@@ -638,6 +638,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ticketing_enabled,
       external_ticket_link,
       listed_on_ticketing,
+      show_attendee_count,
       tags
     } = req.body;
 
@@ -781,6 +782,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ticketing_enabled: ticketing_enabled !== undefined ? parseBool(ticketing_enabled, true) : event.ticketing_enabled,
       external_ticket_link: external_ticket_link !== undefined ? (external_ticket_link === '' ? null : external_ticket_link) : event.external_ticket_link,
       listed_on_ticketing: listed_on_ticketing !== undefined ? parseBool(listed_on_ticketing, true) : event.listed_on_ticketing,
+      show_attendee_count: show_attendee_count !== undefined ? parseBool(show_attendee_count, true) : event.show_attendee_count,
       walk_in_enabled: walk_in_enabled !== undefined ? walk_in_enabled : event.walk_in_enabled,
       walk_in_supports_cash: walk_in_supports_cash !== undefined ? walk_in_supports_cash : event.walk_in_supports_cash,
       walk_in_supports_gcash: walk_in_supports_gcash !== undefined ? walk_in_supports_gcash : event.walk_in_supports_gcash,
