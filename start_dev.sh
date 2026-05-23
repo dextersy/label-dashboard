@@ -20,6 +20,7 @@ NGROK_LOG="$SCRIPT_DIR/dev_ngrok.log"
 SPINDLY_LOG="$SCRIPT_DIR/dev_spindly.log"
 TICKETING_LOG="$SCRIPT_DIR/dev_ticketing.log"
 
+SMEE_URL="https://smee.io/CmkvBO6jTmDcCFbc"
 NGROK_DOMAIN="$1"
 
 # Clear log files (fresh start)
@@ -81,6 +82,12 @@ else
     echo ""
 fi
 
+# Start smee webhook proxy (forwards PayMongo webhooks to local API)
+echo "Starting smee webhook proxy..."
+npx smee -u "$SMEE_URL" -t http://127.0.0.1:3000/api/public/webhook/payment > "$SMEE_LOG" 2>&1 &
+SMEE_PID=$!
+echo "Smee proxy started (PID: $SMEE_PID)"
+
 # Start API server
 echo "Starting API server..."
 cd "$API_DIR"
@@ -132,6 +139,7 @@ echo "Press Ctrl+C to stop all services"
 cleanup() {
     echo ""
     echo "Stopping all services..."
+    [ -n "$SMEE_PID" ] && kill $SMEE_PID 2>/dev/null
     [ -n "$NGROK_PID" ] && kill $NGROK_PID 2>/dev/null
     [ -n "$API_PID" ] && kill $API_PID 2>/dev/null
     [ -n "$WEB_PID" ] && kill $WEB_PID 2>/dev/null

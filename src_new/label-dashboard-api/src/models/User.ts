@@ -95,14 +95,14 @@ User.init(
       allowNull: true,
     },
     is_admin: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: false,
     },
     is_system_user: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: false,
     },
     brand_id: {
       type: DataTypes.INTEGER,

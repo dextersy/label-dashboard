@@ -41,7 +41,7 @@ export async function createNotificationsForUsers(
 export async function getBrandAdminUserIds(brandId: number): Promise<number[]> {
   try {
     const admins = await User.findAll({
-      where: { brand_id: brandId, is_admin: 1 },
+      where: { brand_id: brandId, is_admin: true },
       attributes: ['id']
     });
     return admins.map(u => u.id);

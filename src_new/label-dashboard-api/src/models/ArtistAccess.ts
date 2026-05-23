@@ -48,19 +48,19 @@ ArtistAccess.init(
       primaryKey: true,
     },
     can_view_payments: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 1,
+      defaultValue: true,
     },
     can_view_royalties: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 1,
+      defaultValue: true,
     },
     can_edit_artist_profile: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 1,
+      defaultValue: true,
     },
     status: {
       type: DataTypes.ENUM('Pending', 'Accepted'),

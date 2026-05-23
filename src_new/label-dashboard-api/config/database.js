@@ -10,13 +10,22 @@ try {
   }
 }
 
+const sslConfig = process.env.DB_SSL === 'false' ? false : {
+  require: true,
+  rejectUnauthorized: false,
+};
+
 const config = {
-  username: process.env.DB_USER || 'root',
+  username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_DATABASE || 'meltrecords_dashboard',
   host: process.env.DB_SERVER || 'localhost',
-  dialect: 'mysql',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  dialect: 'postgres',
   logging: false,
+  dialectOptions: {
+    ssl: sslConfig,
+  },
   pool: {
     max: 5,
     min: 0,

@@ -50,9 +50,9 @@ PaymentMethod.init(
       allowNull: false,
     },
     is_default_for_artist: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: false,
     },
     bank_code: {
       type: DataTypes.STRING(45),

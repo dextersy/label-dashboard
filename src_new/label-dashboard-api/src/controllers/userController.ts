@@ -388,24 +388,14 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       // SECURITY: Strict allowlist for sort direction - never interpolate user input
       const isDescending = sortDirection.toUpperCase() === 'DESC';
 
-      // MySQL doesn't support NULLS FIRST/LAST, so we use a CASE statement workaround
+      // PostgreSQL supports NULLS FIRST/LAST natively
       // For DESC: non-null values first (DESC), then NULL values
       // For ASC: NULL values first, then non-null values (ASC)
 
       // SECURITY: Use complete pre-built strings to make SQL injection protection obvious to reviewers
       const orderByClause = isDescending
-        ? `ORDER BY CASE
-          WHEN la_max.last_logged_in IS NULL
-          THEN 1
-          ELSE 0
-        END,
-        la_max.last_logged_in DESC`
-        : `ORDER BY CASE
-          WHEN la_max.last_logged_in IS NULL
-          THEN 0
-          ELSE 1
-        END,
-        la_max.last_logged_in ASC`;
+        ? `ORDER BY la_max.last_logged_in DESC NULLS LAST`
+        : `ORDER BY la_max.last_logged_in ASC NULLS FIRST`;
 
       // Build additional filter conditions for the raw query using parameterized queries
       // SECURITY: Use parameterized queries to prevent SQL injection
@@ -437,11 +427,11 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
           const value = whereCondition[key];
           if (key === 'is_admin') {
             filterConditions.push(`AND ${columnName} = ?`);
-            filterReplacements.push(value ? 1 : 0);
+            filterReplacements.push(!!value);
           } else if (typeof value === 'object' && value[Op.like]) {
             // SECURITY: Extract the escaped value (already escaped by escapeLikeWildcards earlier)
             // The value is already in format %escapedValue%, just use it directly
-            // Use ESCAPE clause to tell MySQL that backslash is our escape character
+            // Use ESCAPE clause to tell the database that backslash is our escape character
             filterConditions.push(`AND ${columnName} LIKE ? ESCAPE '\\'`);
             filterReplacements.push(value[Op.like]);
           }
@@ -456,7 +446,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         const escapedUsername = escapeLikeWildcards(usernameFilter.trim());
         
         // When username filter is applied, exclude pending invites (only search actual usernames)
-        // Use ESCAPE clause to tell MySQL that backslash is our escape character
+        // Use ESCAPE clause to tell the database that backslash is our escape character
         const usernameFilterCondition = "AND u.username LIKE ? ESCAPE '\\'";
         filterReplacements.push(`%${escapedUsername}%`);
         
@@ -495,7 +485,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
             THEN 1 
             ELSE 0 
           END as has_pending_invite
-        FROM user u
+        FROM "user" u
         LEFT JOIN (
           SELECT user_id, MAX(date_and_time) as last_logged_in
           FROM login_attempt
@@ -509,7 +499,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
       const countQuery = `
         SELECT COUNT(*) as total
-        FROM user u
+        FROM "user" u
         ${whereClause}
       `;
 

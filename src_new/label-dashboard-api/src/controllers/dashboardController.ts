@@ -612,7 +612,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
     const activeFundraisersCount = await Fundraiser.count({
       where: {
         ...brandFilter,
-        status: 'active'
+        status: 'published'
       }
     });
 
@@ -659,7 +659,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
 
     // Get total donations for active fundraisers
     const activeFundraisers = await Fundraiser.findAll({
-      where: { ...brandFilter, status: 'active' },
+      where: { ...brandFilter, status: 'published' },
       attributes: ['id']
     });
 

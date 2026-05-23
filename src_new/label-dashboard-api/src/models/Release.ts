@@ -85,20 +85,6 @@ Release.init(
     release_date: {
       type: DataTypes.DATEONLY,
       allowNull: true,
-      validate: {
-        isValidDate(value: any) {
-          if (value === '0000-00-00' || value === '') {
-            return null;
-          }
-        }
-      },
-      set(value: any) {
-        if (value === '0000-00-00' || value === '') {
-          this.setDataValue('release_date', null);
-        } else {
-          this.setDataValue('release_date', value);
-        }
-      }
     },
     status: {
       type: DataTypes.ENUM('Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'),
