@@ -449,7 +449,7 @@
           <div class="form-section" *ngIf="activeSection === 'scanner' && !isEventDraft()">
 
             <!-- Verification link -->
-            <p class="ef-section-label">Verification link</p>
+            <p class="ef-section-label">Scanner Link</p>
             <div class="tw-mb-5">
               <div *ngIf="event && event.verification_link">
                 <div class="tw-flex tw-items-center tw-gap-2">
@@ -470,27 +470,30 @@
             </div>
 
             <!-- Verification PIN -->
-            <p class="ef-section-label">Verification PIN</p>
+            <p class="ef-section-label">Scanner PIN</p>
             <div class="tw-mb-3">
-              <div class="tw-flex tw-items-center tw-gap-2">
-                <input type="text" id="verificationPin" class="tw-input tw-flex-1 tw-min-w-0"
-                       [(ngModel)]="eventData.verification_pin"
-                       placeholder="6-digit PIN" maxlength="6" pattern="[0-9]{6}">
-                <button type="button"
-                        class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
-                        (click)="copyVerificationPIN()" title="Copy PIN"
-                        [disabled]="!eventData.verification_pin">
-                  <app-icon name="copy" class="tw-text-sm" iconOnly />
-                  <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">Copy</span>
-                </button>
-                <button type="button"
-                        class="tw-w-9 sm:tw-w-auto sm:tw-px-3 tw-h-9 tw-flex tw-items-center tw-justify-center tw-rounded-md tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-50 tw-text-gray-500 tw-transition-colors tw-shrink-0"
-                        (click)="generateVerificationPIN()" title="Generate random PIN">
-                  <app-icon name="refresh" class="tw-text-sm" iconOnly />
-                  <span class="tw-hidden sm:tw-inline sm:tw-ml-1 tw-text-xs">Generate</span>
-                </button>
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <div class="tw-relative tw-inline-flex sm:tw-inline-flex tw-w-full sm:tw-w-auto tw-px-5 tw-py-5 tw-rounded-md tw-border tw-border-gray-200 tw-bg-gray-50 tw-justify-center sm:tw-justify-start">
+                  <span *ngIf="eventData.verification_pin"
+                        class="tw-font-mono tw-text-3xl tw-font-bold tw-tracking-[0.5em] tw-text-gray-900 tw-select-all tw-pr-8">{{ eventData.verification_pin }}</span>
+                  <span *ngIf="!eventData.verification_pin"
+                        class="tw-font-mono tw-text-sm tw-text-gray-400 tw-italic">No PIN generated</span>
+                  <div class="tw-absolute tw-top-2 tw-right-2 tw-flex tw-flex-col tw-gap-1">
+                    <button type="button"
+                            class="tw-w-7 tw-h-7 tw-flex tw-items-center tw-justify-center tw-rounded tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-100 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                            (click)="copyVerificationPIN()" title="Copy PIN"
+                            [disabled]="!eventData.verification_pin">
+                      <app-icon name="copy" [size]="13" iconOnly />
+                    </button>
+                    <button type="button"
+                            class="tw-w-7 tw-h-7 tw-flex tw-items-center tw-justify-center tw-rounded tw-border tw-border-gray-300 tw-bg-white hover:tw-bg-gray-100 tw-text-gray-400 hover:tw-text-gray-600 tw-transition-colors"
+                            (click)="generateVerificationPIN()" title="Generate random PIN">
+                      <app-icon name="refresh" [size]="13" iconOnly />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p class="tw-text-xs tw-text-muted tw-mt-1.5">6-digit PIN for ticket scanners</p>
+              <p class="tw-text-xs tw-text-muted tw-mt-1.5 tw-flex tw-items-center tw-gap-1"><app-icon name="info" class="tw-shrink-0" [size]="12" iconOnly /> Provide this PIN code to gate staff for access to the scanner.</p>
               <small class="form-text tw-text-warning" *ngIf="pinRefreshed">
                 <app-icon name="warning" /> Save Changes to apply new PIN code
               </small>
