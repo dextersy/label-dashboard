@@ -25,6 +25,7 @@
 
     <!-- Right: scanner content -->
     <div class="content-panel">
+      <div class="tw-w-full tw-max-w-sm tw-mx-auto">
 
       <!-- Event header -->
       <div class="tw-text-center tw-mb-6">
@@ -62,7 +63,7 @@
 
       <!-- Mode toggle (scan / walk-in) -->
       <div *ngIf="isPinValidated && walkInEnabled"
-        class="tw-mb-6 sm:tw-mx-40">
+        class="tw-mb-6">
         <div class="tw-flex tw-items-center tw-gap-1 tw-bg-gray-100 tw-rounded-xl tw-p-1 tw-border tw-border-gray-200">
           <button type="button"
             class="tw-flex-1 tw-flex tw-items-center tw-justify-center tw-gap-2 tw-px-5 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-transition-all"
@@ -88,7 +89,7 @@
       </div>
 
       <!-- ======= WALK-IN MODE ======= -->
-      <div *ngIf="isPinValidated && activeMode === 'walk-in' && walkInEnabled" class="sm:tw-mx-40">
+      <div *ngIf="isPinValidated && activeMode === 'walk-in' && walkInEnabled">
 
         <!-- Loading -->
         <div *ngIf="walkInLoading" class="tw-flex tw-justify-center tw-py-8">
@@ -236,7 +237,7 @@
       </div>
 
       <!-- ======= SCAN MODE ======= -->
-      <div class="sm:tw-mx-40" *ngIf="isPinValidated && (activeMode === 'scan' || !walkInEnabled)">
+      <div *ngIf="isPinValidated && (activeMode === 'scan' || !walkInEnabled)">
 
         <!-- Transient alerts -->
         <div *ngIf="showAlert && alertType === 'error'"
@@ -260,10 +261,8 @@
           [class.tw-border-green-400]="persistentAlertType === 'success'"
           [class.tw-bg-red-50]="persistentAlertType === 'error'"
           [class.tw-border-red-400]="persistentAlertType === 'error'">
-          <app-icon name="info" [size]="48" class="tw-mb-3" [class.fa-check-circle]="persistentAlertType === 'success'"
-            [class.tw-text-green-500]="persistentAlertType === 'success'"
-            [class.fa-times-circle]="persistentAlertType === 'error'"
-            [class.tw-text-red-500]="persistentAlertType === 'error'" iconOnly />
+          <app-icon *ngIf="persistentAlertType === 'success'" name="check-circle" [size]="48" class="tw-mb-3 tw-text-green-500" iconOnly />
+          <app-icon *ngIf="persistentAlertType === 'error'" name="x-circle" [size]="48" class="tw-mb-3 tw-text-red-500" iconOnly />
           <h3 class="tw-text-xl tw-font-bold tw-mb-1"
             [class.tw-text-green-800]="persistentAlertType === 'success'"
             [class.tw-text-red-800]="persistentAlertType === 'error'">
@@ -366,6 +365,7 @@
         <p class="tw-font-semibold">Powered by Spindly.</p>
       </div>
 
+      </div><!-- end inner content wrapper -->
     </div><!-- end content-panel -->
   </div><!-- end page-layout -->
 </div><!-- end public-page -->
