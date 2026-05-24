@@ -18,6 +18,17 @@ import { ICON_REGISTRY } from './icon.registry';
     :host(.icon-only) {
       margin-right: 0;
     }
+    /* Spin only the SVG, not the host, so adjacent text doesn't shift */
+    :host(.tw-animate-spin) {
+      animation: none !important;
+    }
+    :host(.tw-animate-spin) svg {
+      animation: icon-spin 1s linear infinite;
+    }
+    @keyframes icon-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
   `]
 })
 export class IconComponent implements OnChanges {
