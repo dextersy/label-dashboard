@@ -1,0 +1,50 @@
+<app-breadcrumb></app-breadcrumb>
+
+<app-paginated-table
+  title="Discography"
+  [data]="releases"
+  [pagination]="pagination"
+  [loading]="loading"
+  [columns]="columns"
+  [showSortableHeaders]="true"
+  [sortInfo]="sortInfo"
+  [responsiveMode]="'card'"
+  [showSearch]="false"
+  [rowClickable]="true"
+  (pageChange)="onPageChange($event)"
+  (sortChange)="onSortChange($event)"
+  (rowClick)="onRowClick($event)">
+
+  <!-- Status filter in header -->
+  <ng-template #customButtons>
+    <div class="release-filter-group" role="group">
+      <button
+        *ngFor="let opt of statusOptions"
+        type="button"
+        class="release-filter-btn"
+        [class.active]="statusFilter === opt.value"
+        (click)="onStatusFilter(opt.value)">
+        {{ opt.label }}
+      </button>
+    </div>
+  </ng-template>
+
+  <!-- Mobile row template -->
+  <ng-template #mobileRowTemplate let-item>
+    <div class="disc-mobile-row" (click)="onRowClick(item)">
+      <img [src]="getCoverArtUrl(item.cover_art)" [alt]="item.title" class="disc-mobile-cover" />
+      <div class="disc-mobile-info">
+        <div class="disc-mobile-title">{{ item.title }}</div>
+        <div class="disc-mobile-artist">{{ item.artists?.length ? item.artists[0].name : '—' }}<span *ngIf="item.artists?.length > 1"> +{{ item.artists.length - 1 }}</span></div>
+        <div class="disc-mobile-meta">
+          <span>{{ formatDate(item.release_date) }}</span>
+          <span *ngIf="item.catalog_no" class="disc-mobile-catalog">{{ item.catalog_no }}</span>
+        </div>
+      </div>
+      <div class="disc-mobile-status">
+        <span [class]="getStatusClass(item.status)">{{ item.status }}</span>
+      </div>
+    </div>
+  </ng-template>
+
+</app-paginated-table>

@@ -167,6 +167,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           children: [
             { route: '/labels/dashboard', title: 'Dashboard', adminOnly: true },
+            { route: '/labels/discography', title: 'Discography', adminOnly: true },
             { route: '/labels/setup', title: 'Settings', adminOnly: true },
             { route: '/labels/earnings', title: 'Financials', adminOnly: true },
             { route: '/labels/sublabels', title: 'Sublabels', adminOnly: true }
@@ -272,10 +273,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
             .map(child => {
               let icon = 'tags';
               switch (child.route) {
-                case '/labels/dashboard': icon = 'chart-bar'; break;
-                case '/labels/earnings':  icon = 'coins';     break;
-                case '/labels/sublabels': icon = 'layers';    break;
-                case '/labels/setup':     icon = 'settings';  break;
+                case '/labels/dashboard':    icon = 'chart-bar'; break;
+                case '/labels/discography': icon = 'music';    break;
+                case '/labels/earnings':    icon = 'coins';    break;
+                case '/labels/sublabels':   icon = 'layers';   break;
+                case '/labels/setup':       icon = 'settings'; break;
               }
               return { ...child, icon };
             });

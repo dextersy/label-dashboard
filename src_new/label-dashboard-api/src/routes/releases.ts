@@ -13,7 +13,8 @@ import {
   generateCatalogNumber,
   downloadMasters,
   downloadMp3s,
-  downloadPriorityPitch
+  downloadPriorityPitch,
+  getDiscography
 } from '../controllers/releaseController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -41,6 +42,9 @@ router.use(authenticateToken);
 
 // Catalog number utilities (must be before /:id routes)
 router.get('/generate-catalog-number', generateCatalogNumber);
+
+// Discography — paginated, sorted, filtered release list for label view
+router.get('/discography', requireAdmin, getDiscography);
 
 // Release CRUD operations
 router.get('/', getReleases);

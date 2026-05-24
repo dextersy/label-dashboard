@@ -1,0 +1,121 @@
+// Status filter group — same style as EPK visibility filter
+.release-filter-group {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+}
+
+.release-filter-btn {
+  background: #fff;
+  border: none;
+  border-left: 1px solid #d1d5db;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 12px;
+  cursor: pointer;
+  line-height: 1.5;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+
+  &:first-child {
+    border-left: none;
+  }
+
+  &:hover:not(.active) {
+    background: #f3f4f6;
+  }
+
+  &.active {
+    background: #111827;
+    color: #fff;
+  }
+}
+
+// Cover art + title cell (desktop)
+::ng-deep .disc-cover-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+::ng-deep .disc-cover-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #f3f4f6;
+}
+
+::ng-deep .disc-cover-title {
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+// Mobile row layout
+.disc-mobile-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+
+  &:active {
+    background: #f3f4f6;
+  }
+}
+
+.disc-mobile-cover {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: #f3f4f6;
+}
+
+.disc-mobile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.disc-mobile-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.disc-mobile-artist {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.disc-mobile-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.disc-mobile-catalog {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+}
+
+.disc-mobile-status {
+  flex-shrink: 0;
+}

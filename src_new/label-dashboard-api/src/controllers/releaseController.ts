@@ -1555,3 +1555,62 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
     }
   }
 };
+
+export const getDiscography = async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      page = '1',
+      limit = '20',
+      sortBy = 'release_date',
+      sortDirection = 'desc',
+      status
+    } = req.query;
+
+    const pageNum = parseInt(page as string) || 1;
+    const pageSize = parseInt(limit as string) || 20;
+    const offset = (pageNum - 1) * pageSize;
+
+    const allowedSortColumns = ['release_date', 'title', 'catalog_no', 'status'];
+    const sortColumn = allowedSortColumns.includes(sortBy as string) ? (sortBy as string) : 'release_date';
+    const direction = (sortDirection as string)?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    const where: any = { brand_id: req.user.brand_id };
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const { count, rows: releases } = await Release.findAndCountAll({
+      where,
+      include: [
+        {
+          model: Artist,
+          as: 'artists',
+          attributes: ['id', 'name', 'profile_photo'],
+          through: { attributes: [] }
+        }
+      ],
+      attributes: ['id', 'title', 'catalog_no', 'UPC', 'cover_art', 'release_date', 'status'],
+      order: [[sortColumn, direction]],
+      limit: pageSize,
+      offset,
+      distinct: true
+    });
+
+    const totalPages = Math.ceil(count / pageSize);
+
+    res.json({
+      releases,
+      pagination: {
+        current_page: pageNum,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: pageSize,
+        has_next: pageNum < totalPages,
+        has_prev: pageNum > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get discography error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

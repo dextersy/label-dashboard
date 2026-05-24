@@ -80,7 +80,7 @@
             </div>
 
             <!-- For Submission -->
-            <a routerLink="/music/releases"
+            <a routerLink="/labels/discography" [queryParams]="{status: 'For Submission'}"
                class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
               <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-flex-shrink-0" style="color: #3b82f6;">
                 <app-icon name="paper-plane" />
@@ -93,7 +93,7 @@
             </a>
 
             <!-- Pending -->
-            <a routerLink="/music/releases"
+            <a routerLink="/labels/discography" [queryParams]="{status: 'Pending'}"
                class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
               <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-warning tw-flex-shrink-0">
                 <app-icon name="clock" />
@@ -195,11 +195,6 @@
           </div>
         </div>
 
-        <div *ngIf="dashboardData.latestReleases?.length" class="tw-text-right tw-mt-5">
-          <a (click)="goToReleases()" class="btn btn-ghost btn-sm tw-cursor-pointer tw-no-underline">
-            All releases →
-          </a>
-        </div>
 
       </div>
 

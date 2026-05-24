@@ -39,6 +39,7 @@ import { artistSelectedGuard } from './guards/artist-selected.guard';
 import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
+import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
@@ -173,6 +174,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: LabelsDashboardComponent },
+      { path: 'discography', component: LabelsDiscographyComponent },
       { path: 'earnings', component: LabelsComponent },
       { path: 'sublabels', component: LabelsSubLabelsComponent },
       { path: 'setup', component: LabelSetupComponent },
