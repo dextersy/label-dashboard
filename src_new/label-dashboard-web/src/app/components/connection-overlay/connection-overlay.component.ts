@@ -9,9 +9,7 @@ import { Observable } from 'rxjs';
     template: `
     <div *ngIf="!(isConnected$ | async)" class="connection-overlay">
       <div class="connection-message">
-        <div class="spinner-border text-light mb-3" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+        <div class="spinner-border text-light mb-3" role="status" aria-hidden="true"></div>
         <h4 class="text-white mb-2">Lost your connection</h4>
         <p class="text-white-50 mb-0">Please check your internet connection.<br>This page will automatically refresh once we get a connection.</p>
       </div>

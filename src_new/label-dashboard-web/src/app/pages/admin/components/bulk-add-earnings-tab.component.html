@@ -634,9 +634,7 @@
 
   <!-- Loading State -->
   <div *ngIf="loading" class="tw-py-4 tw-text-center">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Processing...</span>
-    </div>
+    <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
     <p class="tw-mt-2 tw-text-muted">Previewing CSV file...</p>
   </div>
 </div>

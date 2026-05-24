@@ -31,9 +31,7 @@ export interface VenueLocationData {
           <div class="modal-body p-0">
             <!-- Loading indicator -->
             <div *ngIf="isLoadingMap" class="d-flex justify-content-center align-items-center p-4">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading map...</span>
-              </div>
+              <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
               <span class="ms-2">Loading map...</span>
             </div>
             
