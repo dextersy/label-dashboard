@@ -83,11 +83,13 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() bulkOperationsLoading: boolean = false; // Loading state for all operations (single and bulk)
   @Input() rowClassGetter?: (item: any) => string; // Function to get CSS classes for each row
   @Input() headerActions: HeaderAction[] = []; // Action buttons rendered above the table
+  @Input() rowClickable: boolean = false;
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
   @Output() selectedItemsChange = new EventEmitter<any[]>(); // Emit selected items for bulk operations
   @Output() breakdownButtonClick = new EventEmitter<{item: any, columnKey: string}>();
+  @Output() rowClick = new EventEmitter<any>();
 
   @ContentChild('tableContent', { static: false }) tableContent!: TemplateRef<any>;
   @ContentChild('actionsContent', { static: false }) actionsContent!: TemplateRef<any>;

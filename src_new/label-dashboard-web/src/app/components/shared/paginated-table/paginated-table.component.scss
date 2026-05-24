@@ -1,3 +1,9 @@
+// Clickable row
+tr.row-clickable {
+  cursor: pointer;
+  &:hover td { background: #f9fafb; }
+}
+
 // Search bar panel
 .search-bar-panel {
   display: flex;

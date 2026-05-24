@@ -190,7 +190,9 @@
                 </tr>
                 <tr *ngFor="let item of data"
                     [class]="rowClassGetter ? rowClassGetter(item) : ''"
-                    [class.merged-cell-row]="getMergeCellValue(item) !== null">
+                    [class.merged-cell-row]="getMergeCellValue(item) !== null"
+                    [class.row-clickable]="rowClickable"
+                    (click)="rowClickable ? rowClick.emit(item) : null">
 
                   <!-- Merged cell row (section header) — visible on mobile only via CSS -->
                   <ng-container *ngIf="getMergeCellValue(item) !== null">
