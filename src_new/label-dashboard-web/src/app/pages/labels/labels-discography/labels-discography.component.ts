@@ -43,10 +43,14 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
 export class LabelsDiscographyComponent implements OnInit {
   releases: DiscographyRelease[] = [];
   pagination: PaginationInfo | null = null;
+  statusCounts: Record<string, number> = {};
   loading = false;
 
   statusFilter = 'all';
   statusOptions = STATUS_OPTIONS;
+  // true by default — hides itself once the user scrolls to the end or on wide screens
+  filterScrollable = true;    // right fade: hidden when at right end
+  filterScrolledRight = false; // left fade: hidden when at left start
 
   sortInfo: SortInfo = { column: 'release_date', direction: 'desc' };
 
@@ -130,7 +134,7 @@ export class LabelsDiscographyComponent implements OnInit {
     const queryString = new URLSearchParams(params).toString();
 
     this.http
-      .get<{ releases: DiscographyRelease[]; pagination: PaginationInfo }>(
+      .get<{ releases: DiscographyRelease[]; pagination: PaginationInfo; statusCounts: Record<string, number> }>(
         `${environment.apiUrl}/releases/discography?${queryString}`,
         { headers }
       )
@@ -138,6 +142,7 @@ export class LabelsDiscographyComponent implements OnInit {
         next: (data) => {
           this.releases = data.releases;
           this.pagination = data.pagination;
+          this.statusCounts = data.statusCounts ?? {};
           this.loading = false;
         },
         error: (err) => {
@@ -164,6 +169,12 @@ export class LabelsDiscographyComponent implements OnInit {
     this.statusFilter = value;
     this.loadDiscography(1);
   }
+
+  onFilterScroll(el: HTMLElement): void {
+    this.filterScrolledRight = el.scrollLeft > 2;
+    this.filterScrollable = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+  }
+
 
   onRowClick(release: DiscographyRelease): void {
     const firstArtist = release.artists?.[0];

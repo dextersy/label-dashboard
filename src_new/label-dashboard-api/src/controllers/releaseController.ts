@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { fn, col, literal } from 'sequelize';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
 import path from 'path';
 import archiver from 'archiver';
@@ -1579,27 +1580,41 @@ export const getDiscography = async (req: AuthRequest, res: Response) => {
       where.status = status;
     }
 
-    const { count, rows: releases } = await Release.findAndCountAll({
-      where,
-      include: [
-        {
-          model: Artist,
-          as: 'artists',
-          attributes: ['id', 'name', 'profile_photo'],
-          through: { attributes: [] }
-        }
-      ],
-      attributes: ['id', 'title', 'catalog_no', 'UPC', 'cover_art', 'release_date', 'status'],
-      order: [[sortColumn, direction]],
-      limit: pageSize,
-      offset,
-      distinct: true
-    });
+    const [{ count, rows: releases }, statusCountRows] = await Promise.all([
+      Release.findAndCountAll({
+        where,
+        include: [
+          {
+            model: Artist,
+            as: 'artists',
+            attributes: ['id', 'name', 'profile_photo'],
+            through: { attributes: [] }
+          }
+        ],
+        attributes: ['id', 'title', 'catalog_no', 'UPC', 'cover_art', 'release_date', 'status'],
+        order: [[sortColumn, direction]],
+        limit: pageSize,
+        offset,
+        distinct: true
+      }),
+      Release.findAll({
+        where: { brand_id: req.user.brand_id },
+        attributes: ['status', [fn('COUNT', col('id')), 'count']],
+        group: ['status'],
+        raw: true
+      })
+    ]);
+
+    const statusCounts: Record<string, number> = {};
+    for (const row of statusCountRows as any[]) {
+      statusCounts[row.status] = parseInt(row.count, 10);
+    }
 
     const totalPages = Math.ceil(count / pageSize);
 
     res.json({
       releases,
+      statusCounts,
       pagination: {
         current_page: pageNum,
         total_pages: totalPages,

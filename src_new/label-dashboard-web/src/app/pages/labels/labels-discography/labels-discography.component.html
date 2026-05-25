@@ -17,15 +17,23 @@
 
   <!-- Status filter in header -->
   <ng-template #customButtons>
-    <div class="release-filter-group" role="group">
-      <button
-        *ngFor="let opt of statusOptions"
-        type="button"
-        class="release-filter-btn"
-        [class.active]="statusFilter === opt.value"
-        (click)="onStatusFilter(opt.value)">
-        {{ opt.label }}
-      </button>
+    <div class="release-filter-wrap">
+      <div class="release-filter-group" role="group"
+           #filterScroll
+           (scroll)="onFilterScroll(filterScroll)">
+        <button
+          *ngFor="let opt of statusOptions"
+          type="button"
+          class="release-filter-btn"
+          [class.active]="statusFilter === opt.value"
+          (click)="onStatusFilter(opt.value)">
+          {{ opt.label }}
+          <span *ngIf="(opt.value === 'For Submission' || opt.value === 'Pending') && statusCounts[opt.value] > 0"
+                class="filter-count-badge">{{ statusCounts[opt.value] }}</span>
+        </button>
+      </div>
+      <div class="release-filter-fade release-filter-fade--left" [class.hidden]="!filterScrolledRight" aria-hidden="true">‹</div>
+      <div class="release-filter-fade release-filter-fade--right" [class.hidden]="!filterScrollable" aria-hidden="true">›</div>
     </div>
   </ng-template>
 

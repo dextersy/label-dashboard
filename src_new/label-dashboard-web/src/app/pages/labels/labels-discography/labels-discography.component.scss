@@ -1,9 +1,63 @@
+// Wrapper for scroll + fade affordance
+.release-filter-wrap {
+  position: relative;
+  // On mobile the header row wraps and table-actions gets a full-width line,
+  // so we must cap the wrap's width to force overflow inside the group.
+  @media (max-width: 539px) {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+// Fade + caret overlays — only relevant on narrow viewports
+.release-filter-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  transition: opacity 0.15s;
+
+  &.hidden { opacity: 0; }
+
+  &--right {
+    right: 0;
+    justify-content: flex-end;
+    padding-right: 6px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.95) 55%);
+    border-radius: 0 7px 7px 0;
+  }
+
+  &--left {
+    left: 0;
+    justify-content: flex-start;
+    padding-left: 6px;
+    background: linear-gradient(to left, transparent, rgba(255,255,255,0.95) 55%);
+    border-radius: 7px 0 0 7px;
+    opacity: 0; // starts hidden (not scrolled yet)
+    &:not(.hidden) { opacity: 1; }
+  }
+
+  // On screens wide enough that the filter group won't overflow, hide unconditionally
+  @media (min-width: 540px) { display: none; }
+}
+
 // Status filter group — same style as EPK visibility filter
 .release-filter-group {
   display: flex;
-  border-radius: 8px;
-  overflow: hidden;
   border: 1px solid #d1d5db;
+  border-radius: 8px;
+  // No overflow: hidden — use per-button radius so the group can scroll on mobile
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  // Hide scrollbar visually but keep scroll behaviour
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
 }
 
 .release-filter-btn {
@@ -18,9 +72,15 @@
   line-height: 1.5;
   transition: background 0.12s, color 0.12s;
   white-space: nowrap;
+  flex-shrink: 0;
 
   &:first-child {
     border-left: none;
+    border-radius: 7px 0 0 7px;
+  }
+
+  &:last-child {
+    border-radius: 0 7px 7px 0;
   }
 
   &:hover:not(.active) {
@@ -30,6 +90,27 @@
   &.active {
     background: #111827;
     color: #fff;
+  }
+}
+
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  background: #3b82f6;
+  color: #fff;
+
+  .release-filter-btn.active & {
+    background: #fff;
+    color: #111827;
   }
 }
 
