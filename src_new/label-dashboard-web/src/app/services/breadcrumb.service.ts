@@ -24,7 +24,7 @@ export class BreadcrumbService {
 
   // Menu structure for breadcrumb generation
   private menuStructure: Record<string, MenuItemBase> = {
-    '/dashboard': { label: 'Dashboard', icon: 'chart-line' },
+    '/dashboard': { label: 'Dashboard', icon: 'chart-bar' },
     '/campaigns/sync-licensing': { label: 'Sync Licensing', icon: 'file' },
 
     // Artist section
@@ -84,10 +84,12 @@ export class BreadcrumbService {
 
     // Labels section
     '/labels': { label: 'Labels', icon: 'tags' },
-    '/labels/earnings': { label: 'Financials', parent: '/labels' },
-    '/labels/sublabels': { label: 'Sublabels', parent: '/labels' },
-    '/labels/setup': { label: 'Settings', parent: '/labels' },
-    '/labels/reports': { label: 'Reports', parent: '/labels' },
+    '/labels/dashboard': { label: 'Dashboard', icon: 'chart-bar', parent: '/labels' },
+    '/labels/discography': { label: 'Discography', icon: 'music', parent: '/labels' },
+    '/labels/earnings': { label: 'Financials', icon: 'coins', parent: '/labels' },
+    '/labels/sublabels': { label: 'Sublabels', icon: 'layers', parent: '/labels' },
+    '/labels/setup': { label: 'Settings', icon: 'settings', parent: '/labels' },
+    '/labels/reports': { label: 'Reports', icon: 'chart-line', parent: '/labels' },
     '/labels/reports/music-earnings': { label: 'Music Earnings', parent: '/labels/reports' },
     '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },
     '/labels/reports/payments-royalties': { label: 'Payments & Royalties', parent: '/labels/reports' },

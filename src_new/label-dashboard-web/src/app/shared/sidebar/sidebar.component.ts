@@ -267,6 +267,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           const labelsCoreItems = (labelsItem.children || [])
             .filter(child => {
               if (child.route === '/labels/dashboard' && !this.featureMusicWorkspace) return false;
+              if (child.route === '/labels/discography' && !this.featureMusicWorkspace) return false;
               if (child.route === '/labels/sublabels' && !this.featureSublabels) return false;
               return true;
             })
@@ -293,7 +294,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 id: 'labels-reports',
                 items: [{
                   ...reportsChild,
-                  icon: 'chart-bar',
+                  icon: 'chart-line',
                   title: 'Reports'
                 }]
               });
