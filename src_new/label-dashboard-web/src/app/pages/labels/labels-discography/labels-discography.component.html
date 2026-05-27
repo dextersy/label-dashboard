@@ -11,9 +11,12 @@
   [responsiveMode]="'card'"
   [showSearch]="false"
   [rowClickable]="true"
+  [enableBulkOperations]="true"
+  [bulkOperationsLoading]="bulkLoading"
   (pageChange)="onPageChange($event)"
   (sortChange)="onSortChange($event)"
-  (rowClick)="onRowClick($event)">
+  (rowClick)="onRowClick($event)"
+  (selectedItemsChange)="onSelectionChange($event)">
 
   <!-- Status filter in header -->
   <ng-template #customButtons>
@@ -34,6 +37,31 @@
       </div>
       <div class="release-filter-fade release-filter-fade--left" [class.hidden]="!filterScrolledRight" aria-hidden="true">‹</div>
       <div class="release-filter-fade release-filter-fade--right" [class.hidden]="!filterScrollable" aria-hidden="true">›</div>
+    </div>
+  </ng-template>
+
+  <!-- Bulk operations toolbar -->
+  <ng-template #bulkOperationsContent>
+    <div class="tw-relative">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [disabled]="bulkLoading"
+        (click)="bulkStatusOpen = !bulkStatusOpen; $event.stopPropagation()">
+        Set Status
+        <app-icon name="caret-down" iconOnly />
+      </button>
+      <div *ngIf="bulkStatusOpen"
+           class="tw-absolute tw-z-50 tw-mt-1 tw-bg-white tw-border tw-border-gray-200 tw-rounded tw-shadow-lg tw-min-w-max"
+           style="top: 100%; left: 0;">
+        <button
+          *ngFor="let s of statusValues"
+          type="button"
+          class="dropdown-item"
+          (click)="bulkSetStatus(s); bulkStatusOpen = false; $event.stopPropagation()">
+          {{ s }}
+        </button>
+      </div>
     </div>
   </ng-template>
 

@@ -204,7 +204,7 @@
                   <!-- Normal row -->
                   <ng-container *ngIf="getMergeCellValue(item) === null">
                     <!-- Bulk select checkbox -->
-                    <td *ngIf="enableBulkOperations" class="checkbox-column">
+                    <td *ngIf="enableBulkOperations" class="checkbox-column" (click)="$event.stopPropagation()">
                       <input
                         type="checkbox"
                         class="form-check-input"

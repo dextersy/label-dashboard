@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
@@ -45,6 +46,11 @@ export class LabelsDiscographyComponent implements OnInit {
   pagination: PaginationInfo | null = null;
   statusCounts: Record<string, number> = {};
   loading = false;
+  bulkLoading = false;
+
+  selectedReleases: DiscographyRelease[] = [];
+  bulkStatusOpen = false;
+  readonly statusValues = ['Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'];
 
   statusFilter = 'all';
   statusOptions = STATUS_OPTIONS;
@@ -175,6 +181,36 @@ export class LabelsDiscographyComponent implements OnInit {
     this.filterScrollable = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
   }
 
+
+  @HostListener('document:click')
+  closeBulkDropdown(): void {
+    this.bulkStatusOpen = false;
+  }
+
+  onSelectionChange(items: any[]): void {
+    this.selectedReleases = items as DiscographyRelease[];
+  }
+
+  bulkSetStatus(status: string): void {
+    if (!this.selectedReleases.length) return;
+    const token = localStorage.getItem('auth_token');
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    this.bulkLoading = true;
+    forkJoin(
+      this.selectedReleases.map(r =>
+        this.http.put(`${environment.apiUrl}/releases/${r.id}`, { status }, { headers })
+      )
+    ).subscribe({
+      next: () => {
+        this.bulkLoading = false;
+        this.loadDiscography(this.pagination?.current_page ?? 1);
+      },
+      error: (err) => {
+        console.error('Bulk status update error:', err);
+        this.bulkLoading = false;
+      }
+    });
+  }
 
   onRowClick(release: DiscographyRelease): void {
     const firstArtist = release.artists?.[0];
