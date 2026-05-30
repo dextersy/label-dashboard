@@ -31,19 +31,18 @@ import { environment } from '../../../../environments/environment';
 
           <!-- Benefits -->
           <div class="mb-6">
-            <h1 class="text-lg font-black text-gray-900 uppercase tracking-tight mb-1">Save your tickets</h1>
-            <p class="text-xs font-mono text-gray-400 mb-4">Create a free Your Scene account to:</p>
+            <h1 class="text-sm font-bold text-gray-900 mb-4">Create a free Your Scene account to:</h1>
             <ul class="space-y-2.5">
               <li class="flex items-start gap-2.5 text-xs font-mono text-gray-600">
-                <span class="text-yellow-500 font-black mt-0.5">—</span>
+                <svg class="w-3.5 h-3.5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 Access all your tickets in one place, anytime
               </li>
               <li class="flex items-start gap-2.5 text-xs font-mono text-gray-600">
-                <span class="text-yellow-500 font-black mt-0.5">—</span>
-                Your details are saved for next time — no retyping
+                <svg class="w-3.5 h-3.5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                Save your information — no need to input every time
               </li>
               <li class="flex items-start gap-2.5 text-xs font-mono text-gray-600">
-                <span class="text-yellow-500 font-black mt-0.5">—</span>
+                <svg class="w-3.5 h-3.5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 Discover local shows and events you'll love
               </li>
             </ul>
