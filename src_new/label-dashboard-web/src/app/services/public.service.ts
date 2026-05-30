@@ -166,8 +166,12 @@ export class PublicService {
   /**
    * Purchase a ticket for an event
    */
-  buyTicket(request: TicketPurchaseRequest): Observable<TicketPurchaseResponse> {
-    return this.http.post<TicketPurchaseResponse>(`${this.apiUrl}/public/tickets/buy`, request, { withCredentials: true });
+  buyTicket(request: TicketPurchaseRequest, audienceToken?: string | null): Observable<TicketPurchaseResponse> {
+    const headers: Record<string, string> = {};
+    if (audienceToken) {
+      headers['Authorization'] = `Bearer ${audienceToken}`;
+    }
+    return this.http.post<TicketPurchaseResponse>(`${this.apiUrl}/public/tickets/buy`, request, { withCredentials: true, headers });
   }
 
   /**

@@ -122,6 +122,35 @@
   }
 }
 
+.description-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #555;
+
+  &.description-collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.read-more-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-color, #6f42c1);
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+}
+
 /* LOADING SPINNER */
 .loading {
   width: 100px;
@@ -232,154 +261,59 @@
   animation-delay: 1.4s;
 }
 
-/* Bootstrap Form Controls - Consistent styling for all form fields */
-.name-container,
-.email-container,
-.contact-number-container {
+/* Form field rows */
+.form-field-row {
   margin-bottom: 1rem;
-
-  // Override Bootstrap form-floating height constraints
-  .form-floating {
-    > .form-control {
-      height: 4rem !important;
-      padding-top: 1.625rem !important;
-      padding-bottom: 0.625rem !important;
-      padding-left: 0.75rem !important;
-      padding-right: 0.75rem !important;
-    }
-
-    // Default label position (when field is empty) - center vertically
-    > label {
-      top: 0 !important;
-      height: 4rem !important;
-      padding: 1rem 0.75rem !important;
-      line-height: 2rem !important;
-    }
-
-    // Floating label position (when focused or filled) - move to top
-    > .form-control:focus ~ label,
-    > .form-control:not(:placeholder-shown) ~ label {
-      opacity: 0.65 !important;
-      transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem) !important;
-    }
-  }
-
-  .input-group-text {
-    background-color: white;
-    border-color: #ced4da;
-    font-weight: 500;
-  }
-
-  .form-control {
-    border-color: #ced4da;
-
-    &.form-control {
-      height: 4rem !important;
-      padding: 1.5rem 0.75rem !important;
-      line-height: 1.2 !important;
-      font-size: 1rem !important;
-    }
-
-    &[type="text"],
-    &[type="email"] {
-      background-color: white !important;
-      border: 1px solid #ced4da !important;
-      height: 4rem !important;
-      padding: 1.5rem 0.75rem !important;
-      text-align: left !important;
-      margin: 0 !important;
-      font-size: 1rem !important;
-      border-radius: 0.375rem !important;
-      line-height: 1.2 !important;
-
-      &:focus {
-        background-color: white !important;
-        border-color: var(--brand-color) !important;
-        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
-      }
-    }
-
-    &:focus {
-      border-color: var(--brand-color);
-      box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
-    }
-
-    &.is-invalid {
-      border-color: #dc3545;
-    }
-  }
 
   .invalid-feedback {
     color: #dc3545;
     font-size: 14px;
     margin-top: 0.25rem;
+    display: block;
   }
 
   .valid-feedback {
     color: #28a745;
     font-size: 14px;
     margin-top: 0.25rem;
+    display: block;
   }
 }
 
-// Special styling for input groups with prepend text
-.contact-number-container {
-  .form-control {
-    border-left: 0;
-  }
+.tw-input.is-invalid {
+  border-color: #dc3545 !important;
 }
 
 /* Amount field - Prominent styling */
 .amount-container {
   margin-bottom: 1.5rem;
 
-  .amount-input-group {
-    .currency-prefix {
-      background-color: var(--brand-color);
-      color: white;
-      border-color: var(--brand-color);
-      font-size: 1.5rem;
-      font-weight: 700;
-      padding: 0 1.25rem;
+  .currency-prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem;
+    background-color: var(--brand-color);
+    color: white;
+    border: 1px solid var(--brand-color);
+    border-radius: 0.375rem 0 0 0.375rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .amount-field {
+    font-size: 1.75rem !important;
+    font-weight: 600 !important;
+    height: 4rem !important;
+    border-radius: 0 0.375rem 0.375rem 0 !important;
+
+    &:focus {
+      border-color: var(--brand-color) !important;
+      box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
     }
 
-    .form-floating {
-      > .form-control {
-        height: 5rem !important;
-        padding-top: 1.625rem !important;
-        padding-bottom: 0.625rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        font-size: 1.75rem !important;
-        font-weight: 600 !important;
-      }
-
-      > label {
-        top: 0 !important;
-        height: 5rem !important;
-        padding: 1.25rem 1rem !important;
-        line-height: 2.5rem !important;
-        font-size: 1.1rem;
-      }
-
-      > .form-control:focus ~ label,
-      > .form-control:not(:placeholder-shown) ~ label {
-        opacity: 0.65 !important;
-        transform: scale(0.75) translateY(-0.5rem) translateX(0.15rem) !important;
-      }
-    }
-
-    .amount-field {
-      border-left: 0 !important;
-
-      &:focus {
-        border-color: var(--brand-color) !important;
-        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25) !important;
-      }
-
-      &.is-invalid {
-        border-color: #dc3545 !important;
-      }
+    &.is-invalid {
+      border-color: #dc3545 !important;
     }
   }
 
@@ -387,6 +321,7 @@
     color: #dc3545;
     font-size: 14px;
     margin-top: 0.25rem;
+    display: block;
   }
 }
 

@@ -71,27 +71,33 @@
 
         <!-- Description -->
         <div *ngIf="fundraiser.description" class="description-box tw-mb-4 tw-p-3">
-          <div class="description-content" [innerHTML]="fundraiser.description"></div>
+          <div #descriptionEl
+            class="description-content"
+            [class.description-collapsed]="!descriptionExpanded"
+            [innerHTML]="sanitizeHtml(fundraiser.description)">
+          </div>
+          <button *ngIf="descriptionOverflows || descriptionExpanded"
+            type="button" class="read-more-btn"
+            (click)="descriptionExpanded = !descriptionExpanded">
+            {{ descriptionExpanded ? 'Show less' : 'Read more...' }}
+          </button>
         </div>
 
         <form [formGroup]="donationForm" (ngSubmit)="onSubmit()">
           <!-- Amount Field - Prominent -->
           <div class="amount-container fadeIn first">
             <h6><strong>How much would you like to donate?</strong></h6>
-            <div class="input-group amount-input-group">
-              <span class="input-group-text currency-prefix">₱</span>
-              <div class="form-floating tw-flex-1">
-                <input
-                  type="number"
-                  class="amount-field tw-input"
-                  id="amount"
-                  formControlName="amount"
-                  placeholder="Amount"
-                  [class.is-invalid]="amountControl?.invalid && amountControl?.touched"
-                  min="20"
-                  step="0.01">
-                <label for="amount">Amount</label>
-              </div>
+            <div class="tw-flex">
+              <span class="currency-prefix">₱</span>
+              <input
+                type="number"
+                class="amount-field tw-input tw-rounded-l-none tw-border-l-0"
+                id="amount"
+                formControlName="amount"
+                placeholder="0.00"
+                [class.is-invalid]="amountControl?.invalid && amountControl?.touched"
+                min="20"
+                step="0.01">
             </div>
             <div class="invalid-feedback tw-block"
                  *ngIf="amountControl?.invalid && amountControl?.touched">
@@ -103,20 +109,16 @@
           <h6 class="fadeIn second"><strong>Please provide your details.</strong></h6>
 
           <!-- Name Field -->
-          <div class="name-container fadeIn second">
-            <div class="input-group">
-              <div class="form-floating tw-flex-1">
-                <input
-                  type="text"
-                  class="tw-input"
-                  id="name"
-                  formControlName="name"
-                  placeholder="Full name"
-                  [class.is-invalid]="nameControl?.invalid && nameControl?.touched"
-                  required>
-                <label for="name">Full name</label>
-              </div>
-            </div>
+          <div class="form-field-row fadeIn second">
+            <label class="tw-label" for="name">Full name</label>
+            <input
+              type="text"
+              class="tw-input"
+              id="name"
+              formControlName="name"
+              placeholder="Your full name"
+              [class.is-invalid]="nameControl?.invalid && nameControl?.touched"
+              required>
             <div class="invalid-feedback tw-block"
                  *ngIf="nameControl?.invalid && nameControl?.touched">
               Full name is required.
@@ -124,20 +126,16 @@
           </div>
 
           <!-- Email Field -->
-          <div class="email-container fadeIn third">
-            <div class="input-group">
-              <div class="form-floating tw-flex-1">
-                <input
-                  type="email"
-                  class="tw-input"
-                  id="email"
-                  formControlName="email"
-                  placeholder="Email address"
-                  [class.is-invalid]="emailControl?.invalid && emailControl?.touched"
-                  required>
-                <label for="email">Email address</label>
-              </div>
-            </div>
+          <div class="form-field-row fadeIn third">
+            <label class="tw-label" for="email">Email address</label>
+            <input
+              type="email"
+              class="tw-input"
+              id="email"
+              formControlName="email"
+              placeholder="Your email address"
+              [class.is-invalid]="emailControl?.invalid && emailControl?.touched"
+              required>
             <div class="invalid-feedback tw-block"
                  *ngIf="emailControl?.invalid && emailControl?.touched && emailControl?.errors?.['required']">
               Email address is required.
@@ -154,18 +152,16 @@
           </div>
 
           <!-- Contact Number Field -->
-          <div class="contact-number-container fadeIn fourth">
-            <div class="input-group">
-              <span class="input-group-text">🇵🇭 +63</span>
-              <div class="form-floating tw-flex-1">
-                <input
-                  type="text"
-                  class="tw-input"
-                  id="contact_number"
-                  formControlName="contact_number"
-                  placeholder="Contact number (optional)">
-                <label for="contact_number">Contact number (optional)</label>
-              </div>
+          <div class="form-field-row fadeIn fourth">
+            <label class="tw-label" for="contact_number">Contact number <span class="tw-font-normal tw-text-gray-400">(optional)</span></label>
+            <div class="tw-flex">
+              <span class="input-group-text tw-flex tw-items-center tw-px-3 tw-bg-gray-50 tw-border tw-border-r-0 tw-border-gray-300 tw-rounded-l tw-text-sm tw-text-gray-600 tw-whitespace-nowrap">🇵🇭 +63</span>
+              <input
+                type="text"
+                class="tw-input tw-rounded-l-none tw-border-l-0"
+                id="contact_number"
+                formControlName="contact_number"
+                placeholder="9xx xxx xxxx">
             </div>
           </div>
 

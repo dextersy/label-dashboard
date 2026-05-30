@@ -11,6 +11,8 @@ import { BrandService, BrandSettings } from '../../../services/brand.service';
 import { MetaService } from '../../../services/meta.service';
 import { CountdownNotificationComponent } from '../../../shared/countdown-notification/countdown-notification.component';
 import { checkEmailIssues, EmailTypoResult } from '../../../utils/email-typo-detector';
+import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
+import { AudienceLoginComponent } from '../../../components/shared/audience-login/audience-login.component';
 
 // Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -29,8 +31,9 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
         MatInputModule,
         MatButtonModule,
         MatCheckboxModule,
-        CountdownNotificationComponent
-, IconComponent],
+        CountdownNotificationComponent,
+        AudienceLoginComponent,
+        IconComponent],
     templateUrl: './ticket-buy.component.html',
     styleUrls: ['./ticket-buy.component.scss']
 })
@@ -69,7 +72,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   emailTypoResult: EmailTypoResult | null = null;
   isPreview = false;
   showClosedDetails = false;
+  descriptionExpanded = false;
+  descriptionOverflows = false;
   currentPageUrl = window.location.href;
+
+  @ViewChild('descriptionEl') descriptionEl?: ElementRef<HTMLElement>;
 
   constructor(
     private fb: FormBuilder,
@@ -79,7 +86,8 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     private eventService: EventService,
     private brandService: BrandService,
     private metaService: MetaService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    public audienceAuthService: AudienceAuthService
   ) {
     this.ticketForm = this.fb.group({
       name: ['', Validators.required],
@@ -109,6 +117,17 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         }
       });
 
+    // Pre-fill name and lock email if audience user already logged in
+    const existingUser = this.audienceAuthService.getUser();
+    if (existingUser) {
+      const fullName = [existingUser.first_name, existingUser.last_name].filter(Boolean).join(' ');
+      if (fullName) this.ticketForm.patchValue({ name: fullName });
+      if (existingUser.email_address) {
+        this.ticketForm.patchValue({ email_address: existingUser.email_address });
+        this.ticketForm.get('email_address')?.disable();
+      }
+    }
+
     // Add email typo and name/email mismatch checking
     this.ticketForm.get('email_address')?.valueChanges
       .pipe(
@@ -120,7 +139,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         this.checkEmailIssues();
       });
 
-    // Check email issues when name changes too
+    // Check email issues when name changes too (skip if email is locked to audience account)
     this.ticketForm.get('name')?.valueChanges
       .pipe(
         debounceTime(500),
@@ -128,7 +147,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        this.checkEmailIssues();
+        if (!this.audienceAuthService.isLoggedIn()) {
+          this.checkEmailIssues();
+        }
       });
   }
 
@@ -181,6 +202,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
             this.initializeTicketType();
             
             this.isLoading = false;
+            setTimeout(() => this.checkDescriptionOverflow(), 100);
           } else {
             this.showError();
           }
@@ -190,6 +212,13 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
           this.showError();
         }
       });
+  }
+
+  checkDescriptionOverflow() {
+    const el = this.descriptionEl?.nativeElement;
+    if (el) {
+      this.descriptionOverflows = el.scrollHeight > el.clientHeight;
+    }
   }
 
   showError() {
@@ -414,6 +443,17 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  onAudienceLoggedIn(user: AudienceUser): void {
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+    if (fullName && !this.ticketForm.value.name) {
+      this.ticketForm.patchValue({ name: fullName });
+    }
+    if (user.email_address) {
+      this.ticketForm.patchValue({ email_address: user.email_address });
+      this.ticketForm.get('email_address')?.disable();
+    }
+  }
+
   onSubmit() {
     if (this.isPreview) return;
     if (this.ticketForm.valid && this.event) {
@@ -441,17 +481,19 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
       this.isSubmitting = true;
       
+      const rawValue = this.ticketForm.getRawValue();
       const purchaseRequest: TicketPurchaseRequest = {
         event_id: this.event.id,
-        name: this.ticketForm.value.name,
-        email_address: this.ticketForm.value.email_address,
-        contact_number: this.ticketForm.value.contact_number,
-        number_of_entries: this.ticketForm.value.number_of_entries,
-        ticket_type_id: this.ticketForm.value.ticket_type_id || undefined,
-        referral_code: this.ticketForm.value.referral_code
+        name: rawValue.name,
+        email_address: rawValue.email_address,
+        contact_number: rawValue.contact_number,
+        number_of_entries: rawValue.number_of_entries,
+        ticket_type_id: rawValue.ticket_type_id || undefined,
+        referral_code: rawValue.referral_code
       };
 
-      this.publicService.buyTicket(purchaseRequest)
+      const audienceToken = this.audienceAuthService.getToken();
+      this.publicService.buyTicket(purchaseRequest, audienceToken)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {

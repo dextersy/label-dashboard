@@ -122,10 +122,24 @@
           </div>
 
           <!-- Description -->
-          <div *ngIf="event.description" class="tw-mt-3 tw-text-sm tw-text-gray-600 tw-leading-relaxed description-text"
-            [innerHTML]="sanitizeHtml(event.description)">
+          <div *ngIf="event.description" class="tw-mt-3">
+            <div #descriptionEl
+              class="tw-text-sm tw-text-gray-600 tw-leading-relaxed description-text"
+              [class.description-collapsed]="!descriptionExpanded"
+              [innerHTML]="sanitizeHtml(event.description)">
+            </div>
+            <button *ngIf="descriptionOverflows || descriptionExpanded"
+              type="button" class="read-more-btn"
+              (click)="descriptionExpanded = !descriptionExpanded">
+              {{ descriptionExpanded ? 'Show less' : 'Read more...' }}
+            </button>
           </div>
         </div>
+
+          <!-- Audience account hint -->
+          <div class="tw-mb-5">
+            <app-audience-login (loggedIn)="onAudienceLoggedIn($event)"></app-audience-login>
+          </div>
 
           <!-- Name -->
           <div class="tw-mb-4">
@@ -143,18 +157,25 @@
           <!-- Email -->
           <div class="tw-mb-4">
             <label class="tw-label" for="email_address">Email address</label>
-            <input type="email" id="email_address" class="tw-input" formControlName="email_address"
-              placeholder="Your email address"
-              [class.invalid]="isFieldInvalid('email_address')" required>
-            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
-              *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">Email address is required.</p>
-            <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
-              *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">Enter a valid email address.</p>
+            <ng-container *ngIf="audienceAuthService.isLoggedIn(); else emailInput">
+              <p class="tw-py-2 tw-text-sm tw-text-gray-700">{{ audienceAuthService.getUser()?.email_address }}</p>
+              <p class="tw-text-xs tw-text-gray-400">Linked to your Your Scene™ account.</p>
+            </ng-container>
+            <ng-template #emailInput>
+              <input type="email" id="email_address" class="tw-input" formControlName="email_address"
+                placeholder="Your email address"
+                [class.invalid]="isFieldInvalid('email_address')"
+                required>
+              <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
+                *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['required']">Email address is required.</p>
+              <p class="tw-mt-1.5 tw-text-sm tw-text-red-500"
+                *ngIf="isFieldInvalid('email_address') && ticketForm.get('email_address')?.errors?.['email']">Enter a valid email address.</p>
+            </ng-template>
             <p class="tw-mt-1.5 tw-text-xs tw-text-green-600"
-              *ngIf="!isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
+              *ngIf="!audienceAuthService.isLoggedIn() && !isFieldInvalid('email_address') && ticketForm.get('email_address')?.value && !emailTypoResult?.suggestedEmail">
               <app-icon name="check-circle" class="tw-mr-1" />Please make sure your email address is correct.
             </p>
-            <div class="tw-mt-2 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-amber-600" *ngIf="emailTypoResult?.suggestedEmail">
+            <div class="tw-mt-2 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-amber-600" *ngIf="!audienceAuthService.isLoggedIn() && emailTypoResult?.suggestedEmail">
               <app-icon name="warning" class="tw-flex-shrink-0" />
               <span>
                 Did you mean <strong>{{ emailTypoResult?.suggestedEmail }}</strong>?

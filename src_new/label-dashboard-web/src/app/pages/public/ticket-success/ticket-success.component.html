@@ -59,11 +59,32 @@
                       [class.tw-animate-spin]="isDownloading" />
             {{ isDownloading ? 'Downloading...' : 'Download Ticket PDF' }}
           </button>
-          <p class="tw-text-sm tw-text-gray-400 tw-text-center tw-mt-2">Save or print your ticket for easy access at the event</p>
           <div *ngIf="downloadError"
             class="tw-mt-3 tw-flex tw-items-start tw-gap-2 tw-text-base tw-text-red-700 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-3 tw-py-2.5">
             <app-icon name="warning" class="tw-flex-shrink-0 tw-mt-0.5" />
             <span>Failed to download PDF. Please try again or contact support if the issue persists.</span>
+          </div>
+        </div>
+
+        <!-- Audience account link section -->
+        <div class="tw-mb-5">
+          <div *ngIf="ticketLinked" class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-text-green-700 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-3 tw-text-sm tw-font-medium">
+            <span class="tw-flex tw-items-center tw-gap-2"><span>✓</span> Ticket saved to your account</span>
+            <a [href]="ticketingAppUrl + '/my-shows'" target="_blank" class="tw-text-green-700 tw-underline tw-whitespace-nowrap">View my tickets →</a>
+          </div>
+          <div *ngIf="!ticketLinked && !audienceAuthService.isLoggedIn()" class="tw-py-2">
+            <button type="button" (click)="openConnectPopup()"
+              class="tw-w-full tw-flex tw-items-center tw-justify-center tw-gap-2.5 tw-bg-white tw-border tw-border-gray-300 tw-rounded-lg tw-px-4 tw-py-2.5 tw-text-sm tw-font-medium tw-text-gray-700 tw-cursor-pointer tw-transition-all tw-mb-2.5 hover:tw-border-gray-400 hover:tw-shadow-sm">
+              <img src="assets/img/yourscene-logo.svg" alt="" class="tw-w-[18px] tw-h-[18px] tw-flex-shrink-0" style="mix-blend-mode: multiply;" />
+              <span class="tw-flex tw-items-center tw-gap-1.5">
+                Connect with <strong>Your Scene™</strong>
+                <span class="tw-text-[10px] tw-font-normal tw-uppercase tw-tracking-wide tw-text-gray-400" style="line-height:1;">Optional</span>
+              </span>
+            </button>
+            <p class="tw-text-[11px] tw-text-gray-400 tw-m-0 tw-flex tw-items-center tw-justify-center tw-gap-1">
+              <app-icon name="info" [size]="12" iconOnly />
+              Keep your tickets in one place and discover other local shows.
+            </p>
           </div>
         </div>
 

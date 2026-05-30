@@ -13,10 +13,13 @@ export class DonationSuccessComponent implements OnInit {
   brandColor = '#6f42c1';
   currentBrand: BrandSettings | null = null;
   isLoading = true;
+  fundraiserTitle: string | null = null;
 
   constructor(private brandService: BrandService) {}
 
   ngOnInit() {
+    this.fundraiserTitle = sessionStorage.getItem('donation_fundraiser_title');
+    sessionStorage.removeItem('donation_fundraiser_title');
     this.loadBrand();
   }
 

@@ -1,5 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, SecurityContext, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
@@ -31,13 +32,18 @@ export class FundraiserComponent implements OnInit, OnDestroy {
   brandColor = '#6f42c1';
   currentBrand: BrandSettings | null = null;
   showLightbox = false;
+  descriptionExpanded = false;
+  descriptionOverflows = false;
+
+  @ViewChild('descriptionEl') descriptionEl?: ElementRef<HTMLElement>;
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private publicService: PublicService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private sanitizer: DomSanitizer
   ) {
     this.donationForm = this.fb.group({
       name: ['', Validators.required],
@@ -84,6 +90,7 @@ export class FundraiserComponent implements OnInit, OnDestroy {
           this.isClosed = this.fundraiser.status === 'closed';
 
           this.isLoading = false;
+          setTimeout(() => this.checkDescriptionOverflow(), 100);
         },
         error: (error) => {
           console.error('Error loading fundraiser:', error);
@@ -117,6 +124,7 @@ export class FundraiserComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (response) => {
             if (response.success && response.checkout_url) {
+              sessionStorage.setItem('donation_fundraiser_title', this.fundraiser.title);
               window.location.href = response.checkout_url;
             } else {
               this.isSubmitting = false;
@@ -181,5 +189,21 @@ export class FundraiserComponent implements OnInit, OnDestroy {
 
   closeLightbox() {
     this.showLightbox = false;
+  }
+
+  checkDescriptionOverflow() {
+    const el = this.descriptionEl?.nativeElement;
+    if (el) {
+      this.descriptionOverflows = el.scrollHeight > el.clientHeight;
+    }
+  }
+
+  sanitizeHtml(content: string | undefined): SafeHtml | string {
+    if (!content) return '';
+    content = content.replace(/\u00A0/g, ' ');
+    content = content.replace(/<\/p>\s*<p>/gi, '<br>');
+    content = content.replace(/^<p>/i, '');
+    content = content.replace(/<\/p>$/i, '');
+    return this.sanitizer.sanitize(SecurityContext.HTML, content) || '';
   }
 }

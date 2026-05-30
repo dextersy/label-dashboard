@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { PublicService, TicketDetails, PublicEvent } from '../../../services/public.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
+import { environment } from '../../../../environments/environment';
 
 
 @Component({
@@ -13,6 +15,9 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
 })
 export class TicketSuccessComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private popupMessageHandler: ((e: MessageEvent) => void) | null = null;
+  private popup: Window | null = null;
+  private popupPoll: ReturnType<typeof setInterval> | null = null;
   
   isLoading = true;
   isSuccess = false;
@@ -21,19 +26,88 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
   downloadError = false;
   ticketDetails: TicketDetails | null = null;
   event: Partial<PublicEvent> | null = null;
+  ticketLinked = false;
+  ticketingAppUrl = environment.ticketingAppUrl;
 
   constructor(
-    private publicService: PublicService
+    private publicService: PublicService,
+    public audienceAuthService: AudienceAuthService
   ) {}
 
   ngOnInit() {
     // Load ticket details from cookie (no route params needed)
     this.loadTicketFromCookie();
+
+    // Handle Google OAuth code returned directly to this page (popup redirected the opener here).
+    const params = new URLSearchParams(window.location.search);
+    const audienceCode = params.get('audience_code');
+    if (audienceCode) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('audience_code');
+      window.history.replaceState(null, '', url.toString());
+      this.audienceAuthService.exchangeGoogleCode(audienceCode)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({ next: (res) => this.onAudienceLoggedIn(res.user), error: () => {} });
+    }
+
+    // Handle fragment fallback (connect page without opener redirected here with auth in hash).
+    const authResult = this.audienceAuthService.consumeAuthFragment();
+    if (authResult) {
+      this.onAudienceLoggedIn(authResult.user);
+    } else if (this.audienceAuthService.isLoggedIn()) {
+      // Auto-claim if audience user is already logged in
+      this.claimTicket();
+    }
+  }
+
+  onAudienceLoggedIn(user: AudienceUser): void {
+    this.claimTicket();
+  }
+
+  claimTicket(): void {
+    this.audienceAuthService.claimTicketsByEmail()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => { this.ticketLinked = true; },
+        error: () => { /* silent — ticket still purchased */ }
+      });
+  }
+
+  openConnectPopup(): void {
+    const connectUrl = `${environment.ticketingAppUrl}/connect?return_to=${encodeURIComponent(window.location.href)}`;
+    this.popup = window.open(connectUrl, 'ys_connect', 'width=480,height=660,left=200,top=80');
+
+    this.popupMessageHandler = (event: MessageEvent) => {
+      if (event.origin !== new URL(environment.ticketingAppUrl).origin) return;
+      if (event.data?.type !== 'ys_auth') return;
+      this.cleanupPopup();
+      this.audienceAuthService.storeSession(event.data.token, event.data.user);
+      this.onAudienceLoggedIn(event.data.user);
+    };
+    window.addEventListener('message', this.popupMessageHandler);
+
+    // COOP fallback: popup loads this page with auth in fragment, stores session, closes itself.
+    this.popupPoll = setInterval(() => {
+      if (this.popup?.closed) {
+        this.cleanupPopup();
+        if (this.audienceAuthService.isLoggedIn() && !this.ticketLinked) {
+          this.claimTicket();
+        }
+      }
+    }, 500);
+  }
+
+  private cleanupPopup(): void {
+    if (this.popupMessageHandler) { window.removeEventListener('message', this.popupMessageHandler); }
+    this.popupMessageHandler = null;
+    if (this.popupPoll) { clearInterval(this.popupPoll); this.popupPoll = null; }
+    this.popup = null;
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    this.cleanupPopup();
   }
 
   loadTicketFromCookie() {
