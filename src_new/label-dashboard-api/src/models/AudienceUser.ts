@@ -9,6 +9,9 @@ interface AudienceUserAttributes {
   last_name?: string;
   reset_hash?: string;
   reset_hash_expires_at?: Date;
+  email_verified?: boolean;
+  email_verification_token?: string;
+  email_verification_expires_at?: Date;
 }
 
 interface AudienceUserCreationAttributes extends Optional<AudienceUserAttributes, 'id'> {}
@@ -21,6 +24,9 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public last_name?: string;
   public reset_hash?: string;
   public reset_hash_expires_at?: Date;
+  public email_verified?: boolean;
+  public email_verification_token?: string;
+  public email_verification_expires_at?: Date;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -55,6 +61,19 @@ AudienceUser.init(
       allowNull: true,
     },
     reset_hash_expires_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    email_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    email_verification_token: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    email_verification_expires_at: {
       type: DataTypes.DATE,
       allowNull: true,
     },
