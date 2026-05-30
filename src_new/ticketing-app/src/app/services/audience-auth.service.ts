@@ -8,6 +8,7 @@ export interface AudienceUser {
   email_address: string;
   first_name?: string;
   last_name?: string;
+  email_verified?: boolean;
 }
 
 export interface AudienceAuthResponse {
@@ -48,9 +49,8 @@ export class AudienceAuthService {
       .pipe(tap(res => this.storeAuth(res)));
   }
 
-  signup(email: string, password: string, first_name: string, last_name: string): Observable<AudienceAuthResponse> {
-    return this.http.post<AudienceAuthResponse>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name })
-      .pipe(tap(res => this.storeAuth(res)));
+  signup(email: string, password: string, first_name: string, last_name: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name });
   }
 
   logout(): void {
@@ -74,5 +74,26 @@ export class AudienceAuthService {
       headers,
       responseType: 'blob'
     });
+  }
+
+  verifyEmail(token: string): Observable<{ message: string }> {
+    return this.http.get<{ message: string }>(`${this.apiUrl}/auth/audience/verify-email/${token}`);
+  }
+
+  resendVerification(): Observable<{ message: string }> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/resend-verification`, {}, { headers });
+  }
+
+  resendVerificationByEmail(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/resend-verification-by-email`, { email });
+  }
+
+  markEmailVerified(): void {
+    const user = this.getUser();
+    if (user) {
+      user.email_verified = true;
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+    }
   }
 }

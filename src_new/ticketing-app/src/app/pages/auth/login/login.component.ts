@@ -56,7 +56,7 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
           </div>
 
           <!-- Mode tabs — hidden on reset-password (mode is fixed by the reset link) -->
-          <div class="flex border border-gray-200 mb-7" [class.hidden]="view() === 'reset-password'">
+          <div class="flex border border-gray-200 mb-5" [class.hidden]="view() === 'reset-password'">
             <button type="button"
               class="flex-1 py-2 text-xs font-mono uppercase tracking-widest transition-colors"
               [class.bg-black]="mode() === 'audience'"
@@ -75,10 +75,45 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
             </button>
           </div>
 
+          <!-- Mobile copy — shown below toggle -->
+          @if (view() !== 'reset-password') {
+            <div class="lg:hidden mb-6">
+              @if (mode() === 'audience') {
+                <p class="text-xs font-mono text-yellow-500 uppercase tracking-[0.25em] mb-1">— your tickets —</p>
+                <h2 class="text-xl font-black text-black uppercase leading-[1] mb-1">
+                  Support your scene.<br>One show at a time.
+                </h2>
+                <p class="text-xs font-mono text-gray-400 leading-relaxed">
+                  log in to view your tickets, see upcoming shows, and never lose a ticket again.
+                </p>
+              } @else {
+                <p class="text-xs font-mono text-yellow-500 uppercase tracking-[0.25em] mb-1">— organizer portal —</p>
+                <h2 class="text-xl font-black text-black uppercase leading-[1] mb-1">
+                  Your shows.<br>Your rules.
+                </h2>
+                <p class="text-xs font-mono text-gray-400 leading-relaxed">
+                  list your gig, sell tickets, track the door. built for the people putting on shows.
+                </p>
+              }
+            </div>
+          }
+
           <!-- Error banner -->
           @if (error()) {
             <div class="mb-5 p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">
               {{ error() }}
+              @if (unverifiedEmail()) {
+                <div class="mt-2 pt-2 border-t border-red-200">
+                  @if (resentFromLogin()) {
+                    <span class="text-green-600">Verification email sent — check your inbox.</span>
+                  } @else {
+                    <button type="button" (click)="resendFromLogin()" [disabled]="resendingFromLogin()"
+                      class="underline hover:no-underline disabled:opacity-50">
+                      {{ resendingFromLogin() ? 'Sending...' : 'Resend verification email' }}
+                    </button>
+                  }
+                </div>
+              }
             </div>
           }
 
@@ -140,6 +175,21 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
 
           <!-- ── SIGNUP VIEW ─────────────────────────────────────────── -->
           @if (view() === 'signup') {
+
+            <!-- Verification pending screen (shown after successful audience signup) -->
+            @if (signupPendingEmail() && mode() === 'audience') {
+              <div class="border border-green-200 bg-green-50 p-6 text-center">
+                <p class="text-green-700 font-mono text-sm font-bold mb-2">Check your inbox!</p>
+                <p class="text-green-700 text-xs font-mono mb-4">
+                  We sent a verification link to <strong>{{ signupPendingEmail() }}</strong>.
+                  Click it to activate your account before signing in.
+                </p>
+                <button type="button" (click)="setView('login')"
+                  class="text-xs font-mono text-yellow-600 hover:text-yellow-700 uppercase tracking-wider transition-colors">
+                  ← Back to sign in
+                </button>
+              </div>
+            } @else {
 
             @if (googleAuthEnabled) {
               <a (click)="googleSignIn()" class="flex items-center justify-center gap-3 w-full py-2.5 px-4 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium cursor-pointer transition-colors mb-4">
@@ -283,6 +333,7 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
                 Sign in
               </button>
             </p>
+            } <!-- end @else (signupPendingEmail) -->
           }
 
           <!-- ── FORGOT PASSWORD VIEW ─────────────────────────────────── -->
@@ -422,6 +473,10 @@ export class LoginComponent implements OnInit {
   resetPasswordValue = signal('');
   error = signal('');
   showPassword = signal(false);
+  unverifiedEmail = signal('');
+  resendingFromLogin = signal(false);
+  resentFromLogin = signal(false);
+  signupPendingEmail = signal('');
 
   private resetCode = '';
   resetMode: 'audience' | 'organizer' = 'organizer';
@@ -539,6 +594,9 @@ export class LoginComponent implements OnInit {
     this.error.set('');
     this.showPassword.set(false);
     this.forgotSent.set(false);
+    this.unverifiedEmail.set('');
+    this.resentFromLogin.set(false);
+    this.signupPendingEmail.set('');
   }
 
   setView(v: View): void {
@@ -546,6 +604,9 @@ export class LoginComponent implements OnInit {
     this.error.set('');
     this.showPassword.set(false);
     this.forgotSent.set(false);
+    this.unverifiedEmail.set('');
+    this.resentFromLogin.set(false);
+    this.signupPendingEmail.set('');
     this.router.navigate([], {
       queryParams: { view: v === 'login' ? null : v, mode: this.mode() === 'organizer' ? 'organizer' : null },
       queryParamsHandling: 'merge',
@@ -569,11 +630,16 @@ export class LoginComponent implements OnInit {
     const { email, password } = this.loginForm.value;
 
     if (this.mode() === 'audience') {
+      this.unverifiedEmail.set('');
+      this.resentFromLogin.set(false);
       this.audienceAuth.login(email, password).subscribe({
         next: () => { this.loginLoading.set(false); this.router.navigate(['/my-shows']); },
         error: (err: any) => {
-          this.error.set(err.error?.error || 'Login failed. Please try again.');
           this.loginLoading.set(false);
+          if (err.error?.code === 'EMAIL_NOT_VERIFIED') {
+            this.unverifiedEmail.set(email);
+          }
+          this.error.set(err.error?.error || 'Login failed. Please try again.');
         }
       });
     } else {
@@ -594,13 +660,24 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  resendFromLogin(): void {
+    this.resendingFromLogin.set(true);
+    this.audienceAuth.resendVerificationByEmail(this.unverifiedEmail()).subscribe({
+      next: () => { this.resendingFromLogin.set(false); this.resentFromLogin.set(true); },
+      error: () => { this.resendingFromLogin.set(false); },
+    });
+  }
+
   submitAudience(): void {
     if (this.audienceForm.invalid) { this.audienceForm.markAllAsTouched(); return; }
     this.audienceLoading.set(true);
     this.error.set('');
     const { first_name, last_name, email, password } = this.audienceForm.value;
     this.audienceAuth.signup(email, password, first_name, last_name).subscribe({
-      next: () => { this.audienceLoading.set(false); this.router.navigate(['/my-shows']); },
+      next: () => {
+        this.audienceLoading.set(false);
+        this.signupPendingEmail.set(email);
+      },
       error: (err: any) => {
         this.audienceLoading.set(false);
         this.error.set(err.error?.error || 'Signup failed. Please try again.');

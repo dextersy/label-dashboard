@@ -130,56 +130,70 @@ import { environment } from '../../../../environments/environment';
 
           <!-- Signup form -->
           @if (tab() === 'signup') {
-            <form [formGroup]="signupForm" (ngSubmit)="submitSignup()">
-              <div class="space-y-4">
-                <div class="flex gap-3">
-                  <div class="flex-1">
-                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">First name</label>
-                    <input type="text" formControlName="first_name"
-                      class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
-                      autocomplete="given-name">
-                  </div>
-                  <div class="flex-1">
-                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Last name</label>
-                    <input type="text" formControlName="last_name"
-                      class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
-                      autocomplete="family-name">
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
-                  <input type="email" formControlName="email"
-                    class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
-                    placeholder="you@example.com" autocomplete="email">
-                </div>
-                <div>
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
-                  <div class="relative">
-                    <input [type]="showPassword() ? 'text' : 'password'" formControlName="password"
-                      class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors pr-14"
-                      placeholder="Min. 8 characters" autocomplete="new-password">
-                    <button type="button" (click)="showPassword.set(!showPassword())"
-                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors text-xs font-mono uppercase tracking-wider">
-                      {{ showPassword() ? 'Hide' : 'Show' }}
-                    </button>
-                  </div>
-                </div>
+            @if (signupPendingEmail()) {
+              <div class="border border-green-200 bg-green-50 p-5 text-center">
+                <p class="text-green-700 font-mono text-sm font-bold mb-2">Check your inbox!</p>
+                <p class="text-green-700 text-xs font-mono mb-4">
+                  We sent a verification link to <strong>{{ signupPendingEmail() }}</strong>.
+                  Click it to activate your account, then sign in here.
+                </p>
+                <button type="button" (click)="tab.set('login')"
+                  class="text-xs font-mono text-yellow-600 hover:text-yellow-700 uppercase tracking-wider transition-colors">
+                  ← Sign in
+                </button>
               </div>
-              <p class="mt-3 text-xs text-gray-400 leading-snug">
-                Tickets previously purchased with your email will be automatically linked to your profile.
+            } @else {
+              <form [formGroup]="signupForm" (ngSubmit)="submitSignup()">
+                <div class="space-y-4">
+                  <div class="flex gap-3">
+                    <div class="flex-1">
+                      <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">First name</label>
+                      <input type="text" formControlName="first_name"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                        autocomplete="given-name">
+                    </div>
+                    <div class="flex-1">
+                      <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Last name</label>
+                      <input type="text" formControlName="last_name"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                        autocomplete="family-name">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
+                    <input type="email" formControlName="email"
+                      class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                      placeholder="you@example.com" autocomplete="email">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
+                    <div class="relative">
+                      <input [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+                        class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors pr-14"
+                        placeholder="Min. 8 characters" autocomplete="new-password">
+                      <button type="button" (click)="showPassword.set(!showPassword())"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors text-xs font-mono uppercase tracking-wider">
+                        {{ showPassword() ? 'Hide' : 'Show' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p class="mt-3 text-xs text-gray-400 leading-snug">
+                  Tickets previously purchased with your email will be automatically linked to your profile.
+                </p>
+                <button type="submit" [disabled]="loading()"
+                  class="mt-4 w-full py-2.5 px-4 bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black uppercase tracking-wider transition-colors disabled:opacity-50">
+                  {{ loading() ? 'Creating account...' : 'Create account' }}
+                </button>
+              </form>
+              <p class="mt-4 text-xs font-mono text-gray-500 text-center">
+                Already have an account?
+                <button type="button" (click)="tab.set('login')"
+                  class="text-yellow-500 hover:text-yellow-600 uppercase tracking-wider transition-colors ml-1">
+                  Sign in
+                </button>
               </p>
-              <button type="submit" [disabled]="loading()"
-                class="mt-4 w-full py-2.5 px-4 bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black uppercase tracking-wider transition-colors disabled:opacity-50">
-                {{ loading() ? 'Creating account...' : 'Create account' }}
-              </button>
-            </form>
-            <p class="mt-4 text-xs font-mono text-gray-500 text-center">
-              Already have an account?
-              <button type="button" (click)="tab.set('login')"
-                class="text-yellow-500 hover:text-yellow-600 uppercase tracking-wider transition-colors ml-1">
-                Sign in
-              </button>
-            </p>
+            }
           }
 
         }
@@ -193,6 +207,7 @@ export class ConnectComponent implements OnInit {
   exchanging = signal(false);
   error = signal('');
   showPassword = signal(false);
+  signupPendingEmail = signal('');
 
   loginForm: FormGroup;
   signupForm: FormGroup;
@@ -282,7 +297,7 @@ export class ConnectComponent implements OnInit {
     this.error.set('');
     const { first_name, last_name, email, password } = this.signupForm.value;
     this.audienceAuth.signup(email, password, first_name, last_name).subscribe({
-      next: (res) => { this.loading.set(false); this.notifyAndClose(res); },
+      next: () => { this.loading.set(false); this.signupPendingEmail.set(email); },
       error: (err: any) => {
         this.loading.set(false);
         this.error.set(err.error?.error || 'Signup failed. Please try again.');

@@ -69,6 +69,10 @@ export const routes: Routes = [
   },
   // Audience-facing routes (top-level, no /app/ prefix for clean URLs)
   {
+    path: 'verify-email',
+    loadComponent: () => import('./pages/auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
     path: 'connect',
     loadComponent: () => import('./pages/auth/connect/connect.component').then(m => m.ConnectComponent)
   },

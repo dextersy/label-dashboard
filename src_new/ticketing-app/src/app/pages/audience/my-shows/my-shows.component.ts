@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
+import { AudienceAuthService } from '../../../services/audience-auth.service';
 
 interface EventGroup {
   event: {
@@ -56,6 +56,27 @@ interface EventGroup {
           </div>
         </div>
       </header>
+
+      <!-- Email verification banner -->
+      @if (!emailVerified()) {
+        <div class="border-b-2 border-yellow-400/50 bg-yellow-400/10 px-4 py-3">
+          <div class="max-w-5xl mx-auto flex items-center justify-between gap-4 flex-wrap">
+            <p class="text-yellow-300 text-xs font-mono">
+              Please verify your email address to keep your account secure.
+            </p>
+            <div class="flex items-center gap-4">
+              @if (verificationSent()) {
+                <span class="text-green-400 text-xs font-mono">Verification email sent!</span>
+              } @else {
+                <button type="button" (click)="resendVerification()" [disabled]="resendingVerification()"
+                  class="text-xs font-mono text-yellow-400 hover:text-yellow-300 uppercase tracking-wider transition-colors disabled:opacity-50">
+                  {{ resendingVerification() ? 'Sending...' : 'Resend email' }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
 
       <main class="max-w-5xl mx-auto px-4 py-10 pt-20">
 
@@ -139,6 +160,9 @@ export class MyShowsComponent implements OnInit {
   error = signal(false);
   eventGroups = signal<EventGroup[]>([]);
   menuOpen = signal(false);
+  emailVerified = signal(true);
+  resendingVerification = signal(false);
+  verificationSent = signal(false);
 
   userInitial = () => {
     const u = this.audienceAuthService.getUser();
@@ -162,7 +186,17 @@ export class MyShowsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const user = this.audienceAuthService.getUser();
+    this.emailVerified.set(user?.email_verified !== false);
     this.loadTickets();
+  }
+
+  resendVerification(): void {
+    this.resendingVerification.set(true);
+    this.audienceAuthService.resendVerification().subscribe({
+      next: () => { this.resendingVerification.set(false); this.verificationSent.set(true); },
+      error: () => { this.resendingVerification.set(false); },
+    });
   }
 
   loadTickets(): void {
