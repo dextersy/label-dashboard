@@ -654,6 +654,7 @@ export const buyTicket = async (req: Request, res: Response) => {
             name: ticket.name,
             ticket_code: ticket.ticket_code,
             number_of_entries: ticket.number_of_entries,
+            audience_user_id: audienceUserId,
             ticket_type: selectedTicketType ? {
               id: selectedTicketType.id,
               name: selectedTicketType.name,
@@ -1507,7 +1508,7 @@ export const getAudienceTickets = async (req: Request, res: Response) => {
     const audienceUser = (req as any).audienceUser as AudienceUser;
 
     const tickets = await Ticket.findAll({
-      where: { audience_user_id: audienceUser.id },
+      where: { audience_user_id: audienceUser.id, status: 'Ticket sent.' },
       include: [
         {
           model: Event,

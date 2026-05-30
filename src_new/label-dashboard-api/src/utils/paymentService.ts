@@ -888,6 +888,7 @@ export class PaymentService {
           name: ticket.name,
           ticket_code: ticket.ticket_code,
           number_of_entries: ticket.number_of_entries,
+          audience_user_id: ticket.audience_user_id,
           ticket_type: (ticket as any).ticketType ? {
             id: (ticket as any).ticketType.id,
             name: (ticket as any).ticketType.name,

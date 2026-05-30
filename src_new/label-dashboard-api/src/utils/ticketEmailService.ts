@@ -53,6 +53,7 @@ export const sendTicketEmail = async (
     name: string;
     ticket_code: string;
     number_of_entries: number;
+    audience_user_id?: number | null;
     ticket_type?: {
       id: number;
       name: string;
@@ -146,6 +147,17 @@ export const sendTicketEmail = async (
       templateData['/show_special_instructions'] = '-->';
       templateData.special_instructions_ticket_type = '';
       templateData.special_instructions_text = '';
+    }
+
+    // Add conditional Your Scene account section
+    if (ticket.audience_user_id) {
+      templateData.show_your_scene_account = '';
+      templateData['/show_your_scene_account'] = '';
+      templateData.audience_app_url = `${process.env.AUDIENCE_APP_URL || ''}/my-shows`;
+    } else {
+      templateData.show_your_scene_account = '<!--';
+      templateData['/show_your_scene_account'] = '-->';
+      templateData.audience_app_url = '';
     }
 
     // Add conditional sections
