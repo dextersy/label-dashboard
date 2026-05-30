@@ -245,7 +245,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
             },
             {
               id: 'campaigns-top-level',
-              items: campaignsSection.items.map(item => {
+              items: campaignsSection.items
+                .filter(item => {
+                  if (item.route === '/campaigns/sync-licensing' && !this.featureMusicWorkspace) return false;
+                  return true;
+                })
+                .map(item => {
                 // Assign appropriate icons based on the route
                 let icon = item.icon || 'bullhorn';
                 return {
