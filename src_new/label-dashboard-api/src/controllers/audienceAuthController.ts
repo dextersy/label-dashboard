@@ -80,6 +80,25 @@ const signAudienceToken = (audienceUserId: number): string => {
   );
 };
 
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+
+async function sendVerificationEmail(user: AudienceUser): Promise<void> {
+  const email_verification_token = generateSecureToken();
+  const email_verification_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await user.update({ email_verification_token, email_verification_expires_at });
+  const verifyUrl = `${getAudienceFrontendUrl()}/verify-email?token=${email_verification_token}`;
+  await sendAudienceEmail(
+    user.email_address,
+    'Verify your email address',
+    `
+      <p>Hi ${user.first_name || 'there'},</p>
+      <p>Click the link below to verify your email address. This link expires in 24 hours.</p>
+      <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+      <p>If you didn't request this, you can safely ignore this email.</p>
+    `
+  );
+}
+
 // ─── Controllers ──────────────────────────────────────────────────────────────
 
 export const audienceSignup = async (req: Request, res: Response) => {
@@ -106,20 +125,14 @@ export const audienceSignup = async (req: Request, res: Response) => {
       password_hash,
       first_name,
       last_name,
+      email_verified: false,
     });
 
-    const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address);
-    const token = signAudienceToken(user.id);
+    // Send verification email (non-blocking — don't fail signup if email fails)
+    sendVerificationEmail(user).catch(err => console.error('Failed to send verification email:', err));
 
     return res.json({
-      token,
-      user: {
-        id: user.id,
-        email_address: user.email_address,
-        first_name: user.first_name,
-        last_name: user.last_name,
-      },
-      claimed_tickets_count,
+      message: 'Account created. Please check your email to verify your address before signing in.',
     });
   } catch (error) {
     console.error('Audience signup error:', error);
@@ -146,7 +159,14 @@ export const audienceLogin = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address);
+    if (!user.email_verified) {
+      return res.status(403).json({ error: 'Please verify your email address before signing in. Check your inbox for a verification link.', code: 'EMAIL_NOT_VERIFIED' });
+    }
+
+    // Only claim tickets for verified accounts
+    const claimed_tickets_count = user.email_verified
+      ? await claimTicketsByEmailInternal(user.id, user.email_address)
+      : 0;
     const token = signAudienceToken(user.id);
 
     return res.json({
@@ -156,6 +176,7 @@ export const audienceLogin = async (req: Request, res: Response) => {
         email_address: user.email_address,
         first_name: user.first_name,
         last_name: user.last_name,
+        email_verified: user.email_verified ?? false,
       },
       claimed_tickets_count,
     });
@@ -173,6 +194,7 @@ export const audienceGetMe = async (req: Request, res: Response) => {
       email_address: user.email_address,
       first_name: user.first_name,
       last_name: user.last_name,
+      email_verified: user.email_verified ?? false,
     });
   } catch (error) {
     console.error('Audience getMe error:', error);
@@ -199,7 +221,7 @@ export const audienceForgotPassword = async (req: Request, res: Response) => {
     const reset_hash_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await user.update({ reset_hash, reset_hash_expires_at });
 
-    const resetUrl = `${process.env.AUDIENCE_RESET_URL || process.env.FRONTEND_URL}/reset-password?hash=${reset_hash}&mode=audience`;
+    const resetUrl = `${process.env.AUDIENCE_APP_URL || process.env.FRONTEND_URL}/reset-password?hash=${reset_hash}&mode=audience`;
 
     await sendAudienceEmail(
       user.email_address,
@@ -365,6 +387,16 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
         email_address: email.toLowerCase(),
         first_name: given_name,
         last_name: family_name,
+        email_verified: true,
+        email_verification_token: null as any,
+        email_verification_expires_at: null as any,
+      });
+    } else if (!user.email_verified) {
+      // Google confirmed ownership of this email — mark it verified
+      await user.update({
+        email_verified: true,
+        email_verification_token: null as any,
+        email_verification_expires_at: null as any,
       });
     }
 
@@ -382,6 +414,76 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Audience Google callback error:', error);
     return errorRedirect('google_auth_failed');
+  }
+};
+
+// ─── Email verification ───────────────────────────────────────────────────────
+
+export const audienceVerifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.query as { token?: string };
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+
+    const user = await AudienceUser.findOne({ where: { email_verification_token: token } });
+    if (!user || !user.email_verification_expires_at || user.email_verification_expires_at < new Date()) {
+      return res.status(400).json({ error: 'Invalid or expired verification link' });
+    }
+
+    await user.update({
+      email_verified: true,
+      email_verification_token: null as any,
+      email_verification_expires_at: null as any,
+    });
+
+    // Now that the email is confirmed, claim any tickets purchased with this address
+    await claimTicketsByEmailInternal(user.id, user.email_address);
+
+    return res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('Audience verifyEmail error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const audienceResendVerification = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+
+    if (user.email_verified) {
+      return res.status(400).json({ error: 'Email is already verified' });
+    }
+
+    await sendVerificationEmail(user);
+
+    return res.json({ message: 'Verification email sent' });
+  } catch (error) {
+    console.error('Audience resendVerification error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const audienceResendVerificationByEmail = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const user = await AudienceUser.findOne({ where: { email_address: email.toLowerCase() } });
+
+    // Always return success to prevent user enumeration
+    if (!user || user.email_verified) {
+      return res.json({ message: 'If that email exists and is unverified, a new link has been sent' });
+    }
+
+    await sendVerificationEmail(user);
+
+    return res.json({ message: 'If that email exists and is unverified, a new link has been sent' });
+  } catch (error) {
+    console.error('Audience resendVerificationByEmail error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
