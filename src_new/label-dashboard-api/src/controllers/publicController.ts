@@ -1031,7 +1031,7 @@ async function streamTicketPDF(ticket: any, res: Response): Promise<void> {
 export const downloadAudienceTicketPDF = async (req: Request, res: Response) => {
   try {
     const audienceUser = (req as any).audienceUser as AudienceUser;
-    const { ticketCode } = req.params;
+    const ticketCode = req.params['ticketCode'] as string;
 
     const ticket = await Ticket.findOne({
       where: { ticket_code: ticketCode.toUpperCase(), audience_user_id: audienceUser.id },
