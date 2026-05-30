@@ -1,7 +1,7 @@
 <!-- Modal Backdrop -->
-<div class="modal-backdrop" *ngIf="show" (click)="onBackdropClick($event)">
+<div class="modal" *ngIf="show" (click)="onBackdropClick($event)" style="background-color: rgba(0,0,0,0.5); display: block;">
   <!-- Modal Dialog -->
-  <div class="modal-dialog modal-dialog-centered" role="document">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">
@@ -72,17 +72,31 @@
           </div>
 
           <!-- What will be created -->
-          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50">
-            <div class="tw-px-card-pad tw-pb-card-pad">
-              <h6 class="card-title">
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-4">
+            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
+              <h6 class="tw-mb-0">
                 <app-icon name="list" class="tw-mr-2" />
                 What will be created:
               </h6>
-              <ul class="tw-mb-0 small tw-text-sm">
-                <li>New brand record as a sublabel of your current brand</li>
-                <li>Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.spindly.app" with automatic DNS configuration</li>
-                <li>Admin user account for the new sublabel (copy of your account)</li>
-                <li>Default settings: Gray brand color, 10% payment processing fee</li>
+            </div>
+            <div class="tw-px-card-pad tw-pb-card-pad">
+              <ul class="tw-mb-0 tw-text-sm tw-list-none tw-pl-0 tw-space-y-2">
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <app-icon name="check-circle" class="tw-text-success tw-mt-0.5 tw-shrink-0" iconOnly />
+                  New brand record as a sublabel of your current brand
+                </li>
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <app-icon name="check-circle" class="tw-text-success tw-mt-0.5 tw-shrink-0" iconOnly />
+                  Domain record for "{{ formData.subdomainName || 'your-subdomain' }}.spindly.app" with automatic DNS configuration
+                </li>
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <app-icon name="check-circle" class="tw-text-success tw-mt-0.5 tw-shrink-0" iconOnly />
+                  Admin user account for the new sublabel (copy of your account)
+                </li>
+                <li class="tw-flex tw-items-start tw-gap-2">
+                  <app-icon name="check-circle" class="tw-text-success tw-mt-0.5 tw-shrink-0" iconOnly />
+                  Default settings: Gray brand color, ₱10 payment processing fee, all other fee settings ₱0
+                </li>
               </ul>
             </div>
           </div>
