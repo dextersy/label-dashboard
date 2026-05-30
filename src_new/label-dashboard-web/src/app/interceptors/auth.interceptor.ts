@@ -64,7 +64,8 @@ export class AuthInterceptor implements HttpInterceptor {
         if ((error.status === 401 || error.status === 403) &&
             !req.url.includes('/public/') &&
             !req.url.includes('/scanner/') &&
-            !req.url.includes('/auth/login')) {
+            !req.url.includes('/auth/login') &&
+            !req.url.includes('/auth/audience/')) {
           // Force logout and clear the user session
           this.authService.forceLogout();
           

@@ -1,0 +1,33 @@
+<!-- Logged-in state -->
+<div *ngIf="isLoggedIn; else notLoggedIn" class="ys-banner ys-banner--active">
+  <div class="ys-banner__body">
+    <p class="ys-banner__title">
+      <app-icon name="check-circle" [size]="15" iconOnly class="ys-banner__active-icon" />
+      Ticket will be saved to your Your Scene™ account.
+    </p>
+    <p class="ys-banner__meta">
+      Logged in as <strong>{{ audienceUser?.first_name }} {{ audienceUser?.last_name }}</strong>
+      <button type="button" class="ys-hint__logout" (click)="logout()">Disconnect</button>
+    </p>
+    <p *ngIf="claimedCount > 0" class="ys-banner__claimed">
+      {{ claimedCount }} existing ticket{{ claimedCount !== 1 ? 's' : '' }} linked to your account.
+    </p>
+  </div>
+</div>
+
+<!-- Not logged-in -->
+<ng-template #notLoggedIn>
+  <div *ngIf="isBannerVisible" class="ys-connect">
+    <button type="button" class="ys-connect__btn" (click)="openConnectPopup()">
+      <img src="assets/img/yourscene-logo.svg" alt="" class="ys-connect__btn-icon" />
+      <span class="ys-connect__btn-text">
+        Connect with <strong>Your Scene™</strong>
+        <span class="ys-connect__btn-optional">Optional</span>
+      </span>
+    </button>
+    <p class="ys-connect__note">
+      <app-icon name="info" [size]="12" iconOnly class="ys-connect__note-icon" />
+      Fill your information automatically and keep your tickets in one place
+    </p>
+  </div>
+</ng-template>
