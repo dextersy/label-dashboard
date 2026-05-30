@@ -438,9 +438,21 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
     });
 
     // Now that the email is confirmed, claim any tickets purchased with this address
-    await claimTicketsByEmailInternal(user.id, user.email_address);
+    const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address);
 
-    return res.json({ message: 'Email verified successfully' });
+    const authToken = signAudienceToken(user.id);
+    return res.json({
+      message: 'Email verified successfully',
+      token: authToken,
+      user: {
+        id: user.id,
+        email_address: user.email_address,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email_verified: true,
+      },
+      claimed_tickets_count,
+    });
   } catch (error) {
     console.error('Audience verifyEmail error:', error);
     return res.status(500).json({ error: 'Internal server error' });
