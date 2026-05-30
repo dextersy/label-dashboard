@@ -103,6 +103,8 @@ The system supports multiple labels/brands through:
 - This ensures that all user interactions happen within the correct brand context
 - Example: Admin invites must only work on the specific brand's domain that sent the invite
 
+**Exception — Audience (ticket buyer) accounts**: `AudienceUser` accounts are platform-wide, not brand-specific. They exist at the ticketing platform level and can interact with tickets across any organizer brand. URLs for audience-facing flows (e.g. password reset, OAuth) should use the `AUDIENCE_RESET_URL` or `AUDIENCE_APP_URL` environment variables, which point to the single platform-level audience app. Do NOT use `getBrandFrontendUrl` for audience auth URLs.
+
 ## Authentication & Authorization
 
 - JWT-based authentication with role-based access control
@@ -128,7 +130,7 @@ Set `TICKETING_PARENT_BRAND_ID` in the API `.env` to the brand ID that acts as t
 7. **Never Build the App**: Do not run `npm run build`, `npm start`, or any build/test commands. The user will handle building and testing themselves.
 8. **S3 Cleanup**: Whenever a new S3 file upload is implemented (any new model field stored in S3), always update `getUsedS3Urls` in `src_new/label-dashboard-api/src/controllers/systemController.ts` to include that field. This prevents the S3 cleanup job from deleting files that are still in use.
 9. **Database Migrations**: Whenever a database schema change is made (adding/removing/modifying columns or tables in Sequelize models), always create a corresponding Sequelize CLI migration file in `src_new/label-dashboard-api/migrations/`. Follow the existing naming convention: `YYYYMMDD000001-description.js`. Include both `up` and `down` methods. Use the current date for the timestamp prefix.
-10. **No Hardcoded Brand Names**: Never use specific brand names (e.g. "scenetix", "spindly", or any other label name) as string literals, identifiers, variable names, comments, or any other code content. Brands are dynamic data loaded from the database. Hardcoding brand names creates brittle code that breaks when brands are added, renamed, or removed. Always reference brands generically (e.g. `brand.name`, `brand.slug`) or through the Brand model/service.
+10. **No Hardcoded Brand Names**: Never use specific brand names (e.g. "scenetix", "spindly", or any other label name) as string literals, identifiers, variable names, comments, or any other code content. Brands are dynamic data loaded from the database. Hardcoding brand names creates brittle code that breaks when brands are added, renamed, or removed. Always reference brands generically (e.g. `brand.name`, `brand.slug`) or through the Brand model/service. **Exception**: "Your Scene" is the fixed brand name of the ticketing platform's audience-facing product and may be hardcoded in the ticketing app (`src_new/ticketing-app/`) and audience-related UI in label-dashboard-web. It is not a dynamic organizer brand.
 
 ## Angular Frontend Reference Documents
 
