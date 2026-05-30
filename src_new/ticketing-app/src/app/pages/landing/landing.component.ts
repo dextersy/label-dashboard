@@ -4,6 +4,7 @@ import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
+import { AudienceAuthService } from '../../services/audience-auth.service';
 
 interface PublicEvent {
   id: number;
@@ -41,6 +42,31 @@ interface PublicBrand {
       <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
         <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
         <div class="flex items-center gap-4">
+          <!-- Audience user avatar -->
+          @if (isAudienceLoggedIn()) {
+            <div class="relative">
+              <button (click)="audienceMenuOpen.set(!audienceMenuOpen())"
+                class="w-7 h-7 bg-white flex items-center justify-center flex-shrink-0 focus:outline-none">
+                <span class="text-black text-xs font-black">{{ audienceInitial() }}</span>
+              </button>
+              @if (audienceMenuOpen()) {
+                <div class="absolute right-0 top-full mt-2 w-44 bg-black border border-white/20 shadow-xl z-50">
+                  <div class="px-4 py-3 border-b border-white/10">
+                    <p class="text-xs font-mono text-white truncate">{{ audienceName() }}</p>
+                    <p class="text-xs font-mono text-white/40 truncate">Audience</p>
+                  </div>
+                  <a routerLink="/my-shows" (click)="audienceMenuOpen.set(false)"
+                    class="flex items-center gap-2 px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
+                    My Shows
+                  </a>
+                  <button (click)="audienceLogout()"
+                    class="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors border-t border-white/10">
+                    Log out
+                  </button>
+                </div>
+              }
+            </div>
+          }
           @if (isLoggedIn()) {
             <a routerLink="/app/dashboard" class="text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors hidden sm:block">
               Go to organizer portal
@@ -70,7 +96,7 @@ interface PublicBrand {
                 </div>
               }
             </div>
-          } @else {
+          } @else if (!isAudienceLoggedIn()) {
             <a routerLink="/app/login" class="text-xs text-white/50 hover:text-white uppercase tracking-wider transition-colors">Sign in</a>
             <a routerLink="/app/signup" class="text-xs font-bold bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-1.5 uppercase tracking-wider transition-colors">
               List a Show
@@ -260,10 +286,24 @@ export class LandingComponent implements OnInit {
   loading = signal(true);
   allEvents = signal<PublicEvent[]>([]);
   userMenuOpen = signal(false);
+  audienceMenuOpen = signal(false);
 
-  constructor(private http: HttpClient, private auth: AuthService, private router: Router) {}
+  constructor(private http: HttpClient, private auth: AuthService, private audienceAuth: AudienceAuthService, private router: Router) {}
 
   isLoggedIn = () => this.auth.isLoggedIn();
+  isAudienceLoggedIn = () => this.audienceAuth.isLoggedIn();
+  audienceInitial = () => {
+    const u = this.audienceAuth.getUser();
+    return (u?.first_name?.[0] || u?.email_address?.[0] || 'A').toUpperCase();
+  };
+  audienceName = () => {
+    const u = this.audienceAuth.getUser();
+    return u?.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : (u?.email_address || 'Guest');
+  };
+  audienceLogout(): void {
+    this.audienceAuth.logout();
+    this.audienceMenuOpen.set(false);
+  }
   userInitial = () => {
     const u = this.auth.getCurrentUser();
     return (u?.first_name?.[0] || u?.email_address?.[0] || u?.email?.[0] || 'U').toUpperCase();
@@ -285,6 +325,7 @@ export class LandingComponent implements OnInit {
     const target = event.target as HTMLElement;
     if (!target.closest('.relative')) {
       this.userMenuOpen.set(false);
+      this.audienceMenuOpen.set(false);
     }
   }
 

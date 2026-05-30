@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
+import { audienceAuthGuard } from './guards/audience-auth.guard';
 
 export const routes: Routes = [
   {
@@ -13,7 +14,8 @@ export const routes: Routes = [
   {
     // Root-level reset-password so the email link (generated without /app/ prefix) works
     path: 'reset-password',
-    loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+    data: { view: 'reset-password' }
   },
   {
     path: 'app',
@@ -24,15 +26,18 @@ export const routes: Routes = [
       },
       {
         path: 'signup',
-        loadComponent: () => import('./pages/auth/signup/signup.component').then(m => m.SignupComponent)
+        loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+        data: { view: 'signup' }
       },
       {
         path: 'forgot-password',
-        loadComponent: () => import('./pages/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+        loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+        data: { view: 'forgot-password' }
       },
       {
         path: 'reset-password',
-        loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+        loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+        data: { view: 'reset-password' }
       },
       {
         path: 'complete-profile',
@@ -61,6 +66,35 @@ export const routes: Routes = [
         ]
       }
     ]
+  },
+  // Audience-facing routes (top-level, no /app/ prefix for clean URLs)
+  {
+    path: 'connect',
+    loadComponent: () => import('./pages/auth/connect/connect.component').then(m => m.ConnectComponent)
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'signup',
+    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+    data: { view: 'signup' }
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+    data: { view: 'forgot-password' }
+  },
+  {
+    path: 'my-shows',
+    canActivate: [audienceAuthGuard],
+    loadComponent: () => import('./pages/audience/my-shows/my-shows.component').then(m => m.MyShowsComponent)
+  },
+  {
+    path: 'my-shows/:eventId',
+    canActivate: [audienceAuthGuard],
+    loadComponent: () => import('./pages/audience/show-detail/show-detail.component').then(m => m.ShowDetailComponent)
   },
   { path: '**', redirectTo: '/' }
 ];
