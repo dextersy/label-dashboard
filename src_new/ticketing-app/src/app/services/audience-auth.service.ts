@@ -77,7 +77,7 @@ export class AudienceAuthService {
   }
 
   verifyEmail(token: string): Observable<{ message: string }> {
-    return this.http.get<{ message: string }>(`${this.apiUrl}/auth/audience/verify-email/${token}`);
+    return this.http.get<{ message: string }>(`${this.apiUrl}/auth/audience/verify-email`, { params: { token } });
   }
 
   resendVerification(): Observable<{ message: string }> {
