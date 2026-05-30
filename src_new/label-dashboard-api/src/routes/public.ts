@@ -21,9 +21,13 @@ import {
   getReleasePlayer,
   getFundraiserForPublic,
   makeDonation,
-  submitLeadInquiry
+  submitLeadInquiry,
+  getAudienceTickets,
+  claimAudienceTickets,
+  downloadAudienceTicketPDF
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
+import { authenticateAudienceToken } from '../middleware/auth';
 
 const router = Router();
 
@@ -64,5 +68,10 @@ router.post('/webhook/transfer', transferWebhook);
 
 // Lead inquiry (label partnership interest form)
 router.post('/lead-inquiry', publicRateLimit, submitLeadInquiry);
+
+// Audience user routes (requires audience JWT)
+router.get('/audience/me/tickets', authenticateAudienceToken, getAudienceTickets);
+router.post('/audience/claim', authenticateAudienceToken, claimAudienceTickets);
+router.get('/audience/tickets/:ticketCode/pdf', authenticateAudienceToken, downloadAudienceTicketPDF);
 
 export default router;

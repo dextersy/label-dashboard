@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser } from '../models';
+import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
@@ -521,6 +522,21 @@ export const buyTicket = async (req: Request, res: Response) => {
     const eventIdNum = parseInt(event_id, 10);
     const requestDomain = getRequestDomain(req);
 
+    // Resolve audience user from optional Authorization header
+    let audienceUserId: number | null = null;
+    const authHeader = req.headers['authorization'];
+    const audienceToken = authHeader && authHeader.split(' ')[1];
+    if (audienceToken && audienceToken !== 'null' && audienceToken !== 'undefined' && process.env.JWT_SECRET) {
+      try {
+        const decoded = jwt.verify(audienceToken, process.env.JWT_SECRET) as any;
+        if (decoded.type === 'audience' && decoded.audienceUserId) {
+          audienceUserId = decoded.audienceUserId;
+        }
+      } catch {
+        // Invalid audience token — ignore and proceed as guest
+      }
+    }
+
     // Get event details
     const event = await Event.findOne({
       where: { id: eventIdNum },
@@ -625,6 +641,7 @@ export const buyTicket = async (req: Request, res: Response) => {
         price_per_ticket: 0,
         ticket_type_id: selectedTicketType?.id || null,
         referrer_id: referrer?.id || null,
+        audience_user_id: audienceUserId || undefined,
         order_timestamp: new Date(),
         date_paid: new Date()
       });
@@ -726,6 +743,7 @@ export const buyTicket = async (req: Request, res: Response) => {
       price_per_ticket: ticketPrice,
       ticket_type_id: selectedTicketType?.id || null,
       referrer_id: referrer?.id || null,
+      audience_user_id: audienceUserId || undefined,
       order_timestamp: new Date()
     });
 
@@ -819,47 +837,48 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
       });
     }
 
-    // Generate QR code as data URL
-    const qrCodeDataUrl = await QRCode.toDataURL(ticket.ticket_code, {
-      errorCorrectionLevel: 'M',
-      type: 'image/png',
-      width: 200,
-      margin: 1
-    });
-
-    // Validate QR code data URL format BEFORE creating PDF
-    const qrDataParts = qrCodeDataUrl.split(',');
-    if (qrDataParts.length < 2) {
-      console.error('Invalid QR code data URL format:', qrCodeDataUrl);
-      return res.status(500).json({ error: 'Failed to generate ticket QR code' });
+    await streamTicketPDF(ticket, res);
+  } catch (error) {
+    console.error('Download ticket PDF error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate PDF' });
     }
+  }
+};
 
-    // Create PDF document
-    doc = new PDFDocument({ size: 'A4', margin: 50 });
+/** Shared PDF generation — resolves when the PDF has been sent, rejects on any error */
+async function streamTicketPDF(ticket: any, res: Response): Promise<void> {
+  // Generate QR code as data URL
+  const qrCodeDataUrl = await QRCode.toDataURL(ticket.ticket_code, {
+    errorCorrectionLevel: 'M',
+    type: 'image/png',
+    width: 200,
+    margin: 1
+  });
 
-    // Buffer the PDF in memory to ensure atomic success/failure
+  const qrDataParts = qrCodeDataUrl.split(',');
+  if (qrDataParts.length < 2) {
+    throw new Error('Invalid QR code data URL format');
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
     const chunks: Buffer[] = [];
+
     doc.on('data', (chunk: Buffer) => chunks.push(chunk));
     doc.on('end', () => {
-      // PDF generation completed successfully - now send it
       const pdfBuffer = Buffer.concat(chunks);
-
-      // Set response headers for PDF download (sanitize ticket code for filename safety)
       const ticketCode = ticket.ticket_code || 'download';
       const sanitizedCode = ticketCode.replace(/[^A-Z0-9]/gi, '');
       const filename = `ticket-${sanitizedCode}.pdf`;
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.setHeader('Content-Length', pdfBuffer.length.toString());
-
       res.send(pdfBuffer);
+      resolve();
     });
     doc.on('error', (err: Error) => {
-      // PDF generation failed - send error response (headers not sent yet)
-      console.error('PDF generation error:', err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to generate PDF' });
-      }
+      reject(err);
     });
 
     // Get brand info
@@ -1004,20 +1023,40 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
       { align: 'center' }
     );
 
-    // Finalize the PDF
+    // Finalize the PDF — triggers 'end' or 'error' event above
     doc.end();
-  } catch (error) {
-    console.error('Download ticket PDF error:', error);
+  }); // end Promise
+}
 
-    // Clean up PDF document stream if it was created
-    if (doc) {
-      try {
-        doc.destroy();
-      } catch (destroyError) {
-        console.error('Error destroying PDF document:', destroyError);
-      }
+export const downloadAudienceTicketPDF = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser as AudienceUser;
+    const { ticketCode } = req.params;
+
+    const ticket = await Ticket.findOne({
+      where: { ticket_code: ticketCode.toUpperCase(), audience_user_id: audienceUser.id },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          include: [{ model: Brand, as: 'brand' }],
+        },
+        { model: TicketType, as: 'ticketType' },
+      ],
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
     }
 
+    const validStatuses = ['Payment Confirmed', 'Ticket sent.'];
+    if (!validStatuses.includes(ticket.status)) {
+      return res.status(403).json({ error: 'PDF download is only available for confirmed tickets' });
+    }
+
+    await streamTicketPDF(ticket, res);
+  } catch (error) {
+    console.error('downloadAudienceTicketPDF error:', error);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to generate PDF' });
     }
@@ -1461,7 +1500,44 @@ ${JSON.stringify(structuredData, null, 4)}
   }
 };
 
+// ─── Audience user ticket endpoints ───────────────────────────────────────────
 
+export const getAudienceTickets = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser as AudienceUser;
+
+    const tickets = await Ticket.findAll({
+      where: { audience_user_id: audienceUser.id },
+      include: [
+        {
+          model: Event,
+          as: 'event',
+          include: [
+            { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] }
+          ],
+        },
+        { model: TicketType, as: 'ticketType', attributes: ['id', 'name'] },
+      ],
+      order: [['id', 'DESC']],
+    });
+
+    return res.json({ tickets });
+  } catch (error) {
+    console.error('getAudienceTickets error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const claimAudienceTickets = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser as AudienceUser;
+    const claimed_tickets_count = await claimTicketsByEmailInternal(audienceUser.id, audienceUser.email_address);
+    return res.json({ claimed_tickets_count });
+  } catch (error) {
+    console.error('claimAudienceTickets error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
 // Get brand information by domain
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
