@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User } from '../models';
+import { User, AudienceUser } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -44,6 +44,37 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();
+};
+
+export const authenticateAudienceToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token || token === 'null' || token === 'undefined') {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
+
+    if (decoded.type !== 'audience') {
+      return res.status(401).json({ error: 'Invalid token type' });
+    }
+
+    const audienceUser = await AudienceUser.findByPk(decoded.audienceUserId);
+    if (!audienceUser) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    (req as any).audienceUser = audienceUser;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
 };
 
 export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {

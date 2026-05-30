@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange, ticketingForgotPassword, ticketingValidateResetHash, dashboardGoogleRedirect, dashboardGoogleCallback, dashboardGoogleExchange } from '../controllers/authController';
-import { authenticateToken } from '../middleware/auth';
+import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange } from '../controllers/audienceAuthController';
+import { authenticateToken, authenticateAudienceToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
@@ -25,6 +26,19 @@ ticketingRouter.get('/google', authRateLimit, organizerGoogleRedirect);
 ticketingRouter.get('/google/callback', organizerGoogleCallback);
 ticketingRouter.post('/google/exchange', authRateLimit, organizerGoogleExchange);
 router.use('/ticketing', ticketingRouter);
+
+// Audience auth
+const audienceRouter = Router();
+audienceRouter.post('/signup', authRateLimit, audienceSignup);
+audienceRouter.post('/login', authRateLimit, audienceLogin);
+audienceRouter.get('/me', authenticateAudienceToken, audienceGetMe);
+audienceRouter.post('/forgot-password', authRateLimit, audienceForgotPassword);
+audienceRouter.post('/reset-password', authRateLimit, audienceResetPassword);
+audienceRouter.get('/validate-reset-hash/:hash', audienceValidateResetHash);
+audienceRouter.get('/google', authRateLimit, audienceGoogleRedirect);
+audienceRouter.get('/google/callback', audienceGoogleCallback);
+audienceRouter.post('/google/exchange', authRateLimit, audienceGoogleExchange);
+router.use('/audience', audienceRouter);
 
 // Dashboard portal Google auth
 const dashboardRouter = Router();
