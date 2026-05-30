@@ -1,6 +1,7 @@
 import { sequelize } from '../config/database';
 
 // Import all models
+import AudienceUser from './AudienceUser';
 import User from './User';
 import Brand from './Brand';
 import Artist from './Artist';
@@ -136,6 +137,10 @@ EventReferrer.hasMany(Ticket, { foreignKey: 'referrer_id', as: 'tickets' });
 Ticket.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 Ticket.belongsTo(EventReferrer, { foreignKey: 'referrer_id', as: 'referrer' });
 Ticket.belongsTo(TicketType, { foreignKey: 'ticket_type_id', as: 'ticketType' });
+Ticket.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
+
+// AudienceUser relationships
+AudienceUser.hasMany(Ticket, { foreignKey: 'audience_user_id', as: 'tickets' });
 
 // TicketType relationships
 TicketType.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
@@ -282,6 +287,7 @@ WalkInTransactionItem.belongsTo(WalkInType, { foreignKey: 'walk_in_type_id', as:
 // Export all models
 export {
   sequelize,
+  AudienceUser,
   User,
   Brand,
   Artist,

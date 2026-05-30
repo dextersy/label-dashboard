@@ -22,6 +22,7 @@ interface TicketAttributes {
   payment_processing_fee?: number;
   platform_fee?: number;
   referrer_id?: number;
+  audience_user_id?: number;
   order_timestamp?: Date;
   date_paid?: Date;
 }
@@ -47,6 +48,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public payment_processing_fee?: number;
   public platform_fee?: number;
   public referrer_id?: number;
+  public audience_user_id?: number;
   public order_timestamp?: Date;
   public date_paid?: Date;
 
@@ -54,6 +56,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public event?: any;
   public referrer?: any;
   public ticketType?: any;
+  public audienceUser?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -166,6 +169,10 @@ Ticket.init(
       }
     },
     referrer_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    audience_user_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
