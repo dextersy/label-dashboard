@@ -117,7 +117,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Pre-fill name and lock email if audience user already logged in
+    // Pre-fill name, email, and contact number if audience user already logged in
     const existingUser = this.audienceAuthService.getUser();
     if (existingUser) {
       const fullName = [existingUser.first_name, existingUser.last_name].filter(Boolean).join(' ');
@@ -125,6 +125,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
       if (existingUser.email_address) {
         this.ticketForm.patchValue({ email_address: existingUser.email_address });
         this.ticketForm.get('email_address')?.disable();
+      }
+      if (existingUser.contact_number) {
+        this.ticketForm.patchValue({ contact_number: existingUser.contact_number });
       }
     }
 
@@ -451,6 +454,9 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     if (user.email_address) {
       this.ticketForm.patchValue({ email_address: user.email_address });
       this.ticketForm.get('email_address')?.disable();
+    }
+    if (user.contact_number && !this.ticketForm.value.contact_number) {
+      this.ticketForm.patchValue({ contact_number: user.contact_number });
     }
   }
 

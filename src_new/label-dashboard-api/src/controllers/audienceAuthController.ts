@@ -176,6 +176,7 @@ export const audienceLogin = async (req: Request, res: Response) => {
         email_address: user.email_address,
         first_name: user.first_name,
         last_name: user.last_name,
+        contact_number: user.contact_number,
         email_verified: user.email_verified ?? false,
       },
       claimed_tickets_count,
@@ -194,6 +195,7 @@ export const audienceGetMe = async (req: Request, res: Response) => {
       email_address: user.email_address,
       first_name: user.first_name,
       last_name: user.last_name,
+      contact_number: user.contact_number,
       email_verified: user.email_verified ?? false,
     });
   } catch (error) {
@@ -449,6 +451,7 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
         email_address: user.email_address,
         first_name: user.first_name,
         last_name: user.last_name,
+        contact_number: user.contact_number,
         email_verified: true,
       },
       claimed_tickets_count,
@@ -524,6 +527,7 @@ export const audienceGoogleExchange = async (req: Request, res: Response) => {
         email_address: user.email_address,
         first_name: user.first_name,
         last_name: user.last_name,
+        contact_number: user.contact_number,
       },
     });
   } catch (error) {

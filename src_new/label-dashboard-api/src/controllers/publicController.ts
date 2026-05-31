@@ -627,6 +627,15 @@ export const buyTicket = async (req: Request, res: Response) => {
     // Get brand's domain for success URL
     const brandDomain = await getBrandFrontendUrl(event.brand_id);
 
+    // Save contact number to audience user account if not already set
+    if (audienceUserId && contact_number) {
+      AudienceUser.findByPk(audienceUserId).then(auUser => {
+        if (auUser && !auUser.contact_number) {
+          auUser.update({ contact_number }).catch(err => console.error('Failed to save audience contact number:', err));
+        }
+      }).catch(() => {});
+    }
+
     // Handle FREE tickets (skip payment workflow)
     if (totalAmount === 0) {
       // Create ticket record with "Ticket sent." status

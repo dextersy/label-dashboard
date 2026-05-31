@@ -7,6 +7,7 @@ interface AudienceUserAttributes {
   password_hash?: string;
   first_name?: string;
   last_name?: string;
+  contact_number?: string;
   reset_hash?: string;
   reset_hash_expires_at?: Date;
   email_verified?: boolean;
@@ -22,6 +23,7 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public password_hash?: string;
   public first_name?: string;
   public last_name?: string;
+  public contact_number?: string;
   public reset_hash?: string;
   public reset_hash_expires_at?: Date;
   public email_verified?: boolean;
@@ -54,6 +56,10 @@ AudienceUser.init(
     },
     last_name: {
       type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    contact_number: {
+      type: DataTypes.STRING(30),
       allowNull: true,
     },
     reset_hash: {
