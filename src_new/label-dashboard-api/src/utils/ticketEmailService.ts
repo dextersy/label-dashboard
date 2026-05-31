@@ -154,10 +154,16 @@ export const sendTicketEmail = async (
       templateData.show_your_scene_account = '';
       templateData['/show_your_scene_account'] = '';
       templateData.audience_app_url = `${process.env.AUDIENCE_APP_URL || ''}/my-shows`;
+      templateData.show_register_your_scene = '<!--';
+      templateData['/show_register_your_scene'] = '-->';
+      templateData.audience_register_url = '';
     } else {
       templateData.show_your_scene_account = '<!--';
       templateData['/show_your_scene_account'] = '-->';
       templateData.audience_app_url = '';
+      templateData.show_register_your_scene = '';
+      templateData['/show_register_your_scene'] = '';
+      templateData.audience_register_url = `${process.env.AUDIENCE_APP_URL || ''}/login?mode=audience`;
     }
 
     // Add conditional sections
