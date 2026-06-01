@@ -229,15 +229,48 @@
 
       <p *ngIf="domains.length === 0" class="tw-text-sm tw-text-muted tw-mb-4">No domains configured.</p>
 
-      <h4 class="tw-text-sm tw-font-semibold tw-text-gray-700 tw-mb-3">Add domain</h4>
-      <div class="tw-flex tw-gap-3 tw-items-center">
-        <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [(ngModel)]="newDomainName" placeholder="Domain name">
-        <button type="button"
-                (click)="addDomain()"
-                style="flex-shrink:0; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-size:14px; cursor:pointer; white-space:nowrap;"
-                [style.background]="brandSettings?.brand_color || '#6366f1'">
-          <app-icon name="plus" /> Add domain
-        </button>
+      <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4 sm:tw-gap-6 sm:tw-items-start">
+
+        <!-- Add domain (40%) -->
+        <div class="sm:tw-w-[40%]">
+          <h4 class="tw-text-sm tw-font-semibold tw-text-gray-700 tw-mb-3">Add domain</h4>
+          <div class="tw-flex tw-flex-col tw-gap-2">
+            <input type="text" class="tw-input tw-w-full" [(ngModel)]="newDomainName" placeholder="Domain name">
+            <button type="button"
+                    (click)="addDomain()"
+                    style="color:#fff; border:none; padding:8px 16px; border-radius:6px; font-size:14px; cursor:pointer; white-space:nowrap;"
+                    [style.background]="brandSettings?.brand_color || '#6366f1'">
+              <app-icon name="plus" /> Add domain
+            </button>
+          </div>
+        </div>
+
+        <!-- DNS setup instructions (60%) -->
+        <div class="tw-rounded-card-mobile tw-border tw-border-subtle tw-bg-gray-50 tw-px-4 tw-py-3 sm:tw-w-[60%]">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-muted tw-mb-2">DNS setup</p>
+          <p class="tw-text-sm tw-text-body tw-mb-2">To verify your domain, add an <strong>A record</strong> in your registrar's DNS settings.</p>
+          <table class="tw-w-full tw-text-sm" style="border-collapse:collapse;">
+            <thead>
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <th class="tw-text-left tw-text-muted tw-font-normal tw-pb-1 tw-pr-4">Type</th>
+                <th class="tw-text-left tw-text-muted tw-font-normal tw-pb-1 tw-pr-4">Name</th>
+                <th class="tw-text-left tw-text-muted tw-font-normal tw-pb-1">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="tw-pt-1.5 tw-pr-4 tw-text-body tw-font-semibold">A</td>
+                <td class="tw-pt-1.5 tw-pr-4 tw-text-body tw-font-semibold" style="font-family:monospace;">{{ dnsRecordName }}</td>
+                <td class="tw-pt-1.5 tw-text-body tw-font-semibold tw-select-all" style="font-family:monospace;">
+                  <span *ngIf="serverIp">{{ serverIp }}</span>
+                  <span *ngIf="!serverIp" class="tw-text-muted tw-font-normal" style="font-family:inherit;">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="tw-text-sm tw-text-muted tw-mt-2">When the changes are propagated, click "Verify" on the table to complete your domain setup.</p>
+        </div>
+
       </div>
     </div>
   </div>

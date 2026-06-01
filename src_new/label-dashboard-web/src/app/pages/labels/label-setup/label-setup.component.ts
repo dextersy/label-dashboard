@@ -34,6 +34,7 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   activeSection: 'brand-settings' | 'domains' = 'brand-settings';
+  serverIp: string | null = null;
   private subscriptions: Subscription[] = [];
 
   get navTabs(): InPageNavTab[] {
@@ -134,6 +135,10 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
         this.notificationService.showError('Error loading domains');
         this.loading = false;
       }
+    });
+    this.adminService.getServerIp().subscribe({
+      next: (result) => { this.serverIp = result.ip; },
+      error: () => { this.serverIp = null; }
     });
   }
 
@@ -369,6 +374,12 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
       case 'Unverified':
       default: return 'x-circle';
     }
+  }
+
+  get dnsRecordName(): string {
+    const domain = (this.newDomainName || '').trim().toLowerCase().replace(/^https?:\/\//, '');
+    const parts = domain.split('.').filter(p => p.length > 0);
+    return parts.length > 2 ? parts.slice(0, parts.length - 2).join('.') : '@';
   }
 
   getStatusTooltip(status: string): string {
