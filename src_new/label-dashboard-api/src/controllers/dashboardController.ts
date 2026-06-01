@@ -271,13 +271,16 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
   try {
     const artistId = req.query.artist_id ? parseInt(req.query.artist_id as string) : null;
 
-    const [latestReleases, topEarningReleases, stats, latestRelease, latestEarning, checklist] = await Promise.all([
+    const [latestReleases, topEarningReleases, stats, latestRelease, latestEarning, checklist, balanceSummary, releasePipeline, recentArtists] = await Promise.all([
       getLatestReleasesData(req, artistId),
       getTopEarningReleasesData(req, artistId),
       getDashboardStatsData(req, artistId),
       getLatestReleaseWithEarnings(req, artistId),
       getLatestEarningData(req, artistId),
-      getChecklistData(req, artistId)
+      getChecklistData(req, artistId),
+      getBalanceSummaryData(req),
+      getReleasePipelineData(req),
+      getRecentArtistsData(req)
     ]);
 
     const dashboardData: any = {
@@ -290,7 +293,10 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
       topEarningReleases,
       stats,
       latestEarning,
-      checklist
+      checklist,
+      balanceSummary,
+      releasePipeline,
+      recentArtists
     };
 
     res.json(dashboardData);
