@@ -69,8 +69,8 @@ export class SelectArtistComponent implements OnInit {
     // Update the state service
     this.artistStateService.setSelectedArtist(artist);
     
-    // Navigate to artist profile
-    this.router.navigate(['/artist/profile']);
+    // Navigate to dashboard
+    this.router.navigate(['/dashboard']);
   }
 
   getArtistPhotoUrl(artist: Artist): string | null {

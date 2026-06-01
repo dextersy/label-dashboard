@@ -22,20 +22,27 @@
 
         <!-- Profile photo -->
         <div class="tw-flex-shrink-0 tw-rounded-full tw-bg-gray-100 tw-overflow-hidden tw-flex tw-items-center tw-justify-center"
-             style="width: 44px; height: 44px; border: 0.5px solid #e5e7eb;">
+             style="width: 56px; height: 56px; border: 0.5px solid #e5e7eb;">
           <img *ngIf="selectedArtist?.profile_photo"
                [src]="getArtistPhotoUrl(selectedArtist?.profile_photo)"
                [alt]="selectedArtist?.name"
                class="tw-w-full tw-h-full tw-object-cover">
           <span *ngIf="!selectedArtist?.profile_photo"
-                class="tw-text-sm tw-font-semibold tw-text-gray-500 tw-select-none">
+                class="tw-text-base tw-font-semibold tw-text-gray-500 tw-select-none">
             {{ getArtistInitials(selectedArtist?.name) }}
           </span>
         </div>
 
         <div>
-          <div class="tw-text-lg tw-font-medium tw-text-gray-900 tw-font-heading tw-leading-snug">
-            {{ selectedArtist?.name }}
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <div class="tw-text-lg tw-font-medium tw-text-gray-900 tw-font-heading tw-leading-snug">
+              {{ selectedArtist?.name }}
+            </div>
+            <button class="tw-flex-shrink-0 tw-w-[26px] tw-h-[26px] tw-rounded-full tw-bg-gray-100 tw-border-0 tw-flex tw-items-center tw-justify-center tw-text-gray-400 hover:tw-bg-gray-200 hover:tw-text-gray-600 tw-transition-colors tw-cursor-pointer"
+                    title="Switch artist"
+                    routerLink="/artist">
+              <app-icon name="transfer" iconOnly style="font-size: 12px;" />
+            </button>
           </div>
           <div *ngIf="brandName" class="tw-text-sm tw-text-muted tw-mt-0.5">{{ brandName }}</div>
         </div>
