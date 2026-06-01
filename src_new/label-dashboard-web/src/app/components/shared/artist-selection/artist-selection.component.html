@@ -6,9 +6,7 @@
 
     <!-- New Artist Mode -->
     <div class="artist-info" *ngIf="isNewArtistMode">
-      <img src="assets/img/placeholder.jpg"
-           class="artist-photo"
-           alt="New artist placeholder">
+      <div class="artist-photo artist-initials artist-initials--new">+</div>
       <div class="artist-details">
         <div class="artist-name new-artist-name">New artist</div>
       </div>
@@ -16,9 +14,12 @@
 
     <!-- Normal Mode -->
     <div class="artist-info" *ngIf="selectedArtist && !isNewArtistMode">
-      <img [src]="getProfilePhotoUrl(selectedArtist)"
+      <img *ngIf="hasProfilePhoto(selectedArtist)"
+           [src]="getProfilePhotoUrl(selectedArtist)"
            class="artist-photo"
            [alt]="selectedArtist.name">
+      <div *ngIf="!hasProfilePhoto(selectedArtist)"
+           class="artist-photo artist-initials">{{ getArtistInitials(selectedArtist.name) }}</div>
       <div class="artist-details">
         <div class="artist-name">{{ selectedArtist.name }}</div>
       </div>
@@ -67,10 +68,13 @@
                   [class.active]="selectedArtist?.id === artist.id"
                   (click)="selectArtist(artist, true)">
             <app-icon name="check" iconOnly class="artist-modal-check" *ngIf="selectedArtist?.id === artist.id" />
-            <img [src]="getProfilePhotoUrl(artist)"
+            <img *ngIf="hasProfilePhoto(artist)"
+                 [src]="getProfilePhotoUrl(artist)"
                  class="artist-modal-photo"
                  [alt]="artist.name"
                  loading="lazy">
+            <div *ngIf="!hasProfilePhoto(artist)"
+                 class="artist-modal-photo artist-modal-initials">{{ getArtistInitials(artist.name) }}</div>
             <span class="artist-modal-name">{{ artist.name }}</span>
           </button>
 

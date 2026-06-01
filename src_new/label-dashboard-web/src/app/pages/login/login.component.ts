@@ -33,10 +33,18 @@ export class LoginComponent implements OnInit {
   showPassword: boolean = false;
   
   // Brand settings (matching original PHP defaults)
-  brandLogo: string = 'assets/img/Your Logo Here.png';
+  brandLogo: string = '';
   brandName: string = 'Label Dashboard';
   brandColor: string = '#667eea';
   brandId: number | null = null;
+
+  get hasBrandLogo(): boolean {
+    return !!this.brandLogo;
+  }
+
+  get brandInitials(): string {
+    return this.brandName.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase();
+  }
 
   constructor(
     private router: Router,
@@ -100,7 +108,7 @@ export class LoginComponent implements OnInit {
   }
 
   private setBrandSettings(brandSettings: any): void {
-    this.brandLogo = brandSettings.logo_url || 'assets/img/Your Logo Here.png';
+    this.brandLogo = brandSettings.logo_url || '';
     this.brandName = brandSettings.name;
     this.brandColor = brandSettings.brand_color;
     this.brandId = brandSettings.id;

@@ -291,7 +291,15 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
       return artist.profile_photo.startsWith('http') ? artist.profile_photo : `${environment.apiUrl}/uploads/artists/${artist.profile_photo}`;
     }
 
-    return 'assets/img/placeholder.jpg';
+    return '';
+  }
+
+  hasProfilePhoto(artist: Artist): boolean {
+    return !!(artist.profilePhotoImage?.path || artist.profile_photo);
+  }
+
+  getArtistInitials(name: string): string {
+    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   }
 
   ngOnDestroy(): void {
