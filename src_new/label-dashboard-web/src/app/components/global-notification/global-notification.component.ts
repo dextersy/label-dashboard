@@ -21,13 +21,13 @@ export class GlobalNotificationComponent implements OnInit, OnDestroy {
       notification => {
         this.currentNotification = notification;
         
-        // Auto-hide after 5 seconds
         if (notification) {
+          const duration = notification.duration ?? 5000;
           setTimeout(() => {
             if (this.currentNotification === notification) {
               this.closeNotification();
             }
-          }, 5000);
+          }, duration);
         }
       }
     );

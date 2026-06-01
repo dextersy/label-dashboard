@@ -13,6 +13,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class AudienceLoginComponent implements OnInit, OnDestroy {
   @Output() loggedIn = new EventEmitter<AudienceUser>();
+  @Output() loggedOut = new EventEmitter<void>();
 
   dismissed = false;
   claimedCount = 0;
@@ -113,6 +114,7 @@ export class AudienceLoginComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.audienceAuthService.logout();
+    this.loggedOut.emit();
   }
 
   ngOnDestroy(): void {

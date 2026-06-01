@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 export interface NotificationMessage {
   type: 'success' | 'error' | 'info' | 'warning';
   message: string;
+  duration?: number;
   clickable?: boolean;
   clickAction?: () => void;
 }
@@ -15,39 +16,43 @@ export class NotificationService {
   private notificationSubject = new BehaviorSubject<NotificationMessage | null>(null);
   public notification$ = this.notificationSubject.asObservable();
 
-  showSuccess(message: string, clickAction?: () => void): void {
-    this.notificationSubject.next({ 
-      type: 'success', 
-      message, 
+  showSuccess(message: string, clickAction?: () => void, duration?: number): void {
+    this.notificationSubject.next({
+      type: 'success',
+      message,
+      duration,
       clickable: !!clickAction,
-      clickAction 
+      clickAction
     });
   }
 
-  showError(message: string, clickAction?: () => void): void {
-    this.notificationSubject.next({ 
-      type: 'error', 
-      message, 
+  showError(message: string, clickAction?: () => void, duration?: number): void {
+    this.notificationSubject.next({
+      type: 'error',
+      message,
+      duration,
       clickable: !!clickAction,
-      clickAction 
+      clickAction
     });
   }
 
-  showInfo(message: string, clickAction?: () => void): void {
-    this.notificationSubject.next({ 
-      type: 'info', 
-      message, 
+  showInfo(message: string, clickAction?: () => void, duration?: number): void {
+    this.notificationSubject.next({
+      type: 'info',
+      message,
+      duration,
       clickable: !!clickAction,
-      clickAction 
+      clickAction
     });
   }
 
-  showWarning(message: string, clickAction?: () => void): void {
-    this.notificationSubject.next({ 
-      type: 'warning', 
-      message, 
+  showWarning(message: string, clickAction?: () => void, duration?: number): void {
+    this.notificationSubject.next({
+      type: 'warning',
+      message,
+      duration,
       clickable: !!clickAction,
-      clickAction 
+      clickAction
     });
   }
 

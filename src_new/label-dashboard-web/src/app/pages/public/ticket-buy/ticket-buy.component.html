@@ -1,3 +1,4 @@
+<app-global-notification></app-global-notification>
 <div class="public-page" [style.background-color]="brandColor">
 
   <!-- Preview Banner -->
@@ -138,7 +139,7 @@
 
           <!-- Audience account hint -->
           <div class="tw-mb-5">
-            <app-audience-login (loggedIn)="onAudienceLoggedIn($event)"></app-audience-login>
+            <app-audience-login (loggedIn)="onAudienceLoggedIn($event)" (loggedOut)="onAudienceLoggedOut()"></app-audience-login>
           </div>
 
           <!-- Name -->

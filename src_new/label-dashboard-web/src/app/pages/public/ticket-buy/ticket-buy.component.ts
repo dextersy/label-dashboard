@@ -13,6 +13,8 @@ import { CountdownNotificationComponent } from '../../../shared/countdown-notifi
 import { checkEmailIssues, EmailTypoResult } from '../../../utils/email-typo-detector';
 import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
 import { AudienceLoginComponent } from '../../../components/shared/audience-login/audience-login.component';
+import { NotificationService } from '../../../services/notification.service';
+import { GlobalNotificationComponent } from '../../../components/global-notification/global-notification.component';
 
 // Angular Material imports (removed MatIconModule to prevent conflicts with FontAwesome)
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -33,6 +35,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
         MatCheckboxModule,
         CountdownNotificationComponent,
         AudienceLoginComponent,
+        GlobalNotificationComponent,
         IconComponent],
     templateUrl: './ticket-buy.component.html',
     styleUrls: ['./ticket-buy.component.scss']
@@ -87,7 +90,8 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     private brandService: BrandService,
     private metaService: MetaService,
     private sanitizer: DomSanitizer,
-    public audienceAuthService: AudienceAuthService
+    public audienceAuthService: AudienceAuthService,
+    private notificationService: NotificationService
   ) {
     this.ticketForm = this.fb.group({
       name: ['', Validators.required],
@@ -458,6 +462,11 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     if (user.contact_number && !this.ticketForm.value.contact_number) {
       this.ticketForm.patchValue({ contact_number: user.contact_number });
     }
+    this.notificationService.showSuccess('Your Scene™ account connected.', undefined, 3000);
+  }
+
+  onAudienceLoggedOut(): void {
+    this.notificationService.showInfo('Your Scene™ account disconnected.', undefined, 3000);
   }
 
   onSubmit() {
