@@ -1,5 +1,5 @@
 import express from 'express';
-import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles } from '../controllers/brandController';
+import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getServerIp, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles } from '../controllers/brandController';
 import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, deleteLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus } from '../controllers/labelPaymentController';
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
@@ -30,6 +30,7 @@ router.post('/:brandId/logo', authenticateToken, requireAdmin, ...uploadLogo);
 router.post('/:brandId/favicon', authenticateToken, requireAdmin, ...uploadFavicon);
 
 // Domain management routes
+router.get('/:brandId/server-ip', authenticateToken, requireAdmin, getServerIp);
 router.get('/:brandId/domains', authenticateToken, requireAdmin, getDomains);
 router.post('/:brandId/domains', authenticateToken, requireAdmin, addDomain);
 router.delete('/:brandId/domains/:domainName', authenticateToken, requireAdmin, deleteDomain);

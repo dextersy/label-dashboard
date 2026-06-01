@@ -560,6 +560,11 @@ export const uploadFavicon = [
 
 // Domain Management Functions
 
+export const getServerIp = async (req: Request, res: Response) => {
+  const ip = process.env.FRONTEND_IP || null;
+  res.json({ ip });
+};
+
 export const getDomains = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;

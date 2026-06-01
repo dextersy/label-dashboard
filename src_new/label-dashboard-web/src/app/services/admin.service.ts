@@ -578,6 +578,15 @@ export class AdminService {
   }
 
   // Domains
+  getServerIp(): Observable<{ ip: string | null }> {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    if (!brandId) throw new Error('No brand ID found for current user');
+    return this.http.get<{ ip: string | null }>(`${environment.apiUrl}/brands/${brandId}/server-ip`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   getDomains(): Observable<Domain[]> {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     const brandId = currentUser.brand_id;
