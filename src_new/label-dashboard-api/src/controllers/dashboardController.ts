@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation } from '../models';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -269,12 +269,15 @@ export const getEventSalesChart = async (req: AuthRequest, res: Response) => {
 // Get complete dashboard data
 export const getDashboardData = async (req: AuthRequest, res: Response) => {
   try {
-    const [latestReleases, topEarningReleases, balanceSummary, stats, releasePipeline] = await Promise.all([
-      getLatestReleasesData(req),
-      getTopEarningReleasesData(req),
-      getBalanceSummaryData(req),
-      getDashboardStatsData(req),
-      getReleasePipelineData(req)
+    const artistId = req.query.artist_id ? parseInt(req.query.artist_id as string) : null;
+
+    const [latestReleases, topEarningReleases, stats, latestRelease, latestEarning, checklist] = await Promise.all([
+      getLatestReleasesData(req, artistId),
+      getTopEarningReleasesData(req, artistId),
+      getDashboardStatsData(req, artistId),
+      getLatestReleaseWithEarnings(req, artistId),
+      getLatestEarningData(req, artistId),
+      getChecklistData(req, artistId)
     ]);
 
     const dashboardData: any = {
@@ -282,22 +285,13 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
         firstName: req.user.first_name,
         isAdmin: req.user.is_admin
       },
+      latestRelease,
       latestReleases,
       topEarningReleases,
-      balanceSummary,
       stats,
-      releasePipeline
+      latestEarning,
+      checklist
     };
-
-    // Add event sales and recent artists for admin users
-    if (req.user.is_admin) {
-      const [eventSales, recentArtists] = await Promise.all([
-        getEventSalesData(req),
-        getRecentArtistsData(req)
-      ]);
-      dashboardData.eventSales = eventSales;
-      dashboardData.recentArtists = recentArtists;
-    }
 
     res.json(dashboardData);
   } catch (error) {
@@ -307,54 +301,39 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
 };
 
 // Helper functions to get data without response
-async function getLatestReleasesData(req: AuthRequest) {
-  let releaseQuery: any = {
+async function getLatestReleasesData(req: AuthRequest, artistId: number | null = null) {
+  let artistFilter: number[] | null = null;
+
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    const accessibleIds = artistAccess.map(access => access.artist_id);
+    if (accessibleIds.length === 0) return [];
+    artistFilter = artistId ? accessibleIds.filter(id => id === artistId) : accessibleIds;
+    if (artistFilter.length === 0) return [];
+  } else if (artistId) {
+    artistFilter = [artistId];
+  }
+
+  const releaseQuery: any = {
     where: { brand_id: req.user.brand_id },
-    include: [
-      {
-        model: ReleaseArtist,
-        as: 'releaseArtists',
-        include: [
-          {
-            model: Artist,
-            as: 'artist'
-          }
-        ]
-      }
-    ],
+    include: [{
+      model: ReleaseArtist,
+      as: 'releaseArtists',
+      include: [{ model: Artist, as: 'artist' }],
+      ...(artistFilter ? { where: { artist_id: artistFilter }, required: true } : {})
+    }],
     order: [['release_date', 'DESC']],
     limit: 5
   };
 
-  // For non-admin users, only show releases where they have access to the artist
-  if (!req.user.is_admin) {
-    // Get accessible artist IDs first
-    const artistAccess = await ArtistAccess.findAll({
-      where: { 
-        user_id: req.user.id,
-        status: 'Accepted'
-      },
-      attributes: ['artist_id']
-    });
-    
-    const accessibleArtistIds = artistAccess.map(access => access.artist_id);
-    
-    if (accessibleArtistIds.length === 0) {
-      return []; // No accessible artists, return empty array
-    }
-
-    // Filter releases to only include those with accessible artists
-    releaseQuery.include[0].where = {
-      artist_id: accessibleArtistIds
-    };
-    releaseQuery.include[0].required = true;
-  }
-
   const releases = await Release.findAll(releaseQuery);
 
   return releases.map(release => {
-    const primaryArtist = release.releaseArtists && release.releaseArtists.length > 0 
-      ? release.releaseArtists[0].artist 
+    const primaryArtist = release.releaseArtists && release.releaseArtists.length > 0
+      ? release.releaseArtists[0].artist
       : null;
     return {
       id: release.id,
@@ -369,55 +348,37 @@ async function getLatestReleasesData(req: AuthRequest) {
   });
 }
 
-async function getTopEarningReleasesData(req: AuthRequest) {
-  let releaseQuery: any = {
+async function getTopEarningReleasesData(req: AuthRequest, artistId: number | null = null) {
+  let artistFilter: number[] | null = null;
+
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    const accessibleIds = artistAccess.map(access => access.artist_id);
+    if (accessibleIds.length === 0) return [];
+    artistFilter = artistId ? accessibleIds.filter(id => id === artistId) : accessibleIds;
+    if (artistFilter.length === 0) return [];
+  } else if (artistId) {
+    artistFilter = [artistId];
+  }
+
+  const releaseQuery: any = {
     where: { brand_id: req.user.brand_id },
     include: [
       {
         model: ReleaseArtist,
         as: 'releaseArtists',
-        include: [
-          {
-            model: Artist,
-            as: 'artist'
-          }
-        ]
+        include: [{ model: Artist, as: 'artist' }],
+        ...(artistFilter ? { where: { artist_id: artistFilter }, required: true } : {})
       },
-      {
-        model: Earning,
-        as: 'earnings',
-        required: false
-      }
+      { model: Earning, as: 'earnings', required: false }
     ]
   };
 
-  // For non-admin users, only show releases where they have access to the artist
-  if (!req.user.is_admin) {
-    // Get accessible artist IDs first
-    const artistAccess = await ArtistAccess.findAll({
-      where: { 
-        user_id: req.user.id,
-        status: 'Accepted'
-      },
-      attributes: ['artist_id']
-    });
-    
-    const accessibleArtistIds = artistAccess.map(access => access.artist_id);
-    
-    if (accessibleArtistIds.length === 0) {
-      return []; // No accessible artists, return empty array
-    }
-
-    // Filter releases to only include those with accessible artists
-    releaseQuery.include[0].where = {
-      artist_id: accessibleArtistIds
-    };
-    releaseQuery.include[0].required = true;
-  }
-
   const releases = await Release.findAll(releaseQuery);
 
-  // Calculate total earnings for each release and sort by total earnings
   return releases.map(release => {
     const totalEarnings = release.earnings?.reduce((sum, earning) => {
       return sum + (parseFloat(earning.amount?.toString() || '0'));
@@ -429,12 +390,12 @@ async function getTopEarningReleasesData(req: AuthRequest) {
       title: release.title,
       total_earnings: totalEarnings,
       cover_art: release.cover_art,
-      artist_name: release.releaseArtists && release.releaseArtists.length > 0 
-        ? release.releaseArtists[0].artist?.name 
+      artist_name: release.releaseArtists && release.releaseArtists.length > 0
+        ? release.releaseArtists[0].artist?.name
         : 'Unknown Artist'
     };
   }).sort((a, b) => b.total_earnings - a.total_earnings)
-    .slice(0, 6); // Take top 6 after sorting by total earnings
+    .slice(0, 6);
 }
 
 async function getBalanceSummaryData(req: AuthRequest) {
@@ -780,116 +741,45 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
   }
 };
 
-async function getDashboardStatsData(req: AuthRequest) {
-  let statsQuery = {};
-  let accessibleArtistIds: number[] = [];
-
-  // For non-admin users, get accessible artist IDs first
-  if (!req.user.is_admin) {
-    const artistAccess = await ArtistAccess.findAll({
-      where: { 
-        user_id: req.user.id,
-        status: 'Accepted'
-      },
-      attributes: ['artist_id']
-    });
-    
-    accessibleArtistIds = artistAccess.map(access => access.artist_id);
-    
-    if (accessibleArtistIds.length === 0) {
-      return {
-        latestRelease: null,
-        totalArtists: 0,
-        totalReleases: 0
-      };
-    }
-  }
-
+async function getDashboardStatsData(req: AuthRequest, artistId: number | null = null) {
+  let artistFilter: number[] | null = null;
   const brandFilter = { brand_id: req.user.brand_id };
 
-  // Get latest release with artist info
-  let latestReleaseQuery: any = {
-    where: brandFilter,
-    include: [
-      {
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    const accessibleIds = artistAccess.map(access => access.artist_id);
+    if (accessibleIds.length === 0) return { totalReleases: 0 };
+    artistFilter = artistId ? accessibleIds.filter(id => id === artistId) : accessibleIds;
+    if (artistFilter.length === 0) return { totalReleases: 0 };
+  } else if (artistId) {
+    artistFilter = [artistId];
+  }
+
+  const countReleases = (extraWhere: object) => {
+    if (!artistFilter) {
+      return Release.count({ where: { ...brandFilter, ...extraWhere } });
+    }
+    return Release.count({
+      where: { ...brandFilter, ...extraWhere },
+      include: [{
         model: ReleaseArtist,
         as: 'releaseArtists',
-        include: [
-          {
-            model: Artist,
-            as: 'artist'
-          }
-        ]
-      }
-    ],
-    order: [['release_date', 'DESC']],
-    limit: 1
+        where: { artist_id: artistFilter },
+        required: true
+      }]
+    });
   };
 
-  // For non-admin users, filter by accessible artists
-  if (!req.user.is_admin && accessibleArtistIds.length > 0) {
-    latestReleaseQuery.include[0].where = {
-      artist_id: accessibleArtistIds
-    };
-    latestReleaseQuery.include[0].required = true;
-  }
+  const { Op } = require('sequelize');
+  const [totalReleases, unreleasedCount] = await Promise.all([
+    countReleases({}),
+    countReleases({ status: { [Op.in]: ['Draft', 'For Submission', 'Pending'] } })
+  ]);
 
-  const latestReleaseResult = await Release.findOne(latestReleaseQuery);
-
-  let latestRelease = null;
-  if (latestReleaseResult) {
-    const primaryArtist = latestReleaseResult.releaseArtists && latestReleaseResult.releaseArtists.length > 0 
-      ? latestReleaseResult.releaseArtists[0].artist 
-      : null;
-    latestRelease = {
-      id: latestReleaseResult.id,
-      catalog_no: latestReleaseResult.catalog_no,
-      title: latestReleaseResult.title,
-      artist_id: primaryArtist?.id || null,
-      artist_name: primaryArtist?.name || 'Unknown Artist',
-      cover_art: latestReleaseResult.cover_art || null
-    };
-  }
-
-  // Get total counts
-  let totalArtists, totalReleases;
-
-  if (req.user.is_admin) {
-    // Admin can see all artists and releases in their brand
-    [totalArtists, totalReleases] = await Promise.all([
-      Artist.count({ where: brandFilter }),
-      Release.count({ where: brandFilter })
-    ]);
-  } else {
-    // Non-admin users see only accessible data
-    if (accessibleArtistIds.length === 0) {
-      totalArtists = 0;
-      totalReleases = 0;
-    } else {
-      totalArtists = accessibleArtistIds.length;
-      
-      // Count releases for accessible artists
-      totalReleases = await Release.count({
-        where: brandFilter,
-        include: [
-          {
-            model: ReleaseArtist,
-            as: 'releaseArtists',
-            where: {
-              artist_id: accessibleArtistIds
-            },
-            required: true
-          }
-        ]
-      });
-    }
-  }
-
-  return {
-    latestRelease,
-    totalArtists,
-    totalReleases
-  };
+  return { totalReleases, unreleasedCount };
 }
 
 async function getReleasePipelineData(req: AuthRequest) {
@@ -939,6 +829,159 @@ async function getReleasePipelineData(req: AuthRequest) {
   });
 
   return STATUSES.map(status => ({ status, count: counts[status] }));
+}
+
+async function getChecklistData(req: AuthRequest, artistId: number | null = null) {
+  const empty = { hasProfile: false, hasGalleryPhotos: false, hasSettlementAccount: false, hasRelease: false };
+
+  // Resolve artistId for non-admin users if not provided
+  let resolvedId = artistId;
+  if (!resolvedId && !req.user.is_admin) {
+    const access = await ArtistAccess.findOne({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    if (access) resolvedId = access.artist_id;
+  }
+  if (!resolvedId) return empty;
+
+  const artist = await Artist.findOne({
+    where: { id: resolvedId, brand_id: req.user.brand_id },
+    attributes: ['id', 'bio']
+  });
+  if (!artist) return empty;
+
+  const [galleryCount, paymentMethodCount, releaseCount] = await Promise.all([
+    ArtistImage.count({ where: { artist_id: resolvedId } }),
+    PaymentMethod.count({ where: { artist_id: resolvedId } }),
+    Release.count({
+      where: { brand_id: req.user.brand_id },
+      include: [{
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        where: { artist_id: resolvedId },
+        required: true
+      }]
+    })
+  ]);
+
+  return {
+    hasProfile: !!(artist.bio && artist.bio.trim()),
+    hasGalleryPhotos: galleryCount > 0,
+    hasSettlementAccount: paymentMethodCount > 0,
+    hasRelease: releaseCount > 0
+  };
+}
+
+async function getLatestEarningData(req: AuthRequest, artistId: number | null = null) {
+  let artistFilter: number[] | null = null;
+
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    const accessibleIds = artistAccess.map((a: any) => a.artist_id);
+    if (accessibleIds.length === 0) return null;
+    artistFilter = artistId ? accessibleIds.filter((id: number) => id === artistId) : accessibleIds;
+    if (artistFilter.length === 0) return null;
+  } else if (artistId) {
+    artistFilter = [artistId];
+  }
+
+  // Find all release IDs for this artist
+  const releaseWhere: any = { brand_id: req.user.brand_id };
+  let releaseIds: number[];
+
+  if (artistFilter) {
+    const releases = await Release.findAll({
+      where: releaseWhere,
+      attributes: ['id'],
+      include: [{
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        where: { artist_id: artistFilter },
+        required: true,
+        attributes: []
+      }]
+    });
+    releaseIds = releases.map((r: any) => r.id);
+    if (releaseIds.length === 0) return null;
+  } else {
+    const releases = await Release.findAll({ where: releaseWhere, attributes: ['id'] });
+    releaseIds = releases.map((r: any) => r.id);
+    if (releaseIds.length === 0) return null;
+  }
+
+  const earning = await Earning.findOne({
+    where: { release_id: releaseIds },
+    include: [{ model: Release, as: 'release', attributes: ['id', 'title'] }],
+    order: [['date_recorded', 'DESC']]
+  });
+
+  if (!earning) return null;
+
+  return {
+    amount: parseFloat(earning.amount?.toString() || '0'),
+    date_recorded: earning.date_recorded,
+    type: earning.type,
+    release_id: earning.release_id,
+    release_title: (earning as any).release?.title || null
+  };
+}
+
+async function getLatestReleaseWithEarnings(req: AuthRequest, artistId: number | null = null) {
+  let artistFilter: number[] | null = null;
+
+  if (!req.user.is_admin) {
+    const artistAccess = await ArtistAccess.findAll({
+      where: { user_id: req.user.id, status: 'Accepted' },
+      attributes: ['artist_id']
+    });
+    const accessibleIds = artistAccess.map((a: any) => a.artist_id);
+    if (accessibleIds.length === 0) return null;
+    artistFilter = artistId ? accessibleIds.filter((id: number) => id === artistId) : accessibleIds;
+    if (artistFilter.length === 0) return null;
+  } else if (artistId) {
+    artistFilter = [artistId];
+  }
+
+  const releaseQuery: any = {
+    where: { brand_id: req.user.brand_id },
+    include: [
+      {
+        model: ReleaseArtist,
+        as: 'releaseArtists',
+        include: [{ model: Artist, as: 'artist' }],
+        ...(artistFilter ? { where: { artist_id: artistFilter }, required: true } : {})
+      },
+      { model: Earning, as: 'earnings', required: false }
+    ],
+    order: [['release_date', 'DESC']],
+    limit: 1
+  };
+
+  releaseQuery.where.status = 'Live';
+
+  const release = await Release.findOne(releaseQuery);
+  if (!release) return null;
+
+  const primaryArtist = release.releaseArtists?.[0]?.artist || null;
+  const netEarnings = release.earnings?.reduce((sum: number, e: any) => {
+    return sum + (parseFloat(e.amount?.toString() || '0'));
+  }, 0) || 0;
+
+  return {
+    id: release.id,
+    catalog_no: release.catalog_no,
+    title: release.title,
+    release_date: release.release_date,
+    cover_art: release.cover_art || null,
+    status: release.status,
+    artist_id: primaryArtist?.id || null,
+    artist_name: primaryArtist?.name || 'Unknown Artist',
+    net_earnings: netEarnings
+  };
 }
 
 async function getRecentArtistsData(req: AuthRequest) {

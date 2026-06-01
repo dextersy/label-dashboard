@@ -68,7 +68,7 @@ export const routes: Routes = [
   { path: 'artist/epk/preview/:artist_id/:template', component: ArtistEPKComponent, canActivate: [authGuard], data: { preview: true } },
   
   // Protected Routes
-  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard, artistSelectedGuard] },
   { path: 'artist', component: SelectArtistComponent, canActivate: [authGuard] },
   {
     path: 'artist',

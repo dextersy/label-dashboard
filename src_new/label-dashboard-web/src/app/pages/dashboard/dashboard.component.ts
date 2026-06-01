@@ -1,28 +1,30 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { LatestAlbumsComponent, LatestRelease } from './components/latest-albums/latest-albums.component';
-import { TopAlbumsComponent, TopEarningRelease } from './components/top-albums/top-albums.component';
-import { BalanceTableComponent, ArtistBalance } from './components/balance-table/balance-table.component';
-import { ReleasePipelineComponent, PipelineStage } from './components/release-pipeline/release-pipeline.component';
+import { HttpClient } from '@angular/common/http';
+import { LatestRelease } from './components/latest-albums/latest-albums.component';
+import { TopEarningRelease } from './components/top-albums/top-albums.component';
+import { LatestReleaseCardComponent, LatestReleaseDetail } from './components/latest-release-card/latest-release-card.component';
+import { OnboardingChecklistComponent, DashboardChecklist } from './components/onboarding-checklist/onboarding-checklist.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { ArtistStateService } from '../../services/artist-state.service';
+import { Artist } from '../../models/artist.model';
 import { environment } from 'environments/environment';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 
 interface DashboardStats {
-  latestRelease: {
-    id: number;
-    catalog_no: string;
-    title: string;
-    artist_id: number | null;
-    artist_name: string;
-    cover_art: string;
-  } | null;
-  totalArtists: number;
   totalReleases: number;
+  unreleasedCount: number;
+}
+
+interface LatestEarning {
+  amount: number;
+  date_recorded: string;
+  type: string;
+  release_id: number;
+  release_title: string | null;
 }
 
 interface DashboardData {
@@ -30,11 +32,12 @@ interface DashboardData {
     firstName: string;
     isAdmin: boolean;
   };
+  latestRelease: LatestReleaseDetail | null;
   latestReleases: LatestRelease[];
   topEarningReleases: TopEarningRelease[];
-  balanceSummary: ArtistBalance[];
   stats?: DashboardStats;
-  releasePipeline: PipelineStage[];
+  latestEarning: LatestEarning | null;
+  checklist: DashboardChecklist | null;
 }
 
 @Component({
@@ -42,19 +45,20 @@ interface DashboardData {
     imports: [
         CommonModule,
         RouterModule,
-        LatestAlbumsComponent,
-        TopAlbumsComponent,
-        BalanceTableComponent,
-        ReleasePipelineComponent,
-        BreadcrumbComponent
-, IconComponent],
+        OnboardingChecklistComponent,
+        LatestReleaseCardComponent,
+        BreadcrumbComponent,
+        IconComponent
+    ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   dashboardData: DashboardData | null = null;
+  selectedArtist: Artist | null = null;
   loading = true;
   error: string | null = null;
+  private artistSubscription = new Subscription();
   brandColor: string = '#667eea';
   brandName: string = '';
   gradientStart: string = '#667eea';
@@ -74,15 +78,29 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBrandSettings();
-    this.loadDashboardData();
+    // BehaviorSubject emits current value immediately, so this handles both
+    // the initial load and any subsequent artist switches.
+    this.artistSubscription.add(
+      this.artistStateService.selectedArtist$.subscribe(artist => {
+        this.selectedArtist = artist;
+        this.loadDashboardData();
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.artistSubscription.unsubscribe();
   }
 
   loadDashboardData(): void {
     this.loading = true;
     this.error = null;
 
-    // Let the auth interceptor handle adding the Authorization header
-    this.http.get<DashboardData>(`${environment.apiUrl}/dashboard`).subscribe({
+    const artistId = this.artistStateService.getSelectedArtist()?.id
+      || localStorage.getItem('selected_artist_id');
+    const params = artistId ? `?artist_id=${artistId}` : '';
+
+    this.http.get<DashboardData>(`${environment.apiUrl}/dashboard${params}`).subscribe({
       next: (data) => {
         this.dashboardData = data;
         this.loading = false;
@@ -223,13 +241,38 @@ export class DashboardComponent implements OnInit {
     return luminance > 0.5;
   }
 
-  goToArtistSelection(): void {
-    // Clear the current artist selection
-    this.artistStateService.setSelectedArtist(null);
-    localStorage.removeItem('selected_artist_id');
-    
-    // Navigate to the artist selection page
-    this.router.navigate(['/artist']);
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount || 0);
+  }
+
+  formatShort(amount: number): string {
+    const v = amount || 0;
+    if (v >= 1_000_000) return '₱' + (v / 1_000_000).toFixed(1) + 'M';
+    if (v >= 1_000)     return '₱' + (v / 1_000).toFixed(0) + 'K';
+    return '₱' + Math.round(v);
+  }
+
+  getEarningsPct(amount: number): number {
+    const releases = this.dashboardData?.topEarningReleases;
+    if (!releases?.length) return 0;
+    const max = Math.max(...releases.map(r => r.total_earnings || 0));
+    if (max === 0) return 0;
+    return Math.max(4, Math.round(((amount || 0) / max) * 100));
+  }
+
+  getCombinedEarnings(): number {
+    return (this.dashboardData?.topEarningReleases || [])
+      .reduce((sum, r) => sum + (r.total_earnings || 0), 0);
+  }
+
+  getArtistInitials(name: string | undefined): string {
+    if (!name) return '?';
+    return name.trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  }
+
+  getArtistPhotoUrl(photo: string | undefined): string {
+    if (!photo) return '';
+    return photo.startsWith('http') ? photo : `${environment.apiUrl}/uploads/artists/${photo}`;
   }
 
   getCoverArtUrl(coverArt: string | undefined): string {
@@ -237,22 +280,6 @@ export class DashboardComponent implements OnInit {
       return 'assets/img/placeholder.jpg';
     }
     return coverArt.startsWith('http') ? coverArt : `${environment.apiUrl}/uploads/covers/${coverArt}`;
-  }
-
-  getPipelineTotal(): number {
-    if (!this.dashboardData?.releasePipeline) return 0;
-    return this.dashboardData.releasePipeline.reduce((sum, s) => sum + s.count, 0);
-  }
-
-  getPipelineStageCount(status: string): number {
-    if (!this.dashboardData?.releasePipeline) return 0;
-    return this.dashboardData.releasePipeline.find(s => s.status === status)?.count ?? 0;
-  }
-
-  getPipelinePct(status: string): number {
-    const total = this.getPipelineTotal();
-    if (total === 0) return 0;
-    return Math.round((this.getPipelineStageCount(status) / total) * 100);
   }
 
   goToReleases(): void {
@@ -274,19 +301,5 @@ export class DashboardComponent implements OnInit {
       localStorage.setItem('selected_artist_id', release.artist_id.toString());
     }
     this.router.navigate(['/music/releases/edit', release.id]);
-  }
-
-  goToLatestRelease(): void {
-    const latestRelease = this.dashboardData?.stats?.latestRelease;
-    if (!latestRelease) return;
-
-    // Set the artist for this release as the current artist
-    if (latestRelease.artist_id) {
-      localStorage.setItem('selected_artist_id', latestRelease.artist_id.toString());
-      // We only have partial artist info, so just set the ID - the artist component will fetch full details
-    }
-
-    // Navigate to the release edit page
-    this.router.navigate(['/music/releases/edit', latestRelease.id]);
   }
 }

@@ -1,0 +1,51 @@
+<div *ngIf="!isAllDone" class="tw-bg-white tw-rounded-card tw-shadow-card tw-px-card-pad tw-py-4">
+
+  <!-- Header -->
+  <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+    <span class="tw-text-sm tw-font-medium tw-text-gray-900">Get started</span>
+    <span class="tw-text-xs tw-text-muted">{{ completedCount }} / 4 complete</span>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="tw-rounded-full tw-bg-gray-100" style="height: 4px;">
+    <div class="tw-rounded-full tw-transition-all"
+         style="height: 4px; background: #1D9E75;"
+         [style.width.%]="completedCount * 25"></div>
+  </div>
+
+  <!-- Items -->
+  <ul class="tw-m-0 tw-p-0 tw-list-none tw-mt-3">
+
+    <ng-container *ngFor="let item of items; let last = last">
+      <li [style.border-bottom]="!last ? '0.5px solid #e5e7eb' : 'none'">
+        <a [routerLink]="item.done ? null : item.route"
+           class="tw-flex tw-items-center tw-gap-3 tw-py-2 tw-no-underline tw-transition-colors"
+           [class.hover:tw-bg-gray-50]="!item.done"
+           [class.tw-cursor-pointer]="!item.done"
+           [class.tw-cursor-default]="item.done">
+
+          <!-- Circle checkbox -->
+          <span class="tw-flex-shrink-0 tw-w-[18px] tw-h-[18px] tw-rounded-full tw-flex tw-items-center tw-justify-center tw-flex-shrink-0"
+                style="border: 1.5px solid;"
+                [style.border-color]="item.done ? '#1D9E75' : '#d1d5db'"
+                [style.background]="item.done ? '#1D9E75' : 'transparent'">
+            <app-icon *ngIf="item.done" name="check" iconOnly style="font-size: 9px; color: #fff;" />
+          </span>
+
+          <!-- Label -->
+          <span class="tw-text-sm tw-flex-1"
+                [class.tw-text-gray-800]="!item.done"
+                [class.tw-text-muted]="item.done"
+                [class.tw-line-through]="item.done">
+            {{ item.label }}
+          </span>
+
+          <app-icon *ngIf="!item.done" name="chevron-right" iconOnly class="tw-text-gray-300 tw-flex-shrink-0" />
+
+        </a>
+      </li>
+    </ng-container>
+
+  </ul>
+
+</div>
