@@ -60,11 +60,11 @@
         </app-onboarding-checklist>
 
         <!-- Releases card -->
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-px-card-pad tw-py-4">
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-px-card-pad tw-py-4">
 
           <!-- Card header -->
           <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
-            <span class="tw-text-sm tw-font-medium tw-text-gray-900">Releases</span>
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Releases</h3>
             <a (click)="goToReleases()"
                class="tw-text-xs tw-text-muted tw-cursor-pointer tw-flex tw-items-center tw-gap-1 tw-no-underline hover:tw-text-gray-700 tw-transition-colors">
               All releases <app-icon name="arrow-right" iconOnly />
@@ -133,8 +133,8 @@
       <div class="tw-flex tw-flex-col tw-gap-4">
 
         <!-- Quick actions card -->
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-px-card-pad tw-py-4">
-          <div class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-muted tw-mb-3">Quick actions</div>
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-px-card-pad tw-py-4">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Quick actions</h3>
 
           <a routerLink="/artist/profile"
              class="tw-flex tw-items-center tw-gap-3 tw-py-2.5 tw-no-underline hover:tw-bg-gray-50 tw-transition-colors tw-rounded"
@@ -178,8 +178,8 @@
 
         <!-- Top earning releases card -->
         <div *ngIf="dashboardData.topEarningReleases?.length"
-             class="tw-bg-white tw-rounded-card tw-shadow-card tw-px-card-pad tw-py-4">
-          <div class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-muted tw-mb-3">Top earning releases</div>
+             class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-px-card-pad tw-py-4">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Top earning releases</h3>
 
           <div *ngFor="let r of dashboardData.topEarningReleases; let last = last"
                class="tw-flex tw-items-center tw-gap-2 tw-py-2"

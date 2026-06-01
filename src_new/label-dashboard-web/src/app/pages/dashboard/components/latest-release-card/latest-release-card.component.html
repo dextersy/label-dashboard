@@ -1,10 +1,10 @@
-<div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-cursor-pointer hover:tw-shadow-card-hover tw-transition-shadow"
+<div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:hover:tw-shadow-card-hover tw-overflow-hidden tw-cursor-pointer tw-transition-shadow"
      (click)="goToRelease()">
 
-  <div class="tw-flex tw-items-stretch">
+  <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-stretch">
 
     <!-- Cover art -->
-    <div class="tw-flex-shrink-0" style="width: 110px; min-height: 110px;">
+    <div class="tw-flex-shrink-0 tw-w-full sm:tw-w-[110px] tw-h-[180px] sm:tw-h-auto sm:tw-min-h-[110px]">
       <img [src]="getCoverArtUrl()"
            [alt]="release.title"
            class="tw-w-full tw-h-full tw-object-cover"
@@ -14,35 +14,39 @@
     <!-- Details -->
     <div class="tw-flex tw-flex-col tw-justify-between tw-flex-1 tw-min-w-0 tw-px-card-pad tw-py-4">
 
-      <div>
-        <!-- Label + status -->
-        <div class="tw-flex tw-items-center tw-gap-2 tw-mb-1">
-          <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-muted">Latest Live Release</span>
-          <span class="tw-text-xs tw-font-medium tw-px-2 tw-py-0.5 tw-rounded-full"
-                [ngClass]="getStatusClass()">{{ release.status }}</span>
+      <div class="tw-flex tw-items-end tw-gap-3">
+
+        <!-- Left: label, title, meta -->
+        <div class="tw-flex-1 tw-min-w-0">
+          <!-- Label + status -->
+          <div class="tw-flex tw-items-center tw-gap-2 tw-mb-1">
+            <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-muted">Latest Live Release</span>
+            <span class="tw-text-xs tw-font-medium tw-px-2 tw-py-0.5 tw-rounded-full"
+                  [ngClass]="getStatusClass()">{{ release.status }}</span>
+          </div>
+
+          <!-- Title -->
+          <div class="tw-text-base tw-font-semibold tw-text-gray-900 tw-leading-snug tw-truncate tw-font-heading">
+            {{ release.title }}
+          </div>
+
+          <!-- Catalog + date -->
+          <div class="tw-text-xs tw-text-muted tw-font-mono tw-mt-1">
+            {{ release.catalog_no }}<span *ngIf="release.release_date"> · {{ release.release_date | date:'MMM d, y' }}</span>
+          </div>
         </div>
 
-        <!-- Title -->
-        <div class="tw-text-base tw-font-semibold tw-text-gray-900 tw-leading-snug tw-truncate tw-font-heading">
-          {{ release.title }}
-        </div>
-
-        <!-- Catalog + date -->
-        <div class="tw-text-xs tw-text-muted tw-font-mono tw-mt-1">
-          {{ release.catalog_no }}<span *ngIf="release.release_date"> · {{ release.release_date | date:'MMM d, y' }}</span>
-        </div>
-      </div>
-
-      <!-- Earnings -->
-      <div class="tw-flex tw-items-end tw-justify-between tw-mt-3">
-        <div>
+        <!-- Right: earnings -->
+        <div class="tw-flex-shrink-0 tw-text-right">
           <div class="tw-text-xs tw-text-muted tw-uppercase tw-tracking-wider tw-font-semibold tw-mb-0.5">Net Earnings</div>
           <div class="tw-text-lg tw-font-semibold tw-font-heading" style="color: #111827;">
             {{ formatCurrency(release.net_earnings) }}
           </div>
         </div>
-        <span class="tw-text-xs tw-text-muted tw-hidden sm:tw-inline">View release →</span>
+
       </div>
+
+      <span class="tw-text-xs tw-text-muted tw-hidden sm:tw-inline tw-mt-3">View release →</span>
 
     </div>
 
