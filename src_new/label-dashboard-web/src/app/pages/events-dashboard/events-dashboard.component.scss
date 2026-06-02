@@ -1,1 +1,9 @@
 :host { display: block; }
+
+/* Break hero out of the .content 15px padding on mobile */
+@media (max-width: 991px) {
+  .hero-strip {
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+}
