@@ -29,7 +29,7 @@ export class PaymentsRoyaltiesTabComponent implements OnInit {
 
   artistColumns: TableColumn[] = [
     { key: 'artist_name', label: 'Artist', type: 'text', searchable: true, sortable: true },
-    { key: 'total_payments', label: 'Payments (₱)', type: 'number', searchable: false, sortable: true, align: 'right', formatter: (item) => this.formatCurrency(item.total_payments) },
+    { key: 'total_payments', label: 'Payouts (₱)', type: 'number', searchable: false, sortable: true, align: 'right', formatter: (item) => this.formatCurrency(item.total_payments) },
     { key: 'total_royalties', label: 'Royalties (₱)', type: 'number', searchable: false, sortable: true, align: 'right', formatter: (item) => this.formatCurrency(item.total_royalties) }
   ];
 

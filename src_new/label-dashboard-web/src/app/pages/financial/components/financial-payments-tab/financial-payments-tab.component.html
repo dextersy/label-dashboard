@@ -3,9 +3,9 @@
   <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
     <h3 class="tw-mb-2">
       <app-icon name="credit-card" class="tw-mr-2" />
-      Payments
+      Payouts
     </h3>
-    <p class="tw-mb-0 tw-text-muted">Track payments made to this artist and manage payout settings.</p>
+    <p class="tw-mb-0 tw-text-muted">Track payouts made to this artist and manage payout settings.</p>
   </div>
 </div>
 
@@ -26,12 +26,13 @@
   <div class="md:tw-col-span-4">
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payment Methods</h3>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payout Accounts</h3>
       </div>
       <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+        <p class="tw-text-sm tw-text-muted tw-mb-3">This is where you will receive your payouts.</p>
         <div *ngIf="paymentMethods.length === 0" class="tw-text-center tw-text-muted tw-py-4">
           <app-icon name="credit-card" [size]="40" class="tw-mb-2 tw-opacity-40" iconOnly />
-          <p class="tw-text-sm tw-mb-0">No payment methods added yet.</p>
+          <p class="tw-text-sm tw-mb-0">No payout accounts added yet.</p>
         </div>
         <div *ngIf="paymentMethods.length > 0">
           <div class="list-group list-group-flush">
@@ -60,7 +61,7 @@
                           class="btn-icon payment-method-action-btn payment-method-delete-btn"
                           [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                           (click)="deletePaymentMethod(method.id)"
-                          [title]="method.is_default_for_artist ? 'Cannot delete the default payment method' : (paymentMethods.length === 1 ? 'Cannot delete the only payment method' : 'Delete payment method')">
+                          [title]="method.is_default_for_artist ? 'Cannot delete the default payout account' : (paymentMethods.length === 1 ? 'Cannot delete the only payout account' : 'Delete payout account')">
                     <app-icon name="trash" iconOnly />
                   </button>
                 </div>
@@ -72,7 +73,7 @@
         <div class="tw-mt-3">
           <button type="button" class="btn-ghost-dashed" (click)="toggleAddPaymentMethodCollapse()">
             <app-icon [name]="isAddPaymentMethodCollapsed ? 'plus' : 'x'" class="tw-mr-1.5" />
-            {{ isAddPaymentMethodCollapsed ? 'Add payment method' : 'Cancel' }}
+            {{ isAddPaymentMethodCollapsed ? 'Add payout account' : 'Cancel' }}
           </button>
         </div>
 
@@ -102,7 +103,7 @@
               
               <button type="submit" class="btn-primary btn-sm" [disabled]="addingPaymentMethod">
                 <span *ngIf="addingPaymentMethod" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
-                {{ addingPaymentMethod ? 'Adding...' : 'Add Payment Method' }}
+                {{ addingPaymentMethod ? 'Adding...' : 'Add Payout Account' }}
               </button>
             </form>
           </div>

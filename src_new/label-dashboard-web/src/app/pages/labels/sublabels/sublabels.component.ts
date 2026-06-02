@@ -129,7 +129,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     },
     {
       key: 'payments',
-      label: 'Payments Made',
+      label: 'Payouts Made',
       type: 'number',
       sortable: true,
       align: 'right',

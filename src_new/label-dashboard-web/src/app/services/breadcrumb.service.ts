@@ -49,7 +49,7 @@ export class BreadcrumbService {
     '/financial/documents': { label: 'Documents', parent: '/financial' },
     '/financial/earnings': { label: 'Earnings', parent: '/financial' },
     '/financial/royalties': { label: 'Royalties', parent: '/financial' },
-    '/financial/payments': { label: 'Payments and Advances', parent: '/financial' },
+    '/financial/payments': { label: 'Payouts and Advances', parent: '/financial' },
     '/financial/release': { label: 'Release Information', parent: '/financial' },
     '/financial/royalties/new': { label: 'New Royalty', parent: '/financial/royalties' },
     '/financial/payments/new': { label: 'New Payment', parent: '/financial/payments' },
@@ -92,7 +92,7 @@ export class BreadcrumbService {
     '/labels/reports': { label: 'Reports', icon: 'chart-line', parent: '/labels' },
     '/labels/reports/music-earnings': { label: 'Music Earnings', parent: '/labels/reports' },
     '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },
-    '/labels/reports/payments-royalties': { label: 'Payments & Royalties', parent: '/labels/reports' },
+    '/labels/reports/payments-royalties': { label: 'Payouts & Royalties', parent: '/labels/reports' },
     '/labels/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/labels/reports' },
   };
 

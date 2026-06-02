@@ -88,7 +88,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     },
     {
       key: 'paid_thru_type',
-      label: 'Method',
+      label: 'Payout Account',
       type: 'text',
       searchable: true,
       sortable: true,

@@ -83,7 +83,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     { key: 'date_paid', label: 'Date', sortable: false, formatter: (item: any) => new Date(item.date_paid).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }), hideDataLabel: true },
     { key: 'description', label: 'Description', sortable: false, cardHeader: true, formatter: (item: any) => item.description || 'Payment received' , hideDataLabel: true},
     { key: 'amount', label: 'Amount', sortable: false, align: 'right', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.amount), hideDataLabel: true },
-    { key: 'payment_method', label: 'Payment Method', sortable: false, tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatPaymentMethod(item), hideDataLabel: true },
+    { key: 'payment_method', label: 'Payout Account', sortable: false, tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatPaymentMethod(item), hideDataLabel: true },
     { key: 'reference_number', label: 'Reference', sortable: false, mobileClass: 'mobile-hide', formatter: (item: any) => item.reference_number || 'N/A', hideDataLabel: true },
     { key: 'status', label: 'Status', sortable: false, renderHtml: true, hideDataLabel: true, formatter: (item: any) => this.formatStatus(item.status, item.failure_reason) },
   ];
@@ -319,14 +319,14 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.adminService.addLabelPaymentMethod(paymentMethodData as LabelPaymentMethod).subscribe({
         next: () => {
-          this.notificationService.showSuccess('Payment method added successfully');
+          this.notificationService.showSuccess('Payout account added successfully');
           this.closeAddPaymentMethodModal();
           this.loadPaymentMethods();
           this.isAddingPaymentMethod = false;
         },
         error: (error) => {
           console.error('Error adding payment method:', error);
-          this.notificationService.showError('Failed to add payment method');
+          this.notificationService.showError('Failed to add payout account');
           this.isAddingPaymentMethod = false;
         }
       })
@@ -339,12 +339,12 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.adminService.setDefaultLabelPaymentMethod(method.id).subscribe({
         next: () => {
-          this.notificationService.showSuccess('Default payment method updated');
+          this.notificationService.showSuccess('Default payout account updated');
           this.loadPaymentMethods();
         },
         error: (error) => {
           console.error('Error setting default payment method:', error);
-          this.notificationService.showError('Failed to update default payment method');
+          this.notificationService.showError('Failed to update default payout account');
         }
       })
     );
@@ -352,7 +352,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
 
   deletePaymentMethod(method: LabelPaymentMethod): void {
     this.confirmationService.confirm({
-      title: 'Remove Payment Method',
+      title: 'Remove Payout Account',
       message: `Remove "${method.type} - ${method.account_name}"?`,
       warning: 'This cannot be undone.',
       confirmText: 'Remove',
@@ -364,12 +364,12 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
       this.subscriptions.add(
         this.adminService.deleteLabelPaymentMethod(method.id).subscribe({
           next: () => {
-            this.notificationService.showSuccess('Payment method removed');
+            this.notificationService.showSuccess('Payout account removed');
             this.loadPaymentMethods();
           },
           error: (error) => {
             console.error('Error deleting payment method:', error);
-            this.notificationService.showError('Failed to remove payment method');
+            this.notificationService.showError('Failed to remove payout account');
           }
         })
       );

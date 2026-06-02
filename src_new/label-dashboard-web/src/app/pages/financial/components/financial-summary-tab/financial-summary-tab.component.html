@@ -61,7 +61,7 @@
         <a class="financial-item-link">View all</a>
       </div>
       <div class="financial-summary-item" (click)="viewPaymentsDetails.emit()">
-        <span class="financial-item-label">Total Payments</span>
+        <span class="financial-item-label">Total Payouts</span>
         <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
         <a class="financial-item-link">View all</a>
       </div>

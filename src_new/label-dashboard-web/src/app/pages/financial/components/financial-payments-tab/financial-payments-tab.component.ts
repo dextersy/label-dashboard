@@ -62,8 +62,8 @@ export class FinancialPaymentsTabComponent {
 
   async deletePaymentMethod(paymentMethodId: number): Promise<void> {
     const confirmed = await this.confirmationService.confirm({
-      title: 'Delete Payment Method',
-      message: 'Are you sure you want to delete this payment method?',
+      title: 'Delete Payout Account',
+      message: 'Are you sure you want to delete this payout account?',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       type: 'danger'

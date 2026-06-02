@@ -83,9 +83,9 @@
               [disabled]="submitting">
           </div>
 
-          <!-- Payment Method Selection -->
+          <!-- Payout Account Selection -->
           <div class="tw-mb-3">
-            <label for="payment_method_id" class="tw-label">Payment Method</label>
+            <label for="payment_method_id" class="tw-label">Payout Account</label>
             <select
               id="payment_method_id"
               name="payment_method_id"
@@ -93,7 +93,7 @@
               [(ngModel)]="selectedPaymentMethodId"
               (change)="onPaymentMethodChange()"
               [disabled]="submitting || loadingPaymentMethods">
-              <option value="">-- Select Payment Method --</option>
+              <option value="">-- Select Payout Account --</option>
               <option value="-1">Manual Payment (Enter details below)</option>
               <option 
                 *ngFor="let method of paymentMethods" 
@@ -102,7 +102,7 @@
               </option>
             </select>
             <div class="form-text" *ngIf="loadingPaymentMethods">
-              <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" /> Loading payment methods...
+              <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" /> Loading payout accounts...
             </div>
           </div>
 

@@ -54,7 +54,7 @@ export class SublabelPaymentsModalComponent implements OnChanges {
     { key: 'description', label: 'Description', type: 'text', sortable: true, searchable: false, mobileGroup: 'summary', mobileGroupMain: true },
     {
       key: 'paid_thru_type',
-      label: 'Method',
+      label: 'Payout Account',
       type: 'text',
       sortable: false,
       searchable: false,

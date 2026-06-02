@@ -120,7 +120,7 @@ export class InAppNotificationService implements OnDestroy {
       'release_submitted': 'Release submitted',
       'release_pending': 'Release pending',
       'artist_updated': 'Artist updated',
-      'payment_method_updated': 'Payment method updated',
+      'payment_method_updated': 'Payout account updated',
       'payout_point_updated': 'Payout point updated',
       'team_invite': 'Team invite',
       'user_invite': 'Invite',

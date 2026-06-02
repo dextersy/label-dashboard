@@ -119,7 +119,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/financial/documents', title: 'Documents', adminOnly: false },
             { route: '/financial/earnings', title: 'Earnings', adminOnly: false },
             { route: '/financial/royalties', title: 'Royalties', adminOnly: false },
-            { route: '/financial/payments', title: 'Payments and Advances', adminOnly: false },
+            { route: '/financial/payments', title: 'Payouts and Advances', adminOnly: false },
             { route: '/financial/release', title: 'Release Information', adminOnly: false }
           ]
         },
@@ -192,7 +192,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
               children: [
                 { route: '/labels/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
                 { route: '/labels/reports/artist-balances', title: 'Artist Balances', adminOnly: true },
-                { route: '/labels/reports/payments-royalties', title: 'Payments & Royalties', adminOnly: true },
+                { route: '/labels/reports/payments-royalties', title: 'Payouts & Royalties', adminOnly: true },
                 { route: '/labels/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
               ]
             },

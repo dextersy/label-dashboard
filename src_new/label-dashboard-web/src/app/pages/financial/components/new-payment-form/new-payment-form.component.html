@@ -35,7 +35,7 @@
           <div>
             <label class="tw-label">Paid through</label>
             <select class="tw-input" [(ngModel)]="selectedPaymentMethodId" (change)="onPaymentMethodChange($event)" name="paymentMethodSelect" required>
-              <option value="">Select payment method</option>
+              <option value="">Select payout account</option>
               <option value="-1">Non-cash / adjustment</option>
               <option *ngFor="let method of paymentMethods" [value]="method.id">
                 {{method.type}} - {{method.account_name}} - {{method.account_number_or_email}}

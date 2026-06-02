@@ -65,7 +65,7 @@
             <span class="brand-card__stat-value">₱{{ brand.platform_fees | number:'1.2-2' }}</span>
           </div>
           <div class="brand-card__stat brand-card__stat--clickable" (click)="onBreakdownButtonClick({item: brand, columnKey: 'payments'})">
-            <span class="brand-card__stat-label">Payments</span>
+            <span class="brand-card__stat-label">Payouts</span>
             <span class="brand-card__stat-value">₱{{ brand.payments | number:'1.2-2' }}</span>
           </div>
         </div>
@@ -116,7 +116,7 @@
         <app-icon name="currency" class="tw-text-xl tw-text-gray-400 tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</div>
-          <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Payments Made</div>
+          <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Payouts Made</div>
         </div>
       </div>
 

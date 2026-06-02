@@ -23,7 +23,7 @@ export class OnboardingChecklistComponent {
     return [
       { label: 'Update your profile',            route: '/artist/profile',      done: this.checklist.hasProfile },
       { label: 'Upload photos to your gallery',  route: '/artist/gallery',      done: this.checklist.hasGalleryPhotos },
-      { label: 'Set up your settlement account', route: '/financial/payments',  done: this.checklist.hasSettlementAccount },
+      { label: 'Set up your payout account', route: '/financial/payments',  done: this.checklist.hasSettlementAccount },
       { label: 'Create your first release',      route: '/music/releases/new',  done: this.checklist.hasRelease }
     ];
   }

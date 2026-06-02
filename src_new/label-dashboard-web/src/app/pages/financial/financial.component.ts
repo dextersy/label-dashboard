@@ -569,12 +569,12 @@ export class FinancialComponent implements OnInit, OnDestroy {
       };
 
       await this.financialService.addPaymentMethod(this.selectedArtist.id, paymentMethodData);
-      this.notificationService.showSuccess('Payment method added successfully');
+      this.notificationService.showSuccess('Payout account added successfully');
       this.resetPaymentMethodForm();
       this.loadPaymentMethods();
     } catch (error) {
       console.error('Error adding payment method:', error);
-      this.notificationService.showError('Failed to add payment method');
+      this.notificationService.showError('Failed to add payout account');
     } finally {
       this.addingPaymentMethod = false;
     }
@@ -597,11 +597,11 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
     try {
       await this.financialService.deletePaymentMethod(this.selectedArtist.id, paymentMethodId);
-      this.notificationService.showSuccess('Payment method deleted successfully');
+      this.notificationService.showSuccess('Payout account deleted successfully');
       this.loadPaymentMethods();
     } catch (error) {
       console.error('Error deleting payment method:', error);
-      this.notificationService.showError('Failed to delete payment method');
+      this.notificationService.showError('Failed to delete payout account');
     }
   }
 
@@ -610,11 +610,11 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
     try {
       await this.financialService.setDefaultPaymentMethod(this.selectedArtist.id, paymentMethodId);
-      this.notificationService.showSuccess('Default payment method updated successfully');
+      this.notificationService.showSuccess('Default payout account updated successfully');
       this.loadPaymentMethods();
     } catch (error) {
       console.error('Error setting default payment method:', error);
-      this.notificationService.showError('Failed to set default payment method');
+      this.notificationService.showError('Failed to set default payout account');
     }
   }
 
