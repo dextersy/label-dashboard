@@ -59,7 +59,7 @@
             class="view-full-image-btn"
             (click)="openLightbox(); $event.stopPropagation()"
             title="View full image">
-            <app-icon name="info" class="fa-search-plus" />
+            <app-icon name="expand" iconOnly />
           </button>
         </div>
       </div>
@@ -227,11 +227,11 @@
   <div class="lightbox-overlay" *ngIf="showLightbox" (click)="closeLightbox()">
     <div class="lightbox-content" (click)="$event.stopPropagation()">
       <button class="lightbox-close" (click)="closeLightbox()">
-        <app-icon name="x" />
+        <app-icon name="x" iconOnly />
       </button>
       <img [src]="fundraiser?.poster_url" class="lightbox-image" alt="Fundraiser poster">
       <div class="lightbox-caption" *ngIf="fundraiser?.description">
-        <p style="white-space: pre-wrap;">{{ fundraiser?.description }}</p>
+        <p [innerHTML]="sanitizeHtml(fundraiser?.description || '')"></p>
       </div>
     </div>
   </div>
