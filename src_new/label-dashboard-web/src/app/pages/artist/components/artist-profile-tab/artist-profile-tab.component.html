@@ -13,58 +13,16 @@
 
   <form id="profileForm" (ngSubmit)="saveProfile()" #profileForm="ngForm" *ngIf="artist">
 
-    <!-- Top row: Basic Info + Photo -->
+    <!-- Top row: Photo (left) + Basic Info (right) -->
     <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-6 tw-mb-6">
 
-      <!-- Basic Information -->
-      <div class="lg:tw-col-span-2 tw-bg-white lg:tw-rounded-card lg:tw-shadow-card lg:tw-p-6">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Basic Information</h3>
-        <div class="tw-space-y-4">
-          <div>
-            <label for="artistName" class="tw-label">Artist Name <span class="tw-text-danger">*</span></label>
-            <input type="text"
-                   class="tw-input"
-                   id="artistName"
-                   name="artistName"
-                   [(ngModel)]="editingProfile.name"
-                   required
-                   placeholder="Enter artist name">
-          </div>
-          <div>
-            <label for="bandMembers" class="tw-label">Band Members</label>
-            <textarea class="tw-input"
-                      id="bandMembers"
-                      name="bandMembers"
-                      rows="3"
-                      [(ngModel)]="editingProfile.band_members"
-                      placeholder="Enter band members, one per line or separated by commas"></textarea>
-          </div>
-          <div>
-            <label for="bio" class="tw-label">Biography</label>
-            <quill-editor
-              id="bio"
-              name="bio"
-              [(ngModel)]="editingProfile.bio"
-              [modules]="quillConfig"
-              (onContentChanged)="onBioContentChanged($event)"
-              placeholder="Tell us about the artist...">
-            </quill-editor>
-            <p class="tw-mt-1 tw-text-xs"
-               [class.tw-text-danger]="bioCharCount > bioCharLimit"
-               [class.tw-text-muted]="bioCharCount <= bioCharLimit">
-              {{ bioCharCount | number }} / {{ bioCharLimit | number }} characters
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Profile Photo -->
-      <div class="tw-bg-white lg:tw-rounded-card lg:tw-shadow-card lg:tw-p-6">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Profile Photo</h3>
-        <div class="tw-flex tw-flex-col tw-items-center tw-gap-5">
+      <!-- Profile Photo — first in DOM so it appears on top on mobile -->
+      <div class="tw-bg-white lg:tw-rounded-card lg:tw-shadow-card lg:tw-p-6 tw-flex tw-flex-col tw-items-center tw-gap-5">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0 tw-self-start">Profile Photo</h3>
+        <div class="tw-flex tw-flex-col tw-items-center tw-gap-4 tw-w-full">
           <img [src]="getProfilePhotoUrl()"
                [alt]="editingProfile.name"
-               class="tw-w-32 tw-h-32 tw-rounded-full tw-object-cover tw-border-2 tw-border-gray-100">
+               class="tw-w-72 tw-h-72 tw-rounded-full tw-object-cover tw-border-4 tw-border-gray-100 tw-shadow-md">
           <div class="tw-w-full tw-space-y-1">
             <label for="profilePhoto" class="tw-label">Upload New Photo</label>
             <input type="file"
@@ -90,66 +48,233 @@
         </div>
       </div>
 
+      <!-- Basic Information -->
+      <div class="lg:tw-col-span-2 tw-bg-white lg:tw-rounded-card lg:tw-shadow-card lg:tw-p-6">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Basic Information</h3>
+        <div class="tw-space-y-5">
+
+          <!-- Artist Name -->
+          <div>
+            <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Artist Name</p>
+            <div *ngIf="!isEditing('name')" class="tw-flex tw-items-center tw-gap-1">
+              <span class="tw-text-base tw-text-gray-800">{{ editingProfile.name || '—' }}</span>
+              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('name')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="isEditing('name')" class="tw-flex tw-items-center tw-gap-1">
+              <input type="text"
+                     class="tw-input"
+                     id="artistName"
+                     name="artistName"
+                     [(ngModel)]="editingProfile.name"
+                     required
+                     placeholder="Enter artist name"
+                     [style.width]="inputWidth(editingProfile.name, 'Enter artist name')"
+                     style="max-width: 100%">
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('name')" title="Save">
+                <app-icon name="check" iconOnly />
+              </button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('name')" title="Cancel">
+                <app-icon name="x" iconOnly />
+              </button>
+            </div>
+          </div>
+
+          <!-- Band Members -->
+          <div>
+            <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Band Members</p>
+            <div *ngIf="!isEditing('band_members')" class="tw-flex tw-items-start tw-gap-1">
+              <span class="tw-text-base tw-text-gray-800 tw-whitespace-pre-line">{{ editingProfile.band_members || '—' }}</span>
+              <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('band_members')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="isEditing('band_members')" class="tw-flex tw-items-start tw-gap-1">
+              <textarea class="tw-input"
+                        id="bandMembers"
+                        name="bandMembers"
+                        rows="3"
+                        [(ngModel)]="editingProfile.band_members"
+                        placeholder="Enter band members, one per line or separated by commas"></textarea>
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('band_members')" title="Save">
+                <app-icon name="check" iconOnly />
+              </button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('band_members')" title="Cancel">
+                <app-icon name="x" iconOnly />
+              </button>
+            </div>
+          </div>
+
+          <!-- Biography -->
+          <div>
+            <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Biography</p>
+            <div *ngIf="!isEditing('bio')" class="tw-flex tw-items-start tw-gap-1">
+              <div class="tw-flex-1 tw-min-w-0">
+                <div *ngIf="editingProfile.bio" class="tw-text-base tw-text-gray-800 tw-prose tw-prose-sm tw-max-w-none" [innerHTML]="editingProfile.bio"></div>
+                <span *ngIf="!editingProfile.bio" class="tw-text-base tw-text-gray-800">—</span>
+              </div>
+              <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('bio')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="isEditing('bio')">
+              <quill-editor
+                id="bio"
+                name="bio"
+                [(ngModel)]="editingProfile.bio"
+                [modules]="quillConfig"
+                (onContentChanged)="onBioContentChanged($event)"
+                placeholder="Tell us about the artist...">
+              </quill-editor>
+              <div class="tw-flex tw-items-center tw-justify-between tw-mt-1">
+                <p class="tw-text-xs tw-mb-0"
+                   [class.tw-text-danger]="bioCharCount > bioCharLimit"
+                   [class.tw-text-muted]="bioCharCount <= bioCharLimit">
+                  {{ bioCharCount | number }} / {{ bioCharLimit | number }} characters
+                </p>
+                <div class="tw-flex tw-gap-1">
+                  <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('bio')" title="Save">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('bio')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
 
     <!-- Social Media & Links -->
     <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-6 tw-mb-6">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Social Media & Links</h3>
-      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5">
+
+        <!-- Website -->
         <div>
-          <label for="website" class="tw-label">Website</label>
-          <input type="url"
-                 class="tw-input"
-                 id="website"
-                 name="website"
-                 [(ngModel)]="editingProfile.website_page_url"
-                 placeholder="https://www.example.com">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Website</p>
+          <div *ngIf="!isEditing('website_page_url')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800 tw-break-all">{{ editingProfile.website_page_url || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('website_page_url')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('website_page_url')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="url" class="tw-input" id="website" name="website" [(ngModel)]="editingProfile.website_page_url" placeholder="https://www.example.com" [style.width]="inputWidth(editingProfile.website_page_url, 'https://www.example.com')" style="max-width: 100%">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('website_page_url')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('website_page_url')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
         </div>
+
+        <!-- Facebook -->
         <div>
-          <label for="facebook" class="tw-label">Facebook</label>
-          <input type="text"
-                 class="tw-input"
-                 id="facebook"
-                 name="facebook"
-                 [(ngModel)]="editingProfile.facebook_handle"
-                 placeholder="Facebook username">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Facebook</p>
+          <div *ngIf="!isEditing('facebook_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800">{{ editingProfile.facebook_handle || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('facebook_handle')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('facebook_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text" class="tw-input" id="facebook" name="facebook" [(ngModel)]="editingProfile.facebook_handle" placeholder="Facebook username" [style.width]="inputWidth(editingProfile.facebook_handle, 'Facebook username')" style="max-width: 100%">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('facebook_handle')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('facebook_handle')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
         </div>
+
+        <!-- Instagram -->
         <div>
-          <label for="instagram" class="tw-label">Instagram</label>
-          <input type="text"
-                 class="tw-input"
-                 id="instagram"
-                 name="instagram"
-                 [(ngModel)]="editingProfile.instagram_handle"
-                 placeholder="Instagram username">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Instagram</p>
+          <div *ngIf="!isEditing('instagram_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800">{{ editingProfile.instagram_handle || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('instagram_handle')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('instagram_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text" class="tw-input" id="instagram" name="instagram" [(ngModel)]="editingProfile.instagram_handle" placeholder="Instagram username" [style.width]="inputWidth(editingProfile.instagram_handle, 'Instagram username')" style="max-width: 100%">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('instagram_handle')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('instagram_handle')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
         </div>
+
+        <!-- Twitter / X -->
         <div>
-          <label for="twitter" class="tw-label">Twitter / X</label>
-          <input type="text"
-                 class="tw-input"
-                 id="twitter"
-                 name="twitter"
-                 [(ngModel)]="editingProfile.twitter_handle"
-                 placeholder="Twitter username">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Twitter / X</p>
+          <div *ngIf="!isEditing('twitter_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800">{{ editingProfile.twitter_handle || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('twitter_handle')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('twitter_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text" class="tw-input" id="twitter" name="twitter" [(ngModel)]="editingProfile.twitter_handle" placeholder="Twitter username" [style.width]="inputWidth(editingProfile.twitter_handle, 'Twitter username')" style="max-width: 100%">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('twitter_handle')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('twitter_handle')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
         </div>
+
+        <!-- TikTok -->
         <div>
-          <label for="tiktok" class="tw-label">TikTok</label>
-          <input type="text"
-                 class="tw-input"
-                 id="tiktok"
-                 name="tiktok"
-                 [(ngModel)]="editingProfile.tiktok_handle"
-                 placeholder="TikTok username">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">TikTok</p>
+          <div *ngIf="!isEditing('tiktok_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800">{{ editingProfile.tiktok_handle || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('tiktok_handle')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('tiktok_handle')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text" class="tw-input" id="tiktok" name="tiktok" [(ngModel)]="editingProfile.tiktok_handle" placeholder="TikTok username" [style.width]="inputWidth(editingProfile.tiktok_handle, 'TikTok username')" style="max-width: 100%">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('tiktok_handle')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('tiktok_handle')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
         </div>
+
+        <!-- YouTube -->
         <div>
-          <label for="youtube" class="tw-label">YouTube Channel</label>
-          <input type="text"
-                 class="tw-input"
-                 id="youtube"
-                 name="youtube"
-                 [(ngModel)]="editingProfile.youtube_channel"
-                 placeholder="YouTube channel URL or name">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">YouTube Channel</p>
+          <div *ngIf="!isEditing('youtube_channel')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800 tw-break-all">{{ editingProfile.youtube_channel || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_channel')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('youtube_channel')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text" class="tw-input" id="youtube" name="youtube" [(ngModel)]="editingProfile.youtube_channel" placeholder="YouTube channel URL or name" [style.width]="inputWidth(editingProfile.youtube_channel, 'YouTube channel URL or name')" style="max-width: 100%">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('youtube_channel')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('youtube_channel')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
 
@@ -157,7 +282,7 @@
 </div>
 
 <!-- Floating Action Bar -->
-<app-floating-action-bar *ngIf="artist">
+<app-floating-action-bar *ngIf="artist && hasDirtyFields()">
   <button type="button"
           class="btn-primary fab-primary-btn"
           [disabled]="saving || !isFormValid()"

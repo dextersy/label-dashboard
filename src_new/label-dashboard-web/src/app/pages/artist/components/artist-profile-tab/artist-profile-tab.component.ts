@@ -53,6 +53,68 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   selectedFile: File | null = null;
   uploadProgress = 0;
 
+  editingFields: Set<string> = new Set();
+  dirtyFields: Set<string> = new Set();
+  private fieldOriginals: Map<string, any> = new Map();
+  private savedProfile: ArtistProfile | null = null;
+
+  startEditing(field: string): void {
+    this.fieldOriginals.set(field, (this.editingProfile as any)[field]);
+    this.editingFields.add(field);
+  }
+
+  cancelEditing(field: string): void {
+    if (this.fieldOriginals.has(field)) {
+      (this.editingProfile as any)[field] = this.fieldOriginals.get(field);
+      if (field === 'bio') {
+        this.bioCharCount = this.getPlainTextLength(this.editingProfile.bio || '');
+      }
+      this.fieldOriginals.delete(field);
+    }
+    this.editingFields.delete(field);
+    // Re-check against DB snapshot — field may still be dirty from a previous edit session
+    const savedValue = this.savedProfile ? (this.savedProfile as any)[field] : undefined;
+    const currentValue = (this.editingProfile as any)[field];
+    if (currentValue !== savedValue) {
+      this.dirtyFields.add(field);
+    } else {
+      this.dirtyFields.delete(field);
+    }
+  }
+
+  stopEditing(field: string): void {
+    this.fieldOriginals.delete(field);
+    this.editingFields.delete(field);
+    const savedValue = this.savedProfile ? (this.savedProfile as any)[field] : undefined;
+    const currentValue = (this.editingProfile as any)[field];
+    if (currentValue !== savedValue) {
+      this.dirtyFields.add(field);
+    } else {
+      this.dirtyFields.delete(field);
+    }
+  }
+
+  isEditing(field: string): boolean {
+    return this.editingFields.has(field);
+  }
+
+  hasActiveEdits(): boolean {
+    return this.editingFields.size > 0;
+  }
+
+  hasDirtyFields(): boolean {
+    return this.dirtyFields.size > 0;
+  }
+
+  isFormDirty(): boolean {
+    return this.dirtyFields.size > 0;
+  }
+
+  inputWidth(value: string | undefined, placeholder: string = ''): string {
+    const len = Math.max(value?.length || 0, placeholder.length, 10);
+    return (len + 4) + 'ch';
+  }
+
   quillConfig = {
     toolbar: [
       ['bold', 'italic'],
@@ -86,7 +148,7 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     if (this.artist) {
       this.editingProfile = { ...this.artist };
-      // Initialize bio character count from loaded content
+      this.savedProfile = { ...this.artist };
       this.bioCharCount = this.getPlainTextLength(this.artist.bio || '');
     }
   }
@@ -94,8 +156,11 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   ngOnChanges(): void {
     if (this.artist) {
       this.editingProfile = { ...this.artist };
-      // Initialize bio character count from loaded content
+      this.savedProfile = { ...this.artist };
       this.bioCharCount = this.getPlainTextLength(this.artist.bio || '');
+      this.dirtyFields.clear();
+      this.editingFields.clear();
+      this.fieldOriginals.clear();
     }
   }
 
@@ -191,6 +256,8 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
               message: response.message || 'Artist profile updated successfully!'
             });
             this.selectedFile = null;
+            this.dirtyFields.clear();
+            this.savedProfile = { ...response.artist };
           } else {
             this.alertMessage.emit({
               type: 'error',
