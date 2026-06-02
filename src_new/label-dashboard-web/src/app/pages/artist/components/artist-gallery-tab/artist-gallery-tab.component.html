@@ -74,11 +74,11 @@
            [cdkDropListDisabled]="!reorderMode"
            (cdkDropListDropped)="onDrop($event)">
         <div class="photo-item" *ngFor="let photo of filteredPhotos" cdkDrag [cdkDragDisabled]="!reorderMode">
-          <div class="photo-container" [class.excluded]="photo.exclude_from_epk">
+          <div class="photo-container" [class.excluded]="photo.exclude_from_epk" (click)="closeKebabMenu()">
             <img [src]="getPhotoUrl(photo)"
                  [alt]="photo.caption || 'Artist photo'"
                  class="photo-image"
-                 (dblclick)="onPhotoDoubleClick(photo)">
+                 (click)="openLightbox(photo)">
 
             <div class="drag-handle" *ngIf="reorderMode" cdkDragHandle>
               <app-icon name="drag" iconOnly />
@@ -88,29 +88,18 @@
               <app-icon name="eye-off" iconOnly />
             </div>
 
-            <div class="photo-overlay" *ngIf="!reorderMode">
+            <!-- Desktop overlay (hidden on mobile) -->
+            <div class="photo-overlay desktop-overlay" *ngIf="!reorderMode">
               <div class="photo-actions">
-                <button class="btn-sm btn-secondary btn-icon"
-                        (click)="openLightbox(photo)"
-                        title="View photo">
-                  <app-icon name="eye" iconOnly />
-                </button>
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="setAsProfilePhoto(photo)"
                         title="Set as profile photo">
                   <app-icon name="user" iconOnly />
                 </button>
-                <button class="btn-sm btn-icon"
-                        [ngClass]="photo.exclude_from_epk ? 'btn-secondary' : 'btn-secondary'"
+                <button class="btn-sm btn-icon btn-secondary"
                         (click)="toggleExcludeFromEPK(photo)"
                         [title]="photo.exclude_from_epk ? 'Excluded from EPK (click to include)' : 'Included in EPK (click to exclude)'">
                   <app-icon [name]="photo.exclude_from_epk ? 'eye-off' : 'globe'" iconOnly />
-                </button>
-                <button class="btn-sm btn-secondary btn-icon"
-                        (click)="startEditingCaption(photo)"
-                        *ngIf="!editingCaptions[photo.id]"
-                        title="Edit caption">
-                  <app-icon name="edit" iconOnly />
                 </button>
                 <button class="btn-sm btn-danger btn-icon"
                         (click)="deletePhoto(photo)"
@@ -119,13 +108,44 @@
                 </button>
               </div>
             </div>
+
+          </div>
+
+          <!-- Mobile kebab menu (outside photo-container to avoid overflow:hidden clipping) -->
+          <div class="mobile-kebab" *ngIf="!reorderMode">
+            <button class="kebab-btn"
+                    (click)="toggleKebabMenu(photo.id, $event)"
+                    title="More actions">
+              <app-icon name="more-vertical" iconOnly />
+            </button>
+            <div class="kebab-menu" *ngIf="openKebabMenuId === photo.id" (click)="$event.stopPropagation()">
+              <button class="kebab-menu-item" (click)="setAsProfilePhoto(photo); closeKebabMenu()">
+                <app-icon name="user" /> Set as profile photo
+              </button>
+              <button class="kebab-menu-item" (click)="toggleExcludeFromEPK(photo); closeKebabMenu()">
+                <app-icon [name]="photo.exclude_from_epk ? 'eye' : 'eye-off'" />
+                {{ photo.exclude_from_epk ? 'Include in EPK' : 'Hide from EPK' }}
+              </button>
+              <button class="kebab-menu-item kebab-menu-item--danger" (click)="deletePhoto(photo); closeKebabMenu()">
+                <app-icon name="trash" /> Delete photo
+              </button>
+            </div>
           </div>
 
           <div class="photo-caption">
             <div *ngIf="!editingCaptions[photo.id]" class="caption-display">
-              <p *ngIf="photo.caption" class="caption-text">{{ photo.caption }}</p>
-              <p *ngIf="!photo.caption" class="caption-empty">No caption</p>
-              <small class="caption-date">{{ formatDate(photo.upload_date) }}</small>
+              <div class="caption-text-row">
+                <div class="caption-text-content">
+                  <p *ngIf="photo.caption" class="caption-text">{{ photo.caption }}</p>
+                  <p *ngIf="!photo.caption" class="caption-empty">No caption</p>
+                  <small class="caption-date">Uploaded on {{ formatDate(photo.upload_date) }}</small>
+                </div>
+                <button class="btn-sm btn-secondary btn-icon caption-edit-btn"
+                        (click)="startEditingCaption(photo)"
+                        title="Edit caption">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </div>
             </div>
 
             <div *ngIf="editingCaptions[photo.id]" class="caption-edit">

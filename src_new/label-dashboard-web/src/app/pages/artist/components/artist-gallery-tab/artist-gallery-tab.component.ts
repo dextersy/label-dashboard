@@ -49,6 +49,9 @@ export class ArtistGalleryTabComponent {
   lightboxImageAlt = '';
   lightboxCaption = '';
 
+  // Kebab menu (mobile)
+  openKebabMenuId: number | null = null;
+
   constructor(
     private http: HttpClient,
     private confirmationService: ConfirmationService
@@ -434,6 +437,15 @@ export class ArtistGalleryTabComponent {
 
   onPhotoDoubleClick(photo: ArtistPhoto): void {
     this.openLightbox(photo);
+  }
+
+  toggleKebabMenu(photoId: number, event: Event): void {
+    event.stopPropagation();
+    this.openKebabMenuId = this.openKebabMenuId === photoId ? null : photoId;
+  }
+
+  closeKebabMenu(): void {
+    this.openKebabMenuId = null;
   }
 
   async setAsProfilePhoto(photo: ArtistPhoto): Promise<void> {
