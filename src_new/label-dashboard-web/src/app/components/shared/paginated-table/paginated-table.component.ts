@@ -1,8 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, TemplateRef, ContentChild, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, TemplateRef, ContentChild, HostListener, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../icon/icon.component';
-import { SafeHtml } from '@angular/platform-browser';
+import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 
 export interface PaginationInfo {
   current_page: number;
@@ -68,6 +68,11 @@ export interface SortInfo {
     styleUrl: './paginated-table.component.scss'
 })
 export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
+  // Prevent the `title` @Input from leaking onto the host element as an HTML attribute,
+  // which would override all inner title tooltips with the table's title text.
+  @HostBinding('attr.title') protected readonly hostTitle = null;
+
+  constructor(private sanitizer: DomSanitizer) {}
   @Input() title: string = '';
   @Input() data: any[] = [];
   @Input() pagination: PaginationInfo | null = null;
@@ -363,7 +368,11 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   getColumnValue(item: any, column: TableColumn): any {
     // Use custom formatter if provided
     if (column.formatter) {
-      return column.formatter(item);
+      const result = column.formatter(item);
+      if (column.renderHtml && typeof result === 'string') {
+        return this.sanitizer.bypassSecurityTrustHtml(result);
+      }
+      return result;
     }
     
     const value = item[column.key];
