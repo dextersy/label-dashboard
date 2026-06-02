@@ -74,7 +74,7 @@ export const routes: Routes = [
     path: 'artist',
     canActivate: [authGuard, artistSelectedGuard],
     children: [
-      { path: 'profile', component: ArtistComponent, data: { tab: 'profile' } },
+      { path: 'profile', component: ArtistComponent, data: { tab: 'profile' }, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'gallery', component: ArtistComponent, data: { tab: 'gallery' } },
       { path: 'epk', component: ArtistComponent, data: { tab: 'manage-epk' } },
       { path: 'new', component: AddNewArtistComponent, canActivate: [adminGuard] }

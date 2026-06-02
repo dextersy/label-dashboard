@@ -15,6 +15,7 @@ import { AuthService } from '../../services/auth.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from '../../../environments/environment';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 
 export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'manage-epk';
 
@@ -32,14 +33,20 @@ export type TabType = 'profile' | 'gallery' | 'releases' | 'team' | 'manage-epk'
     templateUrl: './artist.component.html',
     styleUrl: './artist.component.scss'
 })
-export class ArtistComponent implements OnInit, OnDestroy {
+export class ArtistComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   
+  @ViewChild(ArtistProfileTabComponent) profileTab?: ArtistProfileTabComponent;
+
   selectedArtist: Artist | null = null;
   activeTab: TabType = 'profile';
   isAdmin = false;
   loading = false;
   availableArtists: Artist[] = [];
   private routeSubscription: Subscription = new Subscription();
+
+  isFormDirty(): boolean {
+    return this.profileTab?.isFormDirty() ?? false;
+  }
 
   constructor(
     private notificationService: NotificationService,
