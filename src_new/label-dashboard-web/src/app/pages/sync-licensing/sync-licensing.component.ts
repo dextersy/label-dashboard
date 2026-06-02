@@ -56,15 +56,15 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         const validSongs = songs.filter(s => this.getSongWarnings(s).length === 0);
 
         const validTooltip = validSongs.map(s => this.escapeHtml(s.title)).join('&#10;');
-        const checkSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-green-600" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
-        let html = `<span class="tw-inline-flex tw-items-center tw-gap-1">${checkSvg}<span title="${validTooltip}">${validSongs.length}</span></span>`;
+        const checkSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+        let html = `<span title="${validTooltip}" style="display:inline-flex;align-items:center;gap:4px;cursor:default">${checkSvg}${validSongs.length}</span>`;
 
         if (warnSongs.length > 0) {
           const warnTooltip = warnSongs
             .map(s => `${this.escapeHtml(s.title)}: ${this.getSongWarnings(s).join(', ')}`)
             .join('&#10;');
-          const warnSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="tw-text-amber-500" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
-          html += ` <span class="tw-inline-flex tw-items-center tw-gap-1 tw-ml-2">${warnSvg}<span title="${warnTooltip}">${warnSongs.length}</span></span>`;
+          const warnSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+          html += ` <span title="${warnTooltip}" style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;cursor:default">${warnSvg}${warnSongs.length}</span>`;
         }
 
         return html;
