@@ -40,7 +40,7 @@ export class LoginComponent {
     this.errorMessage = '';
 
     this.http.post<any>(`${environment.apiUrl}/auth/login-unified`, {
-      username: this.loginField,
+      email: this.loginField,
       password: this.password,
     }).subscribe({
       next: (response) => {

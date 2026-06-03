@@ -31,13 +31,13 @@
 
           <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
             <div class="mb-4">
-              <label class="block text-white/50 text-xs font-medium mb-1.5 uppercase tracking-wide">Username or email</label>
+              <label class="block text-white/50 text-xs font-medium mb-1.5 uppercase tracking-wide">Email address</label>
               <input
-                type="text"
-                name="login"
+                type="email"
+                name="email"
                 [(ngModel)]="loginField"
                 required
-                autocomplete="username"
+                autocomplete="email"
                 class="w-full bg-dark border border-white/[0.1] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-primary/60 transition-colors">
             </div>
 

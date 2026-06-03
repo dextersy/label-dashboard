@@ -529,42 +529,52 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const loginUnified = async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // Unified login requires an email address — usernames are not globally unique across brands
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
     }
 
     const remoteIp = req.ip || 'unknown';
     const proxyIp = req.get('X-Forwarded-For') || 'unknown';
 
-    // Find ALL users matching username or email across all brands
+    // Find all user records for this email across all brands
     const users = await User.findAll({
-      where: {
-        [Op.or]: [
-          { username },
-          { email_address: username }
-        ]
-      },
+      where: { email_address: email },
       include: [{ model: Brand, as: 'brand' }]
     });
 
     if (users.length === 0) {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const lockedUsers: any[] = [];
+    // Check lockout at the email level — aggregate failed attempts across all user records
+    // for this email so a multi-brand user can't be brute-forced N times as easily
+    const isLocked = await checkLoginLockByEmail(users.map(u => u.id));
+    if (isLocked) {
+      sendAdminFailedLoginAlert(email, remoteIp, proxyIp, users[0].brand_id).catch(() => {});
+      const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
+      return res.status(423).json({
+        error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.`
+      });
+    }
+
+    // Verify password against each user record individually (sequential, CPU-bound).
+    // We must check each hash separately — a user may have changed their password on
+    // one brand but not another, so we only surface brands where the password matches.
     const matchedUsers: { user: any; needsMigration: boolean }[] = [];
 
-    const results = await Promise.all(users.map(async (user) => {
-      const isLocked = await checkLoginLock(user.id);
-      if (isLocked) {
-        sendAdminFailedLoginAlert(user.username || user.email_address, remoteIp, proxyIp, user.brand_id).catch(() => {});
-        return { user, locked: true, isValid: false, needsMigration: false };
-      }
-
+    for (const user of users) {
       const { isValid, needsMigration } = await verifyPassword(password, user);
-      if (!isValid && user.brand_id) {
+      if (isValid) {
+        matchedUsers.push({ user, needsMigration });
+      } else if (user.brand_id) {
         LoginAttempt.create({
           user_id: user.id,
           status: 'Failed',
@@ -574,28 +584,11 @@ export const loginUnified = async (req: Request, res: Response) => {
           remote_ip: remoteIp
         }).catch(() => {});
       }
-      return { user, locked: false, isValid, needsMigration };
-    }));
-
-    for (const result of results) {
-      if (result.locked) {
-        lockedUsers.push(result.user);
-      } else if (result.isValid) {
-        matchedUsers.push({ user: result.user, needsMigration: result.needsMigration });
-      }
-    }
-
-    // All found users are locked (none unlocked to attempt password)
-    if (matchedUsers.length === 0 && lockedUsers.length === users.length) {
-      const lockTimeMinutes = Math.ceil(parseInt(process.env.LOCK_TIME_IN_SECONDS || '120') / 60);
-      return res.status(423).json({
-        error: `Account temporarily locked due to too many failed logins. Please try again in ${lockTimeMinutes} minutes.`
-      });
     }
 
     if (matchedUsers.length === 0) {
-      console.warn('Login failed (unified)', { username, reason: 'invalid_password', ip: remoteIp, timestamp: new Date() });
-      return res.status(401).json({ error: 'Invalid username or password' });
+      console.warn('Login failed (unified)', { email, reason: 'invalid_password', ip: remoteIp, timestamp: new Date() });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     if (matchedUsers.length === 1) {
@@ -603,7 +596,7 @@ export const loginUnified = async (req: Request, res: Response) => {
       return await completeLoginForUser(user, remoteIp, proxyIp, res, needsMigration, password);
     }
 
-    // Multiple password matches — return brand selection token
+    // Multiple brands matched — return brand selection token
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is required');
     }
@@ -1691,6 +1684,29 @@ export const dashboardGoogleExchange = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Checks lockout across all user records sharing an email (used by unified login).
+// Aggregates failed attempts so a multi-brand user can't be brute-forced N×limit times.
+async function checkLoginLockByEmail(userIds: number[]): Promise<boolean> {
+  try {
+    const FAILED_LOGIN_LIMIT = parseInt(process.env.FAILED_LOGIN_LIMIT || '3');
+    const LOCK_TIME_IN_SECONDS = parseInt(process.env.LOCK_TIME_IN_SECONDS || '120');
+    const cutoffTime = new Date(Date.now() - LOCK_TIME_IN_SECONDS * 1000);
+
+    const count = await LoginAttempt.count({
+      where: {
+        user_id: { [Op.in]: userIds },
+        status: 'Failed',
+        date_and_time: { [Op.gt]: cutoffTime }
+      }
+    });
+
+    return count >= FAILED_LOGIN_LIMIT;
+  } catch (error) {
+    console.error('Error checking login lock by email:', error);
+    return false;
+  }
+}
 
 // Helper function to check login lock (matching PHP logic)
 async function checkLoginLock(userId: number): Promise<boolean> {

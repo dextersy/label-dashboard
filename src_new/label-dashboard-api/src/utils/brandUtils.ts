@@ -1,5 +1,7 @@
 import { Domain, Brand } from '../models';
 
+const protocol = (d: string) => d.split(':')[0] === 'localhost' ? 'http' : 'https';
+
 /**
  * Get the frontend URL for a brand by finding its first available domain
  * @param brandId - The brand ID to get the domain for
@@ -16,19 +18,19 @@ export const getBrandFrontendUrl = async (brandId: number): Promise<string> => {
   });
 
   if (primaryDomain) {
-    return `https://${primaryDomain.domain_name}`;
+    return `${protocol(primaryDomain.domain_name)}://${primaryDomain.domain_name}`;
   }
 
   // Fall back to any verified domain
   const verifiedDomain = await Domain.findOne({
-    where: { 
+    where: {
       brand_id: brandId,
       status: 'Connected'
     }
   });
   
   if (verifiedDomain) {
-    return `https://${verifiedDomain.domain_name}`;
+    return `${protocol(verifiedDomain.domain_name)}://${verifiedDomain.domain_name}`;
   }
   
   // Fallback to any domain if no verified domain exists
@@ -37,7 +39,7 @@ export const getBrandFrontendUrl = async (brandId: number): Promise<string> => {
   });
   
   if (anyDomain) {
-    return `https://${anyDomain.domain_name}`;
+    return `${protocol(anyDomain.domain_name)}://${anyDomain.domain_name}`;
   }
   
   // Fall back to parent brand's domain (for organizer sub-brands that inherit the platform domain)
