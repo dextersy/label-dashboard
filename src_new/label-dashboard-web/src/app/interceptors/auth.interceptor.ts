@@ -61,11 +61,14 @@ export class AuthInterceptor implements HttpInterceptor {
 
         // Handle 401 Unauthorized and 403 Forbidden errors for protected endpoints only
         // Don't handle auth errors for public API calls or login attempts - let components handle them
+        // Don't interfere with the Google OAuth callback flow (stale token may still be in localStorage)
         if ((error.status === 401 || error.status === 403) &&
             !req.url.includes('/public/') &&
             !req.url.includes('/scanner/') &&
             !req.url.includes('/auth/login') &&
-            !req.url.includes('/auth/audience/')) {
+            !req.url.includes('/auth/audience/') &&
+            !req.url.includes('/auth/dashboard/google/') &&
+            !this.router.url.startsWith('/google-callback')) {
           // Force logout and clear the user session
           this.authService.forceLogout();
           
