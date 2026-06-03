@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, User, LoginAttempt } from '../../../services/admin.service';
+import { AdminService, User, LoginAttempt, AudienceUserRecord } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { BrandService } from '../../../services/brand.service';
 
 @Component({
     selector: 'app-users-tab',
@@ -31,14 +32,47 @@ export class UsersTabComponent implements OnInit {
 
   // Sidebar navigation
   activeSection: string = 'users';
+  isTicketingParentBrand: boolean = false;
 
   navTabs: InPageNavTab[] = [
     { id: 'users', label: 'Users', icon: 'users' },
     { id: 'login-attempts', label: 'Login Attempts', icon: 'shield' },
   ];
 
+  // Audience users
+  audienceUsers: AudienceUserRecord[] = [];
+  audiencePagination: PaginationInfo | null = null;
+  audienceLoading: boolean = false;
+  audienceFilters: any = {};
+  audienceSort: SortInfo | null = null;
+
+  audienceColumns: TableColumn[] = [
+    { key: 'display_name', label: 'Name', type: 'text', searchable: false, sortable: false, cardHeader: true, renderHtml: true, formatter: (item) => {
+      const name = this.getAudienceDisplayName(item);
+      const idx = this.getAvatarColorIndex(name);
+      const initials = this.getInitials(name);
+      return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${name}</span>`;
+    }},
+    { key: 'email_address', label: 'Email Address', type: 'text', searchable: true, sortable: true },
+    { key: 'contact_number', label: 'Contact Number', type: 'text', searchable: false, sortable: false },
+    { key: 'email_verified', label: 'Verified', type: 'text', searchable: false, sortable: true, renderHtml: true, formatter: (item) => {
+      return item.email_verified
+        ? `<span class="status-badge status-success">Verified</span>`
+        : `<span class="status-badge status-warning">Unverified</span>`;
+    }},
+    { key: 'created_at', label: 'Registered', type: 'date', searchable: false, sortable: true }
+  ];
+
+  getAudienceDisplayName(user: AudienceUserRecord): string {
+    const parts = [user.first_name, user.last_name].filter(p => !!p);
+    return parts.length ? parts.join(' ') : user.email_address;
+  }
+
   setActiveSection(section: string): void {
     this.activeSection = section;
+    if (section === 'audiences' && this.audienceUsers.length === 0 && !this.audienceLoading) {
+      this.loadAudienceUsers(1);
+    }
   }
 
   // Admin invite modal
@@ -153,12 +187,32 @@ export class UsersTabComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private brandService: BrandService
   ) {}
 
   ngOnInit(): void {
     this.loadUsers(1, this.usersFilters, this.usersSort);
     this.loadLoginAttempts(1, this.loginAttemptsFilters, this.loginAttemptsSort);
+
+    const settings = this.brandService.getCurrentBrandSettings();
+    this.isTicketingParentBrand = settings?.is_ticketing_parent === true;
+    this.brandService.brandSettings$.subscribe(s => {
+      this.isTicketingParentBrand = s?.is_ticketing_parent === true;
+      this.updateNavTabs();
+    });
+    this.updateNavTabs();
+  }
+
+  private updateNavTabs(): void {
+    const tabs: InPageNavTab[] = [
+      { id: 'users', label: 'Users', icon: 'users' },
+      { id: 'login-attempts', label: 'Login Attempts', icon: 'shield' },
+    ];
+    if (this.isTicketingParentBrand) {
+      tabs.push({ id: 'audiences', label: 'Audiences', icon: 'ticket' });
+    }
+    this.navTabs = tabs;
   }
 
   // Transform users data for display (called once when data is loaded)
@@ -243,6 +297,36 @@ export class UsersTabComponent implements OnInit {
   onLoginAttemptsSortChange(sort: SortInfo | null): void {
     this.loginAttemptsSort = sort;
     this.loadLoginAttempts(this.loginAttemptsPagination?.current_page || 1, this.loginAttemptsFilters, this.loginAttemptsSort);
+  }
+
+  // Audience users handlers
+  loadAudienceUsers(page: number): void {
+    this.audienceLoading = true;
+    this.adminService.getAudienceUsers(page, 20, this.audienceFilters, this.audienceSort?.column, this.audienceSort?.direction).subscribe({
+      next: (response) => {
+        this.audienceUsers = response.data;
+        this.audiencePagination = response.pagination;
+        this.audienceLoading = false;
+      },
+      error: () => {
+        this.notificationService.showError('Error loading audience users');
+        this.audienceLoading = false;
+      }
+    });
+  }
+
+  onAudiencePageChange(page: number): void {
+    this.loadAudienceUsers(page);
+  }
+
+  onAudienceFiltersChange(filters: SearchFilters): void {
+    this.audienceFilters = filters;
+    this.loadAudienceUsers(1);
+  }
+
+  onAudienceSortChange(sort: SortInfo | null): void {
+    this.audienceSort = sort;
+    this.loadAudienceUsers(this.audiencePagination?.current_page || 1);
   }
 
   // Admin invite functions

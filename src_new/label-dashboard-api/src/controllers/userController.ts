@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { User, Brand, LoginAttempt } from '../models';
+import { User, Brand, LoginAttempt, AudienceUser } from '../models';
 import { sendEmail } from '../utils/emailService';
 import { createNotification } from '../utils/notificationService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -1005,6 +1005,73 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Invitation cancelled successfully' });
   } catch (error) {
     console.error('Cancel admin invite error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ======================================
+// AUDIENCE USERS (ticketing parent brand only)
+// ======================================
+
+export const getAudienceUsers = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const ticketingParentBrandId = process.env.TICKETING_PARENT_BRAND_ID ? parseInt(process.env.TICKETING_PARENT_BRAND_ID) : null;
+    if (!ticketingParentBrandId || req.user.brand_id !== ticketingParentBrandId) {
+      return res.status(403).json({ error: 'Access restricted to ticketing parent brand admins' });
+    }
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+
+    const sortBy = req.query.sortBy as string;
+    const sortDirection = (req.query.sortDirection as string)?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+    const escapeLikeWildcards = (value: string): string => value.replace(/[%_]/g, '\\$&');
+
+    const whereCondition: any = {};
+
+    const filterFields = ['email_address', 'first_name', 'last_name', 'contact_number'];
+    for (const field of filterFields) {
+      const val = req.query[field] as string;
+      if (val && val.trim()) {
+        whereCondition[field] = { [Op.like]: `%${escapeLikeWildcards(val.trim())}%` };
+      }
+    }
+
+    const sortableFields = ['email_address', 'first_name', 'last_name', 'created_at', 'email_verified'];
+    let orderClause: any[] = [['created_at', 'DESC']];
+    if (sortBy && sortableFields.includes(sortBy)) {
+      orderClause = [[sortBy, sortDirection]];
+    }
+
+    const { count, rows: audienceUsers } = await AudienceUser.findAndCountAll({
+      where: whereCondition,
+      attributes: ['id', 'email_address', 'first_name', 'last_name', 'contact_number', 'email_verified', 'created_at'],
+      order: orderClause,
+      limit,
+      offset
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    res.json({
+      data: audienceUsers,
+      pagination: {
+        current_page: page,
+        total_pages: totalPages,
+        total_count: count,
+        per_page: limit,
+        has_next: page < totalPages,
+        has_prev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Get audience users error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -15,6 +15,7 @@ export interface BrandSettings {
   feature_music_workspace?: boolean;
   feature_campaigns_workspace?: boolean;
   feature_sublabels?: boolean;
+  is_ticketing_parent?: boolean;
 }
 
 export interface BrandApiResponse {
@@ -31,6 +32,7 @@ export interface BrandApiResponse {
     feature_music_workspace?: boolean;
     feature_campaigns_workspace?: boolean;
     feature_sublabels?: boolean;
+    is_ticketing_parent?: boolean;
   };
 }
 
@@ -75,7 +77,8 @@ export class BrandService {
             catalog_prefix: response.brand.catalog_prefix,
             feature_music_workspace: response.brand.feature_music_workspace,
             feature_campaigns_workspace: response.brand.feature_campaigns_workspace,
-            feature_sublabels: response.brand.feature_sublabels
+            feature_sublabels: response.brand.feature_sublabels,
+            is_ticketing_parent: response.brand.is_ticketing_parent
           };
           localStorage.setItem('brand_settings', JSON.stringify(brandSettings));
           this.brandSettingsSubject.next(brandSettings);

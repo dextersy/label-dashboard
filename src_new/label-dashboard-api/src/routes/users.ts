@@ -11,7 +11,8 @@ import {
   inviteAdmin,
   resendAdminInvite,
   cancelAdminInvite,
-  completeOnboarding
+  completeOnboarding,
+  getAudienceUsers
 } from '../controllers/userController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { emailRateLimit, authRateLimit, adminRateLimit } from '../middleware/rateLimiting';
@@ -27,6 +28,7 @@ router.post('/init', authRateLimit, initUser);
 router.post('/complete-onboarding', authenticateToken, completeOnboarding);
 
 // Admin-only routes
+router.get('/audience', authenticateToken, requireAdmin, adminRateLimit, getAudienceUsers);
 router.get('/', authenticateToken, requireAdmin, adminRateLimit, getAllUsers);
 router.get('/login-attempts', authenticateToken, requireAdmin, adminRateLimit, getLoginAttempts);
 router.post('/invite', authenticateToken, requireAdmin, emailRateLimit, inviteUser);

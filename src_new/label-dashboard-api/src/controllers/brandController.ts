@@ -53,6 +53,8 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
     }
 
     
+    const ticketingParentBrandId = process.env.TICKETING_PARENT_BRAND_ID ? parseInt(process.env.TICKETING_PARENT_BRAND_ID) : null;
+
     res.json({
       domain: cleanDomain,
       brand: {
@@ -66,7 +68,8 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         catalog_prefix: brand.catalog_prefix || 'REL',
         feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
         feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
-        feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels)
+        feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
+        is_ticketing_parent: ticketingParentBrandId !== null && brand.id === ticketingParentBrandId
       }
     });
 

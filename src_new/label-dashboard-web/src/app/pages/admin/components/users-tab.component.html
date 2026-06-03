@@ -101,6 +101,45 @@
     </app-paginated-table>
   </div>
 
+  <!-- Audiences Table -->
+  <div *ngIf="activeSection === 'audiences'">
+    <app-paginated-table
+      title="Audience Users"
+      [data]="audienceUsers"
+      [pagination]="audiencePagination"
+      [loading]="audienceLoading"
+      [columns]="audienceColumns"
+      [showSortableHeaders]="true"
+      [sortInfo]="audienceSort"
+      (pageChange)="onAudiencePageChange($event)"
+      (filtersChange)="onAudienceFiltersChange($event)"
+      (sortChange)="onAudienceSortChange($event)">
+
+      <ng-template #mobileRowTemplate let-user>
+        <div class="user-card">
+          <div class="user-card__header">
+            <div class="user-card__avatar" [style.background-color]="getAvatarColor(getAudienceDisplayName(user))">
+              {{ getInitials(getAudienceDisplayName(user)) }}
+            </div>
+            <div class="user-card__info">
+              <div class="user-card__name">{{ getAudienceDisplayName(user) }}</div>
+              <div class="user-card__email">{{ user.email_address }}</div>
+            </div>
+            <div class="user-card__badges">
+              <span class="status-badge" [class.status-success]="user.email_verified" [class.status-warning]="!user.email_verified">
+                {{ user.email_verified ? 'Verified' : 'Unverified' }}
+              </span>
+            </div>
+          </div>
+          <div class="user-card__footer" *ngIf="user.created_at">
+            <app-icon name="clock" /> Registered: {{ user.created_at | date:'mediumDate' }}
+          </div>
+        </div>
+      </ng-template>
+
+    </app-paginated-table>
+  </div>
+
 </app-in-page-nav>
 
 <!-- Admin Invite Modal -->

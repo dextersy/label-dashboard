@@ -56,6 +56,16 @@ export interface User {
   has_pending_invite?: boolean;
 }
 
+export interface AudienceUserRecord {
+  id: number;
+  email_address: string;
+  first_name: string | null;
+  last_name: string | null;
+  contact_number: string | null;
+  email_verified: boolean;
+  created_at: string;
+}
+
 export interface LoginAttempt {
   username: string;
   name: string;
@@ -1084,5 +1094,20 @@ export class AdminService {
 
   getSupportedBanks(): Observable<Array<{bank_code: string, bank_name: string}>> {
     return this.http.get<Array<{bank_code: string, bank_name: string}>>(`${environment.apiUrl}/brands/supported-banks`);
+  }
+
+  // Audience Users (ticketing parent brand only)
+  getAudienceUsers(page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: AudienceUserRecord[], pagination: any}> {
+    let queryParams = `page=${page}&limit=${limit}`;
+    const filterKeys = ['email_address', 'first_name', 'last_name', 'contact_number'];
+    for (const key of filterKeys) {
+      if (filters[key]) queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
+    }
+    if (sortBy && sortDirection) {
+      queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
+    }
+    return this.http.get<{data: AudienceUserRecord[], pagination: any}>(`${environment.apiUrl}/users/audience?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
   }
 }
