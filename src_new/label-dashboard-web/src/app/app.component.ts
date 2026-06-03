@@ -123,7 +123,7 @@ export class AppComponent implements OnInit, OnDestroy {
         const url = (event as NavigationEnd).url;
         this.currentRoute = url;
         const workspace = this.getWorkspaceFromUrl(url);
-        if (workspace !== this.workspaceService.currentWorkspace) {
+        if (workspace !== null && workspace !== this.workspaceService.currentWorkspace) {
           this.workspaceService.setWorkspace(workspace);
         }
       });
@@ -191,12 +191,15 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getWorkspaceFromUrl(url: string): WorkspaceType {
+  private getWorkspaceFromUrl(url: string): WorkspaceType | null {
     const path = url.split('?')[0];
     if (path.startsWith('/admin')) return 'admin';
     if (path.startsWith('/campaigns')) return 'campaigns';
     if (path.startsWith('/labels')) return 'labels';
-    return 'music';
+    // Routes that belong to the music workspace
+    if (path === '/dashboard' || path.startsWith('/artist') || path.startsWith('/releases') || path.startsWith('/financial') || path.startsWith('/events') || path.startsWith('/team')) return 'music';
+    // Routes that are workspace-agnostic (e.g. /profile) — preserve current workspace
+    return null;
   }
 
   isStandalonePage(): boolean {

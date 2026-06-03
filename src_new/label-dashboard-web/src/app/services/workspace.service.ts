@@ -75,6 +75,19 @@ export class WorkspaceService {
     return this.getAvailableWorkspaces(isAdmin).map(ws => this.getWorkspaceInfo(ws));
   }
 
+  getWorkspaceLandingUrl(workspace: WorkspaceType): string {
+    switch (workspace) {
+      case 'music': return '/dashboard';
+      case 'campaigns': return '/campaigns/dashboard';
+      case 'labels': {
+        const settings = this.brandService.getCurrentBrandSettings();
+        return settings?.feature_music_workspace !== false ? '/labels/dashboard' : '/labels/earnings';
+      }
+      case 'admin': return '/admin/users';
+      default: return '/dashboard';
+    }
+  }
+
   private loadWorkspaceFromStorage(): WorkspaceType {
     const stored = localStorage.getItem(this.STORAGE_KEY);
 

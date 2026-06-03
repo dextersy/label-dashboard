@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProfileService, UserProfile, UpdateProfileRequest, ChangePasswordRequest } from '../../services/profile.service';
 import { NotificationService } from '../../services/notification.service';
+import { WorkspaceService } from '../../services/workspace.service';
 import { validatePassword } from '../../utils/password-utils';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 
@@ -46,7 +47,8 @@ export class ProfileComponent implements OnInit {
   constructor(
     private profileService: ProfileService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    private workspaceService: WorkspaceService
   ) {}
 
   ngOnInit(): void {
@@ -229,7 +231,8 @@ export class ProfileComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    const landingUrl = this.workspaceService.getWorkspaceLandingUrl(this.workspaceService.currentWorkspace);
+    this.router.navigate([landingUrl]);
   }
 
   formatLastLogin(lastLogin: string | undefined): string {
