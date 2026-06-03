@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { AudienceAuthService } from '../../services/audience-auth.service';
+import { ShareModalComponent } from '../../components/share-modal/share-modal.component';
 
 interface PublicEvent {
   id: number;
@@ -35,7 +36,7 @@ interface PublicBrand {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ShareModalComponent],
   template: `
     <!-- Nav -->
     <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
@@ -170,7 +171,7 @@ interface PublicBrand {
         } @else {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @for (event of allEvents(); track event.id) {
-              <div class="group bg-black hover:bg-zinc-950 transition-colors border border-white/10">
+              <div class="group bg-black hover:bg-zinc-950 transition-colors border border-white/10 flex flex-col">
                 <!-- Poster -->
                 @if (event.poster_url) {
                   <a [routerLink]="['/events', event.id]" class="block aspect-[4/3] overflow-hidden bg-zinc-900">
@@ -185,7 +186,7 @@ interface PublicBrand {
                 }
 
                 <!-- Info -->
-                <div class="p-4">
+                <div class="p-4 flex flex-col flex-1">
                   @if (event.brand_name) {
                     <p class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate">{{ event.brand_name }}</p>
                   }
@@ -217,37 +218,48 @@ interface PublicBrand {
                     </div>
                   }
 
-                  <!-- Attending count -->
-                  @if (event.tickets_sold && event.tickets_sold > 0) {
-                    <div class="inline-flex items-center gap-1.5 mb-3 px-2 py-1 bg-white/5 border border-white/10">
-                      <svg class="w-3.5 h-3.5 text-yellow-400/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      </svg>
-                      <span class="font-mono text-xs text-white/70"><span class="text-white font-bold">{{ event.tickets_sold }}</span> attending</span>
-                    </div>
-                  }
-
-                  <!-- Footer -->
-                  <div class="flex items-center justify-between pt-3 border-t border-white/10">
-                    <span class="text-sm font-black text-white">{{ event.ticket_price_display }}</span>
+                  <!-- Ticket CTA + attending count row -->
+                  <div class="flex items-center justify-between mb-3">
                     @if (event.external_ticket_link && !event.is_closed) {
                       <a [href]="event.external_ticket_link" target="_blank" rel="noopener"
-                        class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-bold uppercase tracking-wider transition-colors">
-                        tickets →
+                        class="inline-flex flex-col px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
+                        <span class="text-xs font-bold uppercase tracking-wider leading-tight">Get Tickets →</span>
+                        <span class="text-[10px] font-mono leading-tight opacity-70">{{ event.ticket_price_display }}</span>
                       </a>
                     } @else if (event.buy_shortlink && !event.is_closed && event.ticketing_enabled !== false) {
                       <a [href]="event.buy_shortlink" target="_blank" rel="noopener"
-                        class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-bold uppercase tracking-wider transition-colors">
-                        tickets →
+                        class="inline-flex flex-col px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
+                        <span class="text-xs font-bold uppercase tracking-wider leading-tight">Get Tickets →</span>
+                        <span class="text-[10px] font-mono leading-tight opacity-70">{{ event.ticket_price_display }}</span>
                       </a>
                     } @else if (event.is_closed) {
                       <span class="text-xs text-white/20 font-mono uppercase">closed</span>
                     } @else {
                       <a [routerLink]="['/events', event.id]"
-                        class="inline-flex items-center gap-1 px-3 py-1 border border-white/20 hover:border-white/50 text-white/50 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors">
-                        view →
+                        class="inline-flex flex-col px-3 py-1.5 border border-white/20 hover:border-white/50 text-white/50 hover:text-white transition-colors">
+                        <span class="text-xs font-bold uppercase tracking-wider leading-tight">View →</span>
+                        <span class="text-[10px] font-mono leading-tight opacity-70">{{ event.ticket_price_display }}</span>
                       </a>
                     }
+                    @if (event.tickets_sold && event.tickets_sold > 0) {
+                      <div class="inline-flex items-center gap-1.5 px-2 py-1 bg-white/5 border border-white/10">
+                        <svg class="w-3.5 h-3.5 text-yellow-400/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span class="font-mono text-xs text-white/70"><span class="text-white font-bold">{{ event.tickets_sold }}</span> attending</span>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Actions bar -->
+                  <div class="flex items-center gap-3 pt-3 mt-auto border-t border-white/10">
+                    <button (click)="openShare($event, event)" title="Share"
+                      class="inline-flex items-center gap-1.5 text-white/30 hover:text-white/70 text-xs font-mono uppercase tracking-wider transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                      </svg>
+                      Share
+                    </button>
                   </div>
                 </div>
               </div>
@@ -280,6 +292,15 @@ interface PublicBrand {
         </div>
       </div>
     </footer>
+
+    <!-- Share modal -->
+    @if (shareModal()) {
+      <app-share-modal
+        [url]="shareModal()!.url"
+        [title]="shareModal()!.title"
+        (close)="shareModal.set(null)">
+      </app-share-modal>
+    }
   `
 })
 export class LandingComponent implements OnInit {
@@ -287,6 +308,7 @@ export class LandingComponent implements OnInit {
   allEvents = signal<PublicEvent[]>([]);
   userMenuOpen = signal(false);
   audienceMenuOpen = signal(false);
+  shareModal = signal<{ url: string; title: string } | null>(null);
 
   constructor(private http: HttpClient, private auth: AuthService, private audienceAuth: AudienceAuthService, private router: Router) {}
 
@@ -348,5 +370,12 @@ export class LandingComponent implements OnInit {
 
   scrollToShows(): void {
     document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  openShare(event: MouseEvent, ev: PublicEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const url = `${window.location.origin}/events/${ev.id}`;
+    this.shareModal.set({ url, title: ev.title });
   }
 }

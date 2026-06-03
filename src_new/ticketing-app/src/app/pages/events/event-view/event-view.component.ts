@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Title, Meta } from '@angular/platform-browser';
 import { environment } from '../../../../environments/environment';
+import { ShareModalComponent } from '../../../components/share-modal/share-modal.component';
 
 interface PublicEventView {
   id: number;
@@ -47,7 +48,7 @@ interface PublicEventView {
 @Component({
   selector: 'app-event-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [CommonModule, RouterLink, DatePipe, ShareModalComponent],
   template: `
     <!-- Nav -->
     <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
@@ -99,7 +100,15 @@ interface PublicEventView {
                 @if (event()!.brand) {
                   <p class="text-xs font-mono text-yellow-400/70 uppercase tracking-[0.2em] mb-3">{{ event()!.brand!.name }}</p>
                 }
-                <h1 class="text-3xl sm:text-4xl font-black text-white uppercase leading-tight mb-5">{{ event()!.title }}</h1>
+                <div class="flex items-start justify-between gap-4 mb-5">
+                  <h1 class="text-3xl sm:text-4xl font-black text-white uppercase leading-tight">{{ event()!.title }}</h1>
+                  <button (click)="shareModalOpen.set(true)" title="Share"
+                    class="flex-shrink-0 mt-1 text-white/30 hover:text-white/70 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                  </button>
+                </div>
 
                 <!-- Date & time -->
                 <div class="flex items-start gap-3 mb-3">
@@ -148,46 +157,42 @@ interface PublicEventView {
                   </div>
                 }
 
-                <!-- Status / CTA -->
-                @if (event()!.ticketing_enabled === false) {
-                  <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
-                    <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                    Listing Only
-                  </div>
-                } @else if (event()!.is_closed) {
-                  <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
-                    <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                    Tickets Closed
-                  </div>
-                } @else if (event()!.external_ticket_link) {
-                  <div>
+                <!-- Status / CTA + attending count -->
+                <div class="flex items-center gap-5">
+                  @if (event()!.ticketing_enabled === false) {
+                    <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
+                      <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
+                      Listing Only
+                    </div>
+                  } @else if (event()!.is_closed) {
+                    <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
+                      <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
+                      Tickets Closed
+                    </div>
+                  } @else if (event()!.external_ticket_link) {
                     <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
-                      class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors shadow-lg">
-                      Get Tickets ↗
+                      class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
+                      <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
+                      <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }} · External site</span>
                     </a>
-                    <p class="text-white/30 font-mono text-xs mt-2 uppercase tracking-wider">External ticketing site</p>
-                  </div>
-                } @else if (event()!.buy_shortlink) {
-                  <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
-                    class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors shadow-lg">
-                    Get Tickets →
-                  </a>
-                }
+                  } @else if (event()!.buy_shortlink) {
+                    <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
+                      class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
+                      <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets →</span>
+                      <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }}</span>
+                    </a>
+                  }
 
-                <!-- Price -->
-                @if (event()!.ticketing_enabled !== false) {
-                  <p class="text-white/30 font-mono text-xs mt-3 uppercase tracking-wider">{{ event()!.ticket_price_display }}</p>
-                }
+                  @if (event()!.tickets_sold && event()!.tickets_sold! > 0) {
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10">
+                      <svg class="w-4 h-4 text-yellow-400/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      <span class="font-mono text-sm text-white/70"><span class="text-white font-bold">{{ event()!.tickets_sold }}</span> attending</span>
+                    </div>
+                  }
+                </div>
 
-                <!-- Attending count -->
-                @if (event()!.tickets_sold && event()!.tickets_sold! > 0) {
-                  <div class="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-white/5 border border-white/10">
-                    <svg class="w-4 h-4 text-yellow-400/80 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <span class="font-mono text-sm text-white/70"><span class="text-white font-bold">{{ event()!.tickets_sold }}</span> people attending</span>
-                  </div>
-                }
               </div>
             </div>
           </div>
@@ -243,14 +248,15 @@ interface PublicEventView {
                     <div class="mt-6">
                       @if (event()!.external_ticket_link) {
                         <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
-                          class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors">
-                          Get Tickets ↗
+                          class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
+                          <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
+                          <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }} · External site</span>
                         </a>
-                        <p class="text-white/30 font-mono text-xs mt-2 uppercase tracking-wider">External ticketing site</p>
                       } @else {
                         <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
-                          class="inline-flex items-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors">
-                          Get Tickets →
+                          class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
+                          <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets →</span>
+                          <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }}</span>
                         </a>
                       }
                     </div>
@@ -320,12 +326,23 @@ interface PublicEventView {
         </div>
       </div>
     </footer>
+
+    <!-- Share modal -->
+    @if (shareModalOpen() && event()) {
+      <app-share-modal
+        [url]="currentUrl()"
+        [title]="event()!.title"
+        (close)="shareModalOpen.set(false)">
+      </app-share-modal>
+    }
   `
 })
 export class EventViewComponent implements OnInit, OnDestroy {
   loading = signal(true);
   error = signal(false);
   event = signal<PublicEventView | null>(null);
+  shareModalOpen = signal(false);
+  currentUrl = () => window.location.href;
 
   constructor(
     private route: ActivatedRoute,
