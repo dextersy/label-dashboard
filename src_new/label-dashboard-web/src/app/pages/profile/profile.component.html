@@ -49,81 +49,88 @@
         </div>
       </div>
 
-      <!-- Profile Form -->
-      <form (ngSubmit)="onSubmitProfile()" #profileFormRef="ngForm">
-        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5 tw-mb-5">
-          <!-- Username (read-only) -->
-          <div>
-            <label for="username" class="tw-label">Username</label>
-            <input
-              type="text"
-              id="username"
-              class="tw-input tw-bg-gray-50 tw-text-gray-500 tw-cursor-not-allowed"
-              [(ngModel)]="profileForm.username"
-              name="username"
-              readonly
-              placeholder="Username">
-            <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Username cannot be changed</p>
-          </div>
+      <!-- Read-only fields -->
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5">
+        <div>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Username</p>
+          <p class="tw-text-base tw-text-gray-800 tw-mb-0">{{ profileForm.username || '—' }}</p>
+          <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Username cannot be changed</p>
+        </div>
+        <div>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Email Address</p>
+          <p class="tw-text-base tw-text-gray-800 tw-mb-0">{{ profileForm.email || '—' }}</p>
+          <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Email cannot be changed</p>
+        </div>
+      </div>
 
-          <!-- Email (read-only) -->
-          <div>
-            <label for="email" class="tw-label">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              class="tw-input tw-bg-gray-50 tw-text-gray-500 tw-cursor-not-allowed"
-              [(ngModel)]="profileForm.email"
-              name="email"
-              readonly
-              placeholder="Email address">
-            <p class="tw-text-xs tw-text-gray-400 tw-mt-1 tw-mb-0">Email cannot be changed</p>
+      <!-- Editable fields -->
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5">
+
+        <!-- First Name -->
+        <div>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">First Name</p>
+          <div *ngIf="!isEditing('first_name')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800">{{ profileForm.first_name || '—' }}</span>
+            <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('first_name')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
           </div>
+          <div *ngIf="isEditing('first_name')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text"
+                   class="tw-input"
+                   [class.is-invalid]="errors.first_name"
+                   [(ngModel)]="profileForm.first_name"
+                   name="first_name"
+                   placeholder="First name">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('first_name')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('first_name')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
+          <p *ngIf="errors.first_name" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.first_name }}</p>
         </div>
 
-        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5 tw-mb-5">
-          <!-- First Name -->
-          <div>
-            <label for="first_name" class="tw-label">First Name <span class="tw-text-red-500">*</span></label>
-            <input
-              type="text"
-              id="first_name"
-              class="tw-input"
-              [class.is-invalid]="errors.first_name"
-              [(ngModel)]="profileForm.first_name"
-              name="first_name"
-              placeholder="First name"
-              required>
-            <p *ngIf="errors.first_name" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.first_name }}</p>
+        <!-- Last Name -->
+        <div>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Last Name</p>
+          <div *ngIf="!isEditing('last_name')" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800">{{ profileForm.last_name || '—' }}</span>
+            <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('last_name')" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
           </div>
-
-          <!-- Last Name -->
-          <div>
-            <label for="last_name" class="tw-label">Last Name <span class="tw-text-red-500">*</span></label>
-            <input
-              type="text"
-              id="last_name"
-              class="tw-input"
-              [class.is-invalid]="errors.last_name"
-              [(ngModel)]="profileForm.last_name"
-              name="last_name"
-              placeholder="Last name"
-              required>
-            <p *ngIf="errors.last_name" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.last_name }}</p>
+          <div *ngIf="isEditing('last_name')" class="tw-flex tw-items-center tw-gap-1">
+            <input type="text"
+                   class="tw-input"
+                   [class.is-invalid]="errors.last_name"
+                   [(ngModel)]="profileForm.last_name"
+                   name="last_name"
+                   placeholder="Last name">
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('last_name')" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('last_name')" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
           </div>
+          <p *ngIf="errors.last_name" class="tw-text-xs tw-text-red-500 tw-mt-1 tw-mb-0">{{ errors.last_name }}</p>
         </div>
 
-        <div class="tw-flex tw-justify-end">
-          <button
-            type="submit"
-            class="btn-primary tw-w-full sm:tw-w-auto"
-            [disabled]="saving">
-            <span *ngIf="saving" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
-            <app-icon name="save" class=" tw-mr-2" *ngIf="!saving" />
-            {{ saving ? 'Saving...' : 'Save Changes' }}
-          </button>
-        </div>
-      </form>
+      </div>
+
+      <div class="tw-flex tw-justify-end">
+        <button
+          type="button"
+          class="btn-primary tw-w-full sm:tw-w-auto"
+          [disabled]="saving || !hasDirtyFields()"
+          (click)="saveProfile()">
+          <span *ngIf="saving" class="spinner-border spinner-border-sm tw-mr-2" role="status"></span>
+          <app-icon name="save" class="tw-mr-2" *ngIf="!saving" />
+          {{ saving ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
     </div>
   </div>
 
@@ -250,3 +257,4 @@
   </div>
 
 </div>
+

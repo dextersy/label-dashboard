@@ -110,7 +110,7 @@ export const routes: Routes = [
       { path: 'release', component: FinancialComponent, data: { tab: 'release' } }
     ]
   },
-  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard], canDeactivate: [canDeactivateUnsavedChanges] },
 
   // Campaigns workspace (Events + Fundraisers)
   {
