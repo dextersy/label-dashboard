@@ -932,6 +932,9 @@ export class EventService {
   }
 
   updateEventListing(eventId: number, data: { listed_on_ticketing: boolean; show_attendee_count: boolean; event_type?: string | null; tags?: number[] }): Observable<Event> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
     return this.http.put<{ event: Event }>(`${environment.apiUrl}/events/${eventId}`, data, {
       headers: this.getAuthHeaders()
     }).pipe(

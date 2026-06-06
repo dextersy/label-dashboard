@@ -247,6 +247,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       this.eventService.getEvents().subscribe({
         next: (events) => {
           this.availableEvents = events;
+          if (events.length === 0) {
+            this.router.navigate(['/campaigns/events/new']);
+            return;
+          }
           // Check if there's a selected event from EventService
           const selectedEvent = this.eventService.getSelectedEvent();
           if (!selectedEvent && events.length > 0) {
@@ -400,6 +404,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       tags: [...this.listingTabRef.selectedTagIds]
     } : null;
 
+    if (!this.isNewEvent && !this.eventId) {
+      this.saving = false;
+      this.notificationService.showError('No event selected');
+      return;
+    }
+
     const saveObservable = this.isNewEvent
       ? this.eventService.createEvent(formData)
       : (this.selectedPosterFile
@@ -477,6 +487,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     });
 
     if (!confirmed) return;
+
+    if (!this.isNewEvent && !this.eventId) {
+      this.saving = false;
+      this.notificationService.showError('No event selected');
+      return;
+    }
 
     this.saving = true;
     const formData = this.prepareFormData('published');
