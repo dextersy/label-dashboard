@@ -159,33 +159,34 @@
                 <label class="tw-label">Price per Ticket</label>
                 <div class="input-group">
                   <span class="input-group-text">₱</span>
-                  <input 
-                    type="number" 
-                    class="tw-input" 
+                  <input
+                    type="number"
+                    class="tw-input"
                     [(ngModel)]="customTicketForm.price_per_ticket"
                     name="price_per_ticket"
                     placeholder="0.00"
                     step="0.01"
                     min="0"
-                    [disabled]="!priceOverrideEnabled">
+                    [disabled]="!priceOverrideEnabled"
+                    (ngModelChange)="priceOverrideEnabled && onPriceOverrideChange()">
                   <button
                     type="button"
-                    class="btn-secondary"
+                    class="btn btn-icon btn-sm"
                     (click)="enablePriceOverride()"
                     *ngIf="!priceOverrideEnabled"
                     title="Override price">
-                    <app-icon name="edit" />
+                    <app-icon name="edit" iconOnly />
                   </button>
                   <button
                     type="button"
-                    class="btn-secondary"
+                    class="btn btn-icon btn-sm"
                     (click)="disablePriceOverride()"
                     *ngIf="priceOverrideEnabled"
                     title="Use ticket type price">
-                    <app-icon name="undo" />
+                    <app-icon name="undo" iconOnly />
                   </button>
                 </div>
-                <div class="form-text" *ngIf="!priceOverrideEnabled && customTicketForm.ticket_type_id">
+                <div class="form-text" *ngIf="priceOverrideEnabled && customTicketForm.ticket_type_id">
                   <ng-container *ngFor="let ticketType of ticketTypes">
                     <span *ngIf="ticketType.id === customTicketForm.ticket_type_id">
                       {{ ticketType.name }} price: ₱{{ ticketType.price | number:'1.2-2' }}
@@ -205,26 +206,29 @@
               </div>
 
               <div class="tw-mb-3">
-                <div class="form-check form-switch">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
+                <div class="form-check form-switch"
+                     [title]="isComplementary ? 'Complimentary ticket — no payment required' : ''">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
                     [(ngModel)]="customTicketForm.ticket_paid"
                     name="ticket_paid"
                     id="ticket_paid"
+                    [disabled]="isComplementary"
                     (change)="onToggleMarkAsPaid()">
                   <label class="form-check-label" for="ticket_paid">
                     Mark as paid
+                    <span *ngIf="isComplementary" class="tw-text-muted tw-text-xs tw-ml-1">(complimentary)</span>
                   </label>
                 </div>
 
-                <div class="tw-mt-2" *ngIf="customTicketForm.ticket_paid">
+                <div class="tw-mt-2" *ngIf="customTicketForm.ticket_paid && !isComplementary">
                   <label class="tw-label">Payment Processing Fee</label>
                   <div class="input-group">
                     <span class="input-group-text">₱</span>
-                    <input 
-                      type="number" 
-                      class="tw-input" 
+                    <input
+                      type="number"
+                      class="tw-input"
                       [(ngModel)]="customTicketForm.payment_processing_fee"
                       name="payment_processing_fee"
                       placeholder="0.00"
@@ -234,9 +238,9 @@
                 </div>
 
                 <div class="form-check form-switch tw-mt-2" *ngIf="!customTicketForm.ticket_paid">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
                     [(ngModel)]="customTicketForm.send_email"
                     name="send_email"
                     id="send_email">
@@ -508,41 +512,45 @@
               <td>
                 <div class="input-group input-group-md">
                   <span class="input-group-text">₱</span>
-                  <input type="number" 
-                         class="tw-input" 
+                  <input type="number"
+                         class="tw-input"
                          [(ngModel)]="ticket.price_per_ticket"
                          placeholder="0.00"
                          step="0.01"
-                         min="0">
+                         min="0"
+                         (ngModelChange)="onBulkPriceChange(ticket)">
                 </div>
               </td>
               <td>
                 <div class="form-check form-switch">
-                  <input type="checkbox" 
-                         class="form-check-input" 
+                  <input type="checkbox"
+                         class="form-check-input"
                          [(ngModel)]="ticket.send_email"
-                         [disabled]="ticket.ticket_paid">
+                         [disabled]="ticket.ticket_paid || isBulkRowComplementary(ticket)">
                 </div>
               </td>
               <td>
-                <div class="form-check form-switch">
-                  <input type="checkbox" 
-                         class="form-check-input" 
+                <div class="form-check form-switch"
+                     [title]="isBulkRowComplementary(ticket) ? 'Complimentary ticket — no payment required' : ''">
+                  <input type="checkbox"
+                         class="form-check-input"
                          [(ngModel)]="ticket.ticket_paid"
+                         [disabled]="isBulkRowComplementary(ticket)"
                          (change)="ticket.ticket_paid ? (ticket.send_email = false) : (ticket.payment_processing_fee = 0)">
                 </div>
               </td>
               <td>
-                <div class="input-group input-group-md">
+                <div class="input-group input-group-md" *ngIf="!isBulkRowComplementary(ticket)">
                   <span class="input-group-text">₱</span>
-                  <input type="number" 
-                         class="tw-input" 
+                  <input type="number"
+                         class="tw-input"
                          [(ngModel)]="ticket.payment_processing_fee"
                          placeholder="0.00"
                          step="0.01"
                          min="0"
                          [disabled]="!ticket.ticket_paid">
                 </div>
+                <span *ngIf="isBulkRowComplementary(ticket)" class="tw-text-muted tw-text-xs">—</span>
               </td>
               <td>
                 <input type="text" 

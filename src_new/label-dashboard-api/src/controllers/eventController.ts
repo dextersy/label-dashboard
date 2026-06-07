@@ -1119,8 +1119,8 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
       let paymentLink = null;
       let ticket;
 
-      if (ticket_paid) {
-        // For paid tickets, create without payment link
+      if (ticket_paid || totalAmount === 0) {
+        // No payment required — either marked as paid or complementary (zero price)
         ticket = await Ticket.create({
           event_id: eventIdNum,
           ticket_type_id: ticketTypeIdNum,

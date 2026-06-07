@@ -176,10 +176,18 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     this.customTicketForm.price_per_ticket = this.selectedEvent?.ticket_price || 0;
   }
 
+  get isComplementary(): boolean {
+    return this.customTicketForm.price_per_ticket === 0;
+  }
+
   updatePriceFromTicketType(ticketTypeId: number): void {
     const selectedType = this.ticketTypes.find(type => type.id === ticketTypeId);
     if (selectedType && !this.priceOverrideEnabled) {
       this.customTicketForm.price_per_ticket = selectedType.price;
+      if (selectedType.price === 0) {
+        this.customTicketForm.ticket_paid = true;
+        this.customTicketForm.payment_processing_fee = 0;
+      }
     }
   }
 
@@ -191,6 +199,13 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
   enablePriceOverride(): void {
     this.priceOverrideEnabled = true;
+  }
+
+  onPriceOverrideChange(): void {
+    if (this.customTicketForm.price_per_ticket === 0) {
+      this.customTicketForm.ticket_paid = true;
+      this.customTicketForm.payment_processing_fee = 0;
+    }
   }
 
   disablePriceOverride(): void {
@@ -240,7 +255,8 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
       send_email: this.customTicketForm.send_email,
       price_per_ticket: this.priceOverrideEnabled ? this.customTicketForm.price_per_ticket : undefined,
       payment_processing_fee: this.customTicketForm.payment_processing_fee,
-      referrer_code: this.customTicketForm.referral_code || undefined
+      referrer_code: this.customTicketForm.referral_code || undefined,
+      ticket_paid: this.customTicketForm.ticket_paid
     };
     
     this.subscriptions.add(
@@ -483,11 +499,28 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     }
   }
 
+  isBulkRowComplementary(ticket: BulkTicketRow): boolean {
+    return ticket.price_per_ticket === 0;
+  }
+
+  onBulkPriceChange(ticket: BulkTicketRow): void {
+    if (ticket.price_per_ticket === 0) {
+      ticket.ticket_paid = true;
+      ticket.send_email = false;
+      ticket.payment_processing_fee = 0;
+    }
+  }
+
   onBulkTicketTypeChange(index: number): void {
     const ticket = this.bulkTickets[index];
     const selectedType = this.ticketTypes.find(type => type.id === ticket.ticket_type_id);
     if (selectedType) {
       ticket.price_per_ticket = selectedType.price;
+      if (selectedType.price === 0) {
+        ticket.ticket_paid = true;
+        ticket.payment_processing_fee = 0;
+        ticket.send_email = false;
+      }
     }
   }
 
