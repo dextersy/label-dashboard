@@ -951,8 +951,8 @@ export class EventService {
   }
 
   // Walk-in type CRUD methods
-  getWalkInTypes(eventId: number): Observable<{ walkInTypes: any[] }> {
-    return this.http.get<{ walkInTypes: any[] }>(`${environment.apiUrl}/events/walk-in-types`, {
+  getWalkInTypes(eventId: number): Observable<{ walkInTypes: any[]; by_payment_method: { method: string; total: number }[] }> {
+    return this.http.get<{ walkInTypes: any[]; by_payment_method: { method: string; total: number }[] }>(`${environment.apiUrl}/events/walk-in-types`, {
       headers: this.getAuthHeaders(),
       params: { event_id: eventId.toString() }
     }).pipe(catchError(this.handleError));

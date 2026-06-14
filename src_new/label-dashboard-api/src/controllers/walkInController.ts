@@ -45,7 +45,22 @@ export const getWalkInTypes = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    res.json({ walkInTypes: processedTypes });
+    // Revenue breakdown by payment method (all transactions for this event)
+    const allTransactions = await WalkInTransaction.findAll({
+      where: { event_id: eventIdNum },
+      attributes: ['payment_method', 'total_amount']
+    });
+    const paymentMethodMap = new Map<string, number>();
+    for (const tx of allTransactions) {
+      const method = (tx as any).payment_method || 'Unknown';
+      paymentMethodMap.set(method, (paymentMethodMap.get(method) || 0) + (Number((tx as any).total_amount) || 0));
+    }
+    const by_payment_method = Array.from(paymentMethodMap.entries()).map(([method, total]) => ({
+      method,
+      total: Number(total.toFixed(2))
+    }));
+
+    res.json({ walkInTypes: processedTypes, by_payment_method });
   } catch (error) {
     console.error('Get walk-in types error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -42,6 +42,7 @@ export interface TicketSummary {
   grand_total: number;
   tax: number;
   admin_grand_total: number;
+  by_ticket_type?: { name: string; revenue: number }[];
 }
 
 @Component({
@@ -73,6 +74,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   walkInPagination: PaginationInfo | null = null;
   walkInTypes: any[] = [];
   walkInTypesLoading = false;
+  walkInPaymentMethodSummary: { method: string; total: number }[] = [];
+
+  // Revenue breakdown expand state
+  grossSalesByTypeExpanded = false;
+  walkInRevenueExpanded = false;
 
   // Pagination properties
   pagination: PaginationInfo | null = null;
@@ -734,6 +740,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       this.eventService.getWalkInTypes(this.selectedEvent.id).subscribe({
         next: (response) => {
           this.walkInTypes = response.walkInTypes;
+          this.walkInPaymentMethodSummary = response.by_payment_method || [];
           this.walkInTypesLoading = false;
         },
         error: () => {

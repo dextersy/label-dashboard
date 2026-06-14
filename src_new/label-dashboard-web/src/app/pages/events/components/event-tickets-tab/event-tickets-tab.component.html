@@ -35,8 +35,19 @@
         <div class="ticket-stats__divider"></div>
         <div class="ticket-stats__stat">
           <div class="ticket-stats__label">Gross sales</div>
-          <div class="ticket-stats__value">₱{{ summary.total_revenue | number:'1.0-0' }}</div>
+          <div class="ticket-stats__value">₱{{ summary.total_revenue | number:'1.2-2' }}</div>
           <div class="ticket-stats__sub">{{ summary.total_tickets_sold }} tickets</div>
+          <div class="ticket-stats__breakdown" *ngIf="summary.by_ticket_type && summary.by_ticket_type.length > 1">
+            <button type="button" class="ticket-stats__breakdown-toggle" (click)="grossSalesByTypeExpanded = !grossSalesByTypeExpanded">
+              By ticket type <app-icon [name]="grossSalesByTypeExpanded ? 'chevron-up' : 'chevron-down'" />
+            </button>
+            <div class="ticket-stats__breakdown-body" *ngIf="grossSalesByTypeExpanded">
+              <div class="ticket-stats__breakdown-row" *ngFor="let item of summary.by_ticket_type">
+                <span class="ticket-stats__breakdown-label">{{ item.name }}</span>
+                <span class="ticket-stats__breakdown-value">₱{{ item.revenue | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="ticket-stats__divider"></div>
         <div class="ticket-stats__stat">
@@ -144,6 +155,17 @@
           <div class="ticket-stats__label">Revenue</div>
           <div class="ticket-stats__value ticket-stats__value--highlight">{{ formatWalkInPrice(getWalkInTotalRevenue()) }}</div>
           <div class="ticket-stats__sub">total collected</div>
+          <div class="ticket-stats__breakdown" *ngIf="walkInPaymentMethodSummary.length > 0">
+            <button type="button" class="ticket-stats__breakdown-toggle" (click)="walkInRevenueExpanded = !walkInRevenueExpanded">
+              By payment method <app-icon [name]="walkInRevenueExpanded ? 'chevron-up' : 'chevron-down'" />
+            </button>
+            <div class="ticket-stats__breakdown-body" *ngIf="walkInRevenueExpanded">
+              <div class="ticket-stats__breakdown-row" *ngFor="let pm of walkInPaymentMethodSummary">
+                <span class="ticket-stats__breakdown-label">{{ pm.method | titlecase }}</span>
+                <span class="ticket-stats__breakdown-value">{{ formatWalkInPrice(pm.total) }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

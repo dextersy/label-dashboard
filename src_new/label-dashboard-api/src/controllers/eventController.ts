@@ -2757,12 +2757,21 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
         event_id: eventIdNum
       },
       attributes: [
+        'ticket_type_id',
         'status',
         'number_of_entries',
         'number_of_claimed_entries',
         'price_per_ticket',
         'payment_processing_fee',
         'platform_fee'
+      ],
+      include: [
+        {
+          model: TicketType,
+          as: 'ticketType',
+          attributes: ['id', 'name'],
+          required: false
+        }
       ]
     });
 
@@ -2811,6 +2820,18 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
     // Admin grand total after processing fees and tax
     const adminGrandTotal = Number((netRevenue * 0.995).toFixed(2)) || 0;
 
+    // Revenue breakdown by ticket type (confirmed/sent only)
+    const revenueByTicketTypeMap = new Map<string, number>();
+    for (const ticket of confirmedTickets) {
+      const typeName = (ticket as any).ticketType?.name || 'Regular';
+      const revenue = (Number(ticket.price_per_ticket) || 0) * (Number(ticket.number_of_entries) || 0);
+      revenueByTicketTypeMap.set(typeName, (revenueByTicketTypeMap.get(typeName) || 0) + revenue);
+    }
+    const by_ticket_type = Array.from(revenueByTicketTypeMap.entries()).map(([name, revenue]) => ({
+      name,
+      revenue: Number(revenue.toFixed(2))
+    }));
+
     res.json({
       event_id: eventIdNum,
       summary: {
@@ -2822,7 +2843,8 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
         platform_fee: platformFee,
         grand_total: grandTotal,
         tax: tax,
-        admin_grand_total: adminGrandTotal
+        admin_grand_total: adminGrandTotal,
+        by_ticket_type
       }
     });
   } catch (error) {
