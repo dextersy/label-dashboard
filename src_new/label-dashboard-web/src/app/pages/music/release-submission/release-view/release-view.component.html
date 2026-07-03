@@ -1,7 +1,27 @@
 <div class="release-view" *ngIf="release">
-  <!-- Header with Edit Button -->
+  <!-- Header -->
   <div class="release-view-header">
-    <h2 class="release-title">{{ release.title }}</h2>
+    <!-- Title with inline editing (admin only) -->
+    <div *ngIf="!isAdmin || !isEditing('title')" class="tw-flex tw-items-center tw-gap-1">
+      <h2 class="release-title tw-mb-0">{{ editingRelease.title }}</h2>
+      <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('title')" title="Edit title">
+        <app-icon name="edit" iconOnly />
+      </button>
+    </div>
+    <div *ngIf="isAdmin && isEditing('title')" class="tw-flex tw-items-center tw-gap-1">
+      <input type="text" class="tw-input tw-text-xl tw-font-semibold"
+             [(ngModel)]="editingRelease.title"
+             placeholder="Release title"
+             [style.width]="inputWidth(editingRelease.title, 'Release title')"
+             style="max-width: 100%">
+      <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('title')" title="Confirm">
+        <app-icon name="check" iconOnly />
+      </button>
+      <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('title')" title="Cancel">
+        <app-icon name="x" iconOnly />
+      </button>
+    </div>
+
     <!-- Desktop action buttons -->
     <div class="header-actions">
       <button *ngIf="canSubmitRelease()"
@@ -22,13 +42,10 @@
                   [class.tw-animate-spin]="downloadingPriorityPitch" />
         <span class="tw-ml-1">{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}</span>
       </button>
-      <button *ngIf="isAdmin" class="edit-btn" (click)="onEditClick()" title="Edit Release">
-        <app-icon name="edit" />
-      </button>
     </div>
 
     <!-- Mobile kebab menu -->
-    <div class="kebab-menu" *ngIf="isAdmin || canSubmitRelease()">
+    <div class="kebab-menu" *ngIf="canSubmitRelease() || isAdmin">
       <button class="kebab-toggle" (click)="kebabOpen = !kebabOpen">
         <app-icon name="more-vertical" />
       </button>
@@ -43,11 +60,21 @@
                 [disabled]="downloadingPriorityPitch">
           <app-icon name="file" class="tw-mr-2" />{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
         </button>
-        <button *ngIf="isAdmin" (click)="onEditClick(); kebabOpen = false">
-          <app-icon name="edit" class="tw-mr-2" />Edit Release
-        </button>
       </div>
     </div>
+  </div>
+
+  <!-- Read-only notice for non-admin users -->
+  <div *ngIf="!isAdmin" class="tw-flex tw-items-baseline tw-gap-1 tw-text-sm tw-text-muted tw-mt-2 tw-mb-4">
+    <app-icon name="info" iconOnly class="tw-shrink-0" />
+    <span><ng-container [ngSwitch]="release.status">
+      <ng-container *ngSwitchCase="'For Submission'"><strong>Submitted for review.</strong></ng-container>
+      <ng-container *ngSwitchCase="'Pending'"><strong>Currently under review.</strong></ng-container>
+      <ng-container *ngSwitchCase="'Live'"><strong>This release is live.</strong></ng-container>
+      <ng-container *ngSwitchCase="'Taken Down'"><strong>This release has been taken down.</strong></ng-container>
+      <ng-container *ngSwitchDefault><strong>This release is not editable.</strong></ng-container>
+    </ng-container>
+    Contact your label administrator if you need to make changes.</span>
   </div>
 
   <!-- Main Content -->
@@ -61,65 +88,217 @@
       <div class="info-grid">
         <!-- Cover Art -->
         <div class="cover-art-container">
-          <img 
-            *ngIf="release.cover_art" 
-            [src]="release.cover_art" 
-            [alt]="release.title"
-            class="cover-art">
-          <div *ngIf="!release.cover_art" class="cover-art-placeholder">
-            <app-icon name="disc" />
-          </div>
+          <ng-container *ngIf="isAdmin; else coverArtReadOnly">
+            <label class="tw-cursor-pointer tw-block tw-relative tw-group" title="Click to change cover art">
+              <img *ngIf="coverArtPreview || editingRelease.cover_art"
+                   [src]="coverArtPreview || editingRelease.cover_art"
+                   [alt]="editingRelease.title"
+                   class="cover-art">
+              <div *ngIf="!coverArtPreview && !editingRelease.cover_art" class="cover-art-placeholder">
+                <app-icon name="disc" />
+              </div>
+              <div class="tw-absolute tw-inset-0 tw-bg-black tw-bg-opacity-0 group-hover:tw-bg-opacity-30 tw-transition-all tw-rounded tw-flex tw-items-center tw-justify-center">
+                <app-icon name="camera" class="tw-text-white tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity" />
+              </div>
+              <input type="file" class="tw-hidden" accept="image/jpeg,image/jpg,image/png,image/gif" (change)="onCoverArtSelected($event)">
+            </label>
+          </ng-container>
+          <ng-template #coverArtReadOnly>
+            <img *ngIf="editingRelease.cover_art" [src]="editingRelease.cover_art" [alt]="editingRelease.title" class="cover-art">
+            <div *ngIf="!editingRelease.cover_art" class="cover-art-placeholder">
+              <app-icon name="disc" />
+            </div>
+          </ng-template>
         </div>
 
         <!-- Release Details -->
         <div class="release-details">
+
+          <!-- Catalog Number -->
           <div class="detail-row">
             <span class="detail-label">Catalog Number</span>
-            <span class="detail-value">{{ release.catalog_no || '—' }}</span>
+            <span class="detail-value">
+              <ng-container *ngIf="!isAdmin || !isEditing('catalog_no')">
+                {{ editingRelease.catalog_no || '—' }}
+                <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('catalog_no')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </ng-container>
+              <span *ngIf="isAdmin && isEditing('catalog_no')" class="tw-flex tw-items-center tw-gap-1">
+                <input type="text" class="tw-input" [(ngModel)]="editingRelease.catalog_no" placeholder="Catalog number"
+                       [style.width]="inputWidth(editingRelease.catalog_no, 'Catalog number')" style="max-width: 100%"
+                       maxlength="6">
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('catalog_no')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('catalog_no')" title="Cancel"><app-icon name="x" iconOnly /></button>
+              </span>
+            </span>
           </div>
-          <div class="detail-row" *ngIf="release.UPC">
+
+          <!-- UPC -->
+          <div class="detail-row">
             <span class="detail-label">Barcode (UPC/EAN/Code128)</span>
             <span class="detail-value">
-              {{ release.UPC }}
-              <button class="btn-secondary btn-sm tw-ml-2"
-                      (click)="downloadBarcode()"
-                      title="Download Barcode">
-                <app-icon name="qr-code" />
-              </button>
+              <ng-container *ngIf="!isAdmin || !isEditing('UPC')">
+                <span *ngIf="editingRelease.UPC">
+                  {{ editingRelease.UPC }}
+                  <button class="btn-secondary btn-sm tw-ml-2" (click)="downloadBarcode()" title="Download Barcode">
+                    <app-icon name="qr-code" />
+                  </button>
+                </span>
+                <span *ngIf="!editingRelease.UPC">—</span>
+                <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('UPC')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </ng-container>
+              <span *ngIf="isAdmin && isEditing('UPC')" class="tw-flex tw-items-center tw-gap-1">
+                <input type="text" class="tw-input" [(ngModel)]="editingRelease.UPC" placeholder="UPC / EAN / Code128"
+                       [style.width]="inputWidth(editingRelease.UPC, 'UPC / EAN / Code128')" style="max-width: 100%">
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('UPC')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('UPC')" title="Cancel"><app-icon name="x" iconOnly /></button>
+              </span>
             </span>
           </div>
+
+          <!-- Release Date -->
           <div class="detail-row">
             <span class="detail-label">Release Date</span>
-            <span class="detail-value tw-flex tw-items-center tw-gap-2">
-              {{ formatDate(release.release_date) }}
-              <span class="badge" [ngClass]="getStatusBadgeClass(release.status)">{{ release.status }}</span>
+            <span class="detail-value">
+              <ng-container *ngIf="!isAdmin || !isEditing('release_date')">
+                <span class="tw-flex tw-items-center tw-gap-2">
+                  {{ formatDate(editingRelease.release_date) }}
+                  <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('release_date')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </span>
+              </ng-container>
+              <span *ngIf="isAdmin && isEditing('release_date')" class="tw-flex tw-items-center tw-gap-1">
+                <input type="date" class="tw-input" [(ngModel)]="editingRelease.release_date">
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('release_date')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('release_date')" title="Cancel"><app-icon name="x" iconOnly /></button>
+              </span>
             </span>
           </div>
-          <div class="detail-row" *ngIf="release.description">
+
+          <!-- Status -->
+          <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+              <ng-container *ngIf="!isAdmin || !isEditing('status')">
+                <span class="tw-flex tw-items-center tw-gap-2">
+                  <span class="badge" [ngClass]="getStatusBadgeClass(editingRelease.status)">{{ editingRelease.status }}</span>
+                  <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('status')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </span>
+              </ng-container>
+              <span *ngIf="isAdmin && isEditing('status')" class="tw-flex tw-items-center tw-gap-1">
+                <select class="tw-input" [(ngModel)]="editingRelease.status">
+                  <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+                </select>
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('status')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('status')" title="Cancel"><app-icon name="x" iconOnly /></button>
+              </span>
+            </span>
+          </div>
+
+          <!-- Description -->
+          <div class="detail-row">
             <span class="detail-label">Description</span>
             <span class="detail-value">
-              <span class="expandable-text" [class.expanded]="descriptionExpanded" [innerHTML]="sanitizeHtml(release.description)"></span>
-              <a class="read-more-link" (click)="descriptionExpanded = !descriptionExpanded">
-                {{ descriptionExpanded ? 'Show less' : 'Read more' }}
-              </a>
+              <ng-container *ngIf="!isAdmin || !isEditing('description')">
+                <ng-container *ngIf="editingRelease.description">
+                  <span class="expandable-text" [class.expanded]="descriptionExpanded" [innerHTML]="sanitizeHtml(editingRelease.description)"></span>
+                  <a class="read-more-link" (click)="descriptionExpanded = !descriptionExpanded">
+                    {{ descriptionExpanded ? 'Show less' : 'Read more' }}
+                  </a>
+                </ng-container>
+                <span *ngIf="!editingRelease.description">—</span>
+                <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('description')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </ng-container>
+              <div *ngIf="isAdmin && isEditing('description')">
+                <quill-editor
+                  [(ngModel)]="editingRelease.description"
+                  [modules]="quillConfig"
+                  (onContentChanged)="onDescriptionChanged($event)"
+                  placeholder="Enter description..."
+                  style="width: 100%; display: block;">
+                </quill-editor>
+                <div class="tw-flex tw-items-center tw-justify-between tw-mt-1">
+                  <p class="tw-text-xs tw-mb-0"
+                     [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit"
+                     [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
+                    {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
+                  </p>
+                  <div class="tw-flex tw-gap-1">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('description')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('description')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                  </div>
+                </div>
+              </div>
             </span>
           </div>
+
         </div>
       </div>
 
       <!-- Streaming Links -->
-      <div class="streaming-links" *ngIf="hasStreamingLinks()">
+      <div class="streaming-links">
         <h3 class="subsection-title">Streaming Links</h3>
-        <div class="links-row">
-          <a *ngIf="release.spotify_link" [href]="release.spotify_link" target="_blank" class="streaming-link spotify">
-            <app-icon name="spotify" /> Spotify
-          </a>
-          <a *ngIf="release.apple_music_link" [href]="release.apple_music_link" target="_blank" class="streaming-link apple">
-            <app-icon name="apple" /> Apple Music
-          </a>
-          <a *ngIf="release.youtube_link" [href]="release.youtube_link" target="_blank" class="streaming-link youtube">
-            <app-icon name="youtube" /> YouTube
-          </a>
+        <div class="tw-space-y-3">
+
+          <!-- Spotify -->
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <app-icon name="spotify" class="tw-text-green-500 tw-shrink-0" />
+            <ng-container *ngIf="!isAdmin || !isEditing('spotify_link')">
+              <a *ngIf="editingRelease.spotify_link" [href]="editingRelease.spotify_link" target="_blank" class="streaming-link spotify">Spotify</a>
+              <span *ngIf="!editingRelease.spotify_link" class="tw-text-muted">—</span>
+              <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('spotify_link')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </ng-container>
+            <span *ngIf="isAdmin && isEditing('spotify_link')" class="tw-flex tw-items-center tw-gap-1 tw-flex-1">
+              <input type="url" class="tw-input tw-flex-1" [(ngModel)]="editingRelease.spotify_link" placeholder="https://open.spotify.com/...">
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('spotify_link')" title="Confirm"><app-icon name="check" iconOnly /></button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('spotify_link')" title="Cancel"><app-icon name="x" iconOnly /></button>
+            </span>
+          </div>
+
+          <!-- Apple Music -->
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <app-icon name="apple" class="tw-shrink-0" />
+            <ng-container *ngIf="!isAdmin || !isEditing('apple_music_link')">
+              <a *ngIf="editingRelease.apple_music_link" [href]="editingRelease.apple_music_link" target="_blank" class="streaming-link apple">Apple Music</a>
+              <span *ngIf="!editingRelease.apple_music_link" class="tw-text-muted">—</span>
+              <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('apple_music_link')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </ng-container>
+            <span *ngIf="isAdmin && isEditing('apple_music_link')" class="tw-flex tw-items-center tw-gap-1 tw-flex-1">
+              <input type="url" class="tw-input tw-flex-1" [(ngModel)]="editingRelease.apple_music_link" placeholder="https://music.apple.com/...">
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('apple_music_link')" title="Confirm"><app-icon name="check" iconOnly /></button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('apple_music_link')" title="Cancel"><app-icon name="x" iconOnly /></button>
+            </span>
+          </div>
+
+          <!-- YouTube -->
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <app-icon name="youtube" class="tw-text-red-500 tw-shrink-0" />
+            <ng-container *ngIf="!isAdmin || !isEditing('youtube_link')">
+              <a *ngIf="editingRelease.youtube_link" [href]="editingRelease.youtube_link" target="_blank" class="streaming-link youtube">YouTube</a>
+              <span *ngIf="!editingRelease.youtube_link" class="tw-text-muted">—</span>
+              <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_link')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </ng-container>
+            <span *ngIf="isAdmin && isEditing('youtube_link')" class="tw-flex tw-items-center tw-gap-1 tw-flex-1">
+              <input type="url" class="tw-input tw-flex-1" [(ngModel)]="editingRelease.youtube_link" placeholder="https://youtube.com/...">
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('youtube_link')" title="Confirm"><app-icon name="check" iconOnly /></button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('youtube_link')" title="Cancel"><app-icon name="x" iconOnly /></button>
+            </span>
+          </div>
+
         </div>
       </div>
     </section>
@@ -164,12 +343,42 @@
       </ng-template>
 
       <!-- Liner Notes -->
-      <div class="liner-notes" *ngIf="release.liner_notes">
-        <h3 class="subsection-title">Liner Notes</h3>
-        <span class="expandable-text" [class.expanded]="linerNotesExpanded" [innerHTML]="sanitizeHtml(release.liner_notes)"></span>
-        <a class="read-more-link" (click)="linerNotesExpanded = !linerNotesExpanded">
-          {{ linerNotesExpanded ? 'Show less' : 'Read more' }}
-        </a>
+      <div class="liner-notes">
+        <h3 class="subsection-title tw-flex tw-items-center tw-gap-1">
+          Liner Notes
+          <button *ngIf="isAdmin && !isEditing('liner_notes')" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('liner_notes')" title="Edit liner notes">
+            <app-icon name="edit" iconOnly />
+          </button>
+        </h3>
+        <ng-container *ngIf="!isAdmin || !isEditing('liner_notes')">
+          <ng-container *ngIf="editingRelease.liner_notes">
+            <span class="expandable-text" [class.expanded]="linerNotesExpanded" [innerHTML]="sanitizeHtml(editingRelease.liner_notes)"></span>
+            <a class="read-more-link" (click)="linerNotesExpanded = !linerNotesExpanded">
+              {{ linerNotesExpanded ? 'Show less' : 'Read more' }}
+            </a>
+          </ng-container>
+          <span *ngIf="!editingRelease.liner_notes" class="tw-text-muted">—</span>
+        </ng-container>
+        <div *ngIf="isAdmin && isEditing('liner_notes')">
+          <quill-editor
+            [(ngModel)]="editingRelease.liner_notes"
+            [modules]="quillConfig"
+            (onContentChanged)="onLinerNotesChanged($event)"
+            placeholder="Enter liner notes..."
+            style="width: 100%; display: block;">
+          </quill-editor>
+          <div class="tw-flex tw-items-center tw-justify-between tw-mt-1">
+            <p class="tw-text-xs tw-mb-0"
+               [class.tw-text-danger]="linerNotesCharCount > linerNotesCharLimit"
+               [class.tw-text-muted]="linerNotesCharCount <= linerNotesCharLimit">
+              {{ linerNotesCharCount | number }} / {{ linerNotesCharLimit | number }} characters
+            </p>
+            <div class="tw-flex tw-gap-1">
+              <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('liner_notes')" title="Confirm"><app-icon name="check" iconOnly /></button>
+              <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('liner_notes')" title="Cancel"><app-icon name="x" iconOnly /></button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -366,3 +575,15 @@
   </div>
   <div class="modal-backdrop fade" [class.show]="lyricsModalSong" *ngIf="lyricsModalSong"></div>
 </div>
+
+<!-- Floating Action Bar for inline edits -->
+<app-floating-action-bar *ngIf="isAdmin && hasDirtyFields()">
+  <button type="button"
+          class="btn-primary fab-primary-btn"
+          [disabled]="saving"
+          (click)="saveRelease()">
+    <div class="loading-spinner" *ngIf="saving"></div>
+    <app-icon name="save" iconOnly *ngIf="!saving" />
+    {{ saving ? 'Saving...' : 'Save Changes' }}
+  </button>
+</app-floating-action-bar>

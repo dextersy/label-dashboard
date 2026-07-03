@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, SecurityContext, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SecurityContext, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { Release, ReleaseService } from '../../../../services/release.service';
@@ -8,20 +9,22 @@ import { AudioPlayerService } from '../../../../services/audio-player.service';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import JsBarcode from 'jsbarcode';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
+import { QuillModule } from 'ngx-quill';
 
 @Component({
   selector: 'app-release-view',
   standalone: true,
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, FormsModule, QuillModule, IconComponent, FloatingActionBarComponent],
   templateUrl: './release-view.component.html',
   styleUrl: './release-view.component.scss'
 })
-export class ReleaseViewComponent implements OnInit, OnDestroy {
+export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   @Input() release: Release | null = null;
   @Input() isAdmin: boolean = false;
-  @Output() editClicked = new EventEmitter<void>();
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() releaseSubmitted = new EventEmitter<Release>();
+  @Output() releaseUpdated = new EventEmitter<Release>();
 
   // Audio player state (synced from service)
   playingSongId: number | null = null;
@@ -66,7 +69,184 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   // Mobile track expand state
   expandedTrackIds = new Set<number>();
 
+  // Inline editing state
+  editingRelease: any = {};
+  editingFields: Set<string> = new Set();
+  dirtyFields: Set<string> = new Set();
+  private fieldOriginals: Map<string, any> = new Map();
+  private savedRelease: Release | null = null;
+  saving = false;
+  selectedCoverArt: File | null = null;
+  coverArtPreview: string | null = null;
+
+  // Char limits for rich text fields
+  descriptionCharLimit = 5000;
+  descriptionCharCount = 0;
+  linerNotesCharLimit = 5000;
+  linerNotesCharCount = 0;
+
+  quillConfig = {
+    toolbar: [
+      ['bold', 'italic'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['clean']
+    ]
+  };
+
+  statusOptions: Array<'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down'> = [
+    'Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'
+  ];
+
   private subscription: Subscription | null = null;
+
+  startEditing(field: string): void {
+    this.fieldOriginals.set(field, this.editingRelease[field]);
+    this.editingFields.add(field);
+  }
+
+  stopEditing(field: string): void {
+    this.fieldOriginals.delete(field);
+    this.editingFields.delete(field);
+    const savedValue = this.savedRelease ? (this.savedRelease as any)[field] : undefined;
+    const currentValue = this.editingRelease[field];
+    if (currentValue !== savedValue) {
+      this.dirtyFields.add(field);
+    } else {
+      this.dirtyFields.delete(field);
+    }
+  }
+
+  cancelEditing(field: string): void {
+    if (this.fieldOriginals.has(field)) {
+      this.editingRelease[field] = this.fieldOriginals.get(field);
+      if (field === 'description') {
+        this.descriptionCharCount = this.getPlainTextLength(this.editingRelease.description || '');
+      }
+      if (field === 'liner_notes') {
+        this.linerNotesCharCount = this.getPlainTextLength(this.editingRelease.liner_notes || '');
+      }
+      this.fieldOriginals.delete(field);
+    }
+    this.editingFields.delete(field);
+    const savedValue = this.savedRelease ? (this.savedRelease as any)[field] : undefined;
+    const currentValue = this.editingRelease[field];
+    if (currentValue !== savedValue) {
+      this.dirtyFields.add(field);
+    } else {
+      this.dirtyFields.delete(field);
+    }
+  }
+
+  isEditing(field: string): boolean {
+    return this.editingFields.has(field);
+  }
+
+  hasDirtyFields(): boolean {
+    return this.dirtyFields.size > 0 || this.selectedCoverArt !== null;
+  }
+
+  inputWidth(value: string | undefined, placeholder: string = ''): string {
+    const len = Math.max(value?.length || 0, placeholder.length, 10);
+    return (len + 4) + 'ch';
+  }
+
+  private getPlainTextLength(html: string): number {
+    if (!html) return 0;
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    const text = temp.textContent || temp.innerText || '';
+    return text.replace(/\n$/, '').length;
+  }
+
+  onDescriptionChanged(event: any): void {
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.descriptionCharCount = text.length;
+  }
+
+  onLinerNotesChanged(event: any): void {
+    const text = event.text ? event.text.replace(/\n$/, '') : '';
+    this.linerNotesCharCount = text.length;
+  }
+
+  onCoverArtSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      this.alertMessage.emit({ type: 'error', message: 'Please select a valid image file (JPEG, PNG, or GIF).' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertMessage.emit({ type: 'error', message: 'File size must be less than 5 MB.' });
+      return;
+    }
+    this.selectedCoverArt = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        this.coverArtPreview = e.target.result as string;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  saveRelease(): void {
+    if (!this.release) return;
+
+    if ((this.editingRelease.catalog_no || '').length > 6) {
+      this.alertMessage.emit({ type: 'error', message: 'Catalog number cannot exceed 6 characters.' });
+      return;
+    }
+    if (this.descriptionCharCount > this.descriptionCharLimit) {
+      this.alertMessage.emit({ type: 'error', message: `Description exceeds the ${this.descriptionCharLimit.toLocaleString()} character limit.` });
+      return;
+    }
+    if (this.linerNotesCharCount > this.linerNotesCharLimit) {
+      this.alertMessage.emit({ type: 'error', message: `Liner notes exceed the ${this.linerNotesCharLimit.toLocaleString()} character limit.` });
+      return;
+    }
+
+    this.saving = true;
+
+    const payload: any = {
+      title: this.editingRelease.title,
+      catalog_no: this.editingRelease.catalog_no,
+      UPC: this.editingRelease.UPC ?? '',
+      release_date: this.editingRelease.release_date,
+      status: this.editingRelease.status,
+      description: this.editingRelease.description ?? '',
+      liner_notes: this.editingRelease.liner_notes ?? '',
+      spotify_link: this.editingRelease.spotify_link ?? '',
+      apple_music_link: this.editingRelease.apple_music_link ?? '',
+      youtube_link: this.editingRelease.youtube_link ?? '',
+    };
+
+    if (this.selectedCoverArt) {
+      payload.cover_art = this.selectedCoverArt;
+    }
+
+    this.releaseService.updateRelease(this.release.id, payload).subscribe({
+      next: (response) => {
+        this.saving = false;
+        this.savedRelease = { ...response.release };
+        this.editingRelease = { ...response.release };
+        this.dirtyFields.clear();
+        this.editingFields.clear();
+        this.fieldOriginals.clear();
+        this.selectedCoverArt = null;
+        this.coverArtPreview = null;
+        this.descriptionCharCount = this.getPlainTextLength(response.release.description || '');
+        this.linerNotesCharCount = this.getPlainTextLength(response.release.liner_notes || '');
+        this.releaseUpdated.emit(response.release);
+        this.alertMessage.emit({ type: 'success', message: 'Release updated successfully!' });
+      },
+      error: (error) => {
+        this.saving = false;
+        const msg = error.error?.error || 'Failed to save release.';
+        this.alertMessage.emit({ type: 'error', message: msg });
+      }
+    });
+  }
 
   constructor(
     private audioPlayerService: AudioPlayerService,
@@ -87,6 +267,26 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
       this.pausedSongId = state.pausedSongId;
     });
     document.addEventListener('scroll', this.scrollCloseHandler, true);
+    if (this.release) {
+      this.editingRelease = { ...this.release };
+      this.savedRelease = { ...this.release };
+      this.descriptionCharCount = this.getPlainTextLength(this.release.description || '');
+      this.linerNotesCharCount = this.getPlainTextLength(this.release.liner_notes || '');
+    }
+  }
+
+  ngOnChanges(): void {
+    if (this.release) {
+      this.editingRelease = { ...this.release };
+      this.savedRelease = { ...this.release };
+      this.descriptionCharCount = this.getPlainTextLength(this.release.description || '');
+      this.linerNotesCharCount = this.getPlainTextLength(this.release.liner_notes || '');
+      this.dirtyFields.clear();
+      this.editingFields.clear();
+      this.fieldOriginals.clear();
+      this.selectedCoverArt = null;
+      this.coverArtPreview = null;
+    }
   }
 
   ngOnDestroy(): void {
@@ -95,10 +295,6 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
     }
     document.removeEventListener('scroll', this.scrollCloseHandler, true);
     document.body.classList.remove('modal-open');
-  }
-
-  onEditClick(): void {
-    this.editClicked.emit();
   }
 
   getStatusBadgeClass(status: string): string {
@@ -160,7 +356,7 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   }
 
   hasStreamingLinks(): boolean {
-    return !!(this.release?.spotify_link || this.release?.apple_music_link || this.release?.youtube_link);
+    return !!(this.editingRelease?.spotify_link || this.editingRelease?.apple_music_link || this.editingRelease?.youtube_link);
   }
 
   // Get the primary artist name for the release
@@ -417,11 +613,11 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
   }
 
   downloadBarcode(): void {
-    if (!this.release?.UPC) return;
+    if (!this.editingRelease?.UPC) return;
 
     try {
       const canvas = document.createElement('canvas');
-      const value = this.release.UPC.trim();
+      const value = this.editingRelease.UPC.trim();
       const isAllDigits = /^\d+$/.test(value);
       let format: string;
       if (isAllDigits && value.length === 13) {
@@ -448,7 +644,7 @@ export class ReleaseViewComponent implements OnInit, OnDestroy {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `barcode-${this.release!.UPC}.png`;
+        a.download = `barcode-${this.editingRelease.UPC}.png`;
         a.click();
         URL.revokeObjectURL(url);
       }, 'image/png');

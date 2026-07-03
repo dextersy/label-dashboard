@@ -86,8 +86,8 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'releases', pathMatch: 'full' },
       { path: 'releases', component: ArtistComponent, data: { tab: 'releases' } },
-      { path: 'releases/new', component: ReleaseSubmissionComponent },
-      { path: 'releases/edit/:id', component: ReleaseSubmissionComponent }
+      { path: 'releases/new', component: ReleaseSubmissionComponent, canDeactivate: [canDeactivateUnsavedChanges] },
+      { path: 'releases/edit/:id', component: ReleaseSubmissionComponent, canDeactivate: [canDeactivateUnsavedChanges] }
     ]
   },
   // Sync Licensing (admin only, not artist-specific)

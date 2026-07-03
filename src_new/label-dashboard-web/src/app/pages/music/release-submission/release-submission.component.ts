@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -18,6 +18,7 @@ import { ReleaseViewComponent } from './release-view/release-view.component';
 import { ValidationResult } from '../../../services/release-validation.service';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { ReleaseSubmittedService } from '../../../services/release-submitted.service';
+import { HasUnsavedChanges } from '../../../guards/unsaved-changes.guard';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 
@@ -38,7 +39,9 @@ export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
     templateUrl: './release-submission.component.html',
     styleUrl: './release-submission.component.scss'
 })
-export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
+export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsavedChanges {
+  @ViewChild(ReleaseViewComponent) private releaseViewComponent?: ReleaseViewComponent;
+
   artist: Artist | null = null;
   private subscriptions: Subscription = new Subscription();
   private programmaticArtistChange = false;
@@ -156,6 +159,10 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
         }
       })
     );
+  }
+
+  isFormDirty(): boolean {
+    return this.showReadOnlyView && (this.releaseViewComponent?.hasDirtyFields() ?? false);
   }
 
   ngOnDestroy(): void {
@@ -607,6 +614,12 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy {
   // Handle release submission from view mode (admin only)
   onReleaseSubmitted(release: Release): void {
     // Update the local release data with the new status
+    this.releaseForView = release;
+    this.editingRelease = release;
+  }
+
+  // Handle inline release field edits from view mode (admin only)
+  onReleaseUpdated(release: Release): void {
     this.releaseForView = release;
     this.editingRelease = release;
   }
