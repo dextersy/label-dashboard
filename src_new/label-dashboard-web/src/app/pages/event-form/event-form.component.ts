@@ -138,6 +138,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   originalWalkInTypes: any[] = [];
   slugManuallyEdited = false;
   
+  // Inline editing state (Details section, published events)
+  editingFields: Set<string> = new Set();
+  private fieldOriginals: Map<string, any> = new Map();
+
   // UI state
   isMaxTicketsUnlimited = true;
   closeAtEventStart = true;
@@ -816,6 +820,72 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     );
   }
 
+  get isDetailsViewMode(): boolean {
+    return this.isEventPublished();
+  }
+
+  startEditingField(field: string): void {
+    if (field === 'venue') {
+      this.fieldOriginals.set('venue', {
+        venue: this.eventData.venue,
+        google_place_id: this.eventData.google_place_id,
+        venue_address: this.eventData.venue_address,
+        venue_latitude: this.eventData.venue_latitude,
+        venue_longitude: this.eventData.venue_longitude,
+        venue_phone: this.eventData.venue_phone,
+        venue_website: this.eventData.venue_website,
+        venue_maps_url: this.eventData.venue_maps_url,
+      });
+    } else {
+      this.fieldOriginals.set(field, this.eventData[field]);
+    }
+    this.editingFields.add(field);
+  }
+
+  stopEditingField(field: string): void {
+    this.fieldOriginals.delete(field);
+    this.editingFields.delete(field);
+  }
+
+  cancelEditingField(field: string): void {
+    if (this.fieldOriginals.has(field)) {
+      if (field === 'venue') {
+        const orig = this.fieldOriginals.get('venue');
+        Object.assign(this.eventData, orig);
+        this.currentVenueSelection = orig.venue ? {
+          venue: orig.venue,
+          google_place_id: orig.google_place_id || null,
+          venue_address: orig.venue_address || null,
+          venue_latitude: orig.venue_latitude || null,
+          venue_longitude: orig.venue_longitude || null,
+          venue_phone: orig.venue_phone || null,
+          venue_website: orig.venue_website || null,
+          venue_maps_url: orig.venue_maps_url || null,
+        } : null;
+      } else if (field === 'description') {
+        this.eventData.description = this.fieldOriginals.get(field);
+        this.descriptionCharCount = this.getPlainTextLength(this.eventData.description || '');
+      } else {
+        this.eventData[field] = this.fieldOriginals.get(field);
+      }
+      this.fieldOriginals.delete(field);
+    }
+    this.editingFields.delete(field);
+  }
+
+  isEditingField(field: string): boolean {
+    return this.editingFields.has(field);
+  }
+
+  formatEventDate(dateStr: string): string {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
+  }
+
   isFormDirty(): boolean {
     if (!this.originalEventData) return false;
     // Compare eventData
@@ -1183,6 +1253,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
     // Store original data for dirty checking
     this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+
+    // Reset inline editing state
+    this.editingFields.clear();
+    this.fieldOriginals.clear();
   }
 
   private loadTicketTypes(): void {

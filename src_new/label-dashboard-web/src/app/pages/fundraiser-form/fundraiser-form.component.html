@@ -70,68 +70,107 @@
         </div>
 
         <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+
+          <!-- Title -->
           <div class="tw-mb-3 tw-col-span-12">
-            <label for="fundraiserTitle" class="tw-label required">Fundraiser Title</label>
-            <input
-              type="text"
-              id="fundraiserTitle"
-              class="tw-input"
-              [(ngModel)]="fundraiserData.title"
-              placeholder="Enter fundraiser title"
-              [disabled]="isFundraiserClosed()"
-              required>
-            <small class="form-text tw-text-muted">
+            <label class="tw-label required">Fundraiser Title</label>
+            <!-- View mode -->
+            <div *ngIf="isViewMode && !isEditingField('title')" class="tw-flex tw-items-center tw-gap-1">
+              <span class="tw-text-base tw-font-medium">{{ fundraiserData.title || '—' }}</span>
+              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('title')" title="Edit title"><app-icon name="edit" iconOnly /></button>
+            </div>
+            <!-- Edit mode -->
+            <div *ngIf="!isViewMode || isEditingField('title')" class="tw-flex tw-items-center tw-gap-1">
+              <input type="text" id="fundraiserTitle" class="tw-input tw-flex-1" [(ngModel)]="fundraiserData.title" placeholder="Enter fundraiser title" required>
+              <ng-container *ngIf="isViewMode">
+                <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('title')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('title')" title="Cancel"><app-icon name="x" iconOnly /></button>
+              </ng-container>
+            </div>
+            <small class="form-text tw-text-muted" *ngIf="!isViewMode || isEditingField('title')">
               <app-icon name="info" /> The title will be displayed prominently on the donation page
             </small>
           </div>
 
+          <!-- Description -->
           <div class="tw-mb-3 tw-col-span-12">
-            <label for="fundraiserDescription" class="tw-label">Description</label>
-            <quill-editor
-              id="fundraiserDescription"
-              [(ngModel)]="fundraiserData.description"
-              [modules]="quillConfig"
-              [disabled]="isFundraiserClosed()"
-              (onContentChanged)="onDescriptionContentChanged($event)"
-              placeholder="Describe your fundraiser and what the donations will be used for...">
-            </quill-editor>
-            <small class="form-text" [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit" [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
-              {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
-            </small>
+            <label class="tw-label">Description</label>
+            <!-- View mode -->
+            <div *ngIf="isViewMode && !isEditingField('description')" class="tw-flex tw-gap-1">
+              <div class="tw-flex-1 tw-text-sm ql-editor tw-p-0" *ngIf="fundraiserData.description" [innerHTML]="fundraiserData.description"></div>
+              <span class="tw-flex-1 tw-text-muted tw-text-sm" *ngIf="!fundraiserData.description">No description</span>
+              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-shrink-0" (click)="startEditingField('description')" title="Edit description"><app-icon name="edit" iconOnly /></button>
+            </div>
+            <!-- Edit mode -->
+            <div *ngIf="!isViewMode || isEditingField('description')">
+              <quill-editor
+                id="fundraiserDescription"
+                [(ngModel)]="fundraiserData.description"
+                [modules]="quillConfig"
+                (onContentChanged)="onDescriptionContentChanged($event)"
+                placeholder="Describe your fundraiser and what the donations will be used for..."
+                style="width: 100%; display: block;">
+              </quill-editor>
+              <div class="tw-flex tw-items-center tw-justify-between tw-mt-1">
+                <small class="form-text" [class.tw-text-danger]="descriptionCharCount > descriptionCharLimit" [class.tw-text-muted]="descriptionCharCount <= descriptionCharLimit">
+                  {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }} characters
+                </small>
+                <div class="tw-flex tw-gap-1" *ngIf="isViewMode">
+                  <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditingField('description')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                  <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditingField('description')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                </div>
+              </div>
+            </div>
           </div>
 
+          <!-- Poster -->
           <div class="tw-mb-3 tw-col-span-12">
             <label class="tw-label">Fundraiser Poster</label>
-            <div *ngIf="!posterPreview && !fundraiserData.poster_url"
-                 class="poster-upload-zone"
-                 role="button"
-                 tabindex="0"
-                 (click)="posterInput.click()"
-                 (keydown)="onPosterUploadKeydown($event)"
-                 aria-label="Upload fundraiser poster image">
-              <app-icon name="image" [size]="48" class="tw-mb-2 tw-text-muted" iconOnly />
-              <p class="tw-mb-0 tw-text-muted">Click to upload poster image</p>
-              <small class="tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
-            </div>
 
-            <div *ngIf="posterPreview || fundraiserData.poster_url" class="poster-preview">
-              <img [src]="posterPreview || fundraiserData.poster_url" alt="Fundraiser poster">
-              <button
-                type="button"
-                class="poster-remove-btn"
-                (click)="removePoster()"
-                *ngIf="!isFundraiserClosed()">
-                <app-icon name="x" />
-              </button>
-            </div>
+            <!-- View mode: always show image with click-to-change overlay -->
+            <ng-container *ngIf="isViewMode">
+              <label *ngIf="posterPreview || fundraiserData.poster_url"
+                     class="tw-cursor-pointer tw-block tw-relative tw-group tw-w-fit"
+                     title="Click to change poster">
+                <img [src]="posterPreview || fundraiserData.poster_url" alt="Fundraiser poster" style="max-width: 320px; display: block; border-radius: 6px;">
+                <div class="tw-absolute tw-inset-0 tw-bg-black tw-bg-opacity-0 group-hover:tw-bg-opacity-30 tw-transition-all tw-rounded tw-flex tw-items-center tw-justify-center">
+                  <app-icon name="camera" class="tw-text-white tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity" />
+                </div>
+                <input type="file" class="tw-hidden" accept="image/*" (change)="onPosterSelected($event)" aria-label="Fundraiser poster image file">
+              </label>
+              <label *ngIf="!posterPreview && !fundraiserData.poster_url"
+                     class="tw-cursor-pointer tw-block"
+                     title="Click to upload poster">
+                <div class="poster-upload-zone">
+                  <app-icon name="image" [size]="48" class="tw-mb-2 tw-text-muted" iconOnly />
+                  <p class="tw-mb-0 tw-text-muted">Click to upload poster image</p>
+                  <small class="tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
+                </div>
+                <input type="file" class="tw-hidden" accept="image/*" (change)="onPosterSelected($event)" aria-label="Fundraiser poster image file">
+              </label>
+            </ng-container>
 
-            <input
-              type="file"
-              #posterInput
-              accept="image/*"
-              (change)="onPosterSelected($event)"
-              aria-label="Fundraiser poster image file"
-              style="display: none;">
+            <!-- Draft mode: existing upload/preview UI -->
+            <ng-container *ngIf="!isViewMode">
+              <div *ngIf="!posterPreview && !fundraiserData.poster_url"
+                   class="poster-upload-zone"
+                   role="button"
+                   tabindex="0"
+                   (click)="posterInput.click()"
+                   (keydown)="onPosterUploadKeydown($event)"
+                   aria-label="Upload fundraiser poster image">
+                <app-icon name="image" [size]="48" class="tw-mb-2 tw-text-muted" iconOnly />
+                <p class="tw-mb-0 tw-text-muted">Click to upload poster image</p>
+                <small class="tw-text-muted">JPG, PNG or GIF (max 10MB)</small>
+              </div>
+              <div *ngIf="posterPreview || fundraiserData.poster_url" class="poster-preview">
+                <img [src]="posterPreview || fundraiserData.poster_url" alt="Fundraiser poster">
+                <button type="button" class="poster-remove-btn" (click)="removePoster()">
+                  <app-icon name="x" />
+                </button>
+              </div>
+              <input type="file" #posterInput accept="image/*" (change)="onPosterSelected($event)" aria-label="Fundraiser poster image file" style="display: none;">
+            </ng-container>
           </div>
         </div>
       </div>

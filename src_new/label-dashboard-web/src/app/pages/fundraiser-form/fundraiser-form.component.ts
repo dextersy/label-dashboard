@@ -13,6 +13,7 @@ import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 
 @Component({
   selector: 'app-fundraiser-form',
@@ -28,7 +29,7 @@ import { IconComponent } from '../../components/shared/icon/icon.component';
   templateUrl: './fundraiser-form.component.html',
   styleUrl: './fundraiser-form.component.scss'
 })
-export class FundraiserFormComponent implements OnInit, OnDestroy {
+export class FundraiserFormComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   fundraiserId: number | null = null;
   fundraiser: Fundraiser | null = null;
   loading = false;
@@ -48,6 +49,10 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   originalFundraiserData: any = null;
+
+  // Inline editing state (published / closed fundraisers)
+  editingFields: Set<string> = new Set();
+  private fieldOriginals: Map<string, any> = new Map();
 
   // Quill editor config
   quillConfig = {
@@ -446,6 +451,35 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
     return (this.fundraiser?.donationCount || 0) > 0;
   }
 
+  get isViewMode(): boolean {
+    return !this.isNewFundraiser && !this.isFundraiserDraft();
+  }
+
+  startEditingField(field: string): void {
+    this.fieldOriginals.set(field, this.fundraiserData[field]);
+    this.editingFields.add(field);
+  }
+
+  stopEditingField(field: string): void {
+    this.fieldOriginals.delete(field);
+    this.editingFields.delete(field);
+  }
+
+  cancelEditingField(field: string): void {
+    if (this.fieldOriginals.has(field)) {
+      this.fundraiserData[field] = this.fieldOriginals.get(field);
+      if (field === 'description') {
+        this.descriptionCharCount = this.getPlainTextLength(this.fundraiserData.description || '');
+      }
+      this.fieldOriginals.delete(field);
+    }
+    this.editingFields.delete(field);
+  }
+
+  isEditingField(field: string): boolean {
+    return this.editingFields.has(field);
+  }
+
   isFormDirty(): boolean {
     if (!this.originalFundraiserData) return false;
     const dataChanged = JSON.stringify(this.fundraiserData) !== JSON.stringify(this.originalFundraiserData);
@@ -486,6 +520,10 @@ export class FundraiserFormComponent implements OnInit, OnDestroy {
 
     // Store original data for dirty checking
     this.originalFundraiserData = JSON.parse(JSON.stringify(this.fundraiserData));
+
+    // Reset inline editing state
+    this.editingFields.clear();
+    this.fieldOriginals.clear();
   }
 
   formatCurrency(amount: number | undefined): string {

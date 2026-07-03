@@ -83,38 +83,52 @@
             <!-- Event identity -->
             <p class="ef-section-label">Event identity</p>
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
+
+              <!-- Title -->
               <div>
                 <label for="eventTitle" class="ef-label">
                   Event Title <span class="ef-label-required">*</span>
                 </label>
-                <div class="ef-field" [class.ef-field--filled]="!!eventData.title">
-                  <input
-                    type="text"
-                    id="eventTitle"
-                    class="tw-input"
-                    [(ngModel)]="eventData.title"
-                    (input)="onTitleChange()"
-                    placeholder="Enter event title"
-                    [disabled]="isEventPast()"
-                    required>
-                  <span class="ef-field-check" *ngIf="eventData.title"><app-icon name="check" /></span>
+                <!-- View mode -->
+                <div *ngIf="isDetailsViewMode && !isEditingField('title')" class="tw-flex tw-items-center tw-gap-1">
+                  <span class="tw-text-base tw-font-medium">{{ eventData.title || '—' }}</span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('title')" title="Edit title"><app-icon name="edit" iconOnly /></button>
+                </div>
+                <!-- Edit mode -->
+                <div *ngIf="!isDetailsViewMode || isEditingField('title')" class="tw-flex tw-items-center tw-gap-1">
+                  <div class="ef-field tw-flex-1" [class.ef-field--filled]="!!eventData.title">
+                    <input type="text" id="eventTitle" class="tw-input" [(ngModel)]="eventData.title" (input)="onTitleChange()" placeholder="Enter event title" [disabled]="isEventPast()" required>
+                    <span class="ef-field-check" *ngIf="eventData.title && !isDetailsViewMode"><app-icon name="check" /></span>
+                  </div>
+                  <ng-container *ngIf="isDetailsViewMode">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('title')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('title')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                  </ng-container>
                 </div>
               </div>
+
+              <!-- Date & Time -->
               <div>
                 <label for="eventDateTime" class="ef-label">
                   Event Date & Time <span class="ef-label-required">*</span>
                   <span class="ef-label-optional">(GMT+8 PH)</span>
                 </label>
-                <div class="ef-field ef-field--icon-end" [class.ef-field--filled]="!!eventData.date_and_time">
-                  <input
-                    type="datetime-local"
-                    id="eventDateTime"
-                    class="tw-input"
-                    [(ngModel)]="eventData.date_and_time"
-                    [disabled]="false"
-                    required>
-                  <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><app-icon name="calendar" /></span>
-                  <span class="ef-field-check" *ngIf="eventData.date_and_time"><app-icon name="check" /></span>
+                <!-- View mode -->
+                <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time')" class="tw-flex tw-items-center tw-gap-1">
+                  <span class="tw-text-base">{{ formatEventDate(eventData.date_and_time) }}</span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit date and time"><app-icon name="edit" iconOnly /></button>
+                </div>
+                <!-- Edit mode -->
+                <div *ngIf="!isDetailsViewMode || isEditingField('date_and_time')" class="tw-flex tw-items-center tw-gap-1">
+                  <div class="ef-field ef-field--icon-end tw-flex-1" [class.ef-field--filled]="!!eventData.date_and_time">
+                    <input type="datetime-local" id="eventDateTime" class="tw-input" [(ngModel)]="eventData.date_and_time" required>
+                    <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><app-icon name="calendar" /></span>
+                    <span class="ef-field-check" *ngIf="eventData.date_and_time && !isDetailsViewMode"><app-icon name="check" /></span>
+                  </div>
+                  <ng-container *ngIf="isDetailsViewMode">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('date_and_time')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('date_and_time')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                  </ng-container>
                 </div>
               </div>
             </div>
@@ -122,35 +136,60 @@
             <!-- Location -->
             <p class="ef-section-label">Location</p>
             <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
+
+              <!-- Venue -->
               <div>
                 <label class="ef-label">Venue <span class="ef-label-required">*</span></label>
-                <app-venue-autocomplete
-                  placeholder="Search for venue or enter manually..."
-                  [required]="true"
-                  [hasError]="false"
-                  [disabled]="isEventPast()"
-                  [ngModel]="currentVenueSelection"
-                  (ngModelChange)="onVenueSelected($event)"
-                  (venueSelected)="onVenueSelected($event)">
-                </app-venue-autocomplete>
+                <!-- View mode -->
+                <div *ngIf="isDetailsViewMode && !isEditingField('venue')" class="tw-flex tw-items-center tw-gap-1">
+                  <span class="tw-text-base">{{ eventData.venue || '—' }}</span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('venue')" title="Edit venue"><app-icon name="edit" iconOnly /></button>
+                </div>
+                <!-- Edit mode -->
+                <div *ngIf="!isDetailsViewMode || isEditingField('venue')" class="tw-flex tw-items-start tw-gap-1">
+                  <div class="tw-flex-1">
+                    <app-venue-autocomplete
+                      placeholder="Search for venue or enter manually..."
+                      [required]="true"
+                      [hasError]="false"
+                      [disabled]="isEventPast()"
+                      [ngModel]="currentVenueSelection"
+                      (ngModelChange)="onVenueSelected($event)"
+                      (venueSelected)="onVenueSelected($event)">
+                    </app-venue-autocomplete>
+                  </div>
+                  <ng-container *ngIf="isDetailsViewMode">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0 tw-mt-1" (click)="stopEditingField('venue')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0 tw-mt-1" (click)="cancelEditingField('venue')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                  </ng-container>
+                </div>
               </div>
+
+              <!-- RSVP link -->
               <div>
                 <label for="rsvpLink" class="ef-label">
                   RSVP or Social Media Link
                   <span class="ef-label-optional">(optional)</span>
                 </label>
-                <div class="ef-field ef-field--icon-end" [class.ef-field--filled]="!!eventData.rsvp_link">
-                  <input
-                    type="url"
-                    id="rsvpLink"
-                    class="tw-input"
-                    [(ngModel)]="eventData.rsvp_link"
-                    placeholder="https://facebook.com/events/..."
-                    [disabled]="isEventPast()">
-                  <span class="ef-field-icon-end" *ngIf="!eventData.rsvp_link"><app-icon name="link" /></span>
-                  <span class="ef-field-check" *ngIf="eventData.rsvp_link"><app-icon name="check" /></span>
+                <!-- View mode -->
+                <div *ngIf="isDetailsViewMode && !isEditingField('rsvp_link')" class="tw-flex tw-items-center tw-gap-1">
+                  <a *ngIf="eventData.rsvp_link" [href]="eventData.rsvp_link" target="_blank" rel="noopener" class="tw-text-base tw-break-all">{{ eventData.rsvp_link }}</a>
+                  <span *ngIf="!eventData.rsvp_link" class="tw-text-muted">—</span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1 tw-shrink-0" (click)="startEditingField('rsvp_link')" title="Edit RSVP link"><app-icon name="edit" iconOnly /></button>
                 </div>
-                <small class="ef-hint">
+                <!-- Edit mode -->
+                <div *ngIf="!isDetailsViewMode || isEditingField('rsvp_link')" class="tw-flex tw-items-center tw-gap-1">
+                  <div class="ef-field ef-field--icon-end tw-flex-1" [class.ef-field--filled]="!!eventData.rsvp_link">
+                    <input type="url" id="rsvpLink" class="tw-input" [(ngModel)]="eventData.rsvp_link" placeholder="https://facebook.com/events/..." [disabled]="isEventPast()">
+                    <span class="ef-field-icon-end" *ngIf="!eventData.rsvp_link"><app-icon name="link" /></span>
+                    <span class="ef-field-check" *ngIf="eventData.rsvp_link && !isDetailsViewMode"><app-icon name="check" /></span>
+                  </div>
+                  <ng-container *ngIf="isDetailsViewMode">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('rsvp_link')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('rsvp_link')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                  </ng-container>
+                </div>
+                <small class="ef-hint" *ngIf="!isDetailsViewMode || isEditingField('rsvp_link')">
                   <app-icon name="info" /> Facebook event page link or preferred social media page
                 </small>
               </div>
@@ -187,20 +226,34 @@
               Description <span class="ef-label-optional">(optional)</span>
             </p>
             <div class="tw-mb-5">
-              <div class="ef-description-wrap" [class.ef-description-wrap--has-content]="descriptionCharCount > 0">
-                <quill-editor
-                  id="eventDescription"
-                  [(ngModel)]="eventData.description"
-                  [modules]="quillConfig"
-                  (onContentChanged)="onDescriptionContentChanged($event)"
-                  placeholder="Enter event description...">
-                </quill-editor>
+              <!-- View mode -->
+              <div *ngIf="isDetailsViewMode && !isEditingField('description')" class="tw-flex tw-gap-1">
+                <div class="tw-flex-1 tw-text-sm ql-editor tw-p-0" *ngIf="eventData.description" [innerHTML]="eventData.description"></div>
+                <span class="tw-flex-1 tw-text-muted tw-text-sm" *ngIf="!eventData.description">No description</span>
+                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-shrink-0" (click)="startEditingField('description')" title="Edit description"><app-icon name="edit" iconOnly /></button>
               </div>
-              <div class="ef-description-footer">
-                <span></span>
-                <small [class.ef-char-over]="descriptionCharCount > descriptionCharLimit">
-                  {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }}
-                </small>
+              <!-- Edit mode -->
+              <div *ngIf="!isDetailsViewMode || isEditingField('description')">
+                <div class="ef-description-wrap" [class.ef-description-wrap--has-content]="descriptionCharCount > 0">
+                  <quill-editor
+                    id="eventDescription"
+                    [(ngModel)]="eventData.description"
+                    [modules]="quillConfig"
+                    (onContentChanged)="onDescriptionContentChanged($event)"
+                    placeholder="Enter event description..."
+                    style="width: 100%; display: block;">
+                  </quill-editor>
+                </div>
+                <div class="ef-description-footer">
+                  <div class="tw-flex tw-gap-1" *ngIf="isDetailsViewMode">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditingField('description')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditingField('description')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                  </div>
+                  <span *ngIf="!isDetailsViewMode"></span>
+                  <small [class.ef-char-over]="descriptionCharCount > descriptionCharLimit">
+                    {{ descriptionCharCount | number }} / {{ descriptionCharLimit | number }}
+                  </small>
+                </div>
               </div>
             </div>
 
@@ -210,39 +263,52 @@
                 Event poster <span class="ef-label-optional">(optional)</span>
               </p>
 
-              <!-- Upload zone (empty) -->
-              <div *ngIf="!posterPreview && !eventData.poster_url"
-                   class="ef-poster-zone"
-                   role="button"
-                   tabindex="0"
-                   (click)="posterInput.click()"
-                   (keydown)="onPosterUploadKeydown($event)"
-                   aria-label="Upload event poster image">
-                <div class="ef-poster-icon">
-                  <app-icon name="upload" iconOnly />
+              <!-- View mode: always show image with click-to-change overlay -->
+              <ng-container *ngIf="isDetailsViewMode">
+                <label *ngIf="posterPreview || eventData.poster_url"
+                       class="tw-cursor-pointer tw-block tw-relative tw-group tw-w-fit"
+                       title="Click to change poster">
+                  <img [src]="posterPreview || eventData.poster_url" alt="Event poster" class="poster-preview tw-block" style="max-width: 320px;">
+                  <div class="tw-absolute tw-inset-0 tw-bg-black tw-bg-opacity-0 group-hover:tw-bg-opacity-30 tw-transition-all tw-rounded tw-flex tw-items-center tw-justify-center">
+                    <app-icon name="camera" class="tw-text-white tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity" />
+                  </div>
+                  <input type="file" class="tw-hidden" accept="image/jpeg,image/jpg,image/png" (change)="onPosterSelected($event)" aria-label="Event poster image file">
+                </label>
+                <label *ngIf="!posterPreview && !eventData.poster_url"
+                       class="tw-cursor-pointer tw-block"
+                       title="Click to upload poster">
+                  <div class="ef-poster-zone">
+                    <div class="ef-poster-icon"><app-icon name="upload" iconOnly /></div>
+                    <p class="ef-poster-label">Tap to upload a poster</p>
+                    <small class="ef-poster-hint">JPG or PNG · Max 5MB</small>
+                  </div>
+                  <input type="file" class="tw-hidden" accept="image/jpeg,image/jpg,image/png" (change)="onPosterSelected($event)" aria-label="Event poster image file">
+                </label>
+              </ng-container>
+
+              <!-- Draft mode: existing upload/preview UI -->
+              <ng-container *ngIf="!isDetailsViewMode">
+                <div *ngIf="!posterPreview && !eventData.poster_url"
+                     class="ef-poster-zone"
+                     role="button"
+                     tabindex="0"
+                     (click)="posterInput.click()"
+                     (keydown)="onPosterUploadKeydown($event)"
+                     aria-label="Upload event poster image">
+                  <div class="ef-poster-icon">
+                    <app-icon name="upload" iconOnly />
+                  </div>
+                  <p class="ef-poster-label">Tap to upload a poster</p>
+                  <small class="ef-poster-hint">JPG or PNG · Max 5MB</small>
                 </div>
-                <p class="ef-poster-label">Tap to upload a poster</p>
-                <small class="ef-poster-hint">JPG or PNG · Max 5MB</small>
-              </div>
-
-              <!-- Preview (filled) -->
-              <div *ngIf="posterPreview || eventData.poster_url" class="poster-preview">
-                <img [src]="posterPreview || eventData.poster_url" alt="Event poster">
-                <button
-                  type="button"
-                  class="poster-remove-btn"
-                  (click)="removePoster()">
-                  <app-icon name="x" />
-                </button>
-              </div>
-
-              <input
-                type="file"
-                #posterInput
-                accept="image/jpeg,image/jpg,image/png"
-                (change)="onPosterSelected($event)"
-                aria-label="Event poster image file"
-                style="display: none;">
+                <div *ngIf="posterPreview || eventData.poster_url" class="poster-preview">
+                  <img [src]="posterPreview || eventData.poster_url" alt="Event poster">
+                  <button type="button" class="poster-remove-btn" (click)="removePoster()">
+                    <app-icon name="x" />
+                  </button>
+                </div>
+                <input type="file" #posterInput accept="image/jpeg,image/jpg,image/png" (change)="onPosterSelected($event)" aria-label="Event poster image file" style="display: none;">
+              </ng-container>
             </div>
             <div class="tw-mt-4 tw-text-right">
               <button type="button" class="btn-ghost" (click)="goToNextTab()">

@@ -133,8 +133,8 @@ export const routes: Routes = [
       { path: 'events/custom-ticket', component: CustomTicketComponent },
       // Fundraisers
       { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },
-      { path: 'fundraisers/new', component: FundraiserFormComponent },
-      { path: 'fundraisers/details', component: FundraiserFormComponent },
+      { path: 'fundraisers/new', component: FundraiserFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
+      { path: 'fundraisers/details', component: FundraiserFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'fundraisers/donations', component: FundraisersComponent, data: { tab: 'donations' } }
     ]
   },
