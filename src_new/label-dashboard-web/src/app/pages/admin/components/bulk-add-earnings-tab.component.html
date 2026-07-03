@@ -531,6 +531,14 @@
         <option value="Physical">Physical</option>
       </select>
     </div>
+    <!-- Date: show picker only when no date column was detected in the CSV -->
+    <div *ngIf="!csvDetectedDateColumn">
+      <label for="csvDateOverrideDesktop" class="csv-fab-label">Earning Date</label>
+      <input type="date" class="tw-input"
+             id="csvDateOverrideDesktop"
+             [(ngModel)]="csvDateOverride"
+             style="min-width: 140px;">
+    </div>
     <div class="csv-fab-toggle-group">
       <label for="csvCalculateRoyaltiesDesktop" class="csv-fab-label">Calculate Royalties</label>
       <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
@@ -540,11 +548,38 @@
     </div>
   </div>
 
-  <!-- Mobile layout: stacked controls + action row (hidden on desktop) -->
-  <div class="md:tw-hidden tw-flex tw-flex-col tw-gap-2.5 tw-w-full tw-px-4 tw-py-3">
+  <!-- Mobile: static summary + Edit button (hidden on desktop) -->
+  <div *ngIf="!csvMobileEditing" class="md:tw-hidden tw-flex tw-items-start tw-gap-3 tw-w-full">
+    <div class="tw-flex-1 tw-min-w-0">
+      <div class="tw-text-sm tw-font-medium tw-break-words">{{ csvDescription || '—' }} &middot; {{ csvEarningType || '—' }}</div>
+      <div class="tw-text-xs tw-text-muted tw-break-words">
+        <ng-container *ngIf="csvDetectedDateColumn">Date from CSV</ng-container>
+        <ng-container *ngIf="!csvDetectedDateColumn">{{ csvDateOverride || 'No date set' }}</ng-container>
+        &middot; Royalties {{ csvCalculateRoyalties ? 'on' : 'off' }}
+        <ng-container *ngIf="csvTotalUnmatched > 0">
+          &middot; <span class="tw-text-amber-600">{{ csvTotalUnmatched }} unmatched</span>
+        </ng-container>
+      </div>
+    </div>
+    <div class="tw-flex tw-flex-col tw-gap-1.5 tw-flex-shrink-0">
+      <button type="button" class="btn-secondary btn-sm" (click)="csvMobileEditing = true">
+        <app-icon name="edit" class="tw-mr-1" />Edit
+      </button>
+      <button type="button"
+              class="btn-primary btn-sm csv-import-btn"
+              (click)="saveCsvEarnings()"
+              [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType || (!csvDetectedDateColumn && !csvDateOverride)">
+        <app-icon name="save" class="tw-mr-1" />
+        <span>Import {{ csvTotalCount - csvTotalUnmatched }}</span>
+      </button>
+    </div>
+  </div>
 
-    <!-- 1. Description + Type (always visible) -->
-    <div class="tw-flex tw-gap-2">
+  <!-- Mobile: editable inputs (hidden on desktop, shown when editing) -->
+  <ng-container *ngIf="csvMobileEditing">
+
+    <!-- Description + Type -->
+    <div class="md:tw-hidden tw-flex tw-gap-2 tw-w-full">
       <div class="tw-flex-1 tw-min-w-0">
         <label class="csv-fab-label">Description</label>
         <input type="text" class="tw-input" style="height:38px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 Streaming">
@@ -561,52 +596,27 @@
       </div>
     </div>
 
-    <!-- 2. Warning (compact, always visible if unmatched) -->
-    <div *ngIf="csvTotalUnmatched > 0"
-         class="tw-flex tw-items-center tw-gap-2 tw-px-3 tw-py-1.5 tw-rounded tw-border tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800"
-         style="font-size:12px;">
-      <app-icon name="warning" class="tw-flex-shrink-0" iconOnly />
-      <span><strong>{{ csvTotalUnmatched }}</strong> row{{ csvTotalUnmatched === 1 ? '' : 's' }} unmatched</span>
+    <!-- Date (only when no date column detected) -->
+    <div *ngIf="!csvDetectedDateColumn" class="md:tw-hidden tw-w-full">
+      <label class="csv-fab-label">Earning Date</label>
+      <input type="date" class="tw-input" style="height:38px;" [(ngModel)]="csvDateOverride">
     </div>
 
-    <!-- 3. Import (always visible) -->
-    <button type="button"
-            class="btn-primary btn-sm csv-import-btn"
-            (click)="saveCsvEarnings()"
-            [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType">
-      <app-icon name="save" class="tw-mr-2 tw-flex-shrink-0" />
-      <span *ngIf="csvData.length > 0" class="tw-whitespace-nowrap">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
-      <span *ngIf="csvData.length === 0" class="tw-whitespace-nowrap">No Earnings to Import</span>
-    </button>
-
-    <!-- 3. More settings toggle -->
-    <button type="button"
-            class="tw-flex tw-items-center tw-justify-between tw-w-full tw-bg-transparent tw-border-0 tw-p-0 tw-mt-1"
-            (click)="toggleMobileForm()">
-      <span class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500">More Settings</span>
-      <app-icon [name]="mobileFormCollapsed ? 'chevron-down' : 'chevron-up'" class="tw-text-gray-400" iconOnly />
-    </button>
-
-    <!-- Collapsible: Type, Royalties, Warning, Cancel -->
-    <ng-container *ngIf="!mobileFormCollapsed">
-
-      <!-- Royalties toggle -->
-      <div class="csv-fab-toggle-group">
-        <label for="csvCalcRoyaltiesMobile" class="csv-fab-label">Calculate Royalties</label>
-        <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
-          <input class="form-check-input" type="checkbox" id="csvCalcRoyaltiesMobile" [(ngModel)]="csvCalculateRoyalties">
-          <label class="form-check-label tw-text-muted" for="csvCalcRoyaltiesMobile">Enabled</label>
-        </div>
+    <!-- Royalties toggle -->
+    <div class="md:tw-hidden csv-fab-toggle-group tw-w-full">
+      <label for="csvCalcRoyaltiesMobile" class="csv-fab-label">Calculate Royalties</label>
+      <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
+        <input class="form-check-input" type="checkbox" id="csvCalcRoyaltiesMobile" [(ngModel)]="csvCalculateRoyalties">
+        <label class="form-check-label tw-text-muted" for="csvCalcRoyaltiesMobile">Enabled</label>
       </div>
+    </div>
 
-      <!-- Cancel -->
-      <button type="button" class="btn-secondary btn-sm tw-w-full" (click)="removeCsvFile()">
-        <app-icon name="x" class="tw-mr-2" />Cancel
-      </button>
+    <!-- Done -->
+    <button type="button" class="md:tw-hidden btn-primary btn-sm tw-w-full" (click)="csvMobileEditing = false">
+      <app-icon name="check" class="tw-mr-1" />Done
+    </button>
 
-    </ng-container>
-
-  </div>
+  </ng-container>
 
   <!-- Desktop right column: warning (if any) + Cancel + Import (hidden on mobile) -->
   <div class="tw-hidden md:tw-flex md:tw-flex-col tw-gap-2 tw-items-end tw-pr-20">
@@ -622,7 +632,7 @@
       <button type="button"
               class="btn-primary csv-import-btn"
               (click)="saveCsvEarnings()"
-              [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType">
+              [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType || (!csvDetectedDateColumn && !csvDateOverride)">
         <app-icon name="save" class="tw-mr-2 tw-flex-shrink-0" />
         <span *ngIf="csvData.length > 0" class="tw-whitespace-nowrap">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
         <span *ngIf="csvData.length === 0" class="tw-whitespace-nowrap">No Earnings to Import</span>

@@ -43,7 +43,9 @@ export class BulkAddEarningsTabComponent implements OnInit {
   csvCalculateRoyalties: boolean = true;
   csvEarningType: string = '';
   csvDescription: string = '';
-  mobileFormCollapsed: boolean = true;
+  csvDateOverride: string = new Date().toISOString().split('T')[0];
+  csvDetectedDateColumn: string = '';
+  csvMobileEditing: boolean = false;
   manualFormCollapsed: boolean = true;
   csvProcessingResult: CsvProcessingResult | null = null;
   showAddRowsDropdown: boolean = false;
@@ -56,23 +58,36 @@ export class BulkAddEarningsTabComponent implements OnInit {
     has_prev: false
   };
 
-  csvTableColumns: TableColumn[] = [
-    {
-      key: 'matched_release',
-      label: 'Catalog No.',
-      searchable: true,
-      sortable: true,
-      renderHtml: true,
-      formatter: (item) => `<span style="font-family:monospace;font-size:12px;">${item.matched_release?.catalog_no || ''}</span>`
-    },
-    {
-      key: 'matched_release',
-      label: 'Release Title',
-      searchable: true,
-      sortable: true,
-      formatter: (item) => item.matched_release?.title || ''
-    },
-    {
+  get csvTableColumns(): TableColumn[] {
+    const cols: TableColumn[] = [
+      {
+        key: 'matched_release',
+        label: 'Catalog No.',
+        searchable: true,
+        sortable: true,
+        renderHtml: true,
+        formatter: (item) => `<span style="font-family:monospace;font-size:12px;">${item.matched_release?.catalog_no || ''}</span>`
+      },
+      {
+        key: 'matched_release',
+        label: 'Release Title',
+        searchable: true,
+        sortable: true,
+        formatter: (item) => item.matched_release?.title || ''
+      }
+    ];
+
+    if (this.csvDetectedDateColumn) {
+      cols.push({
+        key: 'original_data',
+        label: 'Date',
+        searchable: false,
+        sortable: true,
+        formatter: (item) => item.original_data?.[this.csvDetectedDateColumn] || ''
+      });
+    }
+
+    cols.push({
       key: 'earning_amount',
       label: 'Earning Amount',
       type: 'number',
@@ -80,8 +95,10 @@ export class BulkAddEarningsTabComponent implements OnInit {
       sortable: true,
       align: 'right',
       formatter: (item) => this.formatCurrency(item.earning_amount)
-    }
-  ];
+    });
+
+    return cols;
+  }
 
   constructor(
     private adminService: AdminService,
@@ -290,6 +307,11 @@ export class BulkAddEarningsTabComponent implements OnInit {
         this.csvProcessingResult = result;
         // Only show rows that have matched releases
         this.csvDataAll = result.data.filter(row => row.matched_release !== null);
+        // Auto-detect a date column from CSV headers
+        if (result.data.length > 0) {
+          const columns = Object.keys(result.data[0].original_data);
+          this.csvDetectedDateColumn = columns.find(col => /date|period|month|year/i.test(col)) || '';
+        }
         this.updateCsvSummary();
         this.updatePaginatedData();
         this.loading = false;
@@ -354,6 +376,9 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.csvTotalAmount = 0;
     this.csvTotalCount = 0;
     this.csvTotalUnmatched = 0;
+    this.csvDetectedDateColumn = '';
+    this.csvDateOverride = new Date().toISOString().split('T')[0];
+    this.csvMobileEditing = false;
     this.csvPagination.current_page = 1;
     this.csvPagination.total_pages = 1;
     this.csvPagination.total_count = 0;
@@ -376,8 +401,10 @@ export class BulkAddEarningsTabComponent implements OnInit {
     // Convert processed CSV data to BulkEarning format
     const bulkEarnings: BulkEarning[] = matchedRows.map(row => ({
       release_id: row.matched_release!.id,
-      date_recorded: new Date().toISOString().split('T')[0], // Use current date
-      type: this.csvEarningType, // Use selected earning type
+      date_recorded: this.csvDetectedDateColumn
+        ? this.parseCsvDate(row.original_data[this.csvDetectedDateColumn] || '')
+        : this.csvDateOverride,
+      type: this.csvEarningType,
       description: this.csvDescription,
       amount: row.earning_amount,
       calculate_royalties: this.csvCalculateRoyalties
@@ -466,10 +493,6 @@ export class BulkAddEarningsTabComponent implements OnInit {
     return [csvHeaders, ...csvRows].join('\n');
   }
 
-  toggleMobileForm(): void {
-    this.mobileFormCollapsed = !this.mobileFormCollapsed;
-  }
-
   toggleManualForm(): void {
     this.manualFormCollapsed = !this.manualFormCollapsed;
   }
@@ -482,6 +505,15 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   hideAddRowsDropdown(): void {
     this.showAddRowsDropdown = false;
+  }
+
+  parseCsvDate(value: string): string {
+    if (!value) return this.csvDateOverride;
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split('T')[0];
+    }
+    return this.csvDateOverride;
   }
 
   formatCurrency(amount: number): string {
