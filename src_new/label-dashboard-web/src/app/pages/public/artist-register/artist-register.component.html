@@ -1,4 +1,6 @@
-<div class="tw-min-h-screen tw-bg-gray-50 tw-py-10 tw-px-4">
+<div class="tw-min-h-screen tw-py-10 tw-px-4"
+     [style.background-color]="brandSettings?.brand_color || '#f9fafb'"
+     [style.color]="brandContrastColor">
 
   <!-- Loading -->
   <div *ngIf="loading" class="tw-flex tw-justify-center tw-items-center tw-min-h-64">
@@ -28,8 +30,8 @@
            [src]="brandSettings!.logo_url"
            alt="Logo"
            class="tw-h-16 tw-mx-auto tw-mb-4 tw-object-contain">
-      <h1 class="tw-text-2xl tw-font-heading tw-font-bold tw-text-heading tw-mb-1">Artist Registration</h1>
-      <p class="tw-text-muted">Fill in your details to submit your artist profile for review.</p>
+      <h1 class="tw-text-2xl tw-font-heading tw-font-bold tw-mb-1" [style.color]="brandContrastColor">Artist Registration</h1>
+      <p [style.color]="brandContrastColor" class="tw-opacity-75">Fill in your details to submit your artist profile for review.</p>
     </div>
 
     <!-- Error banner -->

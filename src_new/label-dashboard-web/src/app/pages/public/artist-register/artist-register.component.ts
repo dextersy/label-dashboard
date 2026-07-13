@@ -70,6 +70,16 @@ export class ArtistRegisterComponent implements OnInit {
     });
   }
 
+  get brandContrastColor(): string {
+    const hex = (this.brandSettings?.brand_color ?? '#000000').replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    // Perceived luminance (WCAG formula)
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    return luminance > 140 ? '#000000' : '#ffffff';
+  }
+
   get customFields(): ArtistCustomField[] {
     return this.brandSettings?.artist_custom_fields ?? [];
   }
