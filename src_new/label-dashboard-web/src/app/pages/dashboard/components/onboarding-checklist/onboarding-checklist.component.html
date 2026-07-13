@@ -3,14 +3,14 @@
   <!-- Header -->
   <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
     <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Get started</h3>
-    <span class="tw-text-xs tw-text-muted">{{ completedCount }} / 4 complete</span>
+    <span class="tw-text-xs tw-text-muted">{{ completedCount }} / {{ items.length }} complete</span>
   </div>
 
   <!-- Progress bar -->
   <div class="tw-rounded-full tw-bg-gray-100" style="height: 4px;">
     <div class="tw-rounded-full tw-transition-all"
          style="height: 4px; background: #1D9E75;"
-         [style.width.%]="completedCount * 25"></div>
+         [style.width.%]="items.length ? (completedCount / items.length) * 100 : 0"></div>
   </div>
 
   <!-- Items -->

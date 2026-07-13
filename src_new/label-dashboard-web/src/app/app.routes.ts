@@ -30,6 +30,7 @@ import { TicketSuccessComponent } from './pages/public/ticket-success/ticket-suc
 import { TicketVerifyComponent } from './pages/public/ticket-verify/ticket-verify.component';
 import { PublicEventsComponent } from './pages/public/public-events/public-events.component';
 import { ArtistEPKComponent } from './pages/public/artist-epk/artist-epk.component';
+import { ArtistRegisterComponent } from './pages/public/artist-register/artist-register.component';
 import { ReleasePlayerComponent } from './pages/public/release-player/release-player.component';
 import { FundraiserComponent } from './pages/public/fundraiser/fundraiser.component';
 import { DonationSuccessComponent } from './pages/public/donation-success/donation-success.component';
@@ -63,6 +64,7 @@ export const routes: Routes = [
   { path: 'public/tickets/verify/:id', component: TicketVerifyComponent },
   { path: 'public/fundraiser/:id', component: FundraiserComponent },
   { path: 'public/donation/success', component: DonationSuccessComponent },
+  { path: 'public/artist/register', component: ArtistRegisterComponent },
 
   // EPK Preview (protected)
   { path: 'artist/epk/preview/:artist_id/:template', component: ArtistEPKComponent, canActivate: [authGuard], data: { preview: true } },

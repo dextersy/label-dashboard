@@ -18,14 +18,20 @@ export interface DashboardChecklist {
 })
 export class OnboardingChecklistComponent {
   @Input() checklist!: DashboardChecklist;
+  @Input() featureMusicReleases: boolean = true;
 
   get items() {
-    return [
+    const items = [
       { label: 'Update your profile',            route: '/artist/profile',      done: this.checklist.hasProfile },
       { label: 'Upload photos to your gallery',  route: '/artist/gallery',      done: this.checklist.hasGalleryPhotos },
-      { label: 'Set up your payout account', route: '/financial/payments',  done: this.checklist.hasSettlementAccount },
-      { label: 'Create your first release',      route: '/music/releases/new',  done: this.checklist.hasRelease }
     ];
+    if (this.featureMusicReleases) {
+      items.push(
+        { label: 'Set up your payout account', route: '/financial/payments',  done: this.checklist.hasSettlementAccount },
+        { label: 'Create your first release',  route: '/music/releases/new',  done: this.checklist.hasRelease }
+      );
+    }
+    return items;
   }
 
   get completedCount(): number {
@@ -33,6 +39,6 @@ export class OnboardingChecklistComponent {
   }
 
   get isAllDone(): boolean {
-    return this.completedCount === 4;
+    return this.completedCount === this.items.length;
   }
 }

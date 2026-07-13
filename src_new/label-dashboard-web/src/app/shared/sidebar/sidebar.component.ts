@@ -66,6 +66,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   // Feature toggle state (from brand settings)
   featureSublabels: boolean = true;
   featureMusicWorkspace: boolean = true;
+  featureArtistProfiles: boolean = true;
+  featureMusicReleases: boolean = true;
 
   // Workspace switch modal
   showWorkspaceSwitchModal = false;
@@ -225,9 +227,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
         const dashboardItem: MenuItem = { route: '/dashboard', icon: 'chart-bar', title: 'Dashboard', adminOnly: false };
         const musicSection = this.sections.find(section => section.id === 'artist-music-financial');
         if (musicSection) {
+          const filteredItems = musicSection.items.filter(item => {
+            if ((item.route === '/artist' || item.route === '/team') && !this.featureArtistProfiles) return false;
+            if ((item.route === '/music' || item.route === '/financial') && !this.featureMusicReleases) return false;
+            return true;
+          });
           this.visibleSections = [{
             ...musicSection,
-            items: [dashboardItem, ...musicSection.items]
+            items: [dashboardItem, ...filteredItems]
           }];
         } else {
           this.visibleSections = [];
@@ -272,7 +279,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           const labelsCoreItems = (labelsItem.children || [])
             .filter(child => {
               if (child.route === '/labels/dashboard' && !this.featureMusicWorkspace) return false;
-              if (child.route === '/labels/discography' && !this.featureMusicWorkspace) return false;
+              if (child.route === '/labels/discography' && !this.featureMusicReleases) return false;
               if (child.route === '/labels/sublabels' && !this.featureSublabels) return false;
               return true;
             })
@@ -290,8 +297,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
           this.visibleSections = [{ id: 'labels-top-level', items: labelsCoreItems }];
 
-          // Reports — shown only when Music feature is enabled
-          if (this.featureMusicWorkspace) {
+          // Reports — shown only when Music Releases feature is enabled
+          if (this.featureMusicReleases) {
             const adminSection = this.sections.find(s => s.id === 'admin');
             const reportsChild = adminSection?.items[0]?.children?.find(c => c.route === '/labels/reports');
             if (reportsChild) {
@@ -503,6 +510,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Apply feature flags
     this.featureSublabels = settings.feature_sublabels !== false;
     this.featureMusicWorkspace = settings.feature_music_workspace !== false;
+    this.featureArtistProfiles = settings.feature_artist_profiles !== false;
+    this.featureMusicReleases = settings.feature_music_releases !== false;
 
     // Refresh available workspaces (feature flags may affect which workspaces are visible)
     this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);

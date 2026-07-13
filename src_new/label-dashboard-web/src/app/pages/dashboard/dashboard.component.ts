@@ -61,6 +61,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private artistSubscription = new Subscription();
   brandColor: string = '#667eea';
   brandName: string = '';
+  featureMusicReleases: boolean = true;
   gradientStart: string = '#667eea';
   gradientEnd: string = '#764ba2';
   shadowColor: string = 'rgba(102, 126, 234, 0.3)';
@@ -157,6 +158,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private applyBrandColors(settings: BrandSettings): void {
     this.brandColor = settings.brand_color;
     this.brandName = settings.name || '';
+    this.featureMusicReleases = settings.feature_music_releases !== false;
     this.generateGradientColors(settings.brand_color);
   }
 

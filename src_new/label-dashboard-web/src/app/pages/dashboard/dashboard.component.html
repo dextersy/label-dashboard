@@ -48,7 +48,8 @@
         </div>
 
       </div>
-      <a routerLink="/music/releases/new"
+      <a *ngIf="featureMusicReleases"
+         routerLink="/music/releases/new"
          class="btn btn-primary btn-sm tw-flex-shrink-0 tw-no-underline tw-flex tw-items-center tw-gap-1 tw-w-full sm:tw-w-auto tw-justify-center">
         <app-icon name="plus" iconOnly /> Submit a release
       </a>
@@ -63,11 +64,12 @@
         <!-- Checklist -->
         <app-onboarding-checklist
           *ngIf="dashboardData.checklist"
-          [checklist]="dashboardData.checklist">
+          [checklist]="dashboardData.checklist"
+          [featureMusicReleases]="featureMusicReleases">
         </app-onboarding-checklist>
 
         <!-- Releases card -->
-        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-px-card-pad tw-py-4">
+        <div *ngIf="featureMusicReleases" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-px-card-pad tw-py-4">
 
           <!-- Card header -->
           <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
@@ -156,7 +158,8 @@
             <app-icon name="chevron-right" iconOnly class="tw-text-muted tw-flex-shrink-0" />
           </a>
 
-          <a routerLink="/financial/summary"
+          <a *ngIf="featureMusicReleases"
+             routerLink="/financial/summary"
              class="tw-flex tw-items-center tw-gap-3 tw-py-2.5 tw-no-underline hover:tw-bg-gray-50 tw-transition-colors tw-rounded"
              style="border-bottom: 0.5px solid #e5e7eb;">
             <div class="tw-flex-shrink-0 tw-w-[34px] tw-h-[34px] tw-rounded-input tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-text-gray-500">
@@ -184,7 +187,7 @@
         </div>
 
         <!-- Top earning releases card -->
-        <div *ngIf="dashboardData.topEarningReleases?.length"
+        <div *ngIf="featureMusicReleases && dashboardData.topEarningReleases?.length"
              class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-px-card-pad tw-py-4">
           <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Top earning releases</h3>
 

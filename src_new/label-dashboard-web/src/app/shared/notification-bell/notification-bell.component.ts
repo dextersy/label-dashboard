@@ -95,7 +95,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       'user_invite': 'envelope',
       'login_success': 'lock',
       'login_failed_alert': 'warning',
-      'ticket_purchased': 'ticket'
+      'ticket_purchased': 'ticket',
+      'artist_registration': 'user-plus'
     };
     return iconMap[type] || 'info';
   }
