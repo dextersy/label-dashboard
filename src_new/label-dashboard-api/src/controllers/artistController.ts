@@ -423,7 +423,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
             await sendTeamInviteEmail(
               access.user.email_address,
               artist.name,
-              brand?.name || artist.name,
+              brand?.brand_name || artist.name,
               inviteUrl,
               {
                 brand_color: brand?.brand_color || '#1595e7',
