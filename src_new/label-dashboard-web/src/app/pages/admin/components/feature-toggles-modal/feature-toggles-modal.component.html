@@ -21,26 +21,37 @@
             Control which workspaces and features are available on this sublabel's domain. Click a card to toggle a feature. Changes take effect after saving.
           </div>
 
-          <!-- Feature cards grid -->
+          <!-- Feature cards grid (2x2) -->
           <div class="feature-grid">
 
-            <!-- Music Workspace -->
+            <!-- Artist Profiles -->
             <button
               type="button"
               class="feature-card"
-              [class.active]="toggles.feature_music_workspace"
-              (click)="toggleFeature('feature_music_workspace')">
-              <div class="feature-badge-disabled" *ngIf="!toggles.feature_music_workspace">
-                Disabled
-              </div>
-              <div class="feature-badge-enabled" *ngIf="toggles.feature_music_workspace">
+              [class.active]="toggles.feature_artist_profiles"
+              (click)="toggleFeature('feature_artist_profiles')">
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_artist_profiles">Disabled</div>
+              <div class="feature-badge-enabled" *ngIf="toggles.feature_artist_profiles">
                 <app-icon name="check" iconOnly />
               </div>
-              <div class="feature-icon">
-                <app-icon name="music" iconOnly />
+              <div class="feature-icon"><app-icon name="headphones" iconOnly /></div>
+              <div class="feature-name">Artist Profiles</div>
+              <div class="feature-desc">Artist info, gallery, EPK, and team management</div>
+            </button>
+
+            <!-- Music Releases -->
+            <button
+              type="button"
+              class="feature-card"
+              [class.active]="toggles.feature_music_releases"
+              (click)="toggleFeature('feature_music_releases')">
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_music_releases">Disabled</div>
+              <div class="feature-badge-enabled" *ngIf="toggles.feature_music_releases">
+                <app-icon name="check" iconOnly />
               </div>
-              <div class="feature-name">Music Workspace</div>
-              <div class="feature-desc">Artist info, releases, and financial</div>
+              <div class="feature-icon"><app-icon name="music" iconOnly /></div>
+              <div class="feature-name">Music Distribution</div>
+              <div class="feature-desc">Music distribution, financial reports, and discography</div>
             </button>
 
             <!-- Campaigns Workspace -->
@@ -49,15 +60,11 @@
               class="feature-card"
               [class.active]="toggles.feature_campaigns_workspace"
               (click)="toggleFeature('feature_campaigns_workspace')">
-              <div class="feature-badge-disabled" *ngIf="!toggles.feature_campaigns_workspace">
-                Disabled
-              </div>
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_campaigns_workspace">Disabled</div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_campaigns_workspace">
                 <app-icon name="check" iconOnly />
               </div>
-              <div class="feature-icon">
-                <app-icon name="bullhorn" iconOnly />
-              </div>
+              <div class="feature-icon"><app-icon name="bullhorn" iconOnly /></div>
               <div class="feature-name">Campaigns Workspace</div>
               <div class="feature-desc">Events and fundraisers</div>
             </button>
@@ -68,15 +75,11 @@
               class="feature-card"
               [class.active]="toggles.feature_sublabels"
               (click)="toggleFeature('feature_sublabels')">
-              <div class="feature-badge-disabled" *ngIf="!toggles.feature_sublabels">
-                Disabled
-              </div>
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_sublabels">Disabled</div>
               <div class="feature-badge-enabled" *ngIf="toggles.feature_sublabels">
                 <app-icon name="check" iconOnly />
               </div>
-              <div class="feature-icon">
-                <app-icon name="tags" iconOnly />
-              </div>
+              <div class="feature-icon"><app-icon name="tags" iconOnly /></div>
               <div class="feature-name">Sublabels</div>
               <div class="feature-desc">Sublabels management in Labels workspace</div>
             </button>

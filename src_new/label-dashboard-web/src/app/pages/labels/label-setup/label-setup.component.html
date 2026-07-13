@@ -149,6 +149,66 @@
 
         </div>
       </div>
+
+      <!-- Artist Custom Fields (full width) -->
+      <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6 tw-mt-6">
+        <div class="tw-flex tw-items-center tw-justify-between tw-mb-5">
+          <div>
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-1">Artist Registration Custom Fields</h3>
+            <p class="tw-text-xs tw-text-muted tw-mb-0">These fields appear on the public artist registration form and on each artist's profile page.</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addCustomField()">
+            <app-icon name="plus" /> Add Field
+          </button>
+        </div>
+
+        <p *ngIf="!customFields || customFields.length === 0" class="tw-text-sm tw-text-muted">No custom fields defined.</p>
+
+        <div *ngIf="customFields && customFields.length > 0" class="tw-space-y-3">
+          <div *ngFor="let field of customFields; let i = index"
+               class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-[1fr_1fr_1fr_auto_auto] tw-gap-2 tw-items-center tw-p-3 tw-rounded-lg tw-border tw-border-subtle tw-bg-gray-50">
+            <div>
+              <label class="tw-label tw-text-xs">Key</label>
+              <input type="text" class="tw-input tw-input-sm" [(ngModel)]="field.key" [ngModelOptions]="{standalone: true}" placeholder="e.g. years_participated" (ngModelChange)="onCustomFieldsChanged()">
+            </div>
+            <div>
+              <label class="tw-label tw-text-xs">Label</label>
+              <input type="text" class="tw-input tw-input-sm" [(ngModel)]="field.label" [ngModelOptions]="{standalone: true}" placeholder="e.g. Years Participated" (ngModelChange)="onCustomFieldsChanged()">
+            </div>
+            <div>
+              <label class="tw-label tw-text-xs">Type</label>
+              <select class="tw-input tw-input-sm" [(ngModel)]="field.type" [ngModelOptions]="{standalone: true}" (ngModelChange)="onCustomFieldsChanged()">
+                <option value="text">Text</option>
+                <option value="textarea">Textarea</option>
+                <option value="number">Number</option>
+                <option value="select">Select</option>
+                <option value="array">Array (comma-separated)</option>
+              </select>
+            </div>
+            <div class="tw-flex tw-items-center tw-gap-1 tw-mt-4 sm:tw-mt-0">
+              <input type="checkbox" [id]="'req_' + i" [(ngModel)]="field.required" [ngModelOptions]="{standalone: true}" (ngModelChange)="onCustomFieldsChanged()">
+              <label [for]="'req_' + i" class="tw-text-xs tw-text-gray-600 tw-cursor-pointer">Required</label>
+            </div>
+            <div class="tw-flex tw-justify-end sm:tw-mt-4">
+              <button type="button" class="btn btn-sm btn-ghost text-danger" (click)="removeCustomField(i)" title="Remove field">
+                <app-icon name="trash" iconOnly />
+              </button>
+            </div>
+
+            <!-- Select options -->
+            <div *ngIf="field.type === 'select'" class="sm:tw-col-span-5">
+              <label class="tw-label tw-text-xs">Options (comma-separated)</label>
+              <input type="text"
+                     class="tw-input tw-input-sm"
+                     [ngModel]="field.options?.join(', ')"
+                     [ngModelOptions]="{standalone: true}"
+                     placeholder="Option 1, Option 2, Option 3"
+                     (ngModelChange)="onSelectOptionsChanged(i, $event)">
+            </div>
+          </div>
+        </div>
+      </div>
+
     </form>
   </div>
 

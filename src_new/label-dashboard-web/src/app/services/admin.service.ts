@@ -22,6 +22,15 @@ export interface BrandSettings {
   event_transaction_fixed_fee?: number;
   event_revenue_percentage_fee?: number;
   event_fee_revenue_type?: 'net' | 'gross';
+  artist_custom_fields?: ArtistCustomField[];
+}
+
+export interface ArtistCustomField {
+  key: string;
+  label: string;
+  type: 'text' | 'textarea' | 'number' | 'select' | 'array';
+  required?: boolean;
+  options?: string[];
 }
 
 export interface FeeSettingsSection {
@@ -86,6 +95,8 @@ export interface FeatureToggles {
   feature_music_workspace: boolean;
   feature_campaigns_workspace: boolean;
   feature_sublabels: boolean;
+  feature_artist_profiles: boolean;
+  feature_music_releases: boolean;
 }
 
 export interface ChildBrand {

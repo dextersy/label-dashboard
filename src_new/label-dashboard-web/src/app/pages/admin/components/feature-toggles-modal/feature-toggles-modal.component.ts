@@ -24,7 +24,9 @@ export class FeatureTogglesModalComponent implements OnChanges {
   toggles: FeatureToggles = {
     feature_music_workspace: true,
     feature_campaigns_workspace: true,
-    feature_sublabels: true
+    feature_sublabels: true,
+    feature_artist_profiles: true,
+    feature_music_releases: true
   };
 
   constructor(
@@ -62,8 +64,16 @@ export class FeatureTogglesModalComponent implements OnChanges {
   onSave(): void {
     if (!this.brandId) return;
 
+    // Derive feature_music_workspace from the granular toggles so the workspace
+    // switcher continues to work correctly: music workspace is available when
+    // either artist profiles or music releases are enabled.
+    const togglesToSave: FeatureToggles = {
+      ...this.toggles,
+      feature_music_workspace: this.toggles.feature_artist_profiles || this.toggles.feature_music_releases
+    };
+
     this.saving = true;
-    this.adminService.updateFeatureToggles(this.brandId, this.toggles).subscribe({
+    this.adminService.updateFeatureToggles(this.brandId, togglesToSave).subscribe({
       next: () => {
         this.notificationService.showSuccess('Feature settings updated successfully');
         this.saved.emit(this.toggles);

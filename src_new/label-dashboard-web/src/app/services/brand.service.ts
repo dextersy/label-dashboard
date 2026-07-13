@@ -2,6 +2,14 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ApiService } from './api.service';
 
+export interface ArtistCustomField {
+  key: string;
+  label: string;
+  type: 'text' | 'textarea' | 'number' | 'select' | 'array';
+  required?: boolean;
+  options?: string[];
+}
+
 export interface BrandSettings {
   id: number | null;
   name: string;
@@ -15,7 +23,10 @@ export interface BrandSettings {
   feature_music_workspace?: boolean;
   feature_campaigns_workspace?: boolean;
   feature_sublabels?: boolean;
+  feature_artist_profiles?: boolean;
+  feature_music_releases?: boolean;
   is_ticketing_parent?: boolean;
+  artist_custom_fields?: ArtistCustomField[];
 }
 
 export interface BrandApiResponse {
@@ -32,7 +43,10 @@ export interface BrandApiResponse {
     feature_music_workspace?: boolean;
     feature_campaigns_workspace?: boolean;
     feature_sublabels?: boolean;
+    feature_artist_profiles?: boolean;
+    feature_music_releases?: boolean;
     is_ticketing_parent?: boolean;
+    artist_custom_fields?: ArtistCustomField[];
   };
 }
 
@@ -78,7 +92,10 @@ export class BrandService {
             feature_music_workspace: response.brand.feature_music_workspace,
             feature_campaigns_workspace: response.brand.feature_campaigns_workspace,
             feature_sublabels: response.brand.feature_sublabels,
-            is_ticketing_parent: response.brand.is_ticketing_parent
+            feature_artist_profiles: response.brand.feature_artist_profiles,
+            feature_music_releases: response.brand.feature_music_releases,
+            is_ticketing_parent: response.brand.is_ticketing_parent,
+            artist_custom_fields: response.brand.artist_custom_fields || []
           };
           localStorage.setItem('brand_settings', JSON.stringify(brandSettings));
           this.brandSettingsSubject.next(brandSettings);

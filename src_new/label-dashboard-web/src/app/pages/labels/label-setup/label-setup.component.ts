@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
-import { AdminService, BrandSettings, Domain, DomainVerificationState, DomainVerificationEvent, SublabelCreationState } from '../../../services/admin.service';
+import { AdminService, BrandSettings, Domain, DomainVerificationState, DomainVerificationEvent, SublabelCreationState, ArtistCustomField } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { BrandService } from '../../../services/brand.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
@@ -35,6 +35,8 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   activeSection: 'brand-settings' | 'domains' = 'brand-settings';
   serverIp: string | null = null;
+  customFields: ArtistCustomField[] = [];
+  customFieldsDirty = false;
   private subscriptions: Subscription[] = [];
 
   get navTabs(): InPageNavTab[] {
@@ -116,6 +118,8 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
       next: (settings) => {
         this.brandSettings = settings;
         this.brandForm.patchValue(settings);
+        this.customFields = settings.artist_custom_fields ? [...settings.artist_custom_fields] : [];
+        this.customFieldsDirty = false;
         this.loadDomains();
       },
       error: () => {
@@ -149,7 +153,7 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
     }
     if (this.brandSettings) {
       this.loading = true;
-      const formData = { ...this.brandSettings, ...this.brandForm.value };
+      const formData = { ...this.brandSettings, ...this.brandForm.value, artist_custom_fields: this.customFields };
 
       this.adminService.updateBrandSettings(formData).subscribe({
         next: (response) => {
@@ -169,6 +173,10 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
             };
             this.brandService.updateBrandSettings(brandServiceSettings);
           }
+          if (response.brand?.artist_custom_fields !== undefined) {
+            this.customFields = response.brand.artist_custom_fields || [];
+          }
+          this.customFieldsDirty = false;
           this.notificationService.showSuccess('Brand settings saved successfully');
           this.loading = false;
         },
@@ -431,5 +439,24 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
       case 'Unverified':
       default: return 'Verify';
     }
+  }
+
+  addCustomField(): void {
+    this.customFields = [...this.customFields, { key: '', label: '', type: 'text', required: false }];
+    this.customFieldsDirty = true;
+  }
+
+  removeCustomField(index: number): void {
+    this.customFields = this.customFields.filter((_, i) => i !== index);
+    this.customFieldsDirty = true;
+  }
+
+  onCustomFieldsChanged(): void {
+    this.customFieldsDirty = true;
+  }
+
+  onSelectOptionsChanged(index: number, value: string): void {
+    this.customFields[index].options = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    this.customFieldsDirty = true;
   }
 }
