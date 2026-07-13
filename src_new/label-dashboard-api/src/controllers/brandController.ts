@@ -41,7 +41,8 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
           'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
           'favicon_url', 'paymongo_wallet_id', 'payment_processing_fee_for_payouts',
           'release_submission_url', 'catalog_prefix',
-          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels'
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels',
+          'feature_artist_profiles', 'feature_music_releases', 'artist_custom_fields'
         ]
       }]
     });
@@ -69,7 +70,10 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
         feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
         feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
-        is_ticketing_parent: ticketingParentBrandId !== null && brand.id === ticketingParentBrandId
+        feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
+        feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases),
+        is_ticketing_parent: ticketingParentBrandId !== null && brand.id === ticketingParentBrandId,
+        artist_custom_fields: brand.artist_custom_fields || []
       }
     });
 
@@ -106,7 +110,8 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       music_fee_revenue_type: brand.music_fee_revenue_type || 'net',
       event_transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
       event_revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
-      event_fee_revenue_type: brand.event_fee_revenue_type || 'net'
+      event_fee_revenue_type: brand.event_fee_revenue_type || 'net',
+      artist_custom_fields: brand.artist_custom_fields || []
     });
 
   } catch (error) {
@@ -132,7 +137,8 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       music_fee_revenue_type,
       event_transaction_fixed_fee,
       event_revenue_percentage_fee,
-      event_fee_revenue_type
+      event_fee_revenue_type,
+      artist_custom_fields
     } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
@@ -156,7 +162,8 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       music_fee_revenue_type: music_fee_revenue_type || brand.music_fee_revenue_type,
       event_transaction_fixed_fee: event_transaction_fixed_fee !== undefined ? event_transaction_fixed_fee : brand.event_transaction_fixed_fee,
       event_revenue_percentage_fee: event_revenue_percentage_fee !== undefined ? event_revenue_percentage_fee : brand.event_revenue_percentage_fee,
-      event_fee_revenue_type: event_fee_revenue_type || brand.event_fee_revenue_type
+      event_fee_revenue_type: event_fee_revenue_type || brand.event_fee_revenue_type,
+      artist_custom_fields: artist_custom_fields !== undefined ? artist_custom_fields : brand.artist_custom_fields
     });
 
     res.json({
@@ -178,7 +185,8 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         music_fee_revenue_type: brand.music_fee_revenue_type,
         event_transaction_fixed_fee: brand.event_transaction_fixed_fee,
         event_revenue_percentage_fee: brand.event_revenue_percentage_fee,
-        event_fee_revenue_type: brand.event_fee_revenue_type
+        event_fee_revenue_type: brand.event_fee_revenue_type,
+        artist_custom_fields: brand.artist_custom_fields
       }
     });
 
@@ -346,7 +354,9 @@ export const getFeatureToggles = async (req: Request, res: Response) => {
     res.json({
       feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
       feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
-      feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels)
+      feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
+      feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
+      feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases)
     });
 
   } catch (error) {
@@ -358,7 +368,7 @@ export const getFeatureToggles = async (req: Request, res: Response) => {
 export const updateFeatureToggles = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { feature_music_workspace, feature_campaigns_workspace, feature_sublabels } = req.body;
+    const { feature_music_workspace, feature_campaigns_workspace, feature_sublabels, feature_artist_profiles, feature_music_releases } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
 
@@ -376,18 +386,30 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
     if (feature_sublabels !== undefined && typeof feature_sublabels !== 'boolean') {
       return res.status(400).json({ error: 'feature_sublabels must be a boolean' });
     }
+    if (feature_artist_profiles !== undefined && typeof feature_artist_profiles !== 'boolean') {
+      return res.status(400).json({ error: 'feature_artist_profiles must be a boolean' });
+    }
+    if (feature_music_releases !== undefined && typeof feature_music_releases !== 'boolean') {
+      return res.status(400).json({ error: 'feature_music_releases must be a boolean' });
+    }
 
     await brand.update({
       feature_music_workspace: feature_music_workspace !== undefined ? feature_music_workspace : brand.feature_music_workspace,
       feature_campaigns_workspace: feature_campaigns_workspace !== undefined ? feature_campaigns_workspace : brand.feature_campaigns_workspace,
-      feature_sublabels: feature_sublabels !== undefined ? feature_sublabels : brand.feature_sublabels
+      feature_sublabels: feature_sublabels !== undefined ? feature_sublabels : brand.feature_sublabels,
+      feature_artist_profiles: feature_artist_profiles !== undefined ? feature_artist_profiles : brand.feature_artist_profiles,
+      feature_music_releases: feature_music_releases !== undefined ? feature_music_releases : brand.feature_music_releases
     });
+
+    await brand.reload();
 
     res.json({
       message: 'Feature toggles updated successfully',
       feature_music_workspace: brand.feature_music_workspace !== false,
       feature_campaigns_workspace: brand.feature_campaigns_workspace !== false,
-      feature_sublabels: brand.feature_sublabels !== false
+      feature_sublabels: brand.feature_sublabels !== false,
+      feature_artist_profiles: brand.feature_artist_profiles !== false,
+      feature_music_releases: brand.feature_music_releases !== false
     });
 
   } catch (error) {

@@ -34,6 +34,10 @@ const checkArtistAccess = async (artistId: number, userId: number, brandId: numb
 
   // For non-admin users, check if they have access to this artist
   if (!isAdmin) {
+    if (artist.status !== 'Active') {
+      return null;
+    }
+
     const hasAccess = await ArtistAccess.findOne({
       where: {
         artist_id: artistId,
@@ -77,7 +81,7 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
           {
             model: Artist,
             as: 'artist',
-            where: { brand_id: req.user.brand_id },
+            where: { brand_id: req.user.brand_id, status: 'Active' },
             include: [
               { model: Brand, as: 'brand' },
               { model: Release, as: 'releases' },
@@ -262,7 +266,9 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       band_members,
       youtube_channel,
       payout_point,
-      notify_changes = false
+      notify_changes = false,
+      status,
+      custom_data
     } = req.body;
 
     // Check if user has access to this artist
@@ -350,7 +356,8 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Store original values for change notification
+    // Store original values for change notification and status transition detection
+    const originalStatus = artist.status;
     const originalValues = {
       name: artist.name,
       bio: artist.bio,
@@ -364,7 +371,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       profile_photo: artist.profile_photo
     };
 
-    await artist.update({
+    const updateData: any = {
       name: name || artist.name,
       facebook_handle,
       instagram_handle,
@@ -377,10 +384,64 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       payout_point: payout_point || artist.payout_point,
       profile_photo: profilePhotoUrl,
       profile_photo_id: newProfilePhotoId
-    });
+    };
+
+    // Only admins can change status
+    if (req.user.is_admin && status !== undefined) {
+      if (!['Active', 'Inactive'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status value' });
+      }
+      updateData.status = status;
+    }
+
+    // custom_data can be updated by anyone with edit access
+    if (custom_data !== undefined) {
+      updateData.custom_data = typeof custom_data === 'string' ? JSON.parse(custom_data) : custom_data;
+    }
+
+    await artist.update(updateData);
 
     // Refresh artist data to get updated values
     await artist.reload();
+
+    // When an artist is activated for the first time, send pending invite emails
+    if (originalStatus === 'Inactive' && artist.status === 'Active') {
+      const pendingAccesses = await ArtistAccess.findAll({
+        where: { artist_id: artistId, status: 'Pending' },
+        include: [{ model: User, as: 'user' }]
+      });
+
+      if (pendingAccesses.length > 0) {
+        const brand = await Brand.findByPk(req.user.brand_id);
+        const frontendUrl = await getBrandFrontendUrl(req.user.brand_id);
+
+        for (const access of pendingAccesses) {
+          if (!access.user?.email_address || !access.invite_hash) continue;
+          const inviteUrl = `${frontendUrl}/invite/accept?hash=${access.invite_hash}`;
+          await access.update({ status: 'Invited' });
+          try {
+            await sendTeamInviteEmail(
+              access.user.email_address,
+              artist.name,
+              brand?.name || artist.name,
+              inviteUrl,
+              {
+                brand_color: brand?.brand_color || '#1595e7',
+                logo_url: brand?.logo_url || ''
+              }
+            );
+          } catch (emailError) {
+            console.error(`Failed to send pending invite email to ${access.user.email_address}:`, emailError);
+          }
+
+          try {
+            await createNotification(access.user.id, req.user.brand_id, 'team_invite', `You've been invited to join ${artist.name}'s team`, undefined, `/invite/accept?hash=${access.invite_hash}`);
+          } catch (notifError) {
+            console.error(`Failed to create pending invite notification for user ${access.user.id}:`, notifError);
+          }
+        }
+      }
+    }
 
     // Send notification email if requested and there are changes
     if (notify_changes) {
@@ -1472,11 +1533,11 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
     // Generate cryptographically strong invite hash
     const inviteHash = generateSecureToken();
 
-    // Create artist access
+    // Create artist access — use 'Invited' so the activation flow doesn't re-send this email
     const access = await ArtistAccess.create({
       artist_id: parseInt(id as string),
       user_id: user.id,
-      status: 'Pending',
+      status: 'Invited',
       invite_hash: inviteHash
     });
 

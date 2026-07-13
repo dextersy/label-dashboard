@@ -527,7 +527,8 @@ export const getPendingInvites = async (req: any, res: Response) => {
         {
           model: Artist,
           as: 'artist',
-          attributes: ['id', 'name', 'brand_id']
+          attributes: ['id', 'name', 'brand_id'],
+          where: { status: 'Active' }
         }
       ]
     });

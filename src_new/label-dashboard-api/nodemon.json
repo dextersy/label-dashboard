@@ -8,7 +8,7 @@
     "node_modules",
     "uploads/**/*"
   ],
-  "exec": "ts-node --transpile-only src/app.ts",
+  "exec": "tsx src/app.ts",
   "env": {
     "NODE_ENV": "development"
   },
