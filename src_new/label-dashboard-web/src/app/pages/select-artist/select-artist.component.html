@@ -60,6 +60,7 @@
         <div class="artist-info">
           <h3 class="artist-name">{{ artist.name }}</h3>
           <p *ngIf="artist.band_members" class="artist-members">{{ artist.band_members }}</p>
+          <span *ngIf="artist.status === 'Inactive'" class="status-badge status-secondary tw-mt-1">Inactive</span>
         </div>
         <div class="artist-select-indicator">
           <app-icon name="chevron-right" />

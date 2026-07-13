@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ArtistStateService } from '../../services/artist-state.service';
 import { Artist } from '../../models/artist.model';
@@ -21,17 +21,23 @@ export class SelectArtistComponent implements OnInit {
   error: string | null = null;
   isAdmin = false;
 
+  private autoSelectId: number | null = null;
+
   constructor(
     private http: HttpClient,
     private router: Router,
+    private route: ActivatedRoute,
     private artistStateService: ArtistStateService
   ) {}
 
   ngOnInit(): void {
+    const selectParam = this.route.snapshot.queryParamMap.get('select');
+    this.autoSelectId = selectParam ? parseInt(selectParam, 10) : null;
+
     // Clear the current artist selection when this page loads
     this.artistStateService.setSelectedArtist(null);
     localStorage.removeItem('selected_artist_id');
-    
+
     this.loadArtists();
   }
 
@@ -53,6 +59,13 @@ export class SelectArtistComponent implements OnInit {
         this.artists = data.artists;
         this.isAdmin = data.isAdmin;
         this.loading = false;
+
+        if (this.autoSelectId) {
+          const target = this.artists.find(a => a.id === this.autoSelectId);
+          if (target) {
+            this.selectArtist(target, '/artist/profile');
+          }
+        }
       },
       error: (error) => {
         console.error('Error loading artists:', error);
@@ -62,15 +75,14 @@ export class SelectArtistComponent implements OnInit {
     });
   }
 
-  selectArtist(artist: Artist): void {
+  selectArtist(artist: Artist, redirectTo = '/dashboard'): void {
     // Save to localStorage
     localStorage.setItem('selected_artist_id', artist.id.toString());
-    
+
     // Update the state service
     this.artistStateService.setSelectedArtist(artist);
-    
-    // Navigate to dashboard
-    this.router.navigate(['/dashboard']);
+
+    this.router.navigate([redirectTo]);
   }
 
   getArtistPhotoUrl(artist: Artist): string | null {

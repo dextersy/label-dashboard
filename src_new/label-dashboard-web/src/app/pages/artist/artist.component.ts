@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { Artist } from '../../models/artist.model';
+import { Artist, ArtistCustomField } from '../../models/artist.model';
+import { AdminService } from '../../services/admin.service';
 import { ArtistProfileTabComponent, ArtistProfile } from './components/artist-profile-tab/artist-profile-tab.component';
 import { ArtistGalleryTabComponent } from './components/artist-gallery-tab/artist-gallery-tab.component';
 import { ArtistReleasesTabComponent, ArtistRelease } from './components/artist-releases-tab/artist-releases-tab.component';
@@ -42,6 +43,7 @@ export class ArtistComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   isAdmin = false;
   loading = false;
   availableArtists: Artist[] = [];
+  artistCustomFields: ArtistCustomField[] = [];
   private routeSubscription: Subscription = new Subscription();
 
   isFormDirty(): boolean {
@@ -52,6 +54,7 @@ export class ArtistComponent implements OnInit, OnDestroy, HasUnsavedChanges {
     private notificationService: NotificationService,
     private artistStateService: ArtistStateService,
     private authService: AuthService,
+    private adminService: AdminService,
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient
@@ -61,7 +64,17 @@ export class ArtistComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   ngOnInit(): void {
     // Check if user is admin
     this.isAdmin = this.authService.isAdmin();
-    
+
+    // Load brand custom fields (admin only)
+    if (this.isAdmin) {
+      this.adminService.getBrandSettings().subscribe({
+        next: (settings) => {
+          this.artistCustomFields = settings.artist_custom_fields || [];
+        },
+        error: () => { /* non-critical, silently ignore */ }
+      });
+    }
+
     // Load available artists
     this.loadAvailableArtists();
 

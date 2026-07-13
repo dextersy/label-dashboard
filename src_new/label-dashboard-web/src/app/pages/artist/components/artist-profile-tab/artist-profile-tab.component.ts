@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Artist } from '../../../../models/artist.model';
+import { Artist, ArtistCustomField } from '../../../../models/artist.model';
 import { environment } from 'environments/environment';
 import { QuillModule } from 'ngx-quill';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
@@ -24,6 +24,8 @@ export interface ArtistProfile extends Artist {
     credits?: string;
     date_uploaded: Date;
   };
+  status?: 'Active' | 'Inactive';
+  custom_data?: Record<string, any>;
 }
 
 @Component({
@@ -34,8 +36,13 @@ export interface ArtistProfile extends Artist {
 })
 export class ArtistProfileTabComponent implements OnInit, OnChanges {
   @Input() artist: ArtistProfile | null = null;
+  @Input() isAdmin = false;
+  @Input() customFields: ArtistCustomField[] = [];
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() artistUpdated = new EventEmitter<ArtistProfile>();
+
+  editingCustomData: Record<string, any> = {};
+  savingStatus = false;
 
   editingProfile: ArtistProfile = {
     id: 0,
@@ -59,38 +66,54 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   private savedProfile: ArtistProfile | null = null;
 
   startEditing(field: string): void {
-    this.fieldOriginals.set(field, (this.editingProfile as any)[field]);
+    if (field.startsWith('cf_')) {
+      const key = field.slice(3);
+      this.fieldOriginals.set(field, this.editingCustomData[key]);
+    } else {
+      this.fieldOriginals.set(field, (this.editingProfile as any)[field]);
+    }
     this.editingFields.add(field);
   }
 
   cancelEditing(field: string): void {
     if (this.fieldOriginals.has(field)) {
-      (this.editingProfile as any)[field] = this.fieldOriginals.get(field);
-      if (field === 'bio') {
-        this.bioCharCount = this.getPlainTextLength(this.editingProfile.bio || '');
+      if (field.startsWith('cf_')) {
+        const key = field.slice(3);
+        this.editingCustomData[key] = this.fieldOriginals.get(field);
+      } else {
+        (this.editingProfile as any)[field] = this.fieldOriginals.get(field);
+        if (field === 'bio') {
+          this.bioCharCount = this.getPlainTextLength(this.editingProfile.bio || '');
+        }
       }
       this.fieldOriginals.delete(field);
     }
     this.editingFields.delete(field);
-    // Re-check against DB snapshot — field may still be dirty from a previous edit session
-    const savedValue = this.savedProfile ? (this.savedProfile as any)[field] : undefined;
-    const currentValue = (this.editingProfile as any)[field];
-    if (currentValue !== savedValue) {
-      this.dirtyFields.add(field);
+    if (field.startsWith('cf_')) {
+      // If no other custom fields are dirty, remove custom_data from dirty set
+      // (simplified: leave dirty tracking to the onCustomDataChange method)
     } else {
-      this.dirtyFields.delete(field);
+      const savedValue = this.savedProfile ? (this.savedProfile as any)[field] : undefined;
+      const currentValue = (this.editingProfile as any)[field];
+      if (currentValue !== savedValue) {
+        this.dirtyFields.add(field);
+      } else {
+        this.dirtyFields.delete(field);
+      }
     }
   }
 
   stopEditing(field: string): void {
     this.fieldOriginals.delete(field);
     this.editingFields.delete(field);
-    const savedValue = this.savedProfile ? (this.savedProfile as any)[field] : undefined;
-    const currentValue = (this.editingProfile as any)[field];
-    if (currentValue !== savedValue) {
-      this.dirtyFields.add(field);
-    } else {
-      this.dirtyFields.delete(field);
+    if (!field.startsWith('cf_')) {
+      const savedValue = this.savedProfile ? (this.savedProfile as any)[field] : undefined;
+      const currentValue = (this.editingProfile as any)[field];
+      if (currentValue !== savedValue) {
+        this.dirtyFields.add(field);
+      } else {
+        this.dirtyFields.delete(field);
+      }
     }
   }
 
@@ -150,6 +173,7 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
       this.editingProfile = { ...this.artist };
       this.savedProfile = { ...this.artist };
       this.bioCharCount = this.getPlainTextLength(this.artist.bio || '');
+      this.editingCustomData = this.normalizeCustomDataForEditing(this.artist.custom_data || {});
     }
   }
 
@@ -158,10 +182,64 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
       this.editingProfile = { ...this.artist };
       this.savedProfile = { ...this.artist };
       this.bioCharCount = this.getPlainTextLength(this.artist.bio || '');
+      this.editingCustomData = this.normalizeCustomDataForEditing(this.artist.custom_data || {});
       this.dirtyFields.clear();
       this.editingFields.clear();
       this.fieldOriginals.clear();
     }
+  }
+
+  setStatus(status: 'Active' | 'Inactive'): void {
+    if (!this.artist || !this.isAdmin || this.savingStatus) return;
+    if (this.editingProfile.status === status) return;
+
+    this.savingStatus = true;
+    const headers = this.getAuthHeaders();
+    const formData = new FormData();
+    formData.append('status', status);
+
+    this.http.put<{message: string, artist: ArtistProfile}>(
+      `${environment.apiUrl}/artists/${this.artist.id}`,
+      formData,
+      { headers }
+    ).subscribe({
+      next: (response) => {
+        if (response?.artist) {
+          this.editingProfile.status = response.artist.status;
+          this.artistUpdated.emit(response.artist);
+          this.alertMessage.emit({ type: 'success', message: `Artist marked as ${status}.` });
+        }
+        this.savingStatus = false;
+      },
+      error: () => {
+        this.alertMessage.emit({ type: 'error', message: 'Failed to update artist status.' });
+        this.savingStatus = false;
+      }
+    });
+  }
+
+  onCustomDataChange(key: string, value: any): void {
+    this.editingCustomData[key] = value;
+    this.dirtyFields.add('custom_data');
+  }
+
+  // Array-type custom fields are stored in the DB as JS arrays but edited as comma-separated strings
+  private normalizeCustomDataForEditing(data: Record<string, any>): Record<string, any> {
+    const result: Record<string, any> = {};
+    for (const key of Object.keys(data)) {
+      result[key] = Array.isArray(data[key]) ? data[key].join(', ') : data[key];
+    }
+    return result;
+  }
+
+  private buildCustomDataForSave(): Record<string, any> {
+    const result: Record<string, any> = { ...this.editingCustomData };
+    for (const field of this.customFields) {
+      if (field.type === 'array' && typeof result[field.key] === 'string') {
+        result[field.key] = result[field.key].split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
+      }
+    }
+    return result;
   }
 
   private getAuthHeaders(): HttpHeaders {
@@ -232,6 +310,9 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     formData.append('tiktok_handle', this.editingProfile.tiktok_handle || '');
     formData.append('youtube_channel', this.editingProfile.youtube_channel || '');
     formData.append('notify_changes', 'true');
+    if (Object.keys(this.editingCustomData).length > 0) {
+      formData.append('custom_data', JSON.stringify(this.buildCustomDataForSave()));
+    }
 
     if (this.selectedFile) {
       formData.append('profile_photo', this.selectedFile);
@@ -257,6 +338,7 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
             });
             this.selectedFile = null;
             this.dirtyFields.clear();
+            this.editingCustomData = this.normalizeCustomDataForEditing(response.artist.custom_data || {});
             this.savedProfile = { ...response.artist };
           } else {
             this.alertMessage.emit({

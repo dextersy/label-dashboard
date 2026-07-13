@@ -53,6 +53,25 @@
         <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Basic Information</h3>
         <div class="tw-space-y-5">
 
+          <!-- Artist Status (Admin Only) -->
+          <div *ngIf="isAdmin">
+            <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Status</p>
+            <div class="tw-flex tw-items-center tw-gap-3">
+              <p class="tw-mb-0 tw-font-semibold tw-text-gray-800">{{ editingProfile.status || 'Active' }}</p>
+              <div class="form-check form-switch tw-mb-0">
+                <input class="form-check-input"
+                       type="checkbox"
+                       role="switch"
+                       id="artistStatusToggle"
+                       [checked]="editingProfile.status !== 'Inactive'"
+                       [disabled]="savingStatus"
+                       (change)="setStatus(editingProfile.status === 'Inactive' ? 'Active' : 'Inactive')">
+              </div>
+              <div *ngIf="savingStatus" class="loading-spinner"></div>
+            </div>
+            <p class="tw-mb-0 tw-text-xs tw-text-muted">{{ editingProfile.status === 'Inactive' ? 'Hidden from public directories' : 'Visible in public directories' }}</p>
+          </div>
+
           <!-- Artist Name -->
           <div>
             <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Artist Name</p>
@@ -275,6 +294,58 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Custom Fields -->
+    <div *ngIf="customFields.length > 0" class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-6 tw-mb-6">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Additional Information</h3>
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-5">
+        <div *ngFor="let field of customFields">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">
+            {{ field.label }}
+          </p>
+          <div *ngIf="!isEditing('cf_' + field.key)" class="tw-flex tw-items-center tw-gap-1">
+            <span class="tw-text-base tw-text-gray-800 tw-break-words">{{ editingCustomData[field.key] || '—' }}</span>
+            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('cf_' + field.key)" title="Edit">
+              <app-icon name="edit" iconOnly />
+            </button>
+          </div>
+          <div *ngIf="isEditing('cf_' + field.key)" class="tw-flex tw-items-start tw-gap-1">
+
+            <input *ngIf="field.type === 'text' || field.type === 'number' || field.type === 'array'"
+                   [type]="field.type === 'array' ? 'text' : field.type"
+                   class="tw-input"
+                   [name]="'cf_' + field.key"
+                   [ngModel]="editingCustomData[field.key]"
+                   (ngModelChange)="onCustomDataChange(field.key, $event)"
+                   [placeholder]="field.type === 'array' ? 'Comma-separated values' : field.label">
+
+            <textarea *ngIf="field.type === 'textarea'"
+                      class="tw-input"
+                      rows="3"
+                      [name]="'cf_' + field.key"
+                      [ngModel]="editingCustomData[field.key]"
+                      (ngModelChange)="onCustomDataChange(field.key, $event)"
+                      [placeholder]="field.label"></textarea>
+
+            <select *ngIf="field.type === 'select'"
+                    class="tw-input"
+                    [name]="'cf_' + field.key"
+                    [ngModel]="editingCustomData[field.key]"
+                    (ngModelChange)="onCustomDataChange(field.key, $event)">
+              <option value="">— Select —</option>
+              <option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</option>
+            </select>
+
+            <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('cf_' + field.key)" title="Save">
+              <app-icon name="check" iconOnly />
+            </button>
+            <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('cf_' + field.key)" title="Cancel">
+              <app-icon name="x" iconOnly />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

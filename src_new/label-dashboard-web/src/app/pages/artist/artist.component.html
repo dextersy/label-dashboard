@@ -8,8 +8,10 @@
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
         <!-- Profile Tab (no card wrapper for minimalist design) -->
         <div *ngIf="activeTab === 'profile'">
-          <app-artist-profile-tab 
+          <app-artist-profile-tab
             [artist]="selectedArtist"
+            [isAdmin]="isAdmin"
+            [customFields]="artistCustomFields"
             (alertMessage)="onAlertMessage($event)"
             (artistUpdated)="onArtistUpdated($event)">
           </app-artist-profile-tab>

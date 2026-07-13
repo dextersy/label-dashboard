@@ -12,7 +12,7 @@ export interface TeamMember {
   id: number;
   name: string;
   email: string;
-  status: 'Pending' | 'Accepted';
+  status: 'Pending' | 'Invited' | 'Accepted';
   invited_date: string;
 }
 
@@ -110,7 +110,7 @@ export class ArtistTeamTabComponent {
         icon: 'paper-plane',
         label: 'Resend Invite',
         handler: (member: TeamMember) => this.resendInvite(member),
-        hidden: (member: TeamMember) => member.status !== 'Pending'
+        hidden: (member: TeamMember) => member.status !== 'Pending' && member.status !== 'Invited'
       },
       {
         icon: 'trash',

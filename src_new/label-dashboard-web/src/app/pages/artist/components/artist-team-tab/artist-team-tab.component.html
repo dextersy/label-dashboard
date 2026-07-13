@@ -34,8 +34,8 @@
           </div>
           <span class="status-badge"
                 [class.status-success]="member.status === 'Accepted'"
-                [class.status-warning]="member.status === 'Pending'"
-                [class.status-secondary]="member.status !== 'Accepted' && member.status !== 'Pending'">
+                [class.status-warning]="member.status === 'Pending' || member.status === 'Invited'"
+                [class.status-secondary]="member.status !== 'Accepted' && member.status !== 'Pending' && member.status !== 'Invited'">
             {{ member.status }}
           </span>
           <button *ngIf="visibleActions.length > 0"
