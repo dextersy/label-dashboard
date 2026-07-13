@@ -26,6 +26,9 @@ interface BrandAttributes {
   feature_music_workspace?: boolean;
   feature_campaigns_workspace?: boolean;
   feature_sublabels?: boolean;
+  feature_artist_profiles?: boolean;
+  feature_music_releases?: boolean;
+  artist_custom_fields?: object;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -55,6 +58,9 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public feature_music_workspace?: boolean;
   public feature_campaigns_workspace?: boolean;
   public feature_sublabels?: boolean;
+  public feature_artist_profiles?: boolean;
+  public feature_music_releases?: boolean;
+  public artist_custom_fields?: object;
 
   // Association properties
   public parentBrand?: Brand;
@@ -241,6 +247,20 @@ Brand.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    feature_artist_profiles: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    feature_music_releases: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    artist_custom_fields: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
   },
   {

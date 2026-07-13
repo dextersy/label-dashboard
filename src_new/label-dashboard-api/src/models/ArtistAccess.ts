@@ -3,7 +3,7 @@ import { sequelize } from '../config/database';
 import User from './User';
 import Artist from './Artist';
 
-type AccessStatus = 'Pending' | 'Accepted';
+type AccessStatus = 'Pending' | 'Invited' | 'Accepted';
 
 interface ArtistAccessAttributes {
   artist_id: number;
@@ -63,7 +63,7 @@ ArtistAccess.init(
       defaultValue: true,
     },
     status: {
-      type: DataTypes.ENUM('Pending', 'Accepted'),
+      type: DataTypes.ENUM('Pending', 'Invited', 'Accepted'),
       allowNull: false,
       defaultValue: 'Pending',
     },

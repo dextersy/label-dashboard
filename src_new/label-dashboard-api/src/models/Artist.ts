@@ -18,6 +18,8 @@ interface ArtistAttributes {
   payout_point: number;
   hold_payouts?: boolean;
   epk_template?: number;
+  status: 'Active' | 'Inactive';
+  custom_data?: object;
 }
 
 interface ArtistCreationAttributes extends Optional<ArtistAttributes, 'id' | 'brand_id' | 'payout_point'> {}
@@ -39,6 +41,8 @@ class Artist extends Model<ArtistAttributes, ArtistCreationAttributes> implement
   public payout_point!: number;
   public hold_payouts?: boolean;
   public epk_template?: number;
+  public status!: 'Active' | 'Inactive';
+  public custom_data?: object;
 
   // Association properties
   public brand?: any;
@@ -123,6 +127,15 @@ Artist.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
+    },
+    status: {
+      type: DataTypes.ENUM('Active', 'Inactive'),
+      allowNull: false,
+      defaultValue: 'Active',
+    },
+    custom_data: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
   },
   {
