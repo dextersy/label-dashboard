@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser } from '../models';
+import { generateSecureToken } from '../utils/tokenUtils';
 import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
-import { sendEmail } from '../utils/emailService';
+import { sendEmail, sendArtistRegistrationNotification } from '../utils/emailService';
+import { getBrandAdminUserIds, createNotificationsForUsers } from '../utils/notificationService';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
@@ -1568,7 +1570,8 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         attributes: [
           'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
           'favicon_url', 'release_submission_url', 'catalog_prefix',
-          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels'
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels',
+          'feature_artist_profiles', 'feature_music_releases', 'artist_custom_fields'
         ]
       }]
     });
@@ -1592,7 +1595,10 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
         feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
         feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
-        is_ticketing_parent: process.env.TICKETING_PARENT_BRAND_ID ? brand.id === parseInt(process.env.TICKETING_PARENT_BRAND_ID) : false
+        feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
+        feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases),
+        is_ticketing_parent: process.env.TICKETING_PARENT_BRAND_ID ? brand.id === parseInt(process.env.TICKETING_PARENT_BRAND_ID) : false,
+        artist_custom_fields: brand.artist_custom_fields || []
       }
     });
   } catch (error) {
@@ -3183,6 +3189,245 @@ export const submitLeadInquiry = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Submit lead inquiry error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Helper: resolve brand from request domain
+const getBrandFromRequestDomain = async (req: Request): Promise<{ brand: any; domain: string } | null> => {
+  const requestDomain = getRequestDomain(req);
+  if (!requestDomain) return null;
+
+  const domainRecord = await Domain.findOne({
+    where: { domain_name: requestDomain },
+    include: [{
+      model: Brand,
+      as: 'brand',
+      attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'favicon_url', 'artist_custom_fields']
+    }]
+  });
+
+  if (!domainRecord || !(domainRecord as any).brand) return null;
+  return { brand: (domainRecord as any).brand, domain: requestDomain };
+};
+
+// Public artist registration info (brand + custom fields config)
+export const getArtistRegistrationInfo = async (req: Request, res: Response) => {
+  try {
+    const result = await getBrandFromRequestDomain(req);
+    if (!result) {
+      return res.status(404).json({ error: 'Brand not found for this domain' });
+    }
+
+    const { brand } = result;
+    return res.json({
+      brand: {
+        id: brand.id,
+        name: brand.brand_name,
+        logo_url: brand.logo_url,
+        brand_color: brand.brand_color,
+        artist_custom_fields: brand.artist_custom_fields || []
+      }
+    });
+  } catch (error) {
+    console.error('getArtistRegistrationInfo error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Public artist directory (Active artists for the brand on the current domain)
+export const getArtistDirectory = async (req: Request, res: Response) => {
+  try {
+    const result = await getBrandFromRequestDomain(req);
+    if (!result) {
+      return res.status(404).json({ error: 'Brand not found for this domain' });
+    }
+
+    const { brand } = result;
+
+    const artists = await Artist.findAll({
+      where: { brand_id: brand.id, status: 'Active' },
+      attributes: ['id', 'name', 'bio', 'profile_photo', 'facebook_handle', 'instagram_handle',
+        'twitter_handle', 'tiktok_handle', 'youtube_channel', 'website_page_url', 'band_members', 'custom_data'],
+      include: [{ model: ArtistImage, as: 'profilePhotoImage', attributes: ['id', 'path'] }],
+      order: [['name', 'ASC']]
+    });
+
+    return res.json({
+      brand: {
+        id: brand.id,
+        name: brand.brand_name,
+        logo_url: brand.logo_url,
+        brand_color: brand.brand_color,
+        artist_custom_fields: brand.artist_custom_fields || []
+      },
+      artists
+    });
+  } catch (error) {
+    console.error('getArtistDirectory error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Public artist registration (creates artist with Inactive status)
+export const registerArtist = async (req: Request, res: Response) => {
+  try {
+    const result = await getBrandFromRequestDomain(req);
+    if (!result) {
+      return res.status(404).json({ error: 'Brand not found for this domain' });
+    }
+
+    const { brand } = result;
+
+    const {
+      name,
+      submitter_email,
+      bio,
+      website_page_url,
+      facebook_handle,
+      instagram_handle,
+      twitter_handle,
+      tiktok_handle,
+      youtube_channel,
+      band_members,
+      custom_data
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Artist name is required' });
+    }
+
+    if (!submitter_email || !submitter_email.trim()) {
+      return res.status(400).json({ error: 'Your email address is required' });
+    }
+
+    // Validate required custom fields
+    const customFields: any[] = Array.isArray(brand.artist_custom_fields) ? brand.artist_custom_fields : [];
+    let submittedCustomData: Record<string, any> = {};
+    if (custom_data) {
+      try {
+        submittedCustomData = typeof custom_data === 'string' ? JSON.parse(custom_data) : custom_data;
+      } catch {
+        return res.status(400).json({ error: 'Invalid custom_data format' });
+      }
+    }
+
+    for (const field of customFields) {
+      if (field.required) {
+        const val = submittedCustomData[field.key];
+        const isEmpty = val === undefined || val === null || val === '' ||
+          (Array.isArray(val) && val.length === 0);
+        if (isEmpty) {
+          return res.status(400).json({ error: `Field "${field.label}" is required` });
+        }
+      }
+    }
+
+    // Handle profile photo upload if provided
+    let profilePhotoUrl: string | null = null;
+    if (req.file) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const fileExt = path.extname(req.file.originalname);
+      const fileName = `artist-profile-reg-${uniqueSuffix}${fileExt}`;
+      try {
+        const { uploadToS3 } = await import('../utils/s3Service');
+        const s3Result = await uploadToS3({
+          Bucket: process.env.S3_BUCKET!,
+          Key: fileName,
+          Body: req.file.buffer,
+          ContentType: req.file.mimetype
+        });
+        profilePhotoUrl = s3Result.Location;
+      } catch (uploadError) {
+        console.error('Error uploading registration photo:', uploadError);
+        // Continue without photo
+      }
+    }
+
+    const artist = await Artist.create({
+      name: name.trim(),
+      bio,
+      website_page_url,
+      facebook_handle,
+      instagram_handle,
+      twitter_handle,
+      tiktok_handle,
+      youtube_channel,
+      band_members,
+      brand_id: brand.id,
+      status: 'Inactive',
+      custom_data: Object.keys(submittedCustomData).length > 0 ? submittedCustomData : undefined,
+      profile_photo: profilePhotoUrl || undefined,
+      payout_point: 1000
+    } as any);
+
+    // If a profile photo was uploaded, create an ArtistImage record so S3 cleanup doesn't delete it
+    if (profilePhotoUrl) {
+      try {
+        const artistImage = await ArtistImage.create({
+          path: profilePhotoUrl,
+          credits: 'Profile photo',
+          artist_id: artist.id,
+          date_uploaded: new Date()
+        });
+        await artist.update({ profile_photo_id: artistImage.id });
+      } catch (galleryError) {
+        console.error('Error creating gallery entry for registration profile photo:', galleryError);
+      }
+    }
+
+    // Create a pending team invite for the submitter (email will be sent when artist is activated)
+    try {
+      let submitterUser = await User.findOne({ where: { email_address: submitter_email.trim(), brand_id: brand.id } });
+      if (!submitterUser) {
+        submitterUser = await User.create({
+          email_address: submitter_email.trim(),
+          brand_id: brand.id,
+          is_admin: false
+        });
+      }
+
+      const inviteHash = generateSecureToken();
+      await ArtistAccess.create({
+        artist_id: artist.id,
+        user_id: submitterUser.id,
+        status: 'Pending',
+        invite_hash: inviteHash
+      });
+    } catch (inviteError) {
+      // Non-fatal: log but don't fail the registration
+      console.error('Failed to create pending invite for artist registrant:', inviteError);
+    }
+
+    // Notify brand admins via email and in-app notification
+    try {
+      await sendArtistRegistrationNotification(artist.name, submitter_email.trim(), brand.id, artist.id);
+    } catch (emailError) {
+      console.error('Failed to send artist registration email to admins:', emailError);
+    }
+
+    try {
+      const adminUserIds = await getBrandAdminUserIds(brand.id);
+      if (adminUserIds.length > 0) {
+        await createNotificationsForUsers(
+          adminUserIds,
+          brand.id,
+          'artist_registration',
+          `New artist registration: ${artist.name}`,
+          `${submitter_email.trim()} submitted a registration for "${artist.name}". Review and activate their profile.`,
+          `/artist?select=${artist.id}`
+        );
+      }
+    } catch (notifError) {
+      console.error('Failed to create artist registration notifications for admins:', notifError);
+    }
+
+    return res.status(201).json({
+      message: 'Registration submitted successfully. Your profile is pending review.',
+      artist_id: artist.id
+    });
+  } catch (error) {
+    console.error('registerArtist error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 

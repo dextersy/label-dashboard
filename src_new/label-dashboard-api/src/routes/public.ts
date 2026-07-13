@@ -24,10 +24,14 @@ import {
   submitLeadInquiry,
   getAudienceTickets,
   claimAudienceTickets,
-  downloadAudienceTicketPDF
+  downloadAudienceTicketPDF,
+  getArtistDirectory,
+  registerArtist,
+  getArtistRegistrationInfo
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 import { authenticateAudienceToken } from '../middleware/auth';
+import { upload } from '../controllers/artistController';
 
 const router = Router();
 
@@ -68,6 +72,11 @@ router.post('/webhook/transfer', transferWebhook);
 
 // Lead inquiry (label partnership interest form)
 router.post('/lead-inquiry', publicRateLimit, submitLeadInquiry);
+
+// Artist directory and registration (domain-scoped)
+router.get('/artists/directory', publicRateLimit, getArtistDirectory);
+router.get('/artists/registration-info', publicRateLimit, getArtistRegistrationInfo);
+router.post('/artists/register', publicRateLimit, upload.single('profile_photo'), registerArtist);
 
 // Audience user routes (requires audience JWT)
 router.get('/audience/me/tickets', authenticateAudienceToken, getAudienceTickets);

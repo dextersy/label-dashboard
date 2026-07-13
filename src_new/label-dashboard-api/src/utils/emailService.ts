@@ -961,6 +961,50 @@ export const sendReleasePendingNotification = async (
   }
 };
 
+// Send artist registration notification to brand admins
+export const sendArtistRegistrationNotification = async (
+  artistName: string,
+  submitterEmail: string,
+  brandId: number,
+  artistId: number
+): Promise<boolean> => {
+  try {
+    const adminEmails = await getBrandAdministrators(brandId);
+
+    if (adminEmails.length === 0) {
+      console.log('No administrators found for brand, skipping artist registration notification');
+      return false;
+    }
+
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) {
+      console.error('Brand not found for artist registration notification');
+      return false;
+    }
+
+    const baseUrl = await getBrandFrontendUrl(brandId);
+    const artistUrl = `${baseUrl}/artist?select=${artistId}`;
+
+    const templatePath = path.join(__dirname, '../assets/templates/artist_registration_notification.html');
+    let template = fs.readFileSync(templatePath, 'utf8');
+
+    template = template
+      .replace(/%BRAND_NAME%/g, brand.brand_name || 'Dashboard')
+      .replace(/%BRAND_COLOR%/g, brand.brand_color || '#1595e7')
+      .replace(/%LOGO%/g, brand.logo_url || '')
+      .replace(/%ARTIST_NAME%/g, artistName)
+      .replace(/%SUBMITTER_EMAIL%/g, submitterEmail)
+      .replace(/%DASHBOARD_URL%/g, artistUrl);
+
+    const subject = `New Artist Registration: ${artistName}`;
+
+    return await sendEmail(adminEmails, subject, template, brand.id);
+  } catch (error) {
+    console.error('Error sending artist registration notification:', error);
+    return false;
+  }
+};
+
 // Process base64 images and convert them to inline attachments for email
 const processInlineImages = (htmlContent: string): { html: string, attachments: any[] } => {
   const base64ImageRegex = /<img[^>]+src="data:image\/([^;]+);base64,([^"]+)"[^>]*>/gi;
