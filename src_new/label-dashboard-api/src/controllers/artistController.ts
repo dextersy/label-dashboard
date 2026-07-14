@@ -412,8 +412,8 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       });
 
       if (pendingAccesses.length > 0) {
-        const brand = await Brand.findByPk(req.user.brand_id);
-        const frontendUrl = await getBrandFrontendUrl(req.user.brand_id);
+        const brand = await Brand.findByPk(artist.brand_id);
+        const frontendUrl = await getBrandFrontendUrl(artist.brand_id);
 
         for (const access of pendingAccesses) {
           if (!access.user?.email_address || !access.invite_hash) continue;
@@ -435,7 +435,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
           }
 
           try {
-            await createNotification(access.user.id, req.user.brand_id, 'team_invite', `You've been invited to join ${artist.name}'s team`, undefined, `/invite/accept?hash=${access.invite_hash}`);
+            await createNotification(access.user.id, artist.brand_id, 'team_invite', `You've been invited to join ${artist.name}'s team`, undefined, `/invite/accept?hash=${access.invite_hash}`);
           } catch (notifError) {
             console.error(`Failed to create pending invite notification for user ${access.user.id}:`, notifError);
           }
