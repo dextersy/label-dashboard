@@ -426,6 +426,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
               brand?.brand_name || artist.name,
               inviteUrl,
               {
+                id: artist.brand_id,
                 brand_color: brand?.brand_color || '#1595e7',
                 logo_url: brand?.logo_url || ''
               }
@@ -1543,10 +1544,10 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
 
     // Get brand info for email branding
     const brand = await Brand.findByPk(req.user.brand_id);
-    
+
     // Generate invitation URL
     const inviteUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/invite/accept?hash=${inviteHash}`;
-    
+
     // Send invitation email
     try {
       await sendTeamInviteEmail(
@@ -1557,6 +1558,7 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
           : req.user.email_address,
         inviteUrl,
         {
+          id: req.user.brand_id,
           brand_color: brand?.brand_color || '#1595e7',
           logo_url: brand?.logo_url || ''
         }
@@ -1627,17 +1629,18 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
 
     // Generate invitation URL
     const inviteUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/invite/accept?hash=${access.invite_hash}`;
-    
+
     // Send invitation email
     try {
       await sendTeamInviteEmail(
         access.user.email_address,
         artist.name,
-        req.user.first_name && req.user.last_name 
-          ? `${req.user.first_name} ${req.user.last_name}`.trim() 
+        req.user.first_name && req.user.last_name
+          ? `${req.user.first_name} ${req.user.last_name}`.trim()
           : req.user.email_address,
         inviteUrl,
         {
+          id: req.user.brand_id,
           brand_color: brand?.brand_color || '#1595e7',
           logo_url: brand?.logo_url || ''
         }
