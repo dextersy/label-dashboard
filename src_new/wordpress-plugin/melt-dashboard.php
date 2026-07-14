@@ -1332,13 +1332,15 @@ class MeltDashboardPlugin {
      * Usage:
      *   [melt-dashboard-artists]
      *   [melt-dashboard-artists layout="masonry"]
-     *   [melt-dashboard-artists layout="minimal" popup="true"]
+     *   [melt-dashboard-artists layout="grid" minimal="true" popup="true"]
+     *   [melt-dashboard-artists layout="masonry" minimal="true" popup="true"]
      *   [melt-dashboard-artists layout="grid" columns="4" popup="true"]
      *   [melt-dashboard-artists layout="list" show_details="false"]
      *
      * Attributes:
-     *   layout       - "grid" (default), "list", "masonry", or "minimal"
-     *   columns      - columns in grid/masonry/minimal layouts (default: 3; ignored for list)
+     *   layout       - "grid" (default), "list", or "masonry"
+     *   minimal      - "true" or "false" (default) — photo-only tiles with hover overlay; works with grid or masonry
+     *   columns      - columns in grid/masonry layouts (default: 3; ignored for list)
      *   show_details - "true" (default) or "false" — show bio/social in grid/list/masonry cards
      *   popup        - "true" or "false" (default) — clicking a card opens a detail dialog
      *   class        - extra CSS class on the wrapper element
@@ -1346,13 +1348,15 @@ class MeltDashboardPlugin {
     public function render_artists_shortcode($atts) {
         $atts = shortcode_atts([
             'layout'       => 'grid',
+            'minimal'      => 'false',
             'columns'      => '3',
             'show_details' => 'true',
             'popup'        => 'false',
             'class'        => '',
         ], $atts, 'melt-dashboard-artists');
 
-        $layout       = in_array($atts['layout'], ['grid', 'list', 'masonry', 'minimal']) ? $atts['layout'] : 'grid';
+        $layout       = in_array($atts['layout'], ['grid', 'list', 'masonry']) ? $atts['layout'] : 'grid';
+        $minimal      = $atts['minimal'] === 'true';
         $columns      = max(1, min(6, (int) $atts['columns']));
         $show_details = $atts['show_details'] !== 'false';
         $popup        = $atts['popup'] === 'true';
@@ -1475,14 +1479,7 @@ class MeltDashboardPlugin {
         .melt-popup-trigger { cursor: pointer; }
         .melt-popup-trigger:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
-        /* ----- Minimal layout ----- */
-        .melt-artists-minimal {
-            display: grid;
-            grid-template-columns: repeat(var(--melt-cols, 3), 1fr);
-            gap: 1rem;
-        }
-        @media (max-width: 900px) { .melt-artists-minimal { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 540px) { .melt-artists-minimal { grid-template-columns: 1fr; } }
+        /* ----- Minimal cards ----- */
         .melt-minimal-card { border: none; border-radius: 8px; overflow: hidden; position: relative; }
         .melt-minimal-photo-wrap {
             position: relative;
@@ -1727,8 +1724,8 @@ class MeltDashboardPlugin {
                 $photo = esc_url($artist['profile_photo']);
             }
 
-            // ---- Minimal layout ----
-            if ($layout === 'minimal') {
+            // ---- Minimal mode ----
+            if ($minimal) {
                 $output .= '<div class="melt-artist-card melt-minimal-card">';
                 $output .= '<div class="melt-minimal-photo-wrap">';
                 if ($photo) {
@@ -1767,7 +1764,7 @@ class MeltDashboardPlugin {
 
             $output .= '<div class="' . $card_class . '"' . $popup_attrs . '>';
 
-            if ($layout === 'grid' || $layout === 'masonry') {
+            if (!$minimal && ($layout === 'grid' || $layout === 'masonry')) {
                 if ($photo) {
                     $output .= '<img src="' . $photo . '" alt="' . esc_attr($artist['name'] ?? '') . '" class="melt-artist-photo" loading="lazy">';
                 } else {
