@@ -1331,14 +1331,16 @@ class MeltDashboardPlugin {
      *
      * Usage:
      *   [melt-dashboard-artists]
-     *   [melt-dashboard-artists layout="list"]
-     *   [melt-dashboard-artists layout="grid" columns="4" show_details="false"]
-     *   [melt-dashboard-artists show_details="true" class="my-artists"]
+     *   [melt-dashboard-artists layout="masonry"]
+     *   [melt-dashboard-artists layout="minimal" popup="true"]
+     *   [melt-dashboard-artists layout="grid" columns="4" popup="true"]
+     *   [melt-dashboard-artists layout="list" show_details="false"]
      *
      * Attributes:
-     *   layout       - "grid" (default) or "list"
-     *   columns      - number of columns in grid layout (default: 3)
-     *   show_details - "true" (default) or "false" — show bio, social links, etc.
+     *   layout       - "grid" (default), "list", "masonry", or "minimal"
+     *   columns      - columns in grid/masonry/minimal layouts (default: 3; ignored for list)
+     *   show_details - "true" (default) or "false" — show bio/social in grid/list/masonry cards
+     *   popup        - "true" or "false" (default) — clicking a card opens a detail dialog
      *   class        - extra CSS class on the wrapper element
      */
     public function render_artists_shortcode($atts) {
@@ -1346,12 +1348,14 @@ class MeltDashboardPlugin {
             'layout'       => 'grid',
             'columns'      => '3',
             'show_details' => 'true',
+            'popup'        => 'false',
             'class'        => '',
         ], $atts, 'melt-dashboard-artists');
 
-        $layout       = in_array($atts['layout'], ['grid', 'list']) ? $atts['layout'] : 'grid';
+        $layout       = in_array($atts['layout'], ['grid', 'list', 'masonry', 'minimal']) ? $atts['layout'] : 'grid';
         $columns      = max(1, min(6, (int) $atts['columns']));
         $show_details = $atts['show_details'] !== 'false';
+        $popup        = $atts['popup'] === 'true';
         $extra_class  = sanitize_html_class($atts['class']);
 
         $data = $this->fetch_artist_directory();
@@ -1364,39 +1368,50 @@ class MeltDashboardPlugin {
             return '<p class="melt-artists-empty">' . esc_html__('No artists found.', 'melt-dashboard') . '</p>';
         }
 
-        $artists = $data['artists'];
+        $artists   = $data['artists'];
+        $uid       = 'melt-artists-' . uniqid();
+        $dialog_id = $uid . '-dialog';
 
         // ---- CSS ----
-        $uid = 'melt-artists-' . uniqid();
-
         $css = '<style>';
         $css .= '#' . $uid . ' { --melt-cols: ' . $columns . '; }';
         $css .= '
+        /* ----- Grid ----- */
         .melt-artists-grid {
             display: grid;
             grid-template-columns: repeat(var(--melt-cols, 3), 1fr);
             gap: 1.5rem;
         }
-        @media (max-width: 900px) {
-            .melt-artists-grid { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 900px) { .melt-artists-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 540px) { .melt-artists-grid { grid-template-columns: 1fr; } }
+
+        /* ----- Masonry ----- */
+        .melt-artists-masonry {
+            column-count: var(--melt-cols, 3);
+            column-gap: 1.5rem;
         }
-        @media (max-width: 540px) {
-            .melt-artists-grid { grid-template-columns: 1fr; }
+        @media (max-width: 900px) { .melt-artists-masonry { column-count: 2; } }
+        @media (max-width: 540px) { .melt-artists-masonry { column-count: 1; } }
+        .melt-artists-masonry .melt-artist-card {
+            break-inside: avoid;
+            margin-bottom: 1.5rem;
         }
+
+        /* ----- List ----- */
         .melt-artists-list {
             display: flex;
             flex-direction: column;
             gap: 1.25rem;
         }
+
+        /* ----- Shared card ----- */
         .melt-artist-card {
             background: #fff;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             overflow: hidden;
         }
-        .melt-artist-card-inner {
-            padding: 1rem;
-        }
+        .melt-artist-card-inner { padding: 1rem; }
         .melt-artists-list .melt-artist-card-inner {
             display: flex;
             gap: 1rem;
@@ -1428,20 +1443,9 @@ class MeltDashboardPlugin {
             border-radius: 50%;
             flex-shrink: 0;
         }
-        .melt-artist-body {
-            flex: 1;
-            min-width: 0;
-        }
-        .melt-artist-name {
-            font-weight: 600;
-            font-size: 1rem;
-            margin: 0 0 .25rem;
-        }
-        .melt-artist-members {
-            font-size: .85rem;
-            color: #6b7280;
-            margin: 0 0 .5rem;
-        }
+        .melt-artist-body { flex: 1; min-width: 0; }
+        .melt-artist-name { font-weight: 600; font-size: 1rem; margin: 0 0 .25rem; }
+        .melt-artist-members { font-size: .85rem; color: #6b7280; margin: 0 0 .5rem; }
         .melt-artist-bio {
             font-size: .875rem;
             color: #374151;
@@ -1452,13 +1456,11 @@ class MeltDashboardPlugin {
             -webkit-box-orient: vertical;
         }
         .melt-artist-bio p { margin: 0; }
-        .melt-artist-social {
-            display: flex;
-            flex-wrap: wrap;
-            gap: .4rem;
-            margin-top: .5rem;
-        }
+        .melt-artist-social { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
         .melt-artist-social a {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             font-size: .75rem;
             color: #fff;
             background: #374151;
@@ -1467,16 +1469,223 @@ class MeltDashboardPlugin {
             text-decoration: none;
         }
         .melt-artist-social a:hover { background: #111827; }
-        .melt-artist-website {
-            display: inline-block;
-            margin-top: .4rem;
-            font-size: .8rem;
-            text-decoration: none;
-            color: #2563eb;
+        .melt-artist-social a i { font-size: .7rem; }
+
+        /* ----- Popup trigger (grid / list / masonry) ----- */
+        .melt-popup-trigger { cursor: pointer; }
+        .melt-popup-trigger:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+        /* ----- Minimal layout ----- */
+        .melt-artists-minimal {
+            display: grid;
+            grid-template-columns: repeat(var(--melt-cols, 3), 1fr);
+            gap: 1rem;
         }
-        .melt-artist-website:hover { text-decoration: underline; }
+        @media (max-width: 900px) { .melt-artists-minimal { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 540px) { .melt-artists-minimal { grid-template-columns: 1fr; } }
+        .melt-minimal-card { border: none; border-radius: 8px; overflow: hidden; position: relative; }
+        .melt-minimal-photo-wrap {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #e5e7eb;
+        }
+        .melt-minimal-photo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform .35s ease;
+        }
+        .melt-minimal-card:hover .melt-minimal-photo-wrap img { transform: scale(1.05); }
+        .melt-minimal-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #9ca3af;
+        }
+        .melt-minimal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.62);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity .25s ease;
+            text-align: center;
+        }
+        .melt-minimal-card:hover .melt-minimal-overlay,
+        .melt-minimal-card:focus-within .melt-minimal-overlay { opacity: 1; }
+        .melt-minimal-overlay .melt-artist-name { color: #fff; font-size: 1.05rem; margin-bottom: .3rem; }
+        .melt-minimal-overlay .melt-artist-members { color: #d1d5db; font-size: .8rem; margin-bottom: .5rem; }
+        .melt-minimal-overlay .melt-artist-social { justify-content: center; }
+        .melt-minimal-overlay .melt-artist-social a { background: rgba(255,255,255,.2); color: #fff; }
+        .melt-minimal-overlay .melt-artist-social a:hover { background: rgba(255,255,255,.4); }
+        .melt-minimal-popup-btn {
+            margin-top: .6rem;
+            padding: 5px 14px;
+            background: #fff;
+            color: #111827;
+            border: none;
+            border-radius: 4px;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .melt-minimal-popup-btn:hover { background: #f3f4f6; }
+
+        /* ----- Dialog ----- */
+        dialog.melt-artist-dialog {
+            border: none;
+            border-radius: 12px;
+            padding: 0;
+            max-width: min(680px, 95vw);
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,.3);
+        }
+        dialog.melt-artist-dialog::backdrop { background: rgba(0,0,0,.5); }
+        .melt-dialog-inner { display: flex; flex-direction: column; }
+        .melt-dialog-photo { width: 100%; max-height: 320px; object-fit: cover; border-radius: 12px 12px 0 0; display: block; }
+        .melt-dialog-photo-placeholder {
+            height: 180px;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            border-radius: 12px 12px 0 0;
+        }
+        .melt-dialog-body { padding: 1.5rem; }
+        .melt-dialog-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: .75rem;
+        }
+        .melt-dialog-name { font-size: 1.4rem; font-weight: 700; margin: 0; }
+        .melt-dialog-close {
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .melt-dialog-close:hover { background: #f3f4f6; }
+        .melt-dialog-members { font-size: .9rem; color: #6b7280; margin: 0 0 1rem; }
+        .melt-dialog-bio { font-size: .9rem; color: #374151; margin-bottom: 1rem; line-height: 1.6; }
+        .melt-dialog-bio p { margin: 0 0 .5rem; }
         ';
         $css .= '</style>';
+
+        // ---- Dialog HTML (single shared element) ----
+        $dialog_html = '';
+        if ($popup) {
+            $dialog_html = '
+            <dialog id="' . esc_attr($dialog_id) . '" class="melt-artist-dialog" aria-modal="true">
+                <div class="melt-dialog-inner">
+                    <div class="melt-dialog-photo-wrap"></div>
+                    <div class="melt-dialog-body">
+                        <div class="melt-dialog-header">
+                            <h2 class="melt-dialog-name"></h2>
+                            <button class="melt-dialog-close" aria-label="' . esc_attr__('Close', 'melt-dashboard') . '">&#x2715;</button>
+                        </div>
+                        <p class="melt-dialog-members"></p>
+                        <div class="melt-dialog-bio"></div>
+                        <div class="melt-artist-social melt-dialog-social"></div>
+                    </div>
+                </div>
+            </dialog>';
+        }
+
+        // ---- JS (popup logic) ----
+        $js = '';
+        if ($popup) {
+            $js = '<script>
+(function() {
+    var dialogId = ' . json_encode($dialog_id) . ';
+    function openArtistDialog(data) {
+        var dialog = document.getElementById(dialogId);
+        if (!dialog) return;
+        var photoWrap = dialog.querySelector(".melt-dialog-photo-wrap");
+        if (data.photo) {
+            var img = document.createElement("img");
+            img.src = data.photo;
+            img.alt = data.name || "";
+            img.className = "melt-dialog-photo";
+            photoWrap.innerHTML = "";
+            photoWrap.appendChild(img);
+        } else {
+            photoWrap.innerHTML = \'<div class="melt-dialog-photo-placeholder">\u{1F3B5}</div>\';
+        }
+        dialog.querySelector(".melt-dialog-name").textContent = data.name || "";
+        var membersEl = dialog.querySelector(".melt-dialog-members");
+        membersEl.textContent = data.members || "";
+        membersEl.style.display = data.members ? "" : "none";
+        var bioEl = dialog.querySelector(".melt-dialog-bio");
+        bioEl.innerHTML = data.bio || "";
+        bioEl.style.display = data.bio ? "" : "none";
+        var socialEl = dialog.querySelector(".melt-dialog-social");
+        var socialDefs = [
+            {key:"instagram", icon:"fa-brands fa-instagram", cls:"melt-social-instagram", label:"Instagram"},
+            {key:"facebook",  icon:"fa-brands fa-facebook",  cls:"melt-social-facebook",  label:"Facebook"},
+            {key:"twitter",   icon:"fa-brands fa-x-twitter", cls:"melt-social-twitter",   label:"X"},
+            {key:"tiktok",    icon:"fa-brands fa-tiktok",    cls:"melt-social-tiktok",     label:"TikTok"},
+            {key:"youtube",   icon:"fa-brands fa-youtube",   cls:"melt-social-youtube",    label:"YouTube"},
+            {key:"website",   icon:"fa-solid fa-globe",      cls:"melt-social-website",    label:"Website"},
+        ];
+        var links = [];
+        if (data.social) {
+            socialDefs.forEach(function(def) {
+                if (data.social[def.key]) {
+                    links.push(\'<a href="\' + data.social[def.key] + \'" target="_blank" rel="noopener noreferrer"><i class="\' + def.icon + \'"></i>\' + def.label + \'</a>\');
+                }
+            });
+        }
+        socialEl.innerHTML = links.join("");
+        socialEl.style.display = links.length ? "" : "none";
+        dialog.showModal();
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        var dialog = document.getElementById(dialogId);
+        if (!dialog) return;
+        dialog.querySelector(".melt-dialog-close").addEventListener("click", function() { dialog.close(); });
+        dialog.addEventListener("click", function(e) { if (e.target === dialog) dialog.close(); });
+        document.querySelectorAll("[data-melt-dialog=\'" + dialogId + "\']").forEach(function(el) {
+            el.addEventListener("click", function() {
+                try { openArtistDialog(JSON.parse(el.dataset.artist)); } catch(e) { console.error("melt-dashboard: failed to parse artist data", e); }
+            });
+            el.addEventListener("keydown", function(e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    try { openArtistDialog(JSON.parse(el.dataset.artist)); } catch(e) {}
+                }
+            });
+        });
+    });
+}());
+</script>';
+        }
+
+        // ---- Helper: build per-artist JSON for data-artist attribute ----
+        $make_artist_data = function($artist, $photo, $social_urls) {
+            return esc_attr(json_encode([
+                'name'    => $artist['name'] ?? '',
+                'members' => $artist['band_members'] ?? '',
+                'bio'     => isset($artist['bio']) ? wp_kses_post($artist['bio']) : '',
+                'photo'   => $photo,
+                'social'  => $social_urls,
+            ]));
+        };
 
         // ---- Markup ----
         $wrapper_class = 'melt-artists-' . $layout;
@@ -1484,21 +1693,33 @@ class MeltDashboardPlugin {
             $wrapper_class .= ' ' . $extra_class;
         }
 
-        $output = $css;
+        // ---- Social platform config (shared across all layouts) ----
+        $social_platforms = [
+            'instagram' => ['label' => 'Instagram', 'icon' => 'fa-brands fa-instagram', 'class' => 'melt-social-instagram'],
+            'facebook'  => ['label' => 'Facebook',  'icon' => 'fa-brands fa-facebook',  'class' => 'melt-social-facebook'],
+            'twitter'   => ['label' => 'X',         'icon' => 'fa-brands fa-x-twitter', 'class' => 'melt-social-twitter'],
+            'tiktok'    => ['label' => 'TikTok',    'icon' => 'fa-brands fa-tiktok',    'class' => 'melt-social-tiktok'],
+            'youtube'   => ['label' => 'YouTube',   'icon' => 'fa-brands fa-youtube',   'class' => 'melt-social-youtube'],
+            'website'   => ['label' => 'Website',   'icon' => 'fa-solid fa-globe',      'class' => 'melt-social-website'],
+        ];
+
+        $output = $this->get_social_icons_styles() . $css . $dialog_html . $js;
         $output .= '<div id="' . esc_attr($uid) . '" class="' . esc_attr($wrapper_class) . '">';
 
         foreach ($artists as $artist) {
-            $name        = esc_html($artist['name'] ?? '');
-            $members     = esc_html($artist['band_members'] ?? '');
-            $bio         = isset($artist['bio']) ? wp_kses_post($artist['bio']) : '';
-            $website     = isset($artist['website_page_url']) ? esc_url($artist['website_page_url']) : '';
-            $instagram   = esc_html($artist['instagram_handle'] ?? '');
-            $facebook    = esc_html($artist['facebook_handle'] ?? '');
-            $twitter     = esc_html($artist['twitter_handle'] ?? '');
-            $tiktok      = esc_html($artist['tiktok_handle'] ?? '');
-            $youtube     = esc_url($artist['youtube_channel'] ?? '');
+            $name    = esc_html($artist['name'] ?? '');
+            $members = esc_html($artist['band_members'] ?? '');
+            $bio     = isset($artist['bio']) ? wp_kses_post($artist['bio']) : '';
 
-            // Photo: prefer profilePhotoImage, fall back to profile_photo
+            $social_urls = [
+                'instagram' => $this->social_url($artist['instagram_handle'] ?? '', 'instagram'),
+                'facebook'  => $this->social_url($artist['facebook_handle'] ?? '', 'facebook'),
+                'twitter'   => $this->social_url($artist['twitter_handle'] ?? '', 'twitter'),
+                'tiktok'    => $this->social_url($artist['tiktok_handle'] ?? '', 'tiktok'),
+                'youtube'   => $this->social_url($artist['youtube_channel'] ?? '', 'youtube'),
+                'website'   => isset($artist['website_page_url']) ? esc_url($artist['website_page_url']) : '',
+            ];
+
             $photo = '';
             if (!empty($artist['profilePhotoImage']['path'])) {
                 $photo = esc_url($artist['profilePhotoImage']['path']);
@@ -1506,12 +1727,49 @@ class MeltDashboardPlugin {
                 $photo = esc_url($artist['profile_photo']);
             }
 
-            $output .= '<div class="melt-artist-card">';
-
-            // Photo only appears above the card body in grid layout
-            if ($layout === 'grid') {
+            // ---- Minimal layout ----
+            if ($layout === 'minimal') {
+                $output .= '<div class="melt-artist-card melt-minimal-card">';
+                $output .= '<div class="melt-minimal-photo-wrap">';
                 if ($photo) {
-                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($name) . '" class="melt-artist-photo">';
+                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($artist['name'] ?? '') . '" loading="lazy">';
+                } else {
+                    $output .= '<div class="melt-minimal-placeholder">🎵</div>';
+                }
+                $output .= '<div class="melt-minimal-overlay">';
+                $output .= '<p class="melt-artist-name">' . $name . '</p>';
+                if ($members) {
+                    $output .= '<p class="melt-artist-members">' . $members . '</p>';
+                }
+                $social_links = '';
+                foreach ($social_platforms as $key => $cfg) {
+                    if (!empty($social_urls[$key])) {
+                        $social_links .= '<a href="' . $social_urls[$key] . '" target="_blank" rel="noopener noreferrer"><i class="' . esc_attr($cfg['icon']) . '"></i>' . esc_html($cfg['label']) . '</a>';
+                    }
+                }
+                if ($social_links) {
+                    $output .= '<div class="melt-artist-social">' . $social_links . '</div>';
+                }
+                if ($popup) {
+                    $output .= '<button class="melt-minimal-popup-btn" data-melt-dialog="' . esc_attr($dialog_id) . '" data-artist="' . $make_artist_data($artist, $photo, $social_urls) . '">' . esc_html__('View', 'melt-dashboard') . '</button>';
+                }
+                $output .= '</div>'; // .melt-minimal-overlay
+                $output .= '</div>'; // .melt-minimal-photo-wrap
+                $output .= '</div>'; // .melt-minimal-card
+                continue;
+            }
+
+            // ---- Grid / List / Masonry layouts ----
+            $card_class  = 'melt-artist-card' . ($popup ? ' melt-popup-trigger' : '');
+            $popup_attrs = $popup
+                ? ' data-melt-dialog="' . esc_attr($dialog_id) . '" data-artist="' . $make_artist_data($artist, $photo, $social_urls) . '" role="button" tabindex="0"'
+                : '';
+
+            $output .= '<div class="' . $card_class . '"' . $popup_attrs . '>';
+
+            if ($layout === 'grid' || $layout === 'masonry') {
+                if ($photo) {
+                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($artist['name'] ?? '') . '" class="melt-artist-photo" loading="lazy">';
                 } else {
                     $output .= '<div class="melt-artist-photo melt-artist-photo-placeholder">🎵</div>';
                 }
@@ -1519,10 +1777,9 @@ class MeltDashboardPlugin {
 
             $output .= '<div class="melt-artist-card-inner">';
 
-            // Photo in list layout sits beside the text
             if ($layout === 'list') {
                 if ($photo) {
-                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($name) . '" class="melt-artist-photo">';
+                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($artist['name'] ?? '') . '" class="melt-artist-photo" loading="lazy">';
                 } else {
                     $output .= '<div class="melt-artist-photo-placeholder">🎵</div>';
                 }
@@ -1539,31 +1796,14 @@ class MeltDashboardPlugin {
                 if ($bio) {
                     $output .= '<div class="melt-artist-bio">' . $bio . '</div>';
                 }
-
-                // Social links
                 $social_links = '';
-                if ($instagram) {
-                    $social_links .= '<a href="https://instagram.com/' . esc_attr($instagram) . '" target="_blank" rel="noopener noreferrer">Instagram</a>';
+                foreach ($social_platforms as $key => $cfg) {
+                    if (!empty($social_urls[$key])) {
+                        $social_links .= '<a href="' . $social_urls[$key] . '" target="_blank" rel="noopener noreferrer"><i class="' . esc_attr($cfg['icon']) . '"></i>' . esc_html($cfg['label']) . '</a>';
+                    }
                 }
-                if ($facebook) {
-                    $social_links .= '<a href="https://facebook.com/' . esc_attr($facebook) . '" target="_blank" rel="noopener noreferrer">Facebook</a>';
-                }
-                if ($twitter) {
-                    $social_links .= '<a href="https://x.com/' . esc_attr($twitter) . '" target="_blank" rel="noopener noreferrer">X</a>';
-                }
-                if ($tiktok) {
-                    $social_links .= '<a href="https://tiktok.com/@' . esc_attr($tiktok) . '" target="_blank" rel="noopener noreferrer">TikTok</a>';
-                }
-                if ($youtube) {
-                    $social_links .= '<a href="' . $youtube . '" target="_blank" rel="noopener noreferrer">YouTube</a>';
-                }
-
                 if ($social_links) {
                     $output .= '<div class="melt-artist-social">' . $social_links . '</div>';
-                }
-
-                if ($website) {
-                    $output .= '<a href="' . $website . '" class="melt-artist-website" target="_blank" rel="noopener noreferrer">' . esc_html($website) . '</a>';
                 }
             }
 
@@ -1575,6 +1815,36 @@ class MeltDashboardPlugin {
         $output .= '</div>'; // wrapper
 
         return $output;
+    }
+
+    /**
+     * Build a social media URL from a raw value that may be a full URL, a handle with
+     * a leading @, or a bare username. Returns an escaped URL string or empty string.
+     *
+     * @param string $value    Raw value from the database field.
+     * @param string $platform One of: instagram, facebook, twitter, tiktok, youtube.
+     */
+    private function social_url($value, $platform) {
+        $value = trim($value);
+        if ($value === '') return '';
+
+        // Already a full URL — return as-is (validated).
+        if (preg_match('#^https?://#i', $value)) {
+            return esc_url($value);
+        }
+
+        // Strip leading @ for handle-based platforms.
+        $handle = ltrim($value, '@');
+        if ($handle === '') return '';
+
+        switch ($platform) {
+            case 'instagram': return esc_url('https://instagram.com/' . $handle);
+            case 'facebook':  return esc_url('https://facebook.com/' . $handle);
+            case 'twitter':   return esc_url('https://x.com/' . $handle);
+            case 'tiktok':    return esc_url('https://tiktok.com/@' . $handle);
+            // YouTube: no standard handle-to-URL pattern — only accept full URLs (handled above).
+            default: return '';
+        }
     }
 
     /**
