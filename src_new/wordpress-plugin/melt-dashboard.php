@@ -30,6 +30,7 @@ class MeltDashboardPlugin {
         add_action('admin_init', [$this, 'register_settings']);
         add_action('wp_ajax_melt_dashboard_test_api', [$this, 'ajax_test_api']);
         add_shortcode('melt-dashboard-artist', [$this, 'render_artist_shortcode']);
+        add_shortcode('melt-dashboard-artists', [$this, 'render_artists_shortcode']);
     }
 
     /**
@@ -1260,6 +1261,319 @@ class MeltDashboardPlugin {
         }
 
         $output .= '</ul>';
+        return $output;
+    }
+
+    /**
+     * Fetch the public artist directory for the configured brand domain
+     */
+    private function fetch_artist_directory() {
+        $settings = $this->get_settings();
+
+        if (empty($settings['api_url'])) {
+            return new WP_Error('no_api_url', __('API URL not configured', 'melt-dashboard'));
+        }
+
+        if (empty($settings['brand_domain'])) {
+            return new WP_Error('no_brand_domain', __('Brand origin URL not configured', 'melt-dashboard'));
+        }
+
+        $cache_key = 'melt_artist_directory_' . md5($settings['brand_domain']);
+        $cache_duration = $settings['cache_duration'];
+
+        if ($cache_duration > 0) {
+            $cached = get_transient($cache_key);
+            if ($cached !== false) {
+                return $cached;
+            }
+        }
+
+        $api_url = $settings['api_url'] . '/api/public/artists/directory';
+        $brand_url = $settings['brand_domain'];
+
+        $response = wp_remote_get($api_url, [
+            'timeout' => 15,
+            'headers' => [
+                'Accept'  => 'application/json',
+                'Origin'  => $brand_url,
+                'Referer' => $brand_url . '/',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            return new WP_Error(
+                'api_error',
+                sprintf(__('API returned status %d', 'melt-dashboard'), $status_code)
+            );
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return new WP_Error('json_error', __('Invalid JSON response from API', 'melt-dashboard'));
+        }
+
+        if ($cache_duration > 0) {
+            set_transient($cache_key, $data, $cache_duration);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Render the artist directory shortcode
+     *
+     * Usage:
+     *   [melt-dashboard-artists]
+     *   [melt-dashboard-artists layout="list"]
+     *   [melt-dashboard-artists layout="grid" columns="4" show_details="false"]
+     *   [melt-dashboard-artists show_details="true" class="my-artists"]
+     *
+     * Attributes:
+     *   layout       - "grid" (default) or "list"
+     *   columns      - number of columns in grid layout (default: 3)
+     *   show_details - "true" (default) or "false" — show bio, social links, etc.
+     *   class        - extra CSS class on the wrapper element
+     */
+    public function render_artists_shortcode($atts) {
+        $atts = shortcode_atts([
+            'layout'       => 'grid',
+            'columns'      => '3',
+            'show_details' => 'true',
+            'class'        => '',
+        ], $atts, 'melt-dashboard-artists');
+
+        $layout       = in_array($atts['layout'], ['grid', 'list']) ? $atts['layout'] : 'grid';
+        $columns      = max(1, min(6, (int) $atts['columns']));
+        $show_details = $atts['show_details'] !== 'false';
+        $extra_class  = sanitize_html_class($atts['class']);
+
+        $data = $this->fetch_artist_directory();
+
+        if (is_wp_error($data)) {
+            return $this->render_error($data->get_error_message());
+        }
+
+        if (empty($data['artists'])) {
+            return '<p class="melt-artists-empty">' . esc_html__('No artists found.', 'melt-dashboard') . '</p>';
+        }
+
+        $artists = $data['artists'];
+
+        // ---- CSS ----
+        $uid = 'melt-artists-' . uniqid();
+
+        $css = '<style>';
+        $css .= '#' . $uid . ' { --melt-cols: ' . $columns . '; }';
+        $css .= '
+        .melt-artists-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--melt-cols, 3), 1fr);
+            gap: 1.5rem;
+        }
+        @media (max-width: 900px) {
+            .melt-artists-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 540px) {
+            .melt-artists-grid { grid-template-columns: 1fr; }
+        }
+        .melt-artists-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .melt-artist-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .melt-artist-card-inner {
+            padding: 1rem;
+        }
+        .melt-artists-list .melt-artist-card-inner {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        .melt-artist-photo {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+        }
+        .melt-artists-list .melt-artist-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .melt-artist-photo-placeholder {
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #9ca3af;
+        }
+        .melt-artists-list .melt-artist-photo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .melt-artist-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .melt-artist-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 0 0 .25rem;
+        }
+        .melt-artist-members {
+            font-size: .85rem;
+            color: #6b7280;
+            margin: 0 0 .5rem;
+        }
+        .melt-artist-bio {
+            font-size: .875rem;
+            color: #374151;
+            margin: .5rem 0;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+        }
+        .melt-artist-bio p { margin: 0; }
+        .melt-artist-social {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-top: .5rem;
+        }
+        .melt-artist-social a {
+            font-size: .75rem;
+            color: #fff;
+            background: #374151;
+            border-radius: 4px;
+            padding: 2px 7px;
+            text-decoration: none;
+        }
+        .melt-artist-social a:hover { background: #111827; }
+        .melt-artist-website {
+            display: inline-block;
+            margin-top: .4rem;
+            font-size: .8rem;
+            text-decoration: none;
+            color: #2563eb;
+        }
+        .melt-artist-website:hover { text-decoration: underline; }
+        ';
+        $css .= '</style>';
+
+        // ---- Markup ----
+        $wrapper_class = 'melt-artists-' . $layout;
+        if ($extra_class) {
+            $wrapper_class .= ' ' . $extra_class;
+        }
+
+        $output = $css;
+        $output .= '<div id="' . esc_attr($uid) . '" class="' . esc_attr($wrapper_class) . '">';
+
+        foreach ($artists as $artist) {
+            $name        = esc_html($artist['name'] ?? '');
+            $members     = esc_html($artist['band_members'] ?? '');
+            $bio         = isset($artist['bio']) ? wp_kses_post($artist['bio']) : '';
+            $website     = isset($artist['website_page_url']) ? esc_url($artist['website_page_url']) : '';
+            $instagram   = esc_html($artist['instagram_handle'] ?? '');
+            $facebook    = esc_html($artist['facebook_handle'] ?? '');
+            $twitter     = esc_html($artist['twitter_handle'] ?? '');
+            $tiktok      = esc_html($artist['tiktok_handle'] ?? '');
+            $youtube     = esc_url($artist['youtube_channel'] ?? '');
+
+            // Photo: prefer profilePhotoImage, fall back to profile_photo
+            $photo = '';
+            if (!empty($artist['profilePhotoImage']['path'])) {
+                $photo = esc_url($artist['profilePhotoImage']['path']);
+            } elseif (!empty($artist['profile_photo'])) {
+                $photo = esc_url($artist['profile_photo']);
+            }
+
+            $output .= '<div class="melt-artist-card">';
+
+            // Photo only appears above the card body in grid layout
+            if ($layout === 'grid') {
+                if ($photo) {
+                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($name) . '" class="melt-artist-photo">';
+                } else {
+                    $output .= '<div class="melt-artist-photo melt-artist-photo-placeholder">🎵</div>';
+                }
+            }
+
+            $output .= '<div class="melt-artist-card-inner">';
+
+            // Photo in list layout sits beside the text
+            if ($layout === 'list') {
+                if ($photo) {
+                    $output .= '<img src="' . $photo . '" alt="' . esc_attr($name) . '" class="melt-artist-photo">';
+                } else {
+                    $output .= '<div class="melt-artist-photo-placeholder">🎵</div>';
+                }
+            }
+
+            $output .= '<div class="melt-artist-body">';
+            $output .= '<p class="melt-artist-name">' . $name . '</p>';
+
+            if ($members) {
+                $output .= '<p class="melt-artist-members">' . $members . '</p>';
+            }
+
+            if ($show_details) {
+                if ($bio) {
+                    $output .= '<div class="melt-artist-bio">' . $bio . '</div>';
+                }
+
+                // Social links
+                $social_links = '';
+                if ($instagram) {
+                    $social_links .= '<a href="https://instagram.com/' . esc_attr($instagram) . '" target="_blank" rel="noopener noreferrer">Instagram</a>';
+                }
+                if ($facebook) {
+                    $social_links .= '<a href="https://facebook.com/' . esc_attr($facebook) . '" target="_blank" rel="noopener noreferrer">Facebook</a>';
+                }
+                if ($twitter) {
+                    $social_links .= '<a href="https://x.com/' . esc_attr($twitter) . '" target="_blank" rel="noopener noreferrer">X</a>';
+                }
+                if ($tiktok) {
+                    $social_links .= '<a href="https://tiktok.com/@' . esc_attr($tiktok) . '" target="_blank" rel="noopener noreferrer">TikTok</a>';
+                }
+                if ($youtube) {
+                    $social_links .= '<a href="' . $youtube . '" target="_blank" rel="noopener noreferrer">YouTube</a>';
+                }
+
+                if ($social_links) {
+                    $output .= '<div class="melt-artist-social">' . $social_links . '</div>';
+                }
+
+                if ($website) {
+                    $output .= '<a href="' . $website . '" class="melt-artist-website" target="_blank" rel="noopener noreferrer">' . esc_html($website) . '</a>';
+                }
+            }
+
+            $output .= '</div>'; // .melt-artist-body
+            $output .= '</div>'; // .melt-artist-card-inner
+            $output .= '</div>'; // .melt-artist-card
+        }
+
+        $output .= '</div>'; // wrapper
+
         return $output;
     }
 
