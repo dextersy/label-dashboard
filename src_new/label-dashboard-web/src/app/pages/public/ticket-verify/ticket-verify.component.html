@@ -278,7 +278,7 @@
           <div class="tw-mb-4">
             <label class="tw-label" for="ticketCode">Enter ticket code</label>
             <div class="tw-flex tw-gap-2">
-              <input type="text" id="ticketCode" class="tw-input tw-text-center tw-text-xl tw-font-bold tw-tracking-[0.3em] tw-uppercase"
+              <input type="text" id="ticketCode" #ticketCodeInput class="tw-input tw-text-center tw-text-xl tw-font-bold tw-tracking-[0.3em] tw-uppercase"
                 formControlName="ticketCode" placeholder="AB12C"
                 maxlength="5" [disabled]="isLoading"
                 style="text-transform: uppercase;">

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -35,6 +35,8 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
     styleUrls: ['./ticket-verify.component.scss']
 })
 export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('ticketCodeInput') ticketCodeInput?: ElementRef<HTMLInputElement>;
+
   private destroy$ = new Subject<void>();
   private html5QrCode?: Html5Qrcode;
   
@@ -188,6 +190,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           if (this.walkInPaymentMethods.cash) this.walkInPaymentMethod = 'cash';
           else if (this.walkInPaymentMethods.gcash) this.walkInPaymentMethod = 'gcash';
           else if (this.walkInPaymentMethods.card) this.walkInPaymentMethod = 'card';
+          this.focusTicketCode();
         },
         error: (err) => {
           if (err.status === 400) {
@@ -195,6 +198,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
             this.scannerToken = storedToken;
             this.isPinValidated = true;
             this.walkInEnabled = false;
+            this.focusTicketCode();
           } else {
             // Token invalid/expired - clear it
             this.clearSession();
@@ -276,6 +280,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           // Check walk-in status
           this.checkWalkInStatus();
           this.isLoading = false;
+          this.focusTicketCode();
         },
         error: (error) => {
           this.showError(error.error?.error || 'Failed to validate PIN. Please try again.');
@@ -478,6 +483,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     this.ticketForm.reset();
     this.checkInForm.patchValue({ entriesToClaim: 1 });
     this.lastCheckInEntries = 0;
+    this.focusTicketCode();
   }
 
   private showSuccess(message: string): void {
@@ -517,6 +523,10 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     this.persistentAlertType = 'success';
     this.persistentAlertMessage = message;
     this.ticketForm.reset();
+  }
+
+  private focusTicketCode(): void {
+    setTimeout(() => this.ticketCodeInput?.nativeElement?.focus(), 50);
   }
 
   private resetUIState(): void {
@@ -559,6 +569,8 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     this.activeMode = mode;
     if (mode === 'walk-in' && this.walkInTypes.length === 0) {
       this.loadWalkInTypes();
+    } else if (mode === 'scan') {
+      this.focusTicketCode();
     }
   }
 
