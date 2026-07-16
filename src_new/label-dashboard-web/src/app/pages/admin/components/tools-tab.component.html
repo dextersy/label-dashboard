@@ -25,8 +25,8 @@
       (filtersChange)="onEmailLogsFiltersChange($event)"
       (sortChange)="onEmailLogsSortChange($event)">
 
-      <ng-template #mobileRowTemplate let-email let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
-        <div class="email-log-card">
+      <ng-template #mobileRowTemplate let-email let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions" let-onRowClick="onRowClick" let-isClickable="isClickable">
+        <div class="email-log-card" [style.cursor]="isClickable ? 'pointer' : 'default'" (click)="onRowClick()">
           <div class="email-log-card__header">
             <div class="email-log-card__icon">
               <app-icon name="envelope" iconOnly />
