@@ -475,7 +475,7 @@ The primary data display component. Selector: `app-paginated-table`.
 | `columns` | `TableColumn[]` | Column definitions |
 | `pagination` | `PaginationInfo` | Pagination metadata |
 | `loading` | `boolean` | Show loading dots |
-| `actions` | `TableAction[]` | Per-row kebab menu items |
+| `actions` | `TableAction[]` | Per-row kebab menu items. Set `primary: true` on one action to make rows clickable — clicking the row executes that action. Rows are not clickable if no action has `primary: true`. |
 | `headerActions` | `HeaderAction[]` | Buttons in card header |
 | `showSearch` | `boolean` | Toggle search icon |
 | `showSortableHeaders` | `boolean` | Render `<thead>` with sort |
@@ -572,6 +572,21 @@ Both `icon`, `label`, and `title` accept either a plain string or a `() => strin
 | `#actionsContent` | Custom kebab dropdown content |
 | `#customButtons` | Extra controls always visible in header (e.g., filter dropdowns) |
 | `#bulkOperationsContent` | Bulk action buttons in the selection banner |
+| `#mobileRowTemplate` | Card layout rendered at ≤575px instead of the table |
+| `#mobileHeaderTemplate` | Optional header rendered above the card list |
+
+#### `#mobileRowTemplate` context variables
+
+| Variable | Type | Purpose |
+|----------|------|---------|
+| `$implicit` | `any` | The row item |
+| `toggleKebab` | `(event: Event) => void` | Opens/closes the row's kebab menu |
+| `isKebabOpen` | `boolean` | Whether this row's kebab is open |
+| `visibleActions` | `TableAction[]` | Actions not hidden for this item |
+| `onRowClick` | `() => void` | Executes the primary action for this row |
+| `isClickable` | `boolean` | `true` when a `primary: true` action exists and is visible |
+
+When `isClickable` is true, add `[style.cursor]="isClickable ? 'pointer' : 'default'" (click)="onRowClick()"` to the root card element. Any interactive elements inside the card (breakdown buttons, stat cells) must call `$event.stopPropagation()` to prevent bubbling.
 
 ### Kebab menu
 - Rendered **outside the card** as `position: fixed` to avoid `overflow: hidden` clipping

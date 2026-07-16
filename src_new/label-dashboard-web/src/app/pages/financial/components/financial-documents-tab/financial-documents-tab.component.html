@@ -22,8 +22,8 @@
       [showActionsColumn]="true"
       [actions]="docActions">
 
-      <ng-template #mobileRowTemplate let-doc let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
-        <div class="doc-mobile-row">
+      <ng-template #mobileRowTemplate let-doc let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions" let-onRowClick="onRowClick" let-isClickable="isClickable">
+        <div class="doc-mobile-row" [style.cursor]="isClickable ? 'pointer' : 'default'" (click)="onRowClick()">
           <div class="doc-mobile-badge-col">
             <span class="doc-mobile-badge" [style.background]="getFileTypeInfo(doc.filename).bgColor">
               {{ getFileTypeInfo(doc.filename).label }}

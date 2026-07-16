@@ -19,6 +19,7 @@ export interface TableAction {
   handler: (item: any) => void;
   type?: 'primary' | 'secondary' | 'danger';
   hidden?: (item: any) => boolean;       // Return true to hide for a given row
+  primary?: boolean;                     // Mark as the row's primary action (executed on row click)
 }
 
 export interface HeaderAction {
@@ -203,6 +204,23 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   getVisibleActions(item: any): TableAction[] {
     return this.actions.filter(a => !a.hidden || !a.hidden(item));
+  }
+
+  getPrimaryAction(item: any): TableAction | null {
+    return this.getVisibleActions(item).find(a => a.primary) ?? null;
+  }
+
+  isRowClickable(item: any): boolean {
+    return this.rowClickable || this.getPrimaryAction(item) !== null;
+  }
+
+  onRowClick(item: any): void {
+    const primary = this.getPrimaryAction(item);
+    if (primary) {
+      primary.handler(item);
+    } else if (this.rowClickable) {
+      this.rowClick.emit(item);
+    }
   }
 
   ngOnDestroy(): void {
@@ -491,7 +509,9 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
       $implicit: item,
       toggleKebab: (event: Event) => this.toggleKebab(item, event),
       isKebabOpen: this.isKebabOpen(item),
-      visibleActions: this.getVisibleActions(item)
+      visibleActions: this.getVisibleActions(item),
+      onRowClick: () => this.onRowClick(item),
+      isClickable: this.isRowClickable(item)
     };
   }
 

@@ -62,6 +62,7 @@ export class FinancialDocumentsTabComponent {
       {
         icon: 'eye',
         label: 'View',
+        primary: true,
         handler: (doc: Document) => this.openDocument(doc)
       },
       {

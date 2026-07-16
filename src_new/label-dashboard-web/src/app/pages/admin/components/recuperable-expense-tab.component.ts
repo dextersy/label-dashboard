@@ -63,6 +63,7 @@ export class RecuperableExpenseTabComponent implements OnInit {
     {
       icon: 'eye',
       label: 'View Details',
+      primary: true,
       handler: (item: any) => this.openFlowDetailModal(item)
     }
   ];

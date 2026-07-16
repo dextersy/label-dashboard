@@ -24,6 +24,7 @@ export class ToolsTabComponent implements OnInit, OnDestroy {
     {
       icon: 'eye',
       label: 'View Details',
+      primary: true,
       handler: (email: EmailLog) => this.viewEmailContent(email.id)
     },
     {

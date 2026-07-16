@@ -143,6 +143,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     {
       icon: 'edit',
       label: 'Edit',
+      primary: true,
       handler: (item) => this.openEditModal(item)
     },
     {
