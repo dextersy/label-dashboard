@@ -1,7 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { ReleaseInfo } from '../../financial.component';
 import { ReleaseExpensesDialogComponent } from '../release-expenses-dialog/release-expenses-dialog.component';
 import { AddExpenseDialogComponent } from '../add-expense-dialog/add-expense-dialog.component';
@@ -14,8 +13,9 @@ import { IconComponent } from '../../../../components/shared/icon/icon.component
     styleUrl: './financial-release-tab.component.scss'
 })
 export class FinancialReleaseTabComponent {
-  constructor(private router: Router) {}
   @Input() releases: ReleaseInfo[] = [];
+  @Output() goToEarningsForRelease = new EventEmitter<ReleaseInfo>();
+  @Output() goToRoyaltiesForRelease = new EventEmitter<ReleaseInfo>();
   @Input() isAdmin: boolean = false;
   @Input() editingRoyalties: boolean = false;
   @Input() updatingRoyalties: boolean = false;
@@ -133,14 +133,14 @@ export class FinancialReleaseTabComponent {
   }
 
   // ── Navigation ───────────────────────────────────────────────
-  goToEarnings(event: Event): void {
+  goToEarnings(release: ReleaseInfo, event: Event): void {
     event.stopPropagation();
-    this.router.navigate(['/financial/earnings']);
+    this.goToEarningsForRelease.emit(release);
   }
 
-  goToRoyalties(event: Event): void {
+  goToRoyalties(release: ReleaseInfo, event: Event): void {
     event.stopPropagation();
-    this.router.navigate(['/financial/royalties']);
+    this.goToRoyaltiesForRelease.emit(release);
   }
 
   // ── Dialogs (unchanged) ───────────────────────────────────────

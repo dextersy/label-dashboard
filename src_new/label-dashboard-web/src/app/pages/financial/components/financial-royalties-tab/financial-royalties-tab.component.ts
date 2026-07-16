@@ -23,6 +23,7 @@ export class FinancialRoyaltiesTabComponent {
   @Input() loading: boolean = false;
   @Input() royaltiesSort: SortInfo | null = null;
   @Input() currentFilters: SearchFilters = {};
+  @Input() initialFilters: SearchFilters = {};
   @Input() currentDateRange: DateRangeSelection | null = null;
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
@@ -86,6 +87,16 @@ export class FinancialRoyaltiesTabComponent {
       sortable: true,
       mobileGroup: 'summary',
       mobileClass: 'mobile-narrow',
+      tabletClass: ''
+    },
+    {
+      key: 'catalog_no',
+      label: 'Cat. No.',
+      type: 'text',
+      searchable: true,
+      sortable: false,
+      mobileGroup: 'summary',
+      mobileClass: 'mobile-text',
       tabletClass: ''
     },
     {

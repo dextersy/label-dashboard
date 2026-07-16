@@ -51,6 +51,19 @@
   padding: 0;
 }
 
+.fin-catalog-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #e9ecef;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #495057;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
 .fin-mobile-release {
   font-size: 12px;
   font-weight: 600;

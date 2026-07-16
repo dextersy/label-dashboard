@@ -589,10 +589,13 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
     if (filters.release_title && filters.release_title !== '') {
       releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.release_title}%` };
     }
-    
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
+    }
+
     const includeConditions: any[] = [
       { model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } },
-      { model: Release, as: 'release', where: releaseWhere, required: Object.keys(releaseWhere).length > 0 } // required only when filtering by release title
+      { model: Release, as: 'release', where: releaseWhere, required: Object.keys(releaseWhere).length > 0 } // required only when filtering by release title/catalog_no
     ];
 
     if (artist_id) {
@@ -827,6 +830,9 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
     
     if (filters.release_title && filters.release_title !== '') {
       releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.release_title}%` };
+    }
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
     }
 
     // Get earnings for releases associated with this artist

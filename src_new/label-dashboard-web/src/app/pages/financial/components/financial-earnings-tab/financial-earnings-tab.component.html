@@ -31,6 +31,7 @@
   [sortInfo]="earningsSort"
   [responsiveMode]="'financial'"
   [headerActions]="headerActions"
+  [initialFilters]="initialFilters"
   (pageChange)="onPageChange($event)"
   (filtersChange)="filtersChange.emit($event)"
   (sortChange)="sortChange.emit($event)">
@@ -46,6 +47,7 @@
     <div class="fin-mobile-row">
       <img [src]="item.cover_art || coverArtPlaceholder" alt="" class="fin-mobile-cover">
       <div class="fin-mobile-body">
+        <span *ngIf="item.catalog_no" class="fin-catalog-chip">{{ item.catalog_no }}</span>
         <div class="fin-mobile-release">{{ item.release_title || '(None)' }}</div>
         <div class="fin-mobile-desc">{{ item.description }}</div>
         <div class="fin-mobile-date">{{ item.date_recorded | date:'MMM d, yyyy' }}</div>

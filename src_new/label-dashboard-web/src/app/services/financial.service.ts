@@ -62,7 +62,8 @@ export class FinancialService {
       earnings: earnings.map(earning => ({
         id: earning.id,
         date_recorded: earning.date_recorded,
-        release_title: earning.release?.title || '(No release)',
+        release_title: earning.release?.title || earning.release_title || '(No release)',
+        catalog_no: earning.release?.catalog_no || earning.catalog_no || '',
         cover_art: earning.release?.cover_art,
         description: earning.description || earning.type || 'Earning',
         amount: earning.amount
@@ -100,7 +101,8 @@ export class FinancialService {
       royalties: royalties.map(royalty => ({
         id: royalty.id,
         date_recorded: royalty.date_recorded,
-        release_title: royalty.release?.title || '(No release)',
+        release_title: royalty.release?.title || royalty.release_title || '(No release)',
+        catalog_no: royalty.release?.catalog_no || royalty.catalog_no || '',
         cover_art: royalty.release?.cover_art,
         description: royalty.description || 'Royalty',
         amount: royalty.amount

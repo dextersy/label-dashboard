@@ -20,6 +20,7 @@ import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { DateRangeSelection } from '../../components/shared/date-range-filter/date-range-filter.component';
+import { SearchFilters } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 
@@ -36,6 +37,7 @@ export interface Earning {
   id: number;
   date_recorded: string;
   release_title: string;
+  catalog_no: string;
   cover_art?: string;
   description: string;
   amount: number;
@@ -45,6 +47,7 @@ export interface Royalty {
   id: number;
   date_recorded: string;
   release_title: string;
+  catalog_no: string;
   cover_art?: string;
   description: string;
   amount: number;
@@ -178,6 +181,10 @@ export class FinancialComponent implements OnInit, OnDestroy {
   earningsDateRange: DateRangeSelection | null = null;
   royaltiesDateRange: DateRangeSelection | null = null;
 
+  // Release-scoped filter (pre-populated when navigating from Release tab)
+  earningsInitialFilters: SearchFilters = {};
+  royaltiesInitialFilters: SearchFilters = {};
+
   // Form data for new entries
   newRoyaltyForm = {
     release_id: '',
@@ -264,6 +271,19 @@ export class FinancialComponent implements OnInit, OnDestroy {
     // Initialize payment form with today's date only if not already set
     if (!this.newPaymentForm.date_paid) {
       this.newPaymentForm.date_paid = FinancialComponent.getTodaysDate();
+    }
+
+    // Read router navigation state for release-scoped pre-filtering.
+    // Must happen BEFORE subscribing to artistStateService so that loadFinancialData
+    // picks up the filters on the very first call.
+    const navState = history.state as any;
+    if (navState?.earningsReleaseFilter) {
+      this.earningsFilters = { catalog_no: navState.earningsReleaseFilter };
+      this.earningsInitialFilters = { catalog_no: navState.earningsReleaseFilter };
+    }
+    if (navState?.royaltiesReleaseFilter) {
+      this.royaltiesFilters = { catalog_no: navState.royaltiesReleaseFilter };
+      this.royaltiesInitialFilters = { catalog_no: navState.royaltiesReleaseFilter };
     }
 
     // Subscribe to artist state changes
@@ -394,9 +414,9 @@ export class FinancialComponent implements OnInit, OnDestroy {
     this.earningsLoading = true;
     try {
       const result = await this.financialService.getEarnings(
-        this.selectedArtist.id, 
-        page, 
-        20, 
+        this.selectedArtist.id,
+        page,
+        20,
         filters,
         sort?.column,
         sort?.direction,
@@ -910,5 +930,15 @@ export class FinancialComponent implements OnInit, OnDestroy {
   async onRoyaltiesDateRangeChange(dateRange: DateRangeSelection): Promise<void> {
     this.royaltiesDateRange = dateRange;
     await this.loadRoyaltiesPage(1, this.royaltiesFilters, this.royaltiesSort);
+  }
+
+  // Navigate to Earnings tab pre-filtered by release catalog number
+  onGoToEarningsForRelease(release: ReleaseInfo): void {
+    this.router.navigate(['/financial', 'earnings'], { state: { earningsReleaseFilter: release.catalog_no } });
+  }
+
+  // Navigate to Royalties tab pre-filtered by release catalog number
+  onGoToRoyaltiesForRelease(release: ReleaseInfo): void {
+    this.router.navigate(['/financial', 'royalties'], { state: { royaltiesReleaseFilter: release.catalog_no } });
   }
 }

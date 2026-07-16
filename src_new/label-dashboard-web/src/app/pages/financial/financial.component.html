@@ -36,13 +36,14 @@
         
         <!-- Earnings Tab -->
         <div *ngIf="activeTab === 'earnings'">
-          <app-financial-earnings-tab 
+          <app-financial-earnings-tab
             [earnings]="earnings"
             [pagination]="earningsPagination"
             [loading]="earningsLoading"
             [earningsSort]="earningsSort"
             [currentFilters]="earningsFilters"
             [currentDateRange]="earningsDateRange"
+            [initialFilters]="earningsInitialFilters"
             (pageChange)="onEarningsPageChange($event)"
             (filtersChange)="onEarningsFiltersChange($event)"
             (sortChange)="onEarningsSortChange($event)"
@@ -51,13 +52,14 @@
         
         <!-- Royalties Tab -->
         <div *ngIf="activeTab === 'royalties'">
-          <app-financial-royalties-tab 
+          <app-financial-royalties-tab
             [royalties]="royalties"
             [pagination]="royaltiesPagination"
             [loading]="royaltiesLoading"
             [royaltiesSort]="royaltiesSort"
             [currentFilters]="royaltiesFilters"
             [currentDateRange]="royaltiesDateRange"
+            [initialFilters]="royaltiesInitialFilters"
             (pageChange)="onRoyaltiesPageChange($event)"
             (filtersChange)="onRoyaltiesFiltersChange($event)"
             (sortChange)="onRoyaltiesSortChange($event)"
@@ -96,7 +98,9 @@
             [updatingRoyalties]="updatingRoyalties"
             [toggleEditRoyalties]="toggleEditRoyalties.bind(this)"
             [onUpdateRoyalties]="onUpdateRoyalties.bind(this)"
-            [onAddExpense]="onAddExpense.bind(this)">
+            [onAddExpense]="onAddExpense.bind(this)"
+            (goToEarningsForRelease)="onGoToEarningsForRelease($event)"
+            (goToRoyaltiesForRelease)="onGoToRoyaltiesForRelease($event)">
           </app-financial-release-tab>
         </div>
 

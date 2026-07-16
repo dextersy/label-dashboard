@@ -90,6 +90,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rowClassGetter?: (item: any) => string; // Function to get CSS classes for each row
   @Input() headerActions: HeaderAction[] = []; // Action buttons rendered above the table
   @Input() rowClickable: boolean = false;
+  @Input() initialFilters: SearchFilters = {};
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
   @Output() sortChange = new EventEmitter<SortInfo | null>();
@@ -235,16 +236,37 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
     document.addEventListener('scroll', this.scrollCloseHandler, true);
     this.updateDisplayColumns();
     // Initialize search filters for searchable columns
+    let hasInitialFilter = false;
     this.displayColumns.forEach(column => {
       if (column.searchable !== false) {
-        this.searchFilters[column.key] = '';
+        const initialValue = this.initialFilters[column.key] ?? '';
+        this.searchFilters[column.key] = initialValue;
+        if (initialValue) hasInitialFilter = true;
       }
     });
+    // If initial filters were provided, open the search panel so filters are visible
+    if (hasInitialFilter) {
+      this.showSearchFilters = true;
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['columns']) {
       this.updateDisplayColumns();
+    }
+    if (changes['initialFilters'] && !changes['initialFilters'].firstChange) {
+      const newFilters = changes['initialFilters'].currentValue as SearchFilters;
+      let hasFilter = false;
+      this.displayColumns.forEach(column => {
+        if (column.searchable !== false) {
+          const value = newFilters[column.key] ?? '';
+          this.searchFilters[column.key] = value;
+          if (value) hasFilter = true;
+        }
+      });
+      if (hasFilter) {
+        this.showSearchFilters = true;
+      }
     }
     // Clear selection when data changes (e.g., after refresh, filter, or bulk operations)
     if (changes['data'] && !changes['data'].firstChange) {

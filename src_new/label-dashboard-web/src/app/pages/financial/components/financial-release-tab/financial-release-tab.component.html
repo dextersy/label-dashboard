@@ -101,10 +101,10 @@
               {{ formatPercentage(release.physical_royalty_percentage) }}%
             </td>
 
-            <!-- Earnings — clicking navigates to earnings page -->
+            <!-- Earnings — clicking navigates to earnings page filtered by this release -->
             <td class="tw-text-right rf-cell-financial rf-cell-clickable"
                 [ngClass]="getAmountClass(release.total_earnings)"
-                (click)="goToEarnings($event)">
+                (click)="goToEarnings(release, $event)">
               {{ formatCurrency(release.total_earnings) }}
             </td>
 
@@ -115,10 +115,10 @@
               {{ formatCurrency(release.recuperable_expense_balance) }}
             </td>
 
-            <!-- Royalties — clicking navigates to royalties page -->
+            <!-- Royalties — clicking navigates to royalties page filtered by this release -->
             <td class="tw-text-right rf-cell-financial rf-cell-clickable"
                 [ngClass]="getAmountClass(release.total_royalties)"
-                (click)="goToRoyalties($event)">
+                (click)="goToRoyalties(release, $event)">
               {{ formatCurrency(release.total_royalties) }}
             </td>
 
@@ -324,14 +324,14 @@
           </span>
           <span class="rf-mobile-fin-hint">Tap for details</span>
         </button>
-        <button type="button" class="rf-mobile-fin-cell" (click)="goToEarnings($event)">
+        <button type="button" class="rf-mobile-fin-cell" (click)="goToEarnings(release, $event)">
           <span class="rf-mobile-fin-label">Earnings</span>
           <span class="rf-mobile-fin-value" [ngClass]="getAmountClass(release.total_earnings)">
             {{ formatCurrency(release.total_earnings) }}
           </span>
           <span class="rf-mobile-fin-hint">Tap for details</span>
         </button>
-        <button type="button" class="rf-mobile-fin-cell" (click)="goToRoyalties($event)">
+        <button type="button" class="rf-mobile-fin-cell" (click)="goToRoyalties(release, $event)">
           <span class="rf-mobile-fin-label">Royalties</span>
           <span class="rf-mobile-fin-value tw-text-green-600">
             {{ formatCurrency(release.total_royalties) }}
