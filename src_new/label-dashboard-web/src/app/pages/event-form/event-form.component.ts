@@ -15,6 +15,7 @@ import { VenueAutocompleteComponent, VenueSelection } from '../events/components
 import { TicketTypesComponent } from '../events/components/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
 import { downloadQRCode } from '../../utils/qr-utils';
+import QRCode from 'qrcode';
 import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { FloatingActionBarComponent } from '../../components/shared/floating-action-bar/floating-action-bar.component';
@@ -82,6 +83,9 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   isNewEvent = false;
   isAdmin = false;
   pinRefreshed = false;
+  showScannerQRModal = false;
+  scannerQRDataUrl: string | null = null;
+  scannerQRCaption: string = '';
   activeSection: EventFormSection = 'details';
   draftExpanded = false;
   availableEvents: Event[] = [];
@@ -735,6 +739,40 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   generateVerificationPIN(): void {
     this.eventData.verification_pin = Math.floor(100000 + Math.random() * 900000).toString();
     this.pinRefreshed = true;
+  }
+
+  private generateQRModal(content: string, caption: string): void {
+    const canvas = document.createElement('canvas');
+    QRCode.toCanvas(canvas, content, { errorCorrectionLevel: 'M', margin: 4, width: 300 })
+      .then(() => {
+        this.scannerQRDataUrl = canvas.toDataURL('image/png');
+        this.scannerQRCaption = caption;
+        this.showScannerQRModal = true;
+      })
+      .catch(() => this.notificationService.showError('Failed to generate QR code'));
+  }
+
+  showScannerQR(): void {
+    if (!this.eventData.verification_pin) return;
+    this.generateQRModal(this.eventData.verification_pin, 'Scan to get the PIN code.');
+  }
+
+  showScannerLinkQR(url: string): void {
+    if (!url) return;
+    this.generateQRModal(url, 'Scan to open the ticket scanner for this event.');
+  }
+
+  closeScannerQRModal(): void {
+    this.showScannerQRModal = false;
+    this.scannerQRDataUrl = null;
+  }
+
+  downloadScannerQR(): void {
+    if (!this.eventId) return;
+    const url = `${window.location.origin}/public/tickets/verify/${this.eventId}`;
+    downloadQRCode(url, 'Scanner-' + (this.eventData.title || 'Event')).catch(() => {
+      this.notificationService.showError('Failed to download QR code');
+    });
   }
 
   copyVerificationPIN(): void {
