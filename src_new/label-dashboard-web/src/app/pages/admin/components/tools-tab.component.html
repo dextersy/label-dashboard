@@ -70,34 +70,27 @@
         <button type="button" class="btn-close" (click)="closeEmailModal()" aria-label="Close"></button>
       </div>
       <div class="modal-body" *ngIf="selectedEmail">
-        <div class="tw-mb-3 tw-grid tw-grid-cols-[auto_1fr] tw-gap-x-4 tw-gap-y-3 tw-items-baseline">
-          <div><strong>Timestamp:</strong></div>
-          <div>{{ formatDate(selectedEmail.timestamp) }}</div>
-          <div><strong>Recipients:</strong></div>
-          <div>{{ selectedEmail.recipients }}</div>
-          <div><strong>Subject:</strong></div>
-          <div>{{ selectedEmail.subject }}</div>
-          <div><strong>Result:</strong></div>
-          <div>
-            <span class="status-badge"
-                  [class.status-success]="selectedEmail.result === 'Success'"
-                  [class.status-danger]="selectedEmail.result === 'Failed'"
-                  [class.status-secondary]="selectedEmail.result !== 'Success' && selectedEmail.result !== 'Failed'">
-              {{ selectedEmail.result }}
-            </span>
-          </div>
+        <div class="tw-flex tw-items-center tw-justify-between tw-text-sm tw-text-muted tw-mb-1">
+          <span>{{ formatDate(selectedEmail.timestamp) }}</span>
+          <span class="status-badge"
+                [class.status-success]="selectedEmail.result === 'Success'"
+                [class.status-danger]="selectedEmail.result === 'Failed'"
+                [class.status-secondary]="selectedEmail.result !== 'Success' && selectedEmail.result !== 'Failed'">
+            {{ selectedEmail.result }}
+          </span>
         </div>
-        <div class="tw-mt-4">
-          <div class="tw-mb-2"><strong>Content:</strong></div>
-          <div class="tw-border tw-border-gray-200 tw-rounded-lg tw-p-3" style="max-height: 400px; overflow-y: auto;">
-            <div [innerHTML]="selectedEmail.body"></div>
-          </div>
+        <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Recipients</p>
+        <p class="tw-text-sm tw-text-gray-800 tw-mb-4 tw-break-words">{{ selectedEmail.recipients }}</p>
+        <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Subject</p>
+        <p class="tw-text-sm tw-text-gray-800 tw-mb-4">{{ selectedEmail.subject }}</p>
+        <div class="tw-border tw-border-gray-200 tw-rounded-lg tw-p-3" style="max-height: 400px; overflow-y: auto;">
+          <div [innerHTML]="selectedEmail.body"></div>
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer email-modal-footer">
         <button type="button" class="btn-secondary" (click)="closeEmailModal()">Close</button>
-        <button type="button" class="btn-primary" (click)="previewEmail(selectedEmail.id)" *ngIf="selectedEmail">
-          <app-icon name="external-link" /> Preview in New Window
+        <button type="button" class="btn-primary" (click)="previewEmail(selectedEmail!.id)">
+          <app-icon name="external-link" class="tw-mr-1" /> Preview in New Window
         </button>
       </div>
     </div>
