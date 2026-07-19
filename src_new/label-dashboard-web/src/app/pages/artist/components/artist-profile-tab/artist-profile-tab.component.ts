@@ -272,7 +272,8 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
       }
 
       this.selectedFile = file;
-      
+      this.dirtyFields.add('profile_photo');
+
       // Preview the selected image
       const reader = new FileReader();
       reader.onload = (e) => {
