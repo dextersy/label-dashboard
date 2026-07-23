@@ -406,6 +406,15 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     document.body.classList.remove('modal-open');
   }
 
+  copiedLink: string | null = null;
+
+  copyLink(url: string, key: string): void {
+    navigator.clipboard.writeText(url).then(() => {
+      this.copiedLink = key;
+      setTimeout(() => this.copiedLink = null, 2000);
+    });
+  }
+
   copyLyrics(): void {
     if (!this.lyricsModalSong?.lyrics) return;
     navigator.clipboard.writeText(this.lyricsModalSong.lyrics).then(() => {

@@ -254,6 +254,9 @@
             <ng-container *ngIf="!isAdmin || !isEditing('spotify_link')">
               <a *ngIf="editingRelease.spotify_link" [href]="editingRelease.spotify_link" target="_blank" class="streaming-link spotify">Spotify</a>
               <span *ngIf="!editingRelease.spotify_link" class="tw-text-muted">—</span>
+              <button *ngIf="editingRelease.spotify_link" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="copyLink(editingRelease.spotify_link, 'spotify_link')" [title]="copiedLink === 'spotify_link' ? 'Copied!' : 'Copy link'">
+                <app-icon [name]="copiedLink === 'spotify_link' ? 'check' : 'copy'" iconOnly />
+              </button>
               <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('spotify_link')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
@@ -271,6 +274,9 @@
             <ng-container *ngIf="!isAdmin || !isEditing('apple_music_link')">
               <a *ngIf="editingRelease.apple_music_link" [href]="editingRelease.apple_music_link" target="_blank" class="streaming-link apple">Apple Music</a>
               <span *ngIf="!editingRelease.apple_music_link" class="tw-text-muted">—</span>
+              <button *ngIf="editingRelease.apple_music_link" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="copyLink(editingRelease.apple_music_link, 'apple_music_link')" [title]="copiedLink === 'apple_music_link' ? 'Copied!' : 'Copy link'">
+                <app-icon [name]="copiedLink === 'apple_music_link' ? 'check' : 'copy'" iconOnly />
+              </button>
               <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('apple_music_link')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
@@ -288,6 +294,9 @@
             <ng-container *ngIf="!isAdmin || !isEditing('youtube_link')">
               <a *ngIf="editingRelease.youtube_link" [href]="editingRelease.youtube_link" target="_blank" class="streaming-link youtube">YouTube</a>
               <span *ngIf="!editingRelease.youtube_link" class="tw-text-muted">—</span>
+              <button *ngIf="editingRelease.youtube_link" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="copyLink(editingRelease.youtube_link, 'youtube_link')" [title]="copiedLink === 'youtube_link' ? 'Copied!' : 'Copy link'">
+                <app-icon [name]="copiedLink === 'youtube_link' ? 'check' : 'copy'" iconOnly />
+              </button>
               <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_link')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
