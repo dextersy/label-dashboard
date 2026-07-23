@@ -453,6 +453,31 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
               'physical_royalty_type'
             ]
           }
+        },
+        {
+          model: Song,
+          as: 'songs',
+          through: { attributes: ['track_number'] },
+          include: [
+            {
+              model: SongCollaborator,
+              as: 'collaborators',
+              separate: true,
+              include: [{ model: Artist, as: 'artist' }]
+            },
+            {
+              model: SongAuthor,
+              as: 'authors',
+              separate: true,
+              include: [{ model: Songwriter, as: 'songwriter' }]
+            },
+            {
+              model: SongComposer,
+              as: 'composers',
+              separate: true,
+              include: [{ model: Songwriter, as: 'songwriter' }]
+            }
+          ]
         }
       ]
     });
