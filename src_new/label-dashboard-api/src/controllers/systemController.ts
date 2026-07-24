@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
@@ -281,6 +281,25 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
       if (song.audio_file_mp3) allUrls.add(song.audio_file_mp3);
     });
 
+    // 9. Press Campaign URLs (cover_art, mp3_file)
+    const pressCampaigns = await PressCampaign.findAll({
+      attributes: ['id', 'cover_art', 'mp3_file']
+    });
+
+    pressCampaigns.forEach((campaign: any) => {
+      if (campaign.cover_art) allUrls.add(campaign.cover_art);
+      if (campaign.mp3_file) allUrls.add(campaign.mp3_file);
+    });
+
+    // 10. Press Campaign Artist Photos (path)
+    const pressCampaignPhotos = await PressCampaignArtistPhoto.findAll({
+      attributes: ['id', 'path']
+    });
+
+    pressCampaignPhotos.forEach((photo: any) => {
+      if (photo.path) allUrls.add(photo.path);
+    });
+
     // Convert Set to Array and filter out empty/null values
     const urlsArray = Array.from(allUrls).filter(url => url && url.trim().length > 0);
 
@@ -295,7 +314,9 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
       documentCount: artistDocuments.length,
       releaseCount: releases.length,
       fundraiserCount: fundraisers.length,
-      songCount: songs.length
+      songCount: songs.length,
+      pressCampaignCount: pressCampaigns.length,
+      pressCampaignPhotoCount: pressCampaignPhotos.length
     });
 
     res.json({
@@ -309,7 +330,9 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
         artist_documents: artistDocuments.length,
         releases: releases.length,
         fundraisers: fundraisers.length,
-        songs: songs.length
+        songs: songs.length,
+        press_campaigns: pressCampaigns.length,
+        press_campaign_photos: pressCampaignPhotos.length
       }
     });
 

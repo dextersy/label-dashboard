@@ -140,7 +140,8 @@ const startServer = async () => {
       { name: 'songwriters', path: './routes/songwriters' },
       { name: 'syncLicensing', path: './routes/syncLicensing' },
       { name: 'scanner', path: './routes/scanner' },
-      { name: 'notifications', path: './routes/notifications' }
+      { name: 'notifications', path: './routes/notifications' },
+      { name: 'pressCampaign', path: './routes/pressCampaign' }
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -195,6 +196,7 @@ const startServer = async () => {
     const syncLicensingRoutes = routes.syncLicensing;
     const scannerRoutes = routes.scanner;
     const notificationRoutes = routes.notifications;
+    const pressCampaignRoutes = routes.pressCampaign;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -214,6 +216,7 @@ const startServer = async () => {
     app.use('/api/songs', songRoutes);
     app.use('/api/songwriters', songwriterRoutes);
     app.use('/api/sync-licensing', syncLicensingRoutes);
+    app.use('/api/press-campaigns', pressCampaignRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);
