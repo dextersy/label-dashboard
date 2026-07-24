@@ -155,7 +155,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/campaigns/fundraisers/donations', title: 'Donations', adminOnly: true }
           ]
         },
-        { route: '/campaigns/sync-licensing', icon: 'file', title: 'Sync Licensing', adminOnly: true }
+        { route: '/campaigns/sync-licensing', icon: 'file', title: 'Sync Licensing', adminOnly: true },
+        { route: '/campaigns/press', icon: 'newspaper', title: 'Press Campaigns', adminOnly: true }
       ]
     },
     {

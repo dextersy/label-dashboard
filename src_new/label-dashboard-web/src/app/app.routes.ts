@@ -38,6 +38,8 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { artistSelectedGuard } from './guards/artist-selected.guard';
 import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.component';
+import { PressCampaignsComponent } from './pages/press-campaigns/press-campaigns.component';
+import { PressCampaignPublicComponent } from './pages/press-campaign-public/press-campaign-public.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
@@ -92,8 +94,14 @@ export const routes: Routes = [
       { path: 'releases/edit/:id', component: ReleaseSubmissionComponent, canDeactivate: [canDeactivateUnsavedChanges] }
     ]
   },
+  // Public press kit pages (no auth)
+  { path: 'press/:slug', component: PressCampaignPublicComponent },
+
   // Sync Licensing (admin only, not artist-specific)
   { path: 'campaigns/sync-licensing', component: SyncLicensingComponent, canActivate: [adminGuard] },
+
+  // Press Campaigns (admin only)
+  { path: 'campaigns/press', component: PressCampaignsComponent, canActivate: [adminGuard] },
   { path: 'team', component: ArtistComponent, canActivate: [authGuard, artistSelectedGuard], data: { tab: 'team' } },
   { 
     path: 'financial', 

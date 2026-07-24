@@ -1,0 +1,217 @@
+<!-- Public Press Campaign Page — Google Drive–inspired UI -->
+
+<!-- Loading -->
+<div *ngIf="loading" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-bg-gray-50">
+  <div class="tw-text-center tw-text-muted">
+    <app-icon name="spinner" [size]="40" class="tw-animate-spin tw-mb-3" [iconOnly]="true" />
+    <p>Loading press kit…</p>
+  </div>
+</div>
+
+<!-- Not Found -->
+<div *ngIf="!loading && notFound" class="tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-bg-gray-50">
+  <div class="tw-text-center">
+    <app-icon name="file" [size]="48" class="tw-text-gray-300 tw-mb-4" [iconOnly]="true" />
+    <h2 class="tw-text-2xl tw-font-bold tw-mb-2">Press Kit Not Found</h2>
+    <p class="tw-text-muted">This press kit may have been removed or is not yet published.</p>
+  </div>
+</div>
+
+<!-- Campaign Content -->
+<div *ngIf="!loading && !notFound && campaign" class="tw-min-h-screen tw-bg-gray-50">
+
+  <!-- Hero Header -->
+  <div class="tw-bg-white tw-border-b tw-border-gray-200 tw-py-10">
+    <div class="tw-max-w-4xl tw-mx-auto tw-px-4">
+      <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-6 tw-items-start">
+
+        <!-- Cover Art -->
+        <div class="tw-flex-shrink-0">
+          <img *ngIf="effectiveCoverArt" [src]="effectiveCoverArt" [alt]="campaign.title"
+            class="tw-rounded-lg tw-shadow-md"
+            style="width:160px;height:160px;object-fit:cover;" />
+          <div *ngIf="!effectiveCoverArt"
+            class="tw-rounded-lg tw-bg-gray-100 tw-flex tw-items-center tw-justify-center tw-shadow"
+            style="width:160px;height:160px;">
+            <app-icon name="music" [size]="48" class="tw-text-gray-400" [iconOnly]="true" />
+          </div>
+        </div>
+
+        <!-- Title & Meta -->
+        <div class="tw-flex-1">
+          <p class="tw-text-sm tw-text-muted tw-uppercase tw-tracking-wider tw-mb-1">
+            {{ campaign.campaign_type === 'event' ? 'Event Press Kit' : 'Press Kit' }}
+          </p>
+          <h1 class="tw-text-3xl tw-font-bold tw-mb-1">{{ campaign.title }}</h1>
+
+          <!-- Release meta -->
+          <ng-container *ngIf="campaign.campaign_type !== 'event'">
+            <div *ngIf="getReleaseArtists()" class="tw-text-lg tw-text-gray-600 tw-mb-1">{{ getReleaseArtists() }}</div>
+            <div *ngIf="campaign.release" class="tw-text-sm tw-text-muted tw-mb-3">
+              {{ campaign.release.title }}
+              <span *ngIf="campaign.release.release_date"> · {{ formatDate(campaign.release.release_date) }}</span>
+            </div>
+          </ng-container>
+
+          <!-- Event meta -->
+          <ng-container *ngIf="campaign.campaign_type === 'event' && campaign.event">
+            <div class="tw-text-sm tw-text-muted tw-mb-3">
+              <span *ngIf="campaign.event.date_and_time">{{ formatDate(campaign.event.date_and_time) }}</span>
+              <span *ngIf="campaign.event.venue"> · {{ campaign.event.venue }}</span>
+            </div>
+          </ng-container>
+
+          <p class="tw-text-sm tw-text-muted">
+            <span *ngIf="hasArtists">Artist photos available</span>
+            <span *ngIf="releaseSongsWithAudio.length > 0"><ng-container *ngIf="hasArtists"> · </ng-container>{{ releaseSongsWithAudio.length }} audio file{{ releaseSongsWithAudio.length !== 1 ? 's' : '' }}</span>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="tw-max-w-4xl tw-mx-auto tw-px-4 tw-py-8">
+    <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-6">
+
+      <!-- Left: Files -->
+      <div class="tw-flex-shrink-0 sm:tw-w-2/5 tw-mb-6">
+
+        <!-- Drive-style file listing card -->
+        <div class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-overflow-hidden tw-mb-4">
+
+          <!-- Cover Art File Row -->
+          <div *ngIf="effectiveCoverArt"
+            class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-border-b tw-border-gray-100 hover:tw-bg-gray-50 tw-cursor-pointer"
+            (click)="downloadFile(effectiveCoverArt, (campaign.title + '-cover-art.jpg'))">
+            <div class="tw-flex-shrink-0 tw-rounded tw-bg-purple-50 tw-flex tw-items-center tw-justify-center" style="width:40px;height:40px;">
+              <app-icon name="image" class="tw-text-purple-500" [iconOnly]="true" />
+            </div>
+            <div class="tw-flex-1 tw-min-w-0">
+              <p class="tw-mb-0 tw-font-medium">Cover Art</p>
+              <small class="tw-text-muted">Image</small>
+            </div>
+            <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0">
+              <app-icon name="download" [iconOnly]="true" />
+            </button>
+          </div>
+
+          <!-- Audio File Rows (from release songs) -->
+          <div *ngFor="let song of releaseSongsWithAudio"
+            class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-border-b tw-border-gray-100 hover:tw-bg-gray-50 tw-cursor-pointer"
+            (click)="downloadFile(song.audio_file_mp3, audioFileName(song))">
+            <div class="tw-flex-shrink-0 tw-rounded tw-bg-green-50 tw-flex tw-items-center tw-justify-center" style="width:40px;height:40px;">
+              <app-icon name="music" class="tw-text-green-600" [iconOnly]="true" />
+            </div>
+            <div class="tw-flex-1 tw-min-w-0">
+              <p class="tw-mb-0 tw-font-medium tw-truncate">{{ song.title }}</p>
+              <small class="tw-text-muted">MP3 Audio</small>
+              <div class="tw-mt-1" (click)="$event.stopPropagation()">
+                <audio controls style="height:32px;width:100%;max-width:300px;">
+                  <source [src]="songProxyUrl(song)" type="audio/mpeg" />
+                </audio>
+              </div>
+            </div>
+            <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0"
+              (click)="$event.stopPropagation(); downloadFile(song.audio_file_mp3, audioFileName(song))">
+              <app-icon name="download" [iconOnly]="true" />
+            </button>
+          </div>
+
+          <!-- Artist Photos ZIP Row -->
+          <div *ngIf="hasArtists && artistPhotoZipUrl"
+            class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-cursor-pointer"
+            (click)="downloadFile(artistPhotoZipUrl, (campaign.title + '-Artist-Photos.zip'))">
+            <div class="tw-flex-shrink-0 tw-rounded tw-bg-blue-50 tw-flex tw-items-center tw-justify-center"
+              style="width:40px;height:40px;">
+              <app-icon name="archive" class="tw-text-blue-500" [iconOnly]="true" />
+            </div>
+            <div class="tw-flex-1 tw-min-w-0">
+              <p class="tw-mb-0 tw-font-medium">Artist Photos</p>
+              <small class="tw-text-muted">ZIP Archive</small>
+            </div>
+            <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0"
+              (click)="$event.stopPropagation(); downloadFile(artistPhotoZipUrl, (campaign.title + '-Artist-Photos.zip'))">
+              <app-icon name="download" [iconOnly]="true" />
+            </button>
+          </div>
+
+          <!-- Empty state -->
+          <div *ngIf="!effectiveCoverArt && releaseSongsWithAudio.length === 0 && !hasArtists"
+            class="tw-text-center tw-py-10 tw-text-muted">
+            <app-icon name="folder" [size]="40" class="tw-mb-3 tw-text-gray-300" [iconOnly]="true" />
+            <p>No files available yet.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right: Info -->
+      <div class="tw-flex-1 tw-min-w-0">
+
+        <!-- Event Details (event campaigns) -->
+        <div *ngIf="campaign.campaign_type === 'event' && campaign.event"
+          class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-p-4 tw-mb-4">
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Event Details</h6>
+
+          <dl class="tw-text-sm tw-space-y-1">
+            <div class="tw-flex tw-gap-2">
+              <dt class="tw-text-muted tw-min-w-0 tw-w-24 tw-flex-shrink-0">Event</dt>
+              <dd class="tw-mb-0 tw-font-medium">{{ campaign.event.title }}</dd>
+            </div>
+            <div *ngIf="campaign.event.date_and_time" class="tw-flex tw-gap-2">
+              <dt class="tw-text-muted tw-min-w-0 tw-w-24 tw-flex-shrink-0">Date</dt>
+              <dd class="tw-mb-0">{{ formatDate(campaign.event.date_and_time) }}</dd>
+            </div>
+            <div *ngIf="campaign.event.venue" class="tw-flex tw-gap-2">
+              <dt class="tw-text-muted tw-min-w-0 tw-w-24 tw-flex-shrink-0">Venue</dt>
+              <dd class="tw-mb-0">{{ campaign.event.venue }}</dd>
+            </div>
+            <div *ngIf="campaign.event.venue_address" class="tw-flex tw-gap-2">
+              <dt class="tw-text-muted tw-min-w-0 tw-w-24 tw-flex-shrink-0">Address</dt>
+              <dd class="tw-mb-0">{{ campaign.event.venue_address }}</dd>
+            </div>
+          </dl>
+
+          <div *ngIf="campaign.event.description" class="tw-text-sm tw-mt-3 tw-mb-0 tw-text-body press-writeup" [innerHTML]="campaign.event.description"></div>
+        </div>
+
+        <!-- Liner Notes -->
+        <div *ngIf="campaign.campaign_type !== 'event' && campaign.release?.liner_notes"
+          class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-p-4 tw-mb-4">
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Liner Notes</h6>
+          <div class="tw-text-sm tw-text-body tw-mb-0 press-writeup" [innerHTML]="campaign.release?.liner_notes"></div>
+        </div>
+
+        <!-- Artist Bio(s) -->
+        <ng-container *ngFor="let bioArtist of getArtistsWithBios()">
+          <div class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-p-4 tw-mb-4">
+            <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+              <img *ngIf="bioArtist.profile_photo" [src]="bioArtist.profile_photo"
+                class="rounded-circle" style="width:36px;height:36px;object-fit:cover;" />
+              <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">
+                About {{ bioArtist.name }}
+              </h6>
+            </div>
+            <div class="tw-text-sm tw-text-body press-writeup" [innerHTML]="bioArtist.bio"></div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- Press Release Writeup -->
+    <div *ngIf="campaign.writeup" class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-p-6">
+      <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">Press Release</h6>
+      <div class="tw-text-body tw-leading-relaxed press-writeup" [innerHTML]="campaign.writeup"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="tw-text-center tw-pt-8 tw-pb-4 tw-text-muted tw-text-sm">
+      Press kit generated by the Label Dashboard.
+    </div>
+
+  </div>
+</div>

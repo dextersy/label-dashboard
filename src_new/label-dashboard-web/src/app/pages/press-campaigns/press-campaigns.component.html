@@ -1,0 +1,397 @@
+<app-breadcrumb></app-breadcrumb>
+
+<div class="container-fluid tw-py-4">
+
+  <!-- Page Header -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+      <h3 class="tw-mb-2">
+        <app-icon name="file" class="tw-mr-2" [iconOnly]="false" />
+        Press Campaigns
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Create and manage press campaigns with downloadable press kits and public media pages.</p>
+    </div>
+  </div>
+
+  <!-- Campaigns Table -->
+  <app-paginated-table
+    title="Campaigns"
+    [data]="campaigns"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="columns"
+    [showSortableHeaders]="true"
+    [actions]="actions"
+    [showSearch]="true"
+    [sortInfo]="currentSort"
+    [headerActions]="headerActions"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)"
+    (sortChange)="onSortChange($event)">
+  </app-paginated-table>
+
+</div>
+
+<!-- =========================================================
+     CREATE / EDIT MODAL
+     ========================================================= -->
+<div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingCampaign ? 'Edit Campaign' : 'New Press Campaign' }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Campaign Details -->
+        <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Campaign Details</h6>
+
+        <div class="tw-mb-3">
+          <label for="campTitle" class="tw-label">Title <span class="tw-text-danger">*</span></label>
+          <input type="text" class="tw-input" id="campTitle" [(ngModel)]="campaignForm.title" placeholder="e.g. Single Release Campaign" />
+        </div>
+
+        <!-- Campaign Type (only show if both options are available) -->
+        <div class="tw-mb-3" *ngIf="hasReleases && hasEvents">
+          <label class="tw-label">Campaign Type</label>
+          <div class="btn-group w-100" role="group">
+            <button type="button" class="btn"
+              [class.btn-primary]="campaignForm.campaign_type === 'release'"
+              [class.btn-outline-secondary]="campaignForm.campaign_type !== 'release'"
+              (click)="campaignForm.campaign_type = 'release'; onCampaignTypeChange()">
+              <app-icon name="music" class="tw-mr-1" /> Release
+            </button>
+            <button type="button" class="btn"
+              [class.btn-primary]="campaignForm.campaign_type === 'event'"
+              [class.btn-outline-secondary]="campaignForm.campaign_type !== 'event'"
+              (click)="campaignForm.campaign_type = 'event'; onCampaignTypeChange()">
+              <app-icon name="calendar" class="tw-mr-1" /> Event
+            </button>
+          </div>
+        </div>
+
+        <div class="tw-mb-3">
+          <label for="campStatus" class="tw-label">Status</label>
+          <select class="tw-input" id="campStatus" [(ngModel)]="campaignForm.status">
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+          </select>
+          <small class="tw-text-muted">Only Published campaigns are visible on the public page.</small>
+        </div>
+
+        <div class="tw-mb-4">
+          <label class="tw-label">Press Release Writeup</label>
+          <quill-editor
+            [(ngModel)]="campaignForm.writeup"
+            [modules]="quillConfig"
+            name="campWriteup"
+            placeholder="Enter the press release text here. This will be included in the generated Word document."
+            style="display:block;">
+          </quill-editor>
+          <small class="tw-text-muted">Use the toolbar for basic formatting. Content will be included in the generated Word document.</small>
+        </div>
+
+        <!-- ===== RELEASE TYPE FIELDS ===== -->
+        <ng-container *ngIf="campaignForm.campaign_type === 'release'">
+
+          <!-- Link to Release -->
+          <hr class="tw-my-4" />
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Linked Release</h6>
+          <p class="tw-text-muted tw-text-sm tw-mb-3">Link a release to pull the cover art for the public page.</p>
+
+          <div class="tw-mb-3" *ngIf="!selectedRelease">
+            <label class="tw-label">Search Releases</label>
+            <input type="text" class="tw-input" [(ngModel)]="releaseSearchQuery"
+              (input)="onReleaseSearch()" placeholder="Type to search releases..." />
+            <div *ngIf="releaseSearchResults.length > 0" class="list-group tw-mt-1" style="max-height:200px;overflow-y:auto;">
+              <button type="button" class="list-group-item list-group-item-action tw-flex tw-items-center tw-gap-3"
+                *ngFor="let release of releaseSearchResults" (click)="selectRelease(release)">
+                <img *ngIf="release.cover_art" [src]="release.cover_art" class="rounded" style="width:40px;height:40px;object-fit:cover;" />
+                <div *ngIf="!release.cover_art" class="bg-secondary rounded tw-flex tw-items-center tw-justify-center"
+                  style="width:40px;height:40px;">
+                  <app-icon name="music" class="tw-text-white" />
+                </div>
+                <div>
+                  <strong>{{ release.title }}</strong>
+                  <small class="tw-block tw-text-muted">
+                    {{ getReleaseArtistNames(release) }}
+                    <span *ngIf="release.catalog_no"> · {{ release.catalog_no }}</span>
+                  </small>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="selectedRelease" class="tw-mb-3">
+            <label class="tw-label">Selected Release</label>
+            <div class="list-group-item tw-flex tw-items-center tw-justify-between tw-rounded tw-border">
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <img *ngIf="selectedRelease.cover_art" [src]="selectedRelease.cover_art" class="rounded"
+                  style="width:48px;height:48px;object-fit:cover;" />
+                <div>
+                  <strong>{{ selectedRelease.title }}</strong>
+                  <small class="tw-block tw-text-muted">{{ selectedRelease.catalog_no }}</small>
+                </div>
+              </div>
+              <button type="button" class="btn-sm btn-ghost tw-text-danger" (click)="clearRelease()">
+                <app-icon name="x" [iconOnly]="true" />
+              </button>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <!-- ===== EVENT TYPE FIELDS ===== -->
+        <ng-container *ngIf="campaignForm.campaign_type === 'event'">
+
+          <!-- Link to Event -->
+          <hr class="tw-my-4" />
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Linked Event</h6>
+          <p class="tw-text-muted tw-text-sm tw-mb-3">Link an event to include its details on the public page and in the Word document.</p>
+
+          <div class="tw-mb-3" *ngIf="!selectedEvent">
+            <label class="tw-label">Search Events</label>
+            <input type="text" class="tw-input" [(ngModel)]="eventSearchQuery"
+              (input)="onEventSearch()" placeholder="Type to search events..." />
+            <div *ngIf="eventSearchResults.length > 0" class="list-group tw-mt-1" style="max-height:200px;overflow-y:auto;">
+              <button type="button" class="list-group-item list-group-item-action tw-flex tw-items-center tw-gap-3"
+                *ngFor="let event of eventSearchResults" (click)="selectEvent(event)">
+                <img *ngIf="event.poster_url" [src]="event.poster_url" class="rounded" style="width:40px;height:40px;object-fit:cover;" />
+                <div *ngIf="!event.poster_url" class="bg-secondary rounded tw-flex tw-items-center tw-justify-center"
+                  style="width:40px;height:40px;">
+                  <app-icon name="calendar" class="tw-text-white" />
+                </div>
+                <div>
+                  <strong>{{ event.title }}</strong>
+                  <small class="tw-block tw-text-muted">
+                    {{ getEventDateDisplay(event) }}
+                    <span *ngIf="event.venue"> · {{ event.venue }}</span>
+                  </small>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="selectedEvent" class="tw-mb-3">
+            <label class="tw-label">Selected Event</label>
+            <div class="list-group-item tw-flex tw-items-center tw-justify-between tw-rounded tw-border">
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <img *ngIf="selectedEvent.poster_url" [src]="selectedEvent.poster_url" class="rounded"
+                  style="width:48px;height:48px;object-fit:cover;" />
+                <div>
+                  <strong>{{ selectedEvent.title }}</strong>
+                  <small class="tw-block tw-text-muted">
+                    {{ getEventDateDisplay(selectedEvent) }}
+                    <span *ngIf="selectedEvent.venue"> · {{ selectedEvent.venue }}</span>
+                  </small>
+                </div>
+              </div>
+              <button type="button" class="btn-sm btn-ghost tw-text-danger" (click)="clearEvent()">
+                <app-icon name="x" [iconOnly]="true" />
+              </button>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <!-- Link to Artist (event campaigns only — release campaigns use release collaborators automatically) -->
+        <ng-container *ngIf="campaignForm.campaign_type === 'event'">
+        <hr class="tw-my-4" />
+        <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Linked Artist</h6>
+        <p class="tw-text-muted tw-text-sm tw-mb-3">Link an artist to include their bio in the Word document.</p>
+
+        <div class="tw-mb-3" *ngIf="!selectedArtist">
+          <label class="tw-label">Search Artists</label>
+          <input type="text" class="tw-input" [(ngModel)]="artistSearchQuery"
+            (input)="onArtistSearch()" placeholder="Type to search artists..." />
+          <div *ngIf="artistSearchResults.length > 0" class="list-group tw-mt-1" style="max-height:200px;overflow-y:auto;">
+            <button type="button" class="list-group-item list-group-item-action tw-flex tw-items-center tw-gap-3"
+              *ngFor="let artist of artistSearchResults" (click)="selectArtist(artist)">
+              <img *ngIf="artist.profile_photo" [src]="artist.profile_photo" class="rounded-circle"
+                style="width:36px;height:36px;object-fit:cover;" />
+              <div *ngIf="!artist.profile_photo" class="bg-secondary rounded-circle tw-flex tw-items-center tw-justify-center"
+                style="width:36px;height:36px;">
+                <app-icon name="user" class="tw-text-white" />
+              </div>
+              <div>
+                <strong>{{ artist.name }}</strong>
+                <small *ngIf="!artist.bio" class="tw-block tw-text-warning">No bio on file</small>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="selectedArtist" class="tw-mb-3">
+          <label class="tw-label">Selected Artist</label>
+          <div class="list-group-item tw-flex tw-items-center tw-justify-between tw-rounded tw-border">
+            <div class="tw-flex tw-items-center tw-gap-3">
+              <img *ngIf="selectedArtist.profile_photo" [src]="selectedArtist.profile_photo" class="rounded-circle"
+                style="width:36px;height:36px;object-fit:cover;" />
+              <div>
+                <strong>{{ selectedArtist.name }}</strong>
+                <small *ngIf="!selectedArtist.bio" class="tw-block tw-text-warning">No bio on file</small>
+                <small *ngIf="selectedArtist.bio" class="tw-block tw-text-success"><app-icon name="check" /> Bio available</small>
+              </div>
+            </div>
+            <button type="button" class="btn-sm btn-ghost tw-text-danger" (click)="clearArtist()">
+              <app-icon name="x" [iconOnly]="true" />
+            </button>
+          </div>
+        </div>
+        </ng-container>
+
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="saveCampaign()" [disabled]="saving || !campaignForm.title.trim()">
+          <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" *ngIf="saving" />
+          {{ editingCampaign ? 'Update Campaign' : 'Create Campaign' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showModal" *ngIf="showModal"></div>
+
+<!-- =========================================================
+     DETAIL / MANAGE MODAL (files upload)
+     ========================================================= -->
+<div class="modal fade" [class.show]="showDetailModal" [style.display]="showDetailModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          Manage Campaign
+          <span *ngIf="detailCampaign"> — {{ detailCampaign.title }}</span>
+        </h5>
+        <button type="button" class="btn-close" (click)="closeDetailModal()"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Loading -->
+        <div *ngIf="loadingDetail" class="tw-text-center tw-py-8">
+          <app-icon name="spinner" class="tw-animate-spin tw-text-muted" [size]="32" [iconOnly]="true" />
+        </div>
+
+        <ng-container *ngIf="!loadingDetail && detailCampaign">
+
+          <!-- Public Page Link -->
+          <div class="alert alert-info tw-flex tw-items-center tw-gap-2 tw-mb-4">
+            <app-icon name="link" />
+            <span>
+              Public page:
+              <a [href]="'/press/' + detailCampaign.public_slug" target="_blank" class="tw-font-mono">
+                /press/{{ detailCampaign.public_slug }}
+              </a>
+              <span class="tw-ml-2 status-badge" [class.status-success]="detailCampaign.status === 'Published'" [class.status-warning]="detailCampaign.status === 'Draft'">
+                {{ detailCampaign.status }}
+              </span>
+            </span>
+            <button type="button" class="btn-sm btn-ghost tw-ml-auto" (click)="downloadWord(detailCampaign)">
+              <app-icon name="file" class="tw-mr-1" />
+              Download .docx
+              <app-icon *ngIf="downloadingWord" name="spinner" class="tw-ml-1 tw-animate-spin" />
+            </button>
+          </div>
+
+          <!-- Cover Art -->
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Cover Art</h6>
+          <div class="tw-flex tw-items-center tw-gap-4 tw-mb-4">
+            <div *ngIf="effectiveCoverArt" class="tw-flex-shrink-0">
+              <img [src]="effectiveCoverArt" class="rounded" style="width:80px;height:80px;object-fit:cover;" />
+            </div>
+            <p class="tw-text-sm tw-text-muted tw-mb-0">
+              <ng-container *ngIf="detailCampaign.release?.cover_art">Using cover art from linked release.</ng-container>
+              <ng-container *ngIf="!detailCampaign.release?.cover_art && detailCampaign.event?.poster_url">Using poster from linked event.</ng-container>
+              <ng-container *ngIf="!effectiveCoverArt">No cover art — link a release or event with cover art.</ng-container>
+            </p>
+          </div>
+
+          <hr class="tw-my-4" />
+
+          <!-- Audio Files -->
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Audio Files</h6>
+          <div class="tw-mb-4">
+            <ng-container *ngIf="releaseSongsWithAudio.length > 0; else noAudio">
+              <div *ngFor="let song of releaseSongsWithAudio" class="tw-flex tw-items-center tw-gap-3 tw-mb-2">
+                <app-icon name="music" class="tw-text-success tw-flex-shrink-0" [iconOnly]="true" />
+                <div class="tw-flex-1 tw-min-w-0">
+                  <p class="tw-mb-0 tw-text-sm tw-font-medium tw-truncate">{{ song.title }}</p>
+                  <audio controls class="tw-w-full tw-mt-1" style="height:32px;">
+                    <source [src]="song.audio_file_mp3" type="audio/mpeg" />
+                  </audio>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #noAudio>
+              <p class="tw-text-sm tw-text-muted tw-mb-0">No audio files found on the linked release's tracks.</p>
+            </ng-template>
+          </div>
+
+          <!-- Artist Photos (event campaigns only) -->
+          <ng-container *ngIf="isEventCampaign">
+
+          <hr class="tw-my-4" />
+
+          <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+            <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">
+              Artist Photos ({{ detailCampaign.artistPhotos?.length || 0 }})
+            </h6>
+            <button type="button" class="btn-sm btn-ghost" (click)="photosExpanded = !photosExpanded">
+              <app-icon [name]="photosExpanded ? 'chevron-up' : 'chevron-down'" [iconOnly]="true" />
+            </button>
+          </div>
+
+          <div *ngIf="photosExpanded">
+            <!-- Photo grid -->
+            <div *ngIf="detailCampaign.artistPhotos?.length" class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 md:tw-grid-cols-4 tw-gap-3 tw-mb-3">
+              <div *ngFor="let photo of detailCampaign.artistPhotos" class="tw-relative tw-group">
+                <img [src]="photo.path" class="rounded tw-w-full tw-object-cover" style="height:100px;" />
+                <div class="tw-absolute tw-inset-0 tw-bg-black tw-bg-opacity-40 tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity tw-rounded tw-flex tw-items-center tw-justify-center">
+                  <button type="button" class="btn-sm btn-danger" (click)="deleteArtistPhoto(photo.id)">
+                    <app-icon name="trash" [iconOnly]="true" />
+                  </button>
+                </div>
+                <small *ngIf="photo.label" class="tw-block tw-text-muted tw-mt-1 tw-truncate">{{ photo.label }}</small>
+              </div>
+            </div>
+
+            <div *ngIf="!detailCampaign.artistPhotos?.length" class="tw-text-center tw-py-6 tw-text-muted tw-border tw-rounded tw-mb-3">
+              <app-icon name="image" [size]="32" class="tw-mb-2" [iconOnly]="true" />
+              <p class="tw-mb-0 tw-text-sm">No artist photos uploaded yet.</p>
+            </div>
+
+            <!-- Upload photo -->
+            <div class="tw-flex tw-gap-2 tw-items-end">
+              <div class="tw-flex-1">
+                <label class="tw-label">Photo caption (optional)</label>
+                <input type="text" class="tw-input" [(ngModel)]="photoLabelInput" placeholder="e.g. Live at the studio" />
+              </div>
+              <label class="btn-secondary tw-cursor-pointer tw-flex-shrink-0">
+                <app-icon name="upload" class="tw-mr-1" />
+                {{ uploadingPhoto ? 'Uploading...' : 'Add Photo' }}
+                <input type="file" accept="image/*" class="tw-hidden" (change)="onArtistPhotoSelected($event)" [disabled]="uploadingPhoto" />
+              </label>
+            </div>
+          </div>
+
+          </ng-container><!-- /isEventCampaign -->
+
+        </ng-container>
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeDetailModal()">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showDetailModal" *ngIf="showDetailModal"></div>

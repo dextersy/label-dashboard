@@ -83,7 +83,7 @@ export class AppComponent implements OnInit, OnDestroy {
         } else {
           // This is likely a real domain configuration issue
           // Don't redirect if on standalone/public pages that should work without brand settings
-          const standalonePages = ['/domain-not-found', '/invite', '/admin-invite', '/admin-setup', '/public'];
+          const standalonePages = ['/domain-not-found', '/invite', '/admin-invite', '/admin-setup', '/public', '/press'];
           const isStandalonePage = standalonePages.some(page => window.location.pathname.startsWith(page));
 
           if (!isStandalonePage) {
@@ -204,7 +204,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isStandalonePage(): boolean {
     const standaloneRoutes = ['/login', '/domain-not-found', '/forgot-password', '/reset-password', '/set-profile'];
-    const standaloneRoutePrefixes = ['/invite', '/public', '/artist/epk/preview'];
+    const standaloneRoutePrefixes = ['/invite', '/public', '/artist/epk/preview', '/press'];
 
     // Strip query params before matching
     const urlPath = this.router.url.split('?')[0];
