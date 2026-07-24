@@ -52,6 +52,7 @@ export class LabelsDiscographyComponent implements OnInit {
   bulkStatusOpen = false;
   readonly statusValues = ['Draft', 'For Submission', 'Pending', 'Live', 'Taken Down'];
 
+  searchQuery = '';
   statusFilter = 'all';
   statusOptions = STATUS_OPTIONS;
   // true by default — hides itself once the user scrolls to the end or on wide screens
@@ -135,6 +136,10 @@ export class LabelsDiscographyComponent implements OnInit {
       params['status'] = this.statusFilter;
     }
 
+    if (this.searchQuery.trim()) {
+      params['search'] = this.searchQuery.trim();
+    }
+
     const token = localStorage.getItem('auth_token');
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     const queryString = new URLSearchParams(params).toString();
@@ -173,6 +178,11 @@ export class LabelsDiscographyComponent implements OnInit {
 
   onStatusFilter(value: string): void {
     this.statusFilter = value;
+    this.loadDiscography(1);
+  }
+
+  onSearchChange(query: string): void {
+    this.searchQuery = query;
     this.loadDiscography(1);
   }
 

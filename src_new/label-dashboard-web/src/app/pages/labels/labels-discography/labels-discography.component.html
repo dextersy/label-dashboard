@@ -1,5 +1,14 @@
 <app-breadcrumb></app-breadcrumb>
 
+<div class="disc-search-bar">
+  <input
+    type="search"
+    class="form-control disc-search-input"
+    placeholder="Search by title, artist, catalog #, or UPC…"
+    [value]="searchQuery"
+    (input)="onSearchChange($any($event.target).value)" />
+</div>
+
 <app-paginated-table
   title="Discography"
   [data]="releases"

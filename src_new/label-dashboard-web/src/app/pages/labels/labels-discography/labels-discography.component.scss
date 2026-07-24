@@ -1,3 +1,15 @@
+.disc-search-bar {
+  margin-bottom: 12px;
+}
+
+.disc-search-input {
+  max-width: 360px;
+
+  @media (max-width: 539px) {
+    max-width: 100%;
+  }
+}
+
 // Wrapper for scroll + fade affordance
 .release-filter-wrap {
   position: relative;

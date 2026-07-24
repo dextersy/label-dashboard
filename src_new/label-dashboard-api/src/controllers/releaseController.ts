@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { fn, col, literal } from 'sequelize';
+import { sequelize } from '../config/database';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
 import path from 'path';
 import archiver from 'archiver';
@@ -1589,7 +1590,8 @@ export const getDiscography = async (req: AuthRequest, res: Response) => {
       limit = '20',
       sortBy = 'release_date',
       sortDirection = 'desc',
-      status
+      status,
+      search
     } = req.query;
 
     const pageNum = parseInt(page as string) || 1;
@@ -1600,9 +1602,19 @@ export const getDiscography = async (req: AuthRequest, res: Response) => {
     const sortColumn = allowedSortColumns.includes(sortBy as string) ? (sortBy as string) : 'release_date';
     const direction = (sortDirection as string)?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
+    const Op = require('sequelize').Op;
     const where: any = { brand_id: req.user.brand_id };
     if (status && status !== 'all') {
       where.status = status;
+    }
+    if (search && (search as string).trim()) {
+      const q = `%${(search as string).trim()}%`;
+      where[Op.or] = [
+        { title: { [Op.like]: q } },
+        { catalog_no: { [Op.like]: q } },
+        { UPC: { [Op.like]: q } },
+        literal(`EXISTS (SELECT 1 FROM release_artist ra JOIN artist a ON ra.artist_id = a.id WHERE ra.release_id = "Release"."id" AND a.name LIKE ${sequelize.escape(q)})`),
+      ];
     }
 
     const [{ count, rows: releases }, statusCountRows] = await Promise.all([
