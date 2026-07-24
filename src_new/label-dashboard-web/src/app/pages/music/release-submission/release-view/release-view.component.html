@@ -463,6 +463,9 @@
             </span>
             <span class="track-duration">{{ formatDuration(song.duration) }}</span>
             <span class="track-actions">
+              <button *ngIf="isAdmin" class="btn-icon btn-sm" type="button" (click)="onEditSong(song); $event.stopPropagation()" title="Edit track">
+                <app-icon name="edit" iconOnly />
+              </button>
               <button class="track-expand-btn" (click)="toggleTrackExpand(song.id)">
                 <app-icon [name]="expandedTrackIds.has(song.id) ? 'chevron-up' : 'chevron-down'" />
               </button>
@@ -583,6 +586,20 @@
     </div>
   </div>
   <div class="modal-backdrop fade" [class.show]="lyricsModalSong" *ngIf="lyricsModalSong"></div>
+
+  <!-- Song Edit Form (admin only) -->
+  <app-song-form
+    *ngIf="isAdmin"
+    [isVisible]="showSongForm"
+    [releaseId]="release?.id || 0"
+    [song]="editingSong"
+    [isSubmitting]="submittingSong"
+    [isAdmin]="true"
+    [releaseStatus]="release?.status || ''"
+    [releaseArtists]="release?.artists || []"
+    (close)="showSongForm = false"
+    (submit)="onSongFormSubmit($event)">
+  </app-song-form>
 </div>
 
 <!-- Floating Action Bar for inline edits -->

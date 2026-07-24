@@ -10,12 +10,13 @@ import { downloadFromResponse } from '../../../../utils/file-utils';
 import JsBarcode from 'jsbarcode';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
+import { SongFormComponent } from '../song-form/song-form.component';
 import { QuillModule } from 'ngx-quill';
 
 @Component({
   selector: 'app-release-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, IconComponent, FloatingActionBarComponent],
+  imports: [CommonModule, FormsModule, QuillModule, IconComponent, FloatingActionBarComponent, SongFormComponent],
   templateUrl: './release-view.component.html',
   styleUrl: './release-view.component.scss'
 })
@@ -25,6 +26,11 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() releaseSubmitted = new EventEmitter<Release>();
   @Output() releaseUpdated = new EventEmitter<Release>();
+
+  // Song form state (admin only)
+  showSongForm = false;
+  editingSong: any = null;
+  submittingSong = false;
 
   // Audio player state (synced from service)
   playingSongId: number | null = null;
@@ -407,6 +413,35 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   copiedLink: string | null = null;
+
+  onEditSong(song: any): void {
+    this.editingSong = song;
+    this.showSongForm = true;
+  }
+
+  onSongFormSubmit(songData: any): void {
+    if (!this.editingSong?.id) return;
+    this.submittingSong = true;
+    this.songService.updateSong(this.editingSong.id, songData).subscribe({
+      next: () => {
+        this.submittingSong = false;
+        this.showSongForm = false;
+        this.alertMessage.emit({ type: 'success', message: 'Song updated successfully' });
+        // Reload release to refresh track list
+        if (this.release?.id) {
+          this.releaseService.getRelease(this.release.id).subscribe({
+            next: (response) => this.releaseUpdated.emit(response.release),
+            error: () => {}
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error updating song:', error);
+        this.submittingSong = false;
+        this.alertMessage.emit({ type: 'error', message: error.error?.error || 'Failed to update song' });
+      }
+    });
+  }
 
   copyLink(url: string, key: string): void {
     navigator.clipboard.writeText(url).then(() => {

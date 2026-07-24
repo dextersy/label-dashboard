@@ -562,7 +562,7 @@
 
     .track-header {
       display: grid;
-      grid-template-columns: 32px 36px 200px 1fr 72px 40px;
+      grid-template-columns: 32px 36px 200px 1fr 72px 72px;
       gap: 0.25rem;
       padding: 0.75rem 0.5rem;
       border-bottom: 2px solid var(--border-light, #eee);
@@ -586,7 +586,7 @@
 
     .track-row {
       display: grid;
-      grid-template-columns: 32px 36px 200px 1fr 72px 40px;
+      grid-template-columns: 32px 36px 200px 1fr 72px 72px;
       gap: 0.25rem;
       padding: 0.5rem 0.5rem;
       align-items: center;
