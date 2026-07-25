@@ -27,6 +27,47 @@
     (filtersChange)="onFiltersChange($event)"
     [headerActions]="headerActions"
     (sortChange)="onSortChange($event)">
+
+    <ng-template #mobileRowTemplate let-pitch let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions" let-onRowClick="onRowClick" let-isClickable="isClickable">
+      <div class="pitch-row" [style.cursor]="isClickable ? 'pointer' : 'default'" (click)="onRowClick()">
+
+        <!-- Row 1: title + kebab -->
+        <div class="pitch-row__title-row">
+          <span class="pitch-row__title">{{ pitch.title }}</span>
+          <button *ngIf="visibleActions.length > 0"
+                  class="pitch-row__kebab kebab-btn"
+                  type="button"
+                  (click)="toggleKebab($event)"
+                  [class.active]="isKebabOpen">
+            <app-icon name="more-vertical" iconOnly />
+          </button>
+        </div>
+
+        <!-- Row 2: subtitle (description, single truncated line) -->
+        <div *ngIf="pitch.description" class="pitch-row__subtitle">{{ pitch.description }}</div>
+
+        <!-- Row 3: date left + song badges right -->
+        <div class="pitch-row__stats">
+          <span class="pitch-row__stats-text">{{ pitch.createdAt | date:'mediumDate' }}</span>
+          <span class="pitch-row__badges">
+            <span *ngIf="getValidSongCount(pitch) > 0" class="pitch-row__ok-badge">
+              <app-icon name="check" iconOnly class="pitch-row__badge-icon" />{{ getValidSongCount(pitch) }}
+            </span>
+            <span *ngIf="hasPitchWarnings(pitch)" class="pitch-row__warn-badge">
+              <app-icon name="warning" iconOnly class="pitch-row__badge-icon" />{{ getPitchWarnCount(pitch) }}
+            </span>
+          </span>
+        </div>
+
+        <!-- Row 4: creator avatar + name -->
+        <div *ngIf="getCreatorName(pitch) !== '-'" class="pitch-row__author">
+          <span class="pitch-row__avatar">{{ getCreatorInitials(pitch) }}</span>
+          <span class="pitch-row__author-name">{{ getCreatorName(pitch) }}</span>
+        </div>
+
+      </div>
+    </ng-template>
+
   </app-paginated-table>
 </div>
 

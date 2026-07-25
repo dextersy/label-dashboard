@@ -75,7 +75,16 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       label: 'Created By',
       searchable: false,
       sortable: false,
-      formatter: (pitch: any) => this.getCreatorName(pitch)
+      renderHtml: true,
+      formatter: (pitch: any) => {
+        const name = this.getCreatorName(pitch);
+        if (name === '-') return '-';
+        const initials = this.getCreatorInitials(pitch);
+        return `<span style="display:inline-flex;align-items:center;gap:6px">` +
+          `<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#e5e7eb;color:#6b7280;font-size:9px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;line-height:1">${this.escapeHtml(initials)}</span>` +
+          `<span>${this.escapeHtml(name)}</span>` +
+          `</span>`;
+      }
     },
     {
       key: 'createdAt',
@@ -536,6 +545,15 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     return username || '-';
   }
 
+  getCreatorInitials(pitch: SyncLicensingPitch): string {
+    if (!pitch.creator) return '?';
+    const { first_name, last_name, username } = pitch.creator;
+    if (first_name && last_name) return (first_name[0] + last_name[0]).toUpperCase();
+    if (first_name) return first_name[0].toUpperCase();
+    if (last_name) return last_name[0].toUpperCase();
+    return (username?.[0] ?? '?').toUpperCase();
+  }
+
   getArtistNames(song: SongForPitch): string {
     if (!song.release?.artists?.length) return 'Unknown Artist';
     return song.release.artists.map(a => a.name).join(', ');
@@ -561,6 +579,14 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       }
     }
     return songWarnings.join('\n');
+  }
+
+  getPitchWarnCount(pitch: SyncLicensingPitch): number {
+    return (pitch.songs || []).filter(s => this.getSongWarnings(s).length > 0).length;
+  }
+
+  getValidSongCount(pitch: SyncLicensingPitch): number {
+    return (pitch.songs || []).filter(s => this.getSongWarnings(s).length === 0).length;
   }
 
   hasPitchWarnings(pitch: SyncLicensingPitch): boolean {
