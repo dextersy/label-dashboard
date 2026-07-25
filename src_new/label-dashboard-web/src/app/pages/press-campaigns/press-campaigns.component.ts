@@ -44,6 +44,10 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   showModal = false;
   editingCampaign: PressCampaign | null = null;
   saving = false;
+  selectedTone = '';
+  additionalInstructions = '';
+  isGeneratingWriteup = false;
+  showAiOptions = false;
   campaignForm = {
     title: '',
     writeup: '',
@@ -301,6 +305,9 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   resetForm(): void {
     const defaultType = (!this.hasReleases && this.hasEvents) ? 'event' : 'release';
     this.campaignForm = { title: '', writeup: '', status: 'Draft', campaign_type: defaultType, release_id: null, artist_id: null, event_id: null };
+    this.selectedTone = '';
+    this.additionalInstructions = '';
+    this.showAiOptions = false;
     this.selectedRelease = null;
     this.selectedArtist = null;
     this.selectedEvent = null;
@@ -329,6 +336,22 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       this.releaseSearchQuery = '';
       this.releaseSearchResults = [];
     }
+  }
+
+  draftWithAi(): void {
+    if (!this.editingCampaign?.id) return;
+    this.isGeneratingWriteup = true;
+    this.pressCampaignService.generateWriteup(this.editingCampaign.id, this.selectedTone, this.additionalInstructions).subscribe({
+      next: result => {
+        this.campaignForm.writeup = result.writeup;
+        this.isGeneratingWriteup = false;
+      },
+      error: (err) => {
+        this.isGeneratingWriteup = false;
+        const msg = err?.error?.error || 'Failed to generate writeup.';
+        this.notification.showError(msg);
+      },
+    });
   }
 
   saveCampaign(): void {

@@ -274,6 +274,27 @@ export const createPaymentRateLimit = (maxRequests: number = 10, windowMs: numbe
   });
 };
 
+// Strict rate limiting for AI generation endpoints
+export const aiRateLimit = rateLimit({
+  windowMs: parseInt(process.env.AI_RATE_WINDOW_MS || '60000'), // 1 minute
+  max: parseInt(process.env.AI_RATE_MAX_REQUESTS || '5'), // 5 generations per minute
+  message: {
+    error: 'AI Generation Limit Reached',
+    message: 'You are generating too quickly. Please wait a moment before trying again.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    notifySuperadmin(req, 'AI Generation Rate Limit').catch(err =>
+      console.error('Failed to notify admin:', err)
+    );
+    createRateLimitErrorHandler({
+      error: 'AI Generation Limit Reached',
+      message: 'You are generating too quickly. Please wait a moment before trying again.',
+    })(req, res);
+  }
+});
+
 // Global fallback rate limiter for all endpoints
 export const globalRateLimit = rateLimit({
   windowMs: parseInt(process.env.GLOBAL_RATE_WINDOW_MS || '60000'), // 1 minute

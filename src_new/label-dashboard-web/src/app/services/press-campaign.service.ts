@@ -134,4 +134,8 @@ export class PressCampaignService {
       params: new HttpParams().set('search', search),
     });
   }
+
+  generateWriteup(id: number, tone: string, additionalInstructions?: string): Observable<{ writeup: string }> {
+    return this.http.post<{ writeup: string }>(`${this.apiUrl}/${id}/generate-writeup`, { tone, additionalInstructions });
+  }
 }

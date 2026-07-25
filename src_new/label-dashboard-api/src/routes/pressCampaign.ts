@@ -18,12 +18,13 @@ import {
   searchReleases,
   searchArtists,
   searchEvents,
+  generateWriteup,
   coverArtUpload,
   mp3Upload,
   photoUpload,
 } from '../controllers/pressCampaignController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
-import { uploadRateLimit } from '../middleware/rateLimiting';
+import { uploadRateLimit, aiRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
 
@@ -55,6 +56,9 @@ router.post('/:id/photos', uploadRateLimit, photoUpload.single('photo'), uploadA
 router.put('/:id/photos/:photoId/label', updateArtistPhotoLabel);
 router.delete('/:id/photos/:photoId', deleteArtistPhoto);
 router.put('/:id/photos/reorder', reorderArtistPhotos);
+
+// AI generation
+router.post('/:id/generate-writeup', aiRateLimit, generateWriteup);
 
 // Downloads
 router.get('/:id/download-word', uploadRateLimit, downloadWordDoc);

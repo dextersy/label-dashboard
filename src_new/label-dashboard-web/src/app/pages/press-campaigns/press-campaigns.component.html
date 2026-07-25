@@ -83,7 +83,53 @@
         </div>
 
         <div class="tw-mb-4">
-          <label class="tw-label">Press Release Writeup</label>
+          <div class="tw-flex tw-items-center tw-justify-between tw-mb-1.5">
+            <label class="tw-font-medium tw-text-sm tw-text-[#374151]">Press Release Writeup</label>
+            <div class="tw-flex tw-items-center tw-gap-1">
+              <button type="button"
+                class="tw-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-400 tw-border tw-border-gray-300 tw-rounded tw-px-2 tw-py-0.5 tw-bg-white hover:tw-text-gray-600 hover:tw-border-gray-400 tw-transition-colors disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                [disabled]="!editingCampaign?.id"
+                [title]="!editingCampaign?.id ? 'Save campaign first to use AI drafting' : 'Draft writeup with AI'"
+                (click)="showAiOptions = !showAiOptions">
+                <app-icon name="sparkle" [iconOnly]="true" />
+                Draft with AI
+                <app-icon [name]="showAiOptions ? 'chevron-up' : 'chevron-down'" [iconOnly]="true" />
+              </button>
+              <small *ngIf="!editingCampaign?.id" class="tw-text-xs tw-text-gray-400">Save first</small>
+            </div>
+          </div>
+          <!-- Expanded options -->
+          <div *ngIf="showAiOptions" class="tw-mt-2 tw-p-3 tw-border tw-border-gray-200 tw-rounded tw-bg-gray-50 tw-flex tw-flex-col tw-gap-2">
+              <div class="tw-flex tw-items-center tw-gap-2">
+                <label class="tw-text-xs tw-text-gray-500 tw-whitespace-nowrap">Tone</label>
+                <select class="tw-text-xs tw-text-gray-600 tw-border tw-border-gray-300 tw-rounded tw-px-1 tw-py-0.5 tw-bg-white tw-w-auto" [(ngModel)]="selectedTone" [disabled]="isGeneratingWriteup">
+                  <option value="">Default</option>
+                  <option value="professional">Professional</option>
+                  <option value="conversational">Conversational</option>
+                  <option value="enthusiastic">Enthusiastic</option>
+                  <option value="minimalist">Minimalist</option>
+                </select>
+              </div>
+              <div>
+                <label class="tw-text-xs tw-text-gray-500 tw-block tw-mb-1">Additional instructions</label>
+                <textarea class="tw-text-xs tw-text-gray-600 tw-border tw-border-gray-300 tw-rounded tw-px-2 tw-py-1 tw-bg-white tw-w-full tw-resize-none"
+                  rows="2"
+                  placeholder="e.g. Focus on the lead single. Mention the upcoming tour."
+                  [(ngModel)]="additionalInstructions"
+                  [disabled]="isGeneratingWriteup">
+                </textarea>
+              </div>
+              <div>
+                <button type="button"
+                  class="tw-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-500 tw-border tw-border-gray-300 tw-rounded tw-px-2 tw-py-0.5 tw-bg-white hover:tw-text-gray-700 hover:tw-border-gray-400 tw-transition-colors disabled:tw-opacity-40 disabled:tw-cursor-not-allowed"
+                  [disabled]="isGeneratingWriteup"
+                  (click)="draftWithAi()">
+                  <app-icon name="spinner" class="tw-animate-spin" [iconOnly]="true" *ngIf="isGeneratingWriteup" />
+                  <app-icon name="sparkle" [iconOnly]="true" *ngIf="!isGeneratingWriteup" />
+                  {{ isGeneratingWriteup ? 'Generating...' : 'Generate draft' }}
+                </button>
+              </div>
+          </div>
           <quill-editor
             [(ngModel)]="campaignForm.writeup"
             [modules]="quillConfig"

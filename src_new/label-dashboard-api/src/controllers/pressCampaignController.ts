@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import multer from 'multer';
+import Groq from 'groq-sdk';
 import {
   PressCampaign,
   PressCampaignArtistPhoto,
@@ -1370,5 +1371,103 @@ export const searchEvents = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Error searching events:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// --- AI Writeup Generation ---
+
+const TONE_INSTRUCTIONS: Record<string, string> = {
+  professional: 'in a professional and formal tone',
+  conversational: 'in a conversational and approachable tone',
+  enthusiastic: 'in an enthusiastic and energetic tone',
+  minimalist: 'in a minimalist, concise style with short sentences',
+};
+
+export const generateWriteup = async (req: Request, res: Response) => {
+  try {
+    const brandId = (req as any).user.brand_id;
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'Invalid campaign ID' });
+
+    const campaign = await PressCampaign.findOne({ where: { id, brand_id: brandId } });
+    if (!campaign) return res.status(404).json({ error: 'Press campaign not found' });
+
+    const enriched = await enrichCampaign(campaign);
+
+    const tone = (req.body.tone || '').toString().toLowerCase();
+    const toneInstruction = TONE_INSTRUCTIONS[tone] || '';
+    const additionalInstructions = (req.body.additionalInstructions || '').toString().trim();
+
+    // Build prompt
+    const parts: string[] = [];
+    parts.push(`You are a music publicist writing a press release ${toneInstruction ? toneInstruction + ' ' : ''}for the following campaign.`);
+    parts.push(`Campaign title: ${enriched.title}`);
+    parts.push(`Campaign type: ${enriched.campaign_type}`);
+
+    if (enriched.release) {
+      const r = enriched.release;
+      parts.push(`\nRelease information:`);
+      parts.push(`- Title: ${r.title}`);
+      if (r.release_date) parts.push(`- Release date: ${new Date(r.release_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`);
+      if (r.liner_notes) parts.push(`- Liner notes / description: ${r.liner_notes}`);
+      if (r.artists?.length) {
+        parts.push(`- Artists: ${r.artists.map((a: any) => a.name).join(', ')}`);
+        for (const artist of r.artists) {
+          if (artist.bio) parts.push(`- ${artist.name} bio: ${artist.bio}`);
+        }
+      }
+      if (r.songs?.length) {
+        const songList = [...r.songs]
+          .sort((a: any, b: any) => (a.ReleaseSong?.track_number || 0) - (b.ReleaseSong?.track_number || 0))
+          .map((s: any) => s.title)
+          .join(', ');
+        parts.push(`- Track titles (mention naturally in prose, do not list as bullets): ${songList}`);
+      }
+    }
+
+    if (enriched.event) {
+      const e = enriched.event;
+      parts.push(`\nEvent information:`);
+      parts.push(`- Event: ${e.title}`);
+      if (e.date_and_time) parts.push(`- Date: ${new Date(e.date_and_time).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`);
+      if (e.venue) parts.push(`- Venue: ${e.venue}`);
+      if (e.venue_address) parts.push(`- Address: ${e.venue_address}`);
+      if (e.description) parts.push(`- Description: ${e.description}`);
+    }
+
+    if (enriched.artist) {
+      const a = enriched.artist;
+      parts.push(`\nArtist: ${a.name}`);
+      if (a.bio) parts.push(`Artist bio: ${a.bio}`);
+    }
+
+    if (additionalInstructions) {
+      parts.push(`\nAdditional instructions from the user: ${additionalInstructions}`);
+    }
+
+    parts.push(`\nWrite a compelling press release for this campaign. Important rules:
+- Use only these HTML tags: <p>, <strong>, <em>. No lists, no blockquotes.
+- Every paragraph must be wrapped in <p> tags.
+- Use <strong> for artist names, release titles, and key phrases.
+- Use <em> for song titles and album names.
+- Mention song titles naturally within prose paragraphs — never as a bullet list.
+- Include at least one fabricated but believable quote from the artist or band about the release or event, written as a natural paragraph with the quote inline (e.g. <p>"Quote here," says <strong>Artist Name</strong>. "Continued quote."</p>).
+- Do not include a subject line, "FOR IMMEDIATE RELEASE" header, catalog numbers, or any markdown — just the formatted HTML body paragraphs.`);
+
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'AI generation is not configured. Set GROQ_API_KEY.' });
+
+    const groq = new Groq({ apiKey });
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: parts.join('\n') }],
+      temperature: 0.7,
+    });
+    const text = completion.choices[0]?.message?.content || '';
+
+    return res.json({ writeup: text });
+  } catch (error: any) {
+    console.error('Error generating writeup:', error);
+    res.status(500).json({ error: 'Failed to generate writeup' });
   }
 };
