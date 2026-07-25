@@ -36,6 +36,7 @@ import SyncLicensingPitch from './SyncLicensingPitch';
 import SyncLicensingPitchSong from './SyncLicensingPitchSong';
 import PressCampaign from './PressCampaign';
 import PressCampaignArtistPhoto from './PressCampaignArtistPhoto';
+import PressCampaignLink from './PressCampaignLink';
 import WalkInType from './WalkInType';
 import WalkInTransaction from './WalkInTransaction';
 import WalkInTransactionItem from './WalkInTransactionItem';
@@ -275,10 +276,14 @@ PressCampaign.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 PressCampaign.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
 PressCampaign.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
 PressCampaign.hasMany(PressCampaignArtistPhoto, { foreignKey: 'campaign_id', as: 'artistPhotos' });
+PressCampaign.hasMany(PressCampaignLink, { foreignKey: 'campaign_id', as: 'links' });
 Brand.hasMany(PressCampaign, { foreignKey: 'brand_id', as: 'pressCampaigns' });
 
 // PressCampaignArtistPhoto relationships
 PressCampaignArtistPhoto.belongsTo(PressCampaign, { foreignKey: 'campaign_id', as: 'campaign' });
+
+// PressCampaignLink relationships
+PressCampaignLink.belongsTo(PressCampaign, { foreignKey: 'campaign_id', as: 'campaign' });
 
 // Notification relationships
 Notification.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -336,6 +341,7 @@ export {
   SyncLicensingPitchSong,
   PressCampaign,
   PressCampaignArtistPhoto,
+  PressCampaignLink,
   WalkInType,
   WalkInTransaction,
   WalkInTransactionItem,

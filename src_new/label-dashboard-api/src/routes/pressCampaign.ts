@@ -12,6 +12,9 @@ import {
   deleteArtistPhoto,
   updateArtistPhotoLabel,
   reorderArtistPhotos,
+  addCampaignLink,
+  updateCampaignLink,
+  deleteCampaignLink,
   downloadWordDoc,
   getPublicCampaign,
   downloadArtistPhotosZip,
@@ -56,6 +59,11 @@ router.post('/:id/photos', uploadRateLimit, photoUpload.single('photo'), uploadA
 router.put('/:id/photos/:photoId/label', updateArtistPhotoLabel);
 router.delete('/:id/photos/:photoId', deleteArtistPhoto);
 router.put('/:id/photos/reorder', reorderArtistPhotos);
+
+// Campaign links
+router.post('/:id/links', addCampaignLink);
+router.put('/:id/links/:linkId', updateCampaignLink);
+router.delete('/:id/links/:linkId', deleteCampaignLink);
 
 // AI generation
 router.post('/:id/generate-writeup', aiRateLimit, generateWriteup);

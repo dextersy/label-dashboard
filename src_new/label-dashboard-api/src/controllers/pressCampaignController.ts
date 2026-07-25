@@ -5,6 +5,7 @@ import Groq from 'groq-sdk';
 import {
   PressCampaign,
   PressCampaignArtistPhoto,
+  PressCampaignLink,
   Artist,
   ArtistImage,
   Release,
@@ -231,7 +232,7 @@ async function enrichCampaign(campaign: any): Promise<any> {
   if (plain.event_id) {
     const event = await Event.findOne({
       where: { id: plain.event_id, brand_id: brandId },
-      attributes: ['id', 'title', 'date_and_time', 'venue', 'venue_address', 'poster_url', 'description', 'status'],
+      attributes: ['id', 'title', 'date_and_time', 'venue', 'venue_address', 'poster_url', 'description', 'status', 'external_ticket_link', 'buy_shortlink'],
     });
     plain.event = event ? event.toJSON() : null;
   }
@@ -240,7 +241,7 @@ async function enrichCampaign(campaign: any): Promise<any> {
   if (plain.release_id) {
     const release = await Release.findOne({
       where: { id: plain.release_id, brand_id: brandId },
-      attributes: ['id', 'title', 'catalog_no', 'cover_art', 'release_date', 'liner_notes', 'spotify_link', 'youtube_link'],
+      attributes: ['id', 'title', 'catalog_no', 'cover_art', 'release_date', 'liner_notes', 'spotify_link', 'apple_music_link', 'youtube_link'],
       include: [
         {
           model: Artist,
@@ -308,6 +309,7 @@ export const getPressCampaigns = async (req: Request, res: Response) => {
         { model: Event, as: 'event', attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url'] },
         { model: User, as: 'creator', attributes: ['id', 'first_name', 'last_name', 'username'] },
         { model: PressCampaignArtistPhoto, as: 'artistPhotos', attributes: ['id', 'path', 'label', 'sort_order'] },
+        { model: PressCampaignLink, as: 'links', attributes: ['id', 'label', 'url', 'sort_order'] },
       ],
       order: [[sortField, sortOrder]],
       limit,
@@ -340,6 +342,7 @@ export const getPressCampaign = async (req: Request, res: Response) => {
       include: [
         { model: User, as: 'creator', attributes: ['id', 'first_name', 'last_name', 'username'] },
         { model: PressCampaignArtistPhoto, as: 'artistPhotos', attributes: ['id', 'path', 'label', 'sort_order'] },
+        { model: PressCampaignLink, as: 'links', attributes: ['id', 'label', 'url', 'sort_order'], order: [['sort_order', 'ASC']] as any },
       ],
     });
 
@@ -753,6 +756,83 @@ export const reorderArtistPhotos = async (req: Request, res: Response) => {
   }
 };
 
+// --- Campaign Link CRUD ---
+
+export const addCampaignLink = async (req: Request, res: Response) => {
+  try {
+    const brandId = (req as any).user.brand_id;
+    const { id } = req.params;
+    const { label, url } = req.body;
+
+    if (!label || !label.trim()) return res.status(400).json({ error: 'Label is required' });
+    if (!url || !url.trim()) return res.status(400).json({ error: 'URL is required' });
+
+    const campaign = await PressCampaign.findOne({ where: { id, brand_id: brandId } });
+    if (!campaign) return res.status(404).json({ error: 'Press campaign not found' });
+
+    const maxLink = await PressCampaignLink.findOne({
+      where: { campaign_id: id },
+      order: [['sort_order', 'DESC']],
+    });
+    const nextOrder = maxLink ? (maxLink as any).sort_order + 1 : 0;
+
+    const link = await PressCampaignLink.create({
+      campaign_id: Number(id),
+      label: label.trim(),
+      url: url.trim(),
+      sort_order: nextOrder,
+    });
+
+    res.status(201).json({ link });
+  } catch (error: any) {
+    console.error('Error adding campaign link:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateCampaignLink = async (req: Request, res: Response) => {
+  try {
+    const brandId = (req as any).user.brand_id;
+    const { id, linkId } = req.params;
+    const { label, url } = req.body;
+
+    const campaign = await PressCampaign.findOne({ where: { id, brand_id: brandId } });
+    if (!campaign) return res.status(404).json({ error: 'Press campaign not found' });
+
+    const link = await PressCampaignLink.findOne({ where: { id: linkId, campaign_id: id } });
+    if (!link) return res.status(404).json({ error: 'Link not found' });
+
+    const updates: any = {};
+    if (label !== undefined) updates.label = label.trim();
+    if (url !== undefined) updates.url = url.trim();
+
+    await link.update(updates);
+    res.json({ link });
+  } catch (error: any) {
+    console.error('Error updating campaign link:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteCampaignLink = async (req: Request, res: Response) => {
+  try {
+    const brandId = (req as any).user.brand_id;
+    const { id, linkId } = req.params;
+
+    const campaign = await PressCampaign.findOne({ where: { id, brand_id: brandId } });
+    if (!campaign) return res.status(404).json({ error: 'Press campaign not found' });
+
+    const link = await PressCampaignLink.findOne({ where: { id: linkId, campaign_id: id } });
+    if (!link) return res.status(404).json({ error: 'Link not found' });
+
+    await link.destroy();
+    res.json({ message: 'Link deleted' });
+  } catch (error: any) {
+    console.error('Error deleting campaign link:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // --- Public endpoint (no auth) ---
 
 export const getPublicCampaign = async (req: Request, res: Response) => {
@@ -763,6 +843,7 @@ export const getPublicCampaign = async (req: Request, res: Response) => {
       where: { public_slug: slug, status: 'Published' },
       include: [
         { model: PressCampaignArtistPhoto, as: 'artistPhotos', order: [['sort_order', 'ASC']] as any },
+        { model: PressCampaignLink, as: 'links', attributes: ['id', 'label', 'url', 'sort_order'], order: [['sort_order', 'ASC']] as any },
       ],
     });
 
@@ -1012,6 +1093,7 @@ export const downloadWordDoc = async (req: Request, res: Response) => {
         where: { id, brand_id: brandId },
         include: [
           { model: PressCampaignArtistPhoto, as: 'artistPhotos', order: [['sort_order', 'ASC']] as any },
+          { model: PressCampaignLink, as: 'links', attributes: ['id', 'label', 'url', 'sort_order'], order: [['sort_order', 'ASC']] as any },
           { model: User, as: 'creator', attributes: ['id', 'first_name', 'last_name'] },
         ],
       }),
@@ -1148,7 +1230,13 @@ export const downloadWordDoc = async (req: Request, res: Response) => {
     );
     addLink('Press Kit', publicPageUrl, true);
     if (enriched.release?.spotify_link) addLink('Spotify', enriched.release.spotify_link, true);
+    if (enriched.release?.apple_music_link) addLink('Apple Music', enriched.release.apple_music_link, true);
     if (enriched.release?.youtube_link) addLink('YouTube', enriched.release.youtube_link, true);
+    if (enriched.event?.buy_shortlink) addLink('Buy Tickets', enriched.event.buy_shortlink, true);
+    else if (enriched.event?.external_ticket_link) addLink('Buy Tickets', enriched.event.external_ticket_link, true);
+    for (const link of (enriched.links || [])) {
+      addLink(link.label, link.url, true);
+    }
 
     children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { after: 80 } }));
 
@@ -1445,14 +1533,24 @@ export const generateWriteup = async (req: Request, res: Response) => {
       parts.push(`\nAdditional instructions from the user: ${additionalInstructions}`);
     }
 
+    // Determine if the release/event is upcoming or already out
+    let isUpcoming = false;
+    if (enriched.release?.release_date) {
+      isUpcoming = new Date(enriched.release.release_date) > new Date();
+    } else if (enriched.event?.date_and_time) {
+      isUpcoming = new Date(enriched.event.date_and_time) > new Date();
+    }
+
     parts.push(`\nWrite a compelling press release for this campaign. Important rules:
 - Use only these HTML tags: <p>, <strong>, <em>. No lists, no blockquotes.
 - Every paragraph must be wrapped in <p> tags.
-- Use <strong> for artist names, release titles, and key phrases.
-- Use <em> for song titles and album names.
+- Use <strong> for artist names and key phrases.
+- Wrap release/album/EP titles in <em> tags (e.g. <em>Album Title</em>).
+- Wrap song titles in double quotes (e.g. "Song Title"). If a song title appears inside an existing quoted passage, use single quotes instead (e.g. 'Song Title').
 - Mention song titles naturally within prose paragraphs — never as a bullet list.
 - Include at least one fabricated but believable quote from the artist or band about the release or event, written as a natural paragraph with the quote inline (e.g. <p>"Quote here," says <strong>Artist Name</strong>. "Continued quote."</p>).
-- Do not include a subject line, "FOR IMMEDIATE RELEASE" header, catalog numbers, or any markdown — just the formatted HTML body paragraphs.`);
+- Do not include a subject line, "FOR IMMEDIATE RELEASE" header, catalog numbers, or any markdown — just the formatted HTML body paragraphs.
+- Always end the article with a call-to-action paragraph wrapped in <p> tags. ${isUpcoming ? 'Since this is an upcoming release/event, the CTA should tell readers it is available for pre-save.' : 'Since this is an already-released work, the CTA should tell readers it is now available on all major streaming platforms.'} The CTA text must be wrapped in <strong> tags.`);
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) return res.status(500).json({ error: 'AI generation is not configured. Set GROQ_API_KEY.' });
