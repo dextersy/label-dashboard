@@ -28,6 +28,56 @@
     (pageChange)="onPageChange($event)"
     (filtersChange)="onFiltersChange($event)"
     (sortChange)="onSortChange($event)">
+
+    <ng-template #mobileRowTemplate let-c let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions" let-onRowClick="onRowClick" let-isClickable="isClickable">
+      <div class="campaign-row" [style.cursor]="isClickable ? 'pointer' : 'default'" (click)="onRowClick()">
+
+        <!-- Circular image -->
+        <div class="campaign-row__avatar">
+          <img *ngIf="c.release?.cover_art || c.event?.poster_url"
+               [src]="c.release?.cover_art || c.event?.poster_url"
+               class="campaign-row__avatar-img"
+               alt="" />
+          <div *ngIf="!c.release?.cover_art && !c.event?.poster_url" class="campaign-row__avatar-placeholder">
+            <app-icon [name]="c.campaign_type === 'event' ? 'calendar' : 'disc'" iconOnly />
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="campaign-row__content">
+
+          <!-- Row 1: title + kebab -->
+          <div class="campaign-row__title-row">
+            <span class="campaign-row__title">{{ c.title }}</span>
+            <button *ngIf="visibleActions.length > 0"
+                    class="campaign-row__kebab kebab-btn"
+                    type="button"
+                    (click)="toggleKebab($event)"
+                    [class.active]="isKebabOpen">
+              <app-icon name="more-vertical" iconOnly />
+            </button>
+          </div>
+
+          <!-- Row 2: type icon + subtitle (truncated single line) -->
+          <div class="campaign-row__meta">
+            <app-icon [name]="c.campaign_type === 'event' ? 'calendar' : 'disc'" iconOnly class="campaign-row__meta-icon" />
+            <span class="campaign-row__meta-text">
+              {{ c.campaign_type === 'event' ? 'Event' : 'Release' }}<ng-container *ngIf="c.campaign_type === 'event' && c.event?.title"> · {{ c.event.title }}</ng-container><ng-container *ngIf="c.campaign_type !== 'event' && c.release?.title"> · {{ c.release.title }}</ng-container><ng-container *ngIf="c.artist?.name && c.campaign_type === 'event'"> · {{ c.artist.name }}</ng-container>
+            </span>
+          </div>
+
+          <!-- Row 3: status badge + date -->
+          <div class="campaign-row__footer">
+            <span class="status-badge" [class.status-success]="c.status === 'Published'" [class.status-warning]="c.status !== 'Published'">
+              {{ c.status }}
+            </span>
+            <span *ngIf="c.createdAt" class="campaign-row__date">{{ c.createdAt | date:'mediumDate' }}</span>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+
   </app-paginated-table>
 
 </div>
