@@ -132,4 +132,20 @@ export class PressCampaignPublicComponent implements OnInit {
     }
     return this.campaign?.release?.artists?.filter((a: any) => a.bio) || [];
   }
+
+  get autoLinks(): { label: string; url: string }[] {
+    const links: { label: string; url: string }[] = [];
+    const release = this.campaign?.release;
+    if (release) {
+      if (release.spotify_link) links.push({ label: 'Spotify', url: release.spotify_link });
+      if (release.apple_music_link) links.push({ label: 'Apple Music', url: release.apple_music_link });
+      if (release.youtube_link) links.push({ label: 'YouTube', url: release.youtube_link });
+    }
+    const event = this.campaign?.event;
+    if (event) {
+      const ticketUrl = event.buy_shortlink || event.external_ticket_link;
+      if (ticketUrl) links.push({ label: 'Buy Tickets', url: ticketUrl });
+    }
+    return links;
+  }
 }

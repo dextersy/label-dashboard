@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import {
   PressCampaign,
   PressCampaignArtistPhoto,
+  PressCampaignLink,
   PressCampaignPagination,
 } from '../models/press-campaign.model';
 
@@ -137,5 +138,17 @@ export class PressCampaignService {
 
   generateWriteup(id: number, tone: string, additionalInstructions?: string): Observable<{ writeup: string }> {
     return this.http.post<{ writeup: string }>(`${this.apiUrl}/${id}/generate-writeup`, { tone, additionalInstructions });
+  }
+
+  addCampaignLink(id: number, label: string, url: string): Observable<{ link: PressCampaignLink }> {
+    return this.http.post<{ link: PressCampaignLink }>(`${this.apiUrl}/${id}/links`, { label, url });
+  }
+
+  updateCampaignLink(id: number, linkId: number, data: { label?: string; url?: string }): Observable<{ link: PressCampaignLink }> {
+    return this.http.put<{ link: PressCampaignLink }>(`${this.apiUrl}/${id}/links/${linkId}`, data);
+  }
+
+  deleteCampaignLink(id: number, linkId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}/links/${linkId}`);
   }
 }

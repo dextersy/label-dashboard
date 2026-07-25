@@ -91,6 +91,11 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   photosExpanded = true;
   downloadingWord = false;
 
+  // Links
+  addingLink = false;
+  newLinkLabel = '';
+  newLinkUrl = '';
+
   readonly columns: TableColumn[] = [
     {
       key: 'title',
@@ -538,6 +543,35 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
         }
       },
       error: () => this.notification.showError('Failed to delete photo.'),
+    });
+  }
+
+  addLink(): void {
+    if (!this.detailCampaign || !this.newLinkLabel.trim() || !this.newLinkUrl.trim()) return;
+    this.addingLink = true;
+    this.pressCampaignService.addCampaignLink(this.detailCampaign.id, this.newLinkLabel.trim(), this.newLinkUrl.trim()).subscribe({
+      next: res => {
+        if (this.detailCampaign) {
+          if (!this.detailCampaign.links) this.detailCampaign.links = [];
+          this.detailCampaign.links.push(res.link);
+        }
+        this.newLinkLabel = '';
+        this.newLinkUrl = '';
+        this.addingLink = false;
+      },
+      error: () => { this.addingLink = false; this.notification.showError('Failed to add link.'); },
+    });
+  }
+
+  deleteLink(linkId: number): void {
+    if (!this.detailCampaign) return;
+    this.pressCampaignService.deleteCampaignLink(this.detailCampaign.id, linkId).subscribe({
+      next: () => {
+        if (this.detailCampaign) {
+          this.detailCampaign.links = this.detailCampaign.links?.filter(l => l.id !== linkId);
+        }
+      },
+      error: () => this.notification.showError('Failed to delete link.'),
     });
   }
 

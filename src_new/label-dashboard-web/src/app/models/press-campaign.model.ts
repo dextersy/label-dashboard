@@ -1,3 +1,13 @@
+export interface PressCampaignLink {
+  id: number;
+  campaign_id: number;
+  label: string;
+  url: string;
+  sort_order: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface PressCampaignArtistPhoto {
   id: number;
   campaign_id: number;
@@ -23,6 +33,9 @@ export interface PressCampaignRelease {
   cover_art?: string;
   release_date?: string;
   liner_notes?: string;
+  spotify_link?: string;
+  apple_music_link?: string;
+  youtube_link?: string;
   artists?: { id: number; name: string; bio?: string; profile_photo?: string }[];
   songs?: PressCampaignSong[];
 }
@@ -47,6 +60,8 @@ export interface PressCampaignEvent {
   poster_url?: string;
   description?: string;
   status?: string;
+  external_ticket_link?: string;
+  buy_shortlink?: string;
 }
 
 export interface PressCampaign {
@@ -69,6 +84,7 @@ export interface PressCampaign {
   release?: PressCampaignRelease;
   event?: PressCampaignEvent;
   artistPhotos?: PressCampaignArtistPhoto[];
+  links?: PressCampaignLink[];
   creator?: { id: number; first_name?: string; last_name?: string; username?: string };
 }
 
