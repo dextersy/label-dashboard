@@ -1386,7 +1386,7 @@ const TONE_INSTRUCTIONS: Record<string, string> = {
 export const generateWriteup = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user.brand_id;
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id as string);
     if (isNaN(id)) return res.status(400).json({ error: 'Invalid campaign ID' });
 
     const campaign = await PressCampaign.findOne({ where: { id, brand_id: brandId } });
