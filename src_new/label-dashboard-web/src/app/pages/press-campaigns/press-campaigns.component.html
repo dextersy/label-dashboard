@@ -74,6 +74,16 @@
             <span *ngIf="c.createdAt" class="campaign-row__date">{{ c.createdAt | date:'mediumDate' }}</span>
           </div>
 
+          <!-- Row 4: author -->
+          <div *ngIf="c.creator" class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1">
+            <span class="tw-inline-flex tw-items-center tw-justify-center tw-w-5 tw-h-5 tw-rounded-full tw-bg-gray-200 tw-text-gray-600 tw-text-[10px] tw-font-semibold tw-flex-shrink-0">
+              {{ (c.creator.first_name ? c.creator.first_name[0] : '') + (c.creator.last_name ? c.creator.last_name[0] : '') || (c.creator.username ? c.creator.username[0] : '?') | uppercase }}
+            </span>
+            <span class="tw-text-xs tw-text-gray-500">
+              {{ [c.creator.first_name, c.creator.last_name].join(' ').trim() || c.creator.username }}
+            </span>
+          </div>
+
         </div>
       </div>
     </ng-template>
@@ -358,14 +368,14 @@
      DETAIL / MANAGE MODAL (files upload)
      ========================================================= -->
 <div class="modal fade" [class.show]="showDetailModal" [style.display]="showDetailModal ? 'block' : 'none'" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title">
-          Manage Campaign
-          <span *ngIf="detailCampaign"> — {{ detailCampaign.title }}</span>
-        </h5>
+        <div class="modal-title">
+          <div class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-muted tw-mb-0.5">Manage Campaign</div>
+          <h5 class="tw-mb-0">{{ detailCampaign?.title || '&nbsp;' }}</h5>
+        </div>
         <button type="button" class="btn-close" (click)="closeDetailModal()"></button>
       </div>
 
