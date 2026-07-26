@@ -73,6 +73,13 @@
 
   <!-- Main Content -->
   <div class="tw-max-w-4xl tw-mx-auto tw-px-4 tw-py-8">
+
+    <!-- Press Release Writeup -->
+    <div *ngIf="campaign.writeup" class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-p-6 tw-mb-6">
+      <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">Press Release</h6>
+      <div class="tw-text-body tw-leading-relaxed press-writeup" [innerHTML]="campaign.writeup"></div>
+    </div>
+
     <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-6">
 
       <!-- Left: Files -->
@@ -163,6 +170,10 @@
               <p class="tw-mb-0 tw-font-medium">{{ link.label }}</p>
               <small class="tw-text-muted tw-truncate tw-block">{{ link.url }}</small>
             </div>
+            <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0"
+              (click)="copyLink(link.url)" [title]="copiedLinkUrl === link.url ? 'Copied!' : 'Copy link'">
+              <app-icon [name]="copiedLinkUrl === link.url ? 'check' : 'copy'" [iconOnly]="true" />
+            </button>
             <a [href]="link.url" target="_blank" rel="noopener noreferrer"
               class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0">
               <app-icon name="external-link" [iconOnly]="true" />
@@ -180,6 +191,10 @@
               <p class="tw-mb-0 tw-font-medium">{{ link.label }}</p>
               <small class="tw-text-muted tw-truncate tw-block">{{ link.url }}</small>
             </div>
+            <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0"
+              (click)="copyLink(link.url)" [title]="copiedLinkUrl === link.url ? 'Copied!' : 'Copy link'">
+              <app-icon [name]="copiedLinkUrl === link.url ? 'check' : 'copy'" [iconOnly]="true" />
+            </button>
             <a [href]="link.url" target="_blank" rel="noopener noreferrer"
               class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0">
               <app-icon name="external-link" [iconOnly]="true" />
@@ -239,16 +254,49 @@
               </h6>
             </div>
             <div class="tw-text-sm tw-text-body press-writeup" [innerHTML]="bioArtist.bio"></div>
+            <!-- Artist Socials -->
+            <div *ngIf="bioArtist.instagram_handle || bioArtist.facebook_handle || bioArtist.twitter_handle || bioArtist.tiktok_handle || bioArtist.youtube_channel"
+              class="tw-mt-3 tw-flex tw-flex-wrap tw-gap-2">
+              <a *ngIf="bioArtist.instagram_handle"
+                [href]="'https://instagram.com/' + bioArtist.instagram_handle"
+                target="_blank" rel="noopener noreferrer"
+                class="tw-inline-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-600 hover:tw-text-gray-900 tw-bg-gray-100 hover:tw-bg-gray-200 tw-rounded-full tw-px-3 tw-py-1 tw-no-underline">
+                <app-icon name="instagram" [size]="14" [iconOnly]="true" />
+                <span>{{ bioArtist.instagram_handle }}</span>
+              </a>
+              <a *ngIf="bioArtist.facebook_handle"
+                [href]="'https://facebook.com/' + bioArtist.facebook_handle"
+                target="_blank" rel="noopener noreferrer"
+                class="tw-inline-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-600 hover:tw-text-gray-900 tw-bg-gray-100 hover:tw-bg-gray-200 tw-rounded-full tw-px-3 tw-py-1 tw-no-underline">
+                <app-icon name="facebook" [size]="14" [iconOnly]="true" />
+                <span>{{ bioArtist.facebook_handle }}</span>
+              </a>
+              <a *ngIf="bioArtist.twitter_handle"
+                [href]="'https://x.com/' + bioArtist.twitter_handle"
+                target="_blank" rel="noopener noreferrer"
+                class="tw-inline-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-600 hover:tw-text-gray-900 tw-bg-gray-100 hover:tw-bg-gray-200 tw-rounded-full tw-px-3 tw-py-1 tw-no-underline">
+                <app-icon name="twitter" [size]="14" [iconOnly]="true" />
+                <span>{{ bioArtist.twitter_handle }}</span>
+              </a>
+              <a *ngIf="bioArtist.tiktok_handle"
+                [href]="'https://tiktok.com/@' + bioArtist.tiktok_handle"
+                target="_blank" rel="noopener noreferrer"
+                class="tw-inline-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-600 hover:tw-text-gray-900 tw-bg-gray-100 hover:tw-bg-gray-200 tw-rounded-full tw-px-3 tw-py-1 tw-no-underline">
+                <app-icon name="tiktok" [size]="14" [iconOnly]="true" />
+                <span>{{ bioArtist.tiktok_handle }}</span>
+              </a>
+              <a *ngIf="bioArtist.youtube_channel"
+                [href]="bioArtist.youtube_channel"
+                target="_blank" rel="noopener noreferrer"
+                class="tw-inline-flex tw-items-center tw-gap-1 tw-text-xs tw-text-gray-600 hover:tw-text-gray-900 tw-bg-gray-100 hover:tw-bg-gray-200 tw-rounded-full tw-px-3 tw-py-1 tw-no-underline">
+                <app-icon name="youtube" [size]="14" [iconOnly]="true" />
+                <span>YouTube</span>
+              </a>
+            </div>
           </div>
         </ng-container>
 
       </div>
-    </div>
-
-    <!-- Press Release Writeup -->
-    <div *ngIf="campaign.writeup" class="tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-200 tw-p-6">
-      <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">Press Release</h6>
-      <div class="tw-text-body tw-leading-relaxed press-writeup" [innerHTML]="campaign.writeup"></div>
     </div>
 
     <!-- Footer -->

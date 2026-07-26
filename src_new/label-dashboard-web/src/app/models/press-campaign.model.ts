@@ -23,6 +23,11 @@ export interface PressCampaignArtist {
   name: string;
   bio?: string;
   profile_photo?: string;
+  instagram_handle?: string;
+  facebook_handle?: string;
+  twitter_handle?: string;
+  tiktok_handle?: string;
+  youtube_channel?: string;
   images?: { id: number; path: string; credits?: string; display_order?: number }[];
 }
 
@@ -36,7 +41,7 @@ export interface PressCampaignRelease {
   spotify_link?: string;
   apple_music_link?: string;
   youtube_link?: string;
-  artists?: { id: number; name: string; bio?: string; profile_photo?: string }[];
+  artists?: { id: number; name: string; bio?: string; profile_photo?: string; instagram_handle?: string; facebook_handle?: string; twitter_handle?: string; tiktok_handle?: string; youtube_channel?: string }[];
   songs?: PressCampaignSong[];
 }
 

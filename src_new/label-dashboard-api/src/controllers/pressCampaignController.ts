@@ -171,6 +171,18 @@ function htmlToDocxParagraphs(html: string): Paragraph[] {
   const paragraphs: Paragraph[] = [];
 
   function processNode(node: any): void {
+    // Plain text node at root level (bio stored without HTML tags)
+    if (node.nodeType === 3) {
+      const text = decodeHtmlEntities(node.rawText || '').trim();
+      if (text) {
+        paragraphs.push(new Paragraph({
+          children: [new TextRun({ text })],
+          spacing: { after: 120 },
+        }));
+      }
+      return;
+    }
+
     const tag = node.tagName?.toLowerCase();
 
     if (tag === 'p' || tag === 'div') {
@@ -222,7 +234,7 @@ async function enrichCampaign(campaign: any): Promise<any> {
   if (plain.campaign_type === 'event' && plain.artist_id) {
     const artist = await Artist.findOne({
       where: { id: plain.artist_id, brand_id: brandId },
-      attributes: ['id', 'name', 'bio', 'profile_photo'],
+      attributes: ['id', 'name', 'bio', 'profile_photo', 'instagram_handle', 'facebook_handle', 'twitter_handle', 'tiktok_handle', 'youtube_channel'],
       include: [{ model: ArtistImage, as: 'images', attributes: ['id', 'path', 'credits', 'display_order'] }],
     });
     plain.artist = artist ? artist.toJSON() : null;
@@ -246,7 +258,7 @@ async function enrichCampaign(campaign: any): Promise<any> {
         {
           model: Artist,
           as: 'artists',
-          attributes: ['id', 'name', 'bio', 'profile_photo'],
+          attributes: ['id', 'name', 'bio', 'profile_photo', 'instagram_handle', 'facebook_handle', 'twitter_handle', 'tiktok_handle', 'youtube_channel'],
           through: { attributes: [] },
         },
         {
@@ -1322,27 +1334,55 @@ export const downloadWordDoc = async (req: Request, res: Response) => {
     }
 
     // Artist profile(s)
-    const artistsWithBios: any[] = enriched.campaign_type === 'event'
-      ? (enriched.artist?.bio ? [enriched.artist] : [])
-      : (enriched.release?.artists?.filter((a: any) => a.bio) || []);
+    const hasSocials = (a: any) =>
+      a.instagram_handle || a.facebook_handle || a.twitter_handle || a.tiktok_handle || a.youtube_channel;
+    const artistsForSection: any[] = enriched.campaign_type === 'event'
+      ? (enriched.artist && (enriched.artist.bio || hasSocials(enriched.artist)) ? [enriched.artist] : [])
+      : (enriched.release?.artists?.filter((a: any) => a.bio || hasSocials(a)) || []);
 
-    if (artistsWithBios.length > 0) {
+    if (artistsForSection.length > 0) {
       children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { after: 80 } }));
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: artistsWithBios.length === 1 ? 'Artist profile' : 'Artist profiles', bold: true, size: 40 })],
+          children: [new TextRun({ text: artistsForSection.length === 1 ? 'Artist profile' : 'Artist profiles', bold: true, size: 40 })],
           spacing: { before: 400, after: 120 },
         })
       );
 
-      for (const artist of artistsWithBios) {
-        if (artistsWithBios.length > 1) {
+      for (const artist of artistsForSection) {
+        if (artistsForSection.length > 1) {
           children.push(new Paragraph({
             children: [new TextRun({ text: artist.name, bold: true, size: 24 })],
             spacing: { after: 100 },
           }));
         }
-        children.push(...htmlToDocxParagraphs(artist.bio));
+        if (artist.bio) {
+          children.push(...htmlToDocxParagraphs(artist.bio));
+        }
+
+        // Artist socials
+        const socialLines: { label: string; url: string }[] = [];
+        if (artist.instagram_handle) socialLines.push({ label: 'Instagram', url: `https://instagram.com/${artist.instagram_handle}` });
+        if (artist.facebook_handle) socialLines.push({ label: 'Facebook', url: `https://facebook.com/${artist.facebook_handle}` });
+        if (artist.twitter_handle) socialLines.push({ label: 'X / Twitter', url: `https://x.com/${artist.twitter_handle}` });
+        if (artist.tiktok_handle) socialLines.push({ label: 'TikTok', url: `https://tiktok.com/@${artist.tiktok_handle}` });
+        if (artist.youtube_channel) socialLines.push({ label: 'YouTube', url: artist.youtube_channel });
+
+        if (socialLines.length > 0) {
+          children.push(new Paragraph({ children: [new TextRun({ text: '' })], spacing: { after: 60 } }));
+          for (const social of socialLines) {
+            children.push(new Paragraph({
+              children: [
+                new TextRun({ text: `${social.label}: ` }),
+                new ExternalHyperlink({
+                  link: social.url,
+                  children: [new TextRun({ text: social.url, style: 'Hyperlink', underline: { type: UnderlineType.SINGLE } })],
+                }),
+              ],
+              spacing: { after: 60 },
+            }));
+          }
+        }
       }
     }
 

@@ -18,6 +18,7 @@ export class PressCampaignPublicComponent implements OnInit {
   loading = true;
   notFound = false;
   photosExpanded = false;
+  copiedLinkUrl: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -131,6 +132,13 @@ export class PressCampaignPublicComponent implements OnInit {
       return this.campaign?.artist?.bio ? [this.campaign.artist] : [];
     }
     return this.campaign?.release?.artists?.filter((a: any) => a.bio) || [];
+  }
+
+  copyLink(url: string): void {
+    navigator.clipboard.writeText(url).then(() => {
+      this.copiedLinkUrl = url;
+      setTimeout(() => (this.copiedLinkUrl = null), 2000);
+    });
   }
 
   get autoLinks(): { label: string; url: string }[] {
