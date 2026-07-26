@@ -174,242 +174,139 @@ check_directory "$SCRIPT_DIR/src_new/label-dashboard-web" "Web"
 check_directory "$SCRIPT_DIR/src_new/spindly.app" "Spindly"
 check_directory "$SCRIPT_DIR/src_new/ticketing-app" "Ticketing App"
 
-# Build API
+# Build all apps in parallel
 start_phase
 if [ "$SKIP_BUILD" = true ]; then
-    print_warning "Skipping API build (--skip-build flag specified)"
-    cd "$SCRIPT_DIR/src_new/label-dashboard-api"
-    if [ ! -d "dist" ]; then
-        print_error "API dist directory not found and build was skipped. Please build first or run without --skip-build"
-        exit 1
-    fi
-    end_phase "Build: API (skipped)"
+    print_warning "🚀 Fast deployment mode: Skipping all builds"
+    [ ! -d "$SCRIPT_DIR/src_new/label-dashboard-api/dist" ] && \
+        { print_error "API dist directory not found. Build first or run without --skip-build"; exit 1; }
+    [ ! -d "$SCRIPT_DIR/src_new/label-dashboard-web/dist-prod" ] && \
+        { print_error "Web dist-prod directory not found. Build first or run without --skip-build"; exit 1; }
+    [ ! -d "$SCRIPT_DIR/src_new/spindly.app/dist/spindly-web/browser" ] && \
+        { print_error "Spindly dist directory not found. Build first or run without --skip-build"; exit 1; }
+    [ ! -d "$SCRIPT_DIR/src_new/ticketing-app/dist/ticketing-app/browser" ] && \
+        { print_error "Ticketing App dist directory not found. Build first or run without --skip-build"; exit 1; }
+    end_phase "Build: All apps (skipped)"
 else
-    print_status "Building API..."
-    cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+    print_status "Building all 4 applications in parallel..."
+    BUILD_LOG_DIR=$(mktemp -d)
 
-    if [ ! -f "package.json" ]; then
-        print_error "package.json not found in API directory"
-        exit 1
-    fi
-
-    # Install dependencies if node_modules doesn't exist
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing API dependencies..."
-        npm install
-    fi
-
-    # Build API
-    print_status "Running API build command: $API_BUILD_COMMAND"
-    eval "$API_BUILD_COMMAND"
-
-    if [ ! -d "dist" ]; then
-        print_error "API build failed - dist directory not found"
-        exit 1
-    fi
-
-    print_success "API build completed"
-    end_phase "Build: API"
-fi
-
-# Build Web
-start_phase
-if [ "$SKIP_BUILD" = true ]; then
-    print_warning "Skipping Web build (--skip-build flag specified)"
-    cd "$SCRIPT_DIR/src_new/label-dashboard-web"
-    if [ ! -d "dist-prod" ]; then
-        print_error "Web dist-prod directory not found and build was skipped. Please build first or run without --skip-build"
-        exit 1
-    fi
-    end_phase "Build: Web (skipped)"
-else
-    print_status "Building Web application..."
-    cd "$SCRIPT_DIR/src_new/label-dashboard-web"
-
-    if [ ! -f "package.json" ]; then
-        print_error "package.json not found in Web directory"
-        exit 1
-    fi
-
-    # Install dependencies if node_modules doesn't exist
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing Web dependencies..."
-        npm install
-    fi
-
-    # Handle environment configuration for Web application
-    print_status "Configuring production environment..."
-
-    # Check if Google Maps API key is set in environment or config
-    GOOGLE_MAPS_API_KEY_SOURCE=""
-    if [ ! -z "$GOOGLE_MAPS_API_KEY" ]; then
-        GOOGLE_MAPS_API_KEY_SOURCE="environment variable"
-    elif [ ! -z "$GOOGLE_MAPS_API_KEY_CONFIG" ]; then
+    # Resolve Maps key once so subshells inherit the final value
+    [ -z "$GOOGLE_MAPS_API_KEY" ] && [ -n "$GOOGLE_MAPS_API_KEY_CONFIG" ] && \
         GOOGLE_MAPS_API_KEY="$GOOGLE_MAPS_API_KEY_CONFIG"
-        GOOGLE_MAPS_API_KEY_SOURCE="deploy.config"
-    fi
 
-    if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
-        print_warning "Google Maps API key not found in environment variables or deploy.config"
-        print_warning "The application will build but Google Places autocomplete may not work"
-        print_warning "To fix this, set GOOGLE_MAPS_API_KEY environment variable or add GOOGLE_MAPS_API_KEY_CONFIG to deploy.config"
-    else
-        print_status "Using Google Maps API key from $GOOGLE_MAPS_API_KEY_SOURCE"
+    # --- API ---
+    (
+        cd "$SCRIPT_DIR/src_new/label-dashboard-api"
+        echo "[INFO] Building API..."
+        if [ ! -d "node_modules" ]; then
+            echo "[INFO] Installing API dependencies..."
+            npm install
+        fi
+        eval "$API_BUILD_COMMAND"
+        [ ! -d "dist" ] && { echo "[ERROR] API build failed - dist directory not found"; exit 1; }
+        echo "[SUCCESS] API build completed"
+    ) > "$BUILD_LOG_DIR/api.log" 2>&1 &
+    PID_API=$!
 
-        # Create production environment file from template
-        if [ -f "src/environments/environment.prod.example.ts" ]; then
-            print_status "Creating production environment file from template..."
+    # --- Web ---
+    (
+        cd "$SCRIPT_DIR/src_new/label-dashboard-web"
+        echo "[INFO] Building Web application..."
+        if [ ! -d "node_modules" ]; then
+            echo "[INFO] Installing Web dependencies..."
+            npm install
+        fi
+        if [ -z "$GOOGLE_MAPS_API_KEY" ]; then
+            echo "[WARNING] Google Maps API key not set — Google Places autocomplete may not work"
+        elif [ -f "src/environments/environment.prod.example.ts" ]; then
             cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
-
-            # Replace the placeholder with actual API key
             sed -i "s/YOUR_PRODUCTION_GOOGLE_PLACES_API_KEY_HERE/$GOOGLE_MAPS_API_KEY/g" src/environments/environment.prod.ts
-            print_success "Environment file configured with API key"
-        else
-            print_warning "environment.prod.example.ts not found, skipping API key replacement"
         fi
-    fi
-
-    # Build Web
-    print_status "Running Web build command: $WEB_BUILD_COMMAND"
-    eval "$WEB_BUILD_COMMAND"
-
-    # Clean up temporary environment file
-    if [ -f "src/environments/environment.prod.ts" ]; then
-        print_status "Cleaning up temporary environment file..."
+        eval "$WEB_BUILD_COMMAND"
         rm -f src/environments/environment.prod.ts
-    fi
+        [ ! -d "dist-prod" ] && { echo "[ERROR] Web build failed - dist-prod directory not found"; exit 1; }
+        echo "[SUCCESS] Web build completed"
+    ) > "$BUILD_LOG_DIR/web.log" 2>&1 &
+    PID_WEB=$!
 
-    if [ ! -d "dist-prod" ]; then
-        print_error "Web build failed - dist directory not found"
-        exit 1
-    fi
-
-    print_success "Web build completed"
-    end_phase "Build: Web"
-fi
-
-# Build Spindly.app (landing page)
-start_phase
-if [ "$SKIP_BUILD" = true ]; then
-    print_warning "Skipping Spindly build (--skip-build flag specified)"
-    cd "$SCRIPT_DIR/src_new/spindly.app"
-    if [ ! -d "dist/spindly-web/browser" ]; then
-        print_error "Spindly dist/spindly-web/browser directory not found and build was skipped. Please build first or run without --skip-build"
-        exit 1
-    fi
-    end_phase "Build: Spindly (skipped)"
-else
-    print_status "Building Spindly.app (landing page)..."
-    cd "$SCRIPT_DIR/src_new/spindly.app"
-
-    if [ ! -f "package.json" ]; then
-        print_error "package.json not found in Spindly directory"
-        exit 1
-    fi
-
-    # Install dependencies if node_modules doesn't exist
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing Spindly dependencies..."
-        npm install
-    fi
-
-    # Set up production environment file
-    if [ -f "src/environments/environment.prod.example.ts" ]; then
-        print_status "Creating Spindly production environment file..."
-        cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
-    else
-        print_warning "environment.prod.example.ts not found, skipping environment setup"
-    fi
-
-    # Build Spindly
-    print_status "Running Spindly build command: $SPINDLY_BUILD_COMMAND"
-    eval "$SPINDLY_BUILD_COMMAND"
-
-    # Clean up temporary environment file
-    if [ -f "src/environments/environment.prod.ts" ]; then
+    # --- Spindly ---
+    (
+        cd "$SCRIPT_DIR/src_new/spindly.app"
+        echo "[INFO] Building Spindly.app..."
+        if [ ! -d "node_modules" ]; then
+            echo "[INFO] Installing Spindly dependencies..."
+            npm install
+        fi
+        [ -f "src/environments/environment.prod.example.ts" ] && \
+            cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
+        eval "$SPINDLY_BUILD_COMMAND"
         rm -f src/environments/environment.prod.ts
-    fi
+        [ ! -d "dist/spindly-web/browser" ] && { echo "[ERROR] Spindly build failed - dist directory not found"; exit 1; }
+        echo "[SUCCESS] Spindly build completed"
+    ) > "$BUILD_LOG_DIR/spindly.log" 2>&1 &
+    PID_SPINDLY=$!
 
-    if [ ! -d "dist/spindly-web/browser" ]; then
-        print_error "Spindly build failed - dist/spindly-web/browser directory not found"
-        exit 1
-    fi
-
-    print_success "Spindly build completed"
-    end_phase "Build: Spindly"
-fi
-
-# Build Ticketing App
-start_phase
-if [ "$SKIP_BUILD" = true ]; then
-    print_warning "Skipping Ticketing App build (--skip-build flag specified)"
-    cd "$SCRIPT_DIR/src_new/ticketing-app"
-    if [ ! -d "dist/ticketing-app/browser" ]; then
-        print_error "Ticketing App dist/ticketing-app/browser directory not found and build was skipped. Please build first or run without --skip-build"
-        exit 1
-    fi
-    end_phase "Build: Ticketing App (skipped)"
-else
-    print_status "Building Ticketing App..."
-    cd "$SCRIPT_DIR/src_new/ticketing-app"
-
-    if [ ! -f "package.json" ]; then
-        print_error "package.json not found in Ticketing App directory"
-        exit 1
-    fi
-
-    # Install dependencies if node_modules doesn't exist
-    if [ ! -d "node_modules" ]; then
-        print_status "Installing Ticketing App dependencies..."
-        npm install
-    fi
-
-    # Handle environment configuration for Ticketing App
-    print_status "Configuring Ticketing App production environment..."
-
-    if [ -f "src/environments/environment.prod.example.ts" ]; then
-        print_status "Creating Ticketing App production environment file from template..."
-        cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
-
-        TICKETING_MAPS_KEY=""
-        if [ -n "$GOOGLE_MAPS_API_KEY" ]; then
-            TICKETING_MAPS_KEY="$GOOGLE_MAPS_API_KEY"
-        elif [ -n "$GOOGLE_MAPS_API_KEY_CONFIG" ]; then
-            TICKETING_MAPS_KEY="$GOOGLE_MAPS_API_KEY_CONFIG"
+    # --- Ticketing App ---
+    (
+        cd "$SCRIPT_DIR/src_new/ticketing-app"
+        echo "[INFO] Building Ticketing App..."
+        if [ ! -d "node_modules" ]; then
+            echo "[INFO] Installing Ticketing App dependencies..."
+            npm install
         fi
-
-        if [ -n "$TICKETING_MAPS_KEY" ]; then
-            sed -i "s/YOUR_PRODUCTION_GOOGLE_MAPS_API_KEY_HERE/$TICKETING_MAPS_KEY/g" src/environments/environment.prod.ts
-        else
-            print_warning "No Google Maps API key found — googleMapsApiKey placeholder left as-is"
+        if [ -f "src/environments/environment.prod.example.ts" ]; then
+            cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
+            TICKETING_MAPS_KEY="${GOOGLE_MAPS_API_KEY:-$GOOGLE_MAPS_API_KEY_CONFIG}"
+            [ -n "$TICKETING_MAPS_KEY" ] && \
+                sed -i "s/YOUR_PRODUCTION_GOOGLE_MAPS_API_KEY_HERE/$TICKETING_MAPS_KEY/g" src/environments/environment.prod.ts
+            if [ -n "$TICKETING_APP_PUBLIC_LISTING_DOMAIN" ]; then
+                sed -i "s/YOUR_PUBLIC_LISTING_DOMAIN_HERE/$TICKETING_APP_PUBLIC_LISTING_DOMAIN/g" src/environments/environment.prod.ts
+            else
+                echo "[WARNING] TICKETING_APP_PUBLIC_LISTING_DOMAIN not set — placeholder left as-is"
+            fi
         fi
-
-        if [ -n "$TICKETING_APP_PUBLIC_LISTING_DOMAIN" ]; then
-            sed -i "s/YOUR_PUBLIC_LISTING_DOMAIN_HERE/$TICKETING_APP_PUBLIC_LISTING_DOMAIN/g" src/environments/environment.prod.ts
-        else
-            print_warning "TICKETING_APP_PUBLIC_LISTING_DOMAIN not set in deploy.config — placeholder left as-is"
-        fi
-    else
-        print_warning "environment.prod.example.ts not found in Ticketing App, skipping environment setup"
-    fi
-
-    # Build Ticketing App
-    print_status "Running Ticketing App build command: $TICKETING_BUILD_COMMAND"
-    eval "$TICKETING_BUILD_COMMAND"
-
-    # Clean up temporary environment file
-    if [ -f "src/environments/environment.prod.ts" ]; then
-        print_status "Cleaning up Ticketing App temporary environment file..."
+        eval "$TICKETING_BUILD_COMMAND"
         rm -f src/environments/environment.prod.ts
-    fi
+        [ ! -d "dist/ticketing-app/browser" ] && { echo "[ERROR] Ticketing App build failed - dist directory not found"; exit 1; }
+        echo "[SUCCESS] Ticketing App build completed"
+    ) > "$BUILD_LOG_DIR/ticketing.log" 2>&1 &
+    PID_TICKETING=$!
 
-    if [ ! -d "dist/ticketing-app/browser" ]; then
-        print_error "Ticketing App build failed - dist/ticketing-app/browser directory not found"
-        exit 1
-    fi
+    print_status "Waiting for all builds to complete..."
 
-    print_success "Ticketing App build completed"
-    end_phase "Build: Ticketing App"
+    wait $PID_API;       EXIT_API=$?
+    wait $PID_WEB;       EXIT_WEB=$?
+    wait $PID_SPINDLY;   EXIT_SPINDLY=$?
+    wait $PID_TICKETING; EXIT_TICKETING=$?
+
+    # Print all build logs
+    echo ""
+    print_status "=== API Build Log ==="
+    cat "$BUILD_LOG_DIR/api.log"
+    echo ""
+    print_status "=== Web Build Log ==="
+    cat "$BUILD_LOG_DIR/web.log"
+    echo ""
+    print_status "=== Spindly Build Log ==="
+    cat "$BUILD_LOG_DIR/spindly.log"
+    echo ""
+    print_status "=== Ticketing App Build Log ==="
+    cat "$BUILD_LOG_DIR/ticketing.log"
+    echo ""
+
+    rm -rf "$BUILD_LOG_DIR"
+
+    # Check for failures
+    BUILD_ERRORS=0
+    [ $EXIT_API -ne 0 ]       && { print_error "API build failed";          BUILD_ERRORS=$((BUILD_ERRORS+1)); }
+    [ $EXIT_WEB -ne 0 ]       && { print_error "Web build failed";          BUILD_ERRORS=$((BUILD_ERRORS+1)); }
+    [ $EXIT_SPINDLY -ne 0 ]   && { print_error "Spindly build failed";      BUILD_ERRORS=$((BUILD_ERRORS+1)); }
+    [ $EXIT_TICKETING -ne 0 ] && { print_error "Ticketing App build failed"; BUILD_ERRORS=$((BUILD_ERRORS+1)); }
+    [ $BUILD_ERRORS -gt 0 ] && exit 1
+
+    print_success "All builds completed successfully"
+    end_phase "Build: All apps (parallel)"
 fi
 
 # Function to clean directory on server
