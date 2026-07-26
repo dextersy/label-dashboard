@@ -1352,6 +1352,7 @@ class MeltDashboardPlugin {
             'columns'      => '3',
             'show_details' => 'true',
             'popup'        => 'false',
+            'search'       => 'false',
             'class'        => '',
         ], $atts, 'melt-dashboard-artists');
 
@@ -1360,6 +1361,7 @@ class MeltDashboardPlugin {
         $columns      = max(1, min(6, (int) $atts['columns']));
         $show_details = $atts['show_details'] !== 'false';
         $popup        = $atts['popup'] === 'true';
+        $search       = $atts['search'] === 'true';
         $extra_class  = sanitize_html_class($atts['class']);
 
         $data = $this->fetch_artist_directory();
@@ -1581,6 +1583,56 @@ class MeltDashboardPlugin {
         .melt-dialog-members { font-size: .9rem; color: #6b7280; margin: 0 0 1rem; }
         .melt-dialog-bio { font-size: .9rem; color: #374151; margin-bottom: 1rem; line-height: 1.6; }
         .melt-dialog-bio p { margin: 0 0 .5rem; }
+
+        /* ----- Search bar ----- */
+        .melt-artists-search { margin-bottom: 1rem; }
+        .melt-artists-search input,
+        .melt-artists-search select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 12px;
+            font-size: .95rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            outline: none;
+            background: #fff;
+        }
+        .melt-artists-search input:focus,
+        .melt-artists-search select:focus { border-color: #9ca3af; }
+        .melt-artists-search-advanced-toggle {
+            background: none;
+            border: none;
+            padding: 0;
+            margin-top: .4rem;
+            font-size: .8rem;
+            color: #6b7280;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .melt-artists-search-advanced-toggle:hover { color: #374151; }
+        .melt-artists-advanced-panel {
+            display: none;
+            margin-top: .75rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: .5rem;
+        }
+        .melt-artists-advanced-panel.melt-hidden { display: none !important; }
+        .melt-artists-advanced-field label {
+            display: block;
+            font-size: .75rem;
+            color: #6b7280;
+            margin-bottom: 3px;
+        }
+        .melt-artists-no-results {
+            display: none;
+            padding: 2rem 0;
+            text-align: center;
+            color: #6b7280;
+            font-size: .95rem;
+        }
         ';
         $css .= '</style>';
 
@@ -1700,7 +1752,126 @@ class MeltDashboardPlugin {
             'website'   => ['label' => 'Website',   'icon' => 'fa-solid fa-globe',      'class' => 'melt-social-website'],
         ];
 
-        $output = $this->get_social_icons_styles() . $css . $dialog_html . $js;
+        // ---- Search HTML + JS ----
+        $search_id        = $uid . '-search';
+        $advanced_id      = $uid . '-advanced';
+        $advanced_toggle  = $uid . '-advanced-toggle';
+        $noresults_id     = $uid . '-noresults';
+        $custom_fields    = isset($data['brand']['artist_custom_fields']) && is_array($data['brand']['artist_custom_fields'])
+                            ? $data['brand']['artist_custom_fields']
+                            : [];
+        $has_advanced     = !empty($custom_fields); // bio + members always shown in advanced
+        $search_html      = '';
+        $search_js        = '';
+        if ($search) {
+            // Basic search input
+            $search_html = '<div class="melt-artists-search">';
+            $search_html .= '<input type="search" id="' . esc_attr($search_id) . '" placeholder="' . esc_attr__('Search artists…', 'melt-dashboard') . '" aria-label="' . esc_attr__('Search artists', 'melt-dashboard') . '">';
+
+            // Advanced toggle + panel
+            $search_html .= '<button type="button" class="melt-artists-search-advanced-toggle" id="' . esc_attr($advanced_toggle) . '" aria-expanded="false" aria-controls="' . esc_attr($advanced_id) . '">';
+            $search_html .= '<i class="fa-solid fa-sliders"></i>' . esc_html__('Advanced search', 'melt-dashboard');
+            $search_html .= '</button>';
+
+            $search_html .= '<div class="melt-artists-advanced-panel melt-hidden" id="' . esc_attr($advanced_id) . '">';
+
+            // Standard advanced fields
+            $search_html .= '<div class="melt-artists-advanced-field">';
+            $search_html .= '<label for="' . esc_attr($uid) . '-adv-members">' . esc_html__('Band members', 'melt-dashboard') . '</label>';
+            $search_html .= '<input type="search" id="' . esc_attr($uid) . '-adv-members" data-adv-field="members" placeholder="' . esc_attr__('Filter…', 'melt-dashboard') . '">';
+            $search_html .= '</div>';
+
+            $search_html .= '<div class="melt-artists-advanced-field">';
+            $search_html .= '<label for="' . esc_attr($uid) . '-adv-bio">' . esc_html__('Bio', 'melt-dashboard') . '</label>';
+            $search_html .= '<input type="search" id="' . esc_attr($uid) . '-adv-bio" data-adv-field="bio" placeholder="' . esc_attr__('Filter…', 'melt-dashboard') . '">';
+            $search_html .= '</div>';
+
+            // Custom fields
+            foreach ($custom_fields as $cf) {
+                $cf_key   = sanitize_key($cf['key'] ?? '');
+                $cf_label = esc_html($cf['label'] ?? $cf_key);
+                $cf_type  = $cf['type'] ?? 'text';
+                $input_id = esc_attr($uid) . '-adv-' . $cf_key;
+
+                $search_html .= '<div class="melt-artists-advanced-field">';
+                $search_html .= '<label for="' . $input_id . '">' . $cf_label . '</label>';
+
+                $adv_field = 'custom-' . str_replace('_', '-', $cf_key);
+                if ($cf_type === 'select' && !empty($cf['options'])) {
+                    $search_html .= '<select id="' . $input_id . '" data-adv-field="' . esc_attr($adv_field) . '">';
+                    $search_html .= '<option value="">' . esc_html__('Any', 'melt-dashboard') . '</option>';
+                    foreach ($cf['options'] as $opt) {
+                        $search_html .= '<option value="' . esc_attr($opt) . '">' . esc_html($opt) . '</option>';
+                    }
+                    $search_html .= '</select>';
+                } else {
+                    $search_html .= '<input type="search" id="' . $input_id . '" data-adv-field="' . esc_attr($adv_field) . '" placeholder="' . esc_attr__('Filter…', 'melt-dashboard') . '">';
+                }
+
+                $search_html .= '</div>';
+            }
+
+            $search_html .= '</div>'; // .melt-artists-advanced-panel
+            $search_html .= '</div>'; // .melt-artists-search
+
+            $search_js = '<script>
+(function() {
+    document.addEventListener("DOMContentLoaded", function() {
+        var nameInput  = document.getElementById(' . json_encode($search_id) . ');
+        var grid       = document.getElementById(' . json_encode($uid) . ');
+        var noResults  = document.getElementById(' . json_encode($noresults_id) . ');
+        var toggle     = document.getElementById(' . json_encode($advanced_toggle) . ');
+        var advPanel   = document.getElementById(' . json_encode($advanced_id) . ');
+        if (!nameInput || !grid) return;
+
+        // Advanced toggle
+        if (toggle && advPanel) {
+            toggle.addEventListener("click", function() {
+                var open = advPanel.classList.toggle("melt-hidden");
+                toggle.setAttribute("aria-expanded", open ? "false" : "true");
+            });
+        }
+
+        function applyFilters() {
+            var nameQ = nameInput.value.trim().toLowerCase();
+            var advFilters = {};
+            if (advPanel) {
+                advPanel.querySelectorAll("[data-adv-field]").forEach(function(el) {
+                    var v = el.value.trim().toLowerCase();
+                    if (v) advFilters[el.dataset.advField] = v;
+                });
+            }
+            var cards = grid.querySelectorAll("[data-search-name]");
+            var visible = 0;
+            cards.forEach(function(card) {
+                var match = true;
+                if (nameQ && card.dataset.searchName.toLowerCase().indexOf(nameQ) === -1) match = false;
+                if (match) {
+                    Object.keys(advFilters).forEach(function(field) {
+                        var val = (card.getAttribute("data-search-" + field) || "").toLowerCase();
+                        if (val.indexOf(advFilters[field]) === -1) match = false;
+                    });
+                }
+                card.style.display = match ? "" : "none";
+                if (match) visible++;
+            });
+            var anyFilter = nameQ || Object.keys(advFilters).length > 0;
+            if (noResults) noResults.style.display = (anyFilter && visible === 0) ? "" : "none";
+        }
+
+        nameInput.addEventListener("input", applyFilters);
+        if (advPanel) {
+            advPanel.querySelectorAll("input, select").forEach(function(el) {
+                el.addEventListener("input", applyFilters);
+            });
+        }
+    });
+}());
+</script>';
+        }
+
+        $output = $this->get_social_icons_styles() . $css . $dialog_html . $js . $search_js;
+        $output .= $search_html;
         $output .= '<div id="' . esc_attr($uid) . '" class="' . esc_attr($wrapper_class) . '">';
 
         foreach ($artists as $artist) {
@@ -1724,9 +1895,28 @@ class MeltDashboardPlugin {
                 $photo = esc_url($artist['profile_photo']);
             }
 
-            // ---- Minimal mode ----
+            // ---- Search data attributes ----
+            $search_attr = '';
+            if ($search) {
+                $search_attr  = ' data-search-name="' . esc_attr($artist['name'] ?? '') . '"';
+                $search_attr .= ' data-search-members="' . esc_attr($artist['band_members'] ?? '') . '"';
+                $search_attr .= ' data-search-bio="' . esc_attr(strip_tags($artist['bio'] ?? '')) . '"';
+                $custom_data  = isset($artist['custom_data']) && is_array($artist['custom_data'])
+                                ? $artist['custom_data']
+                                : (isset($artist['custom_data']) ? json_decode($artist['custom_data'], true) ?? [] : []);
+                foreach ($custom_fields as $cf) {
+                    $cf_key     = sanitize_key($cf['key'] ?? '');
+                    $attr_name  = 'data-search-custom-' . str_replace('_', '-', $cf_key);
+                    $cf_val     = isset($custom_data[$cf['key']]) ? $custom_data[$cf['key']] : '';
+                    if (is_array($cf_val)) {
+                        $cf_val = implode(' ', array_map('strval', $cf_val));
+                    }
+                    $search_attr .= ' ' . $attr_name . '="' . esc_attr((string) $cf_val) . '"';
+                }
+            }
+
             if ($minimal) {
-                $output .= '<div class="melt-artist-card melt-minimal-card">';
+                $output .= '<div class="melt-artist-card melt-minimal-card"' . $search_attr . '>';
                 $output .= '<div class="melt-minimal-photo-wrap">';
                 if ($photo) {
                     $output .= '<img src="' . $photo . '" alt="' . esc_attr($artist['name'] ?? '') . '" loading="lazy">';
@@ -1762,7 +1952,7 @@ class MeltDashboardPlugin {
                 ? ' data-melt-dialog="' . esc_attr($dialog_id) . '" data-artist="' . $make_artist_data($artist, $photo, $social_urls) . '" role="button" tabindex="0"'
                 : '';
 
-            $output .= '<div class="' . $card_class . '"' . $popup_attrs . '>';
+            $output .= '<div class="' . $card_class . '"' . $popup_attrs . $search_attr . '>';
 
             if (!$minimal && ($layout === 'grid' || $layout === 'masonry')) {
                 if ($photo) {
@@ -1810,6 +2000,9 @@ class MeltDashboardPlugin {
         }
 
         $output .= '</div>'; // wrapper
+        if ($search) {
+            $output .= '<p id="' . esc_attr($noresults_id) . '" class="melt-artists-no-results">' . esc_html__('No artists found.', 'melt-dashboard') . '</p>';
+        }
 
         return $output;
     }
