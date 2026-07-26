@@ -117,18 +117,22 @@
         <!-- Campaign Type (only show if both options are available) -->
         <div class="tw-mb-3" *ngIf="hasReleases && hasEvents">
           <label class="tw-label">Campaign Type</label>
-          <div class="btn-group w-100" role="group">
-            <button type="button" class="btn"
-              [class.btn-primary]="campaignForm.campaign_type === 'release'"
-              [class.btn-outline-secondary]="campaignForm.campaign_type !== 'release'"
+          <div class="sub-tab-toggle" role="group" aria-label="Campaign type toggle">
+            <button type="button"
+              class="sub-tab-btn"
+              [class.sub-tab-btn-active]="campaignForm.campaign_type === 'release'"
+              [attr.aria-pressed]="campaignForm.campaign_type === 'release'"
               (click)="campaignForm.campaign_type = 'release'; onCampaignTypeChange()">
-              <app-icon name="music" class="tw-mr-1" /> Release
+              <app-icon name="music" />
+              <span>Release</span>
             </button>
-            <button type="button" class="btn"
-              [class.btn-primary]="campaignForm.campaign_type === 'event'"
-              [class.btn-outline-secondary]="campaignForm.campaign_type !== 'event'"
+            <button type="button"
+              class="sub-tab-btn"
+              [class.sub-tab-btn-active]="campaignForm.campaign_type === 'event'"
+              [attr.aria-pressed]="campaignForm.campaign_type === 'event'"
               (click)="campaignForm.campaign_type = 'event'; onCampaignTypeChange()">
-              <app-icon name="calendar" class="tw-mr-1" /> Event
+              <app-icon name="calendar" />
+              <span>Event</span>
             </button>
           </div>
         </div>
@@ -396,6 +400,9 @@
               <a [href]="'/press/' + detailCampaign.public_slug" target="_blank" class="tw-font-mono">
                 /press/{{ detailCampaign.public_slug }}
               </a>
+              <button type="button" class="btn-sm btn-ghost tw-ml-1" (click)="copyPublicUrl(detailCampaign)" [title]="urlCopied ? 'Copied!' : 'Copy link'">
+                <app-icon [name]="urlCopied ? 'check' : 'copy'" [size]="14" [iconOnly]="true" />
+              </button>
               <span class="tw-ml-2 status-badge" [class.status-success]="detailCampaign.status === 'Published'" [class.status-warning]="detailCampaign.status === 'Draft'">
                 {{ detailCampaign.status }}
               </span>

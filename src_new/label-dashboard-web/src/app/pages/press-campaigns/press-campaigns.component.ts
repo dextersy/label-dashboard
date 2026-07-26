@@ -90,6 +90,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   photoLabelInput = '';
   photosExpanded = true;
   downloadingWord = false;
+  urlCopied = false;
 
   // Links
   addingLink = false;
@@ -593,6 +594,14 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
         }
       },
       error: () => this.notification.showError('Failed to delete link.'),
+    });
+  }
+
+  copyPublicUrl(campaign: PressCampaign): void {
+    const url = `${window.location.origin}/press/${campaign.public_slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      this.urlCopied = true;
+      setTimeout(() => (this.urlCopied = false), 2000);
     });
   }
 
