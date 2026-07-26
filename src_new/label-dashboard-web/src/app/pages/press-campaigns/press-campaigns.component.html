@@ -490,6 +490,51 @@
 
           </ng-container><!-- /isEventCampaign -->
 
+          <!-- Campaign Links -->
+          <hr class="tw-my-4" />
+
+          <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">
+            Links ({{ detailCampaign.links?.length || 0 }})
+          </h6>
+
+          <!-- Existing links -->
+          <div *ngIf="detailCampaign.links?.length" class="tw-mb-3">
+            <div *ngFor="let link of detailCampaign.links" class="tw-flex tw-items-center tw-gap-2 tw-py-2 tw-border-b tw-border-gray-100 last:tw-border-0">
+              <app-icon name="link" [iconOnly]="true" class="tw-text-muted tw-flex-shrink-0" />
+              <div class="tw-flex-1 tw-min-w-0">
+                <span class="tw-text-sm tw-font-medium">{{ link.label }}</span>
+                <a [href]="link.url" target="_blank" class="tw-block tw-text-xs tw-text-muted tw-truncate">{{ link.url }}</a>
+              </div>
+              <button type="button" class="btn-sm btn-ghost tw-text-danger tw-flex-shrink-0" (click)="deleteLink(link.id)">
+                <app-icon name="trash" [iconOnly]="true" />
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="!detailCampaign.links?.length" class="tw-text-center tw-py-4 tw-text-muted tw-border tw-rounded tw-mb-3">
+            <app-icon name="link" [size]="28" class="tw-mb-1" [iconOnly]="true" />
+            <p class="tw-mb-0 tw-text-sm">No links added yet.</p>
+          </div>
+
+          <!-- Add link -->
+          <div class="tw-flex tw-gap-2 tw-items-end">
+            <div class="tw-flex-1">
+              <label class="tw-label">Label</label>
+              <input type="text" class="tw-input" [(ngModel)]="newLinkLabel" placeholder="e.g. Spotify" />
+            </div>
+            <div class="tw-flex-1">
+              <label class="tw-label">URL</label>
+              <input type="url" class="tw-input" [(ngModel)]="newLinkUrl" placeholder="https://..." />
+            </div>
+            <button type="button" class="btn-secondary tw-flex-shrink-0"
+              [disabled]="addingLink || !newLinkLabel.trim() || !newLinkUrl.trim()"
+              (click)="addLink()">
+              <app-icon name="spinner" class="tw-animate-spin tw-mr-1" [iconOnly]="true" *ngIf="addingLink" />
+              <app-icon name="plus" class="tw-mr-1" [iconOnly]="true" *ngIf="!addingLink" />
+              Add
+            </button>
+          </div>
+
         </ng-container>
       </div><!-- /modal-body -->
 
