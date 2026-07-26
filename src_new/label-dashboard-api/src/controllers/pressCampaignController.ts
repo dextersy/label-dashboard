@@ -968,6 +968,7 @@ export const proxyDownload = async (req: Request, res: Response) => {
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     if (filename) {
       const safeFilename = filename.replace(/[^\w.\-]/g, '_');
       res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);

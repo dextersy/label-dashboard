@@ -70,6 +70,11 @@ export class PressCampaignPublicComponent implements OnInit {
     return `${environment.apiUrl}/press-campaigns/public/${slug}/download?url=${encodeURIComponent(song.audio_file_mp3)}&filename=${encodeURIComponent(this.audioFileName(song))}`;
   }
 
+  songStreamUrl(song: any): string {
+    const slug = this.campaign?.public_slug || '';
+    return `${environment.apiUrl}/press-campaigns/public/${slug}/download?url=${encodeURIComponent(song.audio_file_mp3)}`;
+  }
+
   audioFileName(song: any): string {
     const artists = this.campaign?.release?.artists?.map((a: any) => a.name).join(', ')
       || this.campaign?.artist?.name

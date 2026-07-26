@@ -116,7 +116,7 @@
               <small class="tw-text-muted">MP3 Audio</small>
               <div class="tw-mt-1" (click)="$event.stopPropagation()">
                 <audio controls style="height:32px;width:100%;max-width:300px;">
-                  <source [src]="songProxyUrl(song)" type="audio/mpeg" />
+                  <source [src]="songStreamUrl(song)" type="audio/mpeg" />
                 </audio>
               </div>
             </div>
