@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
@@ -174,11 +175,19 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   constructor(
     private syncLicensingService: SyncLicensingService,
     private notificationService: NotificationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
     this.loadPitches();
+    const openId = this.route.snapshot.queryParamMap.get('open');
+    if (openId) {
+      this.syncLicensingService.getPitch(+openId).subscribe({
+        next: (res) => this.openEditModal(res.pitch),
+        error: () => {}
+      });
+    }
   }
 
   ngOnDestroy(): void {

@@ -217,7 +217,7 @@
       <div *ngFor="let campaign of dashboardData.recentPressCampaigns"
            class="tw-relative tw-rounded-xl tw-overflow-hidden tw-cursor-pointer tw-h-44 hover:tw-scale-[1.02] tw-transition-transform"
            [style.background]="(campaign.release_cover_art || campaign.event_poster_url) ? 'url(' + (campaign.release_cover_art || campaign.event_poster_url) + ') center/cover no-repeat' : 'linear-gradient(135deg, #7c3aed, #a855f7)'"
-           (click)="navigateToPressCampaigns()">
+           (click)="navigateToPressCampaigns(campaign.id)">
         <div class="tw-absolute tw-inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.08) 100%);"></div>
         <span class="tw-absolute tw-top-2.5 tw-right-2.5 tw-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-white tw-px-2 tw-py-0.5 tw-rounded-full" style="background: rgba(124,58,237,0.75);">
           <app-icon name="newspaper" class="tw-text-[9px]" />Press
@@ -240,7 +240,7 @@
       <div *ngFor="let pitch of dashboardData.recentSyncPitches"
            class="tw-relative tw-rounded-xl tw-overflow-hidden tw-cursor-pointer tw-h-44 hover:tw-scale-[1.02] tw-transition-transform"
            style="background: linear-gradient(135deg, #0d9488, #0891b2);"
-           (click)="navigateToSyncLicensing()">
+           (click)="navigateToSyncLicensing(pitch.id)">
         <!-- Decorative icon -->
         <div class="tw-absolute tw-inset-0 tw-flex tw-items-center tw-justify-center tw-pointer-events-none"
              style="opacity: 0.12; font-size: 6rem; color: #fff;">

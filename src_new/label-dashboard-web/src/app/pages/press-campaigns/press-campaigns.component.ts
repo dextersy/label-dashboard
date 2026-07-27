@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
 import { PressCampaignService } from '../../services/press-campaign.service';
 import { PressCampaign } from '../../models/press-campaign.model';
 import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo, HeaderAction } from '../../components/shared/paginated-table/paginated-table.component';
@@ -184,12 +185,17 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     private pressCampaignService: PressCampaignService,
     private brandService: BrandService,
     private notification: NotificationService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
     this.loadCampaigns();
     this.setupSearch();
     this.loadBrandFeatures();
+    const openId = this.route.snapshot.queryParamMap.get('open');
+    if (openId) {
+      this.openDetailModal({ id: +openId } as PressCampaign);
+    }
   }
 
   private loadBrandFeatures(): void {

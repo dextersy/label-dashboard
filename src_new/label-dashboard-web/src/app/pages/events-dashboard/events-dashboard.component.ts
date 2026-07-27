@@ -134,12 +134,12 @@ export class EventsDashboardComponent implements OnInit {
     this.router.navigate(['/campaigns/fundraisers/details']);
   }
 
-  navigateToPressCampaigns(): void {
-    this.router.navigate(['/campaigns/press']);
+  navigateToPressCampaigns(id?: number): void {
+    this.router.navigate(['/campaigns/press'], id ? { queryParams: { open: id } } : {});
   }
 
-  navigateToSyncLicensing(): void {
-    this.router.navigate(['/campaigns/sync-licensing']);
+  navigateToSyncLicensing(id?: number): void {
+    this.router.navigate(['/campaigns/sync-licensing'], id ? { queryParams: { open: id } } : {});
   }
 
   navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets'): void {
