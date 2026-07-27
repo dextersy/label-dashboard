@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod } from '../models';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -725,6 +725,84 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       getFundraiserDonationsData(req)
     ]);
 
+    // Press campaigns stats
+    const [publishedPressCampaignsCount, draftPressCampaignsCount, recentPressCampaignsRaw] = await Promise.all([
+      PressCampaign.count({ where: { ...brandFilter, status: 'Published' } }),
+      PressCampaign.count({ where: { ...brandFilter, status: 'Draft' } }),
+      PressCampaign.findAll({
+        where: { ...brandFilter },
+        order: [['createdAt', 'DESC']],
+        limit: 3,
+        attributes: ['id', 'title', 'campaign_type', 'status', 'public_slug', 'createdAt'],
+        include: [
+          { model: Release, as: 'release', attributes: ['id', 'title', 'cover_art'] },
+          { model: Event, as: 'event', attributes: ['id', 'title', 'poster_url'] }
+        ]
+      })
+    ]);
+
+    const recentPressCampaigns = recentPressCampaignsRaw.map(c => ({
+      id: c.id,
+      title: c.title,
+      campaign_type: c.campaign_type,
+      status: c.status,
+      public_slug: c.public_slug,
+      release_cover_art: (c as any).release?.cover_art || null,
+      event_poster_url: (c as any).event?.poster_url || null,
+      release_title: (c as any).release?.title || null,
+      event_title: (c as any).event?.title || null
+    }));
+
+    // Sync licensing stats
+    const [syncPitchesCount, recentSyncPitchesRaw] = await Promise.all([
+      SyncLicensingPitch.count({ where: brandFilter }),
+      SyncLicensingPitch.findAll({
+        where: brandFilter,
+        order: [['createdAt', 'DESC']],
+        limit: 3,
+        attributes: ['id', 'title', 'createdAt'],
+        include: [
+          {
+            model: SyncLicensingPitchSong,
+            as: 'pitchSongs',
+            attributes: ['song_id'],
+            required: false
+          }
+        ]
+      })
+    ]);
+
+    // For recent pitches, get song warning counts
+    const recentSyncPitches = await Promise.all(
+      recentSyncPitchesRaw.map(async (pitch) => {
+        const pitchSongs = (pitch as any).pitchSongs || [];
+        const songIds = pitchSongs.map((ps: any) => ps.song_id);
+        const songCount = songIds.length;
+        let warningCount = 0;
+        if (songIds.length > 0) {
+          const songs = await Song.findAll({
+            where: { id: songIds },
+            attributes: ['id', 'isrc', 'lyrics'],
+            include: [
+              { model: SongAuthor, as: 'authors', attributes: ['id'], required: false },
+              { model: SongComposer, as: 'composers', attributes: ['id'], required: false }
+            ]
+          });
+          warningCount = songs.filter((s: any) =>
+            !s.isrc || !s.lyrics ||
+            !((s as any).authors?.length) ||
+            !((s as any).composers?.length)
+          ).length;
+        }
+        return {
+          id: pitch.id,
+          title: pitch.title,
+          song_count: songCount,
+          warning_count: warningCount
+        };
+      })
+    );
+
     res.json({
       user: {
         firstName: req.user.first_name,
@@ -734,10 +812,15 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         activeEvents: activeEventsCount,
         activeFundraisers: activeFundraisersCount,
         activeEventsSales: activeEventsSales,
-        activeFundraisersDonations: activeFundraisersDonations
+        activeFundraisersDonations: activeFundraisersDonations,
+        publishedPressCampaigns: publishedPressCampaignsCount,
+        draftPressCampaigns: draftPressCampaignsCount,
+        syncPitches: syncPitchesCount
       },
       ongoingFundraisers,
       upcomingEvents,
+      recentPressCampaigns,
+      recentSyncPitches,
       eventSales,
       fundraiserDonations
     });

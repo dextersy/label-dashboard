@@ -17,6 +17,28 @@ interface CampaignsDashboardStats {
   activeFundraisers: number;
   activeEventsSales: number;
   activeFundraisersDonations: number;
+  publishedPressCampaigns: number;
+  draftPressCampaigns: number;
+  syncPitches: number;
+}
+
+export interface RecentPressCampaign {
+  id: number;
+  title: string;
+  campaign_type: 'release' | 'event';
+  status: 'Draft' | 'Published';
+  public_slug: string;
+  release_cover_art: string | null;
+  event_poster_url: string | null;
+  release_title: string | null;
+  event_title: string | null;
+}
+
+export interface RecentSyncPitch {
+  id: number;
+  title: string;
+  song_count: number;
+  warning_count: number;
 }
 
 export interface OngoingFundraiser {
@@ -44,6 +66,8 @@ interface CampaignsDashboardData {
   stats: CampaignsDashboardStats;
   ongoingFundraisers: { items: OngoingFundraiser[]; total: number };
   upcomingEvents: UpcomingEvent[];
+  recentPressCampaigns: RecentPressCampaign[];
+  recentSyncPitches: RecentSyncPitch[];
   eventSales: EventSales[];
   fundraiserDonations: FundraiserDonations[];
 }
@@ -108,6 +132,14 @@ export class EventsDashboardComponent implements OnInit {
   navigateToFundraiser(fundraiser: OngoingFundraiser): void {
     this.fundraiserService.setSelectedFundraiser(fundraiser as any);
     this.router.navigate(['/campaigns/fundraisers/details']);
+  }
+
+  navigateToPressCampaigns(): void {
+    this.router.navigate(['/campaigns/press']);
+  }
+
+  navigateToSyncLicensing(): void {
+    this.router.navigate(['/campaigns/sync-licensing']);
   }
 
   navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets'): void {
