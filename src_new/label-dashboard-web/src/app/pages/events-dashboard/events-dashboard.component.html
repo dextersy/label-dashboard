@@ -114,48 +114,70 @@
   <!-- ZONE 2: STATS STRIP                                     -->
   <!-- ─────────────────────────────────────────────────────── -->
   <div class="tw-px-4 tw-pt-6 tw-pb-2 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
-    <div class="tw-grid tw-grid-cols-3 sm:tw-grid-cols-6 tw-gap-2">
+    <!-- Mobile: Events full row, Fundraisers full row, Press+Sync share a row -->
+    <!-- Desktop: all 4 cards in one row -->
+    <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-2">
 
-      <a routerLink="/campaigns/events/details"
-         class="tw-no-underline tw-flex tw-flex-col tw-items-center tw-text-center tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-2 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-base tw-opacity-70 tw-text-[var(--brand-color,#667eea)] tw-mb-1"><app-icon name="calendar" /></div>
-        <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
-        <div class="tw-text-[11px] tw-mt-0.5 tw-leading-tight" style="color:#999;">Active Events</div>
-      </a>
+      <!-- Events combined card -->
+      <div class="tw-col-span-2 sm:tw-col-span-1 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-flex tw-overflow-hidden">
+        <a routerLink="/campaigns/events/details"
+           class="tw-no-underline tw-flex tw-flex-1 tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-transition-colors">
+          <div class="tw-text-lg tw-opacity-70 tw-text-[var(--brand-color,#667eea)] tw-flex-shrink-0"><app-icon name="calendar" /></div>
+          <div>
+            <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeEvents || 0 }}</div>
+            <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Active Events</div>
+          </div>
+        </a>
+        <div class="tw-flex tw-items-center tw-text-gray-200 tw-flex-shrink-0" style="font-size:18px;">›</div>
+        <a routerLink="/campaigns/events/tickets"
+           class="tw-no-underline tw-flex tw-flex-1 tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-transition-colors">
+          <div class="tw-text-lg tw-opacity-70 tw-text-warning tw-flex-shrink-0"><app-icon name="ticket" /></div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-base tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
+            <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Ticket Sales</div>
+          </div>
+        </a>
+      </div>
 
-      <a routerLink="/campaigns/events/tickets"
-         class="tw-no-underline tw-flex tw-flex-col tw-items-center tw-text-center tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-2 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-base tw-opacity-70 tw-text-warning tw-mb-1"><app-icon name="ticket" /></div>
-        <div class="tw-text-base tw-font-semibold tw-leading-tight tw-truncate tw-w-full" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeEventsSales || 0) }}</div>
-        <div class="tw-text-[11px] tw-mt-0.5 tw-leading-tight" style="color:#999;">Ticket Sales</div>
-      </a>
+      <!-- Fundraisers combined card -->
+      <div class="tw-col-span-2 sm:tw-col-span-1 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-flex tw-overflow-hidden">
+        <a routerLink="/campaigns/fundraisers/details"
+           class="tw-no-underline tw-flex tw-flex-1 tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-transition-colors">
+          <div class="tw-text-lg tw-opacity-70 tw-text-success tw-flex-shrink-0"><app-icon name="heart" /></div>
+          <div>
+            <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
+            <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Fundraisers</div>
+          </div>
+        </a>
+        <div class="tw-flex tw-items-center tw-text-gray-200 tw-flex-shrink-0" style="font-size:18px;">›</div>
+        <a routerLink="/campaigns/fundraisers/donations"
+           class="tw-no-underline tw-flex tw-flex-1 tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-transition-colors">
+          <div class="tw-text-lg tw-opacity-70 tw-text-[#0891b2] tw-flex-shrink-0"><app-icon name="currency" /></div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-base tw-font-semibold tw-leading-tight tw-truncate" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>
+            <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Amount Raised</div>
+          </div>
+        </a>
+      </div>
 
-      <a routerLink="/campaigns/fundraisers/details"
-         class="tw-no-underline tw-flex tw-flex-col tw-items-center tw-text-center tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-2 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-base tw-opacity-70 tw-text-success tw-mb-1"><app-icon name="heart" /></div>
-        <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activeFundraisers || 0 }}</div>
-        <div class="tw-text-[11px] tw-mt-0.5 tw-leading-tight" style="color:#999;">Fundraisers</div>
-      </a>
-
-      <a routerLink="/campaigns/fundraisers/donations"
-         class="tw-no-underline tw-flex tw-flex-col tw-items-center tw-text-center tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-2 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-base tw-opacity-70 tw-text-[#0891b2] tw-mb-1"><app-icon name="currency" /></div>
-        <div class="tw-text-base tw-font-semibold tw-leading-tight tw-truncate tw-w-full" style="color:#333;">{{ formatCurrency(dashboardData.stats.activeFundraisersDonations || 0) }}</div>
-        <div class="tw-text-[11px] tw-mt-0.5 tw-leading-tight" style="color:#999;">Amount Raised</div>
-      </a>
-
+      <!-- Press campaigns tile -->
       <a routerLink="/campaigns/press"
-         class="tw-no-underline tw-flex tw-flex-col tw-items-center tw-text-center tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-2 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-base tw-opacity-70 tw-text-[#7c3aed] tw-mb-1"><app-icon name="newspaper" /></div>
-        <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.publishedPressCampaigns || 0 }}</div>
-        <div class="tw-text-[11px] tw-mt-0.5 tw-leading-tight" style="color:#999;">Press Campaigns</div>
+         class="tw-no-underline tw-flex tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
+        <div class="tw-text-lg tw-opacity-70 tw-text-[#7c3aed] tw-flex-shrink-0"><app-icon name="newspaper" /></div>
+        <div>
+          <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.publishedPressCampaigns || 0 }}</div>
+          <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Press Campaigns</div>
+        </div>
       </a>
 
+      <!-- Sync pitches tile -->
       <a routerLink="/campaigns/sync-licensing"
-         class="tw-no-underline tw-flex tw-flex-col tw-items-center tw-text-center tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-2 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-base tw-opacity-70 tw-text-[#0d9488] tw-mb-1"><app-icon name="file" /></div>
-        <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.syncPitches || 0 }}</div>
-        <div class="tw-text-[11px] tw-mt-0.5 tw-leading-tight" style="color:#999;">Sync Pitches</div>
+         class="tw-no-underline tw-flex tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
+        <div class="tw-text-lg tw-opacity-70 tw-text-[#0d9488] tw-flex-shrink-0"><app-icon name="file" /></div>
+        <div>
+          <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.syncPitches || 0 }}</div>
+          <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Sync Pitches</div>
+        </div>
       </a>
 
     </div>
@@ -263,10 +285,18 @@
 
     <!-- Create actions -->
     <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-3 tw-mt-5">
-      <a routerLink="/campaigns/events/new" class="btn btn-secondary btn-sm tw-no-underline tw-text-center">+ Create an event</a>
-      <a routerLink="/campaigns/fundraisers/new" class="btn btn-secondary btn-sm tw-no-underline tw-text-center">+ Start a fundraiser</a>
-      <a routerLink="/campaigns/press" class="btn btn-secondary btn-sm tw-no-underline tw-text-center">+ New press campaign</a>
-      <a routerLink="/campaigns/sync-licensing" class="btn btn-secondary btn-sm tw-no-underline tw-text-center">+ New sync pitch</a>
+      <a routerLink="/campaigns/events/new" class="btn btn-secondary tw-no-underline tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-1 sm:tw-gap-2">
+        <app-icon name="calendar" /><span>Create an event</span>
+      </a>
+      <a routerLink="/campaigns/fundraisers/new" class="btn btn-secondary tw-no-underline tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-1 sm:tw-gap-2">
+        <app-icon name="heart" /><span>Start a fundraiser</span>
+      </a>
+      <a routerLink="/campaigns/press" class="btn btn-secondary tw-no-underline tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-1 sm:tw-gap-2">
+        <app-icon name="newspaper" /><span>New press campaign</span>
+      </a>
+      <a routerLink="/campaigns/sync-licensing" class="btn btn-secondary tw-no-underline tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-1 sm:tw-gap-2">
+        <app-icon name="file" /><span>New sync pitch</span>
+      </a>
     </div>
 
   </div>
