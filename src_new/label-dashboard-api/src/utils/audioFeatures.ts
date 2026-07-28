@@ -13,8 +13,6 @@ export interface MoodScores {
   aggressive?: number;
   relaxed?: number;
   party?: number;
-  acoustic?: number;
-  electronic?: number;
 }
 
 export interface AudioFeatures {
@@ -38,8 +36,6 @@ const MOOD_MODEL_URLS: Record<keyof MoodScores, string> = {
   aggressive: 'https://essentia.upf.edu/models/classifiers/mood_aggressive/mood_aggressive-musicnn-msd-2.json',
   relaxed:    'https://essentia.upf.edu/models/classifiers/mood_relaxed/mood_relaxed-musicnn-msd-2.json',
   party:      'https://essentia.upf.edu/models/classifiers/mood_party/mood_party-musicnn-msd-2.json',
-  acoustic:   'https://essentia.upf.edu/models/classifiers/mood_acoustic/mood_acoustic-musicnn-msd-2.json',
-  electronic: 'https://essentia.upf.edu/models/classifiers/mood_electronic/mood_electronic-musicnn-msd-2.json',
 };
 
 // ── Singletons ────────────────────────────────────────────────────────────────
@@ -166,10 +162,10 @@ export async function extractDSPFeatures(audioBuffer: Buffer): Promise<Omit<Audi
  *   1. Convert audio to 16kHz PCM (MusiCNN input requirement)
  *   2. Extract mel-spectrogram patches using EssentiaTFInputExtractor
  *      (frame-by-frame to avoid broken FrameGenerator in essentia.js 0.1.3)
- *   3. Mean-pool patches → [1, 187, 96] representative patch
- *   4. Run each self-contained mood classifier directly on the mel patch
+ *   3. Group mel frames into non-overlapping patches of 187 frames each
+ *   4. Run each self-contained mood classifier directly on the mel patches
  *      (each classifier embeds MusiCNN internally; no separate MusiCNN step needed)
- *   5. Return binary classifier output → probability 0-1 per mood
+ *   5. Average patch outputs → probability 0-1 per mood
  */
 export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores> {
   const tf = require('@tensorflow/tfjs');
@@ -250,6 +246,7 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
       console.error(`[audioFeatures] Mood "${mood}" prediction failed:`, e);
     }
   }
+
   return scores;
 }
 
@@ -257,7 +254,7 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
 
 /**
  * Extract all audio features from a buffer: DSP features (key, energy, danceability,
- * dynamics) plus MusiCNN-based mood scores (happy, sad, aggressive, relaxed, etc.).
+ * dynamics) plus MusiCNN-based mood scores (happy, sad, aggressive, relaxed, party).
  */
 export async function extractAudioFeatures(audioBuffer: Buffer): Promise<AudioFeatures> {
   const features: AudioFeatures = await extractDSPFeatures(audioBuffer);
