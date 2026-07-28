@@ -50,8 +50,8 @@ npm run build            # Production build
 ### Database Models Generation
 ```bash
 cd db_api
-# Generate Sequelize models from existing MySQL database
-npx sequelize-auto -o "./models" -d meltrecords_dashboard -h localhost -u [username] -p [port] -x [password] -e mysql
+# Generate Sequelize models from existing PostgreSQL database
+npx sequelize-auto -o "./models" -d meltrecords_dashboard -h localhost -u [username] -p [port] -x [password] -e postgres
 ```
 
 ## Architecture Overview
@@ -141,7 +141,7 @@ Two documents in `src_new/label-dashboard-web/` must be consulted for all Angula
 
 ## Database Configuration
 
-The API connects to MySQL using Sequelize ORM. Database configuration is handled in:
+The API connects to PostgreSQL using Sequelize ORM. Database configuration is handled in:
 - `src_new/label-dashboard-api/src/config/database.ts`
 - Environment variables for connection details
 - Auto-sync models on startup with foreign key constraints
