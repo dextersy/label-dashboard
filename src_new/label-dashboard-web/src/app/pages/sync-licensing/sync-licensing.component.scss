@@ -6,6 +6,133 @@
   background-color: #f8f9fa;
 }
 
+// Song search dropdown
+.song-search-dropdown {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.song-search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f0f4ff;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    font-size: 12px;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  &__warning {
+    font-size: 12px;
+    color: #d97706;
+    display: flex;
+    align-items: center;
+  }
+
+  &__reason {
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+  }
+
+  &__add-icon {
+    flex-shrink: 0;
+    color: #6366f1;
+    opacity: 0.7;
+    transition: opacity 0.12s;
+
+    &--done {
+      color: #16a34a;
+      opacity: 1;
+    }
+  }
+
+  &:hover &__add-icon {
+    opacity: 1;
+  }
+
+  // Non-clickable status rows (loading / error)
+  &--status {
+    cursor: default;
+    font-size: 13px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      background: #fff;
+    }
+  }
+
+  &--warning {
+    color: #d97706;
+
+    &:hover {
+      background: #fff;
+    }
+  }
+}
+
+.audio-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #ede9fe;
+  color: #5b21b6;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
 // Download dropdown (rendered outside table with fixed positioning)
 .download-dropdown {
   position: fixed;

@@ -1502,25 +1502,49 @@ Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Ex
 
     // Validate against the known candidate IDs
     const knownIds = new Set(candidates.map(s => s.id));
-    const songMap = new Map(candidates.map(s => [s.id, s.toJSON() as any]));
+    const candidateMap = new Map(candidates.map(s => [s.id, s.toJSON() as any]));
 
-    const validated = recommendations
+    const validatedBase = recommendations
       .filter(r => typeof r.song_id === 'number' && knownIds.has(r.song_id))
-      .map(r => {
-        const s = songMap.get(r.song_id) || {};
-        return {
-          song_id: r.song_id,
-          title: s.title || '',
-          ai_summary: s.ai_summary || '',
-          reason: typeof r.reason === 'string' ? r.reason : '',
-          audio_key: s.audio_key ?? null,
-          audio_scale: s.audio_scale ?? null,
-          audio_energy: s.audio_energy ?? null,
-          audio_danceability: s.audio_danceability ?? null,
-          audio_loudness: s.audio_loudness ?? null,
-          audio_mood: s.audio_mood ?? null,
-        };
-      });
+      .map(r => ({
+        song_id: r.song_id,
+        reason: typeof r.reason === 'string' ? r.reason : '',
+      }));
+
+    // Enrich validated songs with release + artist data (same shape as searchSongs)
+    const validatedIds = validatedBase.map(r => r.song_id);
+    const enrichedSongs = await Song.findAll({
+      where: { id: validatedIds },
+      include: [
+        { model: Release, as: 'releases', attributes: ['id', 'title', 'cover_art'], through: { attributes: [] } },
+        { model: SongAuthor, as: 'authors', attributes: ['id'] },
+        { model: SongComposer, as: 'composers', attributes: ['id'] },
+      ],
+    });
+    const enrichedWithArtists = await enrichSongsWithArtists(enrichedSongs);
+    const enrichedMap = new Map(enrichedWithArtists.map((s: any) => [s.id, s]));
+
+    const validated = validatedBase.map(r => {
+      const s = enrichedMap.get(r.song_id) || {};
+      const c = candidateMap.get(r.song_id) || {};
+      return {
+        song_id: r.song_id,
+        title: s.title || c.title || '',
+        ai_summary: c.ai_summary || '',
+        reason: r.reason,
+        audio_key: s.audio_key ?? null,
+        audio_scale: s.audio_scale ?? null,
+        audio_energy: s.audio_energy ?? null,
+        audio_danceability: s.audio_danceability ?? null,
+        audio_loudness: s.audio_loudness ?? null,
+        audio_mood: s.audio_mood ?? null,
+        isrc: s.isrc ?? null,
+        lyrics: s.lyrics ?? null,
+        authors: s.authors ?? [],
+        composers: s.composers ?? [],
+        release: s.release ?? null,
+      };
+    });
 
     res.json({ recommendations: validated });
   } catch (error: any) {

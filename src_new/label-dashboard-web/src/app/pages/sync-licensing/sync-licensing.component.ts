@@ -120,7 +120,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   recommendations: SongRecommendation[] = [];
   loadingRecommendations = false;
   recommendationsError = '';
-  showRecommendations = false;
+  isAiMode = false;
 
   headerActions: HeaderAction[] = [
     {
@@ -253,7 +253,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.songSearchResults = [];
     this.recommendations = [];
     this.recommendationsError = '';
-    this.showRecommendations = false;
+    this.isAiMode = false;
     this.showPitchModal = true;
   }
 
@@ -268,7 +268,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.songSearchResults = [];
     this.recommendations = [];
     this.recommendationsError = '';
-    this.showRecommendations = false;
+    this.isAiMode = false;
     this.showPitchModal = true;
   }
 
@@ -279,17 +279,35 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.selectedSongs = [];
     this.recommendations = [];
     this.recommendationsError = '';
-    this.showRecommendations = false;
+    this.isAiMode = false;
+  }
+
+  toggleAiMode(): void {
+    if (!this.editingPitch) {
+      this.notificationService.showError('Save the pitch first to use AI recommendations.');
+      return;
+    }
+    if (this.isAiMode) {
+      this.isAiMode = false;
+      return;
+    }
+    this.isAiMode = true;
+    this.songSearchResults = [];
+    // Only fetch if we don't already have results
+    if (this.recommendations.length === 0 && !this.loadingRecommendations) {
+      this.getRecommendations();
+    }
+  }
+
+  onSearchInput(): void {
+    this.isAiMode = false;
+    this.searchSongs();
   }
 
   getRecommendations(): void {
-    if (!this.editingPitch) {
-      this.notificationService.showError('Save the pitch first, then use AI recommendations.');
-      return;
-    }
+    if (!this.editingPitch) return;
     this.loadingRecommendations = true;
     this.recommendationsError = '';
-    this.showRecommendations = true;
     this.recommendations = [];
 
     this.subscriptions.add(
@@ -311,9 +329,21 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   addRecommendedSong(rec: SongRecommendation): void {
     if (this.selectedSongs.find(s => s.id === rec.song_id)) return;
-    this.selectedSongs.push({ id: rec.song_id, title: rec.title });
-    // Remove from recommendations list
-    this.recommendations = this.recommendations.filter(r => r.song_id !== rec.song_id);
+    this.selectedSongs.push({
+      id: rec.song_id,
+      title: rec.title,
+      isrc: rec.isrc ?? undefined,
+      lyrics: rec.lyrics ?? undefined,
+      audio_key: rec.audio_key,
+      audio_scale: rec.audio_scale,
+      audio_energy: rec.audio_energy,
+      audio_danceability: rec.audio_danceability,
+      audio_loudness: rec.audio_loudness,
+      audio_mood: rec.audio_mood,
+      authors: rec.authors,
+      composers: rec.composers,
+      release: rec.release ?? undefined,
+    });
   }
 
   isRecommendedSongSelected(rec: SongRecommendation): boolean {
@@ -616,12 +646,12 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     return (username?.[0] ?? '?').toUpperCase();
   }
 
-  getArtistNames(song: SongForPitch): string {
+  getArtistNames(song: SongForPitch | SongRecommendation): string {
     if (!song.release?.artists?.length) return 'Unknown Artist';
-    return song.release.artists.map(a => a.name).join(', ');
+    return song.release.artists.map((a: any) => a.name).join(', ');
   }
 
-  getSongWarnings(song: SongForPitch): string[] {
+  getSongWarnings(song: SongForPitch | SongRecommendation): string[] {
     const warnings: string[] = [];
     if (!song.isrc) warnings.push('No ISRC');
     if (!song.lyrics) warnings.push('No lyrics');
@@ -656,23 +686,27 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     return pitch.songs.some(song => this.getSongWarnings(song).length > 0);
   }
 
-  formatAudioFeatures(song: SongForPitch | SongRecommendation): string {
-    const parts: string[] = [];
+  getAudioChips(song: SongForPitch | SongRecommendation): string[] {
+    const chips: string[] = [];
     if (song.audio_key) {
       const scale = song.audio_scale ? ` ${song.audio_scale.charAt(0).toUpperCase() + song.audio_scale.slice(1)}` : '';
-      parts.push(`${song.audio_key}${scale}`);
+      chips.push(`${song.audio_key}${scale}`);
     }
-    if (song.audio_energy != null) parts.push(`Energy ${Math.round(song.audio_energy * 100)}%`);
-    if (song.audio_danceability != null) parts.push(`Dance ${Math.round(song.audio_danceability * 100)}%`);
-    if (song.audio_loudness != null) parts.push(`${song.audio_loudness.toFixed(1)} dB`);
+    if (song.audio_energy != null) chips.push(`Energy ${Math.round(song.audio_energy * 100)}%`);
+    if (song.audio_danceability != null) chips.push(`Dance ${Math.round(song.audio_danceability * 100)}%`);
+    if (song.audio_loudness != null) chips.push(`${song.audio_loudness.toFixed(1)} dB`);
     if (song.audio_mood && typeof song.audio_mood === 'object') {
       const topMood = Object.entries(song.audio_mood as Record<string, number>)
         .sort((a, b) => b[1] - a[1])[0];
       if (topMood && topMood[1] > 0.4) {
-        parts.push(topMood[0].charAt(0).toUpperCase() + topMood[0].slice(1));
+        chips.push(topMood[0].charAt(0).toUpperCase() + topMood[0].slice(1));
       }
     }
-    return parts.join(' · ');
+    return chips;
+  }
+
+  formatAudioFeatures(song: SongForPitch | SongRecommendation): string {
+    return this.getAudioChips(song).join(' · ');
   }
 
   formatDuration(seconds: number | undefined): string {

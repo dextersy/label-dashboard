@@ -40,6 +40,16 @@ export interface SongRecommendation {
   audio_danceability?: number | null;
   audio_loudness?: number | null;
   audio_mood?: Record<string, number> | null;
+  isrc?: string | null;
+  lyrics?: string | null;
+  authors?: { id: number }[];
+  composers?: { id: number }[];
+  release?: {
+    id: number;
+    title: string;
+    cover_art?: string;
+    artists?: { id: number; name: string }[];
+  } | null;
 }
 
 export interface SyncLicensingPitch {

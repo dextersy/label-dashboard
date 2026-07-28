@@ -93,47 +93,6 @@
           </div>
         </div>
 
-        <!-- AI Recommendations -->
-        <div class="tw-mb-4" *ngIf="editingPitch">
-          <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
-            <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">AI Recommendations</h6>
-            <button type="button" class="btn-secondary btn-sm" (click)="getRecommendations()" [disabled]="loadingRecommendations">
-              <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" *ngIf="loadingRecommendations" />
-              <app-icon name="sparkle" class="tw-mr-1" *ngIf="!loadingRecommendations" />
-              {{ loadingRecommendations ? 'Finding matches...' : 'Get AI Recommendations' }}
-            </button>
-          </div>
-
-          <div *ngIf="showRecommendations">
-            <!-- Error state -->
-            <div *ngIf="recommendationsError && !loadingRecommendations" class="tw-py-3 tw-px-3 border rounded tw-text-warning tw-text-sm">
-              <app-icon name="warning" class="tw-mr-1" />{{ recommendationsError }}
-            </div>
-
-            <!-- Loading skeleton -->
-            <div *ngIf="loadingRecommendations" class="tw-py-3 tw-text-center tw-text-muted tw-text-sm">
-              <app-icon name="spinner" class="tw-animate-spin tw-mr-1" />Analysing pitch and catalog...
-            </div>
-
-            <!-- Recommendations list -->
-            <div *ngIf="!loadingRecommendations && recommendations.length > 0" class="list-group">
-              <div class="list-group-item tw-flex tw-justify-between tw-items-start"
-                   *ngFor="let rec of recommendations">
-                <div class="tw-flex-1 tw-min-w-0 tw-mr-2">
-                  <strong class="tw-block">{{ rec.title }}</strong>
-                  <small class="tw-block tw-text-muted tw-italic">{{ rec.reason }}</small>
-                </div>
-                <button type="button" class="btn-sm btn-primary tw-flex-shrink-0"
-                        (click)="addRecommendedSong(rec)"
-                        [disabled]="isRecommendedSongSelected(rec)">
-                  <app-icon name="check" *ngIf="isRecommendedSongSelected(rec)" />
-                  <app-icon name="plus" *ngIf="!isRecommendedSongSelected(rec)" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Song Selection -->
         <div class="tw-mb-4">
           <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Songs</h6>
@@ -141,29 +100,80 @@
           <!-- Song Search -->
           <div class="tw-mb-3">
             <div class="input-group">
-              <input type="text" class="tw-input" [(ngModel)]="songSearchQuery" (input)="searchSongs()" placeholder="Search songs to add...">
-              <button class="btn-secondary" type="button" [disabled]="searchingSongs">
+              <input type="text" class="tw-input" [(ngModel)]="songSearchQuery" (input)="onSearchInput()" placeholder="Search songs to add...">
+              <button class="btn-secondary" type="button" [disabled]="searchingSongs" title="Search">
                 <app-icon name="search" *ngIf="!searchingSongs" />
                 <app-icon name="spinner" class="tw-animate-spin" *ngIf="searchingSongs" />
+              </button>
+              <button *ngIf="editingPitch" class="btn-secondary" type="button"
+                      [disabled]="loadingRecommendations"
+                      [class.active]="isAiMode"
+                      (click)="toggleAiMode()"
+                      title="AI Recommendations">
+                <app-icon name="spinner" class="tw-animate-spin" *ngIf="loadingRecommendations" />
+                <app-icon name="sparkle" *ngIf="!loadingRecommendations" />
               </button>
             </div>
           </div>
 
-          <!-- Search Results -->
-          <div *ngIf="songSearchResults.length > 0" class="tw-mb-3">
-            <div class="list-group" style="max-height: 200px; overflow-y: auto;">
-              <button type="button" class="list-group-item list-group-item-action tw-flex tw-justify-between tw-items-center"
-                      *ngFor="let song of songSearchResults; trackBy: trackBySongId" (click)="addSong(song)">
-                <div>
-                  <strong>{{ song.title }}</strong>
-                  <small class="tw-block tw-text-muted">{{ getArtistNames(song) }} &bull; {{ song.release?.title }}</small>
-                  <small class="tw-text-warning tw-block" *ngIf="getSongWarnings(song).length">
-                    <app-icon name="warning" class="tw-mr-1" />{{ getSongWarnings(song).join(' · ') }}
-                  </small>
-                </div>
-                <app-icon name="plus" class="text-primary" />
-              </button>
+          <!-- Search / AI Dropdown -->
+          <div class="song-search-dropdown tw-mb-3"
+               *ngIf="isAiMode ? (loadingRecommendations || recommendationsError || recommendations.length > 0) : songSearchResults.length > 0">
+
+            <!-- AI: loading -->
+            <div *ngIf="isAiMode && loadingRecommendations" class="song-search-row song-search-row--status">
+              <app-icon name="spinner" class="tw-animate-spin tw-mr-2" />Analysing pitch and catalog...
             </div>
+
+            <!-- AI: error -->
+            <div *ngIf="isAiMode && !loadingRecommendations && recommendationsError" class="song-search-row song-search-row--status song-search-row--warning">
+              <app-icon name="warning" class="tw-mr-2" />{{ recommendationsError }}
+            </div>
+
+            <!-- AI: results -->
+            <ng-container *ngIf="isAiMode && !loadingRecommendations && !recommendationsError">
+              <button type="button" class="song-search-row"
+                      *ngFor="let rec of recommendations"
+                      (click)="addRecommendedSong(rec)"
+                      [disabled]="isRecommendedSongSelected(rec)">
+                <div class="song-search-row__body">
+                  <span class="song-search-row__title">{{ rec.title }}</span>
+                  <span class="song-search-row__meta">{{ getArtistNames(rec) }}<ng-container *ngIf="rec.release?.title"> &bull; {{ rec.release!.title }}</ng-container></span>
+                  <span class="song-search-row__chips" *ngIf="formatAudioFeatures(rec)">
+                    <ng-container *ngFor="let chip of getAudioChips(rec)">
+                      <span class="audio-chip">{{ chip }}</span>
+                    </ng-container>
+                  </span>
+                  <span class="song-search-row__reason">{{ rec.reason }}</span>
+                  <span class="song-search-row__warning" *ngIf="getSongWarnings(rec).length">
+                    <app-icon name="warning" class="tw-mr-1" />{{ getSongWarnings(rec).join(' · ') }}
+                  </span>
+                </div>
+                <app-icon name="check" class="song-search-row__add-icon song-search-row__add-icon--done" *ngIf="isRecommendedSongSelected(rec)" />
+                <app-icon name="plus" class="song-search-row__add-icon" *ngIf="!isRecommendedSongSelected(rec)" />
+              </button>
+            </ng-container>
+
+            <!-- Search: results -->
+            <ng-container *ngIf="!isAiMode">
+              <button type="button" class="song-search-row"
+                      *ngFor="let song of songSearchResults; trackBy: trackBySongId" (click)="addSong(song)">
+                <div class="song-search-row__body">
+                  <span class="song-search-row__title">{{ song.title }}</span>
+                  <span class="song-search-row__meta">{{ getArtistNames(song) }}<ng-container *ngIf="song.release?.title"> &bull; {{ song.release!.title }}</ng-container></span>
+                  <span class="song-search-row__chips" *ngIf="formatAudioFeatures(song)">
+                    <ng-container *ngFor="let chip of getAudioChips(song)">
+                      <span class="audio-chip">{{ chip }}</span>
+                    </ng-container>
+                  </span>
+                  <span class="song-search-row__warning" *ngIf="getSongWarnings(song).length">
+                    <app-icon name="warning" class="tw-mr-1" />{{ getSongWarnings(song).join(' · ') }}
+                  </span>
+                </div>
+                <app-icon name="plus" class="song-search-row__add-icon" />
+              </button>
+            </ng-container>
+
           </div>
 
           <!-- Selected Songs -->
