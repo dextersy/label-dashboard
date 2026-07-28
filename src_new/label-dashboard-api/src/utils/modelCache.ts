@@ -47,18 +47,30 @@ function ensureServer(): Promise<void> {
         ? 'application/json'
         : 'application/octet-stream';
 
-      res.writeHead(200, { 'Content-Type': contentType });
-      fs.createReadStream(filePath).pipe(res);
+      try {
+        const data = fs.readFileSync(filePath);
+        res.writeHead(200, {
+          'Content-Type': contentType,
+          'Content-Length': data.length,
+          'Connection': 'close',
+        });
+        res.end(data);
+      } catch (err) {
+        console.error('[modelCache] File read error:', err);
+        res.writeHead(500);
+        res.end();
+      }
     });
 
     server.listen(SERVER_PORT, '127.0.0.1', () => {
       serverStarted = true;
+      console.log(`[modelCache] Model server started on port ${SERVER_PORT}.`);
       resolve();
     });
 
     server.on('error', (err: NodeJS.ErrnoException) => {
       if (err.code === 'EADDRINUSE') {
-        // Another process (e.g. the API server) is already serving on this port — reuse it
+        console.warn(`[modelCache] Port ${SERVER_PORT} already in use — reusing existing server. NOTE: if the existing server is stale, kill it and restart.`);
         serverStarted = true;
         resolve();
       } else {

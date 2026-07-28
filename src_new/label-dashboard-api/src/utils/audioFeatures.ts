@@ -183,8 +183,8 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
   // computeFrameWise() is broken in essentia.js 0.1.3 on Node.js (FrameGenerator crash).
   // extractor.compute() on individual frames works correctly.
   const extractor = new EssentiaModel.EssentiaTFInputExtractor(wasmModule, 'musicnn');
-  const frameSize: number = extractor.frameSize; // 512 for MusiCNN
-  const hopSize: number = frameSize;             // non-overlapping
+  const frameSize: number = extractor.frameSize;          // 512 for MusiCNN
+  const hopSize: number = Math.floor(frameSize / 2);      // 50% overlap — matches training distribution
   const melSpectra: number[][] = [];
   let lastResult: any = null;
   for (let start = 0; start + frameSize <= pcm16k.length; start += hopSize) {
@@ -199,14 +199,21 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
   }
 
   // Each mood classifier expects input shape [1, 187, 96].
-  // Group mel frames into patchSize-sized windows, then mean-pool into one patch.
+  // Group mel frames into non-overlapping patchSize-sized windows.
   const patchSize: number = lastResult.patchSize;   // 187 mel frames per patch
   const melBands: number = lastResult.melBandsSize; // 96 mel bands
 
-  const patches: number[][][] = [];
+  // Collect all non-overlapping patches, then evenly sample up to MAX_PATCHES of them.
+  // This bounds inference cost regardless of song length (140+ calls otherwise).
+  const MAX_PATCHES = 5;
+  const allPatches: number[][][] = [];
   for (let i = 0; i + patchSize <= melSpectra.length; i += patchSize) {
-    patches.push(melSpectra.slice(i, i + patchSize));
+    allPatches.push(melSpectra.slice(i, i + patchSize));
   }
+  const patches: number[][][] = allPatches.length <= MAX_PATCHES
+    ? allPatches
+    : Array.from({ length: MAX_PATCHES }, (_, i) =>
+        allPatches[Math.round(i * (allPatches.length - 1) / (MAX_PATCHES - 1))]);
   if (patches.length === 0) {
     // Audio too short for a full patch — zero-pad
     const padded = [...melSpectra];
@@ -214,39 +221,35 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
     patches.push(padded.slice(0, patchSize));
   }
 
-  // Mean-pool patches → [1, patchSize, melBands]
-  const sumPatch = Array.from({ length: patchSize }, () => new Array(melBands).fill(0));
-  for (const patch of patches) {
-    for (let f = 0; f < patchSize; f++) {
-      for (let b = 0; b < melBands; b++) {
-        sumPatch[f][b] += (patch[f]?.[b] ?? 0);
-      }
-    }
-  }
-  const meanPatch = sumPatch.map(row => row.map((v: number) => v / patches.length));
-  // Model expects [-1, 187, 96] — add batch dimension of 1
-  const inputTensor = tf.tensor3d([meanPatch]); // [1, 187, 96]
-
-  // Run each self-contained mood classifier
+  // Run each mood classifier on every patch independently, then average the
+  // output probabilities. This preserves temporal information lost by input mean-pooling.
   const scores: MoodScores = {};
   for (const mood of Object.keys(MOOD_MODEL_URLS) as (keyof MoodScores)[]) {
     try {
       const model = await getMoodModel(tf, mood);
-      // Specify 'model/Sigmoid' output node explicitly to get a single tensor back
-      const outTensor: any = model.execute(
-        { 'model/Placeholder': inputTensor },
-        'model/Sigmoid',
-      );
-      const values = await outTensor.array() as number[][];
-      // Binary classifier output shape [1, 2]: [non_mood, mood] — take positive class
-      scores[mood] = Array.isArray(values[0]) ? values[0][values[0].length - 1] : (values as any)[values.length - 1];
-      outTensor.dispose();
+      let sum = 0;
+      let count = 0;
+      for (const patch of patches) {
+        const inputTensor = tf.tensor3d([patch]); // [1, 187, 96]
+        // Specify 'model/Sigmoid' output node explicitly to get a single tensor back
+        const outTensor: any = model.execute(
+          { 'model/Placeholder': inputTensor },
+          'model/Sigmoid',
+        );
+        const values = await outTensor.array() as number[][];
+        // Binary classifier output shape [1, 2]: [non_mood, mood] — take positive class
+        const prob = Array.isArray(values[0]) ? values[0][values[0].length - 1] : (values as any)[values.length - 1];
+        sum += prob;
+        count++;
+        inputTensor.dispose();
+        outTensor.dispose();
+      }
+      scores[mood] = count > 0 ? sum / count : 0;
+      console.log(`[audioFeatures] Mood "${mood}": ${scores[mood]?.toFixed(3)} (${count} patches)`);
     } catch (e) {
       console.error(`[audioFeatures] Mood "${mood}" prediction failed:`, e);
     }
   }
-
-  inputTensor.dispose();
   return scores;
 }
 

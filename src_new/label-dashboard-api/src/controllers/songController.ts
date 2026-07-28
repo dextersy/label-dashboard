@@ -848,14 +848,15 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
 
       try {
         const mood = await extractMoodScores(audioBuffer);
+        console.log(`[audioFeatures] Mood scores for song ${songId}:`, JSON.stringify(mood));
         await Song.findByPk(songId).then(s => s?.update({ audio_mood: mood }));
       } catch (err) {
         console.error(`[audioFeatures] Mood extraction failed for song ${songId}:`, err);
       }
-    })();
 
-    // Regenerate AI summary now that audio is available for feature analysis
-    generateSongSummaryBackground(songId);
+      // Regenerate AI summary after all audio features (including mood) are saved
+      generateSongSummaryBackground(songId);
+    })();
   } catch (error) {
     console.error('Upload audio error:', error);
     res.status(500).json({ error: 'Internal server error' });
