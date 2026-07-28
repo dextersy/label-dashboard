@@ -100,12 +100,12 @@
           <!-- Song Search -->
           <div class="tw-mb-3">
             <div class="input-group">
-              <input type="text" class="tw-input" [(ngModel)]="songSearchQuery" (input)="onSearchInput()" placeholder="Search songs to add...">
-              <button class="btn-secondary" type="button" [disabled]="searchingSongs" title="Search">
+              <button class="tw-border-none tw-bg-transparent tw-p-1.5 tw-text-gray-500 hover:tw-text-gray-800 tw-cursor-pointer tw-rounded disabled:tw-opacity-50" type="button" [disabled]="searchingSongs" title="Search">
                 <app-icon name="search" *ngIf="!searchingSongs" />
                 <app-icon name="spinner" class="tw-animate-spin" *ngIf="searchingSongs" />
               </button>
-              <button *ngIf="editingPitch" class="btn-secondary" type="button"
+              <input type="text" class="tw-input" [(ngModel)]="songSearchQuery" (input)="onSearchInput()" placeholder="Search songs to add...">
+              <button *ngIf="editingPitch" class="tw-border-none tw-bg-transparent tw-p-1.5 tw-text-gray-500 hover:tw-text-gray-800 tw-cursor-pointer tw-rounded disabled:tw-opacity-50" type="button"
                       [disabled]="loadingRecommendations"
                       [class.active]="isAiMode"
                       (click)="toggleAiMode()"
@@ -194,7 +194,7 @@
                     </small>
                   </div>
                 </div>
-                <button type="button" class="btn-sm btn-ghost tw-text-danger tw-p-1" (click)="removeSong(song)">
+                <button type="button" class="tw-border-none tw-bg-transparent tw-p-1 tw-text-danger tw-cursor-pointer tw-rounded disabled:tw-opacity-50" (click)="removeSong(song)">
                   <app-icon name="x" />
                 </button>
               </div>
