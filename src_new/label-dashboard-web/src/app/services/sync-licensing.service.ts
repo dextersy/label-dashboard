@@ -9,6 +9,13 @@ export interface SongForPitch {
   duration?: number;
   isrc?: string;
   lyrics?: string;
+  ai_summary?: string;
+  audio_key?: string | null;
+  audio_scale?: string | null;
+  audio_energy?: number | null;
+  audio_danceability?: number | null;
+  audio_loudness?: number | null;
+  audio_mood?: Record<string, number> | null;
   authors?: { id: number }[];
   composers?: { id: number }[];
   release?: {
@@ -20,6 +27,19 @@ export interface SongForPitch {
       name: string;
     }[];
   };
+}
+
+export interface SongRecommendation {
+  song_id: number;
+  title: string;
+  ai_summary: string;
+  reason: string;
+  audio_key?: string | null;
+  audio_scale?: string | null;
+  audio_energy?: number | null;
+  audio_danceability?: number | null;
+  audio_loudness?: number | null;
+  audio_mood?: Record<string, number> | null;
 }
 
 export interface SyncLicensingPitch {
@@ -163,6 +183,26 @@ export class SyncLicensingService {
    */
   downloadBSheet(pitch: SyncLicensingPitch): Observable<Blob> {
     return this._downloadFile(pitch, 'bsheet', 'download-bsheet', '.xlsx');
+  }
+
+  /**
+   * Generate an AI summary for a single song
+   */
+  generateSongSummary(songId: number): Observable<{ song_id: number; ai_summary: string }> {
+    return this.http.post<{ song_id: number; ai_summary: string }>(
+      `${environment.apiUrl}/sync-licensing/songs/${songId}/generate-summary`,
+      {}
+    );
+  }
+
+  /**
+   * Get AI-powered song recommendations for a pitch
+   */
+  getPitchRecommendations(pitchId: number): Observable<{ recommendations: SongRecommendation[] }> {
+    return this.http.post<{ recommendations: SongRecommendation[] }>(
+      `${environment.apiUrl}/sync-licensing/${pitchId}/recommendations`,
+      {}
+    );
   }
 
   /**

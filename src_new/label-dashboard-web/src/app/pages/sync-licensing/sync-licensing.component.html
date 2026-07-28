@@ -93,6 +93,47 @@
           </div>
         </div>
 
+        <!-- AI Recommendations -->
+        <div class="tw-mb-4" *ngIf="editingPitch">
+          <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+            <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">AI Recommendations</h6>
+            <button type="button" class="btn-secondary btn-sm" (click)="getRecommendations()" [disabled]="loadingRecommendations">
+              <app-icon name="spinner" class="tw-mr-1 tw-animate-spin" *ngIf="loadingRecommendations" />
+              <app-icon name="sparkle" class="tw-mr-1" *ngIf="!loadingRecommendations" />
+              {{ loadingRecommendations ? 'Finding matches...' : 'Get AI Recommendations' }}
+            </button>
+          </div>
+
+          <div *ngIf="showRecommendations">
+            <!-- Error state -->
+            <div *ngIf="recommendationsError && !loadingRecommendations" class="tw-py-3 tw-px-3 border rounded tw-text-warning tw-text-sm">
+              <app-icon name="warning" class="tw-mr-1" />{{ recommendationsError }}
+            </div>
+
+            <!-- Loading skeleton -->
+            <div *ngIf="loadingRecommendations" class="tw-py-3 tw-text-center tw-text-muted tw-text-sm">
+              <app-icon name="spinner" class="tw-animate-spin tw-mr-1" />Analysing pitch and catalog...
+            </div>
+
+            <!-- Recommendations list -->
+            <div *ngIf="!loadingRecommendations && recommendations.length > 0" class="list-group">
+              <div class="list-group-item tw-flex tw-justify-between tw-items-start"
+                   *ngFor="let rec of recommendations">
+                <div class="tw-flex-1 tw-min-w-0 tw-mr-2">
+                  <strong class="tw-block">{{ rec.title }}</strong>
+                  <small class="tw-block tw-text-muted tw-italic">{{ rec.reason }}</small>
+                </div>
+                <button type="button" class="btn-sm btn-primary tw-flex-shrink-0"
+                        (click)="addRecommendedSong(rec)"
+                        [disabled]="isRecommendedSongSelected(rec)">
+                  <app-icon name="check" *ngIf="isRecommendedSongSelected(rec)" />
+                  <app-icon name="plus" *ngIf="!isRecommendedSongSelected(rec)" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Song Selection -->
         <div class="tw-mb-4">
           <h6 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Songs</h6>

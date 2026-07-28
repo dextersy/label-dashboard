@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
-import { analyzeAudio } from '../utils/audioAnalyzer';
+import { extractDSPFeatures, extractMoodScores } from '../utils/audioFeatures';
+import { generateSongSummaryBackground } from '../utils/songAI';
 import { Readable } from 'stream';
 
 const ffmpeg = require('fluent-ffmpeg');
@@ -273,6 +274,7 @@ export const createSong = async (req: AuthRequest, res: Response) => {
     };
 
     res.status(201).json({ song: result });
+    generateSongSummaryBackground(song.id);
   } catch (error) {
     console.error('Create song error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -470,6 +472,14 @@ export const updateSong = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ song: updatedSong });
+
+    // Regenerate AI summary if title/lyrics changed or the song has no summary yet
+    const summaryTrigger = updateData.title !== undefined
+      || updateData.lyrics !== undefined
+      || !song.ai_summary;
+    if (summaryTrigger) {
+      generateSongSummaryBackground(Number(id));
+    }
   } catch (error) {
     console.error('Update song error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -803,15 +813,6 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       ...(mp3FileName ? { audio_file_mp3: mp3FileName, audio_file_mp3_size: mp3FileSize } : {})
     };
 
-    const needsTempo = !song.tempo;
-    try {
-      const { bpm, duration } = await analyzeAudio(req.file.buffer);
-      if (needsTempo && bpm) songUpdates.tempo = bpm;
-      if (duration) songUpdates.duration = duration;
-    } catch (err) {
-      console.error(`Audio analysis failed for song ${song.id}:`, err);
-    }
-
     await song.update(songUpdates);
 
     res.json({
@@ -821,6 +822,40 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       audio_file_mp3: mp3FileName,
       audio_file_mp3_size: mp3FileSize
     });
+
+    // Run DSP + mood extraction in background after response is sent
+    const audioBuffer = req.file!.buffer;
+    const songId = song.id;
+    (async () => {
+      try {
+        const dsp = await extractDSPFeatures(audioBuffer);
+        const dspUpdate: any = {};
+        if (dsp.bpm) {
+          dspUpdate.tempo = dsp.bpm;
+          dspUpdate.audio_key = dsp.key ?? null;
+          dspUpdate.audio_scale = dsp.scale ?? null;
+          dspUpdate.audio_key_strength = dsp.keyStrength ?? null;
+          dspUpdate.audio_energy = dsp.energy ?? null;
+          dspUpdate.audio_danceability = dsp.danceability ?? null;
+          dspUpdate.audio_dynamic_complexity = dsp.dynamicComplexity ?? null;
+          dspUpdate.audio_loudness = dsp.loudness ?? null;
+        }
+        if (dsp.duration) dspUpdate.duration = dsp.duration;
+        if (Object.keys(dspUpdate).length > 0) await Song.findByPk(songId).then(s => s?.update(dspUpdate));
+      } catch (err) {
+        console.error(`[audioFeatures] DSP extraction failed for song ${songId}:`, err);
+      }
+
+      try {
+        const mood = await extractMoodScores(audioBuffer);
+        await Song.findByPk(songId).then(s => s?.update({ audio_mood: mood }));
+      } catch (err) {
+        console.error(`[audioFeatures] Mood extraction failed for song ${songId}:`, err);
+      }
+    })();
+
+    // Regenerate AI summary now that audio is available for feature analysis
+    generateSongSummaryBackground(songId);
   } catch (error) {
     console.error('Upload audio error:', error);
     res.status(500).json({ error: 'Internal server error' });

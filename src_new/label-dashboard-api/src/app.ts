@@ -18,6 +18,7 @@ import {
   csrfProtection,
   requireJsonContentType
 } from './middleware/csrf';
+import { prewarmAudioModels } from './utils/audioFeatures';
 
 dotenv.config();
 
@@ -86,6 +87,11 @@ const startServer = async () => {
 
     // PERFORMANCE: Pre-warm origins cache on startup to prevent blocking preflight requests
     await preWarmCache();
+
+    // Pre-download Essentia audio models to disk (no-op if already cached ~26 MB total)
+    prewarmAudioModels().catch(err =>
+      console.warn('⚠ Audio model pre-warm failed (non-fatal):', err?.message ?? err)
+    );
 
     // PERFORMANCE: Start background refresh to keep cache warm (prevents cache misses)
     startBackgroundRefresh();

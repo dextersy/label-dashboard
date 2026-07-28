@@ -3,8 +3,10 @@ import { Op } from 'sequelize';
 import archiver from 'archiver';
 import { Readable } from 'stream';
 import ExcelJS from 'exceljs';
+import Groq from 'groq-sdk';
 import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, ReleaseSong, Artist, User, Brand, SongAuthor, SongComposer, Songwriter } from '../models';
 import { getS3ObjectStream } from '../utils/s3Service';
+import { generateSongSummaryBackground } from '../utils/songAI';
 
 /**
  * Escape SQL LIKE wildcard characters so user input is treated as literal text.
@@ -1314,6 +1316,216 @@ export const downloadBSheet = async (req: Request, res: Response) => {
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to download B-Sheet' });
     }
+  }
+};
+
+/**
+ * Trigger AI summary generation for a single song.
+ * Delegates to the shared songAI utility which uses Essentia for audio analysis.
+ * Responds immediately — generation runs in the background.
+ * POST /api/sync-licensing/songs/:songId/generate-summary
+ */
+export const generateSongSummary = async (req: Request, res: Response): Promise<void> => {
+  const brandId = (req as any).user?.brand_id;
+  const songId = parseInt(req.params.songId as string, 10);
+
+  if (isNaN(songId)) {
+    res.status(400).json({ error: 'Invalid song ID' });
+    return;
+  }
+
+  const song = await Song.findOne({ where: { id: songId, brand_id: brandId } });
+  if (!song) {
+    res.status(404).json({ error: 'Song not found' });
+    return;
+  }
+
+  if (!process.env.GROQ_API_KEY) {
+    res.status(500).json({ error: 'AI generation is not configured. Set GROQ_API_KEY.' });
+    return;
+  }
+
+  generateSongSummaryBackground(songId);
+  res.json({ song_id: songId, message: 'Summary generation started.' });
+};
+
+/**
+ * Extract meaningful keywords from a pitch title and description.
+ * Strips common stop words and returns unique lowercased tokens of 3+ characters.
+ */
+function extractKeywords(text: string): string[] {
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'that', 'this', 'are', 'was', 'has', 'have',
+    'but', 'not', 'from', 'they', 'will', 'been', 'our', 'about', 'more',
+    'into', 'its', 'also', 'can', 'all', 'any', 'one', 'two', 'use', 'used',
+  ]);
+  return [...new Set(
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 3 && !stopWords.has(w))
+  )];
+}
+
+/**
+ * Get AI-powered song recommendations for a sync licensing pitch.
+ *
+ * Two-stage approach to minimise Groq token usage:
+ *   1. SQL pre-filter — run LIKE queries on ai_summary and title using pitch keywords,
+ *      capping candidates at 30 songs.
+ *   2. LLM ranking — send only those ~30 candidates to Groq for ranked matching with reasons.
+ *
+ * POST /api/sync-licensing/:id/recommendations
+ */
+export const getPitchRecommendations = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId = (req as any).user?.brand_id;
+    const pitchId = parseInt(req.params.id as string, 10);
+
+    if (isNaN(pitchId)) {
+      res.status(400).json({ error: 'Invalid pitch ID' });
+      return;
+    }
+
+    const pitch = await SyncLicensingPitch.findOne({ where: { id: pitchId, brand_id: brandId } });
+    if (!pitch) {
+      res.status(404).json({ error: 'Pitch not found' });
+      return;
+    }
+
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      res.status(500).json({ error: 'AI generation is not configured. Set GROQ_API_KEY.' });
+      return;
+    }
+
+    // --- Stage 1: SQL keyword pre-filter ---
+    const pitchText = [pitch.title, pitch.description].filter(Boolean).join(' ');
+    const keywords = extractKeywords(pitchText);
+
+    const baseWhere: any = {
+      brand_id: brandId,
+      ai_summary: { [Op.and]: [{ [Op.not]: null }, { [Op.ne]: '' }] },
+    };
+
+    let candidates: Song[];
+
+    if (keywords.length > 0) {
+      // Build OR conditions: each keyword matched against ai_summary OR title
+      const keywordConditions = keywords.map(kw => {
+        const escaped = escapeLikeWildcards(kw);
+        return {
+          [Op.or]: [
+            { ai_summary: { [Op.like]: `%${escaped}%` } },
+            { title: { [Op.like]: `%${escaped}%` } },
+          ],
+        };
+      });
+
+      candidates = await Song.findAll({
+        where: { ...baseWhere, [Op.or]: keywordConditions },
+        attributes: ['id', 'title', 'ai_summary', 'audio_key', 'audio_scale', 'audio_energy', 'audio_danceability', 'audio_loudness', 'audio_mood'],
+        limit: 30,
+        order: [['title', 'ASC']],
+      });
+
+      // If keyword filter returns too few results, fall back to any summarised songs
+      if (candidates.length < 5) {
+        candidates = await Song.findAll({
+          where: baseWhere,
+          attributes: ['id', 'title', 'ai_summary', 'audio_key', 'audio_scale', 'audio_energy', 'audio_danceability', 'audio_loudness', 'audio_mood'],
+          limit: 30,
+          order: [['updatedAt', 'DESC']],
+        });
+      }
+    } else {
+      // No usable keywords — take the 30 most recently updated summarised songs
+      candidates = await Song.findAll({
+        where: baseWhere,
+        attributes: ['id', 'title', 'ai_summary', 'audio_key', 'audio_scale', 'audio_energy', 'audio_danceability', 'audio_loudness', 'audio_mood'],
+        limit: 30,
+        order: [['updatedAt', 'DESC']],
+      });
+    }
+
+    if (candidates.length === 0) {
+      res.status(422).json({
+        error: 'No songs have AI summaries yet. Generate summaries for your songs first.',
+      });
+      return;
+    }
+
+    // --- Stage 2: LLM ranking of the pre-filtered candidates ---
+    const songList = candidates
+      .map(s => `[ID:${s.id}] "${s.title}" — ${s.ai_summary}`)
+      .join('\n');
+
+    const pitchContext = [
+      `Pitch title: "${pitch.title}"`,
+      pitch.description ? `Pitch description: ${pitch.description}` : '',
+    ].filter(Boolean).join('\n');
+
+    const prompt = `You are a music supervisor assistant helping match songs to a sync licensing opportunity.
+
+${pitchContext}
+
+Below is a pre-filtered set of candidate songs with their IDs and mood/theme descriptions:
+
+${songList}
+
+Return a JSON array of the best-matching songs in order of relevance (up to 10, fewer if fewer candidates exist). Each element must be an object with:
+- "song_id": the integer ID from the list above
+- "reason": one sentence explaining why this song fits the pitch
+
+Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Example format:
+[{"song_id":1,"reason":"Upbeat energy matches the dynamic feel of the pitch."}]`;
+
+    const groq = new Groq({ apiKey });
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+    });
+
+    const rawText = completion.choices[0]?.message?.content?.trim() || '';
+
+    let recommendations: { song_id: number; reason: string }[];
+    try {
+      recommendations = JSON.parse(rawText);
+      if (!Array.isArray(recommendations)) throw new Error('Not an array');
+    } catch {
+      console.error('Failed to parse LLM recommendations JSON:', rawText);
+      res.status(500).json({ error: 'AI returned an unexpected response. Please try again.' });
+      return;
+    }
+
+    // Validate against the known candidate IDs
+    const knownIds = new Set(candidates.map(s => s.id));
+    const songMap = new Map(candidates.map(s => [s.id, s.toJSON() as any]));
+
+    const validated = recommendations
+      .filter(r => typeof r.song_id === 'number' && knownIds.has(r.song_id))
+      .map(r => {
+        const s = songMap.get(r.song_id) || {};
+        return {
+          song_id: r.song_id,
+          title: s.title || '',
+          ai_summary: s.ai_summary || '',
+          reason: typeof r.reason === 'string' ? r.reason : '',
+          audio_key: s.audio_key ?? null,
+          audio_scale: s.audio_scale ?? null,
+          audio_energy: s.audio_energy ?? null,
+          audio_danceability: s.audio_danceability ?? null,
+          audio_loudness: s.audio_loudness ?? null,
+          audio_mood: s.audio_mood ?? null,
+        };
+      });
+
+    res.json({ recommendations: validated });
+  } catch (error: any) {
+    console.error('Error getting pitch recommendations:', error);
+    res.status(500).json({ error: 'Failed to get recommendations' });
   }
 };
 

@@ -16,6 +16,15 @@ interface SongAttributes {
   spotify_link?: string;
   apple_music_link?: string;
   youtube_link?: string;
+  ai_summary?: string;
+  audio_key?: string;
+  audio_scale?: string;
+  audio_key_strength?: number;
+  audio_energy?: number;
+  audio_danceability?: number;
+  audio_dynamic_complexity?: number;
+  audio_loudness?: number;
+  audio_mood?: object;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -37,6 +46,15 @@ class Song extends Model<SongAttributes, SongCreationAttributes> implements Song
   public spotify_link?: string;
   public apple_music_link?: string;
   public youtube_link?: string;
+  public ai_summary?: string;
+  public audio_key?: string;
+  public audio_scale?: string;
+  public audio_key_strength?: number;
+  public audio_energy?: number;
+  public audio_danceability?: number;
+  public audio_dynamic_complexity?: number;
+  public audio_loudness?: number;
+  public audio_mood?: object;
 
   // Association properties
   public releases?: any[];
@@ -110,6 +128,42 @@ Song.init(
     },
     youtube_link: {
       type: DataTypes.STRING(1024),
+      allowNull: true,
+    },
+    ai_summary: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    audio_key: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+    },
+    audio_scale: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+    },
+    audio_key_strength: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    audio_energy: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    audio_danceability: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    audio_dynamic_complexity: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    audio_loudness: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    audio_mood: {
+      type: DataTypes.JSONB,
       allowNull: true,
     },
     createdAt: {

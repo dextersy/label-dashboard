@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { SyncLicensingService, SyncLicensingPitch, SongForPitch } from '../../services/sync-licensing.service';
+import { SyncLicensingService, SyncLicensingPitch, SongForPitch, SongRecommendation } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
@@ -115,6 +115,12 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   songSearchQuery = '';
   songSearchResults: SongForPitch[] = [];
   searchingSongs = false;
+
+  // AI recommendations
+  recommendations: SongRecommendation[] = [];
+  loadingRecommendations = false;
+  recommendationsError = '';
+  showRecommendations = false;
 
   headerActions: HeaderAction[] = [
     {
@@ -245,6 +251,9 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.selectedSongs = [];
     this.songSearchQuery = '';
     this.songSearchResults = [];
+    this.recommendations = [];
+    this.recommendationsError = '';
+    this.showRecommendations = false;
     this.showPitchModal = true;
   }
 
@@ -257,6 +266,9 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.selectedSongs = [...(pitch.songs || [])];
     this.songSearchQuery = '';
     this.songSearchResults = [];
+    this.recommendations = [];
+    this.recommendationsError = '';
+    this.showRecommendations = false;
     this.showPitchModal = true;
   }
 
@@ -265,6 +277,47 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.editingPitch = null;
     this.pitchForm = { title: '', description: '' };
     this.selectedSongs = [];
+    this.recommendations = [];
+    this.recommendationsError = '';
+    this.showRecommendations = false;
+  }
+
+  getRecommendations(): void {
+    if (!this.editingPitch) {
+      this.notificationService.showError('Save the pitch first, then use AI recommendations.');
+      return;
+    }
+    this.loadingRecommendations = true;
+    this.recommendationsError = '';
+    this.showRecommendations = true;
+    this.recommendations = [];
+
+    this.subscriptions.add(
+      this.syncLicensingService.getPitchRecommendations(this.editingPitch.id).subscribe({
+        next: (res) => {
+          this.recommendations = res.recommendations;
+          this.loadingRecommendations = false;
+          if (this.recommendations.length === 0) {
+            this.recommendationsError = 'No recommendations found. Make sure your songs have AI summaries generated.';
+          }
+        },
+        error: (err) => {
+          this.loadingRecommendations = false;
+          this.recommendationsError = err?.error?.error || 'Failed to get recommendations.';
+        }
+      })
+    );
+  }
+
+  addRecommendedSong(rec: SongRecommendation): void {
+    if (this.selectedSongs.find(s => s.id === rec.song_id)) return;
+    this.selectedSongs.push({ id: rec.song_id, title: rec.title });
+    // Remove from recommendations list
+    this.recommendations = this.recommendations.filter(r => r.song_id !== rec.song_id);
+  }
+
+  isRecommendedSongSelected(rec: SongRecommendation): boolean {
+    return !!this.selectedSongs.find(s => s.id === rec.song_id);
   }
 
   searchSongs(): void {
@@ -601,6 +654,25 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   hasPitchWarnings(pitch: SyncLicensingPitch): boolean {
     if (!pitch.songs?.length) return false;
     return pitch.songs.some(song => this.getSongWarnings(song).length > 0);
+  }
+
+  formatAudioFeatures(song: SongForPitch | SongRecommendation): string {
+    const parts: string[] = [];
+    if (song.audio_key) {
+      const scale = song.audio_scale ? ` ${song.audio_scale.charAt(0).toUpperCase() + song.audio_scale.slice(1)}` : '';
+      parts.push(`${song.audio_key}${scale}`);
+    }
+    if (song.audio_energy != null) parts.push(`Energy ${Math.round(song.audio_energy * 100)}%`);
+    if (song.audio_danceability != null) parts.push(`Dance ${Math.round(song.audio_danceability * 100)}%`);
+    if (song.audio_loudness != null) parts.push(`${song.audio_loudness.toFixed(1)} dB`);
+    if (song.audio_mood && typeof song.audio_mood === 'object') {
+      const topMood = Object.entries(song.audio_mood as Record<string, number>)
+        .sort((a, b) => b[1] - a[1])[0];
+      if (topMood && topMood[1] > 0.4) {
+        parts.push(topMood[0].charAt(0).toUpperCase() + topMood[0].slice(1));
+      }
+    }
+    return parts.join(' · ');
   }
 
   formatDuration(seconds: number | undefined): string {
