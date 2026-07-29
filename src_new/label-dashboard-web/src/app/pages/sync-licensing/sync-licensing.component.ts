@@ -316,7 +316,11 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
           this.recommendations = res.recommendations;
           this.loadingRecommendations = false;
           if (this.recommendations.length === 0) {
-            this.recommendationsError = 'No recommendations found. Make sure your songs have AI summaries generated.';
+            if (res.insufficient_context) {
+              this.recommendationsError = 'The pitch title and description don\'t provide enough detail to make confident recommendations. Try adding more specific information about the mood, setting, or style you\'re looking for.';
+            } else {
+              this.recommendationsError = 'No songs matched with sufficient confidence. Make sure your songs have AI summaries generated, or try refining the pitch description.';
+            }
           }
         },
         error: (err) => {
@@ -692,8 +696,14 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       const scale = song.audio_scale ? ` ${song.audio_scale.charAt(0).toUpperCase() + song.audio_scale.slice(1)}` : '';
       chips.push(`${song.audio_key}${scale}`);
     }
-    if (song.audio_energy != null) chips.push(`Energy ${Math.round(song.audio_energy * 100)}%`);
-    if (song.audio_danceability != null) chips.push(`Dance ${Math.round(song.audio_danceability * 100)}%`);
+    if (song.audio_energy != null) {
+      const energyLabel = song.audio_energy > 0.7 ? 'High Energy' : song.audio_energy > 0.35 ? 'Mid Energy' : 'Low Energy';
+      chips.push(energyLabel);
+    }
+    if (song.audio_danceability != null) {
+      const danceLabel = song.audio_danceability > 1.5 ? 'Very Danceable' : song.audio_danceability > 0.8 ? 'Danceable' : 'Not Danceable';
+      chips.push(danceLabel);
+    }
     if (song.audio_loudness != null) chips.push(`${song.audio_loudness.toFixed(1)} dB`);
     if (song.audio_mood && typeof song.audio_mood === 'object') {
       const topMood = Object.entries(song.audio_mood as Record<string, number>)

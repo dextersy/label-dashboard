@@ -34,6 +34,7 @@ export interface SongRecommendation {
   title: string;
   ai_summary: string;
   reason: string;
+  confidence?: number | null;
   audio_key?: string | null;
   audio_scale?: string | null;
   audio_energy?: number | null;
@@ -208,8 +209,8 @@ export class SyncLicensingService {
   /**
    * Get AI-powered song recommendations for a pitch
    */
-  getPitchRecommendations(pitchId: number): Observable<{ recommendations: SongRecommendation[] }> {
-    return this.http.post<{ recommendations: SongRecommendation[] }>(
+  getPitchRecommendations(pitchId: number): Observable<{ recommendations: SongRecommendation[]; insufficient_context?: boolean }> {
+    return this.http.post<{ recommendations: SongRecommendation[]; insufficient_context?: boolean }>(
       `${environment.apiUrl}/sync-licensing/${pitchId}/recommendations`,
       {}
     );

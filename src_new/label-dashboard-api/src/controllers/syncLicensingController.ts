@@ -1411,6 +1411,14 @@ export const getPitchRecommendations = async (req: Request, res: Response): Prom
 
     let candidates: Song[];
 
+    // Require meaningful pitch content — title alone with no keywords is not enough
+    const pitchHasEnoughContext = keywords.length >= 3 || (keywords.length >= 2 && pitch.description && pitch.description.trim().length >= 20);
+
+    if (!pitchHasEnoughContext) {
+      res.json({ recommendations: [], insufficient_context: true });
+      return;
+    }
+
     if (keywords.length > 0) {
       // Build OR conditions: each keyword matched against ai_summary OR title
       const keywordConditions = keywords.map(kw => {
@@ -1440,7 +1448,6 @@ export const getPitchRecommendations = async (req: Request, res: Response): Prom
         });
       }
     } else {
-      // No usable keywords — take the 30 most recently updated summarised songs
       candidates = await Song.findAll({
         where: baseWhere,
         attributes: ['id', 'title', 'ai_summary', 'audio_key', 'audio_scale', 'audio_energy', 'audio_danceability', 'audio_loudness', 'audio_mood'],
@@ -1474,12 +1481,13 @@ Below is a pre-filtered set of candidate songs with their IDs and mood/theme des
 
 ${songList}
 
-Return a JSON array of the best-matching songs in order of relevance (up to 10, fewer if fewer candidates exist). Each element must be an object with:
+Return a JSON array of the best-matching songs in order of relevance (up to 10, fewer if fewer candidates exist). Only include songs you are genuinely confident about — omit any song where the match is weak or uncertain. Each element must be an object with:
 - "song_id": the integer ID from the list above
 - "reason": one sentence explaining why this song fits the pitch
+- "confidence": a number from 0 to 100 representing how confident you are in this match (e.g. 90 = very strong match, 60 = plausible but uncertain)
 
 Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Example format:
-[{"song_id":1,"reason":"Upbeat energy matches the dynamic feel of the pitch."}]`;
+[{"song_id":1,"reason":"Upbeat energy matches the dynamic feel of the pitch.","confidence":88}]`;
 
     const groq = new Groq({ apiKey });
     const completion = await groq.chat.completions.create({
@@ -1490,7 +1498,7 @@ Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Ex
 
     const rawText = completion.choices[0]?.message?.content?.trim() || '';
 
-    let recommendations: { song_id: number; reason: string }[];
+    let recommendations: { song_id: number; reason: string; confidence?: number }[];
     try {
       recommendations = JSON.parse(rawText);
       if (!Array.isArray(recommendations)) throw new Error('Not an array');
@@ -1500,15 +1508,18 @@ Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Ex
       return;
     }
 
-    // Validate against the known candidate IDs
+    // Validate against the known candidate IDs and enforce 75% confidence threshold
+    const CONFIDENCE_THRESHOLD = 75;
     const knownIds = new Set(candidates.map(s => s.id));
     const candidateMap = new Map(candidates.map(s => [s.id, s.toJSON() as any]));
 
     const validatedBase = recommendations
       .filter(r => typeof r.song_id === 'number' && knownIds.has(r.song_id))
+      .filter(r => typeof r.confidence !== 'number' || r.confidence >= CONFIDENCE_THRESHOLD)
       .map(r => ({
         song_id: r.song_id,
         reason: typeof r.reason === 'string' ? r.reason : '',
+        confidence: typeof r.confidence === 'number' ? r.confidence : null,
       }));
 
     // Enrich validated songs with release + artist data (same shape as searchSongs)
@@ -1532,6 +1543,7 @@ Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Ex
         title: s.title || c.title || '',
         ai_summary: c.ai_summary || '',
         reason: r.reason,
+        confidence: r.confidence,
         audio_key: s.audio_key ?? null,
         audio_scale: s.audio_scale ?? null,
         audio_energy: s.audio_energy ?? null,
