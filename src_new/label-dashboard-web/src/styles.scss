@@ -5,6 +5,7 @@
 /* =========================================== */
 @use './app/material-theme.scss';
 @use './styles/components.scss';
+@use './styles/modals.scss';
 
 /* =========================================== */
 /* TAILWIND CSS — processed by PostCSS         */
@@ -153,11 +154,11 @@
   @media (max-width: 991px) {
     .modal {
       padding-top: 50px !important;
-      padding-bottom: 100px !important;
+      padding-bottom: 80px !important;
     }
 
     .modal-content {
-      max-height: calc(100vh - 50px - 100px) !important;
+      max-height: calc(100vh - 50px - 80px) !important;
       display: flex !important;
       flex-direction: column !important;
     }
@@ -167,6 +168,17 @@
       -webkit-overflow-scrolling: touch;
       flex: 1 !important;
       min-height: 0 !important;
+    }
+  }
+
+  /* When the audio player is also visible, add extra clearance for it */
+  @media (max-width: 991px) {
+    body:has(.audio-player-popup) .modal {
+      padding-bottom: 160px !important;
+    }
+
+    body:has(.audio-player-popup) .modal-content {
+      max-height: calc(100vh - 50px - 160px) !important;
     }
   }
 

@@ -1,0 +1,183 @@
+/* ================================================================= */
+/* MODALS — Unified modal styles                                      */
+/* All modal-related CSS lives here for easier maintenance.          */
+/* ================================================================= */
+
+// Space reserved at the bottom on mobile.
+// Accounts for the fixed bottom navigation bar (~80px) plus the audio player
+// (~115px) when present, with a small buffer. Total: ~220px.
+$mobile-nav-height: 220px;
+
+/* -------- Backdrop -------- */
+.modal-backdrop {
+  @apply tw-fixed tw-inset-0 tw-z-[1040] tw-bg-black/50;
+  &.show { opacity: 1; }
+  &.fade { opacity: 0; transition: opacity 0.15s linear; }
+}
+
+/* -------- Modal root -------- */
+.modal {
+  @apply tw-fixed tw-inset-0 tw-z-[1050] tw-overflow-x-hidden tw-overflow-y-auto tw-outline-0;
+  &.show { animation: modal-fade-in 0.3s ease-in-out; }
+}
+
+/* -------- Dialog -------- */
+.modal-dialog {
+  @apply tw-relative tw-w-auto tw-mx-auto tw-max-w-lg tw-pointer-events-none;
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.modal-dialog-centered {
+  @apply tw-flex tw-items-center;
+  min-height: calc(100% - 60px);
+}
+
+.modal-dialog-scrollable {
+  .modal-content {
+    max-height: calc(100vh - 120px);
+    @apply tw-overflow-hidden tw-flex tw-flex-col;
+  }
+  .modal-body {
+    @apply tw-overflow-y-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* -------- Content sections -------- */
+.modal-content {
+  @apply tw-relative tw-flex tw-flex-col tw-w-full tw-pointer-events-auto
+         tw-bg-surface tw-rounded-card tw-shadow-modal tw-outline-0 tw-border-0;
+}
+
+.modal-header {
+  @apply tw-flex tw-shrink-0 tw-items-center tw-justify-between
+         tw-px-6 tw-pt-5 tw-pb-4 tw-border-b tw-border-border-subtle;
+}
+
+.modal-title {
+  @apply tw-text-lg tw-font-semibold tw-text-heading tw-m-0 tw-leading-normal;
+}
+
+.modal-body {
+  @apply tw-relative tw-flex-auto tw-px-6 tw-py-5 tw-overflow-y-auto;
+}
+
+.modal-footer {
+  @apply tw-flex tw-flex-wrap tw-shrink-0 tw-items-center tw-justify-end
+         tw-gap-3 tw-px-6 tw-py-4 tw-border-t tw-border-border-subtle;
+}
+
+/* -------- Size modifiers -------- */
+.modal-sm { max-width: 300px; }
+.modal-lg { max-width: 800px; }
+.modal-xl { max-width: 1140px; }
+
+/* -------- Close button -------- */
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6c757d;
+  opacity: 0.5;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.15s ease-in-out, opacity 0.15s ease-in-out;
+
+  &::before { content: "×"; }
+
+  &:hover,
+  &:focus {
+    color: #000;
+    opacity: 0.75;
+  }
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+}
+
+/* -------- Animations -------- */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes celebration-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-20px); }
+}
+
+.celebration-icon {
+  animation: celebration-bounce 1s ease-in-out;
+}
+
+/* ================================================================= */
+/* MOBILE — prevent overlap with the fixed bottom navigation bar     */
+/* ================================================================= */
+@media (max-width: 576px) {
+  // Shrink the modal container so it never extends into the bottom nav /
+  // audio player area. This is the definitive fix — the modal simply cannot
+  // render content below this boundary.
+  .modal {
+    bottom: $mobile-nav-height;
+  }
+
+  // For modals that use .modal-backdrop as their outermost wrapper
+  // (e.g. transfer-ticket-modal), shrink that container too.
+  .modal-backdrop {
+    bottom: $mobile-nav-height;
+  }
+
+  // Constrain content height so tall modals scroll internally rather than
+  // overflowing outside the container boundary set above.
+  .modal-content {
+    max-height: calc(100dvh - #{$mobile-nav-height} - 60px); // 60px = top margin
+    max-height: calc(100vh  - #{$mobile-nav-height} - 60px); // fallback
+    max-height: calc(100dvh - #{$mobile-nav-height} - 60px); // dvh preferred
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+
+  // Allow body to scroll when content is tall
+  .modal-body {
+    @apply tw-overflow-y-auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .modal-dialog {
+    @apply tw-m-0 tw-max-w-full;
+  }
+
+  .modal-dialog-centered {
+    align-items: flex-end;
+    min-height: 100%;
+  }
+
+  // Override scrollable-dialog max-height for mobile
+  .modal-dialog-scrollable .modal-content {
+    max-height: calc(100dvh - #{$mobile-nav-height} - 60px);
+    max-height: calc(100vh  - #{$mobile-nav-height} - 60px);
+    max-height: calc(100dvh - #{$mobile-nav-height} - 60px);
+  }
+
+  .modal-footer {
+    // Buttons sit side by side, each growing to fill half the footer width
+    @apply tw-gap-2 tw-px-4 tw-py-3;
+    flex-shrink: 0;
+
+    button,
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-ghost {
+      @apply tw-flex-1 tw-justify-center tw-text-sm tw-py-2 tw-px-2;
+    }
+  }
+}

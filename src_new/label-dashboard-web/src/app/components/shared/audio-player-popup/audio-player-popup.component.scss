@@ -252,17 +252,26 @@
   }
 }
 
+// Clear the mobile bottom nav (visible at ≤991px, ~70px tall)
+@media (max-width: 991px) {
+  .audio-player-popup {
+    bottom: 80px;
+  }
+}
+
 // Mobile responsive
 @media (max-width: 576px) {
   .audio-player-popup {
-    bottom: 10px;
+    bottom: 80px;
     left: 10px;
     right: 10px;
     transform: none;
     width: auto;
     max-width: none;
-    flex-direction: column;
-    padding: 12px 16px;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    padding-right: 36px; // room for close button
     gap: 10px;
     border-radius: 12px;
   }
@@ -278,26 +287,46 @@
     }
   }
 
+  .play-pause-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
   .track-info {
-    width: 100%;
+    min-width: 0;
     max-width: none;
-    text-align: center;
+    flex: 1;
+    text-align: left;
+
+    .track-title {
+      font-size: 13px;
+    }
+
+    .track-artist {
+      font-size: 11px;
+    }
   }
 
   .player-controls {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
   }
 
   .progress-section {
-    order: 2;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
   }
 
-  .play-pause-btn {
-    order: 1;
+  .time {
+    display: none; // hide timestamps to save space
   }
 
   .close-btn-corner {
-    order: 3;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 8px;
   }
 }
