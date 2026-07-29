@@ -105,7 +105,7 @@
                 <app-icon name="spinner" class="tw-animate-spin" *ngIf="searchingSongs" />
               </button>
               <input type="text" class="tw-input" [(ngModel)]="songSearchQuery" (input)="onSearchInput()" placeholder="Search songs to add...">
-              <button *ngIf="editingPitch" class="tw-border-none tw-bg-transparent tw-p-1.5 tw-text-gray-500 hover:tw-text-gray-800 tw-cursor-pointer tw-rounded disabled:tw-opacity-50" type="button"
+              <button class="tw-border-none tw-bg-transparent tw-p-1.5 tw-text-gray-500 hover:tw-text-gray-800 tw-cursor-pointer tw-rounded disabled:tw-opacity-50" type="button"
                       [disabled]="loadingRecommendations"
                       [class.active]="isAiMode"
                       (click)="toggleAiMode()"
@@ -149,6 +149,16 @@
                     <app-icon name="warning" class="tw-mr-1" />{{ getSongWarnings(rec).join(' · ') }}
                   </span>
                 </div>
+                <span *ngIf="hasSongAudio(rec)"
+                      class="song-search-row__play-btn"
+                      role="button"
+                      tabindex="0"
+                      (click)="toggleSongPlay($event, rec)"
+                      [title]="isSongPlaying(rec) ? 'Pause' : 'Play preview'">
+                  <app-icon name="spinner" class="tw-animate-spin" *ngIf="isSongLoading(rec)" />
+                  <app-icon name="pause" *ngIf="!isSongLoading(rec) && isSongPlaying(rec)" />
+                  <app-icon name="play" *ngIf="!isSongLoading(rec) && !isSongPlaying(rec)" />
+                </span>
                 <app-icon name="check" class="song-search-row__add-icon song-search-row__add-icon--done" *ngIf="isRecommendedSongSelected(rec)" />
                 <app-icon name="plus" class="song-search-row__add-icon" *ngIf="!isRecommendedSongSelected(rec)" />
               </button>
@@ -170,6 +180,16 @@
                     <app-icon name="warning" class="tw-mr-1" />{{ getSongWarnings(song).join(' · ') }}
                   </span>
                 </div>
+                <span *ngIf="hasSongAudio(song)"
+                      class="song-search-row__play-btn"
+                      role="button"
+                      tabindex="0"
+                      (click)="toggleSongPlay($event, song)"
+                      [title]="isSongPlaying(song) ? 'Pause' : 'Play preview'">
+                  <app-icon name="spinner" class="tw-animate-spin" *ngIf="isSongLoading(song)" />
+                  <app-icon name="pause" *ngIf="!isSongLoading(song) && isSongPlaying(song)" />
+                  <app-icon name="play" *ngIf="!isSongLoading(song) && !isSongPlaying(song)" />
+                </span>
                 <app-icon name="plus" class="song-search-row__add-icon" />
               </button>
             </ng-container>
@@ -194,9 +214,19 @@
                     </small>
                   </div>
                 </div>
-                <button type="button" class="tw-border-none tw-bg-transparent tw-p-1 tw-text-danger tw-cursor-pointer tw-rounded disabled:tw-opacity-50" (click)="removeSong(song)">
-                  <app-icon name="x" />
-                </button>
+                <div class="tw-flex tw-items-center tw-gap-1">
+                  <button *ngIf="hasSongAudio(song)" type="button"
+                          class="tw-border-none tw-bg-transparent tw-p-1 tw-text-gray-400 hover:tw-text-indigo-500 tw-cursor-pointer tw-rounded"
+                          (click)="toggleSongPlay($event, song)"
+                          [title]="isSongPlaying(song) ? 'Pause' : 'Play preview'">
+                    <app-icon name="spinner" class="tw-animate-spin" *ngIf="isSongLoading(song)" />
+                    <app-icon name="pause" *ngIf="!isSongLoading(song) && isSongPlaying(song)" />
+                    <app-icon name="play" *ngIf="!isSongLoading(song) && !isSongPlaying(song)" />
+                  </button>
+                  <button type="button" class="tw-border-none tw-bg-transparent tw-p-1 tw-text-danger tw-cursor-pointer tw-rounded disabled:tw-opacity-50" (click)="removeSong(song)">
+                    <app-icon name="x" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

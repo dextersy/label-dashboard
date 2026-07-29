@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SongForPitch, SongRecommendation } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
+import { AudioPlayerService, AudioPlayerState } from '../../services/audio-player.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
@@ -122,6 +123,9 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   recommendationsError = '';
   isAiMode = false;
 
+  // Audio player state
+  playerState: AudioPlayerState | null = null;
+
   headerActions: HeaderAction[] = [
     {
       icon: 'plus',
@@ -183,9 +187,13 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
     private route: ActivatedRoute,
+    public audioPlayerService: AudioPlayerService,
   ) {}
 
   ngOnInit(): void {
+    this.subscriptions.add(
+      this.audioPlayerService.state$.subscribe(state => this.playerState = state)
+    );
     this.loadPitches();
     const openId = this.route.snapshot.queryParamMap.get('open');
     if (openId) {
@@ -283,10 +291,6 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   }
 
   toggleAiMode(): void {
-    if (!this.editingPitch) {
-      this.notificationService.showError('Save the pitch first to use AI recommendations.');
-      return;
-    }
     if (this.isAiMode) {
       this.isAiMode = false;
       return;
@@ -305,13 +309,16 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   }
 
   getRecommendations(): void {
-    if (!this.editingPitch) return;
     this.loadingRecommendations = true;
     this.recommendationsError = '';
     this.recommendations = [];
 
+    const arg = this.editingPitch
+      ? this.editingPitch.id
+      : { title: this.pitchForm.title, description: this.pitchForm.description };
+
     this.subscriptions.add(
-      this.syncLicensingService.getPitchRecommendations(this.editingPitch.id).subscribe({
+      this.syncLicensingService.getPitchRecommendations(arg).subscribe({
         next: (res) => {
           this.recommendations = res.recommendations;
           this.loadingRecommendations = false;
@@ -717,6 +724,34 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   formatAudioFeatures(song: SongForPitch | SongRecommendation): string {
     return this.getAudioChips(song).join(' · ');
+  }
+
+  getSongId(song: SongForPitch | SongRecommendation): number {
+    return (song as SongForPitch).id ?? (song as SongRecommendation).song_id;
+  }
+
+  hasSongAudio(song: SongForPitch | SongRecommendation): boolean {
+    return !!(song as any).audio_file_mp3;
+  }
+
+  toggleSongPlay(event: MouseEvent, song: SongForPitch | SongRecommendation): void {
+    event.stopPropagation();
+    const id = this.getSongId(song);
+    const track = {
+      id,
+      audio_file: (song as any).audio_file_mp3 || 'present',
+      title: song.title,
+      artist_name: song.release?.artists?.[0]?.name,
+    };
+    this.audioPlayerService.togglePlay(track);
+  }
+
+  isSongPlaying(song: SongForPitch | SongRecommendation): boolean {
+    return this.playerState?.playingSongId === this.getSongId(song);
+  }
+
+  isSongLoading(song: SongForPitch | SongRecommendation): boolean {
+    return this.playerState?.loadingSongId === this.getSongId(song);
   }
 
   formatDuration(seconds: number | undefined): string {

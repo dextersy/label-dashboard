@@ -34,7 +34,8 @@ router.post('/', createPitch);
 router.put('/:id', updatePitch);
 router.delete('/:id', deletePitch);
 
-// AI: get recommended songs for a pitch
+// AI: get recommended songs for a pitch (unsaved pitch passes title/description in body; saved pitch uses /:id)
+router.post('/recommendations', getPitchRecommendations);
 router.post('/:id/recommendations', getPitchRecommendations);
 
 // Downloads (rate limited - streams S3 objects through the server)

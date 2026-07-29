@@ -1381,17 +1381,27 @@ function extractKeywords(text: string): string[] {
 export const getPitchRecommendations = async (req: Request, res: Response): Promise<void> => {
   try {
     const brandId = (req as any).user?.brand_id;
-    const pitchId = parseInt(req.params.id as string, 10);
 
-    if (isNaN(pitchId)) {
-      res.status(400).json({ error: 'Invalid pitch ID' });
-      return;
-    }
+    // Accept title/description from body (unsaved pitch) or fall back to loading a saved pitch by ID
+    let title: string;
+    let description: string | undefined;
 
-    const pitch = await SyncLicensingPitch.findOne({ where: { id: pitchId, brand_id: brandId } });
-    if (!pitch) {
-      res.status(404).json({ error: 'Pitch not found' });
-      return;
+    if (req.body?.title) {
+      title = req.body.title;
+      description = req.body.description || undefined;
+    } else {
+      const pitchId = parseInt(req.params.id as string, 10);
+      if (isNaN(pitchId)) {
+        res.status(400).json({ error: 'Invalid pitch ID' });
+        return;
+      }
+      const pitch = await SyncLicensingPitch.findOne({ where: { id: pitchId, brand_id: brandId } });
+      if (!pitch) {
+        res.status(404).json({ error: 'Pitch not found' });
+        return;
+      }
+      title = pitch.title;
+      description = pitch.description || undefined;
     }
 
     const apiKey = process.env.GROQ_API_KEY;
@@ -1401,7 +1411,7 @@ export const getPitchRecommendations = async (req: Request, res: Response): Prom
     }
 
     // --- Stage 1: SQL keyword pre-filter ---
-    const pitchText = [pitch.title, pitch.description].filter(Boolean).join(' ');
+    const pitchText = [title, description].filter(Boolean).join(' ');
     const keywords = extractKeywords(pitchText);
 
     const baseWhere: any = {
@@ -1412,7 +1422,7 @@ export const getPitchRecommendations = async (req: Request, res: Response): Prom
     let candidates: Song[];
 
     // Require meaningful pitch content — title alone with no keywords is not enough
-    const pitchHasEnoughContext = keywords.length >= 3 || (keywords.length >= 2 && pitch.description && pitch.description.trim().length >= 20);
+    const pitchHasEnoughContext = keywords.length >= 3 || (keywords.length >= 2 && description && description.trim().length >= 20);
 
     if (!pitchHasEnoughContext) {
       res.json({ recommendations: [], insufficient_context: true });
@@ -1469,8 +1479,8 @@ export const getPitchRecommendations = async (req: Request, res: Response): Prom
       .join('\n');
 
     const pitchContext = [
-      `Pitch title: "${pitch.title}"`,
-      pitch.description ? `Pitch description: ${pitch.description}` : '',
+      `Pitch title: "${title}"`,
+      description ? `Pitch description: ${description}` : '',
     ].filter(Boolean).join('\n');
 
     const prompt = `You are a music supervisor assistant helping match songs to a sync licensing opportunity.
@@ -1550,6 +1560,7 @@ Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Ex
         audio_danceability: s.audio_danceability ?? null,
         audio_loudness: s.audio_loudness ?? null,
         audio_mood: s.audio_mood ?? null,
+        audio_file_mp3: s.audio_file_mp3 ?? null,
         isrc: s.isrc ?? null,
         lyrics: s.lyrics ?? null,
         authors: s.authors ?? [],
