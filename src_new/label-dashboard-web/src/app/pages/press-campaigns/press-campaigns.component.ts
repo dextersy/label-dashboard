@@ -118,12 +118,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
         const typeBadge = c.campaign_type === 'event'
           ? `<span class="status-badge status-info tw-mr-1">Event</span>`
           : `<span class="status-badge status-secondary tw-mr-1">Release</span>`;
-        const status = c.status === 'Published'
-          ? `<span class="status-badge status-success tw-ml-1">Published</span>`
-          : c.status === 'Sent'
-          ? `<span class="status-badge status-info tw-ml-1">Sent</span>`
-          : `<span class="status-badge status-warning tw-ml-1">Draft</span>`;
-        return `<span style="display:inline-flex;align-items:center;gap:10px;">${avatar}<span><strong>${c.title}</strong> ${typeBadge}${status}</span></span>`;
+        return `<span style="display:inline-flex;align-items:center;gap:10px;">${avatar}<span><strong>${c.title}</strong> ${typeBadge}</span></span>`;
       },
     },
     {
