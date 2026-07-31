@@ -43,9 +43,8 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     ],
   };
 
-  // Create/Edit modal
+  // Create modal
   showModal = false;
-  editingCampaign: PressCampaign | null = null;
   saving = false;
   selectedTone = '';
   additionalInstructions = '';
@@ -87,6 +86,9 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   showDetailModal = false;
   detailCampaign: PressCampaign | null = null;
   loadingDetail = false;
+  editingField: string | null = null;
+  fieldOriginals: any = {};
+  writeupExpanded = false;
   uploadingCoverArt = false;
   uploadingMp3 = false;
   uploadingPhoto = false;
@@ -176,7 +178,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   ];
 
   readonly actions: TableAction[] = [
-    { icon: 'edit', label: 'Manage / Upload Files', primary: true, handler: (c: PressCampaign) => this.openDetailModal(c) },
+    { icon: 'edit', label: 'Manage Campaign', primary: true, handler: (c: PressCampaign) => this.openDetailModal(c) },
     { icon: 'file', label: 'Download Press Release (.docx)', handler: (c: PressCampaign) => this.downloadWord(c) },
     { icon: 'link', label: 'View Public Page', handler: (c: PressCampaign) => this.openPublicPage(c) },
     {
@@ -191,7 +193,6 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       hidden: (c: PressCampaign) => c.status !== 'Published',
       handler: (c: PressCampaign) => this.updateCampaignStatus(c, 'Sent'),
     },
-    { icon: 'edit', label: 'Edit Details', handler: (c: PressCampaign) => this.openEditModal(c) },
     { icon: 'trash', label: 'Delete', type: 'danger', handler: (c: PressCampaign) => this.deleteCampaign(c) },
   ];
 
@@ -348,37 +349,15 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     this.loadCampaigns(1);
   }
 
-  // --- Create / Edit modal ---
+  // --- Create modal ---
 
   openCreateModal(): void {
-    this.editingCampaign = null;
     this.resetForm();
-    this.showModal = true;
-  }
-
-  openEditModal(campaign: PressCampaign): void {
-    this.editingCampaign = campaign;
-    this.campaignForm = {
-      title: campaign.title,
-      writeup: campaign.writeup || '',
-      status: campaign.status,
-      campaign_type: campaign.campaign_type || 'release',
-      release_id: campaign.release_id || null,
-      artist_id: campaign.artist_id || null,
-      event_id: campaign.event_id || null,
-    };
-    this.selectedRelease = campaign.release || null;
-    this.selectedArtist = campaign.artist || null;
-    this.selectedEvent = campaign.event || null;
-    this.releaseSearchQuery = campaign.release?.title || '';
-    this.artistSearchQuery = campaign.artist?.name || '';
-    this.eventSearchQuery = campaign.event?.title || '';
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
-    this.editingCampaign = null;
   }
 
   resetForm(): void {
@@ -418,9 +397,9 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   }
 
   draftWithAi(): void {
-    if (!this.editingCampaign?.id) return;
+    if (!this.detailCampaign?.id) return;
     this.isGeneratingWriteup = true;
-    this.pressCampaignService.generateWriteup(this.editingCampaign.id, this.selectedTone, this.additionalInstructions).subscribe({
+    this.pressCampaignService.generateWriteup(this.detailCampaign.id, this.selectedTone, this.additionalInstructions).subscribe({
       next: result => {
         this.campaignForm.writeup = result.writeup;
         this.isGeneratingWriteup = false;
@@ -448,11 +427,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       event_id: isEvent ? (this.campaignForm.event_id || null) : null,
     };
 
-    const request = this.editingCampaign
-      ? this.pressCampaignService.updateCampaign(this.editingCampaign.id, data)
-      : this.pressCampaignService.createCampaign(data);
-
-    request.subscribe({
+    this.pressCampaignService.createCampaign(data).subscribe({
       next: () => {
         this.saving = false;
         this.closeModal();
@@ -545,15 +520,112 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     this.detailCampaign = null;
     this.showDetailModal = true;
     this.loadingDetail = true;
+    this.editingField = null;
+    this.writeupExpanded = false;
     this.pressCampaignService.getCampaign(campaign.id).subscribe({
-      next: res => { this.detailCampaign = res.campaign; this.loadingDetail = false; },
+      next: res => { this.detailCampaign = res.campaign; this.populateFormFromDetail(); this.loadingDetail = false; },
       error: () => { this.loadingDetail = false; this.notification.showError('Failed to load campaign details.'); },
     });
+  }
+
+  private populateFormFromDetail(): void {
+    if (!this.detailCampaign) return;
+    this.campaignForm = {
+      title: this.detailCampaign.title,
+      writeup: this.detailCampaign.writeup || '',
+      status: this.detailCampaign.status,
+      campaign_type: this.detailCampaign.campaign_type || 'release',
+      release_id: this.detailCampaign.release_id || null,
+      artist_id: this.detailCampaign.artist_id || null,
+      event_id: this.detailCampaign.event_id || null,
+    };
+    this.selectedRelease = this.detailCampaign.release || null;
+    this.selectedArtist = this.detailCampaign.artist || null;
+    this.selectedEvent = this.detailCampaign.event || null;
+    this.showAiOptions = false;
+    this.selectedTone = '';
+    this.additionalInstructions = '';
   }
 
   closeDetailModal(): void {
     this.showDetailModal = false;
     this.detailCampaign = null;
+    this.editingField = null;
+    this.writeupExpanded = false;
+  }
+
+  get isDraftCampaign(): boolean {
+    return this.detailCampaign?.status === 'Draft';
+  }
+
+  startEditingField(field: string): void {
+    this.fieldOriginals = {
+      title: this.campaignForm.title,
+      status: this.campaignForm.status,
+      writeup: this.campaignForm.writeup,
+      release_id: this.campaignForm.release_id,
+      event_id: this.campaignForm.event_id,
+      artist_id: this.campaignForm.artist_id,
+      selectedRelease: this.selectedRelease,
+      selectedEvent: this.selectedEvent,
+      selectedArtist: this.selectedArtist,
+    };
+    this.editingField = field;
+  }
+
+  cancelEditingField(): void {
+    this.campaignForm.title = this.fieldOriginals['title'];
+    this.campaignForm.status = this.fieldOriginals['status'];
+    this.campaignForm.writeup = this.fieldOriginals['writeup'];
+    this.campaignForm.release_id = this.fieldOriginals['release_id'];
+    this.campaignForm.event_id = this.fieldOriginals['event_id'];
+    this.campaignForm.artist_id = this.fieldOriginals['artist_id'];
+    this.selectedRelease = this.fieldOriginals['selectedRelease'];
+    this.selectedEvent = this.fieldOriginals['selectedEvent'];
+    this.selectedArtist = this.fieldOriginals['selectedArtist'];
+    this.editingField = null;
+    this.releaseSearchQuery = '';
+    this.releaseSearchResults = [];
+    this.eventSearchQuery = '';
+    this.eventSearchResults = [];
+    this.artistSearchQuery = '';
+    this.artistSearchResults = [];
+  }
+
+  saveField(): void {
+    this.saveCampaignDetails();
+  }
+
+  saveCampaignDetails(): void {
+    if (!this.detailCampaign || !this.campaignForm.title.trim()) return;
+    this.saving = true;
+    const isEvent = this.campaignForm.campaign_type === 'event';
+    const data = {
+      title: this.campaignForm.title.trim(),
+      writeup: this.campaignForm.writeup || undefined,
+      status: this.campaignForm.status,
+      campaign_type: this.campaignForm.campaign_type,
+      release_id: isEvent ? null : (this.campaignForm.release_id || null),
+      artist_id: isEvent ? (this.campaignForm.artist_id || null) : null,
+      event_id: isEvent ? (this.campaignForm.event_id || null) : null,
+    };
+    this.pressCampaignService.updateCampaign(this.detailCampaign.id, data).subscribe({
+      next: () => {
+        this.saving = false;
+        this.editingField = null;
+        this.loadingDetail = true;
+        this.pressCampaignService.getCampaign(this.detailCampaign!.id).subscribe({
+          next: res => { this.detailCampaign = res.campaign; this.populateFormFromDetail(); this.loadingDetail = false; },
+          error: () => { this.loadingDetail = false; },
+        });
+        this.loadCampaigns();
+      },
+      error: (err) => {
+        this.saving = false;
+        const msg = err?.error?.error || 'Failed to save campaign.';
+        this.notification.showError(msg);
+      },
+    });
   }
 
   onCoverArtSelected(event: Event): void {
