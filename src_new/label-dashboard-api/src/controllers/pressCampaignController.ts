@@ -1589,7 +1589,7 @@ export const generateWriteup = async (req: Request, res: Response) => {
 - Wrap release/album/EP titles in <em> tags (e.g. <em>Album Title</em>).
 - Wrap song titles in double quotes (e.g. "Song Title"). If a song title appears inside an existing quoted passage, use single quotes instead (e.g. 'Song Title').
 - Mention song titles naturally within prose paragraphs — never as a bullet list.
-- Include at least one fabricated but believable quote from the artist or band about the release or event, written as a natural paragraph with the quote inline (e.g. <p>"Quote here," says <strong>Artist Name</strong>. "Continued quote."</p>).
+- Treat the liner notes/description as a direct quote from the artist or band. Use it (or a meaningful excerpt from it) as an inline quote in the press release, formatted as a natural paragraph (e.g. <p>"Quote here," says <strong>Artist Name</strong>. "Continued quote."</p>). Do NOT fabricate or invent quotes beyond what is provided in the liner notes/description or additional instructions.
 - Do not include a subject line, "FOR IMMEDIATE RELEASE" header, catalog numbers, or any markdown — just the formatted HTML body paragraphs.
 - Always end the article with a call-to-action paragraph wrapped in <p> tags. ${isUpcoming ? 'Since this is an upcoming release/event, the CTA should tell readers it is available for pre-save.' : 'Since this is an already-released work, the CTA should tell readers it is now available on all major streaming platforms.'} The CTA text must be wrapped in <strong> tags.`);
 
