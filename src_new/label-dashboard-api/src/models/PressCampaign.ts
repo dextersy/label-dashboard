@@ -13,7 +13,7 @@ interface PressCampaignAttributes {
   cover_art?: string;
   mp3_file?: string;
   public_slug: string;
-  status: 'Draft' | 'Published';
+  status: 'Draft' | 'Published' | 'Sent';
   created_by: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -33,7 +33,7 @@ class PressCampaign extends Model<PressCampaignAttributes, PressCampaignCreation
   public cover_art?: string;
   public mp3_file?: string;
   public public_slug!: string;
-  public status!: 'Draft' | 'Published';
+  public status!: 'Draft' | 'Published' | 'Sent';
   public created_by!: number;
 
   public artist?: any;
@@ -108,7 +108,7 @@ PressCampaign.init(
       unique: true,
     },
     status: {
-      type: DataTypes.ENUM('Draft', 'Published'),
+      type: DataTypes.ENUM('Draft', 'Published', 'Sent'),
       allowNull: false,
       defaultValue: 'Draft',
     },

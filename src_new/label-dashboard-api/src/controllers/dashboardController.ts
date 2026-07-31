@@ -727,7 +727,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
 
     // Press campaigns stats
     const [publishedPressCampaignsCount, draftPressCampaignsCount, recentPressCampaignsRaw] = await Promise.all([
-      PressCampaign.count({ where: { ...brandFilter, status: 'Published' } }),
+      PressCampaign.count({ where: { ...brandFilter, status: ['Draft', 'Published'] } }),
       PressCampaign.count({ where: { ...brandFilter, status: 'Draft' } }),
       PressCampaign.findAll({
         where: { ...brandFilter },
@@ -813,7 +813,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         activeFundraisers: activeFundraisersCount,
         activeEventsSales: activeEventsSales,
         activeFundraisersDonations: activeFundraisersDonations,
-        publishedPressCampaigns: publishedPressCampaignsCount,
+        activePressCampaigns: publishedPressCampaignsCount,
         draftPressCampaigns: draftPressCampaignsCount,
         syncPitches: syncPitchesCount
       },

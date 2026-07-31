@@ -309,7 +309,7 @@ export const getPressCampaigns = async (req: Request, res: Response) => {
     if (req.query.title) {
       where.title = { [Op.like]: `%${escapeLikeWildcards(req.query.title as string)}%` };
     }
-    if (req.query.status === 'Draft' || req.query.status === 'Published') {
+    if (req.query.status === 'Draft' || req.query.status === 'Published' || req.query.status === 'Sent') {
       where.status = req.query.status;
     }
 
@@ -407,7 +407,7 @@ export const createPressCampaign = async (req: Request, res: Response) => {
       artist_id: type === 'event' ? (artist_id || null) : null,
       event_id: type === 'event' ? (event_id || null) : null,
       public_slug: slug,
-      status: status === 'Published' ? 'Published' : 'Draft',
+      status: status === 'Published' ? 'Published' : status === 'Sent' ? 'Sent' : 'Draft',
       created_by: userId,
     } as any);
 
@@ -463,7 +463,7 @@ export const updatePressCampaign = async (req: Request, res: Response) => {
       }
       campaign.release_id = null;
     }
-    if (status !== undefined && (status === 'Draft' || status === 'Published')) {
+    if (status !== undefined && (status === 'Draft' || status === 'Published' || status === 'Sent')) {
       campaign.status = status;
     }
 

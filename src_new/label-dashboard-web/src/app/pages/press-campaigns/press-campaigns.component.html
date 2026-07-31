@@ -13,7 +13,9 @@
     </div>
   </div>
 
-  <!-- Campaigns Table -->
+  <!-- Status Filter / Campaigns Table -->
+  <app-in-page-nav [tabs]="statusTabs" [activeTab]="activeStatusFilter" (tabChange)="onStatusTabChange($event)">
+
   <app-paginated-table
     title="Campaigns"
     [data]="campaigns"
@@ -68,7 +70,7 @@
 
           <!-- Row 3: status badge + date -->
           <div class="campaign-row__footer">
-            <span class="status-badge" [class.status-success]="c.status === 'Published'" [class.status-warning]="c.status !== 'Published'">
+            <span class="status-badge" [class.status-success]="c.status === 'Published'" [class.status-info]="c.status === 'Sent'" [class.status-warning]="c.status === 'Draft'">
               {{ c.status }}
             </span>
             <span *ngIf="c.createdAt" class="campaign-row__date">{{ c.createdAt | date:'mediumDate' }}</span>
@@ -89,6 +91,8 @@
     </ng-template>
 
   </app-paginated-table>
+
+  </app-in-page-nav>
 
 </div>
 
@@ -142,6 +146,7 @@
           <select class="tw-input" id="campStatus" [(ngModel)]="campaignForm.status">
             <option value="Draft">Draft</option>
             <option value="Published">Published</option>
+            <option value="Sent">Sent</option>
           </select>
           <small class="tw-text-muted">Only Published campaigns are visible on the public page.</small>
         </div>

@@ -81,7 +81,7 @@ export interface PressCampaign {
   cover_art?: string;
   mp3_file?: string;
   public_slug: string;
-  status: 'Draft' | 'Published';
+  status: 'Draft' | 'Published' | 'Sent';
   created_by: number;
   createdAt?: string;
   updatedAt?: string;

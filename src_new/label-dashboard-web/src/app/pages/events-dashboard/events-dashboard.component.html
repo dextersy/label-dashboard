@@ -165,8 +165,8 @@
          class="tw-no-underline tw-flex tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
         <div class="tw-text-lg tw-opacity-70 tw-text-[#7c3aed] tw-flex-shrink-0"><app-icon name="newspaper" /></div>
         <div>
-          <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.publishedPressCampaigns || 0 }}</div>
-          <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Press Campaigns</div>
+          <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activePressCampaigns || 0 }}</div>
+          <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Active campaigns</div>
         </div>
       </a>
 
@@ -246,6 +246,7 @@
         </span>
         <span class="tw-absolute tw-top-2.5 tw-left-2.5 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-px-2 tw-py-0.5 tw-rounded-full"
               [class.tw-text-green-300]="campaign.status === 'Published'"
+              [class.tw-text-blue-300]="campaign.status === 'Sent'"
               [class.tw-text-gray-300]="campaign.status === 'Draft'"
               style="background: rgba(0,0,0,0.3);">{{ campaign.status }}</span>
         <div class="tw-absolute tw-bottom-0 tw-left-0 tw-right-0 tw-px-3.5 tw-pb-3 tw-text-white">

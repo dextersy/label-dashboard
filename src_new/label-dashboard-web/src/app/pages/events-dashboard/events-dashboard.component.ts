@@ -17,7 +17,7 @@ interface CampaignsDashboardStats {
   activeFundraisers: number;
   activeEventsSales: number;
   activeFundraisersDonations: number;
-  publishedPressCampaigns: number;
+  activePressCampaigns: number;
   draftPressCampaigns: number;
   syncPitches: number;
 }
@@ -26,7 +26,7 @@ export interface RecentPressCampaign {
   id: number;
   title: string;
   campaign_type: 'release' | 'event';
-  status: 'Draft' | 'Published';
+  status: 'Draft' | 'Published' | 'Sent';
   public_slug: string;
   release_cover_art: string | null;
   event_poster_url: string | null;

@@ -10,6 +10,7 @@ import { PressCampaign } from '../../models/press-campaign.model';
 import { PaginatedTableComponent, TableColumn, TableAction, PaginationInfo, SearchFilters, SortInfo, HeaderAction } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { NotificationService } from '../../services/notification.service';
 import { environment } from '../../../environments/environment';
@@ -17,7 +18,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-press-campaigns',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent],
+  imports: [CommonModule, FormsModule, QuillModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent, InPageNavComponent],
   templateUrl: './press-campaigns.component.html',
   styleUrl: './press-campaigns.component.scss',
 })
@@ -27,6 +28,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   pagination: PaginationInfo | null = null;
   currentFilters: SearchFilters = {};
   currentSort: SortInfo | null = null;
+  activeStatusFilter = 'all';
 
   // Brand feature flags
   hasReleases = true;
@@ -52,7 +54,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   campaignForm = {
     title: '',
     writeup: '',
-    status: 'Draft' as 'Draft' | 'Published',
+    status: 'Draft' as 'Draft' | 'Published' | 'Sent',
     campaign_type: 'release' as 'release' | 'event',
     release_id: null as number | null,
     artist_id: null as number | null,
@@ -116,6 +118,8 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
           : `<span class="status-badge status-secondary tw-mr-1">Release</span>`;
         const status = c.status === 'Published'
           ? `<span class="status-badge status-success tw-ml-1">Published</span>`
+          : c.status === 'Sent'
+          ? `<span class="status-badge status-info tw-ml-1">Sent</span>`
           : `<span class="status-badge status-warning tw-ml-1">Draft</span>`;
         return `<span style="display:inline-flex;align-items:center;gap:10px;">${avatar}<span><strong>${c.title}</strong> ${typeBadge}${status}</span></span>`;
       },
@@ -141,6 +145,8 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       formatter: (c: PressCampaign) =>
         c.status === 'Published'
           ? '<span class="status-badge status-success">Published</span>'
+          : c.status === 'Sent'
+          ? '<span class="status-badge status-info">Sent</span>'
           : '<span class="status-badge status-warning">Draft</span>',
     },
     {
@@ -173,6 +179,18 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     { icon: 'edit', label: 'Manage / Upload Files', primary: true, handler: (c: PressCampaign) => this.openDetailModal(c) },
     { icon: 'file', label: 'Download Press Release (.docx)', handler: (c: PressCampaign) => this.downloadWord(c) },
     { icon: 'link', label: 'View Public Page', handler: (c: PressCampaign) => this.openPublicPage(c) },
+    {
+      icon: 'check',
+      label: 'Publish',
+      hidden: (c: PressCampaign) => c.status !== 'Draft',
+      handler: (c: PressCampaign) => this.updateCampaignStatus(c, 'Published'),
+    },
+    {
+      icon: 'paper-plane',
+      label: 'Mark as sent',
+      hidden: (c: PressCampaign) => c.status !== 'Published',
+      handler: (c: PressCampaign) => this.updateCampaignStatus(c, 'Sent'),
+    },
     { icon: 'edit', label: 'Edit Details', handler: (c: PressCampaign) => this.openEditModal(c) },
     { icon: 'trash', label: 'Delete', type: 'danger', handler: (c: PressCampaign) => this.deleteCampaign(c) },
   ];
@@ -262,6 +280,27 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     });
   }
 
+  readonly statusTabs: InPageNavTab[] = [
+    { id: 'all', label: 'All', icon: 'filter' },
+    { id: 'Draft', label: 'Draft', icon: 'file' },
+    { id: 'Published', label: 'Published', icon: 'globe' },
+    { id: 'Sent', label: 'Sent', icon: 'paper-plane' },
+  ];
+
+  onStatusTabChange(id: string): void {
+    this.activeStatusFilter = id;
+    this.loadCampaigns(1);
+  }
+
+  updateCampaignStatus(campaign: PressCampaign, status: 'Draft' | 'Published' | 'Sent'): void {
+    this.pressCampaignService.updateCampaign(campaign.id, { status }).subscribe({
+      next: () => this.loadCampaigns(),
+      error: () => this.notification.showError('Failed to update campaign status.'),
+    });
+  }
+
+  private readonly statusOrder: Record<string, number> = { Draft: 0, Published: 1, Sent: 2 };
+
   loadCampaigns(page = 1): void {
     this.loading = true;
     this.pressCampaignService.getCampaigns({
@@ -270,9 +309,16 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       sort_field: this.currentSort?.column,
       sort_order: this.currentSort?.direction?.toUpperCase(),
       title: this.currentFilters['title'],
+      status: this.activeStatusFilter !== 'all' ? this.activeStatusFilter : undefined,
     }).subscribe({
       next: res => {
-        this.campaigns = res.campaigns;
+        let campaigns = res.campaigns;
+        if (this.activeStatusFilter === 'all' && !this.currentSort) {
+          campaigns = [...campaigns].sort(
+            (a, b) => (this.statusOrder[a.status] ?? 3) - (this.statusOrder[b.status] ?? 3)
+          );
+        }
+        this.campaigns = campaigns;
         const p = res.pagination;
         this.pagination = {
           current_page: p.page,
@@ -284,7 +330,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
         };
         this.loading = false;
       },
-      error: () => { this.loading = false; this.notification.showError('Failed to load campaigns.'); },
+      error: () => { this.loading = false; this.campaigns = []; this.pagination = null; this.notification.showError('Failed to load campaigns.'); },
     });
   }
 
@@ -337,7 +383,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
 
   resetForm(): void {
     const defaultType = (!this.hasReleases && this.hasEvents) ? 'event' : 'release';
-    this.campaignForm = { title: '', writeup: '', status: 'Draft', campaign_type: defaultType, release_id: null, artist_id: null, event_id: null };
+    this.campaignForm = { title: '', writeup: '', status: 'Draft' as 'Draft' | 'Published' | 'Sent', campaign_type: defaultType, release_id: null, artist_id: null, event_id: null };
     this.selectedTone = '';
     this.additionalInstructions = '';
     this.showAiOptions = false;
