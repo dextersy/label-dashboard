@@ -852,7 +852,7 @@ export const getPublicCampaign = async (req: Request, res: Response) => {
     const { slug } = req.params;
 
     const campaign = await PressCampaign.findOne({
-      where: { public_slug: slug, status: 'Published' },
+      where: { public_slug: slug, status: ['Published', 'Sent'] },
       include: [
         { model: PressCampaignArtistPhoto, as: 'artistPhotos', order: [['sort_order', 'ASC']] as any },
         { model: PressCampaignLink, as: 'links', attributes: ['id', 'label', 'url', 'sort_order'], order: [['sort_order', 'ASC']] as any },
@@ -920,9 +920,9 @@ export const proxyDownload = async (req: Request, res: Response) => {
 
     if (!url) return res.status(400).json({ error: 'url is required' });
 
-    // Validate the campaign exists and is published
+    // Validate the campaign exists and is published or sent
     const campaign = await PressCampaign.findOne({
-      where: { public_slug: slug, status: 'Published' },
+      where: { public_slug: slug, status: ['Published', 'Sent'] },
       include: [{ model: PressCampaignArtistPhoto, as: 'artistPhotos' }],
     });
     if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
@@ -1005,7 +1005,7 @@ export const downloadArtistPhotosZip = async (req: Request, res: Response) => {
     const { slug } = req.params;
 
     const campaign = await PressCampaign.findOne({
-      where: { public_slug: slug, status: 'Published' },
+      where: { public_slug: slug, status: ['Published', 'Sent'] },
       include: [{ model: PressCampaignArtistPhoto, as: 'artistPhotos', order: [['sort_order', 'ASC']] as any }],
     });
     if (!campaign) return res.status(404).json({ error: 'Campaign not found' });

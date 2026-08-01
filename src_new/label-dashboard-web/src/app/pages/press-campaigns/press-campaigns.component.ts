@@ -764,4 +764,30 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   getReleaseArtistNames(release: any): string {
     return release.artists?.map((a: any) => a.name).join(', ') || '';
   }
+
+  getLinkedReferenceLinks(campaign: PressCampaign): { label: string; url: string }[] {
+    const links: { label: string; url: string }[] = [];
+    if (campaign.campaign_type === 'release' && campaign.release) {
+      const r = campaign.release;
+      if (r.spotify_link) links.push({ label: 'Spotify', url: r.spotify_link });
+      if (r.apple_music_link) links.push({ label: 'Apple Music', url: r.apple_music_link });
+      if (r.youtube_link) links.push({ label: 'YouTube', url: r.youtube_link });
+    } else if (campaign.campaign_type === 'event' && campaign.event) {
+      const e = campaign.event;
+      if (e.external_ticket_link) links.push({ label: 'Buy Tickets', url: e.external_ticket_link });
+      if (e.buy_shortlink) links.push({ label: 'Ticket Short Link', url: e.buy_shortlink });
+    }
+    return links;
+  }
+
+  getReleaseArtistPhotos(campaign: PressCampaign): { path: string; name: string }[] {
+    return (campaign.release?.artists || [])
+      .filter((a: any) => a.profile_photo)
+      .map((a: any) => ({ path: a.profile_photo, name: a.name }));
+  }
+
+  publishDraftCampaign(): void {
+    this.campaignForm.status = 'Published';
+    this.saveCampaignDetails();
+  }
 }
