@@ -755,7 +755,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
 
     // Sync licensing stats
     const [syncPitchesCount, recentSyncPitchesRaw] = await Promise.all([
-      SyncLicensingPitch.count({ where: brandFilter }),
+      SyncLicensingPitch.count({ where: { ...brandFilter, status: 'Draft' } }),
       SyncLicensingPitch.findAll({
         where: brandFilter,
         order: [['createdAt', 'DESC']],

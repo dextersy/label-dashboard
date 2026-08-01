@@ -249,8 +249,18 @@ export const getPitches = async (req: Request, res: Response) => {
     const safeSortField = allowedSortFields.includes(sortField) ? sortField : 'createdAt';
     const safeSortOrder = allowedSortOrders.includes(sortOrder) ? sortOrder : 'DESC';
 
+    // Status filter — default to excluding Deleted
+    const statusParam = (req.query.status as string || '').trim();
+    const allowedStatuses = ['Draft', 'Sent', 'Deleted'];
+    const statusFilter = allowedStatuses.includes(statusParam) ? statusParam : null;
+
     // Build where clause with search filters
     const where: any = { brand_id: brandId };
+    if (statusFilter) {
+      where.status = statusFilter;
+    } else {
+      where.status = { [Op.ne]: 'Deleted' };
+    }
     if (searchTitle) {
       where.title = { [Op.like]: `%${escapeLikeWildcards(searchTitle)}%` };
     }
@@ -341,7 +351,7 @@ export const createPitch = async (req: Request, res: Response) => {
   try {
     const brandId = (req as any).user?.brand_id;
     const userId = (req as any).user?.id;
-    const { title, description, song_ids } = req.body;
+    const { title, description, status, song_ids } = req.body;
 
     if (!brandId) {
       return res.status(400).json({ error: 'Brand ID is required' });
@@ -351,11 +361,15 @@ export const createPitch = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Title is required' });
     }
 
+    const allowedStatuses = ['Draft', 'Sent'];
+    const pitchStatus = allowedStatuses.includes(status) ? status : 'Draft';
+
     // Create the pitch
     const pitch = await SyncLicensingPitch.create({
       brand_id: brandId,
       title: title.trim(),
       description: description?.trim() || null,
+      status: pitchStatus,
       created_by: userId
     });
 
@@ -410,7 +424,7 @@ export const updatePitch = async (req: Request, res: Response) => {
     const brandId = (req as any).user?.brand_id;
     const { id } = req.params;
     const pitchId = parseInt(id as string, 10);
-    const { title, description, song_ids } = req.body;
+    const { title, description, status, song_ids } = req.body;
 
     if (!pitchId || isNaN(pitchId) || pitchId <= 0) {
       return res.status(400).json({ error: 'Valid pitch ID is required' });
@@ -433,6 +447,10 @@ export const updatePitch = async (req: Request, res: Response) => {
     }
     if (description !== undefined) {
       pitch.description = description?.trim() || null;
+    }
+    const allowedStatuses = ['Draft', 'Sent', 'Deleted'];
+    if (status !== undefined && allowedStatuses.includes(status)) {
+      pitch.status = status;
     }
 
     await pitch.save();
@@ -490,39 +508,6 @@ export const updatePitch = async (req: Request, res: Response) => {
 /**
  * Delete a sync licensing pitch
  */
-export const deletePitch = async (req: Request, res: Response) => {
-  try {
-    const brandId = (req as any).user?.brand_id;
-    const { id } = req.params;
-    const pitchId = parseInt(id as string, 10);
-
-    if (!pitchId || isNaN(pitchId) || pitchId <= 0) {
-      return res.status(400).json({ error: 'Valid pitch ID is required' });
-    }
-
-    const pitch = await SyncLicensingPitch.findOne({
-      where: { id: pitchId, brand_id: brandId }
-    });
-
-    if (!pitch) {
-      return res.status(404).json({ error: 'Pitch not found' });
-    }
-
-    // Delete associated songs first (cascade)
-    await SyncLicensingPitchSong.destroy({
-      where: { pitch_id: pitchId }
-    });
-
-    // Delete the pitch
-    await pitch.destroy();
-
-    res.json({ message: 'Pitch deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting sync licensing pitch:', error);
-    res.status(500).json({ error: 'Failed to delete sync licensing pitch' });
-  }
-};
-
 /**
  * Search songs for adding to a pitch (only songs with master audio)
  */

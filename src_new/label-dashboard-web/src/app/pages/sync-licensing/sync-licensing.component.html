@@ -12,7 +12,9 @@
     </div>
   </div>
 
-  <!-- Pitches Table -->
+  <!-- Status Filter / Pitches Table -->
+  <app-in-page-nav [tabs]="statusTabs" [activeTab]="activeStatusFilter" (tabChange)="onStatusTabChange($event)">
+
   <app-paginated-table
     title="Pitches"
     [data]="pitches"
@@ -46,9 +48,10 @@
         <!-- Row 2: subtitle (description, single truncated line) -->
         <div *ngIf="pitch.description" class="pitch-row__subtitle">{{ pitch.description }}</div>
 
-        <!-- Row 3: date left + song badges right -->
+        <!-- Row 3: date left + status + song badges right -->
         <div class="pitch-row__stats">
           <span class="pitch-row__stats-text">{{ pitch.createdAt | date:'mediumDate' }}</span>
+          <span class="badge" [class.bg-secondary]="pitch.status === 'Draft'" [class.bg-success]="pitch.status === 'Sent'">{{ pitch.status || 'Draft' }}</span>
           <span class="pitch-row__badges">
             <span *ngIf="getValidSongCount(pitch) > 0" class="pitch-row__ok-badge">
               <app-icon name="check" iconOnly class="pitch-row__badge-icon" />{{ getValidSongCount(pitch) }}
@@ -69,6 +72,8 @@
     </ng-template>
 
   </app-paginated-table>
+
+  </app-in-page-nav>
 </div>
 
 <!-- Create/Edit Pitch Modal -->

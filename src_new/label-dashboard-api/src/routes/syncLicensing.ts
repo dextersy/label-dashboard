@@ -4,7 +4,6 @@ import {
   getPitch,
   createPitch,
   updatePitch,
-  deletePitch,
   searchSongs,
   downloadMasters,
   downloadLyrics,
@@ -32,7 +31,6 @@ router.get('/', getPitches);
 router.get('/:id', getPitch);
 router.post('/', createPitch);
 router.put('/:id', updatePitch);
-router.delete('/:id', deletePitch);
 
 // AI: get recommended songs for a pitch (unsaved pitch passes title/description in body; saved pitch uses /:id)
 router.post('/recommendations', getPitchRecommendations);

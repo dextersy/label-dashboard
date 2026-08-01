@@ -1,23 +1,27 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
+export type SyncLicensingPitchStatus = 'Draft' | 'Sent' | 'Deleted';
+
 interface SyncLicensingPitchAttributes {
   id: number;
   brand_id: number;
   title: string;
   description?: string;
+  status: SyncLicensingPitchStatus;
   created_by: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface SyncLicensingPitchCreationAttributes extends Optional<SyncLicensingPitchAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+interface SyncLicensingPitchCreationAttributes extends Optional<SyncLicensingPitchAttributes, 'id' | 'status' | 'createdAt' | 'updatedAt'> {}
 
 class SyncLicensingPitch extends Model<SyncLicensingPitchAttributes, SyncLicensingPitchCreationAttributes> implements SyncLicensingPitchAttributes {
   public id!: number;
   public brand_id!: number;
   public title!: string;
   public description?: string;
+  public status!: SyncLicensingPitchStatus;
   public created_by!: number;
 
   // Association properties
@@ -50,6 +54,11 @@ SyncLicensingPitch.init(
     description: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    status: {
+      type: DataTypes.ENUM('Draft', 'Sent', 'Deleted'),
+      allowNull: false,
+      defaultValue: 'Draft',
     },
     created_by: {
       type: DataTypes.INTEGER,

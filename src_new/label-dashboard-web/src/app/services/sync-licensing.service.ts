@@ -55,11 +55,14 @@ export interface SongRecommendation {
   } | null;
 }
 
+export type SyncLicensingPitchStatus = 'Draft' | 'Sent' | 'Deleted';
+
 export interface SyncLicensingPitch {
   id: number;
   brand_id: number;
   title: string;
   description?: string;
+  status: SyncLicensingPitchStatus;
   created_by: number;
   createdAt?: string;
   updatedAt?: string;
@@ -75,12 +78,14 @@ export interface SyncLicensingPitch {
 export interface CreatePitchRequest {
   title: string;
   description?: string;
+  status?: SyncLicensingPitchStatus;
   song_ids?: number[];
 }
 
 export interface UpdatePitchRequest {
   title?: string;
   description?: string;
+  status?: SyncLicensingPitchStatus;
   song_ids?: number[];
 }
 
@@ -106,6 +111,7 @@ export class SyncLicensingService {
     filters?: { [key: string]: string };
     sort_field?: string;
     sort_order?: string;
+    status?: string;
   } = {}): Observable<{ pitches: SyncLicensingPitch[], pagination: PitchPagination }> {
     const queryParams = new URLSearchParams();
     queryParams.set('page', (params.page || 1).toString());
@@ -123,6 +129,9 @@ export class SyncLicensingService {
     }
     if (params.sort_order) {
       queryParams.set('sort_order', params.sort_order);
+    }
+    if (params.status) {
+      queryParams.set('status', params.status);
     }
 
     return this.http.get<{ pitches: SyncLicensingPitch[], pagination: PitchPagination }>(
@@ -156,15 +165,6 @@ export class SyncLicensingService {
     return this.http.put<{ pitch: SyncLicensingPitch }>(
       `${environment.apiUrl}/sync-licensing/${id}`,
       data
-    );
-  }
-
-  /**
-   * Delete a pitch
-   */
-  deletePitch(id: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(
-      `${environment.apiUrl}/sync-licensing/${id}`
     );
   }
 

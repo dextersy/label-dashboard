@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { SyncLicensingService, SyncLicensingPitch, SongForPitch, SongRecommendation } from '../../services/sync-licensing.service';
+import { SyncLicensingService, SyncLicensingPitch, SyncLicensingPitchStatus, SongForPitch, SongRecommendation } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { AudioPlayerService, AudioPlayerState } from '../../services/audio-player.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 
 @Component({
   selector: 'app-sync-licensing',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent, InPageNavComponent],
   templateUrl: './sync-licensing.component.html',
   styleUrl: './sync-licensing.component.scss'
 })
@@ -26,6 +27,14 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
   // Search & sort state
   currentFilters: SearchFilters = {};
   currentSort: SortInfo | null = null;
+
+  // Status filter tabs
+  activeStatusFilter = 'all';
+  readonly statusTabs: InPageNavTab[] = [
+    { id: 'all', label: 'All', icon: 'filter' },
+    { id: 'Draft', label: 'Draft', icon: 'file' },
+    { id: 'Sent', label: 'Sent', icon: 'paper-plane' },
+  ];
 
   // Table columns configuration
   pitchColumns: TableColumn[] = [
@@ -44,6 +53,18 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
       searchable: true,
       sortable: false,
       formatter: (pitch: any) => this.truncateText(pitch.description, 50)
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      searchable: false,
+      sortable: false,
+      renderHtml: true,
+      formatter: (pitch: any) => {
+        const status: SyncLicensingPitchStatus = pitch.status || 'Draft';
+        const badgeClass = status === 'Sent' ? 'success' : 'secondary';
+        return `<span class="badge bg-${badgeClass}">${status}</span>`;
+      }
     },
     {
       key: 'songs',
@@ -137,6 +158,12 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   pitchActions: TableAction[] = [
     {
+      icon: 'paper-plane',
+      label: 'Mark as sent',
+      hidden: (item) => item.status !== 'Draft',
+      handler: (item) => this.updatePitchStatus(item, 'Sent')
+    },
+    {
       icon: 'music',
       label: 'Download Masters',
       hidden: (item) => !item.songs?.length,
@@ -209,6 +236,11 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.closeDownloadDropdown();
   }
 
+  onStatusTabChange(id: string): void {
+    this.activeStatusFilter = id;
+    this.loadPitches(1);
+  }
+
   loadPitches(page: number = 1): void {
     this.loading = true;
     this.subscriptions.add(
@@ -216,7 +248,8 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
         page,
         filters: this.currentFilters,
         sort_field: this.currentSort?.column,
-        sort_order: this.currentSort?.direction
+        sort_order: this.currentSort?.direction,
+        status: this.activeStatusFilter !== 'all' ? this.activeStatusFilter : undefined,
       }).subscribe({
         next: (response) => {
           this.pitches = response.pitches;
@@ -450,6 +483,15 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     }
   }
 
+  updatePitchStatus(pitch: SyncLicensingPitch, status: SyncLicensingPitchStatus): void {
+    this.subscriptions.add(
+      this.syncLicensingService.updatePitch(pitch.id, { status }).subscribe({
+        next: () => this.loadPitches(this.pagination?.current_page || 1),
+        error: () => this.notificationService.showError('Failed to update pitch status.'),
+      })
+    );
+  }
+
   async deletePitch(pitch: SyncLicensingPitch): Promise<void> {
     const confirmed = await this.confirmationService.confirm({
       title: 'Delete Pitch',
@@ -463,7 +505,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     if (!confirmed) return;
 
     this.subscriptions.add(
-      this.syncLicensingService.deletePitch(pitch.id).subscribe({
+      this.syncLicensingService.updatePitch(pitch.id, { status: 'Deleted' }).subscribe({
         next: () => {
           this.notificationService.showSuccess('Pitch deleted successfully');
           this.loadPitches(this.pagination?.current_page || 1);
