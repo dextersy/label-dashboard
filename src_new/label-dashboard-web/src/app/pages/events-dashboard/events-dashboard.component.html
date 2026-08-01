@@ -115,8 +115,8 @@
   <!-- ─────────────────────────────────────────────────────── -->
   <div class="tw-px-4 tw-pt-6 tw-pb-2 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
     <!-- Mobile: Events full row, Fundraisers full row, Press+Sync share a row -->
-    <!-- Desktop: all 4 cards in one row -->
-    <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-2">
+    <!-- Desktop: 3 equal columns -->
+    <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-2">
 
       <!-- Events combined card -->
       <div class="tw-col-span-2 sm:tw-col-span-1 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-flex tw-overflow-hidden">
@@ -160,25 +160,25 @@
         </a>
       </div>
 
-      <!-- Press campaigns tile -->
-      <a routerLink="/campaigns/press"
-         class="tw-no-underline tw-flex tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-lg tw-opacity-70 tw-text-[#7c3aed] tw-flex-shrink-0"><app-icon name="newspaper" /></div>
-        <div>
-          <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activePressCampaigns || 0 }}</div>
-          <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Active campaigns</div>
-        </div>
-      </a>
-
-      <!-- Sync pitches tile -->
-      <a routerLink="/campaigns/sync-licensing"
-         class="tw-no-underline tw-flex tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-        <div class="tw-text-lg tw-opacity-70 tw-text-[#0d9488] tw-flex-shrink-0"><app-icon name="file" /></div>
-        <div>
-          <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.syncPitches || 0 }}</div>
-          <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Sync Pitches</div>
-        </div>
-      </a>
+      <!-- Press campaigns + Sync pitches (two cards sharing one grid column) -->
+      <div class="tw-col-span-2 sm:tw-col-span-1 tw-flex tw-gap-2">
+        <a routerLink="/campaigns/press"
+           class="tw-no-underline tw-flex tw-flex-1 tw-min-w-0 tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
+          <div class="tw-text-lg tw-opacity-70 tw-text-[#7c3aed] tw-flex-shrink-0"><app-icon name="newspaper" /></div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.activePressCampaigns || 0 }}</div>
+            <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Active campaigns</div>
+          </div>
+        </a>
+        <a routerLink="/campaigns/sync-licensing"
+           class="tw-no-underline tw-flex tw-flex-1 tw-min-w-0 tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
+          <div class="tw-text-lg tw-opacity-70 tw-text-[#0d9488] tw-flex-shrink-0"><app-icon name="file" /></div>
+          <div class="tw-min-w-0">
+            <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.syncPitches || 0 }}</div>
+            <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Sync Pitches</div>
+          </div>
+        </a>
+      </div>
 
     </div>
   </div>
