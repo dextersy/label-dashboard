@@ -430,11 +430,11 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                             <div class="sm:col-span-2 flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
                               @if (tt._backup !== undefined) {
                                 <button type="button" (click)="cancelEditTicketType(i)"
-                                  class="px-3 py-1.5 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
+                                  class="px-3 py-1.5 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 uppercase tracking-wider">Discard Changes</button>
                               }
                               <button type="button" (click)="saveTicketType(i)" [disabled]="!tt.name.trim()"
                                 class="px-3 py-1.5 text-xs font-black bg-yellow-400 hover:bg-yellow-300 text-black uppercase tracking-wider disabled:opacity-40">
-                                {{ tt._backup !== undefined ? 'Save' : 'Done' }}
+                                Confirm
                               </button>
                             </div>
                           </div>
@@ -1028,6 +1028,14 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
     // Validate ticket types only when ticketing is enabled
     const ticketingEnabled = this.form.get('ticketing_enabled')?.value !== false;
+    // Auto-save any ticket types currently in edit mode
+    if (ticketingEnabled) {
+      this.ticketTypes.forEach((tt, i) => {
+        if (tt.isEditing && tt.name.trim()) {
+          this.saveTicketType(i);
+        }
+      });
+    }
     const unsaved = ticketingEnabled ? this.ticketTypes.filter(tt => tt.isEditing) : [];
     if (unsaved.length > 0) {
       this.activeTab.set('tickets');

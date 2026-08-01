@@ -88,12 +88,8 @@
         <small class="form-text tw-text-muted">Shown to the scanner operator when checking in a ticket of this type.</small>
       </div>
       <div class="tw-flex tw-gap-2 tw-justify-end">
-        <button type="button" class="btn-primary btn-sm" (click)="saveEdit(i)" title="Save changes">
-          <app-icon name="check" iconOnly />
-        </button>
-        <button type="button" class="btn-secondary btn-sm" (click)="cancelEdit()" title="Cancel editing">
-          <app-icon name="x" iconOnly />
-        </button>
+        <button type="button" class="btn-primary btn-sm tw-w-1/2 sm:tw-w-auto tw-px-10" (click)="saveEdit(i)">Save</button>
+        <button type="button" class="btn-secondary btn-sm tw-w-1/2 sm:tw-w-auto tw-px-10" (click)="cancelEdit()">Cancel</button>
       </div>
     </div>
 

@@ -394,6 +394,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   onSave(): void {
+    // Auto-save any ticket type currently being edited
+    if (this.ticketTypesRef && this.ticketTypesRef.editingIndex !== null) {
+      this.ticketTypesRef.saveEdit(this.ticketTypesRef.editingIndex);
+    }
+
     // Use publishing validation only when saving an already-published event
     if (!this.validateForm(this.isEventPublished())) {
       return;
@@ -481,6 +486,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   async onPublish(): Promise<void> {
+    // Auto-save any ticket type currently being edited
+    if (this.ticketTypesRef && this.ticketTypesRef.editingIndex !== null) {
+      this.ticketTypesRef.saveEdit(this.ticketTypesRef.editingIndex);
+    }
+
     if (!this.validateForm(true)) {
       return;
     }
