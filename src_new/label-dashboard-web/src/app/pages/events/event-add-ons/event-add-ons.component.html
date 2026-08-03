@@ -1,0 +1,682 @@
+<app-breadcrumb></app-breadcrumb>
+
+<div class="container-fluid">
+
+  <!-- Event selector -->
+  <div class="page-header tw-mb-3" *ngIf="availableEvents.length > 0">
+    <app-event-selection
+      [events]="availableEvents"
+      [selectedEvent]="selectedEvent"
+      [loading]="loadingEvents"
+      [isAdmin]="isAdmin"
+      (eventSelected)="onEventSelection($event)"
+    ></app-event-selection>
+  </div>
+
+  <div *ngIf="!selectedEvent && !loadingEvents" class="card mb-4">
+    <div class="card-body text-center py-5 text-muted small">
+      Select an event above to manage its add-ons.
+    </div>
+  </div>
+
+  <app-in-page-nav
+    *ngIf="selectedEvent"
+    [tabs]="tabs"
+    [activeTab]="activeTab"
+    (tabChange)="onTabChange($event)"
+  >
+
+    <!-- Wristbands Tab -->
+    <div *ngIf="isTab('wristbands')">
+
+      <!-- Wristband Orders -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="tw-flex tw-justify-between tw-items-center tw-mb-3">
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Wristband Orders</h3>
+            <button
+              *ngIf="!formOpen && orders.length > 0"
+              type="button"
+              class="btn-primary btn-sm"
+              (click)="openNewOrder()"
+              [disabled]="!eventId"
+            >
+              <app-icon name="plus" />
+              New Order
+            </button>
+          </div>
+
+          <!-- Orders Table -->
+          <div *ngIf="loadingOrders" class="text-muted small py-2">Loading orders…</div>
+
+          <div *ngIf="!loadingOrders && orders.length === 0 && !formOpen" class="wristband-empty-state">
+            <app-icon name="cart" iconOnly class="coming-soon-icon mb-3"></app-icon>
+            <h5 class="mb-2">No orders yet</h5>
+            <p class="text-muted mb-3">Place a wristband order for this event to get started.</p>
+            <button
+              type="button"
+              class="btn-primary btn-sm d-flex align-items-center gap-1 mx-auto"
+              (click)="openNewOrder()"
+              [disabled]="!eventId"
+            >
+              <app-icon name="plus"></app-icon>
+              Create an order
+            </button>
+          </div>
+
+          <div *ngIf="!loadingOrders && orders.length > 0 && !isMobile" class="table-responsive mb-3">
+            <table class="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Design</th>
+                  <th>Colors</th>
+                  <th>Status</th>
+                  <th class="text-end">Price</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let order of orders">
+                  <tr
+                    [class.order-row-dimmed]="formOpen && order.id !== editingOrderId"
+                    [class.order-row-editing]="formOpen && order.id === editingOrderId"
+                    [class.order-row-clickable]="canEdit(order) && !formOpen"
+                    (click)="canEdit(order) && !formOpen ? openEditOrder(order) : null"
+                  >
+                    <td class="text-muted small">#{{ order.id }}</td>
+                    <td>
+                      <div *ngIf="order.design_url; else noDesignTpl2" class="order-design-thumb">
+                        <img [src]="order.design_url" alt="Design" class="order-design-img">
+                      </div>
+                      <ng-template #noDesignTpl2>
+                        <span class="text-muted small">—</span>
+                      </ng-template>
+                    </td>
+                    <td>
+                      <div class="order-color-dots">
+                        <ng-container *ngFor="let item of order.items">
+                          <span *ngIf="item.quantity > 0 && item.color" class="color-dot-entry">
+                            <span
+                              class="color-dot"
+                              [style.backgroundColor]="item.color.bg_color"
+                              [title]="item.color.label"
+                            ></span>
+                            <span class="color-dot-qty">{{ item.quantity }}</span>
+                          </span>
+                        </ng-container>
+                        <span *ngIf="!colorsSummary(order)" class="text-muted small">—</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span [class]="statusBadgeClass(order.status)">
+                        {{ order.status | titlecase }}
+                      </span>
+                    </td>
+                    <td class="text-end small">₱{{ orderPrice(order) | number:'1.2-2' }}</td>
+                    <td class="text-end">
+                      <div class="d-flex justify-content-end gap-1">
+                        <ng-container *ngIf="canEdit(order)">
+                          <button
+                            type="button"
+                            class="btn-icon btn-sm"
+                            (click)="openEditOrder(order); $event.stopPropagation()"
+                            [disabled]="formOpen"
+                            title="Edit"
+                          ><app-icon name="edit" iconOnly /></button>
+                        </ng-container>
+                        <ng-container *ngIf="canDelete(order)">
+                          <button
+                            type="button"
+                            class="btn-icon btn-sm text-danger"
+                            (click)="deleteOrder(order); $event.stopPropagation()"
+                            [disabled]="formOpen"
+                            title="Delete"
+                          ><app-icon name="trash" iconOnly /></button>
+                        </ng-container>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- Inline edit form -->
+                  <tr *ngIf="editingOrderId === order.id && formOpen" class="order-edit-form-row">
+                    <td colspan="6" class="p-0">
+                      <div class="order-edit-form-inner">
+                        <ng-container *ngTemplateOutlet="orderFormTpl"></ng-container>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- New Order Form (desktop only) -->
+          <div *ngIf="formOpen && !editingOrderId && !isMobile" class="order-new-form mt-2">
+            <ng-container *ngTemplateOutlet="orderFormTpl"></ng-container>
+          </div>
+
+          <!-- ── Mobile card list ── -->
+          <ng-container *ngIf="isMobile && !loadingOrders">
+
+            <ng-container *ngIf="orders.length > 0">
+              <!-- Summary strip -->
+              <div class="mc-summary">
+                {{ orders.length }} order{{ orders.length === 1 ? '' : 's' }} · {{ mobileOrdersTotalQty }} wristband{{ mobileOrdersTotalQty === 1 ? '' : 's' }} · ₱{{ mobileOrdersTotalPrice | number:'1.2-2' }} total
+              </div>
+
+              <!-- Cards -->
+              <div *ngFor="let order of orders"
+                class="mc-card"
+                [class.mc-card--dimmed]="formOpen && order.id !== editingOrderId"
+                [class.mc-card--editing]="formOpen && order.id === editingOrderId"
+                [class.mc-card--clickable]="canEdit(order) && !formOpen"
+                (click)="canEdit(order) && !formOpen ? openEditOrder(order) : null"
+              >
+                <!-- Header -->
+                <div class="mc-header">
+                  <div class="mc-header-left">
+                    <span class="mc-order-num">#{{ order.id }}</span>
+                    <span [class]="statusBadgeClass(order.status)">{{ order.status | titlecase }}</span>
+                  </div>
+                  <div class="mc-menu-wrap" *ngIf="canEdit(order) || canDelete(order)">
+                    <button
+                      type="button"
+                      class="mc-menu-btn"
+                      (click)="toggleOrderMenu(order.id, $event); $event.stopPropagation()"
+                      [disabled]="formOpen"
+                      aria-label="Order actions"
+                    >⋮</button>
+                    <div *ngIf="activeMenuOrderId === order.id" class="mc-menu-dropdown">
+                      <button *ngIf="canEdit(order)" type="button" class="mc-menu-item" (click)="openEditOrder(order); activeMenuOrderId = null">Edit</button>
+                      <button *ngIf="canDelete(order)" type="button" class="mc-menu-item mc-menu-item--danger" (click)="deleteOrder(order); activeMenuOrderId = null; $event.stopPropagation()">Delete</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Design row -->
+                <div *ngIf="order.design_url" class="mc-design-row">
+                  <div class="mc-design-thumb">
+                    <img [src]="order.design_url" alt="Design" class="mc-design-img">
+                  </div>
+                  <span class="mc-design-name">Design file</span>
+                </div>
+
+                <!-- Colors -->
+                <div class="mc-colors">
+                  <ng-container *ngFor="let item of order.items">
+                    <span *ngIf="item.quantity > 0 && item.color" class="mc-color-entry">
+                      <span class="color-dot" [style.backgroundColor]="item.color.bg_color"></span>
+                      <span class="mc-color-label">{{ item.color.label }} · {{ item.quantity }}</span>
+                    </span>
+                  </ng-container>
+                  <span *ngIf="!colorsSummary(order)" class="mc-no-colors">No colors selected</span>
+                </div>
+
+                <!-- Footer -->
+                <div class="mc-footer">
+                  <span class="mc-footer-count">{{ totalOrderQty(order) }} wristbands</span>
+                  <span class="mc-footer-price">₱{{ orderPrice(order) | number:'1.2-2' }}</span>
+                </div>
+
+                <!-- Locked note for non-editable placed orders -->
+                <div *ngIf="order.status === 'placed' || order.status === 'confirmed'" class="mc-locked-note">
+                  <app-icon name="lock" iconOnly></app-icon> Placed orders can't be edited.
+                </div>
+
+                <!-- Inline edit form -->
+                <div *ngIf="editingOrderId === order.id && formOpen" class="mc-edit-form">
+                  <ng-container *ngTemplateOutlet="orderFormTpl"></ng-container>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- New order form (mobile) — outside orders block so it shows even when starting fresh -->
+            <div *ngIf="formOpen && !editingOrderId" class="mc-edit-form mc-new-form">
+              <ng-container *ngTemplateOutlet="orderFormTpl"></ng-container>
+            </div>
+
+          </ng-container>
+
+          <!-- Shared order form template -->
+          <ng-template #orderFormTpl>
+            <h6 class="mb-3">{{ editingOrderId ? 'Edit Order #' + editingOrderId : 'New Order' }}</h6>
+
+            <!-- Color qty grid -->
+            <div *ngIf="loadingColors" class="text-muted small py-2">Loading colors…</div>
+            <div class="wristband-grid mb-3" *ngIf="!loadingColors">
+              <div *ngFor="let color of formColors" class="wristband-card" [class.has-quantity]="color.quantity > 0">
+                <div class="wristband-image-wrapper">
+                  <img [src]="color.image_path" [alt]="color.label + ' wristband'" class="wristband-image">
+                </div>
+                <div class="wristband-label">{{ color.label }}</div>
+                <div class="quantity-control">
+                  <button
+                    type="button"
+                    class="btn-secondary btn-sm qty-btn"
+                    (click)="decreaseQuantity(color)"
+                    [disabled]="color.quantity === 0"
+                  >
+                    <app-icon name="minus" iconOnly></app-icon>
+                  </button>
+                  <span class="qty-display">{{ color.quantity }}</span>
+                  <button
+                    type="button"
+                    class="btn-secondary btn-sm qty-btn"
+                    (click)="increaseQuantity(color)"
+                  >
+                    <app-icon name="plus" iconOnly></app-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Design upload section -->
+            <div class="mb-3">
+              <label class="form-label">Design (PNG)</label>
+              <p class="alert alert-info py-2 px-3 mb-3" style="font-size:0.8rem"><app-icon name="info"></app-icon>For best results, upload an image with a <strong>solid, light-coloured background</strong> and a <strong>solid, monochromatic design</strong> (e.g. black logo on white). The design will be automatically converted to black print on the wristband.</p>
+
+              <!-- Color selector -->
+              <div class="color-selector-row mt-2">
+                <app-icon name="eye" class="text-muted" iconOnly></app-icon>
+                <button
+                  *ngFor="let color of formColorsWithQuantity"
+                  type="button"
+                  class="color-swatch-btn"
+                  [class.active]="previewColor?.slug === color.slug"
+                  [title]="color.label"
+                  [style.backgroundColor]="color.bg_color"
+                  (click)="selectPreviewColor(color.slug)"
+                ></button>
+              </div>
+
+              <!-- Preview canvas -->
+              <div
+                #previewContainer
+                class="preview-canvas"
+                [class.is-interacting]="isDraggingOrResizing"
+              >
+                <div class="canvas-inner">
+                  <div class="printable-bg" [style.backgroundColor]="previewColor?.bg_color"></div>
+
+                  <ng-container *ngIf="formDesignDataUrl">
+                    <div
+                      class="design-overlay"
+                      [style.left.px]="designPos.x"
+                      [style.top.px]="designPos.y"
+                      [style.width.px]="designPos.width"
+                      [style.height.px]="designPos.height"
+                      (mousedown)="startDrag($event)"
+                      (touchstart)="startDragTouch($event)"
+                    >
+                      <img [src]="formDesignDataUrl" class="design-img" draggable="false">
+                      <div class="rh nw" (mousedown)="startResize($event, 'nw')" (touchstart)="startResizeTouch($event, 'nw')"></div>
+                      <div class="rh n"  (mousedown)="startResize($event, 'n')"  (touchstart)="startResizeTouch($event, 'n')"></div>
+                      <div class="rh ne" (mousedown)="startResize($event, 'ne')" (touchstart)="startResizeTouch($event, 'ne')"></div>
+                      <div class="rh e"  (mousedown)="startResize($event, 'e')"  (touchstart)="startResizeTouch($event, 'e')"></div>
+                      <div class="rh se" (mousedown)="startResize($event, 'se')" (touchstart)="startResizeTouch($event, 'se')"></div>
+                      <div class="rh s"  (mousedown)="startResize($event, 's')"  (touchstart)="startResizeTouch($event, 's')"></div>
+                      <div class="rh sw" (mousedown)="startResize($event, 'sw')" (touchstart)="startResizeTouch($event, 'sw')"></div>
+                      <div class="rh w"  (mousedown)="startResize($event, 'w')"  (touchstart)="startResizeTouch($event, 'w')"></div>
+                    </div>
+                  </ng-container>
+
+                  <ng-container *ngIf="formDesignFile && !formDesignDataUrl">
+                    <div
+                      class="design-overlay design-placeholder"
+                      [style.left.px]="designPos.x"
+                      [style.top.px]="designPos.y"
+                      [style.width.px]="designPos.width"
+                      [style.height.px]="designPos.height"
+                      (mousedown)="startDrag($event)"
+                      (touchstart)="startDragTouch($event)"
+                    >
+                      <app-icon name="file" class="placeholder-icon"></app-icon>
+                      <span class="placeholder-label text-truncate px-1">{{ formDesignFileName }}</span>
+                      <div class="rh nw" (mousedown)="startResize($event, 'nw')" (touchstart)="startResizeTouch($event, 'nw')"></div>
+                      <div class="rh n"  (mousedown)="startResize($event, 'n')"  (touchstart)="startResizeTouch($event, 'n')"></div>
+                      <div class="rh ne" (mousedown)="startResize($event, 'ne')" (touchstart)="startResizeTouch($event, 'ne')"></div>
+                      <div class="rh e"  (mousedown)="startResize($event, 'e')"  (touchstart)="startResizeTouch($event, 'e')"></div>
+                      <div class="rh se" (mousedown)="startResize($event, 'se')" (touchstart)="startResizeTouch($event, 'se')"></div>
+                      <div class="rh s"  (mousedown)="startResize($event, 's')"  (touchstart)="startResizeTouch($event, 's')"></div>
+                      <div class="rh sw" (mousedown)="startResize($event, 'sw')" (touchstart)="startResizeTouch($event, 'sw')"></div>
+                      <div class="rh w"  (mousedown)="startResize($event, 'w')"  (touchstart)="startResizeTouch($event, 'w')"></div>
+                    </div>
+                  </ng-container>
+
+                  <div class="dimmer dimmer-top"    aria-hidden="true"></div>
+                  <div class="dimmer dimmer-bottom" aria-hidden="true"></div>
+                  <div class="dimmer dimmer-left"   aria-hidden="true"></div>
+                  <div class="dimmer dimmer-right"  aria-hidden="true"></div>
+
+                  <div class="template-area" aria-hidden="true">
+                    <div class="snap-zone">
+                      <span class="snap-label">Snap<br>Closure</span>
+                    </div>
+                    <div class="printable-frame">
+                      <span class="printable-label">Printable Area</span>
+                    </div>
+                  </div>
+
+
+                  <div *ngIf="formDesignProcessing" class="preview-upload-prompt">
+                    <span class="text-muted small">Processing…</span>
+                  </div>
+
+                  <div *ngIf="!formDesignFile && !formDesignDataUrl && !formDesignProcessing" class="preview-upload-prompt" (click)="designFileInput.click()">
+                    <app-icon name="upload-cloud" class="prompt-icon"></app-icon>
+                    <span>Click to upload your design</span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="formDesignError" class="alert alert-warning d-flex gap-2 align-items-start mt-2 mb-0 py-2">
+                <app-icon name="warning" class="flex-shrink-0 mt-1"></app-icon>
+                <div>
+                  <strong>Image not suitable.</strong> {{ formDesignError }}
+                </div>
+              </div>
+
+              <div class="design-controls mt-3 d-flex align-items-center gap-2 flex-wrap">
+                <input
+                  #designFileInput
+                  type="file"
+                  hidden
+                  accept=".png,.jpg,.jpeg"
+                  (change)="onDesignFileChange($event)"
+                >
+                <button type="button" class="btn-secondary btn-sm" (click)="designFileInput.click()" [disabled]="formDesignProcessing">
+                  <app-icon name="upload-cloud"></app-icon>
+                  {{ formDesignFile ? 'Replace file' : 'Upload design' }}
+                </button>
+                <span *ngIf="formDesignFile || formDesignDataUrl" class="text-muted small text-truncate" style="max-width: 200px;">
+                  {{ formDesignFileName }}
+                </span>
+                <button
+                  *ngIf="formDesignFile || formDesignDataUrl"
+                  type="button"
+                  class="btn-ghost btn-sm text-danger ms-auto"
+                  (click)="removeDesignFile()"
+                >Remove</button>
+              </div>
+            </div>
+
+            <div *ngIf="saveOrderError" class="alert alert-danger py-2 small mb-3">{{ saveOrderError }}</div>
+          </ng-template>
+
+        </div>
+      </div>
+
+      <!-- Delivery Address -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Delivery Address</h3>
+
+          <!-- Address Book -->
+          <div class="tw-mb-4">
+            <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-mb-2">Address book</p>
+            <div class="address-book-grid">
+              <ng-container *ngFor="let addr of savedAddresses">
+
+                <!-- Card -->
+                <div class="address-book-card">
+                  <input
+                    type="radio"
+                    name="savedAddress"
+                    [id]="'addr-' + addr.id"
+                    [checked]="selectedSavedAddressId === addr.id"
+                    (change)="selectSavedAddress(addr)"
+                  />
+                  <label [for]="'addr-' + addr.id">
+                    <span class="addr-card-label">{{ addr.label || addr.name || 'Saved Address' }}</span>
+                    <span class="addr-card-text">{{ formatAddressSummary(addr) }}</span>
+                    <span *ngIf="addr.latitude != null && addr.longitude != null" class="addr-card-coords">
+                      {{ addr.latitude }}, {{ addr.longitude }}
+                    </span>
+                  </label>
+                  <div class="addr-card-actions">
+                    <button type="button" class="btn-icon btn-sm" (click)="startEditAddress(addr)" title="Edit"><app-icon name="edit" iconOnly /></button>
+                    <button type="button" class="btn-icon btn-sm text-danger" (click)="deleteAddress(addr)" title="Delete"><app-icon name="trash" iconOnly /></button>
+                  </div>
+                </div>
+
+              </ng-container>
+
+              <!-- Add new address card -->
+              <button
+                *ngIf="editingAddressId === null"
+                type="button"
+                class="addr-add-card"
+                (click)="openNewAddressForm()"
+              >
+                <app-icon name="plus" iconOnly class="addr-add-icon" />
+                <span>Add address</span>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- Compact "Delivering to" summary -->
+          <ng-container *ngIf="!editingDeliveryAddress">
+            <div *ngIf="hasDeliveryAddress" class="delivery-summary">
+              <span class="delivery-summary-text">
+                Delivering to <strong>{{ deliveryName || deliveryStreet }}</strong><ng-container *ngIf="deliveryPhone"> · {{ deliveryPhone }}</ng-container>
+              </span>
+              <button type="button" class="btn-icon btn-sm tw-text-gray-400" title="Edit"
+                (click)="editingDeliveryAddress = true; selectedSavedAddressId = null; addressSaved = false">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="!hasDeliveryAddress" class="delivery-summary delivery-summary--empty">
+              <span class="tw-text-sm tw-text-muted">No delivery address set.</span>
+              <button type="button" class="btn-ghost btn-sm" (click)="editingDeliveryAddress = true; addressSaved = false">
+                Set address
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Edit form -->
+          <ng-container *ngIf="editingDeliveryAddress">
+            <div class="tw-flex tw-flex-col tw-gap-4">
+              <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+                <div>
+                  <label class="tw-label">Name / Recipient</label>
+                  <input type="text" class="tw-input" [(ngModel)]="deliveryName" (ngModelChange)="selectedSavedAddressId = null; addressSaved = false" placeholder="e.g. John Smith" />
+                </div>
+                <div>
+                  <label class="tw-label">Contact number</label>
+                  <input type="text" class="tw-input" [(ngModel)]="deliveryPhone" (ngModelChange)="selectedSavedAddressId = null; addressSaved = false" placeholder="+63 912 345 6789" />
+                </div>
+              </div>
+              <div>
+                <label class="tw-label">Street address</label>
+                <input type="text" class="tw-input" [(ngModel)]="deliveryStreet" (ngModelChange)="selectedSavedAddressId = null; addressSaved = false" placeholder="Street, Barangay" />
+              </div>
+              <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-4">
+                <div>
+                  <label class="tw-label">City</label>
+                  <input type="text" class="tw-input" [(ngModel)]="deliveryCity" (ngModelChange)="selectedSavedAddressId = null; addressSaved = false" placeholder="City" />
+                </div>
+                <div>
+                  <label class="tw-label">Country</label>
+                  <input type="text" class="tw-input" [(ngModel)]="deliveryCountry" (ngModelChange)="selectedSavedAddressId = null; addressSaved = false" placeholder="Country" />
+                </div>
+                <div>
+                  <label class="tw-label">ZIP code</label>
+                  <input type="text" class="tw-input" [(ngModel)]="deliveryZip" (ngModelChange)="selectedSavedAddressId = null; addressSaved = false" placeholder="1234" />
+                </div>
+              </div>
+              <div class="tw-flex tw-items-center tw-gap-3 tw-flex-wrap">
+                <button type="button" class="btn-primary btn-sm" (click)="saveAddress()" [disabled]="savingAddress || !eventId">
+                  {{ savingAddress ? 'Saving…' : 'Save' }}
+                </button>
+                <button type="button" class="btn-ghost btn-sm" (click)="cancelDeliveryEdit()">Cancel</button>
+                <div *ngIf="!editingFromAddressBook" class="form-check form-switch mb-0 ms-auto">
+                  <input class="form-check-input" type="checkbox" id="saveToBookToggle" [(ngModel)]="saveToBook" (ngModelChange)="onSaveToBookToggle()" />
+                  <label class="form-check-label small" for="saveToBookToggle">Save to address book</label>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="saveToBook && !editingFromAddressBook" class="address-book-save-form tw-mt-4">
+              <div class="tw-flex tw-flex-col tw-gap-4">
+                <div>
+                  <label class="tw-label">Label (optional)</label>
+                  <input type="text" class="tw-input" [(ngModel)]="saveToBookLabel" placeholder="e.g. Warehouse, Main Office" />
+                </div>
+                <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+                  <div>
+                    <label class="tw-label">Latitude (optional)</label>
+                    <input type="number" class="tw-input" [(ngModel)]="saveToBookLat" placeholder="e.g. 14.5995" />
+                  </div>
+                  <div>
+                    <label class="tw-label">Longitude (optional)</label>
+                    <input type="number" class="tw-input" [(ngModel)]="saveToBookLng" placeholder="e.g. 120.9842" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <span *ngIf="addressSaved" class="tw-text-success tw-text-sm tw-block tw-mt-3">Saved.</span>
+            <span *ngIf="savedToBook" class="tw-text-success tw-text-sm tw-block tw-mt-1">Saved to address book.</span>
+          </ng-container>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Equipment Rental Tab -->
+    <div *ngIf="isTab('equipment-rental')">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <app-icon name="wrench" iconOnly class="coming-soon-icon mb-3"></app-icon>
+          <h5 class="mb-2">Equipment Rental</h5>
+          <p class="text-muted mb-0">This feature is coming soon.</p>
+        </div>
+      </div>
+    </div>
+
+  </app-in-page-nav>
+
+</div>
+
+<!-- Wristband order summary bar -->
+<div class="wristband-fab" *ngIf="selectedEvent && isTab('wristbands') && showSummaryBar" [@slideUp]>
+  <div class="wristband-fab-inner" [@barContent]="formOpen ? 'editing' : 'viewing'">
+
+    <!-- Summary (form open) -->
+    <ng-container *ngIf="formOpen">
+      <ng-container *ngIf="formColorBreakdown.length > 0; else noSelectionTpl">
+        <div class="wristband-fab-lines">
+          <div class="fab-summary-header">
+            <div class="fab-section-label">Order Summary</div>
+            <div class="fab-total-mobile" *ngIf="formTotalQuantity > 0">₱{{ formTotalPrice | number:'1.2-2' }}</div>
+          </div>
+          <div *ngFor="let item of formColorBreakdown" class="fab-line-item">
+            <span class="fab-line-qty">{{ item.quantity }}x</span>
+            <span class="fab-line-color">{{ item.label }}</span>
+            <span class="fab-line-price">₱{{ item.price | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #noSelectionTpl>
+        <span class="summary-hint">Select quantities above to see order summary</span>
+      </ng-template>
+    </ng-container>
+
+    <!-- Summary (orders exist, not editing) -->
+    <ng-container *ngIf="!formOpen && orders.length > 0">
+      <div class="wristband-fab-lines">
+        <div class="fab-section-label">Total Ordered — {{ placedOrders.length }} placed order{{ placedOrders.length === 1 ? '' : 's' }}</div>
+      </div>
+    </ng-container>
+
+    <!-- Right side: total + actions -->
+    <div class="fab-right" [class.fab-right--editing]="formOpen">
+      <div class="fab-total-block" *ngIf="formOpen ? formTotalQuantity > 0 : placedOrders.length > 0">
+        <div class="fab-total-label">Order Total</div>
+        <div class="fab-total-price">₱{{ (formOpen ? formTotalPrice : allOrdersTotalPrice) | number:'1.2-2' }}</div>
+      </div>
+      <div class="fab-actions" *ngIf="formOpen">
+        <button
+          type="button"
+          class="btn-secondary btn-sm"
+          (click)="saveAsDraft()"
+          [disabled]="savingOrder"
+        >{{ savingOrder ? 'Saving…' : 'Save as Draft' }}</button>
+        <button
+          type="button"
+          class="btn-primary btn-sm"
+          (click)="placeOrder()"
+          [disabled]="savingOrder"
+        >{{ savingOrder ? 'Placing…' : 'Place Order' }}</button>
+        <button
+          type="button"
+          class="btn-ghost btn-sm text-muted"
+          (click)="cancelForm()"
+          [disabled]="savingOrder"
+        >Cancel</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Disclaimer Dialog -->
+<ng-container *ngIf="showDisclaimerDialog">
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show" style="display:block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:480px">
+      <div class="modal-content">
+
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title d-flex align-items-center gap-2">
+            <app-icon name="warning" class="text-warning"></app-icon>
+            Confirm Order Placement
+          </h5>
+          <button type="button" class="btn-close" (click)="cancelDisclaimerDialog()" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body pt-2">
+          <p class="text-muted small mb-3">Please read and acknowledge the following before placing your order.</p>
+
+          <div class="form-check mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="dlg-check-1"
+              [(ngModel)]="dialogCheck1"
+            >
+            <label class="form-check-label" style="font-size:0.75rem" for="dlg-check-1">
+              I confirm that the design and quantities are final. Once placed, this order will be sent for production and cannot be modified.
+            </label>
+          </div>
+
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="dlg-check-2"
+              [(ngModel)]="dialogCheck2"
+            >
+            <label class="form-check-label" style="font-size:0.75rem" for="dlg-check-2">
+              I understand that wristband printing may include minor defects such as small misalignments or light surface markings, and that these are considered within acceptable production tolerances.
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn-secondary btn-sm" (click)="cancelDisclaimerDialog()">Cancel</button>
+          <button
+            type="button"
+            class="btn-primary btn-sm"
+            [disabled]="!dialogCanConfirm"
+            (click)="confirmPlaceOrder()"
+          >Confirm &amp; Place Order</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</ng-container>

@@ -223,17 +223,17 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
          tw-bg-transparent tw-cursor-pointer tw-rounded-md tw-no-underline tw-select-none;
   padding: 6px 12px;
   font-size: 14px;
-  border: 1px solid var(--brand-color, #3b82f6);
-  color: var(--brand-color, #3b82f6);
-  transition: opacity 0.15s ease;
+  border: 1px solid transparent;
+  color: #6b7280;
+  transition: color 0.15s ease, background 0.15s ease;
 
-  &:hover:not(:disabled)  { opacity: 0.8; }
-  &:active:not(:disabled) { opacity: 0.7; }
+  &:hover:not(:disabled)  { background: rgba(0, 0, 0, 0.05); color: #374151; }
+  &:active:not(:disabled) { background: rgba(0, 0, 0, 0.08); }
   &:disabled { @apply tw-opacity-50 tw-cursor-not-allowed; }
 
   &.text-danger {
-    border-color: #ef4444;
     color: #ef4444;
+    &:hover:not(:disabled) { background: rgba(239, 68, 68, 0.08); color: #dc2626; }
   }
 
   i { margin-right: 6px; font-size: 13px; }

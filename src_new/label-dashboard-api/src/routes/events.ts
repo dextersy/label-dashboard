@@ -45,6 +45,16 @@ import {
   getWalkInTransactions
 } from '../controllers/walkInController';
 import { getTags, createTag } from '../controllers/eventTagController';
+import { getWristbandColors } from '../controllers/wristbandColorController';
+import {
+  getWristbandSettings,
+  upsertWristbandSettings,
+  getWristbandOrders,
+  createWristbandOrder,
+  updateWristbandOrder,
+  deleteWristbandOrder,
+  upload as wristbandUpload,
+} from '../controllers/wristbandOrderController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -55,6 +65,17 @@ router.use(authenticateToken);
 // Tag operations (before /:id routes)
 router.get('/tags', getTags);
 router.post('/tags', requireAdmin, createTag);
+
+// Wristband color options
+router.get('/wristband-colors', getWristbandColors);
+
+// Wristband settings & orders
+router.get('/wristband-settings', getWristbandSettings);
+router.put('/wristband-settings', requireAdmin, upsertWristbandSettings);
+router.get('/wristband-orders', getWristbandOrders);
+router.post('/wristband-orders', requireAdmin, wristbandUpload.single('design'), createWristbandOrder);
+router.put('/wristband-orders/:id', requireAdmin, wristbandUpload.single('design'), updateWristbandOrder);
+router.delete('/wristband-orders/:id', requireAdmin, deleteWristbandOrder);
 
 // Event CRUD operations
 router.get('/', getEvents);

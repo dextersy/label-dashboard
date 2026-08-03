@@ -4,6 +4,68 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { map, catchError, switchMap } from 'rxjs/operators';
 
+export interface WristbandColor {
+  id: number;
+  slug: string;
+  label: string;
+  image_path: string;
+  bg_color: string;
+  available_quantity: number;
+  sort_order: number;
+}
+
+export interface WristbandOrderItem {
+  id: number;
+  order_id: number;
+  wristband_color_id: number;
+  quantity: number;
+  color?: WristbandColor;
+}
+
+export interface WristbandOrder {
+  id: number;
+  event_id: number;
+  status: 'draft' | 'placed' | 'rejected' | 'confirmed';
+  design_url: string | null;
+  design_x: number | null;
+  design_y: number | null;
+  design_width: number | null;
+  design_height: number | null;
+  disclaimer_acknowledged: boolean;
+  notes: string | null;
+  created_by: number;
+  createdAt: string;
+  updatedAt: string;
+  items?: WristbandOrderItem[];
+}
+
+export interface EventWristbandSettings {
+  id?: number;
+  event_id: number;
+  delivery_name: string | null;
+  delivery_street: string | null;
+  delivery_city: string | null;
+  delivery_country: string | null;
+  delivery_zip: string | null;
+  delivery_phone: string | null;
+}
+
+export interface SavedDeliveryAddress {
+  id: number;
+  user_id: number;
+  label: string | null;
+  name: string | null;
+  street: string | null;
+  city: string | null;
+  country: string | null;
+  zip: string | null;
+  phone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TicketTypeForm {
   name: string;
   price: number;
@@ -941,6 +1003,117 @@ export class EventService {
       map(response => response.event),
       catchError(this.handleError)
     );
+  }
+
+  getWristbandColors(): Observable<WristbandColor[]> {
+    return this.http.get<WristbandColor[]>(
+      `${environment.apiUrl}/events/wristband-colors`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getWristbandSettings(eventId: number): Observable<EventWristbandSettings> {
+    return this.http.get<{ settings: EventWristbandSettings }>(
+      `${environment.apiUrl}/events/wristband-settings`,
+      { headers: this.getAuthHeaders(), params: { event_id: eventId.toString() } }
+    ).pipe(map(r => r.settings), catchError(this.handleError));
+  }
+
+  upsertWristbandSettings(eventId: number, data: {
+    delivery_name?: string | null;
+    delivery_street?: string | null;
+    delivery_city?: string | null;
+    delivery_country?: string | null;
+    delivery_zip?: string | null;
+    delivery_phone?: string | null;
+  }): Observable<EventWristbandSettings> {
+    return this.http.put<{ settings: EventWristbandSettings }>(
+      `${environment.apiUrl}/events/wristband-settings`,
+      data,
+      { headers: this.getAuthHeaders(), params: { event_id: eventId.toString() } }
+    ).pipe(map(r => r.settings), catchError(this.handleError));
+  }
+
+  getWristbandOrders(eventId: number): Observable<WristbandOrder[]> {
+    return this.http.get<{ orders: WristbandOrder[] }>(
+      `${environment.apiUrl}/events/wristband-orders`,
+      { headers: this.getAuthHeaders(), params: { event_id: eventId.toString() } }
+    ).pipe(map(r => r.orders), catchError(this.handleError));
+  }
+
+  createWristbandOrder(eventId: number, formData: FormData): Observable<WristbandOrder> {
+    return this.http.post<{ order: WristbandOrder }>(
+      `${environment.apiUrl}/events/wristband-orders`,
+      formData,
+      { headers: this.getAuthHeadersForFormData(), params: { event_id: eventId.toString() } }
+    ).pipe(map(r => r.order), catchError(this.handleError));
+  }
+
+  updateWristbandOrder(id: number, formData: FormData): Observable<WristbandOrder> {
+    return this.http.put<{ order: WristbandOrder }>(
+      `${environment.apiUrl}/events/wristband-orders/${id}`,
+      formData,
+      { headers: this.getAuthHeadersForFormData() }
+    ).pipe(map(r => r.order), catchError(this.handleError));
+  }
+
+  deleteWristbandOrder(id: number): Observable<any> {
+    return this.http.delete(
+      `${environment.apiUrl}/events/wristband-orders/${id}`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ─── Saved Delivery Addresses ────────────────────────────────────────────
+
+  getSavedDeliveryAddresses(): Observable<SavedDeliveryAddress[]> {
+    return this.http.get<{ addresses: SavedDeliveryAddress[] }>(
+      `${environment.apiUrl}/delivery-addresses`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(map(r => r.addresses), catchError(this.handleError));
+  }
+
+  createSavedDeliveryAddress(data: {
+    label?: string;
+    name?: string | null;
+    street?: string | null;
+    city?: string | null;
+    country?: string | null;
+    zip?: string | null;
+    phone?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): Observable<SavedDeliveryAddress> {
+    return this.http.post<{ address: SavedDeliveryAddress }>(
+      `${environment.apiUrl}/delivery-addresses`,
+      data,
+      { headers: this.getAuthHeaders() }
+    ).pipe(map(r => r.address), catchError(this.handleError));
+  }
+
+  updateSavedDeliveryAddress(id: number, data: {
+    label?: string | null;
+    name?: string | null;
+    street?: string | null;
+    city?: string | null;
+    country?: string | null;
+    zip?: string | null;
+    phone?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): Observable<SavedDeliveryAddress> {
+    return this.http.put<{ address: SavedDeliveryAddress }>(
+      `${environment.apiUrl}/delivery-addresses/${id}`,
+      data,
+      { headers: this.getAuthHeaders() }
+    ).pipe(map(r => r.address), catchError(this.handleError));
+  }
+
+  deleteSavedDeliveryAddress(id: number): Observable<any> {
+    return this.http.delete(
+      `${environment.apiUrl}/delivery-addresses/${id}`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
   }
 
   getPaymentConfig(): Observable<{ min_card: number | null; min_dob: number | null }> {

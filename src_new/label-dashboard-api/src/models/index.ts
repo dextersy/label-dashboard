@@ -43,6 +43,11 @@ import WalkInTransactionItem from './WalkInTransactionItem';
 import Notification from './Notification';
 import EventTag from './EventTag';
 import EventTagMapping from './EventTagMapping';
+import WristbandColor from './WristbandColor';
+import WristbandOrder from './WristbandOrder';
+import WristbandOrderItem from './WristbandOrderItem';
+import EventWristbandSettings from './EventWristbandSettings';
+import SavedDeliveryAddress from './SavedDeliveryAddress';
 
 // Define relationships
 // Brand relationships
@@ -131,6 +136,24 @@ Event.hasMany(EventReferrer, { foreignKey: 'event_id', as: 'referrers' });
 Event.hasMany(TicketType, { foreignKey: 'event_id', as: 'ticketTypes' });
 Event.hasMany(WalkInType, { foreignKey: 'event_id', as: 'walkInTypes' });
 Event.hasMany(WalkInTransaction, { foreignKey: 'event_id', as: 'walkInTransactions' });
+Event.hasMany(WristbandOrder, { foreignKey: 'event_id', as: 'wristbandOrders' });
+Event.hasOne(EventWristbandSettings, { foreignKey: 'event_id', as: 'wristbandSettings' });
+
+// WristbandOrder relationships
+WristbandOrder.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+WristbandOrder.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+WristbandOrder.hasMany(WristbandOrderItem, { foreignKey: 'order_id', as: 'items' });
+
+// WristbandOrderItem relationships
+WristbandOrderItem.belongsTo(WristbandOrder, { foreignKey: 'order_id', as: 'order' });
+WristbandOrderItem.belongsTo(WristbandColor, { foreignKey: 'wristband_color_id', as: 'color' });
+
+// EventWristbandSettings relationships
+EventWristbandSettings.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+
+// SavedDeliveryAddress relationships
+SavedDeliveryAddress.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(SavedDeliveryAddress, { foreignKey: 'user_id', as: 'savedDeliveryAddresses' });
 
 // EventReferrer relationships
 EventReferrer.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
@@ -348,6 +371,11 @@ export {
   Notification,
   EventTag,
   EventTagMapping,
+  WristbandColor,
+  WristbandOrder,
+  WristbandOrderItem,
+  EventWristbandSettings,
+  SavedDeliveryAddress,
 };
 
 // Initialize database connection

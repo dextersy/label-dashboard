@@ -142,7 +142,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true },
             { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true },
             { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true },
-            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true }
+            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true },
+            { route: '/campaigns/events/add-ons', title: 'Add-ons', adminOnly: true }
           ]
         },
         {

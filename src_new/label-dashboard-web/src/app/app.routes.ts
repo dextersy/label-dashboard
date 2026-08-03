@@ -44,6 +44,7 @@ import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.comp
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
+import { EventAddOnsComponent } from './pages/events/event-add-ons/event-add-ons.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -141,6 +142,7 @@ export const routes: Routes = [
       { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
       { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
+      { path: 'events/add-ons', component: EventAddOnsComponent },
       // Fundraisers
       { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },
       { path: 'fundraisers/new', component: FundraiserFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },

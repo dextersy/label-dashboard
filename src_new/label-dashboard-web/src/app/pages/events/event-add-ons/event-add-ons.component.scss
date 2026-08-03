@@ -1,0 +1,1012 @@
+// ── Orders table color dots ────────────────────────────────────────────────────
+
+.order-color-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-dot-entry {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.color-dot-qty {
+  color: var(--bs-secondary-color);
+}
+
+// ── Order design thumbnail ────────────────────────────────────────────────────
+
+.order-design-thumb {
+  width: 80px;
+  height: 28px;
+  border-radius: 3px;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+.order-design-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+// ── Quantity grid ─────────────────────────────────────────────────────────────
+
+.wristband-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 16px;
+}
+
+.wristband-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 8px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+
+  &.has-quantity {
+    border-color: var(--bs-primary);
+  }
+}
+
+.wristband-image-wrapper {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wristband-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.wristband-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qty-display {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+// ── Color selector ────────────────────────────────────────────────────────────
+
+.color-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.color-swatch-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: scale(1.12);
+  }
+
+  &.active {
+    border: 2px solid #9ca3af;
+    transform: scale(1.15);
+  }
+}
+
+// ── Preview canvas ────────────────────────────────────────────────────────────
+// Canvas is larger than the template on all sides:
+//   template occupies 90% of canvas width  (5% padding L + R)
+//   template occupies 64% of canvas height (18% padding T + B)
+// Template ratio 13.15:1 → canvas ratio = 13.15 × (0.64/0.90) ≈ 9.35:1
+// padding-bottom = 1/9.35 ≈ 10.7%
+
+.preview-canvas {
+  position: relative;
+  width: 100%;
+  padding-bottom: 10.7%;
+  border-radius: 4px;
+  overflow: hidden;
+  user-select: none;
+
+  &.is-interacting * {
+    cursor: inherit !important;
+  }
+}
+
+// Inner wrapper gives all children a real height to resolve percentage values against
+.canvas-inner {
+  position: absolute;
+  inset: 0;
+}
+
+// ── Template background (excluding snap closure) ──────────────────────────────
+// Covers the template area minus the snap closure strip.
+// left  = template_left + template_width × band_left = 5% + 90%×13% = 16.7%
+// right = template right edge = 5% from canvas right
+// top/bottom = template edges = 18%
+
+.printable-bg {
+  position: absolute;
+  left: 16.7%; right: 5%;
+  top: 18%; bottom: 18%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+// ── Outside-template dimmer (4 strips, pointer-events: none) ─────────────────
+
+.dimmer {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 10;
+}
+// template: left 5% → right 95%, top 18% → bottom 82%
+.dimmer-top    { top: 0;    left: 0;   right: 0;   height: 18%; }
+.dimmer-bottom { bottom: 0; left: 0;   right: 0;   height: 18%; }
+.dimmer-left   { left: 0;   width: 5%; top: 18%;   bottom: 18%; }
+.dimmer-right  { right: 0;  width: 5%; top: 18%;   bottom: 18%; }
+
+// ── Design overlay ────────────────────────────────────────────────────────────
+
+.design-overlay {
+  position: absolute;
+  cursor: move;
+  z-index: 15;
+  outline: 1.5px dashed rgba(255, 255, 255, 0.85);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+
+  &:hover {
+    outline-color: #fff;
+  }
+}
+
+.design-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.design-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.placeholder-icon {
+  font-size: 1.5rem;
+  opacity: 0.8;
+}
+
+.placeholder-label {
+  max-width: 100%;
+  text-align: center;
+  font-size: 0.7rem;
+  word-break: break-all;
+}
+
+// ── Resize handles ────────────────────────────────────────────────────────────
+
+.rh {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border: 1.5px solid var(--bs-primary);
+  border-radius: 2px;
+  z-index: 10;
+
+  &.nw { top: -5px;  left: -5px;  cursor: nw-resize; }
+  &.n  { top: -5px;  left: calc(50% - 5px); cursor: n-resize; }
+  &.ne { top: -5px;  right: -5px; cursor: ne-resize; }
+  &.e  { top: calc(50% - 5px); right: -5px; cursor: e-resize; }
+  &.se { bottom: -5px; right: -5px; cursor: se-resize; }
+  &.s  { bottom: -5px; left: calc(50% - 5px); cursor: s-resize; }
+  &.sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+  &.w  { top: calc(50% - 5px); left: -5px; cursor: w-resize; }
+}
+
+// ── Upload prompt (empty state inside canvas) ─────────────────────────────────
+
+.preview-upload-prompt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.22);
+  transition: background 0.2s;
+  z-index: 30; // above dimmer and template overlays
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.32);
+  }
+}
+
+.prompt-icon {
+  font-size: 2rem;
+  opacity: 0.85;
+}
+
+// ── Template area + overlays (z-index: 20, pointer-events: none) ─────────────
+// Template sits at: left 5%, right 5%, top 18%, bottom 18% of canvas.
+// Snap zone and printable frame are positioned relative to .template-area.
+// Within template: band top 28%, band bottom 28%, snap left 0–13%, printable 13–99%.
+
+.template-area {
+  position: absolute;
+  left: 5%; right: 5%;
+  top: 18%; bottom: 18%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+// Snap closure strip (left 0–13% of template, band height 28–72% of template)
+.snap-zone {
+  position: absolute;
+  left: 0; width: 13%;
+  top: 28%; bottom: 28%;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snap-label {
+  font-size: 0.45rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.4;
+}
+
+// Printable area frame (13–99% of template width, band height 28–72% of template)
+.printable-frame {
+  position: absolute;
+  left: 13%; right: 1%;
+  top: 28%; bottom: 28%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.printable-label {
+  font-size: 0.45rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+// ── Orders table dimming & inline edit ────────────────────────────────────────
+
+$edit-border-color: var(--brand-color, var(--bs-primary));
+
+.order-row-dimmed {
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.order-row-editing {
+  transition: opacity 0.2s;
+
+  td {
+    background-color: color-mix(in srgb, var(--brand-color, var(--bs-primary)) 6%, white);
+    border-top: 2px solid $edit-border-color !important;
+    border-bottom: none !important;
+
+    &:first-child { border-left: 2px solid $edit-border-color; }
+    &:last-child  { border-right: 2px solid $edit-border-color; }
+  }
+}
+
+.order-edit-form-row {
+  td {
+    border-top: none !important;
+    border-bottom: 2px solid $edit-border-color !important;
+    border-left: 2px solid $edit-border-color;
+    border-right: 2px solid $edit-border-color;
+    padding: 0 !important;
+  }
+}
+
+.order-edit-form-inner {
+  padding: 16px;
+}
+
+.order-new-form {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.order-row-clickable {
+  cursor: pointer;
+
+  &:hover td {
+    background-color: var(--bs-table-hover-bg);
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+.wristband-empty-state {
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  background: #f8f9fa;
+}
+
+// ── Wristband summary FAB ─────────────────────────────────────────────────────
+
+.wristband-fab {
+  position: fixed;
+  bottom: 16px;
+  left: calc(86px + 16px);  // collapsed sidebar (86px) + gap
+  right: 16px;
+  z-index: 1050;
+
+  // Expanded sidebar
+  :host-context(.sidebar-open) & {
+    left: calc(260px + 16px);
+  }
+
+  // Mobile: no sidebar, clear workspace nav
+  @media (max-width: 991px) {
+    left: 12px;
+    right: 12px;
+    bottom: calc(72px + 12px);
+  }
+}
+
+// Add bottom clearance when the summary bar is visible
+:host {
+  display: block;
+  padding-bottom: 0;
+  &.has-summary-bar {
+    padding-bottom: 120px;
+  }
+}
+
+.wristband-fab-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 20px 28px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.96));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  @media (max-width: 991px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 12px;
+  }
+}
+
+.wristband-fab-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.fab-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bs-secondary-color);
+  margin-bottom: 4px;
+}
+
+.fab-line-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.fab-line-qty {
+  font-weight: 600;
+  min-width: 28px;
+}
+
+.fab-line-color {
+  color: var(--bs-body-color);
+}
+
+.fab-line-price {
+  color: var(--bs-secondary-color);
+  font-size: 0.8rem;
+}
+
+.fab-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+
+  @media (max-width: 991px) {
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--bs-border-color);
+  }
+}
+
+.fab-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  .fab-section-label { margin-bottom: 0; }
+}
+
+.fab-total-mobile {
+  display: none;
+
+  @media (max-width: 991px) {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--bs-body-color);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+}
+
+.fab-total-block {
+  text-align: right;
+  flex-shrink: 0;
+
+  @media (max-width: 991px) {
+    text-align: left;
+  }
+}
+
+.fab-right--editing {
+  @media (max-width: 991px) {
+    justify-content: flex-end;
+
+    .fab-total-block { display: none; }
+  }
+}
+
+.fab-total-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bs-secondary-color);
+  margin-bottom: 2px;
+}
+
+.fab-total-price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--bs-body-color);
+}
+
+.fab-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 20px;
+  border-left: 1px solid var(--bs-border-color);
+
+  @media (max-width: 991px) {
+    padding-left: 0;
+    border-left: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+.summary-hint {
+  color: var(--bs-secondary-color);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+// ── Equipment rental coming soon ──────────────────────────────────────────────
+
+.coming-soon-icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+// ── Delivery summary (compact, below address book) ────────────────────────
+
+.delivery-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+
+  &--empty {
+    gap: 12px;
+  }
+}
+
+.delivery-summary-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+  flex: 1;
+
+  strong { color: #1f2937; font-weight: 600; }
+}
+
+.delivery-placed-note {
+  margin-top: 8px;
+  margin-bottom: 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+// ── Address book ──────────────────────────────────────────────────────────────
+
+.address-book-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  @media (max-width: 640px) {
+    gap: 8px;
+
+    .address-book-card,
+    .addr-add-card {
+      width: calc(50% - 4px);
+      flex-shrink: 1;
+    }
+
+    .address-book-card input[type="radio"] + label {
+      width: 100%;
+    }
+  }
+}
+
+.address-book-card {
+  position: relative;
+  width: 160px;
+  flex-shrink: 0;
+
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  input[type="radio"] + label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 10px 10px;
+    width: 160px;
+    box-sizing: border-box;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    margin: 0;
+    user-select: none;
+    min-height: 80px;
+
+    .addr-card-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.15s;
+    }
+
+    .addr-card-text {
+      font-size: 12px;
+      color: #9ca3af;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+      transition: color 0.15s;
+    }
+
+    .addr-card-coords {
+      font-size: 11px;
+      color: #d1d5db;
+      margin-top: 2px;
+      transition: color 0.15s;
+    }
+
+    &::after {
+      content: '\f00c';
+      font-family: 'Font Awesome 7 Free', 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--brand-color, #3b82f6);
+      color: #fff;
+      font-size: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+
+    &:hover {
+      border-color: #d1d5db;
+      background: #f9fafb;
+    }
+  }
+
+  input:checked + label {
+    border-color: var(--brand-color, #3b82f6);
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, white);
+    box-shadow: 0 0 0 1px var(--brand-color, #3b82f6);
+
+    .addr-card-label { color: var(--brand-color, #3b82f6); }
+    .addr-card-text  { color: color-mix(in srgb, var(--brand-color, #3b82f6) 70%, #374151); }
+    .addr-card-coords { color: color-mix(in srgb, var(--brand-color, #3b82f6) 50%, #9ca3af); }
+
+    &::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  // Action buttons — always in DOM, revealed on hover or when selected
+  .addr-card-actions {
+    position: absolute;
+    bottom: 5px;
+    right: 3px;
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  &:hover .addr-card-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  // Reserve bottom space so actions don't overlap text on hover
+  &:hover input[type="radio"] + label,
+  input:checked + label {
+    padding-bottom: 26px;
+  }
+
+}
+
+.addr-add-card {
+  width: 160px;
+  min-height: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 10px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--brand-color, #3b82f6);
+    color: var(--brand-color, #3b82f6);
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 5%, transparent);
+  }
+}
+
+.addr-add-icon {
+  font-size: 1.1rem;
+}
+
+.address-book-save-form {
+  border-left: 2px solid var(--bs-border-color);
+  padding-left: 12px;
+}
+
+// ── Mobile order cards ─────────────────────────────────────────────────────────
+
+.mc-summary {
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.mc-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  transition: opacity 0.2s;
+
+  &.mc-card--dimmed {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  &.mc-card--clickable { cursor: pointer; }
+
+  &.mc-card--editing {
+    border: 2px solid var(--brand-color, var(--bs-primary));
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom: none;
+  }
+}
+
+// Header row
+.mc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 10px 14px;
+}
+
+.mc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mc-order-num {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+// Overflow menu
+.mc-menu-wrap {
+  position: relative;
+}
+
+.mc-menu-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #6b7280;
+  cursor: pointer;
+  margin: -8px -10px -8px 0;
+  line-height: 1;
+  letter-spacing: 0;
+
+  &:hover { background: #f3f4f6; color: #374151; }
+  &:disabled { opacity: 0.35; cursor: default; }
+}
+
+.mc-menu-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  min-width: 130px;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.mc-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+
+  &:hover { background: #f9fafb; }
+
+  &--danger {
+    color: var(--bs-danger);
+    &:hover { background: #fff5f5; }
+  }
+}
+
+// Design row
+.mc-design-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 8px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.mc-design-thumb {
+  width: 80px;
+  height: 36px;
+  border-radius: 6px;
+  background: #f9fafb;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mc-design-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.mc-design-name {
+  font-size: 0.8rem;
+  color: #4b5563;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Colors row
+.mc-colors {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 14px 10px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.mc-color-entry {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mc-color-label {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.mc-no-colors {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+// Footer row
+.mc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.mc-footer-count {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.mc-footer-price {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+// Locked note
+.mc-locked-note {
+  padding: 6px 14px 10px;
+  font-size: 0.72rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+// Inline edit / new order form inside a card
+.mc-edit-form {
+  border-top: 1px solid #e5e7eb;
+  padding: 16px 14px;
+}
+
+.mc-new-form {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 14px;
+  margin-bottom: 10px;
+}
+
