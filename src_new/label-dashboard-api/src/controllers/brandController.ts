@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
 import User from '../models/User';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, Fundraiser, Donation } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, Fundraiser, Donation, EventAddOnPayment } from '../models';
 import { Op, literal } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
@@ -1258,8 +1258,25 @@ export const getChildBrands = async (req: Request, res: Response) => {
         fundraiserEarnings = fundraiserGrossEarnings - fundraiserPlatformFees;
       }
 
-      // Calculate balance (including fundraiser earnings)
-      const balance = musicEarnings + eventEarnings + fundraiserEarnings - payments;
+      // Deduct add-on payments made using label balance
+      const sublabelEventIds = await Event.findAll({
+        where: { brand_id: childBrand.id },
+        attributes: ['id'],
+        raw: true,
+      });
+      const sublabelEventIdList = sublabelEventIds.map((e: any) => e.id);
+      const totalAddOnBalancePayments = sublabelEventIdList.length > 0
+        ? await EventAddOnPayment.sum('amount', {
+            where: {
+              event_id: { [Op.in]: sublabelEventIdList },
+              method: 'balance',
+              status: 'succeeded',
+            },
+          }) || 0
+        : 0;
+
+      // Calculate balance (including fundraiser earnings, minus add-on balance payments)
+      const balance = musicEarnings + eventEarnings + fundraiserEarnings - payments - totalAddOnBalancePayments;
 
       // Get domains for this child brand
       const domains = await Domain.findAll({

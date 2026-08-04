@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, literal } from 'sequelize';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation, EventAddOnPayment } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -234,14 +234,34 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
       }
     }) || 0;
 
-    // Calculate receivable balance (net earnings minus payments received by the label)
-    const receivableBalance = musicEarnings + eventEarnings + fundraiserEarnings - totalPayments;
+    // Calculate add-on payments made using label balance
+    // (must use a subquery approach — Sequelize sum() does not support include)
+    const brandEventIds = await Event.findAll({
+      where: { brand_id: req.user.brand_id },
+      attributes: ['id'],
+      raw: true,
+    });
+    const brandEventIdList = brandEventIds.map((e: any) => e.id);
+
+    const totalAddOnBalancePayments = brandEventIdList.length > 0
+      ? await EventAddOnPayment.sum('amount', {
+          where: {
+            event_id: { [Op.in]: brandEventIdList },
+            method: 'balance',
+            status: 'succeeded',
+          },
+        }) || 0
+      : 0;
+
+    // Calculate receivable balance (net earnings minus payments received by the label, minus add-on balance payments)
+    const receivableBalance = musicEarnings + eventEarnings + fundraiserEarnings - totalPayments - totalAddOnBalancePayments;
 
     res.json({
       net_music_earnings: musicEarnings,
       net_event_earnings: eventEarnings,
       net_fundraiser_earnings: fundraiserEarnings,
       total_payments: totalPayments,
+      total_addon_balance_payments: totalAddOnBalancePayments,
       receivable_balance: receivableBalance,
       breakdown: {
         music: {

@@ -48,6 +48,7 @@ import WristbandOrder from './WristbandOrder';
 import WristbandOrderItem from './WristbandOrderItem';
 import EventWristbandSettings from './EventWristbandSettings';
 import SavedDeliveryAddress from './SavedDeliveryAddress';
+import EventAddOnPayment from './EventAddOnPayment';
 
 // Define relationships
 // Brand relationships
@@ -154,6 +155,11 @@ EventWristbandSettings.belongsTo(Event, { foreignKey: 'event_id', as: 'event' })
 // SavedDeliveryAddress relationships
 SavedDeliveryAddress.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 User.hasMany(SavedDeliveryAddress, { foreignKey: 'user_id', as: 'savedDeliveryAddresses' });
+
+// EventAddOnPayment relationships
+EventAddOnPayment.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+EventAddOnPayment.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+Event.hasMany(EventAddOnPayment, { foreignKey: 'event_id', as: 'addOnPayments' });
 
 // EventReferrer relationships
 EventReferrer.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
@@ -376,6 +382,7 @@ export {
   WristbandOrderItem,
   EventWristbandSettings,
   SavedDeliveryAddress,
+  EventAddOnPayment,
 };
 
 // Initialize database connection
