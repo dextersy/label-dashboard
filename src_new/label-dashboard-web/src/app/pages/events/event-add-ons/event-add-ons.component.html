@@ -847,8 +847,14 @@
               <app-icon name="check" class="tw-text-green-600 tw-text-xl" iconOnly></app-icon>
             </div>
             <div>
-              <div class="tw-text-lg tw-font-semibold tw-text-gray-900">Payment of ₱{{ paymentSuccessAmount | number:'1.2-2' }} recorded</div>
-              <div class="tw-text-sm tw-text-gray-400 tw-mt-1">via {{ paymentMethodLabel(paymentMethod) }}</div>
+              <ng-container *ngIf="paymentMethod === 'paymongo'">
+                <div class="tw-text-lg tw-font-semibold tw-text-gray-900">Payment received via Paymongo</div>
+                <div class="tw-text-sm tw-text-gray-400 tw-mt-1">Your payment is being processed.</div>
+              </ng-container>
+              <ng-container *ngIf="paymentMethod !== 'paymongo'">
+                <div class="tw-text-lg tw-font-semibold tw-text-gray-900">Payment of ₱{{ paymentSuccessAmount | number:'1.2-2' }} recorded</div>
+                <div class="tw-text-sm tw-text-gray-400 tw-mt-1">via {{ paymentMethodLabel(paymentMethod) }}</div>
+              </ng-container>
             </div>
             <div *ngIf="addonRemainingBalance === 0" class="tw-text-sm tw-text-green-700 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-2.5 tw-w-full">
               Your add-ons are now fully paid for.
@@ -896,16 +902,19 @@
                   </span>
                 </label>
 
-                <!-- Paymongo option (disabled) -->
-                <label
-                  class="tw-flex tw-flex-1 tw-flex-col tw-gap-0.5 tw-cursor-not-allowed tw-rounded-lg tw-border tw-border-gray-200 tw-bg-gray-50 tw-px-4 tw-py-3 tw-opacity-60"
+                <!-- Paymongo option -->
+                <label for="pm-paymongo"
+                  class="tw-flex tw-flex-1 tw-flex-col tw-gap-0.5 tw-cursor-pointer tw-rounded-lg tw-border tw-px-4 tw-py-3"
+                  [class.tw-border-blue-500]="paymentMethod === 'paymongo'"
+                  [class.tw-bg-blue-50]="paymentMethod === 'paymongo'"
+                  [class.tw-border-gray-200]="paymentMethod !== 'paymongo'"
                 >
-                  <input class="tw-sr-only" type="radio" id="pm-paymongo" value="paymongo" [(ngModel)]="paymentMethod" name="paymentMethod" disabled>
-                  <span class="tw-flex tw-items-center tw-gap-1.5 tw-text-sm tw-font-medium tw-text-gray-500">
+                  <input class="tw-sr-only" type="radio" id="pm-paymongo" value="paymongo" [(ngModel)]="paymentMethod" name="paymentMethod">
+                  <span class="tw-flex tw-items-center tw-gap-1.5 tw-text-sm tw-font-medium tw-text-gray-800">
                     <app-icon name="payment" iconOnly class="tw-text-gray-400"></app-icon>
                     Paymongo
                   </span>
-                  <span class="tw-text-[0.73rem] tw-text-gray-400">Coming soon</span>
+                  <span class="tw-text-[0.73rem] tw-text-gray-400">Card, GCash &amp; more</span>
                 </label>
 
               </div>
@@ -915,15 +924,16 @@
             <div>
               <label class="tw-block tw-text-[0.73rem] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Amount</label>
               <div class="tw-text-2xl tw-font-bold tw-tabular-nums tw-text-gray-900">
-                <ng-container *ngIf="loadingLabelBalance">—</ng-container>
-                <ng-container *ngIf="!loadingLabelBalance">₱{{ effectivePaymentAmount | number:'1.2-2' }}</ng-container>
+                <ng-container *ngIf="paymentMethod === 'balance' && loadingLabelBalance">—</ng-container>
+                <ng-container *ngIf="paymentMethod === 'paymongo'">₱{{ addonRemainingBalance | number:'1.2-2' }}</ng-container>
+                <ng-container *ngIf="paymentMethod === 'balance' && !loadingLabelBalance">₱{{ effectivePaymentAmount | number:'1.2-2' }}</ng-container>
               </div>
-              <div *ngIf="!loadingLabelBalance && effectivePaymentAmount === 0"
+              <div *ngIf="paymentMethod === 'balance' && !loadingLabelBalance && effectivePaymentAmount === 0"
                 class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1.5 tw-text-[0.73rem] tw-text-red-600">
                 <app-icon name="warning" class="tw-shrink-0" iconOnly></app-icon>
                 <span>No balance available for payment.</span>
               </div>
-              <div *ngIf="!loadingLabelBalance && effectivePaymentAmount > 0 && afterPaymentBalance > 0"
+              <div *ngIf="paymentMethod === 'balance' && !loadingLabelBalance && effectivePaymentAmount > 0 && afterPaymentBalance > 0"
                 class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1.5 tw-text-[0.73rem] tw-text-amber-700">
                 <app-icon name="warning" class="tw-shrink-0" iconOnly></app-icon>
                 <span>Partial payment can be made — ₱{{ afterPaymentBalance | number:'1.2-2' }} will still be owed.</span>
@@ -946,9 +956,12 @@
             <button
               type="button"
               class="btn-primary btn-sm"
-              [disabled]="savingPayment || effectivePaymentAmount === 0"
+              [disabled]="savingPayment || (paymentMethod === 'balance' && effectivePaymentAmount === 0) || (paymentMethod === 'paymongo' && addonRemainingBalance === 0)"
               (click)="submitPayment()"
-            >{{ savingPayment ? 'Saving…' : 'Record Payment' }}</button>
+            >
+              <ng-container *ngIf="savingPayment">{{ paymentMethod === 'paymongo' ? 'Redirecting…' : 'Saving…' }}</ng-container>
+              <ng-container *ngIf="!savingPayment">{{ paymentMethod === 'paymongo' ? 'Pay via Paymongo' : 'Record Payment' }}</ng-container>
+            </button>
           </div>
 
         </ng-container>

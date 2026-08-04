@@ -1201,6 +1201,14 @@ export class EventService {
     ).pipe(catchError(this.handleError));
   }
 
+  initiateAddOnPayment(data: { event_id: number; amount: number; notes?: string }): Observable<{ payment_id: number; checkout_url: string }> {
+    return this.http.post<{ payment_id: number; checkout_url: string }>(
+      `${environment.apiUrl}/events/addon-payments/initiate`,
+      data,
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
   private handleError(error: any): Observable<never> {
     console.error('Event service error:', error);
     

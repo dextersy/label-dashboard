@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
@@ -174,6 +175,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   paymentSuccessAmount = 0;
   labelBalance: number | null = null;
   loadingLabelBalance = false;
+  pendingPaymongoSuccess = false;
 
   // Mobile layout
   isMobile = false;
@@ -201,7 +203,8 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     private breadcrumbService: BreadcrumbService,
     private eventService: EventService,
     private authService: AuthService,
-    private labelFinanceService: LabelFinanceService
+    private labelFinanceService: LabelFinanceService,
+    private route: ActivatedRoute
   ) {}
 
   @HostListener('window:resize')
@@ -259,6 +262,18 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
           this.resetFormColors();
         },
         error: () => { this.loadingColors = false; }
+      })
+    );
+
+    // Read query params on load; modal is deferred until event is selected
+    this.subscriptions.add(
+      this.route.queryParams.subscribe(params => {
+        if (params['tab']) {
+          this.activeTab = params['tab'];
+        }
+        if (params['payment_status'] === 'success') {
+          this.pendingPaymongoSuccess = true;
+        }
       })
     );
   }
@@ -331,6 +346,12 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
           this.addonPayments = data.payments;
           this.addonTotalPaid = data.total_paid;
           this.loadingPayments = false;
+          if (this.pendingPaymongoSuccess) {
+            this.pendingPaymongoSuccess = false;
+            this.paymentMethod = 'paymongo';
+            this.paymentSuccess = true;
+            this.showPaymentModal = true;
+          }
         },
         error: () => { this.loadingPayments = false; }
       })
@@ -366,10 +387,29 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   submitPayment(): void {
+    if (this.savingPayment) return;
     const amount = this.effectivePaymentAmount;
     if (!this.eventId || !amount || amount <= 0) return;
     this.savingPayment = true;
     this.paymentError = null;
+
+    if (this.paymentMethod === 'paymongo') {
+      this.eventService.initiateAddOnPayment({
+        event_id: this.eventId,
+        amount,
+        notes: this.paymentNotes || undefined,
+      }).subscribe({
+        next: (res) => {
+          window.location.href = res.checkout_url;
+        },
+        error: (err) => {
+          this.savingPayment = false;
+          this.paymentError = err?.error?.error ?? 'Failed to create payment. Please try again.';
+        }
+      });
+      return;
+    }
+
     this.eventService.createAddOnPayment({
       event_id: this.eventId,
       amount,
