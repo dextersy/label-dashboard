@@ -7,9 +7,10 @@ import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.compo
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
-import { EventService, WristbandColor, WristbandOrder, Event as AppEvent, SavedDeliveryAddress } from '../../../services/event.service';
+import { EventService, WristbandColor, WristbandOrder, Event as AppEvent, SavedDeliveryAddress, EventAddOnPayment } from '../../../services/event.service';
 import { EventSelectionComponent } from '../components/event-selection/event-selection.component';
 import { AuthService } from '../../../services/auth.service';
+import { LabelFinanceService } from '../../../services/label-finance.service';
 
 interface WristbandColorRow extends WristbandColor {
   quantity: number;
@@ -61,7 +62,8 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
   tabs: InPageNavTab[] = [
     { id: 'wristbands', label: 'Wristbands', icon: 'tag' },
-    { id: 'equipment-rental', label: 'Equipment Rental', icon: 'wrench' }
+    { id: 'equipment-rental', label: 'Equipment Rental', icon: 'wrench' },
+    { id: 'payment', label: 'Payment', icon: 'credit-card' }
   ];
 
   wristbandColors: WristbandColorRow[] = [];
@@ -159,6 +161,20 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   orders: WristbandOrder[] = [];
   loadingOrders = false;
 
+  // Payment tab
+  addonPayments: EventAddOnPayment[] = [];
+  addonTotalPaid = 0;
+  loadingPayments = false;
+  showPaymentModal = false;
+  paymentMethod: 'balance' | 'paymongo' = 'balance';
+  paymentNotes = '';
+  savingPayment = false;
+  paymentError: string | null = null;
+  paymentSuccess = false;
+  paymentSuccessAmount = 0;
+  labelBalance: number | null = null;
+  loadingLabelBalance = false;
+
   // Mobile layout
   isMobile = false;
   activeMenuOrderId: number | null = null;
@@ -184,7 +200,8 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   constructor(
     private breadcrumbService: BreadcrumbService,
     private eventService: EventService,
-    private authService: AuthService
+    private authService: AuthService,
+    private labelFinanceService: LabelFinanceService
   ) {}
 
   @HostListener('window:resize')
@@ -266,8 +283,11 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     this.saveToBook = false;
     this.savedToBook = false;
     this.editingAddressId = null;
+    this.addonPayments = [];
+    this.addonTotalPaid = 0;
     this.loadSettings();
     this.loadOrders();
+    this.loadPayments();
   }
 
   ngOnDestroy(): void {
@@ -302,8 +322,118 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     );
   }
 
+  private loadPayments(): void {
+    if (!this.eventId) return;
+    this.loadingPayments = true;
+    this.subscriptions.add(
+      this.eventService.getAddOnPayments(this.eventId).subscribe({
+        next: (data) => {
+          this.addonPayments = data.payments;
+          this.addonTotalPaid = data.total_paid;
+          this.loadingPayments = false;
+        },
+        error: () => { this.loadingPayments = false; }
+      })
+    );
+  }
+
+  openPaymentModal(): void {
+    this.paymentMethod = 'balance';
+    this.paymentNotes = '';
+    this.paymentError = null;
+    this.paymentSuccess = false;
+    this.labelBalance = null;
+    this.loadingLabelBalance = true;
+    this.showPaymentModal = true;
+    const user = this.authService.currentUserValue;
+    if (user?.brand_id) {
+      this.subscriptions.add(
+        this.labelFinanceService.getDashboard(user.brand_id).subscribe({
+          next: (data) => {
+            this.labelBalance = data.receivable_balance;
+            this.loadingLabelBalance = false;
+          },
+          error: () => { this.loadingLabelBalance = false; }
+        })
+      );
+    } else {
+      this.loadingLabelBalance = false;
+    }
+  }
+
+  closePaymentModal(): void {
+    this.showPaymentModal = false;
+  }
+
+  submitPayment(): void {
+    const amount = this.effectivePaymentAmount;
+    if (!this.eventId || !amount || amount <= 0) return;
+    this.savingPayment = true;
+    this.paymentError = null;
+    this.eventService.createAddOnPayment({
+      event_id: this.eventId,
+      amount,
+      method: this.paymentMethod,
+      notes: this.paymentNotes || undefined,
+    }).subscribe({
+      next: () => {
+        this.savingPayment = false;
+        this.paymentSuccessAmount = amount;
+        this.paymentSuccess = true;
+        this.loadPayments();
+      },
+      error: (err) => {
+        this.savingPayment = false;
+        this.paymentError = err?.error?.error ?? 'Failed to record payment. Please try again.';
+      }
+    });
+  }
+
+  paymentMethodLabel(method: string): string {
+    return method === 'balance' ? 'Label Balance' : 'Paymongo';
+  }
+
+  get hasPlacedOrConfirmedOrders(): boolean {
+    return this.orders.some(o => o.status === 'placed' || o.status === 'confirmed');
+  }
+
+  get addonWristbandTotal(): number {
+    return this.orders
+      .filter(o => o.status === 'placed' || o.status === 'confirmed')
+      .reduce((sum, o) => sum + this.orderPrice(o), 0);
+  }
+
+  get addonTotalDue(): number {
+    return this.addonWristbandTotal; // equipment rental always 0 for now
+  }
+
+  get addonRemainingBalance(): number {
+    return Math.max(0, this.addonTotalDue - this.addonTotalPaid);
+  }
+
+  /** Amount that will be charged: capped at the available label balance, minimum 0 */
+  get effectivePaymentAmount(): number {
+    if (this.labelBalance === null) return this.addonRemainingBalance;
+    return Math.max(0, Math.min(this.addonRemainingBalance, this.labelBalance));
+  }
+
+  /** Remaining invoice balance after the effective payment is applied */
+  get afterPaymentBalance(): number {
+    return Math.max(0, this.addonRemainingBalance - this.effectivePaymentAmount);
+  }
+
+  paymentStatusBadgeClass(status: string): string {
+    if (status === 'succeeded') return 'badge bg-success';
+    if (status === 'pending') return 'badge bg-warning text-dark';
+    return 'badge bg-danger';
+  }
+
   onTabChange(tabId: string): void {
     this.activeTab = tabId;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (tabId === 'payment' && this.eventId) {
+      this.loadPayments();
+    }
   }
 
   isTab(id: string): boolean {

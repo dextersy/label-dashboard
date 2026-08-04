@@ -29,6 +29,21 @@
     <!-- Wristbands Tab -->
     <div *ngIf="isTab('wristbands')">
 
+      <!-- Payment status banners -->
+      <div *ngIf="!loadingPayments && addonRemainingBalance > 0"
+        class="tw-flex tw-items-center tw-gap-3 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+        <app-icon name="warning" class="tw-text-amber-500 tw-shrink-0"></app-icon>
+        <div class="tw-text-sm tw-text-amber-800">
+          You have an outstanding balance of <strong class="tw-font-semibold">₱{{ addonRemainingBalance | number:'1.2-2' }}</strong>.
+          <button type="button" class="tw-underline tw-font-medium tw-ml-1 tw-text-amber-700 hover:tw-text-amber-900" (click)="onTabChange('payment')">Make a payment</button>
+        </div>
+      </div>
+      <div *ngIf="!loadingPayments && addonTotalDue > 0 && addonRemainingBalance === 0"
+        class="tw-flex tw-items-center tw-gap-3 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+        <app-icon name="check" class="tw-text-green-600 tw-shrink-0"></app-icon>
+        <span class="tw-text-sm tw-text-green-800">Your add-ons are fully paid for.</span>
+      </div>
+
       <!-- Wristband Orders -->
       <div class="card mb-4">
         <div class="card-body">
@@ -547,6 +562,22 @@
 
     <!-- Equipment Rental Tab -->
     <div *ngIf="isTab('equipment-rental')">
+
+      <!-- Payment status banners -->
+      <div *ngIf="!loadingPayments && addonRemainingBalance > 0"
+        class="tw-flex tw-items-center tw-gap-3 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+        <app-icon name="warning" class="tw-text-amber-500 tw-shrink-0"></app-icon>
+        <div class="tw-text-sm tw-text-amber-800">
+          You have an outstanding balance of <strong class="tw-font-semibold">₱{{ addonRemainingBalance | number:'1.2-2' }}</strong>.
+          <button type="button" class="tw-underline tw-font-medium tw-ml-1 tw-text-amber-700 hover:tw-text-amber-900" (click)="onTabChange('payment')">Make a payment</button>
+        </div>
+      </div>
+      <div *ngIf="!loadingPayments && addonTotalDue > 0 && addonRemainingBalance === 0"
+        class="tw-flex tw-items-center tw-gap-3 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+        <app-icon name="check" class="tw-text-green-600 tw-shrink-0"></app-icon>
+        <span class="tw-text-sm tw-text-green-800">Your add-ons are fully paid for.</span>
+      </div>
+
       <div class="card">
         <div class="card-body text-center py-5">
           <app-icon name="wrench" iconOnly class="coming-soon-icon mb-3"></app-icon>
@@ -554,6 +585,169 @@
           <p class="text-muted mb-0">This feature is coming soon.</p>
         </div>
       </div>
+    </div>
+
+    <!-- Payment Tab -->
+    <div *ngIf="isTab('payment')">
+
+      <!-- Loading -->
+      <div *ngIf="loadingPayments" class="text-muted small py-3">Loading payment info…</div>
+
+      <ng-container *ngIf="!loadingPayments">
+        <div class="payment-tab-body">
+
+        <!-- Stat strip -->
+        <div class="payment-stat-strip tw-mb-4">
+
+          <!-- Balance Due -->
+          <div class="payment-stat-card payment-stat-card--balance payment-stat-card--area-balance"
+            [class.payment-stat-card--paid]="addonRemainingBalance === 0"
+            [class.payment-stat-card--due]="addonRemainingBalance > 0"
+          >
+            <div class="payment-stat-label"
+              [class.tw-text-green-600]="addonRemainingBalance === 0"
+              [class.tw-text-red-500]="addonRemainingBalance > 0"
+            >{{ addonRemainingBalance === 0 ? 'Paid in Full' : 'Balance Due' }}</div>
+            <div class="payment-stat-value"
+              [class.tw-text-green-700]="addonRemainingBalance === 0"
+              [class.tw-text-red-600]="addonRemainingBalance > 0"
+            >₱{{ addonRemainingBalance | number:'1.2-2' }}</div>
+            <button *ngIf="addonRemainingBalance > 0" type="button" class="btn-primary btn-sm tw-mt-1" (click)="openPaymentModal()">
+              <app-icon name="credit-card" />
+              Make a Payment
+            </button>
+          </div>
+
+          <!-- Total Due -->
+          <div class="payment-stat-card payment-stat-card--area-due payment-stat-card--secondary">
+            <div class="payment-stat-label">Total Due</div>
+            <div class="payment-stat-value">₱{{ addonTotalDue | number:'1.2-2' }}</div>
+          </div>
+
+          <!-- Total Paid -->
+          <div class="payment-stat-card payment-stat-card--area-paid payment-stat-card--secondary">
+            <div class="payment-stat-label">Total Paid</div>
+            <div class="payment-stat-value tw-text-green-600">₱{{ addonTotalPaid | number:'1.2-2' }}</div>
+          </div>
+
+        </div>
+
+        <!-- Progress bar -->
+        <div *ngIf="addonTotalDue > 0" class="payment-progress-track tw-mb-4">
+          <div class="payment-progress-fill" [style.width.%]="addonRemainingBalance === 0 ? 100 : (addonTotalPaid / addonTotalDue) * 100"></div>
+        </div>
+
+        <!-- Two-column layout on desktop -->
+        <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-4 tw-items-start">
+
+          <!-- Left: Invoice / Order Summary -->
+          <div class="card">
+            <div class="card-body">
+
+              <!-- Heading with item count subtitle -->
+              <div class="tw-mb-4">
+                <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Order Summary</h3>
+                <div class="tw-text-[0.72rem] tw-text-gray-400 tw-mt-0.5">{{ placedOrders.length }} order{{ placedOrders.length === 1 ? '' : 's' }}</div>
+              </div>
+
+              <!-- Line items -->
+              <div class="tw-border tw-border-gray-200 tw-rounded-lg tw-overflow-hidden">
+                <table class="tw-w-full tw-border-collapse">
+                  <thead>
+                    <tr class="tw-border-b tw-border-gray-200">
+                      <th class="tw-px-4 tw-py-2.5 tw-text-left tw-text-[0.7rem] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400">Description</th>
+                      <th class="tw-px-4 tw-py-2.5 tw-text-right tw-text-[0.7rem] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-whitespace-nowrap">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                    <!-- Wristbands section -->
+                    <tr>
+                      <td colspan="2" class="tw-px-4 tw-pt-3 tw-pb-1 tw-text-sm tw-font-bold tw-text-gray-800">Wristbands</td>
+                    </tr>
+                    <ng-container *ngIf="orders.length > 0">
+                      <ng-container *ngFor="let order of orders">
+                        <tr *ngIf="order.status === 'placed' || order.status === 'confirmed'" class="tw-border-t tw-border-gray-100">
+                          <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-text-sm tw-text-gray-700">
+                            <span class="tw-font-medium" style="color: var(--brand-color, var(--bs-primary))">#{{ order.id }}</span><ng-container *ngIf="colorsSummary(order)"> — <span class="tw-text-gray-500">{{ colorsSummary(order) }}</span></ng-container>
+                          </td>
+                          <td class="tw-py-2 tw-px-4 tw-text-right tw-text-sm tw-font-medium tw-text-gray-800 tw-whitespace-nowrap" style="font-variant-numeric: tabular-nums">₱{{ orderPrice(order) | number:'1.2-2' }}</td>
+                        </tr>
+                      </ng-container>
+                      <tr *ngIf="!hasPlacedOrConfirmedOrders" class="tw-border-t tw-border-gray-100">
+                        <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-text-sm tw-text-gray-400 tw-italic">No placed or confirmed orders</td>
+                        <td class="tw-py-2 tw-px-4 tw-text-right tw-text-sm tw-text-gray-400" style="font-variant-numeric: tabular-nums">₱0.00</td>
+                      </tr>
+                    </ng-container>
+                    <tr *ngIf="orders.length === 0" class="tw-border-t tw-border-gray-100">
+                      <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-text-sm tw-text-gray-400 tw-italic">No orders</td>
+                      <td class="tw-py-2 tw-px-4 tw-text-right tw-text-sm tw-text-gray-400" style="font-variant-numeric: tabular-nums">₱0.00</td>
+                    </tr>
+
+                    <!-- Equipment Rental section -->
+                    <tr class="tw-border-t tw-border-gray-200">
+                      <td colspan="2" class="tw-px-4 tw-pt-3 tw-pb-1 tw-text-sm tw-font-bold tw-text-gray-800">Equipment Rental</td>
+                    </tr>
+                    <tr class="tw-border-t tw-border-gray-100">
+                      <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-pb-3 tw-text-sm tw-text-gray-400 tw-italic">No items</td>
+                      <td class="tw-py-2 tw-px-4 tw-pb-3 tw-text-right tw-text-sm tw-text-gray-400" style="font-variant-numeric: tabular-nums">₱0.00</td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Right: Payment History -->
+          <div class="card payment-history-card">
+            <div class="card-body">
+              <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">Payment History</h3>
+
+              <div *ngIf="addonPayments.length === 0" class="tw-text-sm tw-text-gray-400 tw-italic tw-py-2">No payments recorded yet.</div>
+
+              <div *ngIf="addonPayments.length > 0">
+                <div *ngFor="let payment of addonPayments; let last = last"
+                  class="payment-receipt-row"
+                  [class.payment-receipt-row--divided]="!last"
+                >
+                  <!-- Status icon -->
+                  <div class="payment-receipt-icon"
+                    [class.payment-receipt-icon--success]="payment.status === 'succeeded'"
+                    [class.payment-receipt-icon--pending]="payment.status === 'pending'"
+                    [class.payment-receipt-icon--failed]="payment.status !== 'succeeded' && payment.status !== 'pending'"
+                  >
+                    <app-icon
+                      [name]="payment.status === 'succeeded' ? 'check' : payment.status === 'pending' ? 'clock' : 'x'"
+                      iconOnly
+                    ></app-icon>
+                  </div>
+                  <!-- Content -->
+                  <div class="tw-flex-1 tw-min-w-0">
+                    <div class="tw-flex tw-items-baseline tw-justify-between tw-gap-2">
+                      <span class="tw-font-semibold tw-text-gray-800" style="font-variant-numeric: tabular-nums">₱{{ payment.amount | number:'1.2-2' }}</span>
+                      <span class="tw-text-[0.72rem] tw-text-gray-400 tw-whitespace-nowrap">{{ payment.createdAt | date:'MMM d, y' }}</span>
+                    </div>
+                    <div class="tw-text-[0.72rem] tw-text-gray-400 tw-mt-0.5">
+                      {{ paymentMethodLabel(payment.method) }} · {{ payment.status | titlecase }}<ng-container *ngIf="payment.notes"> · {{ payment.notes }}</ng-container>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Total paid summary line -->
+                <div class="tw-flex tw-justify-end tw-items-baseline tw-gap-2 tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-200">
+                  <span class="tw-text-[0.72rem] tw-text-gray-400 tw-font-semibold tw-uppercase tw-tracking-wider">Total Paid</span>
+                  <span class="tw-font-bold tw-text-green-600" style="font-variant-numeric: tabular-nums">₱{{ addonTotalPaid | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        </div><!-- /.payment-tab-body -->
+      </ng-container>
     </div>
 
   </app-in-page-nav>
@@ -597,6 +791,16 @@
         <div class="fab-total-label">Order Total</div>
         <div class="fab-total-price">₱{{ (formOpen ? formTotalPrice : allOrdersTotalPrice) | number:'1.2-2' }}</div>
       </div>
+      <div class="fab-actions" *ngIf="!formOpen && placedOrders.length > 0">
+        <button
+          type="button"
+          [class]="addonRemainingBalance === 0 ? 'btn-success btn-sm' : 'btn-primary btn-sm'"
+          (click)="onTabChange('payment')"
+        >
+          <app-icon [name]="addonRemainingBalance === 0 ? 'check' : 'credit-card'" />
+          {{ addonRemainingBalance === 0 ? 'Order Paid' : 'Proceed to Payment' }}
+        </button>
+      </div>
       <div class="fab-actions" *ngIf="formOpen">
         <button
           type="button"
@@ -622,6 +826,137 @@
   </div>
 </div>
 
+
+<!-- Make a Payment Modal -->
+<ng-container *ngIf="showPaymentModal">
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show" style="display:block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:460px">
+      <div class="modal-content tw-rounded-xl tw-border-0 tw-shadow-xl">
+
+        <!-- Header -->
+        <div class="tw-flex tw-items-center tw-justify-between tw-px-6 tw-pt-5 tw-pb-4 tw-border-b tw-border-gray-100">
+          <h5 class="tw-text-base tw-font-semibold tw-text-gray-900 tw-mb-0">{{ paymentSuccess ? 'Payment Recorded' : 'Make a Payment' }}</h5>
+          <button type="button" class="btn-close" (click)="closePaymentModal()"></button>
+        </div>
+
+        <!-- Success state -->
+        <ng-container *ngIf="paymentSuccess">
+          <div class="tw-flex tw-flex-col tw-items-center tw-gap-4 tw-px-6 tw-py-10 tw-text-center">
+            <div class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-green-100 tw-flex tw-items-center tw-justify-center">
+              <app-icon name="check" class="tw-text-green-600 tw-text-xl" iconOnly></app-icon>
+            </div>
+            <div>
+              <div class="tw-text-lg tw-font-semibold tw-text-gray-900">Payment of ₱{{ paymentSuccessAmount | number:'1.2-2' }} recorded</div>
+              <div class="tw-text-sm tw-text-gray-400 tw-mt-1">via {{ paymentMethodLabel(paymentMethod) }}</div>
+            </div>
+            <div *ngIf="addonRemainingBalance === 0" class="tw-text-sm tw-text-green-700 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-2.5 tw-w-full">
+              Your add-ons are now fully paid for.
+            </div>
+            <div *ngIf="addonRemainingBalance > 0" class="tw-text-sm tw-text-amber-700 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-2.5 tw-w-full">
+              Remaining balance: <strong>₱{{ addonRemainingBalance | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+          <div class="tw-flex tw-justify-center tw-px-6 tw-pb-6">
+            <button type="button" class="btn-secondary btn-sm" (click)="closePaymentModal()">Close</button>
+          </div>
+        </ng-container>
+
+        <!-- Form state -->
+        <ng-container *ngIf="!paymentSuccess">
+
+          <!-- Body -->
+          <div class="tw-px-6 tw-py-5 tw-flex tw-flex-col tw-gap-5">
+
+            <!-- Payment method -->
+            <div>
+              <label class="tw-block tw-text-[0.73rem] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-2">Payment Method</label>
+              <div class="tw-flex tw-gap-3">
+
+                <!-- Balance option -->
+                <label for="pm-balance"
+                  class="tw-flex tw-flex-1 tw-flex-col tw-gap-0.5 tw-cursor-pointer tw-rounded-lg tw-border tw-px-4 tw-py-3 tw-transition-colors"
+                  [class.tw-border-blue-500]="paymentMethod === 'balance'"
+                  [class.tw-bg-blue-50]="paymentMethod === 'balance'"
+                  [class.tw-border-gray-200]="paymentMethod !== 'balance'"
+                >
+                  <input class="tw-sr-only" type="radio" id="pm-balance" value="balance" [(ngModel)]="paymentMethod" name="paymentMethod">
+                  <span class="tw-flex tw-items-center tw-gap-1.5 tw-text-sm tw-font-medium tw-text-gray-800">
+                    <app-icon name="wallet" iconOnly class="tw-text-gray-400"></app-icon>
+                    Label Balance
+                  </span>
+                  <span class="tw-text-[0.73rem] tw-tabular-nums"
+                    [class.tw-text-gray-400]="loadingLabelBalance || labelBalance === null"
+                    [class.tw-text-blue-600]="!loadingLabelBalance && labelBalance !== null && paymentMethod === 'balance'"
+                    [class.tw-text-gray-500]="!loadingLabelBalance && labelBalance !== null && paymentMethod !== 'balance'"
+                  >
+                    <ng-container *ngIf="loadingLabelBalance">Loading…</ng-container>
+                    <ng-container *ngIf="!loadingLabelBalance && labelBalance !== null">Available: ₱{{ labelBalance | number:'1.2-2' }}</ng-container>
+                    <ng-container *ngIf="!loadingLabelBalance && labelBalance === null">Balance unavailable</ng-container>
+                  </span>
+                </label>
+
+                <!-- Paymongo option (disabled) -->
+                <label
+                  class="tw-flex tw-flex-1 tw-flex-col tw-gap-0.5 tw-cursor-not-allowed tw-rounded-lg tw-border tw-border-gray-200 tw-bg-gray-50 tw-px-4 tw-py-3 tw-opacity-60"
+                >
+                  <input class="tw-sr-only" type="radio" id="pm-paymongo" value="paymongo" [(ngModel)]="paymentMethod" name="paymentMethod" disabled>
+                  <span class="tw-flex tw-items-center tw-gap-1.5 tw-text-sm tw-font-medium tw-text-gray-500">
+                    <app-icon name="payment" iconOnly class="tw-text-gray-400"></app-icon>
+                    Paymongo
+                  </span>
+                  <span class="tw-text-[0.73rem] tw-text-gray-400">Coming soon</span>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Amount (fixed) -->
+            <div>
+              <label class="tw-block tw-text-[0.73rem] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Amount</label>
+              <div class="tw-text-2xl tw-font-bold tw-tabular-nums tw-text-gray-900">
+                <ng-container *ngIf="loadingLabelBalance">—</ng-container>
+                <ng-container *ngIf="!loadingLabelBalance">₱{{ effectivePaymentAmount | number:'1.2-2' }}</ng-container>
+              </div>
+              <div *ngIf="!loadingLabelBalance && effectivePaymentAmount === 0"
+                class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1.5 tw-text-[0.73rem] tw-text-red-600">
+                <app-icon name="warning" class="tw-shrink-0" iconOnly></app-icon>
+                <span>No balance available for payment.</span>
+              </div>
+              <div *ngIf="!loadingLabelBalance && effectivePaymentAmount > 0 && afterPaymentBalance > 0"
+                class="tw-flex tw-items-center tw-gap-1.5 tw-mt-1.5 tw-text-[0.73rem] tw-text-amber-700">
+                <app-icon name="warning" class="tw-shrink-0" iconOnly></app-icon>
+                <span>Partial payment can be made — ₱{{ afterPaymentBalance | number:'1.2-2' }} will still be owed.</span>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+              <label class="tw-block tw-text-[0.73rem] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-2">Notes <span class="tw-normal-case tw-font-normal tw-text-gray-300">(optional)</span></label>
+              <textarea class="tw-input" [(ngModel)]="paymentNotes" rows="2" placeholder="Reference number, remarks, etc."></textarea>
+            </div>
+
+            <div *ngIf="paymentError" class="tw-text-sm tw-text-red-600 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-4 tw-py-2.5">{{ paymentError }}</div>
+
+          </div>
+
+          <!-- Footer -->
+          <div class="tw-flex tw-justify-end tw-gap-2 tw-px-6 tw-pb-5">
+            <button type="button" class="btn-secondary btn-sm" (click)="closePaymentModal()" [disabled]="savingPayment">Cancel</button>
+            <button
+              type="button"
+              class="btn-primary btn-sm"
+              [disabled]="savingPayment || effectivePaymentAmount === 0"
+              (click)="submitPayment()"
+            >{{ savingPayment ? 'Saving…' : 'Record Payment' }}</button>
+          </div>
+
+        </ng-container>
+
+      </div>
+    </div>
+  </div>
+</ng-container>
 
 <!-- Disclaimer Dialog -->
 <ng-container *ngIf="showDisclaimerDialog">

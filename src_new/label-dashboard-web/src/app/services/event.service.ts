@@ -50,6 +50,21 @@ export interface EventWristbandSettings {
   delivery_phone: string | null;
 }
 
+export interface EventAddOnPayment {
+  id: number;
+  event_id: number;
+  amount: number;
+  method: 'balance' | 'paymongo';
+  status: 'pending' | 'succeeded' | 'failed';
+  reference_number: string | null;
+  notes: string | null;
+  created_by: number;
+  createdAt: string;
+  updatedAt: string;
+  creator?: { id: number; first_name: string; last_name: string; email_address: string };
+}
+
+
 export interface SavedDeliveryAddress {
   id: number;
   user_id: number;
@@ -1169,6 +1184,21 @@ export class EventService {
     }).pipe(
       catchError(this.handleError)
     );
+  }
+
+  getAddOnPayments(eventId: number): Observable<{ payments: EventAddOnPayment[]; total_paid: number }> {
+    return this.http.get<{ payments: EventAddOnPayment[]; total_paid: number }>(
+      `${environment.apiUrl}/events/addon-payments`,
+      { headers: this.getAuthHeaders(), params: { event_id: eventId.toString() } }
+    ).pipe(catchError(this.handleError));
+  }
+
+  createAddOnPayment(data: { event_id: number; amount: number; method: 'balance' | 'paymongo'; reference_number?: string; notes?: string }): Observable<{ payment: EventAddOnPayment }> {
+    return this.http.post<{ payment: EventAddOnPayment }>(
+      `${environment.apiUrl}/events/addon-payments`,
+      data,
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
   }
 
   private handleError(error: any): Observable<never> {

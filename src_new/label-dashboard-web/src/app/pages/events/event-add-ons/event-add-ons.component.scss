@@ -433,6 +433,13 @@ $edit-border-color: var(--brand-color, var(--bs-primary));
   }
 }
 
+// Constrain payment tab content width
+.payment-tab-body {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .wristband-fab-inner {
   display: flex;
   align-items: center;
@@ -579,6 +586,143 @@ $edit-border-color: var(--brand-color, var(--bs-primary));
   color: var(--bs-secondary-color);
   font-style: italic;
   font-size: 0.875rem;
+}
+
+// ── Payment tab stat strip ─────────────────────────────────────────────────────
+
+// Mobile: balance full-width on top, due + paid side-by-side below
+// Desktop: due | paid | balance as equal columns
+.payment-stat-strip {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "balance balance"
+    "due     paid";
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "due paid balance";
+  }
+}
+
+.payment-stat-card--area-balance { grid-area: balance; }
+.payment-stat-card--area-due     { grid-area: due; }
+.payment-stat-card--area-paid    { grid-area: paid; }
+
+.payment-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.payment-stat-card--paid {
+  background: color-mix(in srgb, #16a34a 7%, white);
+  border-color: color-mix(in srgb, #16a34a 25%, white);
+}
+
+.payment-stat-card--due {
+  background: color-mix(in srgb, #dc2626 5%, white);
+  border-color: color-mix(in srgb, #dc2626 20%, white);
+}
+
+// Smaller visual weight for the secondary stat cards (due + paid) on mobile
+.payment-stat-card--secondary {
+  @media (max-width: 1023px) {
+    padding: 10px 14px;
+
+    .payment-stat-value {
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.payment-stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--bs-secondary-color);
+}
+
+.payment-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--bs-body-color);
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Payment progress bar ────────────────────────────────────────────────────────
+
+.payment-progress-track {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--bs-border-color);
+  overflow: hidden;
+}
+
+.payment-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--bs-success, #16a34a);
+  max-width: 100%;
+  transition: width 0.4s ease;
+}
+
+// ── Payment history card (sticky on desktop) ────────────────────────────────────
+
+@media (min-width: 1024px) {
+  .payment-history-card {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+// ── Payment receipt rows ───────────────────────────────────────────────────────
+
+.payment-receipt-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+
+  &.payment-receipt-row--divided {
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.payment-receipt-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+
+  &--success {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  &--pending {
+    background: #fef9c3;
+    color: #ca8a04;
+  }
+
+  &--failed {
+    background: #fee2e2;
+    color: #dc2626;
+  }
 }
 
 // ── Equipment rental coming soon ──────────────────────────────────────────────
