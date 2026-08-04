@@ -44,6 +44,15 @@
         <span class="tw-text-sm tw-text-green-800">Your add-ons are fully paid for.</span>
       </div>
 
+      <!-- Pending confirmation notice -->
+      <div *ngIf="hasPendingOrders"
+        class="tw-flex tw-items-center tw-gap-3 tw-bg-blue-50 tw-border tw-border-blue-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+        <app-icon name="clock" class="tw-text-blue-500 tw-shrink-0"></app-icon>
+        <span class="tw-text-sm tw-text-blue-800">
+          You have {{ pendingOrderCount }} order(s) awaiting admin confirmation. Confirmed orders will be counted toward your payment total.
+        </span>
+      </div>
+
       <!-- Wristband Orders -->
       <div class="card mb-4">
         <div class="card-body">
@@ -667,7 +676,7 @@
                     </tr>
                     <ng-container *ngIf="orders.length > 0">
                       <ng-container *ngFor="let order of orders">
-                        <tr *ngIf="order.status === 'placed' || order.status === 'confirmed'" class="tw-border-t tw-border-gray-100">
+                        <tr *ngIf="order.status === 'confirmed'" class="tw-border-t tw-border-gray-100">
                           <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-text-sm tw-text-gray-700">
                             <span class="tw-font-medium" style="color: var(--brand-color, var(--bs-primary))">#{{ order.id }}</span><ng-container *ngIf="colorsSummary(order)"> — <span class="tw-text-gray-500">{{ colorsSummary(order) }}</span></ng-container>
                           </td>
@@ -675,7 +684,7 @@
                         </tr>
                       </ng-container>
                       <tr *ngIf="!hasPlacedOrConfirmedOrders" class="tw-border-t tw-border-gray-100">
-                        <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-text-sm tw-text-gray-400 tw-italic">No placed or confirmed orders</td>
+                        <td class="tw-py-2 tw-pl-8 tw-pr-4 tw-text-sm tw-text-gray-400 tw-italic">No confirmed orders</td>
                         <td class="tw-py-2 tw-px-4 tw-text-right tw-text-sm tw-text-gray-400" style="font-variant-numeric: tabular-nums">₱0.00</td>
                       </tr>
                     </ng-container>
@@ -781,7 +790,7 @@
     <!-- Summary (orders exist, not editing) -->
     <ng-container *ngIf="!formOpen && orders.length > 0">
       <div class="wristband-fab-lines">
-        <div class="fab-section-label">Total Ordered — {{ placedOrders.length }} placed order{{ placedOrders.length === 1 ? '' : 's' }}</div>
+        <div class="fab-section-label">Total Ordered — {{ placedOrders.length }} confirmed order{{ placedOrders.length === 1 ? '' : 's' }}</div>
       </div>
     </ng-container>
 

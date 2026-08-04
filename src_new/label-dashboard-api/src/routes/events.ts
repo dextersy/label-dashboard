@@ -51,9 +51,12 @@ import {
   getWristbandSettings,
   upsertWristbandSettings,
   getWristbandOrders,
+  getWristbandOrder,
   createWristbandOrder,
   updateWristbandOrder,
   deleteWristbandOrder,
+  confirmWristbandOrder,
+  rejectWristbandOrder,
   upload as wristbandUpload,
 } from '../controllers/wristbandOrderController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
@@ -76,6 +79,9 @@ router.put('/wristband-settings', requireAdmin, upsertWristbandSettings);
 router.get('/wristband-orders', getWristbandOrders);
 router.post('/wristband-orders', requireAdmin, wristbandUpload.single('design'), createWristbandOrder);
 router.put('/wristband-orders/:id', requireAdmin, wristbandUpload.single('design'), updateWristbandOrder);
+router.get('/wristband-orders/:id', requireAdmin, getWristbandOrder);
+router.post('/wristband-orders/:id/confirm', requireAdmin, confirmWristbandOrder);
+router.post('/wristband-orders/:id/reject', requireAdmin, rejectWristbandOrder);
 router.delete('/wristband-orders/:id', requireAdmin, deleteWristbandOrder);
 
 // Add-on payments

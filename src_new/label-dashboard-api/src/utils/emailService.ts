@@ -245,6 +245,9 @@ export const sendBrandedEmail = async (
     case 'donation_admin_notification':
       subject = `New Donation: ${templateData.FUNDRAISER_TITLE}`;
       break;
+    case 'wristband_order_status':
+      subject = `Wristband order ${templateData.STATUS_LABEL?.toLowerCase()} — ${templateData.EVENT_TITLE}`;
+      break;
     default:
       subject = 'Notification';
   }
@@ -1002,6 +1005,72 @@ export const sendArtistRegistrationNotification = async (
   } catch (error) {
     console.error('Error sending artist registration notification:', error);
     return false;
+  }
+};
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export const sendWristbandOrderStatusEmail = async (
+  order: any,
+  event: any,
+  status: 'confirmed' | 'rejected',
+  ctaUrl: string
+): Promise<void> => {
+  try {
+    const brand = await Brand.findByPk(event.brand_id);
+    if (!brand) return;
+
+    const adminEmails = await getBrandAdministrators(brand.id);
+    if (!adminEmails.length) return;
+
+    const brandLogoHtml = brand.logo_url
+      ? `<img src="${escapeHtml(brand.logo_url)}" alt="${escapeHtml(brand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+      : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(brand.brand_name)}</div>`;
+
+    const items = (order.items ?? []) as any[];
+    const PRICE_PER_10 = 35;
+    const itemsRows = items
+      .filter((i: any) => i.quantity > 0)
+      .map((i: any) => {
+        const price = ((i.quantity / 10) * PRICE_PER_10).toFixed(2);
+        return `<tr style="border-top: 1px solid #e5e5e5;">
+          <td style="font-size: 14px; color: #333333; padding: 8px 12px;">${escapeHtml(i.color?.label ?? '—')}</td>
+          <td style="font-size: 14px; color: #333333; padding: 8px 12px; text-align: right;">${escapeHtml(i.quantity)}</td>
+          <td style="font-size: 14px; color: #333333; padding: 8px 12px; text-align: right;">₱${escapeHtml(price)}</td>
+        </tr>`;
+      })
+      .join('');
+    const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
+    const totalPrice = ((totalQty / 10) * PRICE_PER_10).toFixed(2);
+
+    const isConfirmed = status === 'confirmed';
+
+    await sendBrandedEmail(adminEmails, 'wristband_order_status', {
+      BRAND_NAME: brand.brand_name,
+      BRAND_LOGO_HTML: brandLogoHtml,
+      BRAND_COLOR: brand.brand_color || '#333333',
+      STATUS_LABEL: isConfirmed ? 'Order Accepted' : 'Order Rejected',
+      STATUS_COLOR: isConfirmed ? '#16a34a' : '#dc2626',
+      STATUS_MESSAGE: isConfirmed
+        ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been accepted. You can now proceed to pay for it.`
+        : `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,
+      ORDER_ID: escapeHtml(order.id),
+      EVENT_TITLE: escapeHtml(event.title),
+      ITEMS_ROWS: itemsRows,
+      TOTAL_QTY: String(totalQty),
+      TOTAL_PRICE: totalPrice,
+      CTA_URL: ctaUrl,
+      CTA_LABEL: isConfirmed ? 'Pay for Order' : 'Review Order',
+    }, brand.id);
+  } catch (err) {
+    console.error('sendWristbandOrderStatusEmail error:', err);
   }
 };
 

@@ -45,6 +45,7 @@ import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 import { EventAddOnsComponent } from './pages/events/event-add-ons/event-add-ons.component';
+import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -143,6 +144,7 @@ export const routes: Routes = [
       { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
       { path: 'events/add-ons', component: EventAddOnsComponent },
+      { path: 'events/wristband-order-review', component: WristbandOrderReviewComponent, canActivate: [adminGuard] },
       // Fundraisers
       { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },
       { path: 'fundraisers/new', component: FundraiserFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },

@@ -177,6 +177,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   loadingLabelBalance = false;
   pendingPaymongoSuccess = false;
 
+
   // Mobile layout
   isMobile = false;
   activeMenuOrderId: number | null = null;
@@ -434,12 +435,20 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get hasPlacedOrConfirmedOrders(): boolean {
-    return this.orders.some(o => o.status === 'placed' || o.status === 'confirmed');
+    return this.orders.some(o => o.status === 'confirmed');
+  }
+
+  get hasPendingOrders(): boolean {
+    return this.orders.some(o => o.status === 'placed');
+  }
+
+  get pendingOrderCount(): number {
+    return this.orders.filter(o => o.status === 'placed').length;
   }
 
   get addonWristbandTotal(): number {
     return this.orders
-      .filter(o => o.status === 'placed' || o.status === 'confirmed')
+      .filter(o => o.status === 'confirmed')
       .reduce((sum, o) => sum + this.orderPrice(o), 0);
   }
 
@@ -788,7 +797,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get placedOrders(): WristbandOrder[] {
-    return this.orders.filter(o => o.status === 'placed' || o.status === 'confirmed');
+    return this.orders.filter(o => o.status === 'confirmed');
   }
 
   get allOrdersTotalQty(): number {

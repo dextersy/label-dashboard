@@ -1079,6 +1079,29 @@ export class EventService {
     ).pipe(catchError(this.handleError));
   }
 
+  getWristbandOrderById(orderId: number): Observable<WristbandOrder> {
+    return this.http.get<{ order: WristbandOrder }>(
+      `${environment.apiUrl}/events/wristband-orders/${orderId}`,
+      { headers: this.getAuthHeaders() }
+    ).pipe(map(r => r.order), catchError(this.handleError));
+  }
+
+  confirmWristbandOrder(orderId: number): Observable<any> {
+    return this.http.post(
+      `${environment.apiUrl}/events/wristband-orders/${orderId}/confirm`,
+      {},
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  rejectWristbandOrder(orderId: number): Observable<any> {
+    return this.http.post(
+      `${environment.apiUrl}/events/wristband-orders/${orderId}/reject`,
+      {},
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
   // ─── Saved Delivery Addresses ────────────────────────────────────────────
 
   getSavedDeliveryAddresses(): Observable<SavedDeliveryAddress[]> {

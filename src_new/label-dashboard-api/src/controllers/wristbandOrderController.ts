@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import multer from 'multer';
 import { WristbandOrder, WristbandOrderItem, WristbandColor, EventWristbandSettings, Event } from '../models';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
+import { sendEmail, sendWristbandOrderStatusEmail } from '../utils/emailService';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
+import User from '../models/User';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -38,6 +41,80 @@ async function validateItems(
     return 'One or more wristband color IDs are invalid';
   }
   return null;
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ─── Email notification ────────────────────────────────────────────────────
+
+async function sendWristbandOrderNotification(order: any, event: any): Promise<void> {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId) return;
+
+    const admins = await User.findAll({ where: { brand_id: parentBrandId, is_admin: true }, attributes: ['email_address'] });
+    const recipients = admins.map((u: any) => u.email_address).filter(Boolean);
+    if (!recipients.length) return;
+
+    const frontendUrl = await getBrandFrontendUrl(parentBrandId);
+    const manageUrl = `${frontendUrl}/campaigns/events/wristband-order-review?order_id=${order.id}`;
+
+    const items = (order.items ?? []) as any[];
+    const itemRows = items
+      .filter((i: any) => i.quantity > 0)
+      .map((i: any) => `<tr><td style="padding:4px 8px">${escapeHtml(i.color?.label ?? i.wristband_color_id)}</td><td style="padding:4px 8px;text-align:right">${escapeHtml(i.quantity)}</td></tr>`)
+      .join('');
+    const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
+    const totalPrice = ((totalQty / 10) * 35).toFixed(2);
+
+    let deliveryHtml = '';
+    const settings = await EventWristbandSettings.findOne({ where: { event_id: event.id } }) as any;
+    if (settings?.delivery_name || settings?.delivery_street) {
+      const parts = [
+        settings.delivery_name,
+        settings.delivery_street,
+        [settings.delivery_city, settings.delivery_country, settings.delivery_zip].filter(Boolean).join(', '),
+        settings.delivery_phone,
+      ].filter(Boolean).map(escapeHtml);
+      deliveryHtml = `<p style="margin:16px 0 4px"><strong>Delivery Address:</strong></p><p style="margin:0;white-space:pre-line">${parts.join('\n')}</p>`;
+    }
+
+    const html = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+        <h2 style="margin:0 0 16px">New Wristband Order — Review Required</h2>
+        <p><strong>Order ID:</strong> #${escapeHtml(order.id)}</p>
+        <p><strong>Event:</strong> ${escapeHtml(event.title ?? event.name ?? event.id)}</p>
+        <table style="border-collapse:collapse;width:100%;margin:12px 0">
+          <thead><tr style="background:#f5f5f5">
+            <th style="padding:4px 8px;text-align:left">Color</th>
+            <th style="padding:4px 8px;text-align:right">Qty</th>
+          </tr></thead>
+          <tbody>${itemRows}</tbody>
+          <tfoot><tr style="font-weight:bold;border-top:1px solid #ddd">
+            <td style="padding:4px 8px">Total</td>
+            <td style="padding:4px 8px;text-align:right">${totalQty} — ₱${totalPrice}</td>
+          </tr></tfoot>
+        </table>
+        ${deliveryHtml}
+        <div style="margin-top:24px">
+          <a href="${manageUrl}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold">Manage Order</a>
+        </div>
+      </div>
+    `;
+
+    await sendEmail(recipients, `Wristband Order #${order.id} Pending Confirmation`, html, parentBrandId);
+  } catch (err) {
+    console.error('sendWristbandOrderNotification error:', err);
+  }
 }
 
 // ─── Wristband Settings ────────────────────────────────────────────────────
@@ -166,6 +243,10 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
       include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
     });
 
+    if (order.status === 'placed') {
+      sendWristbandOrderNotification(fullOrder, event);
+    }
+
     res.status(201).json({ order: fullOrder });
   } catch (error) {
     console.error('createWristbandOrder error:', error);
@@ -187,6 +268,7 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Only draft or rejected orders can be edited' });
     }
 
+    const previousStatus = order.status;
     const { status, disclaimer_acknowledged, items, design_x, design_y, design_width, design_height } = req.body;
     const parsedItems: { wristband_color_id: number; quantity: number }[] =
       typeof items === 'string' ? JSON.parse(items) : items;
@@ -239,9 +321,92 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
       include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
     });
 
+    const newStatus = (status || order.status) as string;
+    if (previousStatus !== 'placed' && newStatus === 'placed') {
+      const evt = await Event.findByPk((order as any).event_id);
+      sendWristbandOrderNotification(fullOrder, evt);
+    }
+
     res.json({ order: fullOrder });
   } catch (error) {
     console.error('updateWristbandOrder error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getWristbandOrder = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId, {
+      include: [
+        { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        { model: Event, as: 'event', attributes: ['id', 'title', 'brand_id'] },
+      ],
+    });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    res.json({ order });
+  } catch (error) {
+    console.error('getWristbandOrder error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId, {
+      include: [
+        { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        { model: Event, as: 'event' },
+      ],
+    }) as any;
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be confirmed' });
+    await order.update({ status: 'confirmed' });
+    const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
+    if (orgFrontendUrl) {
+      const payUrl = `${orgFrontendUrl}/campaigns/events/add-ons?tab=payment`;
+      sendWristbandOrderStatusEmail(order, order.event, 'confirmed', payUrl);
+    }
+    res.json({ order });
+  } catch (error) {
+    console.error('confirmWristbandOrder error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId, {
+      include: [
+        { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        { model: Event, as: 'event' },
+      ],
+    }) as any;
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be rejected' });
+    await order.update({ status: 'rejected' });
+    const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
+    if (orgFrontendUrl) {
+      const wristbandUrl = `${orgFrontendUrl}/campaigns/events/add-ons`;
+      sendWristbandOrderStatusEmail(order, order.event, 'rejected', wristbandUrl);
+    }
+    res.json({ order });
+  } catch (error) {
+    console.error('rejectWristbandOrder error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
