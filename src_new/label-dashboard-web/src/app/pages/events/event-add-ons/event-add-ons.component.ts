@@ -61,11 +61,16 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
   activeTab: string = 'wristbands';
 
-  tabs: InPageNavTab[] = [
-    { id: 'wristbands', label: 'Wristbands', icon: 'tag' },
-    { id: 'equipment-rental', label: 'Equipment Rental', icon: 'wrench' },
-    { id: 'payment', label: 'Payment', icon: 'credit-card' }
-  ];
+  get tabs(): InPageNavTab[] {
+    const base: InPageNavTab[] = [
+      { id: 'wristbands', label: 'Wristbands', icon: 'tag' },
+      { id: 'equipment-rental', label: 'Equipment Rental', icon: 'wrench' },
+    ];
+    if (this.hasPlacedOrConfirmedOrders) {
+      base.push({ id: 'payment', label: 'Payment', icon: 'credit-card' });
+    }
+    return base;
+  }
 
   wristbandColors: WristbandColorRow[] = [];
   loadingColors = true;
@@ -813,7 +818,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get showSummaryBar(): boolean {
-    return this.formOpen || this.orders.length > 0;
+    return this.formOpen || this.hasPlacedOrConfirmedOrders;
   }
 
   decreaseQuantity(color: WristbandColorRow): void {
