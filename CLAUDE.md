@@ -124,7 +124,7 @@ Set `TICKETING_PARENT_BRAND_ID` in the API `.env` to the brand ID that acts as t
 1. **Backend First**: Check existing APIs in `label-dashboard-api` before creating new endpoints
 2. **Reuse Components**: Look for existing Angular components before creating new ones
 3. **Follow Patterns**: Mimic existing code patterns for consistency
-4. **Bootstrap Styling**: Use Bootstrap classes whenever possible
+4. **Styling**: Prefer Tailwind (`tw-*`) utility classes for layout, spacing, and component-level styling. Use Bootstrap classes only for structural components that Bootstrap already owns (e.g. `modal`, `card`, `form-check`, `table`) or where a Bootstrap utility is meaningfully shorter and equivalent. Never mix both on the same element.
 5. **Never Modify Legacy**: Do not change files in `src/` (legacy PHP code)
 6. **No Automatic Building/Testing**: By default, do not build or test code unless specifically requested by the user. The user will report any build errors or issues that need to be addressed.
 7. **Never Build the App**: Do not run `npm run build`, `npm start`, or any build/test commands. The user will handle building and testing themselves.
