@@ -46,7 +46,7 @@ import {
 } from '../controllers/walkInController';
 import { getTags, createTag } from '../controllers/eventTagController';
 import { getWristbandColors } from '../controllers/wristbandColorController';
-import { getAddOnPayments, createAddOnPayment } from '../controllers/eventAddOnPaymentController';
+import { getAddOnPayments, createAddOnPayment, initiateAddOnPayment } from '../controllers/eventAddOnPaymentController';
 import {
   getWristbandSettings,
   upsertWristbandSettings,
@@ -81,6 +81,7 @@ router.delete('/wristband-orders/:id', requireAdmin, deleteWristbandOrder);
 // Add-on payments
 router.get('/addon-payments', getAddOnPayments);
 router.post('/addon-payments', requireAdmin, createAddOnPayment);
+router.post('/addon-payments/initiate', requireAdmin, initiateAddOnPayment);
 
 // Event CRUD operations
 router.get('/', getEvents);

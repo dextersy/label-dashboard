@@ -6,6 +6,7 @@ import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
 import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser } from '../models';
+import EventAddOnPayment from '../models/EventAddOnPayment';
 import Artist from '../models/Artist';
 import ArtistAccess from '../models/ArtistAccess';
 import Payment from '../models/Payment';
@@ -210,9 +211,19 @@ export class PaymentService {
         const donation = await this.findDonationByPaymentType(eventType, eventData);
 
         if (!donation) {
-          this.webhookLog('ERROR: Reference is not valid - neither ticket nor donation found');
-          await this.sendAdminFailureNotification('Invalid reference value in JSON response', undefined, payload);
-          return false;
+          // Try finding an event add-on payment
+          const addOnPayment = await this.findAddOnPaymentByPaymentType(eventType, eventData);
+
+          if (!addOnPayment) {
+            this.webhookLog('ERROR: Reference is not valid - no matching ticket, donation, or add-on payment found');
+            await this.sendAdminFailureNotification('Invalid reference value in JSON response', undefined, payload);
+            return false;
+          }
+
+          this.webhookLog('Valid reference found for add-on payment ID: ' + addOnPayment.id);
+
+          const paymentId = this.extractPaymentIdFromPayments(eventType, eventData);
+          return await this.processAddOnPaymentConfirmation(addOnPayment, paymentId);
         }
 
         this.webhookLog('Valid reference found for donation ID: ' + donation.id);
@@ -511,6 +522,42 @@ export class PaymentService {
     }
 
     return null;
+  }
+
+  private async findAddOnPaymentByPaymentType(eventType: string, eventData: any): Promise<any> {
+    if (eventType !== 'checkout_session') {
+      return null;
+    }
+
+    const clientKey = eventData.attributes?.client_key;
+    if (!clientKey) {
+      return null;
+    }
+
+    return await EventAddOnPayment.findOne({
+      where: { checkout_key: clientKey, method: 'paymongo' },
+    });
+  }
+
+  private async processAddOnPaymentConfirmation(addOnPayment: any, paymentId: string | null): Promise<boolean> {
+    try {
+      if (addOnPayment.status === 'succeeded') {
+        this.webhookLog('Add-on payment already marked as succeeded, skipping duplicate webhook');
+        return true;
+      }
+
+      await addOnPayment.update({
+        status: 'succeeded',
+        reference_number: paymentId ?? addOnPayment.reference_number,
+      });
+
+      this.webhookLog('Successfully updated add-on payment ID ' + addOnPayment.id + ' to succeeded');
+      return true;
+    } catch (error) {
+      this.webhookLog('ERROR: Failed to process add-on payment: ' + (error as Error).message);
+      console.error('Failed to process add-on payment confirmation:', error);
+      return false;
+    }
   }
 
   private calculateProcessingFeeFromPayments(eventType: string, eventData: any): number {

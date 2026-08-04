@@ -8,6 +8,8 @@ interface EventAddOnPaymentAttributes {
   method: 'balance' | 'paymongo';
   status: 'pending' | 'succeeded' | 'failed';
   reference_number?: string;
+  checkout_key?: string;
+  checkout_session_id?: string;
   notes?: string;
   created_by: number;
   createdAt?: Date;
@@ -23,6 +25,8 @@ class EventAddOnPayment extends Model<EventAddOnPaymentAttributes, EventAddOnPay
   public method!: 'balance' | 'paymongo';
   public status!: 'pending' | 'succeeded' | 'failed';
   public reference_number?: string;
+  public checkout_key?: string;
+  public checkout_session_id?: string;
   public notes?: string;
   public created_by!: number;
 
@@ -56,6 +60,14 @@ EventAddOnPayment.init(
       defaultValue: 'succeeded',
     },
     reference_number: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    checkout_key: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    checkout_session_id: {
       type: DataTypes.STRING(100),
       allowNull: true,
     },
