@@ -17,9 +17,9 @@
     </div>
   </div>
 
-  <div *ngIf="!loading && order" class="tw-max-w-2xl">
+  <ng-container *ngIf="!loading && order">
 
-    <div class="tw-mb-4">
+    <div class="tw-max-w-2xl tw-mb-4">
       <h4 class="tw-mb-1">Wristband Order #{{ order.id }}</h4>
       <div class="tw-flex tw-items-center tw-gap-2">
         <span [class]="statusBadgeClass(order.status)">{{ order.status | titlecase }}</span>
@@ -27,97 +27,158 @@
       </div>
     </div>
 
-    <!-- Action result banner -->
+    <!-- Action result banners -->
     <div *ngIf="actionDone && actionResult === 'confirmed'"
-      class="tw-flex tw-items-center tw-gap-3 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+      class="tw-flex tw-items-center tw-gap-3 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
       <app-icon name="check" class="tw-text-green-600 tw-shrink-0"></app-icon>
       <span class="tw-text-sm tw-text-green-800">Order #{{ order.id }} has been <strong>accepted</strong>. The organizer's payment total has been updated.</span>
     </div>
     <div *ngIf="actionDone && actionResult === 'rejected'"
-      class="tw-flex tw-items-center tw-gap-3 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+      class="tw-flex tw-items-center tw-gap-3 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
       <app-icon name="warning" class="tw-text-amber-500 tw-shrink-0"></app-icon>
       <span class="tw-text-sm tw-text-amber-800">Order #{{ order.id }} has been <strong>rejected</strong>. The organizer can edit and re-submit it.</span>
     </div>
     <div *ngIf="actionError"
-      class="tw-flex tw-items-center tw-gap-3 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4">
+      class="tw-flex tw-items-center tw-gap-3 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
       <app-icon name="warning" class="tw-text-red-500 tw-shrink-0"></app-icon>
       <span class="tw-text-sm tw-text-red-800">{{ actionError }}</span>
     </div>
 
-    <!-- Order details card -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Order Items</h3>
-
-        <table class="table table-sm mb-0">
-          <thead>
-            <tr>
-              <th>Color</th>
-              <th class="text-end">Qty</th>
-              <th class="text-end">Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of order.items">
-              <td>{{ item.color?.label ?? '—' }}</td>
-              <td class="text-end">{{ item.quantity }}</td>
-              <td class="text-end">₱{{ ((item.quantity / 10) * PRICE_PER_10) | number:'1.2-2' }}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr class="fw-semibold">
-              <td>Total</td>
-              <td class="text-end">{{ totalQty }}</td>
-              <td class="text-end">₱{{ totalPrice | number:'1.2-2' }}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-
-    <!-- Design preview -->
+    <!-- Design preview — full width so the wristband canvas is as wide as possible -->
     <div *ngIf="order.design_url" class="card mb-4">
       <div class="card-body">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Design</h3>
-        <img [src]="order.design_url" alt="Wristband design" class="tw-max-w-xs tw-rounded tw-border tw-border-gray-200">
-      </div>
-    </div>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Design Preview</h3>
 
-    <!-- Action buttons — only shown when order is in 'placed' state and no action taken yet -->
-    <div *ngIf="order.status === 'placed' && !actionDone" class="card mb-4">
-      <div class="card-body">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Action Required</h3>
-        <p class="tw-text-sm tw-text-gray-600 tw-mb-4">Review the order above and accept or reject it. Accepted orders are counted toward the organizer's payment total.</p>
-        <div class="tw-flex tw-gap-3">
+        <!-- Color picker -->
+        <div *ngIf="orderedColors.length" class="color-selector-row">
+          <app-icon name="eye" class="text-muted" iconOnly></app-icon>
+          <button
+            *ngFor="let color of orderedColors"
+            type="button"
+            class="color-swatch-btn"
+            [class.active]="previewColor?.slug === color.slug"
+            [title]="color.label"
+            [style.backgroundColor]="color.bg_color"
+            (click)="selectPreviewColor(color.slug)"
+          ></button>
+        </div>
+
+        <!-- Canvas -->
+        <div class="preview-canvas">
+          <div class="canvas-inner">
+            <div class="printable-bg" [style.backgroundColor]="previewColor?.bg_color"></div>
+
+            <div
+              class="design-overlay"
+              [style.left.%]="designLeftPct"
+              [style.top.%]="designTopPct"
+              [style.width.%]="designWidthPct"
+              [style.height.%]="designHeightPct"
+            >
+              <img [src]="order.design_url" class="design-img" draggable="false" alt="Wristband design">
+            </div>
+
+            <div class="dimmer dimmer-top"    aria-hidden="true"></div>
+            <div class="dimmer dimmer-bottom" aria-hidden="true"></div>
+            <div class="dimmer dimmer-left"   aria-hidden="true"></div>
+            <div class="dimmer dimmer-right"  aria-hidden="true"></div>
+
+            <div class="template-area" aria-hidden="true">
+              <div class="snap-zone">
+                <span class="snap-label">Snap<br>Closure</span>
+              </div>
+              <div class="printable-frame">
+                <span class="printable-label">Printable Area</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tw-mt-3">
           <button
             type="button"
-            class="btn-primary"
-            (click)="confirm()"
-            [disabled]="actioning"
+            class="btn-secondary btn-sm"
+            (click)="downloadDesign()"
+            [disabled]="downloading"
           >
-            <app-icon name="check" />
-            {{ actioning ? 'Processing…' : 'Accept Order' }}
+            <app-icon name="download" />
+            {{ downloading ? 'Preparing…' : 'Download design PNG' }}
           </button>
-          <button
-            type="button"
-            class="btn-secondary text-danger"
-            (click)="reject()"
-            [disabled]="actioning"
-          >
-            <app-icon name="x" />
-            Reject Order
-          </button>
+          <span class="tw-text-xs tw-text-gray-400 tw-ml-2">{{ TEMPLATE_W }}×{{ TEMPLATE_H }}px, transparent</span>
         </div>
       </div>
     </div>
 
-    <!-- Already actioned notice -->
-    <div *ngIf="order.status !== 'placed' && !actionDone" class="card mb-4">
-      <div class="card-body tw-text-sm tw-text-gray-500">
-        This order has already been <strong>{{ order.status }}</strong> and cannot be actioned again.
+    <div class="tw-max-w-2xl">
+
+      <!-- Order details card -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Order Items</h3>
+
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Color</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of order.items">
+                <td>{{ item.color?.label ?? '—' }}</td>
+                <td class="text-end">{{ item.quantity }}</td>
+                <td class="text-end">₱{{ ((item.quantity / 10) * PRICE_PER_10) | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="fw-semibold">
+                <td>Total</td>
+                <td class="text-end">{{ totalQty }}</td>
+                <td class="text-end">₱{{ totalPrice | number:'1.2-2' }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
+
+      <!-- Action buttons — only shown when order is in 'placed' state and no action taken yet -->
+      <div *ngIf="order.status === 'placed' && !actionDone" class="card mb-4">
+        <div class="card-body">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Action Required</h3>
+          <p class="tw-text-sm tw-text-gray-600 tw-mb-4">Review the order above and accept or reject it. Accepted orders are counted toward the organizer's payment total.</p>
+          <div class="tw-flex tw-gap-3">
+            <button
+              type="button"
+              class="btn-primary"
+              (click)="confirm()"
+              [disabled]="actioning"
+            >
+              <app-icon name="check" />
+              {{ actioning ? 'Processing…' : 'Accept Order' }}
+            </button>
+            <button
+              type="button"
+              class="btn-secondary text-danger"
+              (click)="reject()"
+              [disabled]="actioning"
+            >
+              <app-icon name="x" />
+              Reject Order
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Already actioned notice -->
+      <div *ngIf="order.status !== 'placed' && !actionDone" class="card mb-4">
+        <div class="card-body tw-text-sm tw-text-gray-500">
+          This order has already been <strong>{{ order.status }}</strong> and cannot be actioned again.
+        </div>
+      </div>
+
     </div>
 
-  </div>
+  </ng-container>
 
 </div>

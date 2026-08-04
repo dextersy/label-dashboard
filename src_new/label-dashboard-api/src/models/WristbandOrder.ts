@@ -12,12 +12,13 @@ interface WristbandOrderAttributes {
   design_y: number | null;
   design_width: number | null;
   design_height: number | null;
+  canvas_width: number | null;
   disclaimer_acknowledged: boolean;
   notes: string | null;
   created_by: number;
 }
 
-interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'notes' | 'disclaimer_acknowledged'> {}
+interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged'> {}
 
 class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreationAttributes> implements WristbandOrderAttributes {
   public id!: number;
@@ -28,6 +29,7 @@ class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreat
   public design_y!: number | null;
   public design_width!: number | null;
   public design_height!: number | null;
+  public canvas_width!: number | null;
   public disclaimer_acknowledged!: boolean;
   public notes!: string | null;
   public created_by!: number;
@@ -69,6 +71,10 @@ WristbandOrder.init(
       allowNull: true,
     },
     design_height: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
+    canvas_width: {
       type: DataTypes.FLOAT,
       allowNull: true,
     },

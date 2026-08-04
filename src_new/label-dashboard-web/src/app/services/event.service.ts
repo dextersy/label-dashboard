@@ -31,6 +31,7 @@ export interface WristbandOrder {
   design_y: number | null;
   design_width: number | null;
   design_height: number | null;
+  canvas_width: number | null;
   disclaimer_acknowledged: boolean;
   notes: string | null;
   created_by: number;

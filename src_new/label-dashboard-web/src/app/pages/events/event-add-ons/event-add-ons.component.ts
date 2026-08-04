@@ -723,6 +723,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     return order.status === 'draft';
   }
 
+
   statusBadgeClass(status: string): string {
     const map: Record<string, string> = {
       draft: 'status-warning',
@@ -882,10 +883,12 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
       // Always persist canvas position/size when a design is present
       if (this.formDesignIsImage) {
+        const bounds = this.getPreviewBounds();
         formData.append('design_x',      String(this.designPos.x));
         formData.append('design_y',      String(this.designPos.y));
         formData.append('design_width',  String(this.designPos.width));
         formData.append('design_height', String(this.designPos.height));
+        formData.append('canvas_width',  String(bounds.width));
       }
 
       const obs = this.editingOrderId

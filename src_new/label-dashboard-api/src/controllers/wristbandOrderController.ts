@@ -199,7 +199,7 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
     const event = await resolveEvent(eventId, req.user.brand_id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const { status, disclaimer_acknowledged, items, design_x, design_y, design_width, design_height } = req.body;
+    const { status, disclaimer_acknowledged, items, design_x, design_y, design_width, design_height, canvas_width } = req.body;
     const parsedItems: { wristband_color_id: number; quantity: number }[] =
       typeof items === 'string' ? JSON.parse(items) : items;
 
@@ -228,6 +228,7 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
       design_y: design_y != null ? parseFloat(design_y) : null,
       design_width: design_width != null ? parseFloat(design_width) : null,
       design_height: design_height != null ? parseFloat(design_height) : null,
+      canvas_width: canvas_width != null ? parseFloat(canvas_width) : null,
       disclaimer_acknowledged: disclaimer_acknowledged === true || disclaimer_acknowledged === 'true',
       created_by: req.user.id,
     });
@@ -269,7 +270,7 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
     }
 
     const previousStatus = order.status;
-    const { status, disclaimer_acknowledged, items, design_x, design_y, design_width, design_height } = req.body;
+    const { status, disclaimer_acknowledged, items, design_x, design_y, design_width, design_height, canvas_width } = req.body;
     const parsedItems: { wristband_color_id: number; quantity: number }[] =
       typeof items === 'string' ? JSON.parse(items) : items;
 
@@ -306,6 +307,7 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
       design_y: design_y != null ? parseFloat(design_y) : order.design_y,
       design_width: design_width != null ? parseFloat(design_width) : order.design_width,
       design_height: design_height != null ? parseFloat(design_height) : order.design_height,
+      canvas_width: canvas_width != null ? parseFloat(canvas_width) : order.canvas_width,
       disclaimer_acknowledged: disclaimer_acknowledged === true || disclaimer_acknowledged === 'true',
     });
 

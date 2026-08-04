@@ -1,0 +1,128 @@
+// ── Color selector ────────────────────────────────────────────────────────────
+
+.color-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.color-swatch-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: scale(1.12);
+  }
+
+  &.active {
+    border: 2px solid #9ca3af;
+    transform: scale(1.15);
+  }
+}
+
+// ── Preview canvas ────────────────────────────────────────────────────────────
+// Canvas aspect ratio mirrors event-add-ons: padding-bottom = 10.7%
+
+.preview-canvas {
+  position: relative;
+  width: 100%;
+  padding-bottom: 10.7%;
+  border-radius: 4px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.canvas-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.printable-bg {
+  position: absolute;
+  left: 16.7%; right: 5%;
+  top: 18%; bottom: 18%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dimmer {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.dimmer-top    { top: 0;    left: 0;   right: 0;   height: 18%; }
+.dimmer-bottom { bottom: 0; left: 0;   right: 0;   height: 18%; }
+.dimmer-left   { left: 0;   width: 5%; top: 18%;   bottom: 18%; }
+.dimmer-right  { right: 0;  width: 5%; top: 18%;   bottom: 18%; }
+
+.design-overlay {
+  position: absolute;
+  z-index: 15;
+  outline: 1.5px dashed rgba(255, 255, 255, 0.85);
+  outline-offset: -1px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  pointer-events: none; // read-only — no interaction
+}
+
+.design-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.template-area {
+  position: absolute;
+  left: 5%; right: 5%;
+  top: 18%; bottom: 18%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.snap-zone {
+  position: absolute;
+  left: 0; width: 13%;
+  top: 28%; bottom: 28%;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snap-label {
+  font-size: 0.45rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.printable-frame {
+  position: absolute;
+  left: 13%; right: 1%;
+  top: 28%; bottom: 28%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.printable-label {
+  font-size: 0.45rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
