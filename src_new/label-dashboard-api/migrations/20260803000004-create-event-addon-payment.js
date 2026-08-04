@@ -33,6 +33,14 @@ module.exports = {
         type: Sequelize.STRING(100),
         allowNull: true,
       },
+      checkout_key: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      checkout_session_id: {
+        type: Sequelize.STRING(100),
+        allowNull: true,
+      },
       notes: {
         type: Sequelize.TEXT,
         allowNull: true,
