@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Receipt</title>
+  <style>
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    table, td, th {
+      border-collapse: collapse;
+    }
+
+    @media only screen and (max-width: 620px) {
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+      }
+
+      .content {
+        padding: 24px 20px !important;
+      }
+
+      .header-logo img {
+        max-width: 120px !important;
+        height: auto !important;
+      }
+
+      .detail-label {
+        font-size: 13px !important;
+      }
+
+      .detail-value {
+        font-size: 14px !important;
+      }
+    }
+  </style>
+</head>
+<body style="width: 100% !important; min-height: 100% !important; margin: 0 !important; padding: 0 !important; background-color: #f5f5f5; font-family: Arial, Helvetica, sans-serif;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5;">
+    <tr>
+      <td align="center" style="padding: 30px 15px;">
+        <table class="container" width="500" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; width: 100%;">
+          <tr>
+            <td style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+              <!-- Brand Header with Logo -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" class="header-logo" style="background-color: %BRAND_COLOR%; padding: 30px 20px;">
+                    %BRAND_LOGO_HTML%
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Content area -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td class="content" style="padding: 35px 35px 40px 35px;">
+
+              <!-- Status indicator bar -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="background-color: #16a34a; border-radius: 6px; padding: 12px 18px;">
+                    <div style="font-size: 15px; font-weight: 700; color: #ffffff; text-align: center;">Payment Confirmed</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Spacer -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr><td style="padding-bottom: 20px;"></td></tr>
+              </table>
+
+              <!-- Greeting + title -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding-bottom: 20px;">
+                    <div style="font-size: 20px; font-weight: 700; color: #333333;">
+                      Your payment has been received
+                    </div>
+                    <div style="font-size: 14px; color: #555555; margin-top: 8px; line-height: 1.5;">
+                      Hi %INITIATOR_NAME%, thanks for submitting your add-on payment for <strong>%EVENT_TITLE%</strong>. Here's a summary for your records.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-bottom: 1px solid #e5e5e5; padding-bottom: 15px;"></td>
+                </tr>
+              </table>
+
+              <!-- Payment Details -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 20px;">
+                <tr>
+                  <td class="detail-label" style="font-size: 14px; color: #666666; padding: 8px 0; width: 40%;">Event</td>
+                  <td class="detail-value" style="font-size: 15px; color: #333333; padding: 8px 0; font-weight: 600;">%EVENT_TITLE%</td>
+                </tr>
+                <tr>
+                  <td class="detail-label" style="font-size: 14px; color: #666666; padding: 8px 0;">Amount</td>
+                  <td class="detail-value" style="font-size: 15px; color: #333333; padding: 8px 0; font-weight: 700;">₱%AMOUNT%</td>
+                </tr>
+                <tr>
+                  <td class="detail-label" style="font-size: 14px; color: #666666; padding: 8px 0;">Payment Method</td>
+                  <td class="detail-value" style="font-size: 15px; color: #333333; padding: 8px 0;">%METHOD%</td>
+                </tr>
+                %REFERENCE_ROW%
+                %NOTES_ROW%
+              </table>
+
+              <!-- Processing note -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding-top: 25px;">
+                    <div style="font-size: 14px; color: #333333; background-color: #f9f9f9; border-left: 3px solid %BRAND_COLOR%; padding: 12px 16px; line-height: 1.6;">
+                      Your order will be processed <strong>5 days before the event</strong>. Please make sure all details are confirmed before then.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer note -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding-top: 20px;">
+                    <div style="font-size: 13px; color: #888888; line-height: 1.5;">
+                      If you have any questions about this payment, please reach out to the platform administrator.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="padding-top: 35px;">
+                    <div style="font-size: 12px; color: #999999;">
+                      %BRAND_NAME%
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

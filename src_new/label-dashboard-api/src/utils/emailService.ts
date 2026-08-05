@@ -246,7 +246,12 @@ export const sendBrandedEmail = async (
       subject = `New Donation: ${templateData.FUNDRAISER_TITLE}`;
       break;
     case 'wristband_order_status':
-      subject = `Wristband order ${templateData.STATUS_LABEL?.toLowerCase()} — ${templateData.EVENT_TITLE}`;
+      subject = templateData.STATUS_LABEL === 'Order Accepted'
+        ? `Your wristband order is confirmed! 🎉 — ${templateData.EVENT_TITLE}`
+        : `Update on your wristband order — ${templateData.EVENT_TITLE}`;
+      break;
+    case 'addon_payment_receipt':
+      subject = `We've got your payment for ${templateData.EVENT_TITLE} add-ons!`;
       break;
     default:
       subject = 'Notification';
@@ -1071,6 +1076,121 @@ export const sendWristbandOrderStatusEmail = async (
     }, brand.id);
   } catch (err) {
     console.error('sendWristbandOrderStatusEmail error:', err);
+  }
+};
+
+export const sendAddOnPaymentNotification = async (
+  payment: any,
+  event: any,
+  initiatorUser: any,
+  orders: any[]
+): Promise<void> => {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId) return;
+
+    const parentBrand = await Brand.findByPk(parentBrandId);
+    if (!parentBrand) return;
+
+    const orgBrand = await Brand.findByPk(event.brand_id);
+    const orgBrandName = orgBrand?.brand_name ?? 'Organizer';
+
+    const frontendUrl = await import('./brandUtils').then(m => m.getBrandFrontendUrl(parentBrandId)).catch(() => '');
+
+    const PRICE_PER_10 = 35;
+    const orderRows = orders
+      .map((o: any) => {
+        const items = (o.items ?? []) as any[];
+        const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
+        const totalPrice = ((totalQty / 10) * PRICE_PER_10).toFixed(2);
+        const manageUrl = frontendUrl ? `${frontendUrl}/campaigns/events/wristband-order-review?order_id=${escapeHtml(o.id)}` : '';
+        return `<tr style="border-top:1px solid #e5e5e5;">
+          <td style="padding:8px 12px;font-size:14px;color:#333">#${escapeHtml(o.id)}</td>
+          <td style="padding:8px 12px;font-size:14px;color:#333">${escapeHtml(o.status)}</td>
+          <td style="padding:8px 12px;font-size:14px;color:#333;text-align:right">${totalQty}</td>
+          <td style="padding:8px 12px;font-size:14px;color:#333;text-align:right">₱${escapeHtml(totalPrice)}</td>
+          <td style="padding:8px 12px;font-size:14px;text-align:center">${manageUrl ? `<a href="${manageUrl}" style="color:#2563eb;text-decoration:underline">Manage</a>` : '—'}</td>
+        </tr>`;
+      })
+      .join('');
+
+    const methodLabel = payment.method === 'balance' ? 'Label Balance' : 'Paymongo';
+    const initiatorName = initiatorUser ? `${initiatorUser.first_name ?? ''} ${initiatorUser.last_name ?? ''}`.trim() : 'Unknown';
+
+    const adminRefHtml = payment.reference_number ? `<p style="margin:4px 0"><strong>Reference:</strong> ${escapeHtml(payment.reference_number)}</p>` : '';
+    const adminNotesHtml = payment.notes ? `<p style="margin:4px 0"><strong>Notes:</strong> ${escapeHtml(payment.notes)}</p>` : '';
+
+    const adminHtml = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+        <h2 style="margin:0 0 16px">Add-On Payment Received</h2>
+        <p><strong>Organizer:</strong> ${escapeHtml(orgBrandName)}</p>
+        <p><strong>Event:</strong> ${escapeHtml(event.title ?? event.id)}</p>
+        <p><strong>Amount:</strong> ₱${escapeHtml(parseFloat(payment.amount).toFixed(2))}</p>
+        <p><strong>Method:</strong> ${escapeHtml(methodLabel)}</p>
+        <p><strong>Paid by:</strong> ${escapeHtml(initiatorName)}</p>
+        ${adminRefHtml}${adminNotesHtml}
+        <h3 style="margin:24px 0 8px">Wristband Orders for This Event</h3>
+        ${orders.length > 0 ? `
+        <table style="border-collapse:collapse;width:100%">
+          <thead><tr style="background:#f5f5f5">
+            <th style="padding:8px 12px;text-align:left;font-size:13px">Order ID</th>
+            <th style="padding:8px 12px;text-align:left;font-size:13px">Status</th>
+            <th style="padding:8px 12px;text-align:right;font-size:13px">Qty</th>
+            <th style="padding:8px 12px;text-align:right;font-size:13px">Price</th>
+            <th style="padding:8px 12px;text-align:center;font-size:13px">Link</th>
+          </tr></thead>
+          <tbody>${orderRows}</tbody>
+        </table>` : '<p>No wristband orders found for this event.</p>'}
+      </div>
+    `;
+
+    const adminEmails = await getBrandAdministrators(parentBrandId);
+    if (adminEmails.length) {
+      await sendEmail(adminEmails, `Add-On Payment Received — ${event.title ?? `Event #${event.id}`}`, adminHtml, parentBrandId);
+    }
+
+    // Branded receipt to initiator
+    if (initiatorUser?.email_address) {
+      const brandIdForEmail = event.brand_id ?? parentBrandId;
+      const orgBrandForReceipt = await Brand.findByPk(brandIdForEmail);
+      const receiptBrand = orgBrandForReceipt ?? parentBrand;
+
+      const brandLogoHtml = receiptBrand.logo_url
+        ? `<img src="${escapeHtml(receiptBrand.logo_url)}" alt="${escapeHtml(receiptBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+        : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(receiptBrand.brand_name)}</div>`;
+
+      const referenceRow = payment.reference_number
+        ? `<tr>
+            <td class="detail-label" style="font-size: 14px; color: #666666; padding: 8px 0; width: 40%;">Reference</td>
+            <td class="detail-value" style="font-size: 15px; color: #333333; padding: 8px 0;">${escapeHtml(payment.reference_number)}</td>
+           </tr>`
+        : '';
+      const notesRow = payment.notes
+        ? `<tr>
+            <td class="detail-label" style="font-size: 14px; color: #666666; padding: 8px 0; width: 40%;">Notes</td>
+            <td class="detail-value" style="font-size: 15px; color: #333333; padding: 8px 0;">${escapeHtml(payment.notes)}</td>
+           </tr>`
+        : '';
+
+      await sendBrandedEmail(
+        [initiatorUser.email_address],
+        'addon_payment_receipt',
+        {
+          BRAND_NAME: receiptBrand.brand_name,
+          BRAND_LOGO_HTML: brandLogoHtml,
+          BRAND_COLOR: receiptBrand.brand_color || '#333333',
+          INITIATOR_NAME: escapeHtml(initiatorName),
+          EVENT_TITLE: escapeHtml(event.title ?? `Event #${event.id}`),
+          AMOUNT: escapeHtml(parseFloat(payment.amount).toFixed(2)),
+          METHOD: escapeHtml(methodLabel),
+          REFERENCE_ROW: referenceRow,
+          NOTES_ROW: notesRow,
+        },
+        brandIdForEmail
+      );
+    }
+  } catch (err) {
+    console.error('sendAddOnPaymentNotification error:', err);
   }
 };
 
