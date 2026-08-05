@@ -204,7 +204,6 @@ const processImagesInHtml = async (htmlContent: string, eventId: number): Promis
         Key: fileName,
         Body: imageBuffer,
         ContentType: `image/${imageType}`,
-        ACL: 'public-read' // Make images publicly accessible for emails
       });
       
       // Replace the base64 src with S3 URL in the HTML

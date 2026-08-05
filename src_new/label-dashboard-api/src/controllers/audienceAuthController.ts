@@ -613,7 +613,6 @@ export const audienceUploadProfilePhoto = async (req: Request, res: Response) =>
       Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
-      ACL: 'public-read',
     });
 
     const profile_photo_url = getS3PublicUrl(process.env.S3_BUCKET!, key);
