@@ -207,6 +207,13 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   savingOrder = false;
   saveOrderError: string | null = null;
 
+  // Order placed confirmation modal
+  showOrderPlacedModal = false;
+
+  // Delete order confirmation dialog
+  showDeleteOrderDialog = false;
+  private orderPendingDelete: WristbandOrder | null = null;
+
   // Disclaimer dialog
   showDisclaimerDialog = false;
   dialogCheck1 = false; // design & quantities are final
@@ -934,6 +941,9 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
           this.savingOrder = false;
           this.formOpen = false;
           this.editingOrderId = null;
+          if (status === 'placed') {
+            this.showOrderPlacedModal = true;
+          }
         },
         error: (err) => {
           this.savingOrder = false;
@@ -947,11 +957,24 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   deleteOrder(order: WristbandOrder): void {
-    if (!confirm('Delete this draft order?')) return;
-    this.eventService.deleteWristbandOrder(order.id).subscribe({
-      next: () => { this.orders = this.orders.filter(o => o.id !== order.id); },
+    this.orderPendingDelete = order;
+    this.showDeleteOrderDialog = true;
+  }
+
+  confirmDeleteOrder(): void {
+    if (!this.orderPendingDelete) return;
+    const id = this.orderPendingDelete.id;
+    this.showDeleteOrderDialog = false;
+    this.orderPendingDelete = null;
+    this.eventService.deleteWristbandOrder(id).subscribe({
+      next: () => { this.orders = this.orders.filter(o => o.id !== id); },
       error: () => {}
     });
+  }
+
+  cancelDeleteOrder(): void {
+    this.showDeleteOrderDialog = false;
+    this.orderPendingDelete = null;
   }
 
   private dataUrlToBlob(dataUrl: string): Promise<Blob> {
