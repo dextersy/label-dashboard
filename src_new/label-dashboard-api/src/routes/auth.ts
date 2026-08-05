@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange, ticketingForgotPassword, ticketingValidateResetHash, dashboardGoogleRedirect, dashboardGoogleCallback, dashboardGoogleExchange } from '../controllers/authController';
-import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange } from '../controllers/audienceAuthController';
+import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange, audienceUpdateProfile, audienceUploadProfilePhoto, profilePhotoUpload } from '../controllers/audienceAuthController';
 import { authenticateToken, authenticateAudienceToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
@@ -32,6 +32,8 @@ const audienceRouter = Router();
 audienceRouter.post('/signup', authRateLimit, audienceSignup);
 audienceRouter.post('/login', authRateLimit, audienceLogin);
 audienceRouter.get('/me', authenticateAudienceToken, audienceGetMe);
+audienceRouter.patch('/me', authenticateAudienceToken, audienceUpdateProfile);
+audienceRouter.post('/me/photo', authenticateAudienceToken, profilePhotoUpload.single('photo'), audienceUploadProfilePhoto);
 audienceRouter.post('/forgot-password', authRateLimit, audienceForgotPassword);
 audienceRouter.post('/reset-password', authRateLimit, audienceResetPassword);
 audienceRouter.get('/validate-reset-hash/:hash', audienceValidateResetHash);

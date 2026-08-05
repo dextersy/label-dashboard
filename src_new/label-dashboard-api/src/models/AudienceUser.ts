@@ -8,6 +8,9 @@ interface AudienceUserAttributes {
   first_name?: string;
   last_name?: string;
   contact_number?: string;
+  profile_photo_url?: string;
+  membership_id?: string;
+  membership_tier?: string;
   reset_hash?: string;
   reset_hash_expires_at?: Date;
   email_verified?: boolean;
@@ -24,6 +27,9 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public first_name?: string;
   public last_name?: string;
   public contact_number?: string;
+  public profile_photo_url?: string;
+  public membership_id?: string;
+  public membership_tier?: string;
   public reset_hash?: string;
   public reset_hash_expires_at?: Date;
   public email_verified?: boolean;
@@ -61,6 +67,20 @@ AudienceUser.init(
     contact_number: {
       type: DataTypes.STRING(30),
       allowNull: true,
+    },
+    profile_photo_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    membership_id: {
+      type: DataTypes.STRING(12),
+      allowNull: true,
+      unique: true,
+    },
+    membership_tier: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'silver',
     },
     reset_hash: {
       type: DataTypes.STRING(255),

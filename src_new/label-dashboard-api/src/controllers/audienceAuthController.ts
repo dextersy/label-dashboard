@@ -3,10 +3,13 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import axios from 'axios';
+import multer from 'multer';
 import { Op } from 'sequelize';
 import { AudienceUser, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
+import { uploadToS3, deleteFromS3, getS3PublicUrl } from '../utils/s3Service';
+import { extension as mimeExtension } from 'mime-types';
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
@@ -120,12 +123,15 @@ export const audienceSignup = async (req: Request, res: Response) => {
     }
 
     const password_hash = await hashPassword(password);
+    const membership_id = await generateMembershipId();
     const user = await AudienceUser.create({
       email_address: email.toLowerCase(),
       password_hash,
       first_name,
       last_name,
       email_verified: false,
+      membership_id,
+      membership_tier: 'silver',
     });
 
     // Send verification email (non-blocking — don't fail signup if email fails)
@@ -167,18 +173,18 @@ export const audienceLogin = async (req: Request, res: Response) => {
     const claimed_tickets_count = user.email_verified
       ? await claimTicketsByEmailInternal(user.id, user.email_address)
       : 0;
+
+    // Lazily assign membership ID to pre-existing accounts that don't have one
+    if (!user.membership_id) {
+      const membership_id = await generateMembershipId();
+      await user.update({ membership_id, membership_tier: user.membership_tier || 'silver' });
+    }
+
     const token = signAudienceToken(user.id);
 
     return res.json({
       token,
-      user: {
-        id: user.id,
-        email_address: user.email_address,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        contact_number: user.contact_number,
-        email_verified: user.email_verified ?? false,
-      },
+      user: buildUserPayload(user),
       claimed_tickets_count,
     });
   } catch (error) {
@@ -190,14 +196,12 @@ export const audienceLogin = async (req: Request, res: Response) => {
 export const audienceGetMe = async (req: Request, res: Response) => {
   try {
     const user = (req as any).audienceUser as AudienceUser;
-    return res.json({
-      id: user.id,
-      email_address: user.email_address,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      contact_number: user.contact_number,
-      email_verified: user.email_verified ?? false,
-    });
+    // Lazily assign membership ID to pre-existing accounts that don't have one
+    if (!user.membership_id) {
+      const membership_id = await generateMembershipId();
+      await user.update({ membership_id, membership_tier: user.membership_tier || 'silver' });
+    }
+    return res.json(buildUserPayload(user));
   } catch (error) {
     console.error('Audience getMe error:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -446,14 +450,7 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
     return res.json({
       message: 'Email verified successfully',
       token: authToken,
-      user: {
-        id: user.id,
-        email_address: user.email_address,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        contact_number: user.contact_number,
-        email_verified: true,
-      },
+      user: buildUserPayload(user),
       claimed_tickets_count,
     });
   } catch (error) {
@@ -519,19 +516,124 @@ export const audienceGoogleExchange = async (req: Request, res: Response) => {
     const user = await AudienceUser.findByPk(entry.audienceUserId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    if (!user.membership_id) {
+      const membership_id = await generateMembershipId();
+      await user.update({ membership_id, membership_tier: user.membership_tier || 'silver' });
+    }
+
     const token = signAudienceToken(user.id);
     return res.json({
       token,
-      user: {
-        id: user.id,
-        email_address: user.email_address,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        contact_number: user.contact_number,
-      },
+      user: buildUserPayload(user),
     });
   } catch (error) {
     console.error('Audience Google exchange error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ─── Membership ID ────────────────────────────────────────────────────────────
+
+/**
+ * Generate a unique 12-digit membership ID.
+ * Format stored as plain string "XXXXXXXXXXXX"; formatted for display as "XXXX XXXX XXXX".
+ * Uses crypto.randomInt for cryptographic randomness. Retries on the rare collision.
+ */
+async function generateMembershipId(): Promise<string> {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    // Build 12 random digits
+    const digits = Array.from({ length: 12 }, () => crypto.randomInt(0, 10)).join('');
+    const existing = await AudienceUser.findOne({ where: { membership_id: digits } });
+    if (!existing) return digits;
+  }
+  throw new Error('Could not generate a unique membership ID after 10 attempts');
+}
+
+// ─── Profile management ───────────────────────────────────────────────────────
+
+/** Helper: build safe user payload to return to the client */
+function buildUserPayload(user: AudienceUser) {
+  return {
+    id: user.id,
+    email_address: user.email_address,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    contact_number: user.contact_number,
+    profile_photo_url: user.profile_photo_url,
+    membership_id: user.membership_id,
+    membership_tier: user.membership_tier || 'silver',
+    email_verified: user.email_verified ?? false,
+  };
+}
+
+export const audienceUpdateProfile = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const { first_name, last_name, contact_number } = req.body;
+
+    if (!first_name || !last_name) {
+      return res.status(400).json({ error: 'First name and last name are required' });
+    }
+
+    await user.update({ first_name, last_name, contact_number: contact_number || null });
+    return res.json(buildUserPayload(user));
+  } catch (error) {
+    console.error('Audience updateProfile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Multer for profile photo uploads (images only, 5 MB max, stored in memory for S3 upload)
+export const profilePhotoUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+export const audienceUploadProfilePhoto = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const file = (req as any).file as Express.Multer.File | undefined;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const ext = mimeExtension(file.mimetype) || 'jpg';
+    const key = `audience-profiles/${user.id}-${Date.now()}.${ext}`;
+
+    await uploadToS3({
+      Bucket: process.env.S3_BUCKET!,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      ACL: 'public-read',
+    });
+
+    const profile_photo_url = getS3PublicUrl(process.env.S3_BUCKET!, key);
+
+    // Delete old profile photo from S3 before updating
+    if (user.profile_photo_url) {
+      try {
+        const oldUrl = new URL(user.profile_photo_url);
+        const oldKey = oldUrl.pathname.substring(1);
+        await deleteFromS3({ Bucket: process.env.S3_BUCKET!, Key: oldKey });
+      } catch (deleteError) {
+        console.error('Failed to delete old profile photo from S3:', deleteError);
+      }
+    }
+
+    await user.update({ profile_photo_url });
+
+    return res.json(buildUserPayload(user));
+  } catch (error) {
+    console.error('Audience uploadProfilePhoto error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

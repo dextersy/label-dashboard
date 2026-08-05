@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
@@ -303,6 +303,10 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
     // 11. Wristband Order design URLs
     const wristbandOrders = await WristbandOrder.findAll({ attributes: ['design_url'] });
     wristbandOrders.forEach((o: any) => { if (o.design_url) allUrls.add(o.design_url); });
+
+    // 12. Audience user profile photos
+    const audienceUsers = await AudienceUser.findAll({ attributes: ['id', 'profile_photo_url'] });
+    audienceUsers.forEach((u: any) => { if (u.profile_photo_url) allUrls.add(u.profile_photo_url); });
 
     // Convert Set to Array and filter out empty/null values
     const urlsArray = Array.from(allUrls).filter(url => url && url.trim().length > 0);
