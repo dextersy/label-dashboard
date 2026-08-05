@@ -67,7 +67,8 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
       { id: 'equipment-rental', label: 'Equipment Rental', icon: 'wrench' },
     ];
     if (this.hasPlacedOrConfirmedOrders) {
-      base.push({ id: 'payment', label: 'Payment', icon: 'credit-card' });
+      const hasPendingBalance = !this.loadingPayments && this.addonRemainingBalance > 0;
+      base.push({ id: 'payment', label: 'Payment', icon: 'credit-card', status: this.loadingPayments ? null : hasPendingBalance ? 'warning' : 'completed' });
     }
     return base;
   }

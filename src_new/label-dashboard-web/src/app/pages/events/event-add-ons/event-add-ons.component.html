@@ -443,7 +443,7 @@
           <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Delivery Address</h3>
 
           <!-- Address Book -->
-          <div class="tw-mb-4">
+          <div class="tw-mb-4" *ngIf="editingDeliveryAddress">
             <p class="tw-text-xs tw-font-medium tw-uppercase tw-tracking-wide tw-text-gray-400 tw-mb-2">Address book</p>
             <div class="address-book-grid">
               <ng-container *ngFor="let addr of savedAddresses">
@@ -489,6 +489,7 @@
           <!-- Compact "Delivering to" summary -->
           <ng-container *ngIf="!editingDeliveryAddress">
             <div *ngIf="hasDeliveryAddress" class="delivery-summary">
+              <app-icon name="check-circle" iconOnly class="tw-text-green-500 tw-shrink-0 tw-text-base" style="font-size:1rem" />
               <span class="delivery-summary-text">
                 Delivering to <strong>{{ deliveryName || deliveryStreet }}</strong><ng-container *ngIf="deliveryPhone"> · {{ deliveryPhone }}</ng-container>
               </span>
