@@ -121,6 +121,19 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   addressSaved = false;
   editingDeliveryAddress = false;
 
+  get isEventPast(): boolean {
+    if (!this.selectedEvent) return false;
+    return new Date((this.selectedEvent as any).date_and_time) < new Date();
+  }
+
+  get hasAnyPayment(): boolean {
+    return this.addonTotalPaid > 0;
+  }
+
+  get canClearAddress(): boolean {
+    return !this.hasAnyPayment;
+  }
+
   get hasDeliveryAddress(): boolean {
     return !!(this.deliveryName || this.deliveryStreet || this.deliveryCity ||
               this.deliveryCountry || this.deliveryZip || this.deliveryPhone);
@@ -365,6 +378,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   openPaymentModal(): void {
+    if (!this.hasDeliveryAddress) return;
     this.paymentMethod = 'balance';
     this.paymentNotes = '';
     this.paymentError = null;
@@ -496,8 +510,21 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
   // ─── Delivery Address ────────────────────────────────────────────────────
 
+  saveAddressBlockedByPayment = false;
+
   saveAddress(): void {
     if (!this.eventId) return;
+
+    // Prevent clearing the address when payments have been recorded
+    const wouldClear = !this.deliveryName.trim() && !this.deliveryStreet.trim() &&
+      !this.deliveryCity.trim() && !this.deliveryCountry.trim() &&
+      !this.deliveryZip.trim() && !this.deliveryPhone.trim();
+    if (this.hasAnyPayment && wouldClear) {
+      this.saveAddressBlockedByPayment = true;
+      return;
+    }
+    this.saveAddressBlockedByPayment = false;
+
     this.savingAddress = true;
     this.addressSaved = false;
     this.savedToBook = false;
@@ -585,6 +612,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     this.addressSaved = false;
     this.saveToBook = false;
     this.editingDeliveryAddress = false;
+    this.saveAddress();
   }
 
   openNewAddressForm(): void {

@@ -199,6 +199,10 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
     const event = await resolveEvent(eventId, req.user.brand_id);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
+    if (new Date((event as any).date_and_time) < new Date()) {
+      return res.status(400).json({ error: 'This event has already taken place. Orders can no longer be edited.' });
+    }
+
     const { status, disclaimer_acknowledged, items, design_x, design_y, design_width, design_height, canvas_width } = req.body;
     const parsedItems: { wristband_color_id: number; quantity: number }[] =
       typeof items === 'string' ? JSON.parse(items) : items;
@@ -267,6 +271,11 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
 
     if (order.status !== 'draft' && order.status !== 'rejected') {
       return res.status(400).json({ error: 'Only draft or rejected orders can be edited' });
+    }
+
+    const updateEvent = await Event.findByPk((order as any).event_id);
+    if (updateEvent && new Date((updateEvent as any).date_and_time) < new Date()) {
+      return res.status(400).json({ error: 'This event has already taken place. Orders can no longer be edited.' });
     }
 
     const previousStatus = order.status;
@@ -425,6 +434,11 @@ export const deleteWristbandOrder = async (req: AuthRequest, res: Response) => {
 
     if (order.status !== 'draft') {
       return res.status(400).json({ error: 'Only draft orders can be deleted' });
+    }
+
+    const deleteEvent = await Event.findByPk((order as any).event_id);
+    if (deleteEvent && new Date((deleteEvent as any).date_and_time) < new Date()) {
+      return res.status(400).json({ error: 'This event has already taken place. Orders can no longer be edited.' });
     }
 
     if (order.design_url) {
