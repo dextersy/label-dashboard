@@ -487,8 +487,9 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     return Math.max(0, this.addonTotalDue - this.addonTotalPaid);
   }
 
-  /** Amount that will be charged: capped at the available label balance, minimum 0 */
+  /** Amount that will be charged: for balance payments, capped at available label balance; for Paymongo, uses the full remaining amount */
   get effectivePaymentAmount(): number {
+    if (this.paymentMethod === 'paymongo') return this.addonRemainingBalance;
     if (this.labelBalance === null) return this.addonRemainingBalance;
     return Math.max(0, Math.min(this.addonRemainingBalance, this.labelBalance));
   }
