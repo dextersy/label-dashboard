@@ -173,6 +173,8 @@ check_directory "$SCRIPT_DIR/src_new/label-dashboard-api" "API"
 check_directory "$SCRIPT_DIR/src_new/label-dashboard-web" "Web"
 check_directory "$SCRIPT_DIR/src_new/spindly.app" "Spindly"
 check_directory "$SCRIPT_DIR/src_new/ticketing-app" "Ticketing App"
+check_directory "$SCRIPT_DIR/src_new/label-dashboard-jobs" "Jobs"
+JOBS_DIR="$SCRIPT_DIR/src_new/label-dashboard-jobs"
 
 # Build all apps in parallel
 start_phase
@@ -186,9 +188,19 @@ if [ "$SKIP_BUILD" = true ]; then
         { print_error "Spindly dist directory not found. Build first or run without --skip-build"; exit 1; }
     [ ! -d "$SCRIPT_DIR/src_new/ticketing-app/dist/ticketing-app/browser" ] && \
         { print_error "Ticketing App dist directory not found. Build first or run without --skip-build"; exit 1; }
+    for job_dir in "$JOBS_DIR"/*/; do
+        job_name=$(basename "$job_dir")
+        [ ! -f "$job_dir/${job_name}.zip" ] && \
+            { print_error "Lambda job '$job_name' zip not found. Run 'npm run package' in $job_dir first or run without --skip-build"; exit 1; }
+    done
+    # Populate JOB_NAMES so the deploy phase can reference them
+    declare -a JOB_NAMES=()
+    for job_dir in "$JOBS_DIR"/*/; do
+        JOB_NAMES+=("$(basename "$job_dir")")
+    done
     end_phase "Build: All apps (skipped)"
 else
-    print_status "Building all 4 applications in parallel..."
+    print_status "Building all 4 applications + Lambda jobs in parallel..."
     BUILD_LOG_DIR=$(mktemp -d)
 
     # Resolve Maps key once so subshells inherit the final value
@@ -273,12 +285,38 @@ else
     ) > "$BUILD_LOG_DIR/ticketing.log" 2>&1 &
     PID_TICKETING=$!
 
+    # --- Lambda Jobs ---
+    declare -a JOB_NAMES=()
+    declare -a JOB_PIDS=()
+    for job_dir in "$JOBS_DIR"/*/; do
+        job_name=$(basename "$job_dir")
+        JOB_NAMES+=("$job_name")
+        (
+            cd "$job_dir"
+            echo "[INFO] Packaging Lambda job: $job_name..."
+            if [ ! -d "node_modules" ]; then
+                echo "[INFO] Installing $job_name dependencies..."
+                npm install
+            fi
+            npm run package
+            zip_file="${job_name}.zip"
+            [ ! -f "$zip_file" ] && { echo "[ERROR] $job_name package failed - $zip_file not found"; exit 1; }
+            echo "[SUCCESS] $job_name packaged"
+        ) > "$BUILD_LOG_DIR/job-${job_name}.log" 2>&1 &
+        JOB_PIDS+=($!)
+    done
+
     print_status "Waiting for all builds to complete..."
 
     wait $PID_API;       EXIT_API=$?
     wait $PID_WEB;       EXIT_WEB=$?
     wait $PID_SPINDLY;   EXIT_SPINDLY=$?
     wait $PID_TICKETING; EXIT_TICKETING=$?
+
+    declare -a JOB_EXIT_CODES=()
+    for pid in "${JOB_PIDS[@]}"; do
+        wait "$pid"; JOB_EXIT_CODES+=($?)
+    done
 
     # Print all build logs
     echo ""
@@ -294,6 +332,11 @@ else
     print_status "=== Ticketing App Build Log ==="
     cat "$BUILD_LOG_DIR/ticketing.log"
     echo ""
+    for job_name in "${JOB_NAMES[@]}"; do
+        print_status "=== Lambda Job: $job_name Build Log ==="
+        cat "$BUILD_LOG_DIR/job-${job_name}.log"
+        echo ""
+    done
 
     rm -rf "$BUILD_LOG_DIR"
 
@@ -303,6 +346,9 @@ else
     [ $EXIT_WEB -ne 0 ]       && { print_error "Web build failed";          BUILD_ERRORS=$((BUILD_ERRORS+1)); }
     [ $EXIT_SPINDLY -ne 0 ]   && { print_error "Spindly build failed";      BUILD_ERRORS=$((BUILD_ERRORS+1)); }
     [ $EXIT_TICKETING -ne 0 ] && { print_error "Ticketing App build failed"; BUILD_ERRORS=$((BUILD_ERRORS+1)); }
+    for i in "${!JOB_NAMES[@]}"; do
+        [ "${JOB_EXIT_CODES[$i]}" -ne 0 ] && { print_error "Lambda job '${JOB_NAMES[$i]}' package failed"; BUILD_ERRORS=$((BUILD_ERRORS+1)); }
+    done
     [ $BUILD_ERRORS -gt 0 ] && exit 1
 
     print_success "All builds completed successfully"
@@ -554,9 +600,49 @@ upload_files "$SCRIPT_DIR/src_new/ticketing-app/dist/ticketing-app/browser" "$TI
 print_success "✅ Phase 8: Ticketing App deployed and live!"
 end_phase "Phase 8: Deploy Ticketing App"
 
-# Phase 9: Final deployment tasks
+# Phase 9: Deploy Lambda jobs
 start_phase
-print_status "Phase 9: Completing final deployment tasks..."
+print_status "Phase 9: Deploying Lambda jobs..."
+
+LAMBDA_ERRORS=0
+for job_name in "${JOB_NAMES[@]}"; do
+    job_dir="$JOBS_DIR/$job_name"
+    zip_file="$job_dir/${job_name}.zip"
+    if [ ! -f "$zip_file" ]; then
+        print_error "Lambda job '$job_name': zip file not found at $zip_file — skipping"
+        LAMBDA_ERRORS=$((LAMBDA_ERRORS+1))
+        continue
+    fi
+
+    print_status "Deploying Lambda job: $job_name..."
+
+    # Extract aws lambda update-function-code args from the job's package.json deploy script.
+    # The zip path is kept as a bare filename (fileb://name.zip) so the AWS CLI — which is a
+    # native Windows process — receives a path it can resolve when run from inside the job dir.
+    deploy_script=$(cd "$job_dir" && node -e "const p=require('./package.json'); console.log(p.scripts.deploy || '')" 2>/dev/null)
+    extra_flags=$(echo "$deploy_script" | grep -oP '(?<=aws lambda update-function-code ).*')
+
+    if [ -z "$extra_flags" ]; then
+        # Fallback: standard command with just the function name and zip filename
+        extra_flags="--function-name $job_name --zip-file fileb://${job_name}.zip"
+    fi
+
+    if (cd "$job_dir" && aws lambda update-function-code $extra_flags --no-cli-pager); then
+        print_success "Lambda job '$job_name' deployed successfully"
+    else
+        print_error "Failed to deploy Lambda job '$job_name'"
+        LAMBDA_ERRORS=$((LAMBDA_ERRORS+1))
+    fi
+done
+
+[ $LAMBDA_ERRORS -gt 0 ] && { print_error "$LAMBDA_ERRORS Lambda job(s) failed to deploy"; exit 1; }
+
+print_success "✅ Phase 9: All Lambda jobs deployed successfully"
+end_phase "Phase 9: Deploy Lambda jobs"
+
+# Phase 10: Final deployment tasks
+start_phase
+print_status "Phase 10: Completing final deployment tasks..."
 
 # Upload tmp folder if it exists
 if [ -d "tmp" ]; then
@@ -631,8 +717,8 @@ else
 fi
 rm -f "$sftp_batch"
 
-print_success "✅ Phase 9: Final deployment tasks completed"
-end_phase "Phase 9: Final tasks"
+print_success "✅ Phase 10: Final deployment tasks completed"
+end_phase "Phase 10: Final tasks"
 
 # Final deployment summary
 DEPLOY_TOTAL=$(( $(date +%s) - DEPLOY_START ))
