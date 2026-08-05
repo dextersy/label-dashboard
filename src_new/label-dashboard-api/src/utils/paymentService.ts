@@ -5,15 +5,14 @@ import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
-import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser } from '../models';
-import EventAddOnPayment from '../models/EventAddOnPayment';
+import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor } from '../models';
 import Artist from '../models/Artist';
 import ArtistAccess from '../models/ArtistAccess';
 import Payment from '../models/Payment';
 import LabelPayment from '../models/LabelPayment';
 import { sendTicketEmail } from './ticketEmailService';
-import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification } from './emailService';
-import { createNotificationsForUsers, getArtistTeamUserIds, getBrandAdminUserIds } from './notificationService';
+import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification, sendAddOnPaymentNotification } from './emailService';
+import { createNotification, createNotificationsForUsers, getArtistTeamUserIds, getBrandAdminUserIds } from './notificationService';
 import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
 
 interface PayMongoLinkData {
@@ -552,6 +551,62 @@ export class PaymentService {
       });
 
       this.webhookLog('Successfully updated add-on payment ID ' + addOnPayment.id + ' to succeeded');
+
+      // Send email + bell notifications only when fully paid
+      try {
+        const PRICE_PER_10 = 35;
+        const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+        const event = await Event.findByPk(addOnPayment.event_id);
+        const initiatorUser = await User.findByPk(addOnPayment.created_by);
+        if (event) {
+          // Check if balance is fully paid
+          const confirmedOrders = await WristbandOrder.findAll({
+            where: { event_id: event.id, status: 'confirmed' },
+            include: [{ model: WristbandOrderItem, as: 'items' }],
+          });
+          const totalOwed = confirmedOrders.reduce((sum: number, o: any) => {
+            const qty = (o.items ?? []).reduce((s: number, i: any) => s + i.quantity, 0);
+            return sum + ((qty / 10) * PRICE_PER_10);
+          }, 0);
+          const allPayments = await EventAddOnPayment.findAll({ where: { event_id: event.id, status: 'succeeded' } });
+          const totalPaid = allPayments.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+          const fullyPaid = totalOwed > 0 && totalPaid >= totalOwed;
+
+          if (fullyPaid) {
+            const orders = await WristbandOrder.findAll({
+              where: { event_id: event.id },
+              include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
+            });
+            sendAddOnPaymentNotification(addOnPayment, event, initiatorUser, orders);
+
+            if (parentBrandId) {
+              const parentAdminIds = await getBrandAdminUserIds(parentBrandId);
+              await createNotificationsForUsers(
+                parentAdminIds,
+                parentBrandId,
+                'addon_payment_made',
+                `Add-on payment received: ${(event as any).title ?? `Event #${event.id}`}`,
+                `₱${parseFloat(addOnPayment.amount).toFixed(2)} via Paymongo`,
+                '/campaigns/events/add-ons?tab=payment'
+              );
+            }
+
+            if (initiatorUser) {
+              await createNotification(
+                initiatorUser.id,
+                (event as any).brand_id,
+                'addon_payment_made',
+                `Payment confirmed: ${(event as any).title ?? `Event #${event.id}`}`,
+                `₱${parseFloat(addOnPayment.amount).toFixed(2)} via Paymongo`,
+                '/campaigns/events/add-ons?tab=payment'
+              );
+            }
+          }
+        }
+      } catch (notifyErr) {
+        console.error('Add-on payment notification error:', notifyErr);
+      }
+
       return true;
     } catch (error) {
       this.webhookLog('ERROR: Failed to process add-on payment: ' + (error as Error).message);

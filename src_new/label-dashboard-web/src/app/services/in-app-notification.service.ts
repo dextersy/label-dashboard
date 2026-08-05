@@ -126,7 +126,11 @@ export class InAppNotificationService implements OnDestroy {
       'user_invite': 'Invite',
       'login_success': 'Login',
       'login_failed_alert': 'Security alert',
-      'ticket_purchased': 'Ticket sold'
+      'ticket_purchased': 'Ticket sold',
+      'wristband_order_placed': 'Wristband order placed',
+      'wristband_order_accepted': 'Wristband order accepted',
+      'wristband_order_rejected': 'Wristband order rejected',
+      'addon_payment_made': 'Add-on payment'
     };
     return labels[type] || type;
   }

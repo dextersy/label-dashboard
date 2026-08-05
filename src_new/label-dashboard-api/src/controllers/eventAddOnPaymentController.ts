@@ -1,10 +1,78 @@
 import { Request, Response } from 'express';
-import { EventAddOnPayment, Event, User } from '../models';
+import { EventAddOnPayment, Event, User, WristbandOrder, WristbandOrderItem, WristbandColor } from '../models';
 import { getBrandReceivableBalance } from '../utils/labelBalanceUtils';
 import { PaymentService } from '../utils/paymentService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { sendAddOnPaymentNotification } from '../utils/emailService';
+import { createNotification, createNotificationsForUsers, getBrandAdminUserIds } from '../utils/notificationService';
 
 const paymentService = new PaymentService();
+
+const PRICE_PER_10 = 35;
+
+async function isFullyPaid(eventId: number): Promise<boolean> {
+  const confirmedOrders = await WristbandOrder.findAll({
+    where: { event_id: eventId, status: 'confirmed' },
+    include: [{ model: WristbandOrderItem, as: 'items' }],
+  });
+  const totalOwed = confirmedOrders.reduce((sum: number, o: any) => {
+    const qty = (o.items ?? []).reduce((s: number, i: any) => s + i.quantity, 0);
+    return sum + ((qty / 10) * PRICE_PER_10);
+  }, 0);
+
+  if (totalOwed <= 0) return false;
+
+  const payments = await EventAddOnPayment.findAll({ where: { event_id: eventId, status: 'succeeded' } });
+  const totalPaid = payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
+
+  return totalPaid >= totalOwed;
+}
+
+async function notifyAddOnPayment(payment: any, event: any, initiatorUser: any): Promise<void> {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+
+    const fullyPaid = await isFullyPaid(event.id);
+    if (!fullyPaid) return;
+
+    // Fetch wristband orders for the event to include in the notification
+    const orders = await WristbandOrder.findAll({
+      where: { event_id: event.id },
+      include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
+    });
+
+    // Email: admins + receipt to initiator
+    sendAddOnPaymentNotification(payment, event, initiatorUser, orders);
+
+    // Bell notification: ticketing parent brand admins
+    if (parentBrandId) {
+      const parentAdminIds = await getBrandAdminUserIds(parentBrandId);
+      const addOnsLink = '/campaigns/events/add-ons?tab=payment';
+      await createNotificationsForUsers(
+        parentAdminIds,
+        parentBrandId,
+        'addon_payment_made',
+        `Add-on payment received: ${event.title ?? `Event #${event.id}`}`,
+        `₱${parseFloat(payment.amount).toFixed(2)} via ${payment.method === 'balance' ? 'Label Balance' : 'Paymongo'}`,
+        addOnsLink
+      );
+    }
+
+    // Bell notification: the initiator (if different brand from parent)
+    if (initiatorUser) {
+      await createNotification(
+        initiatorUser.id,
+        event.brand_id,
+        'addon_payment_made',
+        `Payment submitted: ${event.title ?? `Event #${event.id}`}`,
+        `₱${parseFloat(payment.amount).toFixed(2)} via ${payment.method === 'balance' ? 'Label Balance' : 'Paymongo'}`,
+        '/campaigns/events/add-ons?tab=payment'
+      );
+    }
+  } catch (err) {
+    console.error('notifyAddOnPayment error:', err);
+  }
+}
 
 interface AuthRequest extends Request {
   user?: any;
@@ -69,6 +137,8 @@ export const createAddOnPayment = async (req: AuthRequest, res: Response) => {
       notes: notes ?? null,
       created_by: req.user.id,
     });
+
+    notifyAddOnPayment(payment, event, req.user);
 
     res.status(201).json({ payment });
   } catch (error) {

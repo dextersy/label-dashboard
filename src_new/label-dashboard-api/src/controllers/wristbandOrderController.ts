@@ -4,6 +4,7 @@ import { WristbandOrder, WristbandOrderItem, WristbandColor, EventWristbandSetti
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import { sendEmail, sendWristbandOrderStatusEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { createNotificationsForUsers, getBrandAdminUserIds } from '../utils/notificationService';
 import User from '../models/User';
 
 interface AuthRequest extends Request {
@@ -250,6 +251,17 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
 
     if (order.status === 'placed') {
       sendWristbandOrderNotification(fullOrder, event);
+      const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+      if (parentBrandId) {
+        getBrandAdminUserIds(parentBrandId).then(adminIds =>
+          createNotificationsForUsers(
+            adminIds, parentBrandId, 'wristband_order_placed',
+            `New wristband order: ${event.title ?? `Event #${eventId}`}`,
+            `Order #${order.id} placed — review required`,
+            `/campaigns/events/wristband-order-review?order_id=${order.id}`
+          )
+        ).catch(console.error);
+      }
     }
 
     res.status(201).json({ order: fullOrder });
@@ -336,6 +348,17 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
     if (previousStatus !== 'placed' && newStatus === 'placed') {
       const evt = await Event.findByPk((order as any).event_id);
       sendWristbandOrderNotification(fullOrder, evt);
+      const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+      if (parentBrandId) {
+        getBrandAdminUserIds(parentBrandId).then(adminIds =>
+          createNotificationsForUsers(
+            adminIds, parentBrandId, 'wristband_order_placed',
+            `New wristband order: ${(evt as any)?.title ?? `Event #${(order as any).event_id}`}`,
+            `Order #${orderId} placed — review required`,
+            `/campaigns/events/wristband-order-review?order_id=${orderId}`
+          )
+        ).catch(console.error);
+      }
     }
 
     res.json({ order: fullOrder });
@@ -387,6 +410,14 @@ export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => 
       const payUrl = `${orgFrontendUrl}/campaigns/events/add-ons?tab=payment`;
       sendWristbandOrderStatusEmail(order, order.event, 'confirmed', payUrl);
     }
+    getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
+      createNotificationsForUsers(
+        orgAdminIds, order.event.brand_id, 'wristband_order_accepted',
+        `Wristband order accepted: ${order.event.title ?? `Event #${order.event_id}`}`,
+        `Order #${orderId} has been accepted. You can now proceed to payment.`,
+        '/campaigns/events/add-ons?tab=payment'
+      )
+    ).catch(console.error);
     res.json({ order });
   } catch (error) {
     console.error('confirmWristbandOrder error:', error);
@@ -415,6 +446,14 @@ export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
       const wristbandUrl = `${orgFrontendUrl}/campaigns/events/add-ons`;
       sendWristbandOrderStatusEmail(order, order.event, 'rejected', wristbandUrl);
     }
+    getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
+      createNotificationsForUsers(
+        orgAdminIds, order.event.brand_id, 'wristband_order_rejected',
+        `Wristband order rejected: ${order.event.title ?? `Event #${order.event_id}`}`,
+        `Order #${orderId} was rejected. Please review and re-submit.`,
+        '/campaigns/events/add-ons'
+      )
+    ).catch(console.error);
     res.json({ order });
   } catch (error) {
     console.error('rejectWristbandOrder error:', error);

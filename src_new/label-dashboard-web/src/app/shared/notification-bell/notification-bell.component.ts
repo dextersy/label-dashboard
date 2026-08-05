@@ -83,9 +83,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
   getTypeIcon(type: string): string {
     const iconMap: Record<string, string> = {
       'earnings_posted': 'coins',
-      'payment_made': 'payment',
+      'payment_made': 'credit-card',
       'payment_failed': 'x-circle',
-      'sublabel_payment': 'payment',
+      'sublabel_payment': 'credit-card',
       'release_submitted': 'upload',
       'release_pending': 'clock',
       'artist_updated': 'edit',
@@ -96,7 +96,11 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       'login_success': 'lock',
       'login_failed_alert': 'warning',
       'ticket_purchased': 'ticket',
-      'artist_registration': 'user-plus'
+      'artist_registration': 'user-plus',
+      'wristband_order_placed': 'package',
+      'wristband_order_accepted': 'check-circle',
+      'wristband_order_rejected': 'x-circle',
+      'addon_payment_made': 'credit-card'
     };
     return iconMap[type] || 'info';
   }
