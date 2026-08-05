@@ -96,6 +96,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/audience/my-shows/my-shows.component').then(m => m.MyShowsComponent)
   },
   {
+    path: 'my-profile',
+    canActivate: [audienceAuthGuard],
+    loadComponent: () => import('./pages/audience/profile/profile.component').then(m => m.AudienceProfileComponent)
+  },
+  {
     path: 'my-shows/:eventId',
     canActivate: [audienceAuthGuard],
     loadComponent: () => import('./pages/audience/show-detail/show-detail.component').then(m => m.ShowDetailComponent)

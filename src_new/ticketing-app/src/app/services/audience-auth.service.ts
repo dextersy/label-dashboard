@@ -8,6 +8,10 @@ export interface AudienceUser {
   email_address: string;
   first_name?: string;
   last_name?: string;
+  contact_number?: string;
+  profile_photo_url?: string;
+  membership_id?: string;
+  membership_tier?: string;
   email_verified?: boolean;
 }
 
@@ -88,6 +92,30 @@ export class AudienceAuthService {
 
   resendVerificationByEmail(email: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/resend-verification-by-email`, { email });
+  }
+
+  getMe(): Observable<AudienceUser> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<AudienceUser>(`${this.apiUrl}/auth/audience/me`, { headers })
+      .pipe(tap(user => this.updateStoredUser(user)));
+  }
+
+  updateProfile(data: { first_name: string; last_name: string; contact_number?: string }): Observable<AudienceUser> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<AudienceUser>(`${this.apiUrl}/auth/audience/me`, data, { headers })
+      .pipe(tap(user => this.updateStoredUser(user)));
+  }
+
+  uploadProfilePhoto(file: File): Observable<AudienceUser> {
+    const headers = this.getAuthHeaders();
+    const formData = new FormData();
+    formData.append('photo', file);
+    return this.http.post<AudienceUser>(`${this.apiUrl}/auth/audience/me/photo`, formData, { headers })
+      .pipe(tap(user => this.updateStoredUser(user)));
+  }
+
+  updateStoredUser(user: AudienceUser): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   markEmailVerified(): void {
