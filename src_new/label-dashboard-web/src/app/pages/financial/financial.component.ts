@@ -26,11 +26,22 @@ import { IconComponent } from '../../components/shared/icon/icon.component';
 
 export type FinancialTabType = 'summary' | 'documents' | 'earnings' | 'royalties' | 'payments' | 'release' | 'new-royalty' | 'new-payment' | 'new-earning';
 
+export interface FinancialSummaryBreakdown {
+  own_royalties: number;
+  parent_royalties: number;
+  own_payments: number;
+  parent_payments: number;
+  own_earnings: number;
+  parent_earnings: number;
+  sublabel_balance: number;
+}
+
 export interface FinancialSummary {
   currentBalance: number;
   totalEarnings: number;
   totalRoyalties: number;
   totalPayments: number;
+  breakdown?: FinancialSummaryBreakdown;
 }
 
 export interface Earning {
@@ -516,9 +527,13 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
   async onPayNow(): Promise<void> {
     if (!this.selectedArtist || !this.summary || this.summary.currentBalance <= 0) return;
-    
-    // Navigate to payment form with amount parameter
-    this.router.navigate(['/financial/payments/new', this.summary.currentBalance]);
+
+    // For admins: default to the sublabel portion of the balance
+    const defaultAmount = this.isAdmin && this.summary.breakdown
+      ? this.summary.breakdown.sublabel_balance
+      : this.summary.currentBalance;
+
+    this.router.navigate(['/financial/payments/new', defaultAmount]);
   }
 
   async onSubmitRoyalty(): Promise<void> {

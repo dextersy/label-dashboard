@@ -36,6 +36,18 @@
                   <span class="text-primary" [ngClass]="getAmountClass(childBrand.music_gross_earnings)">₱{{ childBrand.music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
                 </td>
               </tr>
+              <tr *ngIf="childBrand.parent_music_gross_earnings < childBrand.music_gross_earnings">
+                <td class="tw-text-muted tw-pl-6">↳ Label-collected (payable):</td>
+                <td class="tw-text-right mobile-number">
+                  <span class="tw-text-blue-600">₱{{ childBrand.parent_music_gross_earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="childBrand.parent_music_gross_earnings < childBrand.music_gross_earnings">
+                <td class="tw-text-muted tw-pl-6">↳ Direct (not payable):</td>
+                <td class="tw-text-right mobile-number">
+                  <span class="tw-text-gray-400">₱{{ (childBrand.music_gross_earnings - childBrand.parent_music_gross_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
               <tr>
                 <td class="tw-text-muted">• Less: Royalties Due to Artists:</td>
                 <td class="tw-text-right mobile-number">
@@ -68,7 +80,7 @@
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
             <small>
               <app-icon name="info" class="tw-mr-1" />
-              Net Music Earnings = Gross Music Earnings - Royalties Due to Artists - Platform Fees. Artist payments are tracked separately.
+              Net Music Earnings = Gross Music Earnings - Royalties Due to Artists - Platform Fees. Only label-collected earnings contribute to the payable balance. Direct (sublabel self-entered) earnings are excluded from what the parent label owes.
             </small>
           </div>
         </div>

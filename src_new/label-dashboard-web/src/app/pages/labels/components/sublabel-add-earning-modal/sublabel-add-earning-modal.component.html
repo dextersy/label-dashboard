@@ -1,0 +1,90 @@
+<div class="modal fade show" style="display: block;" *ngIf="show" (click)="onBackdropClick($event)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <app-icon name="coins" class="tw-mr-2" />
+          Add Earning for {{ childBrand?.brand_name }}
+        </h5>
+        <button type="button" class="btn-close" (click)="onClose()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="loading" class="tw-text-center tw-py-6">
+          <app-icon name="spinner" class="tw-animate-spin tw-text-gray-400" />
+          <p class="tw-text-muted tw-mt-2 tw-text-sm">Loading releases...</p>
+        </div>
+
+        <form *ngIf="!loading" (ngSubmit)="onSubmit()">
+          <div class="tw-space-y-4">
+
+            <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+              <div class="sm:tw-col-span-2">
+                <label class="tw-label">Release</label>
+                <select class="tw-input" [(ngModel)]="form.release_id" name="release_id" required>
+                  <option value="">Select a release</option>
+                  <option *ngFor="let release of releases" [value]="release.id">
+                    {{ formatReleaseOption(release) }}
+                  </option>
+                </select>
+                <p *ngIf="releases.length === 0" class="tw-mt-1 tw-text-xs tw-text-muted">
+                  No releases found for this sublabel.
+                </p>
+              </div>
+
+              <div>
+                <label class="tw-label">Earning Type</label>
+                <select class="tw-input" [(ngModel)]="form.type" name="type" required>
+                  <option value="Streaming">Streaming</option>
+                  <option value="Sync">Sync</option>
+                  <option value="Downloads">Downloads</option>
+                  <option value="Physical">Physical</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="tw-label">Date Recorded</label>
+                <input type="date" class="tw-input" [(ngModel)]="form.date_recorded" name="date_recorded" required>
+              </div>
+
+              <div class="sm:tw-col-span-2">
+                <label class="tw-label">Amount (PHP)</label>
+                <input type="number" class="tw-input" [(ngModel)]="form.amount" name="amount" min="0" step="0.01" placeholder="0.00" required>
+              </div>
+            </div>
+
+            <div>
+              <label class="tw-label">Description</label>
+              <textarea class="tw-input" [(ngModel)]="form.description" name="description" rows="2" placeholder="Enter earning description"></textarea>
+            </div>
+
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="form.calculate_royalties" name="calculate_royalties" id="sublabelCalcRoyalties">
+              <label class="form-check-label" for="sublabelCalcRoyalties">
+                Calculate royalties automatically
+              </label>
+            </div>
+
+            <div class="tw-px-4 tw-py-3 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
+              <small>
+                <app-icon name="info" class="tw-mr-1" />
+                This earning will be recorded on behalf of <strong>{{ childBrand?.brand_name }}</strong> and will count toward the payable balance.
+              </small>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="onClose()">Cancel</button>
+        <button type="button" class="btn-primary" [disabled]="submitting || loading || releases.length === 0" (click)="onSubmit()">
+          <app-icon name="spinner" class="tw-animate-spin" *ngIf="submitting" />
+          <app-icon name="plus" *ngIf="!submitting" />
+          {{ submitting ? 'Adding...' : 'Add Earning' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="show"></div>

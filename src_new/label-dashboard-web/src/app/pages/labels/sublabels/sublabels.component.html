@@ -182,3 +182,11 @@
   [brandName]="selectedSublabelForPayments?.brand_name || ''"
   (close)="closePaymentsModal()">
 </app-sublabel-payments-modal>
+
+<!-- Add Earning Modal (parent recording for sublabel) -->
+<app-sublabel-add-earning-modal
+  [show]="showAddEarningModal"
+  [childBrand]="selectedSublabelForEarning"
+  (close)="closeAddEarningModal()"
+  (earningAdded)="onEarningAdded()">
+</app-sublabel-add-earning-modal>

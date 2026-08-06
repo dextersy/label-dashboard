@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FinancialSummary, Earning, Royalty, PayoutSettings } from '../../financial.component';
+import { FinancialSummary, FinancialSummaryBreakdown, Earning, Royalty, PayoutSettings } from '../../financial.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 @Component({

@@ -16,12 +16,13 @@ import { FeatureTogglesModalComponent } from '../../admin/components/feature-tog
 import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../admin/components/sublabel-payout-modal/sublabel-payout-modal.component';
 import { EarningsBreakdownModalComponent, AggregatedTotals } from '../../admin/components/earnings-breakdown-modal.component';
 import { SublabelPaymentsModalComponent } from '../../admin/components/sublabel-payments-modal.component';
+import { SublabelAddEarningModalComponent } from '../components/sublabel-add-earning-modal/sublabel-add-earning-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
     selector: 'app-labels-sublabels',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, BreadcrumbComponent, IconComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, SublabelAddEarningModalComponent, BreadcrumbComponent, IconComponent],
     templateUrl: './sublabels.component.html',
     styleUrls: ['./sublabels.component.scss']
 })
@@ -45,6 +46,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   earningsBreakdownType: 'music' | 'event' | 'fundraiser' | 'platform_fees' | 'total_event' | 'total_platform_fees' = 'music';
   showPaymentsModal: boolean = false;
   selectedSublabelForPayments: ChildBrand | null = null;
+  showAddEarningModal: boolean = false;
+  selectedSublabelForEarning: ChildBrand | null = null;
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
@@ -199,6 +202,11 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       icon: 'currency',
       label: 'Pay Out',
       handler: (item) => this.openPayoutModal(item)
+    },
+    {
+      icon: 'plus',
+      label: 'Add Earning',
+      handler: (item) => this.openAddEarningModal(item)
     }
   ];
 
@@ -692,6 +700,21 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   closePaymentsModal(): void {
     this.showPaymentsModal = false;
     this.selectedSublabelForPayments = null;
+  }
+
+  // Add Earning Modal handlers
+  openAddEarningModal(childBrand: ChildBrand): void {
+    this.selectedSublabelForEarning = childBrand;
+    this.showAddEarningModal = true;
+  }
+
+  closeAddEarningModal(): void {
+    this.showAddEarningModal = false;
+    this.selectedSublabelForEarning = null;
+  }
+
+  onEarningAdded(): void {
+    this.loadChildBrands();
   }
 
   // Handle breakdown button clicks from the table

@@ -9,11 +9,11 @@
   </div>
 </div>
 
-<!-- Balance Summary Table + Summary Cards -->
-<div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-12 tw-gap-6">
+<app-in-page-nav [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
 
-  <!-- Table (left) -->
-  <div class="lg:tw-col-span-8">
+  <!-- ── My Label ─────────────────────────────────────────────────────────── -->
+  <div *ngIf="activeSection === 'my-label'">
+
     <app-paginated-table
       title="Balance Summary"
       [data]="artistBalances"
@@ -36,12 +36,12 @@
                      [class.fa-sort-down]="balanceSort?.column === 'name' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_royalties')">
-                  Total royalties (₱)
+                  Royalties (₱)
                   <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_royalties' && balanceSort?.direction === 'desc'" />
                 </th>
                 <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onBalanceSortToggle('total_payments')">
-                  Total payments (₱)
+                  Payments (₱)
                   <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'asc'"
                      [class.fa-sort-down]="balanceSort?.column === 'total_payments' && balanceSort?.direction === 'desc'" />
                 </th>
@@ -71,11 +71,16 @@
                          class="tw-w-11 tw-h-11 tw-min-w-[2.75rem] tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-xs tw-font-bold tw-flex-shrink-0 tw-bg-gray-200 tw-text-gray-600">
                       {{ getInitials(artist.name) }}
                     </div>
-                    <span>{{ artist.name }}</span>
+                    <div>
+                      <div>{{ artist.name }}</div>
+                      <div *ngIf="artist.parent_royalties && artist.parent_royalties > 0" class="tw-text-xs tw-text-gray-400 tw-mt-0.5">
+                        + {{ formatCurrency(artist.parent_royalties) }} handled by parent label
+                      </div>
+                    </div>
                   </div>
                 </td>
-                <td class="mobile-hide tablet-hide tw-text-right" data-label="Total royalties"><span [ngClass]="{'tw-text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span></td>
-                <td class="mobile-hide tablet-hide tw-text-right" data-label="Total payments"><span [ngClass]="{'tw-text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span></td>
+                <td class="mobile-hide tablet-hide tw-text-right" data-label="Royalties"><span [ngClass]="{'tw-text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span></td>
+                <td class="mobile-hide tablet-hide tw-text-right" data-label="Payments"><span [ngClass]="{'tw-text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span></td>
                 <td class="mobile-narrow mobile-number tw-text-right tw-font-bold" data-label="Balance"><span [ngClass]="{'tw-text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span></td>
                 <td class="mobile-hide tw-text-right" data-label="Payout point"><span [ngClass]="{'tw-text-danger': artist.payout_point < 0}">{{ formatCurrency(artist.payout_point) }}</span></td>
                 <td class="mobile-narrow tw-text-center" data-label="Due for payment">
@@ -92,79 +97,205 @@
         </div>
       </ng-template>
     </app-paginated-table>
-  </div>
 
-  <!-- Summary Cards (right, stacked) -->
-  <div class="lg:tw-col-span-4 tw-flex tw-flex-col tw-gap-4">
-    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payment Overview</h3>
+    <!-- Payment Overview cards below the table -->
+    <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-4 tw-mt-6">
 
-    <!-- Total Balance -->
-    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
-      <div class="tw-flex tw-flex-col tw-items-center tw-text-center sm:tw-flex-row sm:tw-items-center sm:tw-text-left">
-        <div class="tw-text-3xl tw-mb-2 sm:tw-mb-0 sm:tw-mr-5 tw-text-success tw-opacity-80">
-          <app-icon name="coins" iconOnly />
-        </div>
-        <div class="tw-flex-1">
-          <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : '#333'">
-            {{ formatCurrency(balanceSummary?.total_balance || 0) }}
-          </div>
-          <div class="tw-text-sm tw-text-gray-500 tw-mt-1">Total Balance</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Total Due For Payment -->
-    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
-      <div class="tw-flex tw-flex-col tw-items-center tw-text-center sm:tw-flex-row sm:tw-items-center sm:tw-text-left">
-        <div class="tw-text-3xl tw-mb-2 sm:tw-mb-0 sm:tw-mr-5 tw-text-warning tw-opacity-80">
-          <app-icon name="clock" iconOnly />
-        </div>
-        <div class="tw-flex-1">
-          <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
-            {{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}
-          </div>
-          <div class="tw-text-sm tw-text-gray-500 tw-mt-1">Total Due For Payment</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ready to Pay -->
-    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
-      <div class="tw-flex tw-flex-col tw-items-center tw-text-center sm:tw-flex-row sm:tw-items-center sm:tw-text-left">
-        <div class="tw-text-3xl tw-mb-2 sm:tw-mb-0 sm:tw-mr-5 tw-text-[#0891b2] tw-opacity-80">
-          <app-icon name="wallet" iconOnly />
-        </div>
-        <div class="tw-flex-1">
-          <div class="tw-text-2xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
-            {{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}
-          </div>
-          <div class="tw-text-sm tw-text-gray-500 tw-mt-1">
-            Ready to Pay
-            <app-icon name="info" iconOnly class="tw-ml-1" title="Due for payment and has bank account" />
+      <!-- Total Balance -->
+      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
+        <div class="tw-flex tw-items-center tw-gap-4">
+          <div class="tw-text-2xl tw-text-success tw-opacity-80"><app-icon name="coins" iconOnly /></div>
+          <div>
+            <div class="tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_balance || 0) < 0 ? '#FF4A55' : '#333'">
+              {{ formatCurrency(balanceSummary?.total_balance || 0) }}
+            </div>
+            <div class="tw-text-sm tw-text-gray-500 tw-mt-0.5">Total Balance</div>
           </div>
         </div>
       </div>
-      <div class="tw-mt-4">
-        <button class="btn-primary tw-w-full"
-                [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
-                (click)="payAllBalances()">
-          <app-icon name="credit-card" /> Pay Now
-        </button>
-      </div>
-      <div class="tw-mt-3 tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-2 tw-text-center">
-        <div class="badge bg-info">
-          Available balance: <span [style.color]="walletBalance < 0 ? '#FF4A55' : ''">{{ formatCurrency(walletBalance) }}</span>
+
+      <!-- Total Due For Payment -->
+      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
+        <div class="tw-flex tw-items-center tw-gap-4">
+          <div class="tw-text-2xl tw-text-warning tw-opacity-80"><app-icon name="clock" iconOnly /></div>
+          <div>
+            <div class="tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.total_due_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+              {{ formatCurrency(balanceSummary?.total_due_for_payment || 0) }}
+            </div>
+            <div class="tw-text-sm tw-text-gray-500 tw-mt-0.5">Due for Payment</div>
+          </div>
         </div>
-        <small><strong>On hold:</strong> <span [style.color]="(balanceSummary?.paused_payouts || 0) < 0 ? '#FF4A55' : ''">{{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</span></small>
       </div>
+
+      <!-- Ready to Pay -->
+      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
+        <div class="tw-flex tw-items-center tw-gap-4">
+          <div class="tw-text-2xl tw-text-[#0891b2] tw-opacity-80"><app-icon name="wallet" iconOnly /></div>
+          <div class="tw-flex-1">
+            <div class="tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+              {{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}
+            </div>
+            <div class="tw-text-sm tw-text-gray-500 tw-mt-0.5">
+              Ready to Pay
+              <app-icon name="info" iconOnly class="tw-ml-1" title="Due for payment and has bank account" />
+            </div>
+          </div>
+        </div>
+        <div class="tw-mt-4 tw-flex tw-flex-col sm:tw-flex-row tw-items-start tw-gap-3">
+          <button class="btn-primary tw-flex-shrink-0"
+                  [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
+                  (click)="payAllBalances()">
+            <app-icon name="credit-card" /> Pay Now
+          </button>
+          <div class="tw-flex tw-flex-col tw-gap-1 tw-text-sm">
+            <div class="badge bg-info">Available: {{ formatCurrency(walletBalance) }}</div>
+            <small class="tw-text-muted"><strong>On hold:</strong> {{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</small>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
 
-</div>
+  <!-- ── Sublabels ─────────────────────────────────────────────────────────── -->
+  <div *ngIf="activeSection === 'sublabels'">
+
+    <!-- Sublabel selector -->
+    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+      <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+        <p class="tw-mb-3 tw-text-muted">Only royalties recorded by your label are payable from here.</p>
+        <div class="tw-flex tw-items-center tw-gap-3">
+          <label class="tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-0">Sublabel:</label>
+          <select class="form-select tw-w-auto"
+                  [(ngModel)]="selectedChildBrandId"
+                  (ngModelChange)="onChildBrandChange()">
+            <option [ngValue]="null">— Select a sublabel —</option>
+            <option *ngFor="let brand of childBrands" [ngValue]="brand.brand_id">{{ brand.brand_name }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="selectedChildBrandId">
+
+      <app-paginated-table
+        title="Sublabel Artist Balances"
+        [data]="sublabelBalances"
+        [pagination]="sublabelPagination"
+        [loading]="sublabelLoading"
+        [columns]="sublabelBalanceColumns"
+        [showSortableHeaders]="false"
+        [sortInfo]="sublabelSort"
+        (pageChange)="onSublabelPageChange($event)"
+        (filtersChange)="onSublabelFiltersChange($event)">
+
+        <ng-template #tableContent let-data>
+          <div class="table-responsive" *ngIf="!sublabelLoading">
+            <table class="table table-financial">
+              <thead>
+                <tr>
+                  <th class="mobile-text" style="cursor: pointer;" (click)="onSublabelSortToggle('name')">
+                    Artist
+                    <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="sublabelSort?.column === 'name' && sublabelSort?.direction === 'asc'"
+                       [class.fa-sort-down]="sublabelSort?.column === 'name' && sublabelSort?.direction === 'desc'" />
+                  </th>
+                  <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onSublabelSortToggle('total_royalties')">
+                    Parent-payable royalties (₱)
+                    <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="sublabelSort?.column === 'total_royalties' && sublabelSort?.direction === 'asc'"
+                       [class.fa-sort-down]="sublabelSort?.column === 'total_royalties' && sublabelSort?.direction === 'desc'" />
+                  </th>
+                  <th class="mobile-hide tablet-hide tw-text-right" style="cursor: pointer;" (click)="onSublabelSortToggle('total_payments')">
+                    Payments made (₱)
+                    <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="sublabelSort?.column === 'total_payments' && sublabelSort?.direction === 'asc'"
+                       [class.fa-sort-down]="sublabelSort?.column === 'total_payments' && sublabelSort?.direction === 'desc'" />
+                  </th>
+                  <th class="mobile-narrow mobile-number tw-text-right" style="cursor: pointer;" (click)="onSublabelSortToggle('total_balance')">
+                    Remaining (₱)
+                    <app-icon name="sort" class="tw-ml-1" [class.fa-sort-up]="sublabelSort?.column === 'total_balance' && sublabelSort?.direction === 'asc'"
+                       [class.fa-sort-down]="sublabelSort?.column === 'total_balance' && sublabelSort?.direction === 'desc'" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let artist of data">
+                  <td class="mobile-text" data-label="Artist">
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <img *ngIf="getProfilePhotoUrl(artist.profile_photo)"
+                           [src]="getProfilePhotoUrl(artist.profile_photo)"
+                           [alt]="artist.name"
+                           class="tw-w-11 tw-h-11 tw-min-w-[2.75rem] tw-rounded-full tw-object-cover tw-flex-shrink-0">
+                      <div *ngIf="!getProfilePhotoUrl(artist.profile_photo)"
+                           class="tw-w-11 tw-h-11 tw-min-w-[2.75rem] tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-xs tw-font-bold tw-flex-shrink-0 tw-bg-gray-200 tw-text-gray-600">
+                        {{ getInitials(artist.name) }}
+                      </div>
+                      <span>{{ artist.name }}</span>
+                    </div>
+                  </td>
+                  <td class="mobile-hide tablet-hide tw-text-right" data-label="Parent-payable royalties">
+                    <span [ngClass]="{'tw-text-danger': artist.total_royalties < 0}">{{ formatCurrency(artist.total_royalties) }}</span>
+                  </td>
+                  <td class="mobile-hide tablet-hide tw-text-right" data-label="Payments made">
+                    <span [ngClass]="{'tw-text-danger': artist.total_payments < 0}">{{ formatCurrency(artist.total_payments) }}</span>
+                  </td>
+                  <td class="mobile-narrow mobile-number tw-text-right tw-font-bold" data-label="Remaining">
+                    <span [ngClass]="{'tw-text-danger': artist.total_balance < 0}">{{ formatCurrency(artist.total_balance) }}</span>
+                  </td>
+                </tr>
+                <tr *ngIf="data.length === 0">
+                  <td colspan="4" class="tw-text-center tw-text-muted tw-py-6">No artists found for this sublabel.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-template>
+      </app-paginated-table>
+
+      <!-- Sublabel overview cards below the table -->
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mt-6">
+
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-text-2xl tw-text-success tw-opacity-80"><app-icon name="coins" iconOnly /></div>
+            <div>
+              <div class="tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(sublabelSummary?.total_balance || 0) < 0 ? '#FF4A55' : '#333'">
+                {{ formatCurrency(sublabelSummary?.total_balance || 0) }}
+              </div>
+              <div class="tw-text-sm tw-text-gray-500 tw-mt-0.5">Total Remaining Balance</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-px-6 tw-py-5">
+          <div class="tw-flex tw-items-center tw-gap-4">
+            <div class="tw-text-2xl tw-text-[#0891b2] tw-opacity-80"><app-icon name="wallet" iconOnly /></div>
+            <div class="tw-flex-1">
+              <div class="tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(sublabelSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+                {{ formatCurrency(sublabelSummary?.ready_for_payment || 0) }}
+              </div>
+              <div class="tw-text-sm tw-text-gray-500 tw-mt-0.5">Ready to Pay</div>
+            </div>
+          </div>
+          <div class="tw-mt-4 tw-flex tw-flex-col tw-items-start tw-gap-2">
+            <button class="btn-primary tw-flex-shrink-0"
+                    [disabled]="(sublabelSummary?.ready_for_payment || 0) <= 0 || walletBalance < (sublabelSummary?.ready_for_payment || 0)"
+                    (click)="payAllSublabelBalances()">
+              <app-icon name="credit-card" /> Pay All
+            </button>
+            <div class="badge bg-info">Available: {{ formatCurrency(walletBalance) }}</div>
+          </div>
+        </div>
+
+      </div>
+
+    </ng-container>
+
+  </div>
+
+</app-in-page-nav>
 
 <!-- Payment Confirmation Dialog -->
-<app-payment-confirmation-dialog 
+<app-payment-confirmation-dialog
   *ngIf="showPaymentDialog"
   [artists]="paymentArtists"
   [availableBalance]="walletBalance"

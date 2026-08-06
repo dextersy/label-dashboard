@@ -127,6 +127,7 @@
                        style="cursor: pointer; border-bottom: 1px solid #eee;"
                        (click)="selectRelease(i, release)">
                     <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
+                    <span *ngIf="release.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ release.brand!.brand_name }})</span>
                   </div>
                 </div>
                 <ng-template #noResultsDesktop>
@@ -278,6 +279,7 @@
                      style="cursor: pointer; border-bottom: 1px solid #eee;"
                      (click)="selectRelease(i, release)">
                   <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
+                  <span *ngIf="release.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ release.brand!.brand_name }})</span>
                 </div>
               </div>
               <ng-template #noResultsMobile>

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
 import { AdminService, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
 import { ReleaseService, Release } from '../../../services/release.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -45,6 +46,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   csvDescription: string = '';
   csvDateOverride: string = new Date().toISOString().split('T')[0];
   csvDetectedDateColumn: string = '';
+  csvDetectedLabelColumn: boolean = false;
   csvMobileEditing: boolean = false;
   manualFormCollapsed: boolean = true;
   csvProcessingResult: CsvProcessingResult | null = null;
@@ -76,6 +78,16 @@ export class BulkAddEarningsTabComponent implements OnInit {
         formatter: (item) => item.matched_release?.title || ''
       }
     ];
+
+    if (this.csvDetectedLabelColumn) {
+      cols.splice(1, 0, {
+        key: 'matched_brand',
+        label: 'Label',
+        searchable: true,
+        sortable: true,
+        formatter: (item) => item.matched_brand?.brand_name || ''
+      });
+    }
 
     if (this.csvDetectedDateColumn) {
       cols.push({
@@ -114,16 +126,40 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   private loadBulkEarningsData(): void {
     this.loading = true;
-    
-    this.releaseService.getReleases().subscribe({
-      next: (response) => {
-        this.releases = response.releases;
-        this.filteredReleases = [...this.releases];
-        this.loading = false;
+
+    this.adminService.getSublabels().subscribe({
+      next: (childBrands) => {
+        const childBrandIds = childBrands.map(b => b.brand_id);
+        const requests = [
+          this.releaseService.getReleases(),
+          ...childBrandIds.map(id => this.releaseService.getReleasesByChildBrand(id))
+        ];
+
+        forkJoin(requests).subscribe({
+          next: (responses) => {
+            this.releases = responses.flatMap(r => r.releases);
+            this.filteredReleases = [...this.releases];
+            this.loading = false;
+          },
+          error: () => {
+            this.notificationService.showError('Error loading releases');
+            this.loading = false;
+          }
+        });
       },
-      error: (error) => {
-        this.notificationService.showError('Error loading releases');
-        this.loading = false;
+      error: () => {
+        // No child brands or not a parent brand — just load own releases
+        this.releaseService.getReleases().subscribe({
+          next: (response) => {
+            this.releases = response.releases;
+            this.filteredReleases = [...this.releases];
+            this.loading = false;
+          },
+          error: () => {
+            this.notificationService.showError('Error loading releases');
+            this.loading = false;
+          }
+        });
       }
     });
   }
@@ -307,11 +343,13 @@ export class BulkAddEarningsTabComponent implements OnInit {
         this.csvProcessingResult = result;
         // Only show rows that have matched releases
         this.csvDataAll = result.data.filter(row => row.matched_release !== null);
-        // Auto-detect a date column from CSV headers
+        // Auto-detect date and label columns from CSV headers
         if (result.data.length > 0) {
           const columns = Object.keys(result.data[0].original_data);
           this.csvDetectedDateColumn = columns.find(col => /date|period|month|year/i.test(col)) || '';
         }
+        // Detect label column from backend column_mapping
+        this.csvDetectedLabelColumn = !!result.summary.column_mapping['label_name'];
         this.updateCsvSummary();
         this.updatePaginatedData();
         this.loading = false;
@@ -377,6 +415,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.csvTotalCount = 0;
     this.csvTotalUnmatched = 0;
     this.csvDetectedDateColumn = '';
+    this.csvDetectedLabelColumn = false;
     this.csvDateOverride = new Date().toISOString().split('T')[0];
     this.csvMobileEditing = false;
     this.csvPagination.current_page = 1;
