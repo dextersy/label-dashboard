@@ -147,6 +147,22 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Brand not found' });
     }
 
+    // Check brand name uniqueness
+    if (name && name !== brand.brand_name) {
+      const existingName = await Brand.findOne({ where: { brand_name: name } });
+      if (existingName) {
+        return res.status(409).json({ error: `The name "${name}" is already used by another label` });
+      }
+    }
+
+    // Check catalog prefix uniqueness
+    if (catalog_prefix && catalog_prefix !== brand.catalog_prefix) {
+      const existingPrefix = await Brand.findOne({ where: { catalog_prefix } });
+      if (existingPrefix) {
+        return res.status(409).json({ error: `The catalog prefix "${catalog_prefix}" is already used by another label` });
+      }
+    }
+
     // Update brand settings
     await brand.update({
       brand_name: name,
@@ -1328,6 +1344,26 @@ export const getChildBrands = async (req: Request, res: Response) => {
   }
 };
 
+// Generate a unique catalog prefix from a brand name (e.g. "My Cool Label" -> "MCL")
+const generateUniqueCatalogPrefix = async (brandName: string): Promise<string> => {
+  const words = brandName.trim().split(/\s+/);
+  const base = words.map(w => w[0]?.toUpperCase() ?? '').join('').replace(/[^A-Z]/g, '') || 'LBL';
+
+  // Try the base prefix first, then append numbers until unique
+  let candidate = base.slice(0, 10);
+  let existingBrand = await Brand.findOne({ where: { catalog_prefix: candidate } });
+  if (!existingBrand) return candidate;
+
+  for (let i = 2; i <= 99; i++) {
+    const suffix = String(i);
+    candidate = base.slice(0, 10 - suffix.length) + suffix;
+    existingBrand = await Brand.findOne({ where: { catalog_prefix: candidate } });
+    if (!existingBrand) return candidate;
+  }
+
+  throw new Error('Could not generate a unique catalog prefix for the given brand name');
+};
+
 // Async function to handle the heavy lifting of sublabel creation
 const createSublabelAsync = async (
   brandId: string,
@@ -1361,6 +1397,9 @@ const createSublabelAsync = async (
       throw new Error('Current user not found');
     }
 
+    // Generate a unique catalog prefix from the brand name
+    const catalogPrefix = await generateUniqueCatalogPrefix(brand_name);
+
     // Create new brand (sublabel)
     const newBrand = await Brand.create({
       brand_name: brand_name.trim(),
@@ -1372,7 +1411,7 @@ const createSublabelAsync = async (
       paymongo_wallet_id: '',
       payment_processing_fee_for_payouts: 10.00, // Default 10%
       release_submission_url: '',
-      catalog_prefix: ''
+      catalog_prefix: catalogPrefix
     });
 
     console.log(`[Async] Created brand with ID: ${newBrand.id}`);
@@ -1531,6 +1570,12 @@ export const createSublabel = async (req: Request, res: Response) => {
     const currentUser = await User.findByPk(currentUserId);
     if (!currentUser) {
       return res.status(404).json({ error: 'Current user not found' });
+    }
+
+    // Check if brand name already exists
+    const existingBrandName = await Brand.findOne({ where: { brand_name: brand_name.trim() } });
+    if (existingBrandName) {
+      return res.status(409).json({ error: 'A label with that name already exists' });
     }
 
     // Check if domain already exists

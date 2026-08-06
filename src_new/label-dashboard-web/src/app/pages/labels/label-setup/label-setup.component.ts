@@ -180,8 +180,9 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
           this.notificationService.showSuccess('Brand settings saved successfully');
           this.loading = false;
         },
-        error: () => {
-          this.notificationService.showError('Error saving brand settings');
+        error: (err) => {
+          const message = err?.error?.error || 'Error saving brand settings';
+          this.notificationService.showError(message);
           this.loading = false;
         }
       });
