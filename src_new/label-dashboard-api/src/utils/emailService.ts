@@ -578,6 +578,61 @@ export const sendEarningsNotification = async (
   }
 };
 
+// Send admin notification when a parent label posts an earning for a sublabel
+export const sendEarningAdminNotification = async (
+  recipients: string[],
+  releaseTitle: string,
+  earningType: string,
+  earningAmount: number,
+  postedByBrandName: string,
+  sublabelBrandName: string,
+  brandColor: string,
+  dashboardUrl: string,
+  brandId: number
+): Promise<boolean> => {
+  const formattedAmount = formatCurrency(earningAmount);
+  const subject = `New earnings posted for ${releaseTitle} by ${postedByBrandName}`;
+  const body = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: ${brandColor || '#667eea'}; padding: 20px 24px;">
+        <h2 style="color: #ffffff; margin: 0; font-size: 18px;">${sublabelBrandName}</h2>
+      </div>
+      <div style="padding: 24px;">
+        <p style="color: #374151; font-size: 15px; margin-top: 0;">Hello,</p>
+        <p style="color: #374151; font-size: 15px;">
+          <strong>${postedByBrandName}</strong> has posted new earnings for your label:
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr>
+            <td style="padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Release</td>
+            <td style="padding: 8px 12px; border: 1px solid #e5e7eb; color: #374151;">${releaseTitle}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Earning Type</td>
+            <td style="padding: 8px 12px; border: 1px solid #e5e7eb; color: #374151;">${earningType}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Amount</td>
+            <td style="padding: 8px 12px; border: 1px solid #e5e7eb; color: #374151; font-weight: 700;">₱${formattedAmount}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 12px; background: #f9fafb; border: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Posted By</td>
+            <td style="padding: 8px 12px; border: 1px solid #e5e7eb; color: #374151;">${postedByBrandName}</td>
+          </tr>
+        </table>
+        <p style="color: #6b7280; font-size: 14px;">
+          You can view this earning in your dashboard:
+          <a href="${dashboardUrl}" style="color: ${brandColor || '#667eea'};">${dashboardUrl}</a>
+        </p>
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">
+          This is an automated notification. Please do not reply to this email.
+        </p>
+      </div>
+    </div>
+  `;
+  return await sendEmail(recipients, subject, body, brandId);
+};
+
 // Send login success notification (matching PHP logic)
 export const sendLoginNotification = async (
   userEmail: string,

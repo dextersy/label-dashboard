@@ -996,6 +996,7 @@ interface ChildBrandData {
   brand_color: string | null;
   music_earnings: number;
   music_gross_earnings: number;
+  parent_music_gross_earnings: number;
   event_earnings: number;
   event_sales: number;
   event_processing_fees: number;
@@ -1069,14 +1070,18 @@ export const getChildBrands = async (req: Request, res: Response) => {
       const releaseIdList = releaseIds.map(r => (r as any).id);
       
       let musicPlatformFees = 0;
+      let payableMusicEarnings = 0;
+      let parentMusicGrossEarnings = 0;
       if (releaseIdList.length === 0) {
         musicEarnings = 0;
         musicGrossEarnings = 0;
         musicPlatformFees = 0;
         totalRoyalties = 0;
+        payableMusicEarnings = 0;
+        parentMusicGrossEarnings = 0;
       } else {
-        // Calculate music earnings (total earnings minus royalties minus platform fees for this brand's releases)
-        const totalEarnings = await Earning.sum('amount', {
+        // Fetch all earnings for display and split by recorded_by_brand_id for balance
+        const allEarnings = await Earning.findAll({
           where: {
             release_id: { [Op.in]: releaseIdList },
             ...(start_date && end_date ? {
@@ -1084,34 +1089,29 @@ export const getChildBrands = async (req: Request, res: Response) => {
                 [Op.between]: [new Date(start_date), new Date(end_date)]
               }
             } : {})
-          }
+          },
+          attributes: ['id', 'amount', 'platform_fee', 'recorded_by_brand_id']
         });
 
-        totalRoyalties = await Royalty.sum('amount', {
-          where: {
-            release_id: { [Op.in]: releaseIdList },
-            ...(start_date && end_date ? {
-              date_recorded: {
-                [Op.between]: [new Date(start_date), new Date(end_date)]
-              }
-            } : {})
-          }
-        }) || 0;
+        const allEarningIds = allEarnings.map(e => (e as any).id);
+        const parentRecordedEarnings = allEarnings.filter(e => (e as any).recorded_by_brand_id != null);
+        const parentEarningIds = parentRecordedEarnings.map(e => (e as any).id);
 
-        const totalPlatformFees = await Earning.sum('platform_fee', {
-          where: {
-            release_id: { [Op.in]: releaseIdList },
-            ...(start_date && end_date ? {
-              date_recorded: {
-                [Op.between]: [new Date(start_date), new Date(end_date)]
-              }
-            } : {})
-          }
-        });
+        musicGrossEarnings = allEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).amount || 0)), 0);
+        musicPlatformFees = allEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).platform_fee || 0)), 0);
+        parentMusicGrossEarnings = parentRecordedEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).amount || 0)), 0);
+        const parentPlatformFees = parentRecordedEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).platform_fee || 0)), 0);
 
-        musicGrossEarnings = totalEarnings || 0;
-        musicEarnings = musicGrossEarnings - totalRoyalties - (totalPlatformFees || 0);
-        musicPlatformFees = totalPlatformFees || 0;
+        totalRoyalties = allEarningIds.length > 0
+          ? await Royalty.sum('amount', { where: { earning_id: { [Op.in]: allEarningIds } } }) || 0
+          : 0;
+
+        const payableRoyalties = parentEarningIds.length > 0
+          ? await Royalty.sum('amount', { where: { earning_id: { [Op.in]: parentEarningIds } } }) || 0
+          : 0;
+
+        musicEarnings = musicGrossEarnings - totalRoyalties - musicPlatformFees;
+        payableMusicEarnings = parentMusicGrossEarnings - payableRoyalties - parentPlatformFees;
       }
 
       // Fix date range to include full day
@@ -1275,8 +1275,9 @@ export const getChildBrands = async (req: Request, res: Response) => {
           }) || 0
         : 0;
 
-      // Calculate balance (including fundraiser earnings, minus add-on balance payments)
-      const balance = musicEarnings + eventEarnings + fundraiserEarnings - payments - totalAddOnBalancePayments;
+      // Payable balance: only parent-recorded music earnings create an obligation;
+      // direct (sublabel self-entered) earnings are excluded.
+      const balance = payableMusicEarnings + eventEarnings + fundraiserEarnings - payments - totalAddOnBalancePayments;
 
       // Get domains for this child brand
       const domains = await Domain.findAll({
@@ -1298,6 +1299,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
         brand_color: childBrand.brand_color || null,
         music_earnings: musicEarnings,
         music_gross_earnings: musicGrossEarnings,
+        parent_music_gross_earnings: parentMusicGrossEarnings,
         event_earnings: eventEarnings,
         event_sales: eventSales,
         event_processing_fees: eventProcessingFees,

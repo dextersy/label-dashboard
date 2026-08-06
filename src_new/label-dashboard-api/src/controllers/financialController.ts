@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
-import { sendEarningsNotification } from '../utils/emailService';
+import { sequelize } from '../config/database';
+import { sendEarningsNotification, sendEarningAdminNotification } from '../utils/emailService';
 import { createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { PaymentService } from '../utils/paymentService';
 import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
@@ -30,21 +31,33 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     } = req.body;
 
     if (!release_id || !amount || !date_recorded) {
-      return res.status(400).json({ 
-        error: 'Release ID, amount, and date are required' 
+      return res.status(400).json({
+        error: 'Release ID, amount, and date are required'
       });
     }
 
-    // Verify release exists and belongs to user's brand
-    const release = await Release.findOne({
-      where: { 
-        id: release_id,
-        brand_id: req.user.brand_id 
-      }
-    });
+    // Verify release exists and belongs to user's brand, or to a direct child brand
+    const release = await Release.findOne({ where: { id: release_id } });
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
+    }
+
+    let recordedByBrandId: number | null = null;
+
+    if (release.brand_id === req.user.brand_id) {
+      // Sublabel self-entry — direct income, no payable obligation to parent
+      recordedByBrandId = null;
+    } else {
+      // Check if release's brand is a direct child of the user's brand
+      const childBrand = await Brand.findOne({
+        where: { id: release.brand_id, parent_brand: req.user.brand_id }
+      });
+      if (!childBrand) {
+        return res.status(404).json({ error: 'Release not found' });
+      }
+      // Parent recording for sublabel — creates payable obligation
+      recordedByBrandId = req.user.brand_id;
     }
 
     // Create earning record with 0 platform fee initially (will be calculated after processing)
@@ -54,7 +67,8 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       amount: parseFloat(amount.toFixed(2)),
       description,
       date_recorded: new Date(date_recorded),
-      platform_fee: 0
+      platform_fee: 0,
+      recorded_by_brand_id: recordedByBrandId
     });
 
     // Process recuperable expenses and royalties if requested
@@ -75,18 +89,28 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     // If royalties are not calculated, use the gross amount as net revenue
     
     const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-      req.user.brand_id,
+      release.brand_id,
       grossAmount,
       netRevenue
     );
-    
+
     // Update the earning with the final platform fee
     await earning.update({
       platform_fee: finalPlatformFeeCalc.totalPlatformFee
     });
 
+    // If parent recorded for sublabel, pass the parent brand info for notifications
+    const postedByBrand = recordedByBrandId
+      ? await Brand.findByPk(req.user.brand_id, { attributes: ['id', 'brand_name'] })
+      : null;
+
     // Send earning notification emails (matching PHP logic)
-    await sendEarningNotifications(earning, req.user.brand_id, recuperationInfo);
+    await sendEarningNotifications(
+      earning,
+      release.brand_id,
+      recuperationInfo,
+      postedByBrand ? { id: postedByBrand.id, brand_name: postedByBrand.brand_name } : null
+    );
 
     res.status(201).json({
       message: 'Earning added successfully',
@@ -117,17 +141,27 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
       try {
         const earningData = earnings[i];
         
-        // Verify release exists
-        const release = await Release.findOne({
-          where: { 
-            id: earningData.release_id,
-            brand_id: req.user.brand_id 
-          }
-        });
+        // Verify release exists and belongs to user's brand or a direct child brand
+        const release = await Release.findOne({ where: { id: earningData.release_id } });
 
         if (!release) {
           errors.push(`Row ${i + 1}: Release not found`);
           continue;
+        }
+
+        let rowRecordedByBrandId: number | null = null;
+
+        if (release.brand_id === req.user.brand_id) {
+          rowRecordedByBrandId = null;
+        } else {
+          const childBrand = await Brand.findOne({
+            where: { id: release.brand_id, parent_brand: req.user.brand_id }
+          });
+          if (!childBrand) {
+            errors.push(`Row ${i + 1}: Release not found`);
+            continue;
+          }
+          rowRecordedByBrandId = req.user.brand_id;
         }
 
         // Create earning record with 0 platform fee initially (will be calculated after processing)
@@ -137,7 +171,8 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
           amount: parseFloat(earningData.amount.toFixed(2)),
           description: earningData.description,
           date_recorded: new Date(earningData.date_recorded),
-          platform_fee: 0
+          platform_fee: 0,
+          recorded_by_brand_id: rowRecordedByBrandId
         });
 
         // Process recuperable expenses and royalties if requested
@@ -158,18 +193,27 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
         // If royalties are not calculated, use the gross amount as net revenue
         
         const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-          req.user.brand_id,
+          release.brand_id,
           grossAmount,
           netRevenue
         );
-        
+
         // Update the earning with the final platform fee
         await earning.update({
           platform_fee: finalPlatformFeeCalc.totalPlatformFee
         });
 
+        // If parent recorded for sublabel, pass parent brand info for notifications
+        let rowPostedByBrand: { id: number; brand_name: string } | null = null;
+        if (rowRecordedByBrandId) {
+          const parentBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['id', 'brand_name'] });
+          if (parentBrand) {
+            rowPostedByBrand = { id: parentBrand.id, brand_name: parentBrand.brand_name };
+          }
+        }
+
         // Send earning notification emails (matching PHP logic)
-        await sendEarningNotifications(earning, req.user.brand_id, recuperationInfo);
+        await sendEarningNotifications(earning, release.brand_id, recuperationInfo, rowPostedByBrand);
 
         createdEarnings.push(earning);
       } catch (error) {
@@ -202,6 +246,10 @@ interface ProcessedEarningRow {
     catalog_no: string;
     title: string;
   } | null;
+  matched_brand?: {
+    id: number;
+    brand_name: string;
+  } | null;
   fuzzy_match_score?: number;
 }
 
@@ -210,7 +258,8 @@ const fuzzyMatchColumns = (headers: string[]): { [key: string]: string } => {
   const expectedFields = {
     catalog_no: ['catalog', 'catalog_no', 'catalog_number', 'cat_no', 'catno'],
     release_title: ['title', 'release_title', 'release', 'album', 'song'],
-    earning_amount: ['amount', 'earning_amount', 'earnings', 'revenue', 'total']
+    earning_amount: ['amount', 'earning_amount', 'earnings', 'revenue', 'total'],
+    label_name: ['label', 'label_name', 'brand', 'sublabel', 'label name']
   };
 
   const columnMapping: { [key: string]: string } = {};
@@ -299,10 +348,32 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ error: 'CSV file is required' });
     }
 
-    // Get all releases for the brand
-    const releases = await Release.findAll({
+    // Get all releases for the brand and all child brands
+    const ownReleases = await Release.findAll({
       where: { brand_id: req.user.brand_id }
     });
+
+    const childBrands = await Brand.findAll({
+      where: { parent_brand: req.user.brand_id }
+    });
+
+    // Build a map from brand id to brand info for child brand releases
+    const childBrandById: Map<number, any> = new Map();
+    const childBrandReleaseMap: Map<string, { brand: any; releases: any[] }> = new Map();
+
+    const allChildReleases: any[] = [];
+    for (const cb of childBrands) {
+      const cbReleases = await Release.findAll({ where: { brand_id: (cb as any).id } });
+      childBrandById.set((cb as any).id, cb);
+      childBrandReleaseMap.set(
+        ((cb as any).brand_name || '').toLowerCase().trim(),
+        { brand: cb, releases: cbReleases }
+      );
+      allChildReleases.push(...cbReleases);
+    }
+
+    // Combined pool: own releases first, then child brand releases
+    const releases = [...ownReleases, ...allChildReleases];
 
     const csvData: CsvRow[] = [];
     const processedRows: ProcessedEarningRow[] = [];
@@ -328,8 +399,8 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
             const columnMapping = fuzzyMatchColumns(headers);
 
             if (!columnMapping.earning_amount) {
-              return res.status(400).json({ 
-                error: 'Could not identify earning amount column. Expected columns like: amount, earning_amount, earnings, revenue, total' 
+              return res.status(400).json({
+                error: 'Could not identify earning amount column. Expected columns like: amount, earning_amount, earnings, revenue, total'
               });
             }
 
@@ -340,13 +411,26 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
             for (const row of csvData) {
               const catalogNo = columnMapping.catalog_no ? (row[columnMapping.catalog_no] || '').trim() : '';
               const releaseTitle = columnMapping.release_title ? (row[columnMapping.release_title] || '').trim() : '';
+              const labelName = columnMapping.label_name ? (row[columnMapping.label_name] || '').trim() : '';
               const earningAmountStr = row[columnMapping.earning_amount] || '0';
-              
+
               // Parse earning amount
               const earningAmount = parseFloat(earningAmountStr.replace(/[^\d.-]/g, ''));
-              
+
               if (isNaN(earningAmount)) {
                 continue; // Skip rows with invalid amounts
+              }
+
+              // When a label_name column exists and matches a child brand, restrict matching to that brand's releases
+              let releasesForRow = releases;
+              let hintedBrand: { id: number; brand_name: string } | null = null;
+
+              if (labelName && childBrandReleaseMap.size > 0) {
+                const entry = childBrandReleaseMap.get(labelName.toLowerCase());
+                if (entry) {
+                  releasesForRow = entry.releases;
+                  hintedBrand = { id: (entry.brand as any).id, brand_name: (entry.brand as any).brand_name };
+                }
               }
 
               const processedRow: ProcessedEarningRow = {
@@ -354,12 +438,13 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
                 catalog_no: catalogNo,
                 release_title: releaseTitle,
                 earning_amount: earningAmount,
-                matched_release: null
+                matched_release: null,
+                matched_brand: hintedBrand
               };
 
               // Try to find matching release
               if (catalogNo || releaseTitle) {
-                const { release, score } = await findMatchingRelease(releases, catalogNo, releaseTitle);
+                const { release, score } = await findMatchingRelease(releasesForRow, catalogNo, releaseTitle);
                 if (release) {
                   processedRow.matched_release = {
                     id: release.id,
@@ -367,6 +452,11 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
                     title: release.title || ''
                   };
                   processedRow.fuzzy_match_score = score;
+                  // If matched release belongs to a child brand, set matched_brand from the release's brand_id
+                  if (!processedRow.matched_brand && childBrandById.has(release.brand_id)) {
+                    const cb = childBrandById.get(release.brand_id);
+                    processedRow.matched_brand = { id: (cb as any).id, brand_name: (cb as any).brand_name };
+                  }
                   // Only add to total if there's a match
                   totalMatchedAmount += earningAmount;
                 } else {
@@ -914,17 +1004,69 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Verify artist belongs to user's brand
-    const artist = await Artist.findOne({
-      where: { 
+    // Try to find artist in own brand first
+    let artist = await Artist.findOne({
+      where: {
         id: artist_id,
-        brand_id: req.user.brand_id 
+        brand_id: req.user.brand_id
       },
       include: [{ model: Brand, as: 'brand' }]
     });
 
+    let isChildBrandPayment = false;
+
     if (!artist) {
-      return res.status(404).json({ error: 'Artist not found' });
+      // Check if artist belongs to a child brand of the user's brand
+      const childBrand = await Brand.findOne({
+        where: { parent_brand: req.user.brand_id }
+      });
+
+      if (childBrand) {
+        artist = await Artist.findOne({
+          where: { id: artist_id },
+          include: [{
+            model: Brand,
+            as: 'brand',
+            where: { parent_brand: req.user.brand_id }
+          }]
+        });
+      }
+
+      if (!artist) {
+        return res.status(404).json({ error: 'Artist not found' });
+      }
+
+      isChildBrandPayment = true;
+    }
+
+    // For cross-brand payments, enforce the parent-payable balance ceiling
+    if (isChildBrandPayment) {
+      const [royaltyResult]: any[] = await sequelize.query(
+        `SELECT COALESCE(SUM(r.amount), 0) AS total
+         FROM royalty r
+         JOIN earning e ON r.earning_id = e.id
+         WHERE r.artist_id = :artistId
+           AND e.recorded_by_brand_id = :parentBrandId`,
+        { replacements: { artistId: artistIdNum, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+      );
+      const parentPayableRoyalties = parseFloat(royaltyResult.total || 0);
+
+      const [paymentResult]: any[] = await sequelize.query(
+        `SELECT COALESCE(SUM(amount), 0) AS total
+         FROM payment
+         WHERE artist_id = :artistId
+           AND paid_by_brand_id = :parentBrandId
+           AND status = 'succeeded'`,
+        { replacements: { artistId: artistIdNum, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+      );
+      const parentPaymentsMade = parseFloat(paymentResult.total || 0);
+      const parentPayableBalance = parentPayableRoyalties - parentPaymentsMade;
+
+      if (amount > parentPayableBalance) {
+        return res.status(400).json({
+          error: `Amount exceeds parent-payable balance. Available: ${parentPayableBalance.toFixed(2)}`
+        });
+      }
     }
 
     let finalAmount = amount;
@@ -979,7 +1121,8 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
       reference_number: finalReferenceNumber,
       payment_processing_fee: finalProcessingFee,
       status: finalTransferId ? 'pending' : 'succeeded',
-      paymongo_transfer_id: finalTransferId
+      paymongo_transfer_id: finalTransferId,
+      paid_by_brand_id: req.user.brand_id
     };
 
     // Set payment_method_id if provided, otherwise fall back to legacy fields
@@ -1043,18 +1186,26 @@ export const getPayments = async (req: AuthRequest, res: Response) => {
     const { artist_id } = req.query;
     const artistIdNum = artist_id ? parseInt(artist_id as string, 10) : undefined;
 
+    const { Op } = require('sequelize');
+
     const where: any = {};
     if (artist_id) {
       where.artist_id = artistIdNum;
     }
 
+    // Include payments to own artists OR payments made by this brand to child-brand artists
     const payments = await Payment.findAll({
-      where,
+      where: {
+        ...where,
+        [Op.or]: [
+          { '$artist.brand_id$': req.user.brand_id },
+          { paid_by_brand_id: req.user.brand_id }
+        ]
+      },
       include: [
-        { 
-          model: Artist, 
-          as: 'artist',
-          where: { brand_id: req.user.brand_id }
+        {
+          model: Artist,
+          as: 'artist'
         }
       ],
       order: [['date_paid', 'DESC']]
@@ -1132,13 +1283,20 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
     const { artist_id } = req.params;
     const { page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
 
-    // Verify artist belongs to user's brand
-    const artist = await Artist.findOne({
-      where: { 
+    // Verify artist belongs to user's brand (or to a child brand of the user's brand)
+    let artist = await Artist.findOne({
+      where: {
         id: artist_id,
-        brand_id: req.user.brand_id 
+        brand_id: req.user.brand_id
       }
     });
+
+    if (!artist) {
+      artist = await Artist.findOne({
+        where: { id: artist_id },
+        include: [{ model: Brand, as: 'brand', where: { parent_brand: req.user.brand_id }, required: true }]
+      });
+    }
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
@@ -1272,24 +1430,14 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         where: { artist_id: artistIdNum, status: 'succeeded' }
       }) || 0;
 
-      // Calculate total earnings for this artist by first finding releases, then summing earnings
+      // Calculate total earnings from all releases the artist is on (any brand)
       const artistReleases = await ReleaseArtist.findAll({
         where: { artist_id: artistIdNum },
-        attributes: ['release_id'],
-        include: [{
-          model: Release,
-          as: 'release',
-          where: { brand_id: req.user.brand_id },
-          attributes: ['id']
-        }]
+        attributes: ['release_id']
       });
-
       const releaseIds = artistReleases.map(ra => ra.release_id);
-      
       const totalEarnings = releaseIds.length > 0 ? await Earning.sum('amount', {
-        where: {
-          release_id: releaseIds
-        }
+        where: { release_id: releaseIds }
       }) || 0 : 0;
 
       summary = {
@@ -1301,6 +1449,47 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         current_balance: totalRoyalties - totalPayments,
         payout_point: artist.payout_point
       };
+
+      // For admins: add breakdown of own-label vs parent-label figures
+      if (req.user.is_admin) {
+        const [ownRoyaltyRow]: any[] = await sequelize.query(
+          `SELECT COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           LEFT JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id = :artistId
+             AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)`,
+          { replacements: { artistId: artistIdNum }, type: 'SELECT' }
+        );
+        const ownRoyalties = parseFloat(parseFloat(ownRoyaltyRow.total || 0).toFixed(2));
+        const parentRoyalties = parseFloat((totalRoyalties - ownRoyalties).toFixed(2));
+
+        const ownPayments = parseFloat((await Payment.sum('amount', {
+          where: { artist_id: artistIdNum, paid_by_brand_id: req.user.brand_id, status: 'succeeded' }
+        }) || 0).toFixed(2));
+        const parentPayments = parseFloat((totalPayments - ownPayments).toFixed(2));
+
+        let ownEarnings = 0;
+        let parentEarnings = 0;
+        if (releaseIds.length > 0) {
+          const [ownEarningRow]: any[] = await sequelize.query(
+            `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
+             WHERE release_id IN (:releaseIds) AND (recorded_by_brand_id IS NULL)`,
+            { replacements: { releaseIds }, type: 'SELECT' }
+          );
+          ownEarnings = parseFloat(parseFloat(ownEarningRow.total || 0).toFixed(2));
+          parentEarnings = parseFloat((totalEarnings - ownEarnings).toFixed(2));
+        }
+
+        summary.breakdown = {
+          own_royalties: ownRoyalties,
+          parent_royalties: parentRoyalties,
+          own_payments: ownPayments,
+          parent_payments: parentPayments,
+          own_earnings: ownEarnings,
+          parent_earnings: parentEarnings,
+          sublabel_balance: parseFloat((ownRoyalties - ownPayments).toFixed(2)),
+        };
+      }
     } else {
       // Brand-wide summary
       const earningsResult = await Earning.findAll({
@@ -1744,7 +1933,12 @@ export const getAdminPaymentsRoyaltiesArtists = async (req: AuthRequest, res: Re
 };
 
 // Helper function to send earning notifications (matching PHP logic)
-async function sendEarningNotifications(earning: any, brandId: number, recuperationInfo: any = null) {
+async function sendEarningNotifications(
+  earning: any,
+  brandId: number,
+  recuperationInfo: any = null,
+  postedByBrand: { id: number; brand_name: string } | null = null
+) {
   try {
     // Get release with associated artists and brand
     const release = await Release.findByPk(earning.release_id, {
@@ -1831,12 +2025,17 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
       const dashboardUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial/earnings`;
       const paymentScreenUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial/payments`;
 
-      // Send earnings notification email
+      // Build "posted by" note for artist team email description
+      const earningDescription = postedByBrand
+        ? `${earning.description || `${earning.type} earnings`} [Posted by ${postedByBrand.brand_name}]`
+        : (earning.description || `${earning.type} earnings`);
+
+      // Send earnings notification email to artist team
       await sendEarningsNotification(
         emailAddresses,
         releaseArtist.artist.name,
         release.title || 'Unknown Release',
-        earning.description || `${earning.type} earnings`,
+        earningDescription,
         earning.amount.toString(),
         recuperatedAmount.toString(),
         recuperableBalance.toString(),
@@ -1850,6 +2049,36 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
         paymentScreenUrl
       );
 
+      // If posted by parent label, also email sublabel admins
+      if (postedByBrand) {
+        const adminUsers = await User.findAll({
+          where: { brand_id: release.brand_id, is_admin: true },
+          attributes: ['email_address']
+        });
+        const adminEmails = adminUsers
+          .map((u: any) => u.email_address)
+          .filter((email: string) => Boolean(email));
+
+        if (adminEmails.length > 0) {
+          await sendEarningAdminNotification(
+            adminEmails,
+            release.title || 'Unknown Release',
+            earning.type,
+            earning.amount,
+            postedByBrand.brand_name,
+            brandName,
+            brandColor,
+            dashboardUrl,
+            release.brand_id
+          );
+        }
+      }
+
+      // In-app notification message includes "posted by" when relevant
+      const notificationMessage = postedByBrand
+        ? `${earning.type} earnings of ${earning.amount} (posted by ${postedByBrand.brand_name})`
+        : `${earning.type} earnings of ${earning.amount}`;
+
       // Create in-app notifications for artist team + admins
       const notifyUserIds = await getArtistTeamAndAdminUserIds(releaseArtist.artist.id, release.brand_id);
       await createNotificationsForUsers(
@@ -1857,7 +2086,7 @@ async function sendEarningNotifications(earning: any, brandId: number, recuperat
         release.brand_id,
         'earnings_posted',
         `New earnings posted for ${release.title || 'Unknown Release'}`,
-        `${earning.type} earnings of ${earning.amount}`,
+        notificationMessage,
         '/financial/earnings'
       );
     }
@@ -1875,20 +2104,33 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { page = '1', limit = '10', sortBy, sortDirection, ...filters } = req.query;
+    const { page = '1', limit = '10', sortBy, sortDirection, child_brand_id, ...filters } = req.query;
 
     const pageNum = parseInt(page as string);
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
+    const isParentView = !!child_brand_id;
+    const targetBrandId = isParentView ? parseInt(child_brand_id as string) : req.user.brand_id;
+
+    // When viewing a child brand, verify the parent-child relationship
+    if (isParentView) {
+      const childBrand = await Brand.findOne({
+        where: { id: targetBrandId, parent_brand: req.user.brand_id }
+      });
+      if (!childBrand) {
+        return res.status(403).json({ error: 'Access denied to this brand' });
+      }
+    }
+
     // Build where clause for artist filtering
-    const artistWhere: any = { brand_id: req.user.brand_id };
-    
+    const artistWhere: any = { brand_id: targetBrandId };
+
     // Add column-specific filters
     if (filters.name && filters.name !== '') {
       artistWhere.name = { [require('sequelize').Op.like]: `%${filters.name}%` };
     }
-    
+
     if (filters.payout_point && filters.payout_point !== '') {
       artistWhere.payout_point = parseFloat(filters.payout_point as string);
     }
@@ -1901,15 +2143,55 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
     // Calculate balance data for each artist
     const artistBalances = await Promise.all(
       artists.map(async (artist) => {
-        // Get total royalties for artist
-        const totalRoyalties = parseFloat((await Royalty.sum('amount', {
-          where: { artist_id: artist.id }
-        }) || 0).toFixed(2));
+        let totalRoyalties: number;
+        let totalPayments: number;
+        let parentRoyalties: number | undefined;
 
-        // Get total payments for artist
-        const totalPayments = parseFloat((await Payment.sum('amount', {
-          where: { artist_id: artist.id, status: 'succeeded' }
-        }) || 0).toFixed(2));
+        if (isParentView) {
+          // Parent view: only royalties from parent-recorded earnings
+          const [royaltyRow]: any[] = await sequelize.query(
+            `SELECT COALESCE(SUM(r.amount), 0) AS total
+             FROM royalty r
+             JOIN earning e ON r.earning_id = e.id
+             WHERE r.artist_id = :artistId
+               AND e.recorded_by_brand_id = :parentBrandId`,
+            { replacements: { artistId: artist.id, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+          );
+          totalRoyalties = parseFloat(parseFloat(royaltyRow.total || 0).toFixed(2));
+
+          // Parent view: only payments made by this parent brand
+          const [paymentRow]: any[] = await sequelize.query(
+            `SELECT COALESCE(SUM(amount), 0) AS total
+             FROM payment
+             WHERE artist_id = :artistId
+               AND paid_by_brand_id = :parentBrandId
+               AND status = 'succeeded'`,
+            { replacements: { artistId: artist.id, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+          );
+          totalPayments = parseFloat(parseFloat(paymentRow.total || 0).toFixed(2));
+        } else {
+          // Sublabel view: show the artist's full balance (all royalties, all payments)
+          // so the sublabel admin sees the real remaining amount owed to the artist.
+          totalRoyalties = parseFloat((await Royalty.sum('amount', {
+            where: { artist_id: artist.id }
+          }) || 0).toFixed(2));
+
+          // Compute parent-recorded royalties as informational breakdown
+          const [parentRoyaltyRow]: any[] = await sequelize.query(
+            `SELECT COALESCE(SUM(r.amount), 0) AS total
+             FROM royalty r
+             JOIN earning e ON r.earning_id = e.id
+             WHERE r.artist_id = :artistId
+               AND e.recorded_by_brand_id IS NOT NULL`,
+            { replacements: { artistId: artist.id }, type: 'SELECT' }
+          );
+          parentRoyalties = parseFloat(parseFloat(parentRoyaltyRow.total || 0).toFixed(2));
+
+          // Count all succeeded payments regardless of who paid
+          totalPayments = parseFloat((await Payment.sum('amount', {
+            where: { artist_id: artist.id, status: 'succeeded' }
+          }) || 0).toFixed(2));
+        }
 
         const totalBalance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
         const dueForPayment = totalBalance > artist.payout_point;
@@ -1920,7 +2202,7 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
         });
         const hasPaymentMethod = paymentMethods.length > 0;
 
-        return {
+        const result: any = {
           id: artist.id,
           name: artist.name,
           profile_photo: artist.profile_photo || null,
@@ -1933,6 +2215,12 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
           has_payment_method: hasPaymentMethod,
           ready_for_payment: dueForPayment && hasPaymentMethod && !artist.hold_payouts
         };
+
+        if (!isParentView && parentRoyalties !== undefined) {
+          result.parent_royalties = parentRoyalties;
+        }
+
+        return result;
       })
     );
 
@@ -2394,6 +2682,26 @@ const getArtistPaymentDetails = async (artist: any): Promise<ArtistPaymentDetail
   };
 };
 
+// HELPER: Calculate parent-payable balance for a sublabel artist
+const getParentPayableBalance = async (artistId: number, parentBrandId: number): Promise<number> => {
+  const [royaltyRows]: any = await sequelize.query(`
+    SELECT COALESCE(SUM(r.amount), 0) AS parent_royalties
+    FROM royalty r
+    JOIN earning e ON r.earning_id = e.id
+    WHERE r.artist_id = :artistId AND e.recorded_by_brand_id = :parentBrandId
+  `, { replacements: { artistId, parentBrandId }, type: 'SELECT' });
+
+  const [paymentRows]: any = await sequelize.query(`
+    SELECT COALESCE(SUM(amount), 0) AS parent_payments
+    FROM payment
+    WHERE artist_id = :artistId AND paid_by_brand_id = :parentBrandId AND status = 'succeeded'
+  `, { replacements: { artistId, parentBrandId }, type: 'SELECT' });
+
+  const parentRoyalties = parseFloat((royaltyRows?.parent_royalties || 0).toString());
+  const parentPayments = parseFloat((paymentRows?.parent_payments || 0).toString());
+  return parseFloat((parentRoyalties - parentPayments).toFixed(2));
+};
+
 // GET ARTISTS READY FOR PAYMENT WITH DETAILS
 export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response) => {
   try {
@@ -2401,9 +2709,36 @@ export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response)
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    const childBrandId = req.query.child_brand_id ? parseInt(req.query.child_brand_id as string, 10) : null;
+
+    if (childBrandId) {
+      // Validate parent-child relationship
+      const childBrand = await Brand.findOne({ where: { id: childBrandId, parent_brand: req.user.brand_id } });
+      if (!childBrand) {
+        return res.status(404).json({ error: 'Sublabel not found' });
+      }
+
+      const artists = await Artist.findAll({ where: { brand_id: childBrandId, hold_payouts: false } });
+      const readyForPayment = [];
+      let totalAmount = 0;
+
+      for (const artist of artists) {
+        const balance = await getParentPayableBalance(artist.id, req.user.brand_id);
+        if (balance > artist.payout_point) {
+          const paymentMethods = await PaymentMethod.findAll({ where: { artist_id: artist.id } });
+          if (paymentMethods.length > 0) {
+            readyForPayment.push({ id: artist.id, name: artist.name, total_balance: balance });
+            totalAmount += balance;
+          }
+        }
+      }
+
+      return res.json({ artists: readyForPayment, total_amount: parseFloat(totalAmount.toFixed(2)) });
+    }
+
     // Get all artists for this brand that don't have payouts on hold
     const artists = await Artist.findAll({
-      where: { 
+      where: {
         brand_id: req.user.brand_id,
         hold_payouts: false
       }
@@ -2414,7 +2749,7 @@ export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response)
 
     for (const artist of artists) {
       const paymentDetails = await getArtistPaymentDetails(artist);
-      
+
       if (paymentDetails.isReadyForPayment) {
         readyForPayment.push({
           id: artist.id,
@@ -2501,7 +2836,8 @@ const processArtistPayment = async (artist: any, balance: number, brandId: numbe
     reference_number: finalReferenceNumber,
     payment_processing_fee: finalProcessingFee,
     status: finalTransferId ? 'pending' : 'succeeded',
-    paymongo_transfer_id: finalTransferId
+    paymongo_transfer_id: finalTransferId,
+    paid_by_brand_id: brandId
   });
 
   return {
@@ -2520,30 +2856,59 @@ export const payAllBalances = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Get all artists for this brand that don't have payouts on hold
-    const artists = await Artist.findAll({
-      where: { 
-        brand_id: req.user.brand_id,
-        hold_payouts: false
-      }
-    });
+    const childBrandId = req.body.child_brand_id ? parseInt(req.body.child_brand_id, 10) : null;
+    const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
 
     const payments = [];
     const failedPayments = [];
     let totalPaid = 0;
 
+    if (childBrandId) {
+      // Validate parent-child relationship
+      const childBrand = await Brand.findOne({ where: { id: childBrandId, parent_brand: req.user.brand_id } });
+      if (!childBrand) {
+        return res.status(404).json({ error: 'Sublabel not found' });
+      }
+
+      const artists = await Artist.findAll({ where: { brand_id: childBrandId, hold_payouts: false } });
+
+      for (const artist of artists) {
+        const balance = await getParentPayableBalance(artist.id, req.user.brand_id);
+        if (balance > artist.payout_point) {
+          const paymentMethods = await PaymentMethod.findAll({ where: { artist_id: artist.id } });
+          if (paymentMethods.length > 0) {
+            try {
+              const paymentResult = await processArtistPayment(artist, balance, req.user.brand_id, callbackUrl);
+              payments.push(paymentResult);
+              totalPaid += balance;
+            } catch (error) {
+              console.error(`Failed to process payment for sublabel artist ${artist.name}:`, error);
+              failedPayments.push({ artist_id: artist.id, artist_name: artist.name, amount: balance, error: error.message });
+            }
+          }
+        }
+      }
+    } else {
+    // Get all artists for this brand that don't have payouts on hold
+    const artists = await Artist.findAll({
+      where: {
+        brand_id: req.user.brand_id,
+        hold_payouts: false
+      }
+    });
+
     for (const artist of artists) {
       const paymentDetails = await getArtistPaymentDetails(artist);
-      
+
       if (paymentDetails.isReadyForPayment) {
         try {
           const paymentResult = await processArtistPayment(
             artist,
             paymentDetails.balance,
             req.user.brand_id,
-            `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`
+            callbackUrl
           );
-          
+
           payments.push(paymentResult);
           totalPaid += paymentDetails.balance;
         } catch (error) {
@@ -2556,6 +2921,7 @@ export const payAllBalances = async (req: AuthRequest, res: Response) => {
           });
         }
       }
+    }
     }
 
     const response: any = {

@@ -16,8 +16,23 @@ interface AuthRequest extends Request {
 
 export const getReleases = async (req: AuthRequest, res: Response) => {
   try {
+    const { child_brand_id } = req.query;
+
+    let brandId = req.user.brand_id;
+
+    if (child_brand_id) {
+      // Verify the requested brand is a direct child of the authenticated user's brand
+      const childBrand = await Brand.findOne({
+        where: { id: parseInt(child_brand_id as string), parent_brand: req.user.brand_id }
+      });
+      if (!childBrand) {
+        return res.status(403).json({ error: 'Access denied: not a direct child brand' });
+      }
+      brandId = (childBrand as any).id;
+    }
+
     const releases = await Release.findAll({
-      where: { brand_id: req.user.brand_id },
+      where: { brand_id: brandId },
       include: [
         { model: Brand, as: 'brand' },
         {

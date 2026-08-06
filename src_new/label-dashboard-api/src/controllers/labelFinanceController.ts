@@ -45,9 +45,10 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
 
     const releaseIdList = releaseIds.map(r => (r as any).id);
 
+    let payableMusicEarnings = 0;
     if (releaseIdList.length > 0) {
-      // Calculate total music earnings
-      const totalEarnings = await Earning.sum('amount', {
+      // Fetch all earnings; split into total (for display) and parent-recorded (for receivable balance)
+      const allEarnings = await Earning.findAll({
         where: {
           release_id: { [Op.in]: releaseIdList },
           ...(startDateFilter && endDateFilter ? {
@@ -55,35 +56,30 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
               [Op.between]: [startDateFilter, endDateFilter]
             }
           } : {})
-        }
+        },
+        attributes: ['id', 'amount', 'platform_fee', 'recorded_by_brand_id']
       });
 
-      // Calculate total royalties
-      totalRoyalties = await Royalty.sum('amount', {
-        where: {
-          release_id: { [Op.in]: releaseIdList },
-          ...(startDateFilter && endDateFilter ? {
-            date_recorded: {
-              [Op.between]: [startDateFilter, endDateFilter]
-            }
-          } : {})
-        }
-      }) || 0;
+      const allEarningIds = allEarnings.map(e => (e as any).id);
+      const parentRecordedEarnings = allEarnings.filter(e => (e as any).recorded_by_brand_id != null);
+      const parentEarningIds = parentRecordedEarnings.map(e => (e as any).id);
 
-      // Calculate platform fees
-      musicPlatformFees = await Earning.sum('platform_fee', {
-        where: {
-          release_id: { [Op.in]: releaseIdList },
-          ...(startDateFilter && endDateFilter ? {
-            date_recorded: {
-              [Op.between]: [startDateFilter, endDateFilter]
-            }
-          } : {})
-        }
-      }) || 0;
+      musicGrossEarnings = allEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).amount || 0)), 0);
+      musicPlatformFees = allEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).platform_fee || 0)), 0);
 
-      musicGrossEarnings = totalEarnings || 0;
+      const payableGrossEarnings = parentRecordedEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).amount || 0)), 0);
+      const payablePlatformFees = parentRecordedEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).platform_fee || 0)), 0);
+
+      totalRoyalties = allEarningIds.length > 0
+        ? await Royalty.sum('amount', { where: { earning_id: { [Op.in]: allEarningIds } } }) || 0
+        : 0;
+
+      const payableRoyalties = parentEarningIds.length > 0
+        ? await Royalty.sum('amount', { where: { earning_id: { [Op.in]: parentEarningIds } } }) || 0
+        : 0;
+
       musicEarnings = musicGrossEarnings - totalRoyalties - musicPlatformFees;
+      payableMusicEarnings = payableGrossEarnings - payableRoyalties - payablePlatformFees;
     }
 
     // Calculate event earnings for this brand
@@ -253,8 +249,9 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
         }) || 0
       : 0;
 
-    // Calculate receivable balance (net earnings minus payments received by the label, minus add-on balance payments)
-    const receivableBalance = musicEarnings + eventEarnings + fundraiserEarnings - totalPayments - totalAddOnBalancePayments;
+    // Calculate receivable balance — only parent-recorded music earnings create a payment obligation.
+    // Direct (sublabel self-entered) earnings are excluded from what the parent owes.
+    const receivableBalance = payableMusicEarnings + eventEarnings + fundraiserEarnings - totalPayments - totalAddOnBalancePayments;
 
     res.json({
       net_music_earnings: musicEarnings,
