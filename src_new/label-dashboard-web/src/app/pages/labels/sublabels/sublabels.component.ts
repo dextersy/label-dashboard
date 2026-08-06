@@ -178,7 +178,6 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     {
       icon: 'external-link',
       label: 'Go to Dashboard',
-      primary: true,
       hidden: (item) => !this.hasDomains(item),
       handler: (item) => this.openSublabelDashboard(item)
     },
