@@ -1046,8 +1046,8 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
          FROM royalty r
          JOIN earning e ON r.earning_id = e.id
          WHERE r.artist_id = :artistId
-           AND e.recorded_by_brand_id = :parentBrandId`,
-        { replacements: { artistId: artistIdNum, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+           AND e.recorded_by_brand_id IS NOT NULL`,
+        { replacements: { artistId: artistIdNum }, type: 'SELECT' }
       );
       const parentPayableRoyalties = parseFloat(royaltyResult.total || 0);
 
@@ -2148,14 +2148,14 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
         let parentRoyalties: number | undefined;
 
         if (isParentView) {
-          // Parent view: only royalties from parent-recorded earnings
+          // Parent view: royalties from any parent-recorded earnings (IS NOT NULL = recorded by a parent)
           const [royaltyRow]: any[] = await sequelize.query(
             `SELECT COALESCE(SUM(r.amount), 0) AS total
              FROM royalty r
              JOIN earning e ON r.earning_id = e.id
              WHERE r.artist_id = :artistId
-               AND e.recorded_by_brand_id = :parentBrandId`,
-            { replacements: { artistId: artist.id, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+               AND e.recorded_by_brand_id IS NOT NULL`,
+            { replacements: { artistId: artist.id }, type: 'SELECT' }
           );
           totalRoyalties = parseFloat(parseFloat(royaltyRow.total || 0).toFixed(2));
 
@@ -2688,8 +2688,8 @@ const getParentPayableBalance = async (artistId: number, parentBrandId: number):
     SELECT COALESCE(SUM(r.amount), 0) AS parent_royalties
     FROM royalty r
     JOIN earning e ON r.earning_id = e.id
-    WHERE r.artist_id = :artistId AND e.recorded_by_brand_id = :parentBrandId
-  `, { replacements: { artistId, parentBrandId }, type: 'SELECT' });
+    WHERE r.artist_id = :artistId AND e.recorded_by_brand_id IS NOT NULL
+  `, { replacements: { artistId }, type: 'SELECT' });
 
   const [paymentRows]: any = await sequelize.query(`
     SELECT COALESCE(SUM(amount), 0) AS parent_payments
