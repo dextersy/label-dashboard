@@ -39,6 +39,7 @@ export interface Release {
   description?: string;
   liner_notes?: string;
   brand_id: number;
+  brand?: { id: number; brand_name: string };
   artists?: Array<{
     id: number;
     name: string;
@@ -82,6 +83,12 @@ export class ReleaseService {
 
   getReleases(): Observable<{ releases: Release[] }> {
     return this.http.get<{ releases: Release[] }>(`${this.baseUrl}/releases`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getReleasesByChildBrand(childBrandId: number): Observable<{ releases: Release[] }> {
+    return this.http.get<{ releases: Release[] }>(`${this.baseUrl}/releases?child_brand_id=${childBrandId}`, {
       headers: this.getAuthHeaders()
     });
   }

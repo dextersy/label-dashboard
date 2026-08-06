@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { FinancialSummary, Earning, Royalty, Payment, PaymentMethod, PayoutSettings } from '../pages/financial/financial.component';
+import { FinancialSummary, FinancialSummaryBreakdown, Earning, Royalty, Payment, PaymentMethod, PayoutSettings } from '../pages/financial/financial.component';
 
 @Injectable({
   providedIn: 'root'
@@ -25,12 +25,16 @@ export class FinancialService {
     }));
 
     const summary = response.summary;
-    return {
+    const result: FinancialSummary = {
       currentBalance: summary.current_balance,
       totalEarnings: summary.total_earnings,
       totalRoyalties: summary.total_royalties,
       totalPayments: summary.total_payments
     };
+    if (summary.breakdown) {
+      result.breakdown = summary.breakdown as FinancialSummaryBreakdown;
+    }
+    return result;
   }
 
   async getEarnings(artistId: number, page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string, startDate?: string, endDate?: string): Promise<{earnings: Earning[], pagination: any}> {

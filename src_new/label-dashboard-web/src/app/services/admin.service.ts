@@ -106,6 +106,7 @@ export interface ChildBrand {
   brand_color?: string | null;
   music_earnings: number;
   music_gross_earnings: number;
+  parent_music_gross_earnings: number;
   event_earnings: number;
   event_sales: number;
   event_processing_fees: number;
@@ -173,6 +174,8 @@ export interface ArtistBalance {
   hold_payouts: boolean;
   has_payment_method?: boolean;
   ready_for_payment?: boolean;
+  /** Royalties from parent-recorded earnings (shown in sublabel view as read-only) */
+  parent_royalties?: number;
 }
 
 export interface BulkEarning {
@@ -193,6 +196,10 @@ export interface ProcessedEarningRow {
     id: number;
     catalog_no: string;
     title: string;
+  } | null;
+  matched_brand?: {
+    id: number;
+    brand_name: string;
   } | null;
   fuzzy_match_score?: number;
 }
@@ -849,21 +856,25 @@ export class AdminService {
   }
 
   // Balance Summary
-  getArtistBalances(page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: ArtistBalance[], pagination: any, summary: any}> {
+  getArtistBalances(page: number = 1, limit: number = 10, filters: any = {}, sortBy?: string, sortDirection?: string, childBrandId?: number): Observable<{data: ArtistBalance[], pagination: any, summary: any}> {
     let queryParams = `page=${page}&limit=${limit}`;
-    
+
     // Add filter parameters
     Object.keys(filters).forEach(key => {
       if (filters[key] && filters[key].trim() !== '') {
         queryParams += `&${key}=${encodeURIComponent(filters[key])}`;
       }
     });
-    
+
     // Add sort parameters
     if (sortBy && sortDirection) {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
-    
+
+    if (childBrandId) {
+      queryParams += `&child_brand_id=${childBrandId}`;
+    }
+
     return this.http.get<{data: ArtistBalance[], pagination: any, summary: any}>(`${environment.apiUrl}/financial/admin/balance-summary?${queryParams}`, {
       headers: this.getAuthHeaders()
     });
@@ -889,14 +900,30 @@ export class AdminService {
     });
   }
 
-  getArtistsReadyForPayment(): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/financial/admin/artists-ready-for-payment`, {
+  getArtistsReadyForPayment(childBrandId?: number): Observable<any> {
+    const params = childBrandId ? `?child_brand_id=${childBrandId}` : '';
+    return this.http.get(`${environment.apiUrl}/financial/admin/artists-ready-for-payment${params}`, {
       headers: this.getAuthHeaders()
     });
   }
 
-  payAllBalances(): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/financial/admin/pay-all-balances`, {}, {
+  payAllBalances(childBrandId?: number): Observable<any> {
+    const body = childBrandId ? { child_brand_id: childBrandId } : {};
+    return this.http.post(`${environment.apiUrl}/financial/admin/pay-all-balances`, body, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Create a single earning (used for parent-recorded sublabel earnings)
+  createEarning(earningData: {
+    release_id: number;
+    type: string;
+    amount: number;
+    description: string;
+    date_recorded: string;
+    calculate_royalties: boolean;
+  }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/financial/earnings`, earningData, {
       headers: this.getAuthHeaders()
     });
   }
