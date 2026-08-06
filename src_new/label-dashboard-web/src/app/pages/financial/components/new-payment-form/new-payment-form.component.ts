@@ -13,6 +13,7 @@ export class NewPaymentFormComponent implements OnInit, OnChanges {
   @Input() newPaymentForm: any = {};
   @Input() paymentMethods: any[] = [];
   @Input() walletBalance: number = 0;
+  @Input() hasWallet: boolean = false;
   @Input() isSubmittingPayment: boolean = false;
   @Input() onSubmitPayment: () => Promise<void> = async () => {};
 
@@ -114,7 +115,7 @@ export class NewPaymentFormComponent implements OnInit, OnChanges {
     // 1. Not an offline payment (checkbox unchecked), AND
     // 2. A real payment method is selected (not non-cash), AND
     // 3. Payment method ID exists
-    return !this.isManualPayment && this.newPaymentForm.payment_method_id && this.newPaymentForm.payment_method_id !== null;
+    return this.hasWallet && !this.isManualPayment && this.newPaymentForm.payment_method_id && this.newPaymentForm.payment_method_id !== null;
   }
 
   isInsufficientBalance(): boolean {

@@ -56,6 +56,7 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
   isOfflinePayment: boolean = false;
   selectedPaymentMethodId: string = '';
   walletBalance: number = 0;
+  hasWallet: boolean = false;
   loadingWalletBalance: boolean = false;
 
   // Form data
@@ -141,12 +142,14 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
     this.adminService.getWalletBalance().subscribe({
       next: (balance: number) => {
         this.walletBalance = balance;
+        this.hasWallet = true;
         this.loadingWalletBalance = false;
         // Update offline payment state based on wallet balance
         this.updateOfflinePaymentBasedOnBalance();
       },
       error: (error) => {
         console.error('Error loading wallet balance:', error);
+        this.hasWallet = false;
         this.walletBalance = 0;
         this.loadingWalletBalance = false;
         // Force offline payment when wallet balance cannot be loaded

@@ -143,12 +143,12 @@
         </div>
         <div class="tw-mt-4 tw-flex tw-flex-col sm:tw-flex-row tw-items-start tw-gap-3">
           <button class="btn-primary tw-flex-shrink-0"
-                  [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || walletBalance < (balanceSummary?.ready_for_payment || 0)"
+                  [disabled]="(balanceSummary?.ready_for_payment || 0) <= 0 || (hasWallet && walletBalance < (balanceSummary?.ready_for_payment || 0))"
                   (click)="payAllBalances()">
             <app-icon name="credit-card" /> Pay Now
           </button>
           <div class="tw-flex tw-flex-col tw-gap-1 tw-text-sm">
-            <div class="badge bg-info">Available: {{ formatCurrency(walletBalance) }}</div>
+            <div *ngIf="hasWallet" class="badge bg-info">Available: {{ formatCurrency(walletBalance) }}</div>
             <small class="tw-text-muted"><strong>On hold:</strong> {{ formatCurrency(balanceSummary?.paused_payouts || 0) }}</small>
           </div>
         </div>
@@ -278,11 +278,11 @@
           </div>
           <div class="tw-mt-4 tw-flex tw-flex-col tw-items-start tw-gap-2">
             <button class="btn-primary tw-flex-shrink-0"
-                    [disabled]="(sublabelSummary?.ready_for_payment || 0) <= 0 || walletBalance < (sublabelSummary?.ready_for_payment || 0)"
+                    [disabled]="(sublabelSummary?.ready_for_payment || 0) <= 0 || (hasWallet && walletBalance < (sublabelSummary?.ready_for_payment || 0))"
                     (click)="payAllSublabelBalances()">
               <app-icon name="credit-card" /> Pay All
             </button>
-            <div class="badge bg-info">Available: {{ formatCurrency(walletBalance) }}</div>
+            <div *ngIf="hasWallet" class="badge bg-info">Available: {{ formatCurrency(walletBalance) }}</div>
           </div>
         </div>
 

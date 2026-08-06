@@ -167,6 +167,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
   documents: Document[] = [];
   releases: ReleaseInfo[] = [];
   walletBalance: number = 0;
+  hasWallet: boolean = false;
 
   // Pagination data
   paymentsPagination: any = null;
@@ -793,8 +794,10 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
     try {
       this.walletBalance = await this.financialService.getWalletBalance();
+      this.hasWallet = true;
     } catch (error) {
       console.error('Error loading wallet balance:', error);
+      this.hasWallet = false;
       this.walletBalance = 0;
     }
   }

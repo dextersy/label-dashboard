@@ -18,7 +18,7 @@
               <small class="tw-text-muted">Payable Balance:</small>
               <strong class="tw-text-success">₱{{ sublabel.balance | number:'1.2-2' }}</strong>
             </div>
-            <div class="md:tw-col-span-6">
+            <div class="md:tw-col-span-6" *ngIf="hasWallet || loadingWalletBalance">
               <small class="tw-text-muted">Wallet Balance:</small>
               <span *ngIf="!loadingWalletBalance">
                 <strong [class.tw-text-success]="hasEnoughWalletBalance()" [class.tw-text-danger]="!hasEnoughWalletBalance()">

@@ -40,6 +40,7 @@ export class BalanceSummaryTabComponent implements OnInit {
   balanceSummary: any = {};
 
   walletBalance: number = 0;
+  hasWallet: boolean = false;
 
   // Payment confirmation dialog
   showPaymentDialog: boolean = false;
@@ -167,9 +168,13 @@ export class BalanceSummaryTabComponent implements OnInit {
     this.adminService.getWalletBalance().subscribe({
       next: (balance) => {
         this.walletBalance = balance;
+        this.hasWallet = true;
       },
       error: (error) => {
-        this.notificationService.showError('Error loading wallet balance');
+        // Not all brands have a Paymongo wallet — silently default to 0
+        this.hasWallet = false;
+        this.walletBalance = 0;
+        console.error('Error loading wallet balance:', error);
       }
     });
   }
