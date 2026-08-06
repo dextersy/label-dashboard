@@ -16,6 +16,7 @@ interface EarningAttributes {
   description?: string;
   date_recorded: Date;
   platform_fee?: number;
+  recorded_by_brand_id?: number | null;
 }
 
 interface EarningCreationAttributes extends Optional<EarningAttributes, 'id' | 'type'> {}
@@ -28,6 +29,7 @@ class Earning extends Model<EarningAttributes, EarningCreationAttributes> implem
   public description?: string;
   public date_recorded!: Date;
   public platform_fee?: number;
+  public recorded_by_brand_id?: number | null;
 
   // Association
   public release?: ReleaseAssociation;
@@ -75,6 +77,11 @@ Earning.init(
       set(value: any) {
         this.setDataValue('platform_fee', value !== null && value !== undefined ? parseFloat(value) : value);
       }
+    },
+    recorded_by_brand_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
     },
   },
   {

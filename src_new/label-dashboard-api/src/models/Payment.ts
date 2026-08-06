@@ -16,6 +16,7 @@ interface PaymentAttributes {
   status?: string;
   paymongo_transfer_id?: string;
   failure_reason?: string;
+  paid_by_brand_id?: number;
 }
 
 interface PaymentCreationAttributes extends Optional<PaymentAttributes, 'id'> {}
@@ -35,6 +36,7 @@ class Payment extends Model<PaymentAttributes, PaymentCreationAttributes> implem
   public status?: string;
   public paymongo_transfer_id?: string;
   public failure_reason?: string;
+  public paid_by_brand_id?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -99,6 +101,10 @@ Payment.init(
     },
     failure_reason: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    paid_by_brand_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
   },
