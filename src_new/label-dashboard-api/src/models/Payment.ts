@@ -112,6 +112,12 @@ Payment.init(
     sequelize,
     tableName: 'payment',
     timestamps: false,
+    indexes: [
+      { fields: ['artist_id'] },
+      { fields: ['artist_id', 'status'] },
+      { fields: ['paid_by_brand_id', 'artist_id', 'status'] },
+      { fields: ['date_paid'] },
+    ],
   }
 );
 

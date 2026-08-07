@@ -56,6 +56,11 @@ RecuperableExpense.init(
     sequelize,
     tableName: 'recuperable_expense',
     timestamps: false,
+    indexes: [
+      { fields: ['release_id'] },
+      { fields: ['brand_id', 'release_id'] },
+      { fields: ['release_id', 'date_recorded'] },
+    ],
   }
 );
 

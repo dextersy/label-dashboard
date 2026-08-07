@@ -76,6 +76,12 @@ Royalty.init(
     sequelize,
     tableName: 'royalty',
     timestamps: false,
+    indexes: [
+      { fields: ['artist_id'] },
+      { fields: ['earning_id'] },
+      { fields: ['release_id'] },
+      { fields: ['date_recorded'] },
+    ],
   }
 );
 

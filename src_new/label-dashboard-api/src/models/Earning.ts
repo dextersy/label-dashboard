@@ -88,6 +88,11 @@ Earning.init(
     sequelize,
     tableName: 'earning',
     timestamps: false,
+    indexes: [
+      { fields: ['release_id'] },
+      { fields: ['recorded_by_brand_id'] },
+      { fields: ['date_recorded'] },
+    ],
   }
 );
 

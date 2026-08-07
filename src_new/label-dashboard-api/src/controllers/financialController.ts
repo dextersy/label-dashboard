@@ -2140,89 +2140,121 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
       where: artistWhere
     });
 
-    // Calculate balance data for each artist
-    const artistBalances = await Promise.all(
-      artists.map(async (artist) => {
-        let totalRoyalties: number;
-        let totalPayments: number;
-        let parentRoyalties: number | undefined;
+    const artistIds = artists.map(a => a.id);
 
-        if (isParentView) {
-          // Parent view: royalties from any parent-recorded earnings (IS NOT NULL = recorded by a parent)
-          const [royaltyRow]: any[] = await sequelize.query(
-            `SELECT COALESCE(SUM(r.amount), 0) AS total
-             FROM royalty r
-             JOIN earning e ON r.earning_id = e.id
-             WHERE r.artist_id = :artistId
-               AND e.recorded_by_brand_id IS NOT NULL`,
-            { replacements: { artistId: artist.id }, type: 'SELECT' }
-          );
-          totalRoyalties = parseFloat(parseFloat(royaltyRow.total || 0).toFixed(2));
+    // Initialize lookup maps
+    const royaltiesByArtist: Record<number, number> = {};
+    const parentRoyaltiesByArtist: Record<number, number> = {};
+    const paymentsByArtist: Record<number, number> = {};
+    const hasPaymentMethodByArtist: Record<number, boolean> = {};
 
-          // Parent view: only payments made by this parent brand
-          const [paymentRow]: any[] = await sequelize.query(
-            `SELECT COALESCE(SUM(amount), 0) AS total
-             FROM payment
-             WHERE artist_id = :artistId
-               AND paid_by_brand_id = :parentBrandId
-               AND status = 'succeeded'`,
-            { replacements: { artistId: artist.id, parentBrandId: req.user.brand_id }, type: 'SELECT' }
-          );
-          totalPayments = parseFloat(parseFloat(paymentRow.total || 0).toFixed(2));
-        } else {
-          // Sublabel view: show the artist's full balance (all royalties, all payments)
-          // so the sublabel admin sees the real remaining amount owed to the artist.
-          totalRoyalties = parseFloat((await Royalty.sum('amount', {
-            where: { artist_id: artist.id }
-          }) || 0).toFixed(2));
-
-          // Compute parent-recorded royalties as informational breakdown
-          const [parentRoyaltyRow]: any[] = await sequelize.query(
-            `SELECT COALESCE(SUM(r.amount), 0) AS total
-             FROM royalty r
-             JOIN earning e ON r.earning_id = e.id
-             WHERE r.artist_id = :artistId
-               AND e.recorded_by_brand_id IS NOT NULL`,
-            { replacements: { artistId: artist.id }, type: 'SELECT' }
-          );
-          parentRoyalties = parseFloat(parseFloat(parentRoyaltyRow.total || 0).toFixed(2));
-
-          // Count all succeeded payments regardless of who paid
-          totalPayments = parseFloat((await Payment.sum('amount', {
-            where: { artist_id: artist.id, status: 'succeeded' }
-          }) || 0).toFixed(2));
-        }
-
-        const totalBalance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
-        const dueForPayment = totalBalance > artist.payout_point;
-
-        // Check if artist has payment methods
-        const paymentMethods = await PaymentMethod.findAll({
-          where: { artist_id: artist.id }
+    if (artistIds.length > 0) {
+      if (isParentView) {
+        // Parent view: royalties only from parent-recorded earnings
+        const royaltyRows: any[] = await sequelize.query(
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND e.recorded_by_brand_id IS NOT NULL
+           GROUP BY r.artist_id`,
+          { replacements: { artistIds }, type: 'SELECT' }
+        );
+        royaltyRows.forEach(row => {
+          royaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
         });
-        const hasPaymentMethod = paymentMethods.length > 0;
 
-        const result: any = {
-          id: artist.id,
-          name: artist.name,
-          profile_photo: artist.profile_photo || null,
-          total_royalties: totalRoyalties,
-          total_payments: totalPayments,
-          total_balance: totalBalance,
-          payout_point: parseFloat((artist.payout_point || 0).toString()),
-          due_for_payment: dueForPayment,
-          hold_payouts: artist.hold_payouts || false,
-          has_payment_method: hasPaymentMethod,
-          ready_for_payment: dueForPayment && hasPaymentMethod && !artist.hold_payouts
-        };
+        // Parent view: only payments made by this parent brand
+        const paymentRows: any[] = await sequelize.query(
+          `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
+           FROM payment
+           WHERE artist_id IN (:artistIds)
+             AND paid_by_brand_id = :parentBrandId
+             AND status = 'succeeded'
+           GROUP BY artist_id`,
+          { replacements: { artistIds, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+        );
+        paymentRows.forEach(row => {
+          paymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+        });
+      } else {
+        // Sublabel view: all royalties, all payments
+        const royaltyRows: any[] = await sequelize.query(
+          `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
+           FROM royalty
+           WHERE artist_id IN (:artistIds)
+           GROUP BY artist_id`,
+          { replacements: { artistIds }, type: 'SELECT' }
+        );
+        royaltyRows.forEach(row => {
+          royaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+        });
 
-        if (!isParentView && parentRoyalties !== undefined) {
-          result.parent_royalties = parentRoyalties;
-        }
+        // Parent-recorded royalties as informational breakdown
+        const parentRoyaltyRows: any[] = await sequelize.query(
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND e.recorded_by_brand_id IS NOT NULL
+           GROUP BY r.artist_id`,
+          { replacements: { artistIds }, type: 'SELECT' }
+        );
+        parentRoyaltyRows.forEach(row => {
+          parentRoyaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+        });
 
-        return result;
-      })
-    );
+        const paymentRows: any[] = await sequelize.query(
+          `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
+           FROM payment
+           WHERE artist_id IN (:artistIds)
+             AND status = 'succeeded'
+           GROUP BY artist_id`,
+          { replacements: { artistIds }, type: 'SELECT' }
+        );
+        paymentRows.forEach(row => {
+          paymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+        });
+      }
+
+      // Batch payment method lookup
+      const pmRows: any[] = await sequelize.query(
+        `SELECT DISTINCT artist_id FROM payment_method WHERE artist_id IN (:artistIds)`,
+        { replacements: { artistIds }, type: 'SELECT' }
+      );
+      pmRows.forEach(row => {
+        hasPaymentMethodByArtist[row.artist_id] = true;
+      });
+    }
+
+    // Build results in memory
+    const artistBalances = artists.map(artist => {
+      const totalRoyalties = royaltiesByArtist[artist.id] ?? 0;
+      const totalPayments = paymentsByArtist[artist.id] ?? 0;
+      const totalBalance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
+      const dueForPayment = totalBalance > artist.payout_point;
+      const hasPaymentMethod = hasPaymentMethodByArtist[artist.id] ?? false;
+
+      const result: any = {
+        id: artist.id,
+        name: artist.name,
+        profile_photo: artist.profile_photo || null,
+        total_royalties: totalRoyalties,
+        total_payments: totalPayments,
+        total_balance: totalBalance,
+        payout_point: parseFloat((artist.payout_point || 0).toString()),
+        due_for_payment: dueForPayment,
+        hold_payouts: artist.hold_payouts || false,
+        has_payment_method: hasPaymentMethod,
+        ready_for_payment: dueForPayment && hasPaymentMethod && !artist.hold_payouts
+      };
+
+      if (!isParentView) {
+        result.parent_royalties = parentRoyaltiesByArtist[artist.id] ?? 0;
+      }
+
+      return result;
+    });
 
     // Apply post-calculation filters on computed values
     let filteredBalances = artistBalances.filter(artist => {
@@ -2347,67 +2379,59 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    // Build where clause for release filtering
-    const releaseWhere: any = { brand_id: req.user.brand_id };
-    
-    // Add column-specific filters
-    if (filters.catalog_no && filters.catalog_no !== '') {
-      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
-    }
-    
-    if (filters.title && filters.title !== '') {
-      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.title}%` };
-    }
-
-    // Add artist_name filter (applied post-query)
     const artistNameFilter = filters.artist_name && filters.artist_name !== '' ? (filters.artist_name as string).toLowerCase() : null;
 
-    // Get all releases for the brand, including their artists
-    const releases = await Release.findAll({
-      where: releaseWhere,
-      include: [{ model: Artist, as: 'artists', attributes: ['name'], through: { attributes: [] } }]
-    });
+    // Build dynamic WHERE conditions for the SQL query
+    const releaseConditions: string[] = ['r.brand_id = :brandId'];
+    const replacements: any = { brandId: req.user.brand_id };
 
-    const releaseExpenses = [];
-    let totalRecuperableExpense = 0;
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseConditions.push(`r.catalog_no ILIKE :catalogNo`);
+      replacements.catalogNo = `%${filters.catalog_no}%`;
+    }
+    if (filters.title && filters.title !== '') {
+      releaseConditions.push(`r.title ILIKE :title`);
+      replacements.title = `%${filters.title}%`;
+    }
 
-    for (const release of releases) {
-      // Calculate recuperable expense balance for this release
-      const expenses = await RecuperableExpense.findAll({
-        where: { release_id: release.id }
-      });
+    // Single aggregated query: sum expenses per release, join artists
+    const rawRows: any[] = await sequelize.query(
+      `SELECT
+         r.id AS release_id,
+         r.catalog_no,
+         r.title,
+         COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
+         COALESCE(SUM(re.expense_amount), 0) AS remaining_expense
+       FROM release r
+       LEFT JOIN recuperable_expense re ON re.release_id = r.id
+       LEFT JOIN release_artist ra ON ra.release_id = r.id
+       LEFT JOIN artist a ON a.id = ra.artist_id
+       WHERE ${releaseConditions.join(' AND ')}
+       GROUP BY r.id, r.catalog_no, r.title
+       HAVING COALESCE(SUM(re.expense_amount), 0) > 0`,
+      { replacements, type: 'SELECT' }
+    );
 
-      const recuperableBalance = expenses.reduce((sum, expense) => sum + parseFloat((expense.expense_amount || 0).toString()), 0);
+    let releaseExpenses: any[] = rawRows.map(row => ({
+      release_id: row.release_id,
+      catalog_no: row.catalog_no,
+      title: row.title,
+      artist_name: row.artist_name,
+      remaining_expense: parseFloat(parseFloat(row.remaining_expense).toFixed(2))
+    }));
 
-      if (recuperableBalance > 0) {
-        const artistNames = (release as any).artists?.map((a: any) => a.name).join(', ') || '';
-
-        // Apply artist_name filter
-        if (artistNameFilter && !artistNames.toLowerCase().includes(artistNameFilter)) {
-          continue;
-        }
-
-        const expenseItem = {
-          release_id: release.id,
-          catalog_no: release.catalog_no,
-          title: release.title,
-          artist_name: artistNames,
-          remaining_expense: parseFloat(recuperableBalance.toFixed(2))
-        };
-        
-        // Apply remaining_expense filter
-        if (filters.remaining_expense && filters.remaining_expense !== '') {
-          const filterValue = parseFloat(filters.remaining_expense as string);
-          if (!isNaN(filterValue) && recuperableBalance === filterValue) {
-            releaseExpenses.push(expenseItem);
-            totalRecuperableExpense += parseFloat(recuperableBalance.toFixed(2));
-          }
-        } else {
-          releaseExpenses.push(expenseItem);
-          totalRecuperableExpense += parseFloat(recuperableBalance.toFixed(2));
-        }
+    // Apply post-query filters
+    if (artistNameFilter) {
+      releaseExpenses = releaseExpenses.filter(item => item.artist_name.toLowerCase().includes(artistNameFilter));
+    }
+    if (filters.remaining_expense && filters.remaining_expense !== '') {
+      const filterValue = parseFloat(filters.remaining_expense as string);
+      if (!isNaN(filterValue)) {
+        releaseExpenses = releaseExpenses.filter(item => item.remaining_expense === filterValue);
       }
     }
+
+    const totalRecuperableExpense = parseFloat(releaseExpenses.reduce((sum, item) => sum + item.remaining_expense, 0).toFixed(2));
 
     // Apply sorting
     if (sortBy && sortDirection) {
@@ -2475,68 +2499,61 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    // Build release where clause for text filters
-    const releaseWhere: any = { brand_id: req.user.brand_id };
-    if (filters.catalog_no && filters.catalog_no !== '') {
-      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
-    }
-    if (filters.title && filters.title !== '') {
-      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.title}%` };
-    }
     const artistNameFilter = filters.artist_name && filters.artist_name !== '' ? (filters.artist_name as string).toLowerCase() : null;
 
-    // Get all brand releases with artists
-    const releases = await Release.findAll({
-      where: releaseWhere,
-      include: [{ model: Artist, as: 'artists', attributes: ['name'], through: { attributes: [] } }]
+    // Build dynamic WHERE conditions
+    const releaseConditions: string[] = ['r.brand_id = :brandId'];
+    const replacements: any = { brandId: req.user.brand_id, startDate: start_date, endDate: end_date };
+
+    if (filters.catalog_no && filters.catalog_no !== '') {
+      releaseConditions.push(`r.catalog_no ILIKE :catalogNo`);
+      replacements.catalogNo = `%${filters.catalog_no}%`;
+    }
+    if (filters.title && filters.title !== '') {
+      releaseConditions.push(`r.title ILIKE :title`);
+      replacements.title = `%${filters.title}%`;
+    }
+
+    // Single aggregated query with CASE to split positive/negative amounts
+    const rawRows: any[] = await sequelize.query(
+      `SELECT
+         r.id AS release_id,
+         r.catalog_no,
+         r.title,
+         COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
+         COALESCE(SUM(CASE WHEN re.expense_amount > 0 THEN re.expense_amount ELSE 0 END), 0) AS new_expense,
+         COALESCE(ABS(SUM(CASE WHEN re.expense_amount < 0 THEN re.expense_amount ELSE 0 END)), 0) AS recuperated_expense
+       FROM release r
+       INNER JOIN recuperable_expense re ON re.release_id = r.id AND re.date_recorded BETWEEN :startDate AND :endDate
+       LEFT JOIN release_artist ra ON ra.release_id = r.id
+       LEFT JOIN artist a ON a.id = ra.artist_id
+       WHERE ${releaseConditions.join(' AND ')}
+       GROUP BY r.id, r.catalog_no, r.title
+       HAVING COALESCE(SUM(CASE WHEN re.expense_amount > 0 THEN re.expense_amount ELSE 0 END), 0) > 0
+           OR COALESCE(ABS(SUM(CASE WHEN re.expense_amount < 0 THEN re.expense_amount ELSE 0 END)), 0) > 0`,
+      { replacements, type: 'SELECT' }
+    );
+
+    let flowItems: any[] = rawRows.map(row => {
+      const newExpense = parseFloat(parseFloat(row.new_expense).toFixed(2));
+      const recuperatedExpense = parseFloat(parseFloat(row.recuperated_expense).toFixed(2));
+      return {
+        release_id: row.release_id,
+        catalog_no: row.catalog_no,
+        title: row.title,
+        artist_name: row.artist_name,
+        new_expense: newExpense,
+        recuperated_expense: recuperatedExpense,
+        net_change: parseFloat((newExpense - recuperatedExpense).toFixed(2))
+      };
     });
 
-    const flowItems = [];
-    let totalNewExpense = 0;
-    let totalRecuperatedExpense = 0;
-
-    for (const release of releases) {
-      // Get expenses for this release within the date range
-      const expenses = await RecuperableExpense.findAll({
-        where: {
-          release_id: release.id,
-          date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
-        }
-      });
-
-      if (expenses.length === 0) continue;
-
-      const newExpense = expenses
-        .filter(e => parseFloat((e.expense_amount || 0).toString()) > 0)
-        .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0);
-
-      const recuperatedExpense = Math.abs(
-        expenses
-          .filter(e => parseFloat((e.expense_amount || 0).toString()) < 0)
-          .reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0)
-      );
-
-      if (newExpense === 0 && recuperatedExpense === 0) continue;
-
-      const artistNames = (release as any).artists?.map((a: any) => a.name).join(', ') || '';
-
-      if (artistNameFilter && !artistNames.toLowerCase().includes(artistNameFilter)) {
-        continue;
-      }
-
-      flowItems.push({
-        release_id: release.id,
-        catalog_no: release.catalog_no,
-        title: release.title,
-        artist_name: artistNames,
-        new_expense: parseFloat(newExpense.toFixed(2)),
-        recuperated_expense: parseFloat(recuperatedExpense.toFixed(2)),
-        net_change: parseFloat((newExpense - recuperatedExpense).toFixed(2))
-      });
-
-      totalNewExpense += newExpense;
-      totalRecuperatedExpense += recuperatedExpense;
+    if (artistNameFilter) {
+      flowItems = flowItems.filter(item => item.artist_name.toLowerCase().includes(artistNameFilter));
     }
+
+    const totalNewExpense = parseFloat(flowItems.reduce((sum, item) => sum + item.new_expense, 0).toFixed(2));
+    const totalRecuperatedExpense = parseFloat(flowItems.reduce((sum, item) => sum + item.recuperated_expense, 0).toFixed(2));
 
     // Apply sorting
     if (sortBy && sortDirection) {
