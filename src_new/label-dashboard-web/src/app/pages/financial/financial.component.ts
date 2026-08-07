@@ -34,6 +34,7 @@ export interface FinancialSummaryBreakdown {
   own_earnings: number;
   parent_earnings: number;
   sublabel_balance: number;
+  parent_brand_name?: string;
 }
 
 export interface FinancialSummary {

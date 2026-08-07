@@ -41,6 +41,7 @@ export class BalanceSummaryTabComponent implements OnInit {
 
   walletBalance: number = 0;
   hasWallet: boolean = false;
+  parentBrandName: string = '';
 
   // Payment confirmation dialog
   showPaymentDialog: boolean = false;
@@ -51,6 +52,21 @@ export class BalanceSummaryTabComponent implements OnInit {
   // Sublabel artist balances (parent view)
   childBrands: ChildBrand[] = [];
   selectedChildBrandId: number | null = null;
+  showSublabelDropdown: boolean = false;
+
+  get selectedChildBrand(): ChildBrand | null {
+    return this.childBrands.find(b => b.brand_id === this.selectedChildBrandId) ?? null;
+  }
+
+  selectSublabel(brandId: number | null): void {
+    this.selectedChildBrandId = brandId;
+    this.showSublabelDropdown = false;
+    this.onChildBrandChange();
+  }
+
+  getBrandInitials(name: string): string {
+    return (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  }
   sublabelBalances: ArtistBalance[] = [];
   sublabelPagination: PaginationInfo | null = null;
   sublabelLoading: boolean = false;
@@ -132,6 +148,9 @@ export class BalanceSummaryTabComponent implements OnInit {
         this.artistBalances = response.data;
         this.balancePagination = response.pagination;
         this.balanceSummary = response.summary;
+        if (response.summary?.parent_brand_name) {
+          this.parentBrandName = response.summary.parent_brand_name;
+        }
         this.balanceLoading = false;
       },
       error: (error) => {

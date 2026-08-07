@@ -1482,6 +1482,13 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
           parentEarnings = parseFloat((totalEarnings - ownEarnings).toFixed(2));
         }
 
+        let parentBrandName: string | undefined;
+        const adminBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
+        if (adminBrand?.parent_brand) {
+          const parentBrand = await Brand.findByPk(adminBrand.parent_brand, { attributes: ['brand_name'] });
+          parentBrandName = parentBrand?.brand_name;
+        }
+
         summary.breakdown = {
           own_royalties: ownRoyalties,
           parent_royalties: parentRoyalties,
@@ -1490,6 +1497,7 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
           own_earnings: ownEarnings,
           parent_earnings: parentEarnings,
           sublabel_balance: parseFloat((ownRoyalties - ownPayments).toFixed(2)),
+          parent_brand_name: parentBrandName,
         };
       }
     } else {
@@ -2345,6 +2353,15 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
     const paginatedBalances = filteredBalances.slice(offset, offset + pageSize);
     const totalPages = Math.ceil(totalFilteredCount / pageSize);
 
+    let parentBrandName: string | undefined;
+    if (!isParentView) {
+      const currentBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
+      if (currentBrand?.parent_brand) {
+        const parentBrand = await Brand.findByPk(currentBrand.parent_brand, { attributes: ['brand_name'] });
+        parentBrandName = parentBrand?.brand_name;
+      }
+    }
+
     res.json({
       data: paginatedBalances,
       pagination: {
@@ -2359,7 +2376,8 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
         total_balance: totalBalance,
         total_due_for_payment: totalDueForPayment,
         ready_for_payment: readyForPayment,
-        paused_payouts: pausedPayouts
+        paused_payouts: pausedPayouts,
+        parent_brand_name: parentBrandName,
       }
     });
   } catch (error) {

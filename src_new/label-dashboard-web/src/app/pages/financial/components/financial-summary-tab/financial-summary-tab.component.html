@@ -40,11 +40,16 @@
       <ng-template #adminBalance>
         <h1 class="balance-amount" [ngClass]="getAmountClass(summary.currentBalance)">{{ formatCurrency(summary.currentBalance) }}</h1>
         <ng-container *ngIf="summary.breakdown && summary.breakdown.parent_royalties > 0">
-          <div class="tw-text-xs tw-text-white tw-opacity-70 tw-mt-1 tw-mb-2 tw-leading-relaxed">
-            {{ formatCurrency(summary.breakdown.own_royalties - summary.breakdown.own_payments) }} your label
-            &nbsp;·&nbsp;
-            {{ formatCurrency(summary.breakdown.parent_royalties - summary.breakdown.parent_payments) }} from parent label
-          </div>
+          <table class="tw-text-xs tw-text-white tw-mt-1 tw-mb-2 tw-mx-auto">
+            <tr class="tw-opacity-100 tw-font-semibold">
+              <td class="tw-pr-3 tw-text-left">Your label</td>
+              <td class="tw-text-right">{{ formatCurrency(summary.breakdown.own_royalties - summary.breakdown.own_payments) }}</td>
+            </tr>
+            <tr class="tw-opacity-50">
+              <td class="tw-pr-3 tw-text-left">{{ summary.breakdown.parent_brand_name || 'Parent label' }}</td>
+              <td class="tw-text-right">{{ formatCurrency(summary.breakdown.parent_royalties - summary.breakdown.parent_payments) }}</td>
+            </tr>
+          </table>
         </ng-container>
         <button class="btn-primary pay-now-btn"
                 (click)="onPayNow()"
@@ -63,25 +68,28 @@
       <div class="financial-summary-item financial-item--earnings" (click)="viewEarningsDetails.emit()">
         <span class="financial-item-label">Total Earnings</span>
         <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalEarnings)">{{ formatCurrency(summary.totalEarnings) }}</span>
-        <span *ngIf="isAdmin && summary.breakdown && summary.breakdown.parent_earnings > 0" class="tw-text-xs tw-opacity-60 tw-mt-0.5">
-          {{ formatCurrency(summary.breakdown.own_earnings) }} yours&nbsp;·&nbsp;{{ formatCurrency(summary.breakdown.parent_earnings) }} from parent
-        </span>
+        <table *ngIf="isAdmin && summary.breakdown && summary.breakdown.parent_earnings > 0" class="tw-text-xs tw-opacity-60 tw-mt-1 tw-w-full">
+          <tr class="tw-font-semibold"><td>Your label</td><td class="tw-text-right">{{ formatCurrency(summary.breakdown.own_earnings) }}</td></tr>
+          <tr class="tw-opacity-50"><td>{{ summary.breakdown.parent_brand_name || 'Parent label' }}</td><td class="tw-text-right">{{ formatCurrency(summary.breakdown.parent_earnings) }}</td></tr>
+        </table>
         <a class="financial-item-link">View all</a>
       </div>
       <div class="financial-summary-item" (click)="viewRoyaltiesDetails.emit()">
         <span class="financial-item-label">Total Royalties</span>
         <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalRoyalties)">{{ formatCurrency(summary.totalRoyalties) }}</span>
-        <span *ngIf="isAdmin && summary.breakdown && summary.breakdown.parent_royalties > 0" class="tw-text-xs tw-opacity-60 tw-mt-0.5">
-          {{ formatCurrency(summary.breakdown.own_royalties) }} yours&nbsp;·&nbsp;{{ formatCurrency(summary.breakdown.parent_royalties) }} from parent
-        </span>
+        <table *ngIf="isAdmin && summary.breakdown && summary.breakdown.parent_royalties > 0" class="tw-text-xs tw-opacity-60 tw-mt-1 tw-w-full">
+          <tr class="tw-font-semibold"><td>Your label</td><td class="tw-text-right">{{ formatCurrency(summary.breakdown.own_royalties) }}</td></tr>
+          <tr class="tw-opacity-50"><td>{{ summary.breakdown.parent_brand_name || 'Parent label' }}</td><td class="tw-text-right">{{ formatCurrency(summary.breakdown.parent_royalties) }}</td></tr>
+        </table>
         <a class="financial-item-link">View all</a>
       </div>
       <div class="financial-summary-item" (click)="viewPaymentsDetails.emit()">
         <span class="financial-item-label">Total Payouts</span>
         <span class="financial-item-value" [ngClass]="getAmountClass(summary.totalPayments)">{{ formatCurrency(summary.totalPayments) }}</span>
-        <span *ngIf="isAdmin && summary.breakdown && summary.breakdown.parent_payments > 0" class="tw-text-xs tw-opacity-60 tw-mt-0.5">
-          {{ formatCurrency(summary.breakdown.own_payments) }} by your label&nbsp;·&nbsp;{{ formatCurrency(summary.breakdown.parent_payments) }} by parent
-        </span>
+        <table *ngIf="isAdmin && summary.breakdown && summary.breakdown.parent_payments > 0" class="tw-text-xs tw-opacity-60 tw-mt-1 tw-w-full">
+          <tr class="tw-font-semibold"><td>Your label</td><td class="tw-text-right">{{ formatCurrency(summary.breakdown.own_payments) }}</td></tr>
+          <tr class="tw-opacity-50"><td>{{ summary.breakdown.parent_brand_name || 'Parent label' }}</td><td class="tw-text-right">{{ formatCurrency(summary.breakdown.parent_payments) }}</td></tr>
+        </table>
         <a class="financial-item-link">View all</a>
       </div>
     </div>
