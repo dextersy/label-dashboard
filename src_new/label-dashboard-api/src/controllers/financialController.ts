@@ -743,7 +743,9 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
       include: includeConditions,
       order: orderClause,
       limit: pageSize,
-      offset: offset
+      offset: offset,
+      subQuery: false,
+      distinct: true,
     });
 
     const totalPages = Math.ceil(count / pageSize);
@@ -2736,52 +2738,91 @@ export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response)
       }
 
       const artists = await Artist.findAll({ where: { brand_id: childBrandId, hold_payouts: false } });
-      const readyForPayment = [];
-      let totalAmount = 0;
+      const artistIds = artists.map(a => a.id);
 
+      if (artistIds.length === 0) {
+        return res.json({ artists: [], total_amount: 0 });
+      }
+
+      const royaltyRows: any[] = await sequelize.query(
+        `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+         FROM royalty r
+         JOIN earning e ON r.earning_id = e.id
+         WHERE r.artist_id IN (:artistIds) AND e.recorded_by_brand_id IS NOT NULL
+         GROUP BY r.artist_id`,
+        { replacements: { artistIds }, type: 'SELECT' }
+      );
+      const royaltiesByArtist: Record<number, number> = {};
+      royaltyRows.forEach(row => { royaltiesByArtist[row.artist_id] = parseFloat(row.total); });
+
+      const paymentRows: any[] = await sequelize.query(
+        `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
+         FROM payment
+         WHERE artist_id IN (:artistIds) AND paid_by_brand_id = :parentBrandId AND status = 'succeeded'
+         GROUP BY artist_id`,
+        { replacements: { artistIds, parentBrandId: req.user.brand_id }, type: 'SELECT' }
+      );
+      const paymentsByArtist: Record<number, number> = {};
+      paymentRows.forEach(row => { paymentsByArtist[row.artist_id] = parseFloat(row.total); });
+
+      const pmRows: any[] = await sequelize.query(
+        `SELECT DISTINCT artist_id FROM payment_method WHERE artist_id IN (:artistIds)`,
+        { replacements: { artistIds }, type: 'SELECT' }
+      );
+      const hasPaymentMethod = new Set(pmRows.map(r => r.artist_id));
+
+      const readyForPayment: any[] = [];
+      let totalAmount = 0;
       for (const artist of artists) {
-        const balance = await getParentPayableBalance(artist.id, req.user.brand_id);
-        if (balance > artist.payout_point) {
-          const paymentMethods = await PaymentMethod.findAll({ where: { artist_id: artist.id } });
-          if (paymentMethods.length > 0) {
-            readyForPayment.push({ id: artist.id, name: artist.name, total_balance: balance });
-            totalAmount += balance;
-          }
+        const balance = parseFloat(((royaltiesByArtist[artist.id] ?? 0) - (paymentsByArtist[artist.id] ?? 0)).toFixed(2));
+        if (balance > artist.payout_point && hasPaymentMethod.has(artist.id)) {
+          readyForPayment.push({ id: artist.id, name: artist.name, total_balance: balance });
+          totalAmount += balance;
         }
       }
 
       return res.json({ artists: readyForPayment, total_amount: parseFloat(totalAmount.toFixed(2)) });
     }
 
-    // Get all artists for this brand that don't have payouts on hold
-    const artists = await Artist.findAll({
-      where: {
-        brand_id: req.user.brand_id,
-        hold_payouts: false
-      }
-    });
+    // Own-brand view
+    const artists = await Artist.findAll({ where: { brand_id: req.user.brand_id, hold_payouts: false } });
+    const artistIds = artists.map(a => a.id);
 
-    const readyForPayment = [];
+    if (artistIds.length === 0) {
+      return res.json({ artists: [], total_amount: 0 });
+    }
+
+    const royaltyRows: any[] = await sequelize.query(
+      `SELECT artist_id, COALESCE(SUM(amount), 0) AS total FROM royalty WHERE artist_id IN (:artistIds) GROUP BY artist_id`,
+      { replacements: { artistIds }, type: 'SELECT' }
+    );
+    const royaltiesByArtist: Record<number, number> = {};
+    royaltyRows.forEach(row => { royaltiesByArtist[row.artist_id] = parseFloat(row.total); });
+
+    const paymentRows: any[] = await sequelize.query(
+      `SELECT artist_id, COALESCE(SUM(amount), 0) AS total FROM payment WHERE artist_id IN (:artistIds) AND status = 'succeeded' GROUP BY artist_id`,
+      { replacements: { artistIds }, type: 'SELECT' }
+    );
+    const paymentsByArtist: Record<number, number> = {};
+    paymentRows.forEach(row => { paymentsByArtist[row.artist_id] = parseFloat(row.total); });
+
+    const pmRows: any[] = await sequelize.query(
+      `SELECT DISTINCT artist_id FROM payment_method WHERE artist_id IN (:artistIds)`,
+      { replacements: { artistIds }, type: 'SELECT' }
+    );
+    const hasPaymentMethod = new Set(pmRows.map(r => r.artist_id));
+
+    const readyForPayment: any[] = [];
     let totalAmount = 0;
-
     for (const artist of artists) {
-      const paymentDetails = await getArtistPaymentDetails(artist);
-
-      if (paymentDetails.isReadyForPayment) {
-        readyForPayment.push({
-          id: artist.id,
-          name: artist.name,
-          total_balance: paymentDetails.balance
-        });
-
-        totalAmount += paymentDetails.balance;
+      const balance = parseFloat(((royaltiesByArtist[artist.id] ?? 0) - (paymentsByArtist[artist.id] ?? 0)).toFixed(2));
+      if (balance > artist.payout_point && hasPaymentMethod.has(artist.id)) {
+        readyForPayment.push({ id: artist.id, name: artist.name, total_balance: balance });
+        totalAmount += balance;
       }
     }
 
-    res.json({
-      artists: readyForPayment,
-      total_amount: parseFloat(totalAmount.toFixed(2))
-    });
+    res.json({ artists: readyForPayment, total_amount: parseFloat(totalAmount.toFixed(2)) });
   } catch (error) {
     console.error('Get artists ready for payment error:', error);
     res.status(500).json({ error: 'Internal server error' });
