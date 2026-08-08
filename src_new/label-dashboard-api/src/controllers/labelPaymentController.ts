@@ -426,8 +426,8 @@ export const getLabelPayments = async (req: AuthRequest, res: Response) => {
         limit: pageSize,
         offset: offset
       }),
-      LabelPayment.sum('amount', { where }),
-      LabelPayment.sum('payment_processing_fee', { where })
+      LabelPayment.sum('amount', { where: { ...where, status: { [require('sequelize').Op.ne]: 'failed' } } }),
+      LabelPayment.sum('payment_processing_fee', { where: { ...where, status: { [require('sequelize').Op.ne]: 'failed' } } })
     ]);
 
     const totalPages = Math.ceil(count / pageSize);
