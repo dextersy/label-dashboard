@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow } from '../models';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
@@ -3522,6 +3522,101 @@ export const registerArtist = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('registerArtist error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getOrganizerProfile = async (req: Request, res: Response) => {
+  try {
+    const brandId = parseInt(req.params.brandId as string);
+    if (isNaN(brandId)) return res.status(400).json({ error: 'Invalid brand ID' });
+
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) return res.status(404).json({ error: 'Organizer not found' });
+
+    const followerCount = await AudienceFollow.count({ where: { brand_id: brandId } });
+
+    const upcomingEvents = await Event.findAll({
+      where: {
+        brand_id: brandId,
+        status: 'published',
+        listed_on_ticketing: true,
+        date_and_time: { [Op.gte]: new Date() },
+      },
+      attributes: ['id', 'title', 'date_and_time', 'venue', 'event_type', 'poster_url'],
+      order: [['date_and_time', 'ASC']],
+      limit: 10,
+    });
+
+    return res.json({
+      id: brand.id,
+      name: brand.brand_name,
+      logo_url: brand.logo_url || null,
+      brand_color: brand.brand_color || '#000000',
+      brand_website: brand.brand_website || null,
+      about_us: brand.about_us || null,
+      follower_count: followerCount,
+      upcoming_events: upcomingEvents,
+    });
+  } catch (error) {
+    console.error('getOrganizerProfile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const toggleOrganizerFollow = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser;
+    if (!audienceUser) return res.status(401).json({ error: 'Unauthorized' });
+
+    const brandId = parseInt(req.params.brandId as string);
+    if (isNaN(brandId)) return res.status(400).json({ error: 'Invalid brand ID' });
+
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) return res.status(404).json({ error: 'Organizer not found' });
+
+    const existing = await AudienceFollow.findOne({
+      where: { audience_user_id: audienceUser.id, brand_id: brandId },
+    });
+
+    if (existing) {
+      await existing.destroy();
+    } else {
+      await AudienceFollow.create({ audience_user_id: audienceUser.id, brand_id: brandId });
+    }
+
+    const followerCount = await AudienceFollow.count({ where: { brand_id: brandId } });
+
+    return res.json({ following: !existing, follower_count: followerCount });
+  } catch (error) {
+    console.error('toggleOrganizerFollow error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getFollowedOrganizers = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser;
+    if (!audienceUser) return res.status(401).json({ error: 'Unauthorized' });
+
+    const follows = await AudienceFollow.findAll({
+      where: { audience_user_id: audienceUser.id },
+      include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'logo_url', 'about_us', 'brand_color'] }],
+      order: [['created_at', 'DESC']],
+    });
+
+    return res.json({
+      followed_brand_ids: follows.map((f: any) => f.brand_id),
+      followed_organizers: follows.map((f: any) => ({
+        id: f.brand.id,
+        name: f.brand.brand_name,
+        logo_url: f.brand.logo_url || null,
+        about_us: f.brand.about_us || null,
+        brand_color: f.brand.brand_color || '#000000',
+      })),
+    });
+  } catch (error) {
+    console.error('getFollowedOrganizers error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

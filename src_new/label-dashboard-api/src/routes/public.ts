@@ -29,7 +29,10 @@ import {
   getLikedEvents,
   getArtistDirectory,
   registerArtist,
-  getArtistRegistrationInfo
+  getArtistRegistrationInfo,
+  getOrganizerProfile,
+  toggleOrganizerFollow,
+  getFollowedOrganizers
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 import { authenticateAudienceToken } from '../middleware/auth';
@@ -80,11 +83,16 @@ router.get('/artists/directory', publicRateLimit, getArtistDirectory);
 router.get('/artists/registration-info', publicRateLimit, getArtistRegistrationInfo);
 router.post('/artists/register', publicRateLimit, upload.single('profile_photo'), registerArtist);
 
+// Organizer profile (public)
+router.get('/organizers/:brandId', publicRateLimit, getOrganizerProfile);
+
 // Audience user routes (requires audience JWT)
 router.get('/audience/me/tickets', authenticateAudienceToken, getAudienceTickets);
 router.get('/audience/me/liked-events', authenticateAudienceToken, getLikedEvents);
+router.get('/audience/me/followed-organizers', authenticateAudienceToken, getFollowedOrganizers);
 router.post('/audience/claim', authenticateAudienceToken, claimAudienceTickets);
 router.get('/audience/tickets/:ticketCode/pdf', authenticateAudienceToken, downloadAudienceTicketPDF);
 router.post('/audience/events/:eventId/like', authenticateAudienceToken, toggleEventLike);
+router.post('/audience/organizers/:brandId/follow', authenticateAudienceToken, toggleOrganizerFollow);
 
 export default router;

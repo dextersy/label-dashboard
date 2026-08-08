@@ -10,7 +10,7 @@ interface EventGroup {
     date_and_time: string;
     venue: string;
     poster_url?: string;
-    brand?: { name: string; color?: string; logo_url?: string };
+    brand?: { id: number; name: string; color?: string; logo_url?: string };
   };
   tickets: any[];
   isPast: boolean;

@@ -140,6 +140,20 @@ export class AudienceAuthService {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
+  toggleOrganizerFollow(brandId: number): Observable<{ following: boolean; follower_count: number }> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<{ following: boolean; follower_count: number }>(
+      `${this.apiUrl}/public/audience/organizers/${brandId}/follow`, {}, { headers }
+    );
+  }
+
+  getFollowedOrganizers(): Observable<{ followed_brand_ids: number[]; followed_organizers: any[] }> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<{ followed_brand_ids: number[]; followed_organizers: any[] }>(
+      `${this.apiUrl}/public/audience/me/followed-organizers`, { headers }
+    );
+  }
+
   markEmailVerified(): void {
     const user = this.getUser();
     if (user) {

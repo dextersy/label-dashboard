@@ -65,7 +65,8 @@ import { AudienceAuthService } from '../../../services/audience-auth.service';
 
         <!-- Event info -->
         <div class="mb-8">
-          <p *ngIf="event()?.brand?.name" class="text-xs font-mono text-white/30 uppercase tracking-widest mb-1">{{ event()?.brand?.name }}</p>
+          <a *ngIf="event()?.brand?.name" [routerLink]="['/organizers', event()?.brand?.id]"
+            class="text-xs font-mono text-white/30 uppercase tracking-widest mb-1 hover:text-white/60 transition-colors inline-block">{{ event()?.brand?.name }}</a>
           <h1 class="text-2xl font-black uppercase leading-tight mb-3">{{ event()?.title }}</h1>
           <div class="space-y-1 text-sm text-white/50 font-mono">
             <p>{{ formatDate(event()?.date_and_time) }}</p>

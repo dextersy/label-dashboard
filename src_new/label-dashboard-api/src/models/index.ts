@@ -50,6 +50,7 @@ import EventWristbandSettings from './EventWristbandSettings';
 import SavedDeliveryAddress from './SavedDeliveryAddress';
 import EventAddOnPayment from './EventAddOnPayment';
 import EventLike from './EventLike';
+import AudienceFollow from './AudienceFollow';
 
 // Define relationships
 // Brand relationships
@@ -175,6 +176,12 @@ Ticket.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUs
 // AudienceUser relationships
 AudienceUser.hasMany(Ticket, { foreignKey: 'audience_user_id', as: 'tickets' });
 AudienceUser.hasMany(EventLike, { foreignKey: 'audience_user_id', as: 'eventLikes' });
+AudienceUser.hasMany(AudienceFollow, { foreignKey: 'audience_user_id', as: 'follows' });
+
+// AudienceFollow relationships
+AudienceFollow.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
+AudienceFollow.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Brand.hasMany(AudienceFollow, { foreignKey: 'brand_id', as: 'audienceFollows' });
 
 // EventLike relationships
 EventLike.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
@@ -391,6 +398,7 @@ export {
   SavedDeliveryAddress,
   EventAddOnPayment,
   EventLike,
+  AudienceFollow,
 };
 
 // Initialize database connection

@@ -4,6 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
 
+interface FollowedOrganizer {
+  id: number;
+  name: string;
+  logo_url: string | null;
+  about_us: string | null;
+  brand_color: string;
+}
+
 @Component({
   selector: 'app-audience-profile',
   standalone: true,
@@ -147,6 +155,35 @@ import { AudienceAuthService, AudienceUser } from '../../../services/audience-au
           </a>
         </div>
 
+        <!-- Following -->
+        <div class="mt-10 pt-8 border-t border-white/10">
+          <p class="text-xs font-mono text-white/40 uppercase tracking-[0.2em] mb-4">— following —</p>
+          @if (followedOrganizers().length === 0) {
+            <p class="text-xs font-mono text-white/30">You're not following any organizers yet.</p>
+          } @else {
+            <div class="space-y-3">
+              @for (org of followedOrganizers(); track org.id) {
+                <a [routerLink]="['/organizers', org.id]"
+                  class="flex items-center gap-4 border border-white/10 hover:border-yellow-400/40 transition-colors px-4 py-3 group">
+                  @if (org.logo_url) {
+                    <div class="w-10 h-10 flex items-center justify-center p-1 flex-shrink-0" [style.background-color]="org.brand_color">
+                      <img [src]="org.logo_url" [alt]="org.name" class="w-full h-full object-contain">
+                    </div>
+                  } @else {
+                    <div class="w-10 h-10 flex items-center justify-center flex-shrink-0" [style.background-color]="org.brand_color">
+                      <span class="text-white/80 text-sm font-black">{{ org.name.charAt(0).toUpperCase() }}</span>
+                    </div>
+                  }
+                  <span class="text-sm font-black text-white uppercase truncate group-hover:text-yellow-400 transition-colors">{{ org.name }}</span>
+                  <svg class="w-3.5 h-3.5 text-white/20 group-hover:text-yellow-400/60 flex-shrink-0 ml-auto transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </a>
+              }
+            </div>
+          }
+        </div>
+
       </main>
     </div>
   `
@@ -168,6 +205,8 @@ export class AudienceProfileComponent implements OnInit {
   photoError = signal('');
   photoSuccess = signal(false);
 
+  followedOrganizers = signal<FollowedOrganizer[]>([]);
+
   formattedMembershipId(): string {
     const id = this.user()?.membership_id;
     if (!id) return '';
@@ -186,6 +225,11 @@ export class AudienceProfileComponent implements OnInit {
     this.firstName = u.first_name || '';
     this.lastName = u.last_name || '';
     this.contactNumber = u.contact_number || '';
+
+    this.audienceAuthService.getFollowedOrganizers().subscribe({
+      next: (res) => this.followedOrganizers.set(res.followed_organizers),
+      error: () => {}
+    });
   }
 
   userInitial(): string {

@@ -12,6 +12,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/events/event-view/event-view.component').then(m => m.EventViewComponent)
   },
   {
+    path: 'organizers/:brandId',
+    loadComponent: () => import('./pages/organizer-profile/organizer-profile.component').then(m => m.OrganizerProfileComponent)
+  },
+  {
     // Root-level reset-password so the email link (generated without /app/ prefix) works
     path: 'reset-password',
     loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),

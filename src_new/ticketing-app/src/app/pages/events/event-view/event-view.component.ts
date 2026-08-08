@@ -101,7 +101,8 @@ interface PublicEventView {
               <!-- Info -->
               <div class="flex-1 min-w-0 py-2">
                 @if (event()!.brand) {
-                  <p class="text-xs font-mono text-yellow-400/70 uppercase tracking-[0.2em] mb-3">{{ event()!.brand!.name }}</p>
+                  <a [routerLink]="['/organizers', event()!.brand!.id]"
+                    class="text-xs font-mono text-yellow-400/70 uppercase tracking-[0.2em] mb-3 hover:text-yellow-400 transition-colors inline-block">{{ event()!.brand!.name }}</a>
                 }
                 <div class="flex items-start justify-between gap-4 mb-5">
                   <h1 class="text-3xl sm:text-4xl font-black text-white uppercase leading-tight">{{ event()!.title }}</h1>
@@ -323,14 +324,17 @@ interface PublicEventView {
 
               <!-- Organizer card -->
               @if (event()!.brand) {
-                <div class="border border-white/10 p-4">
+                <a [routerLink]="['/organizers', event()!.brand!.id]"
+                  class="block border border-white/10 hover:border-yellow-400/40 transition-colors p-4 group">
                   <p class="text-xs font-mono text-white/30 uppercase tracking-widest mb-2">Organizer</p>
                   @if (event()!.brand!.logo_url) {
-                    <img [src]="event()!.brand!.logo_url" [alt]="event()!.brand!.name" class="h-6 mb-2 opacity-70">
+                    <div class="inline-flex items-center justify-center p-2 mb-2" [style.background-color]="event()!.brand!.color || '#000000'">
+                      <img [src]="event()!.brand!.logo_url" [alt]="event()!.brand!.name" class="h-6 object-contain">
+                    </div>
                   } @else {
-                    <p class="text-white font-bold text-sm">{{ event()!.brand!.name }}</p>
+                    <p class="text-white font-bold text-sm group-hover:text-yellow-400 transition-colors">{{ event()!.brand!.name }}</p>
                   }
-                </div>
+                </a>
               }
             </div>
 
