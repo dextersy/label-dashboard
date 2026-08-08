@@ -91,6 +91,18 @@ export const routes: Routes = [
     data: { view: 'forgot-password' }
   },
   {
+    path: 'terms',
+    loadComponent: () => import('./pages/legal/audience-terms.component').then(m => m.AudienceTermsComponent)
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/legal/audience-privacy.component').then(m => m.AudiencePrivacyComponent)
+  },
+  {
+    path: 'accept-terms',
+    loadComponent: () => import('./pages/auth/accept-terms/accept-terms.component').then(m => m.AcceptTermsComponent)
+  },
+  {
     path: 'my-shows',
     canActivate: [audienceAuthGuard],
     loadComponent: () => import('./pages/audience/my-shows/my-shows.component').then(m => m.MyShowsComponent)

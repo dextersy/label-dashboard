@@ -13,12 +13,16 @@ export interface AudienceUser {
   membership_id?: string;
   membership_tier?: string;
   email_verified?: boolean;
+  terms_accepted_at?: string | null;
+  privacy_accepted_at?: string | null;
+  age_confirmed_at?: string | null;
 }
 
 export interface AudienceAuthResponse {
   token: string;
   user: AudienceUser;
   claimed_tickets_count: number;
+  needs_terms_acceptance?: boolean;
 }
 
 const TOKEN_KEY = 'ys_audience_token';
@@ -53,8 +57,14 @@ export class AudienceAuthService {
       .pipe(tap(res => this.storeAuth(res)));
   }
 
-  signup(email: string, password: string, first_name: string, last_name: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name });
+  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed });
+  }
+
+  acceptTerms(terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean): Observable<AudienceUser> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<AudienceUser>(`${this.apiUrl}/auth/audience/accept-terms`, { terms_accepted, privacy_accepted, age_confirmed }, { headers })
+      .pipe(tap(user => this.updateStoredUser(user)));
   }
 
   logout(): void {

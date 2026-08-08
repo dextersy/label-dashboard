@@ -245,6 +245,48 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
                     </div>
                   </div>
                 </div>
+                <div class="pt-1 space-y-3">
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="terms_accepted"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        I agree to the
+                        <a routerLink="/terms" target="_blank"
+                          class="text-yellow-500 hover:text-yellow-600 underline transition-colors">Terms and Conditions</a>
+                      </span>
+                    </label>
+                    @if (audienceForm.get('terms_accepted')?.invalid && audienceForm.get('terms_accepted')?.touched) {
+                      <p class="mt-1 text-xs font-mono text-red-500">You must accept the Terms and Conditions.</p>
+                    }
+                  </div>
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="privacy_accepted"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        I have read and understood the
+                        <a routerLink="/privacy" target="_blank"
+                          class="text-yellow-500 hover:text-yellow-600 underline transition-colors">Privacy Policy</a>
+                      </span>
+                    </label>
+                    @if (audienceForm.get('privacy_accepted')?.invalid && audienceForm.get('privacy_accepted')?.touched) {
+                      <p class="mt-1 text-xs font-mono text-red-500">You must accept the Privacy Policy.</p>
+                    }
+                  </div>
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="age_confirmed"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        I confirm I am at least 13 years old
+                      </span>
+                    </label>
+                    @if (audienceForm.get('age_confirmed')?.invalid && audienceForm.get('age_confirmed')?.touched) {
+                      <p class="mt-1 text-xs font-mono text-red-500">You must confirm your age.</p>
+                    }
+                  </div>
+                </div>
                 <p class="mt-3 text-xs text-gray-400 leading-snug">
                   Tickets previously purchased with your email address will be automatically linked to your profile.
                 </p>
@@ -499,7 +541,10 @@ export class LoginComponent implements OnInit {
       first_name: ['', Validators.required],
       last_name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]]
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      terms_accepted: [false, Validators.requiredTrue],
+      privacy_accepted: [false, Validators.requiredTrue],
+      age_confirmed: [false, Validators.requiredTrue],
     });
     this.organizerForm = this.fb.group({
       full_name: ['', Validators.required],
@@ -570,7 +615,11 @@ export class LoginComponent implements OnInit {
             this.loginLoading.set(false);
             localStorage.setItem('ys_audience_token', res.token);
             localStorage.setItem('ys_audience_user', JSON.stringify(res.user));
-            this.router.navigate(['/my-shows']);
+            if (res.needs_terms_acceptance) {
+              this.router.navigate(['/accept-terms']);
+            } else {
+              this.router.navigate(['/my-shows']);
+            }
           },
           error: () => {
             this.loginLoading.set(false);
@@ -633,7 +682,14 @@ export class LoginComponent implements OnInit {
       this.unverifiedEmail.set('');
       this.resentFromLogin.set(false);
       this.audienceAuth.login(email, password).subscribe({
-        next: () => { this.loginLoading.set(false); this.router.navigate(['/my-shows']); },
+        next: (res) => {
+          this.loginLoading.set(false);
+          if (res.needs_terms_acceptance) {
+            this.router.navigate(['/accept-terms']);
+          } else {
+            this.router.navigate(['/my-shows']);
+          }
+        },
         error: (err: any) => {
           this.loginLoading.set(false);
           if (err.error?.code === 'EMAIL_NOT_VERIFIED') {
@@ -672,8 +728,8 @@ export class LoginComponent implements OnInit {
     if (this.audienceForm.invalid) { this.audienceForm.markAllAsTouched(); return; }
     this.audienceLoading.set(true);
     this.error.set('');
-    const { first_name, last_name, email, password } = this.audienceForm.value;
-    this.audienceAuth.signup(email, password, first_name, last_name).subscribe({
+    const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed } = this.audienceForm.value;
+    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed).subscribe({
       next: () => {
         this.audienceLoading.set(false);
         this.signupPendingEmail.set(email);

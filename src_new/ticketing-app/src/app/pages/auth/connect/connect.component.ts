@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { AudienceAuthService } from '../../../services/audience-auth.service';
@@ -9,7 +9,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-connect',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="min-h-screen bg-white flex flex-col">
 
@@ -177,6 +177,48 @@ import { environment } from '../../../../environments/environment';
                     </div>
                   </div>
                 </div>
+                <div class="mt-4 space-y-3">
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="terms_accepted"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        I agree to the
+                        <a routerLink="/terms" target="_blank"
+                          class="text-yellow-500 hover:text-yellow-600 underline transition-colors">Terms and Conditions</a>
+                      </span>
+                    </label>
+                    @if (signupForm.get('terms_accepted')?.invalid && signupForm.get('terms_accepted')?.touched) {
+                      <p class="mt-1 text-xs font-mono text-red-500">You must accept the Terms and Conditions.</p>
+                    }
+                  </div>
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="privacy_accepted"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        I have read and understood the
+                        <a routerLink="/privacy" target="_blank"
+                          class="text-yellow-500 hover:text-yellow-600 underline transition-colors">Privacy Policy</a>
+                      </span>
+                    </label>
+                    @if (signupForm.get('privacy_accepted')?.invalid && signupForm.get('privacy_accepted')?.touched) {
+                      <p class="mt-1 text-xs font-mono text-red-500">You must accept the Privacy Policy.</p>
+                    }
+                  </div>
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="age_confirmed"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        I confirm I am at least 13 years old
+                      </span>
+                    </label>
+                    @if (signupForm.get('age_confirmed')?.invalid && signupForm.get('age_confirmed')?.touched) {
+                      <p class="mt-1 text-xs font-mono text-red-500">You must confirm your age.</p>
+                    }
+                  </div>
+                </div>
                 <p class="mt-3 text-xs text-gray-400 leading-snug">
                   Tickets previously purchased with your email will be automatically linked to your profile.
                 </p>
@@ -229,7 +271,10 @@ export class ConnectComponent implements OnInit {
       first_name: ['', Validators.required],
       last_name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]]
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      terms_accepted: [false, Validators.requiredTrue],
+      privacy_accepted: [false, Validators.requiredTrue],
+      age_confirmed: [false, Validators.requiredTrue],
     });
   }
 
@@ -294,8 +339,8 @@ export class ConnectComponent implements OnInit {
     if (this.signupForm.invalid) { this.signupForm.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
-    const { first_name, last_name, email, password } = this.signupForm.value;
-    this.audienceAuth.signup(email, password, first_name, last_name).subscribe({
+    const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed } = this.signupForm.value;
+    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed).subscribe({
       next: () => { this.loading.set(false); this.signupPendingEmail.set(email); },
       error: (err: any) => {
         this.loading.set(false);
