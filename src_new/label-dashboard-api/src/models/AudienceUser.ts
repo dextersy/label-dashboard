@@ -16,6 +16,9 @@ interface AudienceUserAttributes {
   email_verified?: boolean;
   email_verification_token?: string;
   email_verification_expires_at?: Date;
+  terms_accepted_at?: Date;
+  privacy_accepted_at?: Date;
+  age_confirmed_at?: Date;
 }
 
 interface AudienceUserCreationAttributes extends Optional<AudienceUserAttributes, 'id'> {}
@@ -35,6 +38,9 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public email_verified?: boolean;
   public email_verification_token?: string;
   public email_verification_expires_at?: Date;
+  public terms_accepted_at?: Date;
+  public privacy_accepted_at?: Date;
+  public age_confirmed_at?: Date;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -100,6 +106,18 @@ AudienceUser.init(
       allowNull: true,
     },
     email_verification_expires_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    terms_accepted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    privacy_accepted_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    age_confirmed_at: {
       type: DataTypes.DATE,
       allowNull: true,
     },

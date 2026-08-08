@@ -106,10 +106,20 @@ async function sendVerificationEmail(user: AudienceUser): Promise<void> {
 
 export const audienceSignup = async (req: Request, res: Response) => {
   try {
-    const { email, password, first_name, last_name } = req.body;
+    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed } = req.body;
 
     if (!email || !password || !first_name || !last_name) {
       return res.status(400).json({ error: 'Email, password, first name, and last name are required' });
+    }
+
+    if (!terms_accepted) {
+      return res.status(400).json({ error: 'You must accept the Terms and Conditions to create an account' });
+    }
+    if (!privacy_accepted) {
+      return res.status(400).json({ error: 'You must accept the Privacy Policy to create an account' });
+    }
+    if (!age_confirmed) {
+      return res.status(400).json({ error: 'You must confirm you are at least 13 years old to create an account' });
     }
 
     const passwordValidation = validatePassword(password);
@@ -122,6 +132,7 @@ export const audienceSignup = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
 
+    const now = new Date();
     const password_hash = await hashPassword(password);
     const membership_id = await generateMembershipId();
     const user = await AudienceUser.create({
@@ -132,6 +143,9 @@ export const audienceSignup = async (req: Request, res: Response) => {
       email_verified: false,
       membership_id,
       membership_tier: 'silver',
+      terms_accepted_at: now,
+      privacy_accepted_at: now,
+      age_confirmed_at: now,
     });
 
     // Send verification email (non-blocking — don't fail signup if email fails)
@@ -181,11 +195,13 @@ export const audienceLogin = async (req: Request, res: Response) => {
     }
 
     const token = signAudienceToken(user.id);
+    const needs_terms_acceptance = !user.terms_accepted_at || !user.privacy_accepted_at || !user.age_confirmed_at;
 
     return res.json({
       token,
       user: buildUserPayload(user),
       claimed_tickets_count,
+      needs_terms_acceptance,
     });
   } catch (error) {
     console.error('Audience login error:', error);
@@ -522,9 +538,11 @@ export const audienceGoogleExchange = async (req: Request, res: Response) => {
     }
 
     const token = signAudienceToken(user.id);
+    const needs_terms_acceptance = !user.terms_accepted_at || !user.privacy_accepted_at || !user.age_confirmed_at;
     return res.json({
       token,
       user: buildUserPayload(user),
+      needs_terms_acceptance,
     });
   } catch (error) {
     console.error('Audience Google exchange error:', error);
@@ -563,6 +581,9 @@ function buildUserPayload(user: AudienceUser) {
     membership_id: user.membership_id,
     membership_tier: user.membership_tier || 'silver',
     email_verified: user.email_verified ?? false,
+    terms_accepted_at: user.terms_accepted_at ?? null,
+    privacy_accepted_at: user.privacy_accepted_at ?? null,
+    age_confirmed_at: user.age_confirmed_at ?? null,
   };
 }
 
@@ -595,6 +616,35 @@ export const profilePhotoUpload = multer({
   },
   limits: { fileSize: 5 * 1024 * 1024 },
 });
+
+export const audienceAcceptTerms = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const { terms_accepted, privacy_accepted, age_confirmed } = req.body;
+
+    if (!terms_accepted) {
+      return res.status(400).json({ error: 'You must accept the Terms and Conditions' });
+    }
+    if (!privacy_accepted) {
+      return res.status(400).json({ error: 'You must accept the Privacy Policy' });
+    }
+    if (!age_confirmed) {
+      return res.status(400).json({ error: 'You must confirm you are at least 13 years old' });
+    }
+
+    const now = new Date();
+    await user.update({
+      terms_accepted_at: user.terms_accepted_at ?? now,
+      privacy_accepted_at: user.privacy_accepted_at ?? now,
+      age_confirmed_at: user.age_confirmed_at ?? now,
+    });
+
+    return res.json(buildUserPayload(user));
+  } catch (error) {
+    console.error('Audience acceptTerms error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 export const audienceUploadProfilePhoto = async (req: Request, res: Response) => {
   try {

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange, ticketingForgotPassword, ticketingValidateResetHash, dashboardGoogleRedirect, dashboardGoogleCallback, dashboardGoogleExchange } from '../controllers/authController';
-import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange, audienceUpdateProfile, audienceUploadProfilePhoto, profilePhotoUpload } from '../controllers/audienceAuthController';
+import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange, audienceUpdateProfile, audienceUploadProfilePhoto, profilePhotoUpload, audienceAcceptTerms } from '../controllers/audienceAuthController';
 import { authenticateToken, authenticateAudienceToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
@@ -43,6 +43,7 @@ audienceRouter.post('/resend-verification-by-email', authRateLimit, audienceRese
 audienceRouter.get('/google', authRateLimit, audienceGoogleRedirect);
 audienceRouter.get('/google/callback', audienceGoogleCallback);
 audienceRouter.post('/google/exchange', authRateLimit, audienceGoogleExchange);
+audienceRouter.post('/accept-terms', authenticateAudienceToken, audienceAcceptTerms);
 router.use('/audience', audienceRouter);
 
 // Dashboard portal Google auth
