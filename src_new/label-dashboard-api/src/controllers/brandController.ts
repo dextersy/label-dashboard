@@ -3,7 +3,7 @@ import Brand from '../models/Brand';
 import Domain from '../models/Domain';
 import User from '../models/User';
 import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, Fundraiser, Donation, EventAddOnPayment } from '../models';
-import { Op, literal } from 'sequelize';
+import { Op, literal, fn, col } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
@@ -1051,265 +1051,289 @@ export const getChildBrands = async (req: Request, res: Response) => {
       return res.json([]);
     }
 
-    const childBrandData: ChildBrandData[] = [];
+    const childBrandIds = childBrands.map(b => b.id);
 
-    for (const childBrand of childBrands) {
-      let musicEarnings = 0;
-      let musicGrossEarnings = 0;
-      let eventEarnings = 0;
-      let eventSales = 0;
-      let eventProcessingFees = 0;
-      let eventEstimatedTax = 0;
-      let totalRoyalties = 0;
-      let artistPayments = 0;
-      
-      // Calculate total payments made to this sublabel from label_payment table
-      const payments = await LabelPayment.sum('amount', {
-        where: {
-          brand_id: childBrand.id,
-          status: 'succeeded',
-          ...(start_date && end_date ? {
-            date_paid: {
-              [Op.between]: [new Date(start_date), new Date(end_date)]
-            }
-          } : {})
-        }
-      }) || 0;
+    // Normalize date filters once for all queries
+    let startDateFilter: Date | undefined, endDateFilter: Date | undefined;
+    if (start_date && end_date) {
+      startDateFilter = new Date(start_date);
+      endDateFilter = new Date(end_date);
+      endDateFilter.setHours(23, 59, 59, 999);
+    }
+    const paidDateCond = startDateFilter && endDateFilter
+      ? { [Op.between]: [startDateFilter, endDateFilter] as [Date, Date] }
+      : undefined;
 
-      // Get all release IDs for this brand
-      const releaseIds = await Release.findAll({
-        where: { brand_id: childBrand.id },
-        attributes: ['id'],
+    // BATCH 1: LabelPayments grouped by brand_id
+    const labelPaymentRows = await LabelPayment.findAll({
+      attributes: ['brand_id', [fn('SUM', col('amount')), 'total']],
+      where: {
+        brand_id: { [Op.in]: childBrandIds },
+        status: 'succeeded',
+        ...(paidDateCond ? { date_paid: paidDateCond } : {})
+      },
+      group: ['brand_id'],
+      raw: true
+    }) as any[];
+    const paymentsByBrand = new Map<number, number>(
+      labelPaymentRows.map((r: any) => [r.brand_id, parseFloat(r.total) || 0])
+    );
+
+    // BATCH 2: All releases for all child brands
+    const allReleases = await Release.findAll({
+      where: { brand_id: { [Op.in]: childBrandIds } },
+      attributes: ['id', 'brand_id'],
+      raw: true
+    }) as any[];
+    const releaseIdToBrandId = new Map<number, number>(allReleases.map((r: any) => [r.id, r.brand_id]));
+    const allReleaseIds = allReleases.map((r: any) => r.id);
+
+    // BATCH 3: All earnings for all releases — accumulate per brand in memory
+    const musicGrossByBrand = new Map<number, number>();
+    const musicFeesByBrand = new Map<number, number>();
+    const parentGrossByBrand = new Map<number, number>();
+    const parentFeesByBrand = new Map<number, number>();
+    const allEarningIdsByBrand = new Map<number, number[]>();
+    const parentEarningIdsByBrand = new Map<number, number[]>();
+
+    if (allReleaseIds.length > 0) {
+      const earningDateCond = startDateFilter && endDateFilter
+        ? { date_recorded: { [Op.between]: [startDateFilter, endDateFilter] as [Date, Date] } }
+        : {};
+      const allEarnings = await Earning.findAll({
+        where: { release_id: { [Op.in]: allReleaseIds }, ...earningDateCond },
+        attributes: ['id', 'amount', 'platform_fee', 'recorded_by_brand_id', 'release_id'],
         raw: true
+      }) as any[];
+
+      for (const e of allEarnings) {
+        const bId = releaseIdToBrandId.get(e.release_id);
+        if (!bId) continue;
+        const amount = parseFloat(e.amount || 0);
+        const fee = parseFloat(e.platform_fee || 0);
+        musicGrossByBrand.set(bId, (musicGrossByBrand.get(bId) || 0) + amount);
+        musicFeesByBrand.set(bId, (musicFeesByBrand.get(bId) || 0) + fee);
+        const allIds = allEarningIdsByBrand.get(bId) || [];
+        allIds.push(e.id);
+        allEarningIdsByBrand.set(bId, allIds);
+        if (e.recorded_by_brand_id != null) {
+          parentGrossByBrand.set(bId, (parentGrossByBrand.get(bId) || 0) + amount);
+          parentFeesByBrand.set(bId, (parentFeesByBrand.get(bId) || 0) + fee);
+          const pIds = parentEarningIdsByBrand.get(bId) || [];
+          pIds.push(e.id);
+          parentEarningIdsByBrand.set(bId, pIds);
+        }
+      }
+    }
+
+    // BATCH 4: Royalties for all earnings — sum per earning_id, then aggregate per brand
+    const royaltiesByBrand = new Map<number, number>();
+    const parentRoyaltiesByBrand = new Map<number, number>();
+    const flatAllEarningIds: number[] = [];
+    allEarningIdsByBrand.forEach(ids => flatAllEarningIds.push(...ids));
+
+    if (flatAllEarningIds.length > 0) {
+      const royaltyRows = await Royalty.findAll({
+        where: { earning_id: { [Op.in]: flatAllEarningIds } },
+        attributes: ['earning_id', [fn('SUM', col('amount')), 'total']],
+        group: ['earning_id'],
+        raw: true
+      }) as any[];
+      const royaltyByEarningId = new Map<number, number>(
+        royaltyRows.map((r: any) => [r.earning_id, parseFloat(r.total) || 0])
+      );
+      allEarningIdsByBrand.forEach((earningIds, bId) => {
+        royaltiesByBrand.set(bId, earningIds.reduce((sum, eid) => sum + (royaltyByEarningId.get(eid) || 0), 0));
       });
-      
-      const releaseIdList = releaseIds.map(r => (r as any).id);
-      
-      let musicPlatformFees = 0;
-      let payableMusicEarnings = 0;
-      let parentMusicGrossEarnings = 0;
-      if (releaseIdList.length === 0) {
-        musicEarnings = 0;
-        musicGrossEarnings = 0;
-        musicPlatformFees = 0;
-        totalRoyalties = 0;
-        payableMusicEarnings = 0;
-        parentMusicGrossEarnings = 0;
-      } else {
-        // Fetch all earnings for display and split by recorded_by_brand_id for balance
-        const allEarnings = await Earning.findAll({
-          where: {
-            release_id: { [Op.in]: releaseIdList },
-            ...(start_date && end_date ? {
-              date_recorded: {
-                [Op.between]: [new Date(start_date), new Date(end_date)]
-              }
-            } : {})
-          },
-          attributes: ['id', 'amount', 'platform_fee', 'recorded_by_brand_id']
-        });
+      parentEarningIdsByBrand.forEach((earningIds, bId) => {
+        parentRoyaltiesByBrand.set(bId, earningIds.reduce((sum, eid) => sum + (royaltyByEarningId.get(eid) || 0), 0));
+      });
+    }
 
-        const allEarningIds = allEarnings.map(e => (e as any).id);
-        const parentRecordedEarnings = allEarnings.filter(e => (e as any).recorded_by_brand_id != null);
-        const parentEarningIds = parentRecordedEarnings.map(e => (e as any).id);
+    // BATCH 5: All events for all child brands
+    const allEvents = await Event.findAll({
+      where: { brand_id: { [Op.in]: childBrandIds } },
+      attributes: ['id', 'brand_id'],
+      raw: true
+    }) as any[];
+    const eventIdToBrandId = new Map<number, number>(allEvents.map((ev: any) => [ev.id, ev.brand_id]));
+    const allEventIds = allEvents.map((ev: any) => ev.id);
 
-        musicGrossEarnings = allEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).amount || 0)), 0);
-        musicPlatformFees = allEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).platform_fee || 0)), 0);
-        parentMusicGrossEarnings = parentRecordedEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).amount || 0)), 0);
-        const parentPlatformFees = parentRecordedEarnings.reduce((sum, e) => sum + parseFloat(String((e as any).platform_fee || 0)), 0);
+    const eventSalesByBrand = new Map<number, number>();
+    const eventPlatformFeesByBrand = new Map<number, number>();
+    const eventProcessingFeesByBrand = new Map<number, number>();
 
-        totalRoyalties = allEarningIds.length > 0
-          ? await Royalty.sum('amount', { where: { earning_id: { [Op.in]: allEarningIds } } }) || 0
-          : 0;
-
-        const payableRoyalties = parentEarningIds.length > 0
-          ? await Royalty.sum('amount', { where: { earning_id: { [Op.in]: parentEarningIds } } }) || 0
-          : 0;
-
-        musicEarnings = musicGrossEarnings - totalRoyalties - musicPlatformFees;
-        payableMusicEarnings = parentMusicGrossEarnings - payableRoyalties - parentPlatformFees;
-      }
-
-      // Fix date range to include full day
-      let startDateFilter, endDateFilter;
-      if (start_date && end_date) {
-        startDateFilter = new Date(start_date);
-        endDateFilter = new Date(end_date);
-        // Always extend end date to end of day
-        endDateFilter.setHours(23, 59, 59, 999);
-      }
-
-
-      // Calculate event sales, earnings, and fees (ticket sales minus platform fees for this brand's events, excluding tickets where platform_fee is NULL)
-      // For sales: only count confirmed/sent tickets (exclude refunded)
-      const eventSalesQuery = await Ticket.findAll({
-        attributes: [
-          [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']
-        ],
-        include: [{
-          model: Event,
-          as: 'event',
-          where: { brand_id: childBrand.id },
-          attributes: []
-        }],
+    if (allEventIds.length > 0) {
+      // Ticket sales (confirmed/sent only), grouped by event_id
+      const ticketSalesRows = await Ticket.findAll({
+        attributes: ['event_id', [fn('SUM', literal('price_per_ticket * number_of_entries')), 'total_sales']],
         where: {
+          event_id: { [Op.in]: allEventIds },
           status: ['Payment Confirmed', 'Ticket sent.'],
           platform_fee: { [Op.not]: null },
-          ...(startDateFilter && endDateFilter ? {
-            date_paid: {
-              [Op.between]: [startDateFilter, endDateFilter]
-            }
-          } : {})
+          ...(paidDateCond ? { date_paid: paidDateCond } : {})
         },
+        group: ['event_id'],
         raw: true
-      });
+      }) as any[];
+      for (const row of ticketSalesRows) {
+        const bId = eventIdToBrandId.get(row.event_id);
+        if (bId) eventSalesByBrand.set(bId, (eventSalesByBrand.get(bId) || 0) + (parseFloat(row.total_sales) || 0));
+      }
 
-      // For fees: count confirmed/sent AND refunded tickets
-      const eventFeesQuery = await Ticket.findAll({
+      // Ticket fees (confirmed/sent/refunded), grouped by event_id
+      const ticketFeeRows = await Ticket.findAll({
         attributes: [
-          [literal('SUM(platform_fee)'), 'total_platform_fee'],
-          [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
+          'event_id',
+          [fn('SUM', col('platform_fee')), 'total_platform_fee'],
+          [fn('SUM', col('payment_processing_fee')), 'total_processing_fee']
         ],
-        include: [{
-          model: Event,
-          as: 'event',
-          where: { brand_id: childBrand.id },
-          attributes: []
-        }],
         where: {
+          event_id: { [Op.in]: allEventIds },
           status: ['Payment Confirmed', 'Ticket sent.', 'Refunded'],
           platform_fee: { [Op.not]: null },
-          ...(startDateFilter && endDateFilter ? {
-            date_paid: {
-              [Op.between]: [startDateFilter, endDateFilter]
-            }
-          } : {})
+          ...(paidDateCond ? { date_paid: paidDateCond } : {})
         },
+        group: ['event_id'],
         raw: true
-      });
-
-      let eventPlatformFees = 0;
-      if (eventSalesQuery.length > 0 && eventSalesQuery[0]) {
-        const salesData = eventSalesQuery[0] as any;
-        eventSales = parseFloat(salesData.total_sales) || 0;
+      }) as any[];
+      for (const row of ticketFeeRows) {
+        const bId = eventIdToBrandId.get(row.event_id);
+        if (!bId) continue;
+        eventPlatformFeesByBrand.set(bId, (eventPlatformFeesByBrand.get(bId) || 0) + (parseFloat(row.total_platform_fee) || 0));
+        eventProcessingFeesByBrand.set(bId, (eventProcessingFeesByBrand.get(bId) || 0) + (parseFloat(row.total_processing_fee) || 0));
       }
+    }
 
-      if (eventFeesQuery.length > 0 && eventFeesQuery[0]) {
-        const feesData = eventFeesQuery[0] as any;
-        eventPlatformFees = parseFloat(feesData.total_platform_fee) || 0;
-        eventProcessingFees = parseFloat(feesData.total_processing_fee) || 0;
-      }
+    // BATCH 6: Artist payments — fetch all artists, then batch payments by artist_id
+    const allArtists = await Artist.findAll({
+      where: { brand_id: { [Op.in]: childBrandIds } },
+      attributes: ['id', 'brand_id'],
+      raw: true
+    }) as any[];
+    const artistIdToBrandId = new Map<number, number>(allArtists.map((a: any) => [a.id, a.brand_id]));
+    const allArtistIds = allArtists.map((a: any) => a.id);
 
-      eventEarnings = eventSales - eventPlatformFees;
-
-      // Calculate estimated tax: 0.5% of (gross event earnings - processing fees)
-      const taxableAmount = eventSales - eventProcessingFees;
-      eventEstimatedTax = taxableAmount * 0.005; // 0.5%
-
-      // Calculate total artist payments for artists under this sublabel
-      const artistIds = await Artist.findAll({
-        where: { brand_id: childBrand.id },
-        attributes: ['id'],
+    const artistPaymentsByBrand = new Map<number, number>();
+    if (allArtistIds.length > 0) {
+      const artistPaymentRows = await Payment.findAll({
+        attributes: ['artist_id', [fn('SUM', col('amount')), 'total']],
+        where: {
+          artist_id: { [Op.in]: allArtistIds },
+          status: 'succeeded',
+          ...(paidDateCond ? { date_paid: paidDateCond } : {})
+        },
+        group: ['artist_id'],
         raw: true
-      });
-      
-      const artistIdList = artistIds.map(a => (a as any).id);
-      
-      if (artistIdList.length > 0) {
-        artistPayments = await Payment.sum('amount', {
-          where: {
-            artist_id: { [Op.in]: artistIdList },
-            status: 'succeeded',
-            ...(start_date && end_date ? {
-              date_paid: {
-                [Op.between]: [new Date(start_date), new Date(end_date)]
-              }
-            } : {})
-          }
-        }) || 0;
+      }) as any[];
+      for (const row of artistPaymentRows) {
+        const bId = artistIdToBrandId.get(row.artist_id);
+        if (bId) artistPaymentsByBrand.set(bId, (artistPaymentsByBrand.get(bId) || 0) + (parseFloat(row.total) || 0));
       }
+    }
 
-      // Calculate fundraiser earnings (donations minus platform fees)
-      let fundraiserEarnings = 0;
-      let fundraiserGrossEarnings = 0;
-      let fundraiserProcessingFees = 0;
-      let fundraiserPlatformFees = 0;
+    // BATCH 7: Fundraiser donations — fetch all fundraisers, then batch donations by fundraiser_id
+    const allFundraisers = await Fundraiser.findAll({
+      where: { brand_id: { [Op.in]: childBrandIds } },
+      attributes: ['id', 'brand_id'],
+      raw: true
+    }) as any[];
+    const fundraiserIdToBrandId = new Map<number, number>(allFundraisers.map((f: any) => [f.id, f.brand_id]));
+    const allFundraiserIds = allFundraisers.map((f: any) => f.id);
 
-      // Get all fundraiser IDs for this brand
-      const fundraiserIds = await Fundraiser.findAll({
-        where: { brand_id: childBrand.id },
-        attributes: ['id'],
+    const fundraiserGrossByBrand = new Map<number, number>();
+    const fundraiserProcessingFeesByBrand = new Map<number, number>();
+    const fundraiserPlatformFeesByBrand = new Map<number, number>();
+
+    if (allFundraiserIds.length > 0) {
+      const donationRows = await Donation.findAll({
+        attributes: [
+          'fundraiser_id',
+          [fn('SUM', col('amount')), 'total_amount'],
+          [fn('SUM', col('processing_fee')), 'total_processing_fee'],
+          [fn('SUM', col('platform_fee')), 'total_platform_fee']
+        ],
+        where: {
+          fundraiser_id: { [Op.in]: allFundraiserIds },
+          payment_status: 'paid',
+          ...(paidDateCond ? { date_paid: paidDateCond } : {})
+        },
+        group: ['fundraiser_id'],
         raw: true
-      });
-
-      const fundraiserIdList = fundraiserIds.map(f => (f as any).id);
-
-      if (fundraiserIdList.length > 0) {
-        // Calculate total donations (gross earnings)
-        const donationSalesQuery = await Donation.findAll({
-          attributes: [
-            [literal('SUM(amount)'), 'total_amount'],
-            [literal('SUM(processing_fee)'), 'total_processing_fee'],
-            [literal('SUM(platform_fee)'), 'total_platform_fee']
-          ],
-          where: {
-            fundraiser_id: { [Op.in]: fundraiserIdList },
-            payment_status: 'paid',
-            ...(startDateFilter && endDateFilter ? {
-              date_paid: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
-          },
-          raw: true
-        });
-
-        if (donationSalesQuery.length > 0 && donationSalesQuery[0]) {
-          const donationData = donationSalesQuery[0] as any;
-          fundraiserGrossEarnings = parseFloat(donationData.total_amount) || 0;
-          fundraiserProcessingFees = parseFloat(donationData.total_processing_fee) || 0;
-          fundraiserPlatformFees = parseFloat(donationData.total_platform_fee) || 0;
-        }
-
-        fundraiserEarnings = fundraiserGrossEarnings - fundraiserPlatformFees;
+      }) as any[];
+      for (const row of donationRows) {
+        const bId = fundraiserIdToBrandId.get(row.fundraiser_id);
+        if (!bId) continue;
+        fundraiserGrossByBrand.set(bId, (fundraiserGrossByBrand.get(bId) || 0) + (parseFloat(row.total_amount) || 0));
+        fundraiserProcessingFeesByBrand.set(bId, (fundraiserProcessingFeesByBrand.get(bId) || 0) + (parseFloat(row.total_processing_fee) || 0));
+        fundraiserPlatformFeesByBrand.set(bId, (fundraiserPlatformFeesByBrand.get(bId) || 0) + (parseFloat(row.total_platform_fee) || 0));
       }
+    }
 
-      // Deduct add-on payments made using label balance
-      const sublabelEventIds = await Event.findAll({
-        where: { brand_id: childBrand.id },
-        attributes: ['id'],
-        raw: true,
-      });
-      const sublabelEventIdList = sublabelEventIds.map((e: any) => e.id);
-      const totalAddOnBalancePayments = sublabelEventIdList.length > 0
-        ? await EventAddOnPayment.sum('amount', {
-            where: {
-              event_id: { [Op.in]: sublabelEventIdList },
-              method: 'balance',
-              status: 'succeeded',
-            },
-          }) || 0
-        : 0;
+    // BATCH 8: EventAddOnPayments — reuse allEventIds already fetched above
+    const addOnPaymentsByBrand = new Map<number, number>();
+    if (allEventIds.length > 0) {
+      const addOnRows = await EventAddOnPayment.findAll({
+        attributes: ['event_id', [fn('SUM', col('amount')), 'total']],
+        where: { event_id: { [Op.in]: allEventIds }, method: 'balance', status: 'succeeded' },
+        group: ['event_id'],
+        raw: true
+      }) as any[];
+      for (const row of addOnRows) {
+        const bId = eventIdToBrandId.get(row.event_id);
+        if (bId) addOnPaymentsByBrand.set(bId, (addOnPaymentsByBrand.get(bId) || 0) + (parseFloat(row.total) || 0));
+      }
+    }
+
+    // BATCH 9: Domains for all child brands
+    const allDomains = await Domain.findAll({
+      where: { brand_id: { [Op.in]: childBrandIds } },
+      attributes: ['domain_name', 'status', 'brand_id'],
+      order: [['status', 'DESC']]
+    }) as any[];
+    const domainsByBrand = new Map<number, any[]>();
+    for (const d of allDomains) {
+      const list = domainsByBrand.get(d.brand_id) || [];
+      list.push({ domain_name: d.domain_name, status: d.status, brand_id: d.brand_id });
+      domainsByBrand.set(d.brand_id, list);
+    }
+
+    // Assemble results
+    const childBrandData: ChildBrandData[] = childBrands.map(childBrand => {
+      const bId = childBrand.id;
+
+      const musicGrossEarnings = musicGrossByBrand.get(bId) || 0;
+      const musicPlatformFees = musicFeesByBrand.get(bId) || 0;
+      const parentMusicGrossEarnings = parentGrossByBrand.get(bId) || 0;
+      const parentPlatformFees = parentFeesByBrand.get(bId) || 0;
+      const totalRoyalties = royaltiesByBrand.get(bId) || 0;
+      const payableRoyalties = parentRoyaltiesByBrand.get(bId) || 0;
+      const musicEarnings = musicGrossEarnings - totalRoyalties - musicPlatformFees;
+      const payableMusicEarnings = parentMusicGrossEarnings - payableRoyalties - parentPlatformFees;
+
+      const eventSales = eventSalesByBrand.get(bId) || 0;
+      const eventPlatformFees = eventPlatformFeesByBrand.get(bId) || 0;
+      const eventProcessingFees = eventProcessingFeesByBrand.get(bId) || 0;
+      const eventEarnings = eventSales - eventPlatformFees;
+      const eventEstimatedTax = (eventSales - eventProcessingFees) * 0.005;
+
+      const fundraiserGrossEarnings = fundraiserGrossByBrand.get(bId) || 0;
+      const fundraiserProcessingFees = fundraiserProcessingFeesByBrand.get(bId) || 0;
+      const fundraiserPlatformFees = fundraiserPlatformFeesByBrand.get(bId) || 0;
+      const fundraiserEarnings = fundraiserGrossEarnings - fundraiserPlatformFees;
+
+      const payments = paymentsByBrand.get(bId) || 0;
+      const artistPayments = artistPaymentsByBrand.get(bId) || 0;
+      const addOnPayments = addOnPaymentsByBrand.get(bId) || 0;
 
       // Payable balance: only parent-recorded music earnings create an obligation;
       // direct (sublabel self-entered) earnings are excluded.
-      const balance = payableMusicEarnings + eventEarnings + fundraiserEarnings - payments - totalAddOnBalancePayments;
+      const balance = payableMusicEarnings + eventEarnings + fundraiserEarnings - payments - addOnPayments;
 
-      // Get domains for this child brand
-      const domains = await Domain.findAll({
-        where: { brand_id: childBrand.id },
-        attributes: ['domain_name', 'status'],
-        order: [['status', 'DESC']] // Verified domains first
-      });
+      const domainData = domainsByBrand.get(bId) || [];
 
-      const domainData = domains.map(d => ({
-        domain_name: d.domain_name,
-        status: d.status,
-        brand_id: childBrand.id
-      }));
-
-      childBrandData.push({
-        brand_id: childBrand.id,
+      return {
+        brand_id: bId,
         brand_name: childBrand.brand_name,
         logo_url: childBrand.logo_url || null,
         brand_color: childBrand.brand_color || null,
@@ -1333,8 +1357,8 @@ export const getChildBrands = async (req: Request, res: Response) => {
         balance: balance,
         status: calculateSublabelStatus(domainData),
         domains: domainData
-      });
-    }
+      };
+    });
 
     res.json(childBrandData);
 
