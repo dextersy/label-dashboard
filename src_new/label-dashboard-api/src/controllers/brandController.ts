@@ -111,7 +111,8 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       event_transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
       event_revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
       event_fee_revenue_type: brand.event_fee_revenue_type || 'net',
-      artist_custom_fields: brand.artist_custom_fields || []
+      artist_custom_fields: brand.artist_custom_fields || [],
+      about_us: brand.about_us || null
     });
 
   } catch (error) {
@@ -138,7 +139,8 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       event_transaction_fixed_fee,
       event_revenue_percentage_fee,
       event_fee_revenue_type,
-      artist_custom_fields
+      artist_custom_fields,
+      about_us
     } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
@@ -163,6 +165,12 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       }
     }
 
+    if (about_us !== undefined && about_us !== null) {
+      if (typeof about_us !== 'string' || about_us.length > 5000) {
+        return res.status(400).json({ error: 'About Us must be 5000 characters or fewer' });
+      }
+    }
+
     // Update brand settings
     await brand.update({
       brand_name: name,
@@ -179,7 +187,8 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       event_transaction_fixed_fee: event_transaction_fixed_fee !== undefined ? event_transaction_fixed_fee : brand.event_transaction_fixed_fee,
       event_revenue_percentage_fee: event_revenue_percentage_fee !== undefined ? event_revenue_percentage_fee : brand.event_revenue_percentage_fee,
       event_fee_revenue_type: event_fee_revenue_type || brand.event_fee_revenue_type,
-      artist_custom_fields: artist_custom_fields !== undefined ? artist_custom_fields : brand.artist_custom_fields
+      artist_custom_fields: artist_custom_fields !== undefined ? artist_custom_fields : brand.artist_custom_fields,
+      about_us: about_us !== undefined ? (about_us || null) : brand.about_us
     });
 
     res.json({
@@ -202,7 +211,8 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         event_transaction_fixed_fee: brand.event_transaction_fixed_fee,
         event_revenue_percentage_fee: brand.event_revenue_percentage_fee,
         event_fee_revenue_type: brand.event_fee_revenue_type,
-        artist_custom_fields: brand.artist_custom_fields
+        artist_custom_fields: brand.artist_custom_fields,
+        about_us: brand.about_us || null
       }
     });
 

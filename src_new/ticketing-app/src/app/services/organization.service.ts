@@ -9,6 +9,7 @@ export interface OrgSettings {
   logo_url?: string;
   brand_color?: string;
   brand_website?: string;
+  about_us?: string | null;
 }
 
 export interface EventFeeSettings {
@@ -29,7 +30,7 @@ export class OrganizationService {
     return this.http.get<OrgSettings>(`${environment.apiUrl}/brands/${brandId}`);
   }
 
-  updateSettings(brandId: number, data: { name: string; brand_color?: string; brand_website?: string | null }): Observable<{ brand: OrgSettings }> {
+  updateSettings(brandId: number, data: { name: string; brand_color?: string; brand_website?: string | null; about_us?: string | null }): Observable<{ brand: OrgSettings }> {
     return this.http.put<{ brand: OrgSettings }>(`${environment.apiUrl}/brands/${brandId}`, data);
   }
 

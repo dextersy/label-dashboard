@@ -23,6 +23,7 @@ export interface BrandSettings {
   event_revenue_percentage_fee?: number;
   event_fee_revenue_type?: 'net' | 'gross';
   artist_custom_fields?: ArtistCustomField[];
+  about_us?: string | null;
 }
 
 export interface ArtistCustomField {

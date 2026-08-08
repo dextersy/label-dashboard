@@ -46,6 +46,15 @@
             </div>
 
             <div>
+              <label for="about_us" class="tw-label">About Us</label>
+              <textarea class="tw-input" id="about_us" formControlName="about_us" rows="5"
+                placeholder="Tell audiences about your label or organization..."></textarea>
+              @if (brandForm.get('about_us')?.errors?.['maxlength'] && brandForm.get('about_us')?.touched) {
+                <div class="tw-error-message">Must be 5,000 characters or fewer.</div>
+              }
+            </div>
+
+            <div>
               <label for="brand_color" class="tw-label">Brand Color</label>
               <div class="tw-flex tw-items-center tw-gap-3">
                 <div class="tw-flex tw-items-center tw-justify-center tw-rounded tw-border-2 tw-border-gray-200 tw-shrink-0"

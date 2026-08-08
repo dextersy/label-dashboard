@@ -64,7 +64,8 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
       catalog_prefix: [''],
       release_submission_url: [''],
       paymongo_wallet_id: [''],
-      payment_processing_fee_for_payouts: [0, [Validators.min(0)]]
+      payment_processing_fee_for_payouts: [0, [Validators.min(0)]],
+      about_us: ['', [Validators.maxLength(5000)]]
     });
   }
 

@@ -52,6 +52,18 @@ import { OrganizationService } from '../../services/organization.service';
                 }
               </div>
 
+              <!-- About Us -->
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">About Us</label>
+                <p class="text-xs font-mono text-gray-400 mb-2">Displayed on your public organizer profile page.</p>
+                <textarea formControlName="about_us" rows="5"
+                  class="w-full px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400 resize-y"
+                  placeholder="Tell audiences about your organization..."></textarea>
+                @if (form.get('about_us')?.errors?.['maxlength'] && form.get('about_us')?.touched) {
+                  <p class="text-xs font-mono text-red-500 mt-1">Must be 5,000 characters or fewer.</p>
+                }
+              </div>
+
               <!-- Brand Color -->
               <div>
                 <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">Brand Color</label>
@@ -98,7 +110,7 @@ import { OrganizationService } from '../../services/organization.service';
             <!-- Current logo preview -->
             <div class="mb-4">
               @if (logoUrl()) {
-                <div class="inline-block border border-gray-200 p-3 bg-gray-50">
+                <div class="inline-flex items-center justify-center p-3 h-24 w-40" [style.background-color]="form.get('brand_color')?.value || '#000000'">
                   <img [src]="logoUrl()" alt="Organization logo" class="h-16 object-contain">
                 </div>
               } @else {
@@ -172,7 +184,8 @@ export class SettingsComponent implements OnInit {
     this.form = this.fb.group({
       name: ['', Validators.required],
       brand_website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
-      brand_color: ['#6366f1']
+      brand_color: ['#6366f1'],
+      about_us: ['', [Validators.maxLength(5000)]]
     });
 
     const user = this.auth.getCurrentUser();
@@ -187,7 +200,8 @@ export class SettingsComponent implements OnInit {
         this.form.patchValue({
           name: settings.name,
           brand_website: settings.brand_website || '',
-          brand_color: settings.brand_color || '#6366f1'
+          brand_color: settings.brand_color || '#6366f1',
+          about_us: settings.about_us || ''
         });
         this.logoUrl.set(settings.logo_url || null);
         this.loading.set(false);
@@ -202,12 +216,13 @@ export class SettingsComponent implements OnInit {
     this.saveSuccess.set(false);
     this.saveError.set(null);
 
-    const { name, brand_website, brand_color } = this.form.value;
+    const { name, brand_website, brand_color, about_us } = this.form.value;
 
     this.orgService.updateSettings(this.brandId, {
       name,
       brand_color: brand_color || undefined,
-      brand_website: brand_website || null
+      brand_website: brand_website || null,
+      about_us: about_us || null
     }).subscribe({
       next: () => {
         this.saving.set(false);
