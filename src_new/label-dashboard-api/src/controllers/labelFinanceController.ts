@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Op, literal } from 'sequelize';
+import { Op, literal, fn, col } from 'sequelize';
 import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation, EventAddOnPayment } from '../models';
 
 interface AuthRequest extends Request {
@@ -383,56 +383,73 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
     }
 
     if (type === 'music') {
-      // Get music earnings breakdown by release
-      const releaseIds = await Release.findAll({
+      // Get all releases for the brand
+      const releases = await Release.findAll({
         where: { brand_id: req.user.brand_id },
         attributes: ['id', 'title'],
         raw: true
       });
 
+      const releaseIds = releases.map((r: any) => r.id);
+      const releaseTitleMap = new Map<number, string>();
+      for (const r of releases as any[]) {
+        releaseTitleMap.set(r.id, r.title);
+      }
+
+      const earningDateFilter = startDateFilter && endDateFilter
+        ? { date_recorded: { [Op.between]: [startDateFilter, endDateFilter] as [Date, Date] } }
+        : {};
+      const royaltyDateFilter = startDateFilter && endDateFilter
+        ? { date_recorded: { [Op.between]: [startDateFilter, endDateFilter] as [Date, Date] } }
+        : {};
+
+      // Batch fetch all aggregates grouped by release_id (3 queries instead of 3*N)
+      const [earningAmountRows, royaltyRows, earningFeeRows] = await Promise.all([
+        Earning.findAll({
+          attributes: ['release_id', [fn('SUM', col('amount')), 'total']],
+          where: { release_id: { [Op.in]: releaseIds }, ...earningDateFilter },
+          group: ['release_id'],
+          raw: true
+        }),
+        Royalty.findAll({
+          attributes: ['release_id', [fn('SUM', col('amount')), 'total']],
+          where: { release_id: { [Op.in]: releaseIds }, ...royaltyDateFilter },
+          group: ['release_id'],
+          raw: true
+        }),
+        Earning.findAll({
+          attributes: ['release_id', [fn('SUM', col('platform_fee')), 'total']],
+          where: { release_id: { [Op.in]: releaseIds }, ...earningDateFilter },
+          group: ['release_id'],
+          raw: true
+        })
+      ]);
+
+      const earningsMap = new Map<number, number>();
+      for (const row of earningAmountRows as any[]) {
+        earningsMap.set(row.release_id, parseFloat(row.total) || 0);
+      }
+      const royaltiesMap = new Map<number, number>();
+      for (const row of royaltyRows as any[]) {
+        royaltiesMap.set(row.release_id, parseFloat(row.total) || 0);
+      }
+      const platformFeesMap = new Map<number, number>();
+      for (const row of earningFeeRows as any[]) {
+        platformFeesMap.set(row.release_id, parseFloat(row.total) || 0);
+      }
+
       const breakdown = [];
-
-      for (const release of releaseIds) {
-        const earnings = await Earning.sum('amount', {
-          where: {
-            release_id: release.id,
-            ...(startDateFilter && endDateFilter ? {
-              date_recorded: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
-          }
-        }) || 0;
-
-        const royalties = await Royalty.sum('amount', {
-          where: {
-            release_id: release.id,
-            ...(startDateFilter && endDateFilter ? {
-              date_recorded: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
-          }
-        }) || 0;
-
-        const platformFees = await Earning.sum('platform_fee', {
-          where: {
-            release_id: release.id,
-            ...(startDateFilter && endDateFilter ? {
-              date_recorded: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
-          }
-        }) || 0;
-
+      for (const id of releaseIds) {
+        const earnings = earningsMap.get(id) || 0;
+        const royalties = royaltiesMap.get(id) || 0;
+        const platformFees = platformFeesMap.get(id) || 0;
         const netEarnings = earnings - royalties - platformFees;
 
         if (earnings > 0 || royalties > 0 || platformFees > 0) {
           breakdown.push({
-            release_title: (release as any).title,
+            release_title: releaseTitleMap.get(id),
             gross_earnings: earnings,
-            royalties: royalties,
+            royalties,
             platform_fees: platformFees,
             net_earnings: netEarnings
           });
@@ -442,73 +459,75 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       res.json(applyPaginationSortSearch(breakdown, 'release_title', currentPage, perPage, sort_by, sort_order, search, 'music'));
 
     } else if (type === 'event') {
-      // Get event earnings breakdown by event
+      // Get all events for the brand
       const events = await Event.findAll({
         where: { brand_id: req.user.brand_id },
-        attributes: ['id', 'title']
+        attributes: ['id', 'title'],
+        raw: true
       });
 
-      const breakdown = [];
+      const eventIds = events.map((e: any) => (e as any).id);
+      const eventTitleMap = new Map<number, string>();
+      for (const e of events as any[]) {
+        eventTitleMap.set(e.id, e.title);
+      }
 
-      for (const event of events) {
-        // Sales: only count confirmed/sent tickets (exclude refunded)
-        const eventSalesQuery = await Ticket.findAll({
-          attributes: [
-            [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']
-          ],
+      const datePaidFilter = startDateFilter && endDateFilter
+        ? { date_paid: { [Op.between]: [startDateFilter, endDateFilter] } }
+        : {};
+
+      // Batch fetch sales and fees grouped by event_id (2 queries instead of 2*N)
+      const [salesRows, feesRows] = await Promise.all([
+        Ticket.findAll({
+          attributes: ['event_id', [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']],
           where: {
-            event_id: event.id,
+            event_id: { [Op.in]: eventIds },
             status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] },
             platform_fee: { [Op.not]: null },
-            ...(startDateFilter && endDateFilter ? {
-              date_paid: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
+            ...datePaidFilter
           },
+          group: ['event_id'],
           raw: true
-        });
-
-        // Fees: count confirmed/sent AND refunded tickets
-        const eventFeesQuery = await Ticket.findAll({
+        }),
+        Ticket.findAll({
           attributes: [
+            'event_id',
             [literal('SUM(platform_fee)'), 'total_platform_fee'],
             [literal('SUM(payment_processing_fee)'), 'total_processing_fee']
           ],
           where: {
-            event_id: event.id,
+            event_id: { [Op.in]: eventIds },
             status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.', 'Refunded'] },
             platform_fee: { [Op.not]: null },
-            ...(startDateFilter && endDateFilter ? {
-              date_paid: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
+            ...datePaidFilter
           },
+          group: ['event_id'],
           raw: true
-        });
+        })
+      ]);
 
-        let sales = 0;
-        let platformFees = 0;
-        let processingFees = 0;
+      const salesMap = new Map<number, number>();
+      for (const row of salesRows as any[]) {
+        salesMap.set(row.event_id, parseFloat(row.total_sales) || 0);
+      }
+      const platformFeesMap = new Map<number, number>();
+      const processingFeesMap = new Map<number, number>();
+      for (const row of feesRows as any[]) {
+        platformFeesMap.set(row.event_id, parseFloat(row.total_platform_fee) || 0);
+        processingFeesMap.set(row.event_id, parseFloat(row.total_processing_fee) || 0);
+      }
 
-        if (eventSalesQuery.length > 0 && eventSalesQuery[0]) {
-          const salesData = eventSalesQuery[0] as any;
-          sales = parseFloat(salesData.total_sales) || 0;
-        }
-
-        if (eventFeesQuery.length > 0 && eventFeesQuery[0]) {
-          const feesData = eventFeesQuery[0] as any;
-          platformFees = parseFloat(feesData.total_platform_fee) || 0;
-          processingFees = parseFloat(feesData.total_processing_fee) || 0;
-        }
-
+      const breakdown = [];
+      for (const id of eventIds) {
+        const sales = salesMap.get(id) || 0;
+        const platformFees = platformFeesMap.get(id) || 0;
+        const processingFees = processingFeesMap.get(id) || 0;
         const netEarnings = sales - platformFees;
 
         if (sales > 0 || platformFees > 0 || processingFees > 0) {
           breakdown.push({
-            event_name: event.title,
-            sales: sales,
+            event_name: eventTitleMap.get(id),
+            sales,
             platform_fees: platformFees,
             processing_fees: processingFees,
             net_earnings: netEarnings
@@ -519,49 +538,60 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       res.json(applyPaginationSortSearch(breakdown, 'event_name', currentPage, perPage, sort_by, sort_order, search, 'event'));
 
     } else if (type === 'fundraiser') {
-      // Get fundraiser earnings breakdown by fundraiser
+      // Get all fundraisers for the brand
       const fundraisers = await Fundraiser.findAll({
         where: { brand_id: req.user.brand_id },
-        attributes: ['id', 'title']
+        attributes: ['id', 'title'],
+        raw: true
       });
 
-      const breakdown = [];
+      const fundraiserIds = fundraisers.map((f: any) => (f as any).id);
+      const fundraiserTitleMap = new Map<number, string>();
+      for (const f of fundraisers as any[]) {
+        fundraiserTitleMap.set(f.id, f.title);
+      }
 
-      for (const fundraiser of fundraisers) {
-        const donationsQuery = await Donation.findAll({
-          attributes: [
-            [literal('SUM(amount)'), 'total_amount'],
-            [literal('SUM(processing_fee)'), 'total_processing_fee'],
-            [literal('SUM(platform_fee)'), 'total_platform_fee']
-          ],
-          where: {
-            fundraiser_id: fundraiser.id,
-            payment_status: 'paid',
-            ...(startDateFilter && endDateFilter ? {
-              date_paid: {
-                [Op.between]: [startDateFilter, endDateFilter]
-              }
-            } : {})
-          },
-          raw: true
+      const datePaidFilter = startDateFilter && endDateFilter
+        ? { date_paid: { [Op.between]: [startDateFilter, endDateFilter] } }
+        : {};
+
+      // Single batch query instead of 1 query per fundraiser
+      const donationRows = await Donation.findAll({
+        attributes: [
+          'fundraiser_id',
+          [literal('SUM(amount)'), 'total_amount'],
+          [literal('SUM(processing_fee)'), 'total_processing_fee'],
+          [literal('SUM(platform_fee)'), 'total_platform_fee']
+        ],
+        where: {
+          fundraiser_id: { [Op.in]: fundraiserIds },
+          payment_status: 'paid',
+          ...datePaidFilter
+        },
+        group: ['fundraiser_id'],
+        raw: true
+      });
+
+      const donationMap = new Map<number, { amount: number; processingFee: number; platformFee: number }>();
+      for (const row of donationRows as any[]) {
+        donationMap.set(row.fundraiser_id, {
+          amount: parseFloat(row.total_amount) || 0,
+          processingFee: parseFloat(row.total_processing_fee) || 0,
+          platformFee: parseFloat(row.total_platform_fee) || 0
         });
+      }
 
-        let grossEarnings = 0;
-        let platformFees = 0;
-        let processingFees = 0;
-
-        if (donationsQuery.length > 0 && donationsQuery[0]) {
-          const donationData = donationsQuery[0] as any;
-          grossEarnings = parseFloat(donationData.total_amount) || 0;
-          processingFees = parseFloat(donationData.total_processing_fee) || 0;
-          platformFees = parseFloat(donationData.total_platform_fee) || 0;
-        }
-
+      const breakdown = [];
+      for (const id of fundraiserIds) {
+        const d = donationMap.get(id);
+        const grossEarnings = d?.amount || 0;
+        const platformFees = d?.platformFee || 0;
+        const processingFees = d?.processingFee || 0;
         const netEarnings = grossEarnings - platformFees;
 
         if (grossEarnings > 0 || platformFees > 0 || processingFees > 0) {
           breakdown.push({
-            fundraiser_name: fundraiser.title,
+            fundraiser_name: fundraiserTitleMap.get(id),
             gross_earnings: grossEarnings,
             platform_fees: platformFees,
             processing_fees: processingFees,

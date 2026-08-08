@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Op, fn, col } from 'sequelize';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
 import { sequelize } from '../config/database';
 import { sendEarningsNotification, sendEarningAdminNotification } from '../utils/emailService';
@@ -1893,21 +1894,50 @@ export const getAdminPaymentsRoyaltiesArtists = async (req: AuthRequest, res: Re
 
     const artists = await Artist.findAll({ where: artistWhere });
 
+    const artistIds = artists.map((a: any) => a.id);
+
+    // Fetch all payment and royalty totals in two batch queries instead of N*2 queries
+    const [paymentRows, royaltyRows] = await Promise.all([
+      Payment.findAll({
+        attributes: ['artist_id', [fn('SUM', col('amount')), 'total']],
+        where: {
+          artist_id: { [Op.in]: artistIds },
+          status: 'succeeded',
+          date_paid: { [Op.between]: [start_date, end_date] }
+        } as any,
+        group: ['artist_id'],
+        raw: true
+      }),
+      Royalty.findAll({
+        attributes: ['artist_id', [fn('SUM', col('amount')), 'total']],
+        where: {
+          artist_id: { [Op.in]: artistIds },
+          date_recorded: { [Op.between]: [start_date, end_date] }
+        } as any,
+        group: ['artist_id'],
+        raw: true
+      })
+    ]);
+
+    const paymentMap = new Map<number, number>();
+    for (const row of paymentRows as any[]) {
+      paymentMap.set(row.artist_id, parseFloat(row.total) || 0);
+    }
+    const royaltyMap = new Map<number, number>();
+    for (const row of royaltyRows as any[]) {
+      royaltyMap.set(row.artist_id, parseFloat(row.total) || 0);
+    }
+
     const artistSummaries: any[] = [];
     let overallTotalPayments = 0;
     let overallTotalRoyalties = 0;
 
     for (const artist of artists) {
-      const totalPayments = await Payment.sum('amount', {
-        where: { artist_id: artist.id, status: 'succeeded', date_paid: { [require('sequelize').Op.between]: [start_date, end_date] } }
-      }) || 0;
-
-      const totalRoyalties = await Royalty.sum('amount', {
-        where: { artist_id: artist.id, date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] } }
-      }) || 0;
+      const totalPayments = paymentMap.get((artist as any).id) || 0;
+      const totalRoyalties = royaltyMap.get((artist as any).id) || 0;
 
       if (totalPayments > 0 || totalRoyalties > 0) {
-        artistSummaries.push({ artist_id: artist.id, artist_name: artist.name, total_payments: totalPayments, total_royalties: totalRoyalties });
+        artistSummaries.push({ artist_id: (artist as any).id, artist_name: (artist as any).name, total_payments: totalPayments, total_royalties: totalRoyalties });
         overallTotalPayments += totalPayments;
         overallTotalRoyalties += totalRoyalties;
       }
