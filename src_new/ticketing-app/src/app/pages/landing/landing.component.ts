@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -109,12 +109,22 @@ interface PublicBrand {
     </header>
 
     <!-- Hero -->
-    <section class="relative min-h-screen flex items-center bg-black overflow-hidden">
+    <section class="relative min-h-screen flex items-center bg-black overflow-hidden"
+      [class.cursor-pointer]="heroEvents().length > 0"
+      (click)="openHeroEvent()">
+      <!-- Poster carousel background -->
+      @for (poster of heroPosterUrls(); track poster; let i = $index) {
+        <div class="absolute inset-0 bg-center bg-cover transition-opacity duration-1000"
+          [style.background-image]="'url(' + poster + ')'"
+          [style.opacity]="i === heroIndex() ? 1 : 0"></div>
+      }
+      <!-- Dark overlay -->
+      <div class="absolute inset-0 bg-black/70"></div>
       <!-- Subtle diagonal stripe texture -->
       <div class="absolute inset-0 pointer-events-none opacity-[0.03]"
         style="background-image: repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%); background-size: 12px 12px;"></div>
 
-      <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-20">
+      <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-20" (click)="$event.stopPropagation()">
         <div class="max-w-2xl">
           <!-- Eyebrow -->
           <p class="text-xs font-mono text-yellow-400 uppercase tracking-[0.25em] mb-5">— local gigs, real people —</p>
@@ -145,7 +155,7 @@ interface PublicBrand {
       </div>
 
       <!-- Scroll hint -->
-      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/25 font-mono">
+      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/25 font-mono" (click)="$event.stopPropagation()">
         <span class="text-xs uppercase tracking-widest">↓ shows</span>
       </div>
     </section>
@@ -321,13 +331,22 @@ interface PublicBrand {
     }
   `
 })
-export class LandingComponent implements OnInit {
+export class LandingComponent implements OnInit, OnDestroy {
   loading = signal(true);
   allEvents = signal<PublicEvent[]>([]);
   userMenuOpen = signal(false);
   audienceMenuOpen = signal(false);
   shareModal = signal<{ url: string; title: string } | null>(null);
   likedEventIds = signal<Set<number>>(new Set());
+
+  heroIndex = signal(0);
+  heroEvents = computed(() =>
+    this.allEvents()
+      .filter(e => !!e.poster_url)
+      .slice(0, 10)
+  );
+  heroPosterUrls = computed(() => this.heroEvents().map(e => e.poster_url!));
+  private heroTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(private http: HttpClient, private auth: AuthService, private audienceAuth: AudienceAuthService, private router: Router) {}
 
@@ -379,6 +398,7 @@ export class LandingComponent implements OnInit {
         events.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
         this.allEvents.set(events);
         this.loading.set(false);
+        this.startHeroCarousel();
         if (window.location.hash === '#shows') {
           setTimeout(() => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' }), 50);
         }
@@ -410,6 +430,22 @@ export class LandingComponent implements OnInit {
         );
       }
     });
+  }
+
+  openHeroEvent(): void {
+    const ev = this.heroEvents()[this.heroIndex()];
+    if (ev) this.router.navigate(['/events', ev.id]);
+  }
+
+  private startHeroCarousel(): void {
+    if (this.heroPosterUrls().length < 2) return;
+    this.heroTimer = setInterval(() => {
+      this.heroIndex.update(i => (i + 1) % this.heroPosterUrls().length);
+    }, 4000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.heroTimer) clearInterval(this.heroTimer);
   }
 
   scrollToShows(): void {
