@@ -21,7 +21,7 @@ import { CommonModule } from '@angular/common';
       <div class="max-w-3xl mx-auto px-6 py-12">
         <p class="text-xs font-mono text-yellow-400 uppercase tracking-[0.25em] mb-3">— legal —</p>
         <h1 class="text-3xl font-black uppercase tracking-tight mb-2">Terms and Conditions</h1>
-        <p class="text-xs font-mono text-white/30 mb-10">Last updated: April 2026</p>
+        <p class="text-xs font-mono text-white/30 mb-10">Last updated: August 2026</p>
 
         <div class="space-y-10 text-sm font-mono text-white/60 leading-relaxed">
 
@@ -56,6 +56,18 @@ import { CommonModule } from '@angular/common';
             <p>You acknowledge that the Platform facilitates ticket sales on your behalf. You are responsible for delivering the event as advertised to ticket holders.</p>
             <p class="mt-3">If an event is cancelled or significantly changed (including date, venue, or lineup changes), you are responsible for communicating these changes to ticket holders promptly and processing any refunds owed in accordance with your stated refund policy and applicable consumer protection laws.</p>
             <p class="mt-3">The Platform's payment processing features are provided as a convenience. You are responsible for ensuring compliance with all applicable tax obligations arising from ticket sales.</p>
+
+            <h3 class="text-white/80 font-bold uppercase tracking-wide text-sm mt-6 mb-2">4a. Third-Party Payment Processors</h3>
+            <p>All payment transactions are processed by third-party payment service providers (each a "Payment Processor"). By using the Platform's payment features, you agree to be bound by the applicable Payment Processor's terms of service, acceptable use policy, and privacy policy. The Platform is not responsible for any actions, errors, failures, or decisions made by a Payment Processor.</p>
+            <p class="mt-3">You acknowledge that the Payment Processor may hold, delay, suspend, or reverse payouts at its sole discretion in accordance with its own policies, including for suspected fraud, chargebacks, or policy violations. The Platform has no ability to override Payment Processor decisions regarding funds held or withheld.</p>
+
+            <h3 class="text-white/80 font-bold uppercase tracking-wide text-sm mt-6 mb-2">4b. Platform and Processing Fees</h3>
+            <p>The Platform charges a service fee per ticket sold, and the Payment Processor charges a payment processing fee per transaction. These Fees are disclosed to buyers at checkout. You acknowledge and agree that:</p>
+            <ul class="mt-2 space-y-1.5 list-disc list-inside">
+              <li><strong class="text-white/80">Platform service fees and payment processing fees are non-refundable</strong> in all circumstances, including where you cancel or postpone an event or issue refunds to ticket buyers. These Fees are earned at the time of the transaction.</li>
+              <li>When you issue a refund to a ticket buyer, the refunded amount is limited to the face value of the ticket. You are solely responsible for funding any refunds from your payout balance or connected payment account.</li>
+              <li>Chargebacks initiated by ticket buyers may result in the full transaction amount (including Fees) being reversed, plus any chargeback fees imposed by the Payment Processor. You are liable for all chargeback costs arising from your events.</li>
+            </ul>
           </section>
 
           <section>
