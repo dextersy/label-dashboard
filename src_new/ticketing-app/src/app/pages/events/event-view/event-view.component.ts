@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Title, Meta } from '@angular/platform-browser';
 import { environment } from '../../../../environments/environment';
 import { ShareModalComponent } from '../../../components/share-modal/share-modal.component';
+import { AudienceAuthService } from '../../../services/audience-auth.service';
 
 interface PublicEventView {
   id: number;
@@ -43,6 +44,8 @@ interface PublicEventView {
   ticketing_enabled?: boolean;
   listed_on_ticketing?: boolean;
   external_ticket_link?: string | null;
+  like_count?: number;
+  user_liked?: boolean;
 }
 
 @Component({
@@ -102,12 +105,33 @@ interface PublicEventView {
                 }
                 <div class="flex items-start justify-between gap-4 mb-5">
                   <h1 class="text-3xl sm:text-4xl font-black text-white uppercase leading-tight">{{ event()!.title }}</h1>
-                  <button (click)="shareModalOpen.set(true)" title="Share"
-                    class="flex-shrink-0 mt-1 text-white/30 hover:text-white/70 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                    </svg>
-                  </button>
+                  <div class="flex items-center gap-3 flex-shrink-0 mt-1">
+                    @if (isAudienceLoggedIn()) {
+                      <button (click)="toggleLike()" title="Like"
+                        class="flex items-center gap-1.5 transition-colors"
+                        [class]="liked() ? 'text-red-400 hover:text-red-300' : 'text-white/30 hover:text-white/70'">
+                        <svg class="w-5 h-5" [attr.fill]="liked() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        @if (likeCount() > 0) {
+                          <span class="text-xs font-mono">{{ likeCount() }}</span>
+                        }
+                      </button>
+                    } @else if (likeCount() > 0) {
+                      <span class="flex items-center gap-1.5 text-white/20">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <span class="text-xs font-mono">{{ likeCount() }}</span>
+                      </span>
+                    }
+                    <button (click)="shareModalOpen.set(true)" title="Share"
+                      class="text-white/30 hover:text-white/70 transition-colors">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Date & time -->
@@ -342,13 +366,18 @@ export class EventViewComponent implements OnInit, OnDestroy {
   error = signal(false);
   event = signal<PublicEventView | null>(null);
   shareModalOpen = signal(false);
+  liked = signal(false);
+  likeCount = signal(0);
   currentUrl = () => window.location.href;
+
+  isAudienceLoggedIn = () => this.audienceAuth.isLoggedIn();
 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
     private titleService: Title,
-    private metaService: Meta
+    private metaService: Meta,
+    private audienceAuth: AudienceAuthService
   ) {}
 
   ngOnInit(): void {
@@ -360,7 +389,9 @@ export class EventViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.http.get<{ event: PublicEventView }>(`${environment.apiUrl}/public/events/${id}`).subscribe({
+    const audienceToken = this.audienceAuth.getToken();
+    const headers: Record<string, string> = audienceToken ? { Authorization: `Bearer ${audienceToken}` } : {};
+    this.http.get<{ event: PublicEventView }>(`${environment.apiUrl}/public/events/${id}`, { headers }).subscribe({
       next: (res) => {
         if (res.event.listed_on_ticketing === false) {
           this.error.set(true);
@@ -368,6 +399,8 @@ export class EventViewComponent implements OnInit, OnDestroy {
           return;
         }
         this.event.set(res.event);
+        this.liked.set(res.event.user_liked ?? false);
+        this.likeCount.set(res.event.like_count ?? 0);
         this.loading.set(false);
         this.updateSEOTags(res.event);
       },
@@ -391,6 +424,17 @@ export class EventViewComponent implements OnInit, OnDestroy {
     this.metaService.removeTag('name="twitter:title"');
     this.metaService.removeTag('name="twitter:description"');
     this.metaService.removeTag('name="twitter:image"');
+  }
+
+  toggleLike(): void {
+    const ev = this.event();
+    if (!ev) return;
+    this.audienceAuth.toggleEventLike(ev.id).subscribe({
+      next: (res) => {
+        this.liked.set(res.liked);
+        this.likeCount.set(res.like_count);
+      }
+    });
   }
 
   private updateSEOTags(event: PublicEventView): void {

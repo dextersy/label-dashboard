@@ -23,6 +23,7 @@ interface PublicEvent {
   tags?: { id: number; name: string }[];
   ticketing_enabled?: boolean;
   external_ticket_link?: string | null;
+  like_count?: number;
 }
 
 interface PublicBrand {
@@ -260,6 +261,23 @@ interface PublicBrand {
                       </svg>
                       Share
                     </button>
+                    @if (isAudienceLoggedIn()) {
+                      <button (click)="likeEvent($event, event)" title="Like"
+                        class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider transition-colors"
+                        [class]="likedEventIds().has(event.id) ? 'text-red-400 hover:text-red-300' : 'text-white/30 hover:text-white/70'">
+                        <svg class="w-4 h-4" [attr.fill]="likedEventIds().has(event.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        {{ (event.like_count || 0) > 0 ? (event.like_count) : 'Like' }}
+                      </button>
+                    } @else if ((event.like_count || 0) > 0) {
+                      <span class="inline-flex items-center gap-1.5 text-xs font-mono text-white/20 uppercase tracking-wider">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        {{ event.like_count }}
+                      </span>
+                    }
                   </div>
                 </div>
               </div>
@@ -309,6 +327,7 @@ export class LandingComponent implements OnInit {
   userMenuOpen = signal(false);
   audienceMenuOpen = signal(false);
   shareModal = signal<{ url: string; title: string } | null>(null);
+  likedEventIds = signal<Set<number>>(new Set());
 
   constructor(private http: HttpClient, private auth: AuthService, private audienceAuth: AudienceAuthService, private router: Router) {}
 
@@ -365,6 +384,31 @@ export class LandingComponent implements OnInit {
         }
       },
       error: () => this.loading.set(false)
+    });
+
+    if (this.audienceAuth.isLoggedIn()) {
+      this.audienceAuth.getLikedEvents().subscribe({
+        next: (res) => this.likedEventIds.set(new Set(res.liked_event_ids))
+      });
+    }
+  }
+
+  likeEvent(event: MouseEvent, ev: PublicEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.audienceAuth.toggleEventLike(ev.id).subscribe({
+      next: (res) => {
+        const ids = new Set(this.likedEventIds());
+        if (res.liked) {
+          ids.add(ev.id);
+        } else {
+          ids.delete(ev.id);
+        }
+        this.likedEventIds.set(ids);
+        this.allEvents.update(events =>
+          events.map(e => e.id === ev.id ? { ...e, like_count: res.like_count } : e)
+        );
+      }
     });
   }
 

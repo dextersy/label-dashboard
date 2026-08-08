@@ -77,6 +77,18 @@ export class AudienceAuthService {
     return token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : new HttpHeaders();
   }
 
+  toggleEventLike(eventId: number): Observable<{ liked: boolean; like_count: number }> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<{ liked: boolean; like_count: number }>(
+      `${this.apiUrl}/public/audience/events/${eventId}/like`, {}, { headers }
+    );
+  }
+
+  getLikedEvents(): Observable<{ liked_event_ids: number[] }> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<{ liked_event_ids: number[] }>(`${this.apiUrl}/public/audience/me/liked-events`, { headers });
+  }
+
   getTickets(): Observable<{ tickets: any[] }> {
     const headers = this.getAuthHeaders();
     return this.http.get<{ tickets: any[] }>(`${this.apiUrl}/public/audience/me/tickets`, { headers });

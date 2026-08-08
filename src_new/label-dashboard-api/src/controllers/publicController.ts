@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike } from '../models';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
@@ -19,6 +19,21 @@ import archiver from 'archiver';
 import path from 'path';
 
 const paymentService = new PaymentService();
+
+// Optionally extract audience user ID from Authorization header (no error if missing/invalid)
+const getOptionalAudienceUserId = (req: Request): number | null => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') return null;
+    if (!process.env.JWT_SECRET) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as any;
+    if (decoded.type !== 'audience' || !decoded.audienceUserId) return null;
+    return decoded.audienceUserId as number;
+  } catch {
+    return null;
+  }
+};
 
 // Helper function to determine if countdown should be shown for an event
 const shouldShowCountdown = (event: any): boolean => {
@@ -172,6 +187,15 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       remainingTickets = event.max_tickets - totalSold;
     }
 
+    // Get like count and optional user_liked status
+    const likeCount = await EventLike.count({ where: { event_id: eventId } });
+    const audienceUserId = getOptionalAudienceUserId(req);
+    let userLiked = false;
+    if (audienceUserId) {
+      const existing = await EventLike.findOne({ where: { event_id: eventId, audience_user_id: audienceUserId } });
+      userLiked = !!existing;
+    }
+
     // Get display price from ticket types
     const priceDisplay = getEventDisplayPriceSync(event);
 
@@ -239,7 +263,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
           color: event.brand.brand_color,
           logo_url: event.brand.logo_url
         } : null,
-        ticketTypes: processedTicketTypes
+        ticketTypes: processedTicketTypes,
+        like_count: likeCount,
+        user_liked: userLiked
       }
     });
   } catch (error) {
@@ -1512,6 +1538,57 @@ ${JSON.stringify(structuredData, null, 4)}
   }
 };
 
+// ─── Audience user like endpoints ─────────────────────────────────────────────
+
+export const toggleEventLike = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser as AudienceUser;
+    const eventId = parseInt(req.params['eventId'] as string, 10);
+
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const event = await Event.findOne({ where: { id: eventId, status: 'published' } });
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const existing = await EventLike.findOne({
+      where: { audience_user_id: audienceUser.id, event_id: eventId }
+    });
+
+    if (existing) {
+      await existing.destroy();
+    } else {
+      await EventLike.create({ audience_user_id: audienceUser.id, event_id: eventId });
+    }
+
+    const likeCount = await EventLike.count({ where: { event_id: eventId } });
+    return res.json({ liked: !existing, like_count: likeCount });
+  } catch (error) {
+    console.error('Toggle event like error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLikedEvents = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser as AudienceUser;
+
+    const likes = await EventLike.findAll({
+      where: { audience_user_id: audienceUser.id },
+      attributes: ['event_id'],
+      raw: true
+    });
+
+    return res.json({ liked_event_ids: likes.map((l: any) => l.event_id) });
+  } catch (error) {
+    console.error('Get liked events error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // ─── Audience user ticket endpoints ───────────────────────────────────────────
 
 export const getAudienceTickets = async (req: Request, res: Response) => {
@@ -1703,6 +1780,23 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
       }
     }
 
+    // Get like counts for all events in one query
+    const likeCounts: Record<number, number> = {};
+    if (eventIds.length > 0) {
+      const likeCountRows = await EventLike.findAll({
+        attributes: [
+          'event_id',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'total']
+        ],
+        where: { event_id: { [Op.in]: eventIds } },
+        group: ['event_id'],
+        raw: true
+      }) as any[];
+      for (const row of likeCountRows) {
+        likeCounts[row.event_id] = parseInt(row.total, 10) || 0;
+      }
+    }
+
     // Group events by brand
     const brandEvents = allBrands.map(brand => {
       const brandEventsFiltered = events
@@ -1724,7 +1818,8 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
             event_type: event.event_type || null,
             tags: (event as any).tags || [],
             ticketing_enabled: event.ticketing_enabled !== false,
-            external_ticket_link: event.external_ticket_link || null
+            external_ticket_link: event.external_ticket_link || null,
+            like_count: likeCounts[event.id] || 0
           };
         });
 

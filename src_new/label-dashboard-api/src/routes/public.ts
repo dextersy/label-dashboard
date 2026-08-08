@@ -25,6 +25,8 @@ import {
   getAudienceTickets,
   claimAudienceTickets,
   downloadAudienceTicketPDF,
+  toggleEventLike,
+  getLikedEvents,
   getArtistDirectory,
   registerArtist,
   getArtistRegistrationInfo
@@ -80,7 +82,9 @@ router.post('/artists/register', publicRateLimit, upload.single('profile_photo')
 
 // Audience user routes (requires audience JWT)
 router.get('/audience/me/tickets', authenticateAudienceToken, getAudienceTickets);
+router.get('/audience/me/liked-events', authenticateAudienceToken, getLikedEvents);
 router.post('/audience/claim', authenticateAudienceToken, claimAudienceTickets);
 router.get('/audience/tickets/:ticketCode/pdf', authenticateAudienceToken, downloadAudienceTicketPDF);
+router.post('/audience/events/:eventId/like', authenticateAudienceToken, toggleEventLike);
 
 export default router;
