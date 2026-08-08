@@ -47,7 +47,7 @@
             Ready to Pay
             <app-icon name="info" iconOnly class="tw-ml-0.5" title="Due for payment and has bank account" />
           </div>
-          <div class="tw-text-lg sm:tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+          <div class="tw-text-2xl sm:tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(balanceSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
             {{ formatCurrency(balanceSummary?.ready_for_payment || 0) }}
           </div>
         </div>
@@ -220,7 +220,7 @@
       <!-- Sublabel overview cards above the table -->
       <div class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-6">
 
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-px-4 tw-py-4 tw-flex tw-flex-col tw-items-center tw-justify-center tw-text-center sm:tw-self-center">
+        <div class="tw-col-span-2 sm:tw-col-span-1 tw-bg-white tw-rounded-card tw-shadow-card tw-px-4 tw-py-4 tw-flex tw-flex-col tw-items-center tw-justify-center tw-text-center sm:tw-self-center">
           <div class="tw-text-xs tw-text-gray-500 tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-mb-1">
             <app-icon name="coins" iconOnly class="tw-text-gray-400" />
             Total Remaining Balance
@@ -230,13 +230,13 @@
           </div>
         </div>
 
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-px-4 tw-py-4 tw-flex tw-flex-col tw-items-center tw-text-center">
+        <div class="tw-col-span-2 sm:tw-col-span-1 tw-bg-white tw-rounded-card tw-shadow-card tw-px-4 tw-py-4 tw-flex tw-flex-col tw-items-center tw-text-center">
           <div class="tw-flex-1 tw-flex tw-flex-col tw-items-center tw-justify-center">
             <div class="tw-text-xs tw-text-gray-500 tw-flex tw-items-center tw-justify-center tw-gap-1.5 tw-mb-1">
               <app-icon name="wallet" iconOnly class="tw-text-gray-400" />
               Ready to Pay
             </div>
-            <div class="tw-text-lg sm:tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(sublabelSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
+            <div class="tw-text-2xl sm:tw-text-xl tw-font-semibold tw-leading-tight" [style.color]="(sublabelSummary?.ready_for_payment || 0) < 0 ? '#FF4A55' : '#333'">
               {{ formatCurrency(sublabelSummary?.ready_for_payment || 0) }}
             </div>
           </div>
