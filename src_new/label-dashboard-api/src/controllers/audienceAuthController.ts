@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import axios from 'axios';
 import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { Op } from 'sequelize';
 import { AudienceUser, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
@@ -90,16 +92,16 @@ async function sendVerificationEmail(user: AudienceUser): Promise<void> {
   const email_verification_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.update({ email_verification_token, email_verification_expires_at });
   const verifyUrl = `${getAudienceFrontendUrl()}/verify-email?token=${email_verification_token}`;
-  await sendAudienceEmail(
-    user.email_address,
-    'Verify your email address',
-    `
-      <p>Hi ${user.first_name || 'there'},</p>
-      <p>Click the link below to verify your email address. This link expires in 24 hours.</p>
-      <p><a href="${verifyUrl}">${verifyUrl}</a></p>
-      <p>If you didn't request this, you can safely ignore this email.</p>
-    `
-  );
+  const platformName = process.env.PLATFORM_NAME || 'Your Scene';
+
+  const templatePath = path.join(__dirname, '../assets/templates/audience_verify_email.html');
+  let html = fs.readFileSync(templatePath, 'utf-8');
+  html = html
+    .replace(/%PLATFORM_NAME%/g, platformName)
+    .replace(/%FIRST_NAME%/g, user.first_name || 'there')
+    .replace(/%URL%/g, verifyUrl);
+
+  await sendAudienceEmail(user.email_address, 'Verify your email address', html);
 }
 
 // ─── Controllers ──────────────────────────────────────────────────────────────
