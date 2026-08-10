@@ -79,7 +79,13 @@ export class VerifyEmailComponent implements OnInit {
     this.audienceAuth.verifyEmail(token).subscribe({
       next: () => {
         this.audienceAuth.markEmailVerified();
-        this.state.set('success');
+        const pendingReturnUrl = localStorage.getItem('ys_pending_return_url');
+        if (pendingReturnUrl) {
+          localStorage.removeItem('ys_pending_return_url');
+          this.router.navigateByUrl(decodeURIComponent(pendingReturnUrl));
+        } else {
+          this.state.set('success');
+        }
       },
       error: (err: any) => {
         this.errorMessage.set(err.error?.error || 'This verification link is invalid or has expired.');

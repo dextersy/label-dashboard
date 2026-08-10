@@ -1,11 +1,12 @@
 import { Component, OnInit, OnDestroy, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { AudienceAuthService } from '../../services/audience-auth.service';
 import { ShareModalComponent } from '../../components/share-modal/share-modal.component';
+import { AudienceAuthModalComponent } from '../../components/audience-auth-modal/audience-auth-modal.component';
 
 interface PublicEvent {
   id: number;
@@ -37,7 +38,7 @@ interface PublicBrand {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, ShareModalComponent],
+  imports: [CommonModule, RouterLink, ShareModalComponent, AudienceAuthModalComponent],
   template: `
     <!-- Nav -->
     <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
@@ -100,7 +101,7 @@ interface PublicBrand {
             </div>
           } @else if (!isAudienceLoggedIn()) {
             <a routerLink="/app/login" class="text-xs text-white/50 hover:text-white uppercase tracking-wider transition-colors">Sign in</a>
-            <a routerLink="/app/signup" class="text-xs font-bold bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-1.5 uppercase tracking-wider transition-colors">
+            <a routerLink="/app/login" [queryParams]="{ mode: 'organizer' }" class="text-xs font-bold bg-yellow-400 hover:bg-yellow-300 text-black px-4 py-1.5 uppercase tracking-wider transition-colors">
               List a Show
             </a>
           }
@@ -146,7 +147,7 @@ interface PublicBrand {
               class="inline-flex items-center justify-center gap-2 px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-bold uppercase tracking-wider text-sm transition-colors">
               See Shows
             </button>
-            <a routerLink="/app/signup"
+            <a routerLink="/app/login" [queryParams]="{ mode: 'organizer' }"
               class="inline-flex items-center justify-center gap-2 px-7 py-3 border-2 border-white/30 hover:border-white text-white font-bold uppercase tracking-wider text-sm transition-colors">
               List Your Show
             </a>
@@ -175,7 +176,7 @@ interface PublicBrand {
         } @else if (allEvents().length === 0) {
           <div class="py-24 border-2 border-dashed border-white/10 text-center">
             <p class="text-white/30 text-sm font-mono mb-4">nothing on yet. check back soon.</p>
-            <a routerLink="/app/signup" class="text-xs font-bold text-yellow-400 hover:text-yellow-300 uppercase tracking-wider transition-colors">
+            <a routerLink="/app/login" [queryParams]="{ mode: 'organizer' }" class="text-xs font-bold text-yellow-400 hover:text-yellow-300 uppercase tracking-wider transition-colors">
               organizer? list your show →
             </a>
           </div>
@@ -271,23 +272,14 @@ interface PublicBrand {
                       </svg>
                       Share
                     </button>
-                    @if (isAudienceLoggedIn()) {
-                      <button (click)="likeEvent($event, event)" title="Like"
-                        class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider transition-colors"
-                        [class]="likedEventIds().has(event.id) ? 'text-red-400 hover:text-red-300' : 'text-white/30 hover:text-white/70'">
-                        <svg class="w-4 h-4" [attr.fill]="likedEventIds().has(event.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        {{ (event.like_count || 0) > 0 ? (event.like_count) : 'Like' }}
-                      </button>
-                    } @else if ((event.like_count || 0) > 0) {
-                      <span class="inline-flex items-center gap-1.5 text-xs font-mono text-white/20 uppercase tracking-wider">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                        {{ event.like_count }}
-                      </span>
-                    }
+                    <button (click)="onLikeClick($event, event)" title="Like"
+                      class="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider transition-colors"
+                      [class]="likedEventIds().has(event.id) ? 'text-red-400 hover:text-red-300' : 'text-white/30 hover:text-white/70'">
+                      <svg class="w-4 h-4" [attr.fill]="likedEventIds().has(event.id) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                      </svg>
+                      {{ (event.like_count || 0) > 0 ? (event.like_count) : 'Like' }}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -302,7 +294,7 @@ interface PublicBrand {
           <p class="text-white/40 text-sm font-mono mb-6 max-w-sm mx-auto">
             run your own ticketing. set your own prices. keep your audience yours.
           </p>
-          <a routerLink="/app/signup"
+          <a routerLink="/app/login" [queryParams]="{ mode: 'organizer' }"
             class="inline-flex items-center gap-2 px-8 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-sm transition-colors">
             Start for free →
           </a>
@@ -316,7 +308,7 @@ interface PublicBrand {
         <img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-4 opacity-30">
         <div class="flex items-center gap-6 text-xs font-mono text-white/25">
           <a routerLink="/app/login" class="hover:text-white/60 uppercase tracking-wider transition-colors">organizer login</a>
-          <a routerLink="/app/signup" class="hover:text-white/60 uppercase tracking-wider transition-colors">list a show</a>
+          <a routerLink="/app/login" [queryParams]="{ mode: 'organizer' }" class="hover:text-white/60 uppercase tracking-wider transition-colors">list a show</a>
         </div>
       </div>
     </footer>
@@ -329,6 +321,15 @@ interface PublicBrand {
         (close)="shareModal.set(null)">
       </app-share-modal>
     }
+
+    <!-- Audience auth modal -->
+    @if (showAuthModal()) {
+      <app-audience-auth-modal
+        [signupReturnUrl]="signupReturnUrl()"
+        (closed)="showAuthModal.set(false)"
+        (authenticated)="onModalAuthenticated()">
+      </app-audience-auth-modal>
+    }
   `
 })
 export class LandingComponent implements OnInit, OnDestroy {
@@ -338,6 +339,8 @@ export class LandingComponent implements OnInit, OnDestroy {
   audienceMenuOpen = signal(false);
   shareModal = signal<{ url: string; title: string } | null>(null);
   likedEventIds = signal<Set<number>>(new Set());
+  showAuthModal = signal(false);
+  pendingLikeEventId = signal<number | null>(null);
 
   heroIndex = signal(0);
   heroEvents = computed(() =>
@@ -348,7 +351,18 @@ export class LandingComponent implements OnInit, OnDestroy {
   heroPosterUrls = computed(() => this.heroEvents().map(e => e.poster_url!));
   private heroTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private http: HttpClient, private auth: AuthService, private audienceAuth: AudienceAuthService, private router: Router) {}
+  signupReturnUrl = computed(() => {
+    const id = this.pendingLikeEventId();
+    return id !== null ? `/?pendingLike=${id}` : '/';
+  });
+
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+    private audienceAuth: AudienceAuthService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   isLoggedIn = () => this.auth.isLoggedIn();
   isAudienceLoggedIn = () => this.audienceAuth.isLoggedIn();
@@ -363,6 +377,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   audienceLogout(): void {
     this.audienceAuth.logout();
     this.audienceMenuOpen.set(false);
+    this.router.navigate(['/login'], { queryParams: { mode: 'audience', loggedOut: 'true' } });
   }
   userInitial = () => {
     const u = this.auth.getCurrentUser();
@@ -377,7 +392,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   logout(): void {
     this.auth.logout();
     this.userMenuOpen.set(false);
-    this.router.navigate(['/']);
+    this.router.navigate(['/app/login'], { queryParams: { mode: 'organizer', loggedOut: 'true' } });
   }
 
   @HostListener('document:click', ['$event'])
@@ -402,6 +417,18 @@ export class LandingComponent implements OnInit, OnDestroy {
         if (window.location.hash === '#shows') {
           setTimeout(() => document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' }), 50);
         }
+
+        // Handle pendingLike query param
+        const pendingLike = this.route.snapshot.queryParamMap.get('pendingLike');
+        if (pendingLike && this.audienceAuth.isLoggedIn()) {
+          const eventId = parseInt(pendingLike, 10);
+          const ev = events.find(e => e.id === eventId);
+          if (ev) {
+            this.likeEvent(new MouseEvent('click'), ev);
+          }
+          // Clear the query param from URL
+          this.router.navigate([], { queryParams: {}, replaceUrl: true });
+        }
       },
       error: () => this.loading.set(false)
     });
@@ -410,6 +437,27 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.audienceAuth.getLikedEvents().subscribe({
         next: (res) => this.likedEventIds.set(new Set(res.liked_event_ids))
       });
+    }
+  }
+
+  onLikeClick(event: MouseEvent, ev: PublicEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.audienceAuth.isLoggedIn()) {
+      this.likeEvent(event, ev);
+    } else {
+      this.pendingLikeEventId.set(ev.id);
+      this.showAuthModal.set(true);
+    }
+  }
+
+  onModalAuthenticated(): void {
+    this.showAuthModal.set(false);
+    const id = this.pendingLikeEventId();
+    if (id !== null) {
+      const ev = this.allEvents().find(e => e.id === id);
+      if (ev) this.likeEvent(new MouseEvent('click'), ev);
+      this.pendingLikeEventId.set(null);
     }
   }
 

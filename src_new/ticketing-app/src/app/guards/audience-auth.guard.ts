@@ -1,13 +1,15 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, RouterStateSnapshot } from '@angular/router';
 import { AudienceAuthService } from '../services/audience-auth.service';
 
-export const audienceAuthGuard: CanActivateFn = () => {
+export const audienceAuthGuard: CanActivateFn = (route, state: RouterStateSnapshot) => {
   const audienceAuth = inject(AudienceAuthService);
   const router = inject(Router);
 
   if (!audienceAuth.isLoggedIn()) {
-    router.navigate(['/login'], { queryParams: { mode: 'audience' } });
+    router.navigate(['/login'], {
+      queryParams: { mode: 'audience', returnUrl: encodeURIComponent(state.url) }
+    });
     return false;
   }
 

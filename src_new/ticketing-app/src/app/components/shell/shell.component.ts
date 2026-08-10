@@ -161,6 +161,6 @@ export class ShellComponent {
 
   logout(): void {
     this.auth.logout();
-    this.router.navigate(['/app/login']);
+    this.router.navigate(['/app/login'], { queryParams: { mode: 'organizer', loggedOut: 'true' } });
   }
 }

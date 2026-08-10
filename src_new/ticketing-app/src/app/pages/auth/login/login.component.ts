@@ -98,6 +98,13 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
             </div>
           }
 
+          <!-- Logged-out banner -->
+          @if (loggedOut()) {
+            <div class="mb-5 p-3 border border-green-200 bg-green-50 text-green-700 text-xs font-mono">
+              You have been logged out successfully.
+            </div>
+          }
+
           <!-- Error banner -->
           @if (error()) {
             <div class="mb-5 p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">
@@ -502,6 +509,7 @@ export class LoginComponent implements OnInit {
 
   view = signal<View>('login');
   mode = signal<'audience' | 'organizer'>('audience');
+  returnUrl = signal('');
 
   loginLoading = signal(false);
   audienceLoading = signal(false);
@@ -514,6 +522,7 @@ export class LoginComponent implements OnInit {
   resetDone = signal(false);
   resetPasswordValue = signal('');
   error = signal('');
+  loggedOut = signal(false);
   showPassword = signal(false);
   unverifiedEmail = signal('');
   resendingFromLogin = signal(false);
@@ -571,6 +580,13 @@ export class LoginComponent implements OnInit {
     // Mode from query param or route data
     if (params.get('mode') === 'organizer') this.mode.set('organizer');
 
+    // returnUrl for post-login redirect
+    const returnUrlParam = params.get('returnUrl');
+    if (returnUrlParam) this.returnUrl.set(returnUrlParam);
+
+    // Logged-out notification
+    if (params.get('loggedOut') === 'true') this.loggedOut.set(true);
+
     // View from query param or route data (e.g. when /signup or /reset-password redirects here)
     const viewParam = (params.get('view') || routeData['view'] || 'login') as View;
     if (['login', 'signup', 'forgot-password', 'reset-password'].includes(viewParam)) {
@@ -617,6 +633,8 @@ export class LoginComponent implements OnInit {
             localStorage.setItem('ys_audience_user', JSON.stringify(res.user));
             if (res.needs_terms_acceptance) {
               this.router.navigate(['/accept-terms']);
+            } else if (this.returnUrl()) {
+              this.router.navigateByUrl(decodeURIComponent(this.returnUrl()));
             } else {
               this.router.navigate(['/my-shows']);
             }
@@ -686,6 +704,8 @@ export class LoginComponent implements OnInit {
           this.loginLoading.set(false);
           if (res.needs_terms_acceptance) {
             this.router.navigate(['/accept-terms']);
+          } else if (this.returnUrl()) {
+            this.router.navigateByUrl(decodeURIComponent(this.returnUrl()));
           } else {
             this.router.navigate(['/my-shows']);
           }
@@ -733,6 +753,9 @@ export class LoginComponent implements OnInit {
       next: () => {
         this.audienceLoading.set(false);
         this.signupPendingEmail.set(email);
+        if (this.returnUrl()) {
+          localStorage.setItem('ys_pending_return_url', this.returnUrl());
+        }
       },
       error: (err: any) => {
         this.audienceLoading.set(false);
