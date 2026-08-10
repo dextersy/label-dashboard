@@ -96,10 +96,12 @@ async function sendVerificationEmail(user: AudienceUser): Promise<void> {
 
   const templatePath = path.join(__dirname, '../assets/templates/audience_verify_email.html');
   let html = fs.readFileSync(templatePath, 'utf-8');
+  const logoUrl = `${process.env.AUDIENCE_APP_URL || ''}/assets/logo-dark-bg.png`;
   html = html
     .replace(/%PLATFORM_NAME%/g, platformName)
     .replace(/%FIRST_NAME%/g, user.first_name || 'there')
-    .replace(/%URL%/g, verifyUrl);
+    .replace(/%URL%/g, verifyUrl)
+    .replace(/%LOGO_URL%/g, logoUrl);
 
   await sendAudienceEmail(user.email_address, 'Verify your email address', html);
 }
