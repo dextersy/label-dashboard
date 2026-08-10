@@ -2,6 +2,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
 type LoginStatus = 'Successful' | 'Failed';
+type AuthMethod = 'password' | 'google';
 
 interface LoginAttemptAttributes {
   id: number;
@@ -11,6 +12,7 @@ interface LoginAttemptAttributes {
   brand_id: number;
   proxy_ip?: string;
   remote_ip?: string;
+  auth_method?: AuthMethod;
 }
 
 interface LoginAttemptCreationAttributes extends Optional<LoginAttemptAttributes, 'id'> {}
@@ -23,6 +25,7 @@ class LoginAttempt extends Model<LoginAttemptAttributes, LoginAttemptCreationAtt
   public brand_id!: number;
   public proxy_ip?: string;
   public remote_ip?: string;
+  public auth_method?: AuthMethod;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -57,6 +60,10 @@ LoginAttempt.init(
     },
     remote_ip: {
       type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    auth_method: {
+      type: DataTypes.ENUM('password', 'google'),
       allowNull: true,
     },
   },

@@ -740,7 +740,8 @@ export const getLoginAttempts = async (req: AuthRequest, res: Response) => {
         name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Unknown User',
         date_and_time: attempt.date_and_time,
         result: attempt.status,
-        remote_ip: attempt.remote_ip || attempt.proxy_ip || 'Unknown'
+        remote_ip: attempt.remote_ip || attempt.proxy_ip || 'Unknown',
+        auth_method: attempt.auth_method || 'password'
       };
     });
 

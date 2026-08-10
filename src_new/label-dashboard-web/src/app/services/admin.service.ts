@@ -82,6 +82,7 @@ export interface LoginAttempt {
   date_and_time: string;
   result: string;
   remote_ip: string;
+  auth_method: 'password' | 'google';
 }
 
 export interface EmailLog {

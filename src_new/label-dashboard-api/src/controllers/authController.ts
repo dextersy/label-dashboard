@@ -103,7 +103,8 @@ export const login = async (req: Request, res: Response) => {
           date_and_time: new Date(),
           brand_id: user.brand_id,
           proxy_ip: proxyIp,
-          remote_ip: remoteIp
+          remote_ip: remoteIp,
+          auth_method: 'password'
         });
       }
 
@@ -127,7 +128,8 @@ export const login = async (req: Request, res: Response) => {
       date_and_time: new Date(),
       brand_id: user.brand_id,
       proxy_ip: proxyIp,
-      remote_ip: remoteIp
+      remote_ip: remoteIp,
+      auth_method: 'password'
     });
 
     // Migrate from MD5 to bcrypt if needed (lazy migration)
@@ -581,7 +583,8 @@ export const loginUnified = async (req: Request, res: Response) => {
           date_and_time: new Date(),
           brand_id: user.brand_id,
           proxy_ip: proxyIp,
-          remote_ip: remoteIp
+          remote_ip: remoteIp,
+          auth_method: 'password'
         }).catch(() => {});
       }
     }
@@ -690,7 +693,8 @@ async function completeLoginForUser(
     date_and_time: new Date(),
     brand_id: user.brand_id,
     proxy_ip: proxyIp,
-    remote_ip: remoteIp
+    remote_ip: remoteIp,
+    auth_method: 'password'
   });
 
   // Migrate from MD5 to bcrypt if needed
@@ -968,7 +972,8 @@ export const organizerLogin = async (req: Request, res: Response) => {
         date_and_time: new Date(),
         brand_id: user.brand_id,
         proxy_ip: proxyIp,
-        remote_ip: remoteIp
+        remote_ip: remoteIp,
+        auth_method: 'password'
       });
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -1202,6 +1207,9 @@ export const organizerGoogleExchange = async (req: Request, res: Response) => {
     const user = await User.findByPk(entry.userId, { include: [{ model: Brand, as: 'brand' }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    const remoteIp = req.ip || 'unknown';
+    const proxyIp = req.get('X-Forwarded-For') || 'unknown';
+
     if (entry.profileIncomplete) {
       const tempToken = jwt.sign(
         { userId: user.id, email: user.email_address, brandId: user.brand_id, profileIncomplete: true },
@@ -1210,6 +1218,16 @@ export const organizerGoogleExchange = async (req: Request, res: Response) => {
       );
       return res.json({ status: 'profile_incomplete', token: tempToken, needs_terms: entry.needsTerms, needs_brand_name: entry.needsBrandName });
     }
+
+    await LoginAttempt.create({
+      user_id: user.id,
+      status: 'Successful',
+      date_and_time: new Date(),
+      brand_id: user.brand_id,
+      proxy_ip: proxyIp,
+      remote_ip: remoteIp,
+      auth_method: 'google'
+    });
 
     const token = jwt.sign(
       { userId: user.id, username: user.username, brandId: user.brand_id },
@@ -1648,6 +1666,9 @@ export const dashboardGoogleExchange = async (req: Request, res: Response) => {
     const user = await User.findByPk(entry.userId, { include: [{ model: Brand, as: 'brand' }] });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    const remoteIp = req.ip || 'unknown';
+    const proxyIp = req.get('X-Forwarded-For') || 'unknown';
+
     if (entry.profileIncomplete) {
       const tempToken = jwt.sign(
         { userId: user.id, email: user.email_address, brandId: user.brand_id, profileIncomplete: true },
@@ -1656,6 +1677,16 @@ export const dashboardGoogleExchange = async (req: Request, res: Response) => {
       );
       return res.json({ status: 'profile_incomplete', token: tempToken });
     }
+
+    await LoginAttempt.create({
+      user_id: user.id,
+      status: 'Successful',
+      date_and_time: new Date(),
+      brand_id: user.brand_id,
+      proxy_ip: proxyIp,
+      remote_ip: remoteIp,
+      auth_method: 'google'
+    });
 
     const adminEmail = process.env.ADMIN_EMAIL;
     const isSuperadmin = adminEmail && user.email_address === adminEmail;
