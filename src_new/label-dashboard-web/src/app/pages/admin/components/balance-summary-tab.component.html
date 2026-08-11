@@ -125,8 +125,8 @@
                     </div>
                     <div>
                       <div>{{ artist.name }}</div>
-                      <div *ngIf="artist.parent_royalties && artist.parent_royalties > 0" class="tw-text-xs tw-text-gray-400 tw-mt-0.5">
-                        + {{ formatCurrency(artist.parent_royalties) }} handled by {{ parentBrandName || 'parent label' }}
+                      <div *ngIf="artist.parent_balance != null && artist.parent_balance !== 0" class="tw-text-xs tw-text-gray-400 tw-mt-0.5">
+                        + {{ formatCurrency(artist.parent_balance) }} handled by {{ parentBrandName || 'parent label' }}
                       </div>
                     </div>
                   </div>

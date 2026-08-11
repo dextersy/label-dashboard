@@ -2214,6 +2214,7 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
     const royaltiesByArtist: Record<number, number> = {};
     const parentRoyaltiesByArtist: Record<number, number> = {};
     const paymentsByArtist: Record<number, number> = {};
+    const parentPaymentsByArtist: Record<number, number> = {};
     const hasPaymentMethodByArtist: Record<number, boolean> = {};
 
     if (artistIds.length > 0) {
@@ -2246,19 +2247,23 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
           paymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
         });
       } else {
-        // Sublabel view: all royalties, all payments
+        // Own-brand view: royalties recorded by this brand (recorded_by_brand_id IS NULL),
+        // plus orphaned royalties with no linked earning (treated as own-brand).
+        // Uses LEFT JOIN so royalties without a matching earning are not silently dropped.
         const royaltyRows: any[] = await sequelize.query(
-          `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
-           FROM royalty
-           WHERE artist_id IN (:artistIds)
-           GROUP BY artist_id`,
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           LEFT JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)
+           GROUP BY r.artist_id`,
           { replacements: { artistIds }, type: 'SELECT' }
         );
         royaltyRows.forEach(row => {
           royaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
         });
 
-        // Parent-recorded royalties as informational breakdown
+        // Parent-recorded royalties as informational breakdown (shown as "handled by parent label")
         const parentRoyaltyRows: any[] = await sequelize.query(
           `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
            FROM royalty r
@@ -2272,16 +2277,33 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
           parentRoyaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
         });
 
+        // Payments made by this brand only
         const paymentRows: any[] = await sequelize.query(
           `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
            FROM payment
            WHERE artist_id IN (:artistIds)
+             AND paid_by_brand_id = :sublabelBrandId
              AND status = 'succeeded'
            GROUP BY artist_id`,
-          { replacements: { artistIds }, type: 'SELECT' }
+          { replacements: { artistIds, sublabelBrandId: req.user.brand_id }, type: 'SELECT' }
         );
         paymentRows.forEach(row => {
           paymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+        });
+
+        // Parent-made payments for informational parent balance
+        const parentPaymentRows: any[] = await sequelize.query(
+          `SELECT p.artist_id, COALESCE(SUM(p.amount), 0) AS total
+           FROM payment p
+           JOIN brand b ON b.id = :sublabelBrandId
+           WHERE p.artist_id IN (:artistIds)
+             AND p.paid_by_brand_id = b.parent_brand
+             AND p.status = 'succeeded'
+           GROUP BY p.artist_id`,
+          { replacements: { artistIds, sublabelBrandId: req.user.brand_id }, type: 'SELECT' }
+        );
+        parentPaymentRows.forEach(row => {
+          parentPaymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
         });
       }
 
@@ -2318,7 +2340,10 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
       };
 
       if (!isParentView) {
-        result.parent_royalties = parentRoyaltiesByArtist[artist.id] ?? 0;
+        const parentRoyalties = parentRoyaltiesByArtist[artist.id] ?? 0;
+        const parentPayments = parentPaymentsByArtist[artist.id] ?? 0;
+        result.parent_royalties = parentRoyalties;
+        result.parent_balance = parseFloat((parentRoyalties - parentPayments).toFixed(2));
       }
 
       return result;
