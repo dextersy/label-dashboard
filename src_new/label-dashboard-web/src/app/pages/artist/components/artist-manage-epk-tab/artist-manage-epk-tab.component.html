@@ -63,7 +63,7 @@
             class="template-option"
             [class.selected]="selectedTemplate === template.value"
             [class.template-disabled]="template.value === 0"
-            (click)="selectedTemplate = template.value">
+            (click)="!isReadOnly && (selectedTemplate = template.value)">
             <!-- Selected indicator -->
             <div class="template-check" *ngIf="selectedTemplate === template.value">
               <app-icon name="check-circle" iconOnly />
@@ -89,7 +89,7 @@
       </div>
 
       <!-- Save Button -->
-      <div class="tw-flex tw-justify-end">
+      <div *ngIf="!isReadOnly" class="tw-flex tw-justify-end">
         <button
           type="button"
           class="btn-primary"
@@ -128,7 +128,7 @@
               type="button"
               class="btn-sm btn-primary"
               (click)="useThisTemplate()"
-              *ngIf="previewTemplate !== artist.epk_template">
+              *ngIf="previewTemplate !== artist.epk_template && !isReadOnly">
               <app-icon name="check" class="tw-mr-1" />
               Use this template
             </button>

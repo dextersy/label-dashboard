@@ -24,6 +24,7 @@ export interface TeamMember {
 })
 export class ArtistTeamTabComponent {
   @Input() artist: Artist | null = null;
+  @Input() isReadOnly = false;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
 
   teamMembers: TeamMember[] = [];
@@ -105,6 +106,7 @@ export class ArtistTeamTabComponent {
   }
 
   get teamActions(): TableAction[] {
+    if (this.isReadOnly) return [];
     return [
       {
         icon: 'paper-plane',

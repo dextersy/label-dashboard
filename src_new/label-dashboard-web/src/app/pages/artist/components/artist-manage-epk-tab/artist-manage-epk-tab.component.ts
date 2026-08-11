@@ -21,6 +21,7 @@ export interface ArtistWithEPK extends Artist {
 })
 export class ArtistManageEpkTabComponent implements OnInit {
   @Input() artist!: ArtistWithEPK;
+  @Input() isReadOnly = false;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() artistUpdated = new EventEmitter<ArtistWithEPK>();
 

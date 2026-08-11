@@ -11,6 +11,7 @@
           <app-artist-profile-tab
             [artist]="selectedArtist"
             [isAdmin]="isAdmin"
+            [isReadOnly]="isSubLabelArtist"
             [customFields]="artistCustomFields"
             (alertMessage)="onAlertMessage($event)"
             (artistUpdated)="onArtistUpdated($event)">
@@ -19,8 +20,9 @@
         
         <!-- Gallery Tab -->
         <div *ngIf="activeTab === 'gallery'">
-          <app-artist-gallery-tab 
+          <app-artist-gallery-tab
             [artist]="selectedArtist"
+            [isReadOnly]="isSubLabelArtist"
             (alertMessage)="onAlertMessage($event)"
             (profilePhotoUpdated)="onArtistUpdated($event)">
           </app-artist-gallery-tab>
@@ -38,6 +40,7 @@
         <div *ngIf="activeTab === 'team'">
           <app-artist-team-tab
             [artist]="selectedArtist"
+            [isReadOnly]="isSubLabelArtist"
             (alertMessage)="onAlertMessage($event)">
           </app-artist-team-tab>
         </div>
@@ -46,6 +49,7 @@
         <div *ngIf="activeTab === 'manage-epk'">
           <app-artist-manage-epk-tab
             [artist]="selectedArtist"
+            [isReadOnly]="isSubLabelArtist"
             (alertMessage)="onAlertMessage($event)"
             (artistUpdated)="onArtistUpdated($event)">
           </app-artist-manage-epk-tab>

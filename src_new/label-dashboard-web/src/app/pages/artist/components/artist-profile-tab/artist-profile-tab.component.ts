@@ -37,6 +37,7 @@ export interface ArtistProfile extends Artist {
 export class ArtistProfileTabComponent implements OnInit, OnChanges {
   @Input() artist: ArtistProfile | null = null;
   @Input() isAdmin = false;
+  @Input() isReadOnly = false;
   @Input() customFields: ArtistCustomField[] = [];
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() artistUpdated = new EventEmitter<ArtistProfile>();

@@ -23,7 +23,7 @@
           <img [src]="getProfilePhotoUrl()"
                [alt]="editingProfile.name"
                class="tw-w-72 tw-h-72 tw-rounded-full tw-object-cover tw-border-4 tw-border-gray-100 tw-shadow-md">
-          <div class="tw-w-full tw-space-y-1">
+          <div class="tw-w-full tw-space-y-1" *ngIf="!isReadOnly">
             <label for="profilePhoto" class="tw-label">Upload New Photo</label>
             <input type="file"
                    class="tw-block tw-w-full tw-text-sm tw-text-gray-500
@@ -54,7 +54,7 @@
         <div class="tw-space-y-5">
 
           <!-- Artist Status (Admin Only) -->
-          <div *ngIf="isAdmin">
+          <div *ngIf="isAdmin && !isReadOnly">
             <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Status</p>
             <div class="tw-flex tw-items-center tw-gap-3">
               <p class="tw-mb-0 tw-font-semibold tw-text-gray-800">{{ editingProfile.status || 'Active' }}</p>
@@ -77,7 +77,7 @@
             <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Artist Name</p>
             <div *ngIf="!isEditing('name')" class="tw-flex tw-items-center tw-gap-1">
               <span class="tw-text-base tw-text-gray-800">{{ editingProfile.name || '—' }}</span>
-              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('name')" title="Edit">
+              <button *ngIf="!isReadOnly" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('name')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
             </div>
@@ -105,7 +105,7 @@
             <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Band Members</p>
             <div *ngIf="!isEditing('band_members')" class="tw-flex tw-items-start tw-gap-1">
               <span class="tw-text-base tw-text-gray-800 tw-whitespace-pre-line">{{ editingProfile.band_members || '—' }}</span>
-              <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('band_members')" title="Edit">
+              <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('band_members')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
             </div>
@@ -133,7 +133,7 @@
                 <div *ngIf="editingProfile.bio" class="tw-text-base tw-text-gray-800 tw-prose tw-prose-sm tw-max-w-none" [innerHTML]="editingProfile.bio"></div>
                 <span *ngIf="!editingProfile.bio" class="tw-text-base tw-text-gray-800">—</span>
               </div>
-              <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('bio')" title="Edit">
+              <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('bio')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
             </div>
@@ -179,7 +179,7 @@
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Website</p>
           <div *ngIf="!isEditing('website_page_url')" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800 tw-break-all">{{ editingProfile.website_page_url || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('website_page_url')" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('website_page_url')" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -199,7 +199,7 @@
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Facebook</p>
           <div *ngIf="!isEditing('facebook_handle')" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800">{{ editingProfile.facebook_handle || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('facebook_handle')" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('facebook_handle')" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -219,7 +219,7 @@
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Instagram</p>
           <div *ngIf="!isEditing('instagram_handle')" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800">{{ editingProfile.instagram_handle || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('instagram_handle')" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('instagram_handle')" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -239,7 +239,7 @@
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Twitter / X</p>
           <div *ngIf="!isEditing('twitter_handle')" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800">{{ editingProfile.twitter_handle || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('twitter_handle')" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('twitter_handle')" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -259,7 +259,7 @@
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">TikTok</p>
           <div *ngIf="!isEditing('tiktok_handle')" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800">{{ editingProfile.tiktok_handle || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('tiktok_handle')" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('tiktok_handle')" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -279,7 +279,7 @@
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">YouTube Channel</p>
           <div *ngIf="!isEditing('youtube_channel')" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800 tw-break-all">{{ editingProfile.youtube_channel || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_channel')" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_channel')" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -307,7 +307,7 @@
           </p>
           <div *ngIf="!isEditing('cf_' + field.key)" class="tw-flex tw-items-center tw-gap-1">
             <span class="tw-text-base tw-text-gray-800 tw-break-words">{{ editingCustomData[field.key] || '—' }}</span>
-            <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('cf_' + field.key)" title="Edit">
+            <button *ngIf="!isReadOnly" type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('cf_' + field.key)" title="Edit">
               <app-icon name="edit" iconOnly />
             </button>
           </div>
@@ -353,7 +353,7 @@
 </div>
 
 <!-- Floating Action Bar -->
-<app-floating-action-bar *ngIf="artist && hasDirtyFields()">
+<app-floating-action-bar *ngIf="artist && hasDirtyFields() && !isReadOnly">
   <button type="button"
           class="btn-primary fab-primary-btn"
           [disabled]="saving || !isFormValid()"

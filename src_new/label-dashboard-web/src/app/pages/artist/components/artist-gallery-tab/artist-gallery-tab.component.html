@@ -16,7 +16,7 @@
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Photo Gallery</h3>
       <div class="filter-controls tw-flex tw-items-center tw-gap-2">
-        <button class="btn-sm"
+        <button *ngIf="!isReadOnly" class="btn-sm"
                 [class.btn-primary]="reorderMode"
                 [class.btn-secondary]="!reorderMode"
                 (click)="toggleReorderMode()"
@@ -89,7 +89,7 @@
             </div>
 
             <!-- Desktop overlay (hidden on mobile) -->
-            <div class="photo-overlay desktop-overlay" *ngIf="!reorderMode">
+            <div class="photo-overlay desktop-overlay" *ngIf="!reorderMode && !isReadOnly">
               <div class="photo-actions">
                 <button class="btn-sm btn-secondary btn-icon"
                         (click)="setAsProfilePhoto(photo)"
@@ -112,7 +112,7 @@
           </div>
 
           <!-- Mobile kebab menu (outside photo-container to avoid overflow:hidden clipping) -->
-          <div class="mobile-kebab" *ngIf="!reorderMode">
+          <div class="mobile-kebab" *ngIf="!reorderMode && !isReadOnly">
             <button class="kebab-btn"
                     (click)="toggleKebabMenu(photo.id, $event)"
                     title="More actions">
@@ -140,7 +140,7 @@
                   <p *ngIf="!photo.caption" class="caption-empty">No caption</p>
                   <small class="caption-date">Uploaded on {{ formatDate(photo.upload_date) }}</small>
                 </div>
-                <button class="btn-sm btn-secondary btn-icon caption-edit-btn"
+                <button *ngIf="!isReadOnly" class="btn-sm btn-secondary btn-icon caption-edit-btn"
                         (click)="startEditingCaption(photo)"
                         title="Edit caption">
                   <app-icon name="edit" iconOnly />
@@ -172,7 +172,7 @@
   </div>
 
   <!-- Upload Section -->
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 upload-section">
+  <div *ngIf="!isReadOnly" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 upload-section">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Photos</h3>
     </div>

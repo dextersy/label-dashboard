@@ -27,6 +27,7 @@ export interface ArtistPhoto {
 })
 export class ArtistGalleryTabComponent {
   @Input() artist: Artist | null = null;
+  @Input() isReadOnly = false;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() profilePhotoUpdated = new EventEmitter<Artist>();
 

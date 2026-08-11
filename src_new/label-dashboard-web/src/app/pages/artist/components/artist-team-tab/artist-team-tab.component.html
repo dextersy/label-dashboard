@@ -38,7 +38,7 @@
                 [class.status-secondary]="member.status !== 'Accepted' && member.status !== 'Pending' && member.status !== 'Invited'">
             {{ member.status }}
           </span>
-          <button *ngIf="visibleActions.length > 0"
+          <button *ngIf="visibleActions.length > 0 && !isReadOnly"
                   class="member-card__menu kebab-btn"
                   type="button"
                   (click)="toggleKebab($event)"
@@ -55,7 +55,7 @@
   </app-paginated-table>
 
   <!-- Invite New Member Section -->
-  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 invite-section tw-mt-4 md:tw-max-w-lg">
+  <div *ngIf="!isReadOnly" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 invite-section tw-mt-4 md:tw-max-w-lg">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Invite Team Member</h3>
     </div>

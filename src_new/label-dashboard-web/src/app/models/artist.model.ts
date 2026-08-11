@@ -6,6 +6,8 @@ export interface Artist {
   profile_photo_id?: number;
   status?: 'Active' | 'Inactive';
   custom_data?: Record<string, any>;
+  brand_id?: number;
+  brand?: { id: number; brand_name: string };
   profilePhotoImage?: {
     id: number;
     path: string;

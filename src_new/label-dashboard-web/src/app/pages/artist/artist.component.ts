@@ -44,6 +44,10 @@ export class ArtistComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   loading = false;
   availableArtists: Artist[] = [];
   artistCustomFields: ArtistCustomField[] = [];
+
+  get isSubLabelArtist(): boolean {
+    return !!(this.isAdmin && this.selectedArtist && this.authService.currentUserValue?.brand_id !== this.selectedArtist.brand_id);
+  }
   private routeSubscription: Subscription = new Subscription();
 
   isFormDirty(): boolean {
