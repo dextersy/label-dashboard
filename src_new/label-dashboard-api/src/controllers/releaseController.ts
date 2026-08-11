@@ -1,17 +1,23 @@
 import { Request, Response } from 'express';
-import { fn, col, literal } from 'sequelize';
+import { fn, col, literal, Op } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
 import path from 'path';
 import archiver from 'archiver';
 import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
-import { createNotificationsForUsers, getBrandAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
+import { createNotificationsForUsers, getBrandAdminUserIds, getBrandAndParentAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 
 interface AuthRequest extends Request {
   user?: any;
   file?: Express.Multer.File;
+}
+
+// Returns IDs of all direct child brands for the given brand
+async function getChildBrandIds(brandId: number): Promise<number[]> {
+  const children = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'] });
+  return children.map((b: any) => b.id);
 }
 
 export const getReleases = async (req: AuthRequest, res: Response) => {
@@ -62,10 +68,13 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
 
+    const childBrandIds = req.user.is_admin ? await getChildBrandIds(req.user.brand_id) : [];
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const release = await Release.findOne({
       where: {
         id: releaseId,
-        brand_id: req.user.brand_id
+        brand_id: { [Op.in]: allowedBrandIds }
       },
       attributes: [
         'id', 'title', 'catalog_no', 'UPC', 'spotify_link', 'apple_music_link',
@@ -353,10 +362,13 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    const childBrandIdsForUpdate = req.user.is_admin ? await getChildBrandIds(req.user.brand_id) : [];
+    const allowedBrandIdsForUpdate = [req.user.brand_id, ...childBrandIdsForUpdate];
+
     const release = await Release.findOne({
-      where: { 
+      where: {
         id: releaseId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForUpdate }
       }
     });
 
@@ -521,8 +533,9 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
           req.user.brand_id
         );
 
-        // Create in-app notifications for brand admins
-        const adminIds = await getBrandAdminUserIds(req.user.brand_id);
+        // Create in-app notifications for brand admins and parent brand admins
+        const releaseBrandId = (release as any).brand_id ?? req.user.brand_id;
+        const adminIds = await getBrandAndParentAdminUserIds(releaseBrandId);
         await createNotificationsForUsers(adminIds, req.user.brand_id, 'release_submitted', `Release submitted: ${updatedRelease!.title}`, `By ${artistNames}`, `/music/releases/edit/${updatedRelease!.id}`);
       } catch (emailError) {
         console.error('Error sending release submission notification:', emailError);
@@ -897,7 +910,7 @@ export const generateCatalogNumber = async (req: AuthRequest, res: Response) => 
       where: {
         brand_id: brandId,
         catalog_no: {
-          [require('sequelize').Op.like]: `${prefix}%`
+          [Op.like]: `${prefix}%`
         }
       },
       attributes: ['catalog_no'],
@@ -974,7 +987,7 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
       include: [{
         model: Song,
         as: 'song',
-        where: { audio_file: { [require('sequelize').Op.ne]: null } },
+        where: { audio_file: { [Op.ne]: null } },
         required: true
       }],
       order: [['track_number', 'ASC']]
@@ -1141,7 +1154,7 @@ export const downloadMp3s = async (req: AuthRequest, res: Response) => {
       include: [{
         model: Song,
         as: 'song',
-        where: { audio_file_mp3: { [require('sequelize').Op.ne]: null } },
+        where: { audio_file_mp3: { [Op.ne]: null } },
         required: true
       }],
       order: [['track_number', 'ASC']]
@@ -1617,18 +1630,34 @@ export const getDiscography = async (req: AuthRequest, res: Response) => {
     const sortColumn = allowedSortColumns.includes(sortBy as string) ? (sortBy as string) : 'release_date';
     const direction = (sortDirection as string)?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    const Op = require('sequelize').Op;
-    const where: any = { brand_id: req.user.brand_id };
+    const childBrandIdsForDisc = req.user.is_admin ? await getChildBrandIds(req.user.brand_id) : [];
+    const allBrandIdsForDisc = [req.user.brand_id, ...childBrandIdsForDisc];
+
+    const where: any = { brand_id: { [Op.in]: allBrandIdsForDisc } };
     if (status && status !== 'all') {
       where.status = status;
     }
     if (search && (search as string).trim()) {
       const q = `%${(search as string).trim()}%`;
+      // Find release IDs matching by artist name via a separate query to avoid literal table alias issues
+      const artistMatchedReleases = await Release.findAll({
+        where: { brand_id: { [Op.in]: allBrandIdsForDisc } },
+        include: [{
+          model: Artist,
+          as: 'artists',
+          where: { name: { [Op.iLike]: q } },
+          required: true,
+          through: { attributes: [] }
+        }],
+        attributes: ['id'],
+        raw: true
+      });
+      const artistMatchedIds: number[] = artistMatchedReleases.map((r: any) => r.id);
       where[Op.or] = [
-        { title: { [Op.like]: q } },
-        { catalog_no: { [Op.like]: q } },
-        { UPC: { [Op.like]: q } },
-        literal(`EXISTS (SELECT 1 FROM release_artist ra JOIN artist a ON ra.artist_id = a.id WHERE ra.release_id = "Release"."id" AND a.name LIKE ${sequelize.escape(q)})`),
+        { title: { [Op.iLike]: q } },
+        { catalog_no: { [Op.iLike]: q } },
+        { UPC: { [Op.iLike]: q } },
+        ...(artistMatchedIds.length > 0 ? [{ id: { [Op.in]: artistMatchedIds } }] : []),
       ];
     }
 
@@ -1641,16 +1670,21 @@ export const getDiscography = async (req: AuthRequest, res: Response) => {
             as: 'artists',
             attributes: ['id', 'name', 'profile_photo'],
             through: { attributes: [] }
+          },
+          {
+            model: Brand,
+            as: 'brand',
+            attributes: ['id', 'brand_name']
           }
         ],
-        attributes: ['id', 'title', 'catalog_no', 'UPC', 'cover_art', 'release_date', 'status'],
+        attributes: ['id', 'title', 'catalog_no', 'UPC', 'cover_art', 'release_date', 'status', 'brand_id'],
         order: [[sortColumn, direction]],
         limit: pageSize,
         offset,
         distinct: true
       }),
       Release.findAll({
-        where: { brand_id: req.user.brand_id },
+        where: { brand_id: { [Op.in]: allBrandIdsForDisc } },
         attributes: ['status', [fn('COUNT', col('id')), 'count']],
         group: ['status'],
         raw: true

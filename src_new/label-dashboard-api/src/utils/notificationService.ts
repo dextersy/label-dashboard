@@ -1,5 +1,5 @@
 import Notification from '../models/Notification';
-import { User, ArtistAccess } from '../models';
+import { User, ArtistAccess, Brand } from '../models';
 
 export async function createNotification(
   userId: number,
@@ -60,6 +60,24 @@ export async function getArtistTeamUserIds(artistId: number): Promise<number[]> 
     return accesses.map((a: any) => a.user_id);
   } catch (error) {
     console.error('Failed to get artist team user IDs:', error);
+    return [];
+  }
+}
+
+export async function getBrandAndParentAdminUserIds(brandId: number): Promise<number[]> {
+  try {
+    const brand = await Brand.findByPk(brandId, { attributes: ['id', 'parent_brand'] });
+    const brandIds: number[] = [brandId];
+    if ((brand as any)?.parent_brand) {
+      brandIds.push((brand as any).parent_brand);
+    }
+    const admins = await User.findAll({
+      where: { brand_id: brandIds, is_admin: true },
+      attributes: ['id']
+    });
+    return admins.map(u => u.id);
+  } catch (error) {
+    console.error('Failed to get brand and parent admin user IDs:', error);
     return [];
   }
 }

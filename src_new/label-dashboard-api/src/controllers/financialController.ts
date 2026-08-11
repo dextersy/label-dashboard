@@ -858,11 +858,16 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
 
     const { type, page = '1', limit = '20', sortBy, sortDirection, start_date, end_date, ...filters } = req.query;
     
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand for admins)
+    const childBrandsForEarnings = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForEarnings = [req.user.brand_id, ...childBrandsForEarnings.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistIdNum,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForEarnings }
       }
     });
 
@@ -1414,10 +1419,15 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
 
     if (artist_id) {
       // Artist-specific summary
+      const childBrandsForSummary = req.user.is_admin
+        ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+        : [];
+      const allowedBrandIdsForSummary = [req.user.brand_id, ...childBrandsForSummary.map((b: any) => b.id)];
+
       const artist = await Artist.findOne({
-        where: { 
+        where: {
           id: artistIdNum,
-          brand_id: req.user.brand_id 
+          brand_id: { [Op.in]: allowedBrandIdsForSummary }
         }
       });
 

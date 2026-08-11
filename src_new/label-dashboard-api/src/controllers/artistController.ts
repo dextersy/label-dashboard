@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { Op } from 'sequelize';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
@@ -19,12 +20,15 @@ interface AuthRequest extends Request {
 }
 
 // Helper function to check if user has access to an artist
-const checkArtistAccess = async (artistId: number, userId: number, brandId: number, isAdmin: boolean): Promise<Artist | null> => {
+const checkArtistAccess = async (artistId: number, userId: number, brandId: number, isAdmin: boolean, allowedBrandIds?: number[]): Promise<Artist | null> => {
+  const brandWhere = allowedBrandIds && allowedBrandIds.length > 1
+    ? { [Op.in]: allowedBrandIds }
+    : brandId;
   // First check if artist exists and belongs to user's brand
   const artist = await Artist.findOne({
-    where: { 
+    where: {
       id: artistId,
-      brand_id: brandId 
+      brand_id: brandWhere
     }
   });
 
@@ -59,9 +63,12 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
     let artists;
 
     if (req.user.is_admin) {
-      // Admin can see all artists in the brand
+      // Admin can see all artists in the brand and any direct child brands
+      const childBrands = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
+      const allBrandIds = [req.user.brand_id, ...childBrands.map((b: any) => b.id)];
+
       artists = await Artist.findAll({
-        where: { brand_id: req.user.brand_id },
+        where: { brand_id: { [Op.in]: allBrandIds } },
         include: [
           { model: Brand, as: 'brand' },
           { model: Release, as: 'releases' },
@@ -115,11 +122,17 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    // First check if artist exists and belongs to user's brand
+    // Build allowed brand IDs: user's brand + child brands (for admins)
+    const childBrandsForGet = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIds = [req.user.brand_id, ...childBrandsForGet.map((b: any) => b.id)];
+
+    // First check if artist exists and belongs to allowed brands
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIds }
       },
       include: [
         { model: Brand, as: 'brand' },
@@ -271,16 +284,22 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
       custom_data
     } = req.body;
 
+    // Build allowed brand IDs including child brands for admins
+    const childBrandsForUpdate = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForUpdate = [req.user.brand_id, ...childBrandsForUpdate.map((b: any) => b.id)];
+
     // Check if user has access to this artist
-    const artistAccess = await checkArtistAccess(parseInt(id as string), req.user.id, req.user.brand_id, req.user.is_admin);
+    const artistAccess = await checkArtistAccess(parseInt(id as string), req.user.id, req.user.brand_id, req.user.is_admin, allowedBrandIdsForUpdate);
     if (!artistAccess) {
       return res.status(404).json({ error: 'Artist not found or access denied' });
     }
 
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForUpdate }
       },
       include: [
         { model: Brand, as: 'brand' },
@@ -290,6 +309,10 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     // Handle profile photo upload if provided
@@ -539,9 +562,9 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
 
     // Fetch updated artist with all relationships for the response
     const updatedArtist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForUpdate }
       },
       include: [
         { model: Brand, as: 'brand' },
@@ -568,15 +591,24 @@ export const deleteArtist = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
+    const childBrandsForDelete = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForDelete = [req.user.brand_id, ...childBrandsForDelete.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForDelete }
       }
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     await artist.destroy();
@@ -601,11 +633,16 @@ export const setSelectedArtist = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Artist ID is required' });
     }
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForSelect = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForSelect = [req.user.brand_id, ...childBrandsForSelect.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artist_id,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForSelect }
       }
     });
 
@@ -634,11 +671,16 @@ export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand for admins)
+    const childBrandsForPayout = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForPayout = [req.user.brand_id, ...childBrandsForPayout.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForPayout }
       }
     });
 
@@ -646,7 +688,7 @@ export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    res.json({ 
+    res.json({
       payout_point: artist.payout_point || 1000,
       hold_payouts: artist.hold_payouts || false
     });
@@ -662,16 +704,25 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const { payout_point, hold_payouts } = req.body;
 
+    const childBrandsForUpdatePayout = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForUpdatePayout = [req.user.brand_id, ...childBrandsForUpdatePayout.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForUpdatePayout }
       },
       include: [{ model: Brand, as: 'brand' }]
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     const oldPayoutPoint = artist.payout_point;
@@ -737,10 +788,15 @@ export const getArtistBalance = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
+    const childBrandsForBalance = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForBalance = [req.user.brand_id, ...childBrandsForBalance.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForBalance }
       }
     });
 
@@ -831,11 +887,16 @@ export const getArtistPhotos = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForPhotos = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForPhotos = [req.user.brand_id, ...childBrandsForPhotos.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForPhotos }
       }
     });
 
@@ -890,16 +951,25 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForUpload = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForUpload = [req.user.brand_id, ...childBrandsForUpload.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForUpload }
       }
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
@@ -975,16 +1045,25 @@ export const reorderArtistPhotos = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'photoIds must be a non-empty array' });
     }
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForReorder = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForReorder = [req.user.brand_id, ...childBrandsForReorder.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
       where: {
         id: artistId,
-        brand_id: req.user.brand_id
+        brand_id: { [Op.in]: allowedBrandIdsForReorder }
       }
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     // Verify all photos belong to this artist
@@ -1036,11 +1115,16 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
     
     const { caption } = req.body;
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForCaption = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForCaption = [req.user.brand_id, ...childBrandsForCaption.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForCaption }
       }
     });
 
@@ -1048,11 +1132,15 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find and update the photo
     const photo = await ArtistImage.findOne({
-      where: { 
+      where: {
         id: photoIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -1060,8 +1148,8 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Photo not found' });
     }
 
-    await photo.update({ 
-      credits: caption || '' 
+    await photo.update({
+      credits: caption || ''
     });
 
     res.json({
@@ -1085,11 +1173,16 @@ export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response)
       return res.status(400).json({ error: 'Invalid artist ID or photo ID' });
     }
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForEpk = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForEpk = [req.user.brand_id, ...childBrandsForEpk.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForEpk }
       }
     });
 
@@ -1097,11 +1190,15 @@ export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response)
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find and update the photo
     const photo = await ArtistImage.findOne({
-      where: { 
+      where: {
         id: photoIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -1109,8 +1206,8 @@ export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response)
       return res.status(404).json({ error: 'Photo not found' });
     }
 
-    await photo.update({ 
-      exclude_from_epk: !photo.exclude_from_epk 
+    await photo.update({
+      exclude_from_epk: !photo.exclude_from_epk
     });
 
     res.json({
@@ -1131,11 +1228,16 @@ export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const photoIdNum = parseInt(photoId as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForProfile = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForProfile = [req.user.brand_id, ...childBrandsForProfile.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForProfile }
       }
     });
 
@@ -1143,11 +1245,15 @@ export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find the photo
     const photo = await ArtistImage.findOne({
-      where: { 
+      where: {
         id: photoIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -1156,7 +1262,7 @@ export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
     }
 
     // Update artist to use this photo as profile photo
-    await artist.update({ 
+    await artist.update({
       profile_photo: photo.path,
       profile_photo_id: photo.id
     });
@@ -1178,11 +1284,16 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const photoIdNum = parseInt(photoId as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForDelete = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForDelete = [req.user.brand_id, ...childBrandsForDelete.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForDelete }
       }
     });
 
@@ -1190,11 +1301,15 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find the photo
     const photo = await ArtistImage.findOne({
-      where: { 
+      where: {
         id: photoIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -1244,11 +1359,16 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including sublabel artists for parent brand admins)
+    const childBrandsForReleases = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForReleases = [req.user.brand_id, ...childBrandsForReleases.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForReleases }
       }
     });
 
@@ -1308,7 +1428,7 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
           order: [['track_number', 'ASC']]
         }
       ],
-      where: { brand_id: req.user.brand_id },
+      where: { brand_id: { [Op.in]: allowedBrandIdsForReleases } },
       order: [['release_date', 'DESC']]
     });
 
@@ -1318,9 +1438,9 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
 
       // Get recuperable expense balance
       const recuperableExpenseSum = await RecuperableExpense.sum('expense_amount', {
-        where: { 
+        where: {
           release_id: release.id,
-          brand_id: req.user.brand_id 
+          brand_id: (release as any).brand_id
         }
       }) || 0;
 
@@ -1404,16 +1524,23 @@ export const updateRoyalties = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const { releases } = req.body;
 
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand)
+    const childBrandsForRoyalties = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
+    const allowedBrandIdsForRoyalties = [req.user.brand_id, ...childBrandsForRoyalties.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForRoyalties }
       }
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     // Update each release's royalty percentages
@@ -1446,11 +1573,16 @@ export const getArtistTeam = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForTeam = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForTeam = [req.user.brand_id, ...childBrandsForTeam.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForTeam }
       }
     });
 
@@ -1466,7 +1598,7 @@ export const getArtistTeam = async (req: AuthRequest, res: Response) => {
           model: User,
           as: 'user',
           attributes: ['id', 'first_name', 'last_name', 'email_address'],
-          where: { brand_id: req.user.brand_id }
+          where: { brand_id: { [Op.in]: allowedBrandIdsForTeam } }
         }
       ]
     });
@@ -1498,11 +1630,16 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForInvite = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForInvite = [req.user.brand_id, ...childBrandsForInvite.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForInvite }
       }
     });
 
@@ -1510,14 +1647,18 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Check if user exists
-    let user = await User.findOne({ where: { email_address: email, brand_id: req.user.brand_id } });
+    let user = await User.findOne({ where: { email_address: email, brand_id: artist.brand_id } });
     
     if (!user) {
-      // Create a new user with pending status
+      // Create a new user with pending status, scoped to the artist's brand
       user = await User.create({
         email_address: email,
-        brand_id: req.user.brand_id,
+        brand_id: artist.brand_id,
         is_admin: false
       });
     }
@@ -1542,11 +1683,11 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
       invite_hash: inviteHash
     });
 
-    // Get brand info for email branding
-    const brand = await Brand.findByPk(req.user.brand_id);
+    // Get brand info for email branding (use artist's brand for correct domain/styling)
+    const brand = await Brand.findByPk(artist.brand_id);
 
-    // Generate invitation URL
-    const inviteUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/invite/accept?hash=${inviteHash}`;
+    // Generate invitation URL scoped to the artist's brand domain
+    const inviteUrl = `${await getBrandFrontendUrl(artist.brand_id)}/invite/accept?hash=${inviteHash}`;
 
     // Send invitation email
     try {
@@ -1558,7 +1699,7 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
           : req.user.email_address,
         inviteUrl,
         {
-          id: req.user.brand_id,
+          id: artist.brand_id,
           brand_color: brand?.brand_color || '#1595e7',
           logo_url: brand?.logo_url || ''
         }
@@ -1598,11 +1739,16 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const memberIdNum = parseInt(memberId as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForResend = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForResend = [req.user.brand_id, ...childBrandsForResend.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForResend }
       }
     });
 
@@ -1610,13 +1756,17 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find the team member and validate brand
     const access = await ArtistAccess.findOne({
       where: { artist_id: artistId, user_id: memberIdNum },
-      include: [{ 
-        model: User, 
+      include: [{
+        model: User,
         as: 'user',
-        where: { brand_id: req.user.brand_id }
+        where: { brand_id: { [Op.in]: allowedBrandIdsForResend } }
       }]
     });
 
@@ -1624,11 +1774,11 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Team member not found' });
     }
 
-    // Get brand info for email branding
-    const brand = await Brand.findByPk(req.user.brand_id);
+    // Get brand info for email branding (use artist's brand for correct domain/styling)
+    const brand = await Brand.findByPk(artist.brand_id);
 
-    // Generate invitation URL
-    const inviteUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/invite/accept?hash=${access.invite_hash}`;
+    // Generate invitation URL scoped to the artist's brand domain
+    const inviteUrl = `${await getBrandFrontendUrl(artist.brand_id)}/invite/accept?hash=${access.invite_hash}`;
 
     // Send invitation email
     try {
@@ -1667,11 +1817,16 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const memberIdNum = parseInt(memberId as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForRemove = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForRemove = [req.user.brand_id, ...childBrandsForRemove.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForRemove }
       }
     });
 
@@ -1679,13 +1834,17 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find and remove the team member access, validate brand
     const access = await ArtistAccess.findOne({
       where: { artist_id: artistId, user_id: memberIdNum },
-      include: [{ 
-        model: User, 
+      include: [{
+        model: User,
         as: 'user',
-        where: { brand_id: req.user.brand_id }
+        where: { brand_id: { [Op.in]: allowedBrandIdsForRemove } }
       }]
     });
 
@@ -1711,11 +1870,16 @@ export const getPaymentMethods = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand for admins)
+    const childBrandsForPaymentMethods = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForPaymentMethods = [req.user.brand_id, ...childBrandsForPaymentMethods.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForPaymentMethods }
       }
     });
 
@@ -1759,16 +1923,25 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand for admins)
+    const childBrandsForAddPM = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForAddPM = [req.user.brand_id, ...childBrandsForAddPM.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForAddPM }
       }
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     // If this is set as default, remove default from other methods
@@ -1848,11 +2021,16 @@ export const deletePaymentMethod = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const paymentMethodIdNum = parseInt(paymentMethodId as string, 10);
 
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand for admins)
+    const childBrandsForDeletePM = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForDeletePM = [req.user.brand_id, ...childBrandsForDeletePM.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForDeletePM }
       }
     });
 
@@ -1860,11 +2038,15 @@ export const deletePaymentMethod = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find the payment method
     const paymentMethod = await PaymentMethod.findOne({
-      where: { 
+      where: {
         id: paymentMethodIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -1914,11 +2096,16 @@ export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) =
     const artistId = parseInt(id as string, 10);
     const paymentMethodIdNum = parseInt(paymentMethodId as string, 10);
 
-    // Verify artist belongs to user's brand
+    // Verify artist belongs to user's brand (or a child brand for admins)
+    const childBrandsForSetDefaultPM = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForSetDefaultPM = [req.user.brand_id, ...childBrandsForSetDefaultPM.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForSetDefaultPM }
       }
     });
 
@@ -1926,11 +2113,15 @@ export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) =
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find the payment method
     const paymentMethod = await PaymentMethod.findOne({
-      where: { 
+      where: {
         id: paymentMethodIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -1963,11 +2154,16 @@ export const getArtistDocuments = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const artistId = parseInt(id as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForDocs = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForDocs = [req.user.brand_id, ...childBrandsForDocs.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForDocs }
       }
     });
 
@@ -2027,16 +2223,25 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
     
     const { title } = req.body;
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForUploadDoc = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForUploadDoc = [req.user.brand_id, ...childBrandsForUploadDoc.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForUploadDoc }
       }
     });
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     if (!req.file) {
@@ -2097,11 +2302,16 @@ export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const documentIdNum = parseInt(documentId as string, 10);
 
-    // Verify artist exists and user has access
+    // Verify artist exists and user has access (including child brands for admins)
+    const childBrandsForDeleteDoc = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForDeleteDoc = [req.user.brand_id, ...childBrandsForDeleteDoc.map((b: any) => b.id)];
+
     const artist = await Artist.findOne({
-      where: { 
+      where: {
         id: artistId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIdsForDeleteDoc }
       }
     });
 
@@ -2109,11 +2319,15 @@ export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
     // Find the document
     const document = await ArtistDocument.findOne({
-      where: { 
+      where: {
         id: documentIdNum,
-        artist_id: artistId 
+        artist_id: artistId
       }
     });
 
@@ -2156,21 +2370,19 @@ export const updateEPKSettings = async (req: AuthRequest, res: Response) => {
     const artistId = parseInt(id as string, 10);
     const { epk_template } = req.body;
 
+    const childBrandsForEPK = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForEPK = [req.user.brand_id, ...childBrandsForEPK.map((b: any) => b.id)];
+
     // Check if user has access to this artist
-    const artistAccess = await checkArtistAccess(artistId, req.user.id, req.user.brand_id, req.user.is_admin);
-    if (!artistAccess) {
+    const artist = await checkArtistAccess(artistId, req.user.id, req.user.brand_id, req.user.is_admin, allowedBrandIdsForEPK);
+    if (!artist) {
       return res.status(404).json({ error: 'Artist not found or access denied' });
     }
 
-    const artist = await Artist.findOne({
-      where: {
-        id: artistId,
-        brand_id: req.user.brand_id
-      }
-    });
-
-    if (!artist) {
-      return res.status(404).json({ error: 'Artist not found' });
+    if (artist.brand_id !== req.user.brand_id) {
+      return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
     // Build update object based on provided fields
