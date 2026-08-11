@@ -2735,7 +2735,7 @@ export const getAdminRecuperableExpenseFlowDetails = async (req: AuthRequest, re
       where: {
         release_id: releaseId,
         brand_id: { [Op.in]: allowedBrandIdsForExpenseDetails },
-        date_recorded: { [Op.between]: [start_date, end_date] }
+        date_recorded: { [Op.between]: [new Date(start_date as string), new Date(end_date as string)] }
       },
       order: [['date_recorded', 'DESC'], ['id', 'DESC']],
       offset,
