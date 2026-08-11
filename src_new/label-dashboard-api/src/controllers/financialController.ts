@@ -684,8 +684,13 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
       releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
     }
 
+    const childBrandsForRoyalties = req.user.is_admin
+      ? await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] })
+      : [];
+    const allowedBrandIdsForRoyalties = [req.user.brand_id, ...childBrandsForRoyalties.map((b: any) => b.id)];
+
     const includeConditions: any[] = [
-      { model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } },
+      { model: Artist, as: 'artist', where: { brand_id: { [Op.in]: allowedBrandIdsForRoyalties } } },
       { model: Release, as: 'release', where: releaseWhere, required: Object.keys(releaseWhere).length > 0 } // required only when filtering by release title/catalog_no
     ];
 
@@ -924,7 +929,8 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
     const offset = (pageNum - 1) * pageSize;
 
     // Build release where clause for title filtering
-    const releaseWhere: any = { brand_id: req.user.brand_id };
+    // Allow releases from any brand the admin can access (own brand + child brands)
+    const releaseWhere: any = { brand_id: { [Op.in]: allowedBrandIdsForEarnings } };
     
     if (filters.release_title && filters.release_title !== '') {
       releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.release_title}%` };
@@ -1367,10 +1373,9 @@ export const getPaymentsByArtist = async (req: AuthRequest, res: Response) => {
     const { count, rows: payments } = await Payment.findAndCountAll({
       where,
       include: [
-        { 
-          model: Artist, 
-          as: 'artist',
-          where: { brand_id: req.user.brand_id }
+        {
+          model: Artist,
+          as: 'artist'
         },
         {
           model: PaymentMethod,
@@ -1463,16 +1468,35 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         payout_point: artist.payout_point
       };
 
-      // For admins: add breakdown of own-label vs parent-label figures
+      // For admins: add breakdown of own-label vs other-label figures.
+      // "own" = current admin's brand contribution; "parent" = the other label's contribution.
+      // isViewingSubLabelArtist: true when the admin is viewing an artist from a child brand.
       if (req.user.is_admin) {
-        const [ownRoyaltyRow]: any[] = await sequelize.query(
-          `SELECT COALESCE(SUM(r.amount), 0) AS total
-           FROM royalty r
-           LEFT JOIN earning e ON r.earning_id = e.id
-           WHERE r.artist_id = :artistId
-             AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)`,
-          { replacements: { artistId: artistIdNum }, type: 'SELECT' }
-        );
+        const isViewingSubLabelArtist = artist.brand_id !== req.user.brand_id;
+
+        // Royalties split depends on which brand is "ours"
+        let ownRoyaltyQuery: string;
+        let ownRoyaltyReplacements: any;
+        if (isViewingSubLabelArtist) {
+          // Parent admin viewing sub-label artist: own = earnings recorded by this (parent) brand
+          ownRoyaltyQuery = `SELECT COALESCE(SUM(r.amount), 0) AS total
+            FROM royalty r
+            LEFT JOIN earning e ON r.earning_id = e.id
+            WHERE r.artist_id = :artistId
+              AND e.recorded_by_brand_id = :brandId`;
+          ownRoyaltyReplacements = { artistId: artistIdNum, brandId: req.user.brand_id };
+        } else {
+          // Sub-label admin viewing own artist: own = unbranded earnings (sub-label's own)
+          ownRoyaltyQuery = `SELECT COALESCE(SUM(r.amount), 0) AS total
+            FROM royalty r
+            LEFT JOIN earning e ON r.earning_id = e.id
+            WHERE r.artist_id = :artistId
+              AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)`;
+          ownRoyaltyReplacements = { artistId: artistIdNum };
+        }
+        const [ownRoyaltyRow]: any[] = await sequelize.query(ownRoyaltyQuery, {
+          replacements: ownRoyaltyReplacements, type: 'SELECT'
+        });
         const ownRoyalties = parseFloat(parseFloat(ownRoyaltyRow.total || 0).toFixed(2));
         const parentRoyalties = parseFloat((totalRoyalties - ownRoyalties).toFixed(2));
 
@@ -1484,20 +1508,35 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         let ownEarnings = 0;
         let parentEarnings = 0;
         if (releaseIds.length > 0) {
-          const [ownEarningRow]: any[] = await sequelize.query(
-            `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
-             WHERE release_id IN (:releaseIds) AND (recorded_by_brand_id IS NULL)`,
-            { replacements: { releaseIds }, type: 'SELECT' }
-          );
+          let ownEarningQuery: string;
+          let ownEarningReplacements: any;
+          if (isViewingSubLabelArtist) {
+            ownEarningQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
+              WHERE release_id IN (:releaseIds) AND recorded_by_brand_id = :brandId`;
+            ownEarningReplacements = { releaseIds, brandId: req.user.brand_id };
+          } else {
+            ownEarningQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
+              WHERE release_id IN (:releaseIds) AND (recorded_by_brand_id IS NULL)`;
+            ownEarningReplacements = { releaseIds };
+          }
+          const [ownEarningRow]: any[] = await sequelize.query(ownEarningQuery, {
+            replacements: ownEarningReplacements, type: 'SELECT'
+          });
           ownEarnings = parseFloat(parseFloat(ownEarningRow.total || 0).toFixed(2));
           parentEarnings = parseFloat((totalEarnings - ownEarnings).toFixed(2));
         }
 
-        let parentBrandName: string | undefined;
-        const adminBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
-        if (adminBrand?.parent_brand) {
-          const parentBrand = await Brand.findByPk(adminBrand.parent_brand, { attributes: ['brand_name'] });
-          parentBrandName = parentBrand?.brand_name;
+        // Other label name: sub-label name when parent is viewing, parent brand name otherwise
+        let otherLabelName: string | undefined;
+        if (isViewingSubLabelArtist) {
+          const subLabelBrand = await Brand.findByPk(artist.brand_id, { attributes: ['brand_name'] });
+          otherLabelName = subLabelBrand?.brand_name;
+        } else {
+          const adminBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
+          if (adminBrand?.parent_brand) {
+            const parentBrand = await Brand.findByPk(adminBrand.parent_brand, { attributes: ['brand_name'] });
+            otherLabelName = parentBrand?.brand_name;
+          }
         }
 
         summary.breakdown = {
@@ -1508,7 +1547,8 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
           own_earnings: ownEarnings,
           parent_earnings: parentEarnings,
           sublabel_balance: parseFloat((ownRoyalties - ownPayments).toFixed(2)),
-          parent_brand_name: parentBrandName,
+          other_label_name: otherLabelName,
+          is_parent_view: isViewingSubLabelArtist,
         };
       }
     } else {
@@ -2442,8 +2482,10 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
     const artistNameFilter = filters.artist_name && filters.artist_name !== '' ? (filters.artist_name as string).toLowerCase() : null;
 
     // Build dynamic WHERE conditions for the SQL query
-    const releaseConditions: string[] = ['r.brand_id = :brandId'];
-    const replacements: any = { brandId: req.user.brand_id };
+    const childBrandsForExpenses = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
+    const allowedBrandIdsForExpenses = [req.user.brand_id, ...childBrandsForExpenses.map((b: any) => b.id)];
+    const releaseConditions: string[] = ['r.brand_id IN (:brandIds)'];
+    const replacements: any = { brandIds: allowedBrandIdsForExpenses };
 
     if (filters.catalog_no && filters.catalog_no !== '') {
       releaseConditions.push(`r.catalog_no ILIKE :catalogNo`);
@@ -2675,9 +2717,11 @@ export const getAdminRecuperableExpenseFlowDetails = async (req: AuthRequest, re
       return res.status(400).json({ error: 'releaseId is required' });
     }
 
-    // Verify release belongs to brand
+    // Verify release belongs to brand or a child brand
+    const childBrandsForExpenseDetails = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
+    const allowedBrandIdsForExpenseDetails = [req.user.brand_id, ...childBrandsForExpenseDetails.map((b: any) => b.id)];
     const release = await Release.findOne({
-      where: { id: releaseId, brand_id: req.user.brand_id }
+      where: { id: releaseId, brand_id: { [Op.in]: allowedBrandIdsForExpenseDetails } }
     });
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
@@ -2687,11 +2731,10 @@ export const getAdminRecuperableExpenseFlowDetails = async (req: AuthRequest, re
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    const { Op } = require('sequelize');
     const { count, rows } = await RecuperableExpense.findAndCountAll({
       where: {
         release_id: releaseId,
-        brand_id: req.user.brand_id,
+        brand_id: { [Op.in]: allowedBrandIdsForExpenseDetails },
         date_recorded: { [Op.between]: [start_date, end_date] }
       },
       order: [['date_recorded', 'DESC'], ['id', 'DESC']],

@@ -524,6 +524,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
         // Send notification to admins
         await sendReleaseSubmissionNotification(
           {
+            id: updatedRelease!.id,
             title: updatedRelease!.title,
             catalog_no: updatedRelease!.catalog_no,
             release_date: updatedRelease!.release_date.toString(),
@@ -781,10 +782,13 @@ export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const release = await Release.findOne({
-      where: { 
+      where: {
         id: releaseId,
-        brand_id: req.user.brand_id 
+        brand_id: { [Op.in]: allowedBrandIds }
       }
     });
 
