@@ -52,6 +52,7 @@
           </table>
         </ng-container>
         <button class="btn-primary pay-now-btn"
+                *ngIf="!isReadOnly"
                 (click)="onPayNow()"
                 [disabled]="summary.currentBalance <= 0">
           <app-icon name="credit-card" class="tw-mr-2" />Pay Now

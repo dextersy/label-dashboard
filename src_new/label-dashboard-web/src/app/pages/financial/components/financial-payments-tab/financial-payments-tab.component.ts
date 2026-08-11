@@ -20,6 +20,7 @@ export class FinancialPaymentsTabComponent {
   @Input() paymentsPagination: PaginationInfo | null = null;
   @Input() paymentsLoading: boolean = false;
   @Input() paymentsSort: { column: string; direction: 'asc' | 'desc' } | null = null;
+  @Input() isReadOnly: boolean = false;
   @Input() paymentMethods: PaymentMethod[] = [];
   @Output() paymentsPageChange = new EventEmitter<number>();
   @Output() paymentsFiltersChange = new EventEmitter<SearchFilters>();

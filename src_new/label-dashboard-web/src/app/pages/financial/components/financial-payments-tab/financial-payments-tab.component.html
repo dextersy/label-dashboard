@@ -19,6 +19,7 @@
       (pageChange)="paymentsPageChange.emit($event)"
       (filtersChange)="paymentsFiltersChange.emit($event)"
       (sortChange)="paymentsSortChange.emit($event)"
+      [isReadOnly]="isReadOnly"
       (refresh)="paymentsRefresh.emit()">
     </app-payments-table>
   </div>
@@ -50,14 +51,15 @@
                   <div class="tw-text-sm tw-text-muted">{{ maskAccountNumber(method.account_number_or_email) }}</div>
                 </div>
                 <div class="tw-flex tw-gap-1 tw-shrink-0">
-                  <button *ngIf="!method.is_default_for_artist"
+                  <button *ngIf="!method.is_default_for_artist && !isReadOnly"
                           type="button"
                           class="btn-icon payment-method-action-btn"
                           (click)="setDefaultPaymentMethod(method.id)"
                           title="Set as default">
                     <app-icon name="star" iconOnly />
                   </button>
-                  <button type="button"
+                  <button *ngIf="!isReadOnly"
+                          type="button"
                           class="btn-icon payment-method-action-btn payment-method-delete-btn"
                           [disabled]="paymentMethods.length === 1 || method.is_default_for_artist"
                           (click)="deletePaymentMethod(method.id)"
@@ -70,14 +72,14 @@
           </div>
         </div>
         
-        <div class="tw-mt-3">
+        <div class="tw-mt-3" *ngIf="!isReadOnly">
           <button type="button" class="btn-ghost-dashed" (click)="toggleAddPaymentMethodCollapse()">
             <app-icon [name]="isAddPaymentMethodCollapsed ? 'plus' : 'x'" class="tw-mr-1.5" />
             {{ isAddPaymentMethodCollapsed ? 'Add payout account' : 'Cancel' }}
           </button>
         </div>
 
-        <div class="collapsible-section">
+        <div class="collapsible-section" *ngIf="!isReadOnly">
           
           <div class="collapsible-content" [class.collapsed]="isAddPaymentMethodCollapsed">
             <form (ngSubmit)="onSubmitPaymentMethod()">
@@ -119,17 +121,17 @@
         <form (ngSubmit)="onUpdatePayoutSettings()">
           <div class="tw-mb-5">
             <label>Payout Point (PHP)</label>
-            <input type="number" class="tw-input" [(ngModel)]="payoutSettings.payout_point" name="payout_point" min="0" step="0.01">
+            <input type="number" class="tw-input" [(ngModel)]="payoutSettings.payout_point" name="payout_point" min="0" step="0.01" [disabled]="isReadOnly">
           </div>
           
           <div class="form-check form-switch" *ngIf="isAdmin">
-            <input type="checkbox" class="form-check-input" [(ngModel)]="payoutSettings.hold_payouts" name="hold_payouts" id="hold_payouts">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="payoutSettings.hold_payouts" name="hold_payouts" id="hold_payouts" [disabled]="isReadOnly">
             <label class="form-check-label" for="hold_payouts">
               Hold Payouts
             </label>
           </div>
           
-          <button type="submit" class="btn-primary btn-sm tw-mt-2">Update Settings</button>
+          <button *ngIf="!isReadOnly" type="submit" class="btn-primary btn-sm tw-mt-2">Update Settings</button>
         </form>
       </div>
     </div>

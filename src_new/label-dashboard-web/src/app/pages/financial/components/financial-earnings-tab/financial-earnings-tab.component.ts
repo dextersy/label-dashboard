@@ -31,6 +31,7 @@ export class FinancialEarningsTabComponent {
   @Output() dateRangeChange = new EventEmitter<DateRangeSelection>();
   @Output() refresh = new EventEmitter<void>();
 
+  @Input() isReadOnly = false;
   isAdmin = false;
   selectedArtist: any = null;
   downloadingCSV = false;
@@ -43,7 +44,7 @@ export class FinancialEarningsTabComponent {
       disabled: () => this.downloadingCSV,
       title: 'Download earnings as CSV',
     }];
-    if (this.isAdmin) {
+    if (this.isAdmin && !this.isReadOnly) {
       actions.push({
         icon: 'plus',
         label: 'Add',

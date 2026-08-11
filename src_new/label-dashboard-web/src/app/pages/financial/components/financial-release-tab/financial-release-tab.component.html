@@ -58,7 +58,7 @@
           <th class="tw-text-right tw-cursor-pointer">Earnings</th>
           <th class="tw-text-right tw-cursor-pointer">Expense</th>
           <th class="tw-text-right tw-cursor-pointer">Royalties</th>
-          <th *ngIf="isAdmin" class="tw-text-right">Actions</th>
+          <th *ngIf="isAdmin && !isReadOnly" class="tw-text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -123,7 +123,7 @@
             </td>
 
             <!-- Actions -->
-            <td *ngIf="isAdmin" class="tw-text-right rf-cell-actions" (click)="$event.stopPropagation()">
+            <td *ngIf="isAdmin && !isReadOnly" class="tw-text-right rf-cell-actions" (click)="$event.stopPropagation()">
               <ng-container *ngIf="editingRow === i; else viewActions">
                 <button type="button" class="btn-ghost btn-sm btn-icon rf-action-save"
                         [disabled]="isSavingRow"
@@ -341,7 +341,7 @@
       </div>
 
       <!-- Admin actions (admin only) -->
-      <div *ngIf="isAdmin" class="tw-pt-3 tw-border-t tw-border-gray-100 tw-flex tw-flex-col tw-gap-2">
+      <div *ngIf="isAdmin && !isReadOnly" class="tw-pt-3 tw-border-t tw-border-gray-100 tw-flex tw-flex-col tw-gap-2">
         <ng-container *ngIf="mobileEditingCard === i; else mobileEditBtn">
           <div class="tw-flex tw-gap-2">
             <button type="button" class="btn-primary tw-flex-1"

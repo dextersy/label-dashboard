@@ -212,3 +212,19 @@
 .disc-mobile-status {
   flex-shrink: 0;
 }
+
+// Sublabel badge shown on discography releases that belong to a child brand
+.disc-sublabel-badge,
+::ng-deep .disc-sublabel-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #ede9fe;
+  color: #6d28d9;
+  margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}

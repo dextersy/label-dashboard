@@ -80,6 +80,7 @@
       <img [src]="getCoverArtUrl(item.cover_art)" [alt]="item.title" class="disc-mobile-cover" />
       <div class="disc-mobile-info">
         <div class="disc-mobile-title">{{ item.title }}</div>
+        <span *ngIf="item.brand && item.brand.id !== authService.currentUserValue?.brand_id" class="disc-sublabel-badge">{{ item.brand.brand_name }}</span>
         <div class="disc-mobile-artist">{{ item.artists?.length ? item.artists[0].name : '—' }}<span *ngIf="item.artists?.length > 1"> +{{ item.artists.length - 1 }}</span></div>
         <div class="disc-mobile-meta">
           <span>{{ formatDate(item.release_date) }}</span>

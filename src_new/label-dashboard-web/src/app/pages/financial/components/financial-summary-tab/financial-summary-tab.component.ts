@@ -14,6 +14,7 @@ export class FinancialSummaryTabComponent {
   @Input() latestEarnings: Earning[] = [];
   @Input() latestRoyalties: Royalty[] = [];
   @Input() isAdmin: boolean = false;
+  @Input() isReadOnly: boolean = false;
   @Input() payoutSettings: PayoutSettings | null = null;
   @Input() onPayNow: () => Promise<void> = async () => {};
 

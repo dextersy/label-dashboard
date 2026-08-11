@@ -15,6 +15,7 @@ import { IconComponent } from '../../../../components/shared/icon/icon.component
 })
 export class FinancialDocumentsTabComponent {
   constructor(private sanitizer: DomSanitizer) {}
+  @Input() isReadOnly = false;
   @Input() documents: Document[] = [];
   @Input() documentUploadForm: any = {};
   @Input() uploadingDocument: boolean = false;
@@ -69,6 +70,7 @@ export class FinancialDocumentsTabComponent {
         icon: 'trash',
         label: 'Delete',
         type: 'danger',
+        hidden: () => this.isReadOnly,
         handler: (doc: Document) => this.deleteDocument(doc.id)
       }
     ];

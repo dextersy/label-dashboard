@@ -156,6 +156,10 @@ export class FinancialComponent implements OnInit, OnDestroy {
   activeTab: FinancialTabType = 'summary';
   isAdmin = false;
   loading = false;
+
+  get isSubLabelArtist(): boolean {
+    return !!(this.isAdmin && this.selectedArtist && this.authService.currentUserValue?.brand_id !== this.selectedArtist.brand_id);
+  }
   private routeSubscription: Subscription = new Subscription();
 
   // Financial data

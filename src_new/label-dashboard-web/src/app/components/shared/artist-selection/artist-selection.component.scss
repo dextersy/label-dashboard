@@ -79,6 +79,7 @@
 
 .artist-details {
   flex: 1;
+  min-width: 0;
 }
 
 .artist-name {
@@ -195,7 +196,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: 24px; // space for checkmark
+    min-width: 0;
   }
 
   &.active {
@@ -274,6 +275,31 @@
     color: #6c757d;
     min-width: 50px;
     text-align: center;
+  }
+}
+
+// Sublabel badge
+.artist-sublabel-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #ede9fe;
+  color: #6d28d9;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  // In the trigger button it sits below the name
+  .artist-details & {
+    display: block;
+    margin-top: 2px;
+  }
+
+  // In the modal list it sits inline after the name
+  .artist-modal-item & {
+    margin-right: 28px; // leave room for the checkmark
   }
 }
 

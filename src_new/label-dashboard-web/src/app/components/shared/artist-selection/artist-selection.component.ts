@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router, NavigationEnd } from '@angular/router';
 import { ArtistStateService } from '../../../services/artist-state.service';
+import { AuthService } from '../../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { environment } from 'environments/environment';
@@ -38,7 +39,8 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -300,6 +302,14 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
   getArtistInitials(name: string): string {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  getSublabelName(artist: Artist): string | null {
+    const userBrandId = this.authService.currentUserValue?.brand_id;
+    if (artist.brand && userBrandId && artist.brand.id !== userBrandId) {
+      return artist.brand.brand_name;
+    }
+    return null;
   }
 
   ngOnDestroy(): void {

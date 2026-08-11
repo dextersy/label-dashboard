@@ -22,6 +22,7 @@
            class="artist-photo artist-initials">{{ getArtistInitials(selectedArtist.name) }}</div>
       <div class="artist-details">
         <div class="artist-name">{{ selectedArtist.name }}</div>
+        <span *ngIf="getSublabelName(selectedArtist) as labelName" class="artist-sublabel-badge">{{ labelName }}</span>
       </div>
     </div>
     <div *ngIf="!selectedArtist && !loading && !isNewArtistMode" class="no-artist">
@@ -76,6 +77,7 @@
             <div *ngIf="!hasProfilePhoto(artist)"
                  class="artist-modal-photo artist-modal-initials">{{ getArtistInitials(artist.name) }}</div>
             <span class="artist-modal-name">{{ artist.name }}</span>
+            <span *ngIf="getSublabelName(artist) as labelName" class="artist-sublabel-badge">{{ labelName }}</span>
           </button>
 
           <!-- No results -->

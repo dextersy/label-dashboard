@@ -45,7 +45,7 @@
     </app-paginated-table>
   </div>
   
-  <div class="md:tw-col-span-4">
+  <div class="md:tw-col-span-4" *ngIf="!isReadOnly">
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8">
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
         <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Document</h3>

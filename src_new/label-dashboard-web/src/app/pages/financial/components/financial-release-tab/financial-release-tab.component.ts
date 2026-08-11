@@ -17,6 +17,7 @@ export class FinancialReleaseTabComponent {
   @Output() goToEarningsForRelease = new EventEmitter<ReleaseInfo>();
   @Output() goToRoyaltiesForRelease = new EventEmitter<ReleaseInfo>();
   @Input() isAdmin: boolean = false;
+  @Input() isReadOnly: boolean = false;
   @Input() editingRoyalties: boolean = false;
   @Input() updatingRoyalties: boolean = false;
   @Input() toggleEditRoyalties: () => void = () => {};

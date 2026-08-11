@@ -23,6 +23,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   @Output() sortChange = new EventEmitter<{ column: string; direction: 'asc' | 'desc' } | null>();
   @Output() refresh = new EventEmitter<void>();
 
+  @Input() isReadOnly = false;
   isAdmin = false;
 
   rowActions: TableAction[] = [
@@ -30,14 +31,14 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
       icon: 'check-circle',
       label: 'Mark as succeeded',
       type: 'secondary',
-      hidden: (payment: Payment) => !this.isAdmin || payment.status === 'succeeded',
+      hidden: (payment: Payment) => !this.isAdmin || this.isReadOnly || payment.status === 'succeeded',
       handler: (payment: Payment) => this.updateStatus(payment, 'succeeded')
     },
     {
       icon: 'ban',
       label: 'Void payment',
       type: 'danger',
-      hidden: (payment: Payment) => !this.isAdmin || payment.status === 'failed',
+      hidden: (payment: Payment) => !this.isAdmin || this.isReadOnly || payment.status === 'failed',
       handler: (payment: Payment) => this.updateStatus(payment, 'failed')
     }
   ];
@@ -51,7 +52,7 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
       title: 'Refresh payments',
       disabled: () => this.loading,
     }];
-    if (this.isAdmin) {
+    if (this.isAdmin && !this.isReadOnly) {
       actions.push({
         icon: 'plus',
         label: 'Add',

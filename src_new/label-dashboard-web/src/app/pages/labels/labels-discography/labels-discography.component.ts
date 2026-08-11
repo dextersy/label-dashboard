@@ -13,6 +13,7 @@ import {
 } from '../../../components/shared/paginated-table/paginated-table.component';
 import { ArtistStateService } from '../../../services/artist-state.service';
 import { WorkspaceService } from '../../../services/workspace.service';
+import { AuthService } from '../../../services/auth.service';
 import { environment } from 'environments/environment';
 
 export interface DiscographyRelease {
@@ -23,6 +24,8 @@ export interface DiscographyRelease {
   cover_art?: string;
   release_date: string;
   status: 'Draft' | 'For Submission' | 'Pending' | 'Live' | 'Taken Down';
+  brand_id?: number;
+  brand?: { id: number; brand_name: string };
   artists?: Array<{ id: number; name: string; profile_photo: string | null }>;
 }
 
@@ -111,7 +114,8 @@ export class LabelsDiscographyComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private artistStateService: ArtistStateService,
-    private workspaceService: WorkspaceService
+    private workspaceService: WorkspaceService,
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -245,18 +249,32 @@ export class LabelsDiscographyComponent implements OnInit {
       : `${environment.apiUrl}/uploads/covers/${coverArt}`;
   }
 
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   private renderCoverTitle(item: DiscographyRelease): string {
     const url = this.getCoverArtUrl(item.cover_art);
-    const title = item.title || '';
+    const title = this.escapeHtml(item.title || '');
+    const userBrandId = this.authService.currentUserValue?.brand_id;
+    const isSublabel = item.brand && userBrandId && item.brand.id !== userBrandId;
+    const badge = isSublabel
+      ? `<span class="disc-sublabel-badge">${this.escapeHtml(item.brand!.brand_name)}</span>`
+      : '';
     return `<span class="disc-cover-cell">
       <img src="${url}" alt="" class="disc-cover-thumb" />
-      <span class="disc-cover-title">${title}</span>
+      <span class="disc-cover-title">${title}${badge}</span>
     </span>`;
   }
 
   private renderStatusBadge(status: string): string {
     const cls = this.getStatusClass(status);
-    return `<span class="${cls}">${status}</span>`;
+    return `<span class="${cls}">${this.escapeHtml(status)}</span>`;
   }
 
   getStatusClass(status: string): string {
