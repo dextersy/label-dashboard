@@ -620,8 +620,26 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
 
   // Handle inline release field edits from view mode (admin only)
   onReleaseUpdated(release: Release): void {
+    const previousStatus = this.editingRelease?.status;
     this.releaseForView = release;
     this.editingRelease = release;
+
+    // If status changed to Draft, switch to the edit form
+    if (release.status === 'Draft' && previousStatus !== 'Draft') {
+      this.showReadOnlyView = false;
+      this.initReleaseInfoFromRelease(release);
+      this.initAlbumCreditsFromRelease(release);
+      this.isReleaseInfoValid = true;
+      this.isAlbumCreditsValid = true;
+      this.activeSection = 'info';
+      this.performInitialValidation(release, (release as any).songs || []);
+      return;
+    }
+
+    // If status changed away from Draft while in edit mode, switch to read-only view
+    if (release.status !== 'Draft' && previousStatus === 'Draft' && !this.showReadOnlyView) {
+      this.showReadOnlyView = true;
+    }
   }
 
   // Cancel edit mode and return to read-only view (for non-Draft releases)
