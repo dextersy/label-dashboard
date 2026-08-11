@@ -1440,19 +1440,14 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ error: 'Artist not found' });
       }
 
-      const totalRoyalties = await Royalty.sum('amount', {
-        where: { artist_id: artistIdNum }
-      }) || 0;
-
-      const totalPayments = await Payment.sum('amount', {
-        where: { artist_id: artistIdNum, status: 'succeeded' }
-      }) || 0;
+      // Fetch totals and release IDs in parallel
+      const [totalRoyalties, totalPayments, artistReleases] = await Promise.all([
+        Royalty.sum('amount', { where: { artist_id: artistIdNum } }).then(v => v || 0),
+        Payment.sum('amount', { where: { artist_id: artistIdNum, status: 'succeeded' } }).then(v => v || 0),
+        ReleaseArtist.findAll({ where: { artist_id: artistIdNum }, attributes: ['release_id'] }),
+      ]);
 
       // Calculate total earnings from all releases the artist is on (any brand)
-      const artistReleases = await ReleaseArtist.findAll({
-        where: { artist_id: artistIdNum },
-        attributes: ['release_id']
-      });
       const releaseIds = artistReleases.map(ra => ra.release_id);
       const totalEarnings = releaseIds.length > 0 ? await Earning.sum('amount', {
         where: { release_id: releaseIds }
@@ -1474,70 +1469,70 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       if (req.user.is_admin) {
         const isViewingSubLabelArtist = artist.brand_id !== req.user.brand_id;
 
-        // Royalties split depends on which brand is "ours"
-        let ownRoyaltyQuery: string;
-        let ownRoyaltyReplacements: any;
-        if (isViewingSubLabelArtist) {
-          // Parent admin viewing sub-label artist: own = earnings recorded by this (parent) brand
-          ownRoyaltyQuery = `SELECT COALESCE(SUM(r.amount), 0) AS total
-            FROM royalty r
-            LEFT JOIN earning e ON r.earning_id = e.id
-            WHERE r.artist_id = :artistId
-              AND e.recorded_by_brand_id = :brandId`;
-          ownRoyaltyReplacements = { artistId: artistIdNum, brandId: req.user.brand_id };
-        } else {
-          // Sub-label admin viewing own artist: own = unbranded earnings (sub-label's own)
-          ownRoyaltyQuery = `SELECT COALESCE(SUM(r.amount), 0) AS total
-            FROM royalty r
-            LEFT JOIN earning e ON r.earning_id = e.id
-            WHERE r.artist_id = :artistId
-              AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)`;
-          ownRoyaltyReplacements = { artistId: artistIdNum };
-        }
-        const [ownRoyaltyRow]: any[] = await sequelize.query(ownRoyaltyQuery, {
-          replacements: ownRoyaltyReplacements, type: 'SELECT'
-        });
-        const ownRoyalties = parseFloat(parseFloat(ownRoyaltyRow.total || 0).toFixed(2));
-        const parentRoyalties = parseFloat((totalRoyalties - ownRoyalties).toFixed(2));
+        // Royalties split: always query the sub-label's unbranded royalties (same definition in both
+        // views), then derive the parent's portion as total - sublabel_unbranded. This keeps the two
+        // perspectives symmetric: the sublabel sees its own unbranded royalties as "own", and the
+        // parent sees those same unbranded royalties as the "other" label's portion.
+        const unbrandedRoyaltyQuery = `SELECT COALESCE(SUM(r.amount), 0) AS total
+          FROM royalty r
+          LEFT JOIN earning e ON r.earning_id = e.id
+          WHERE r.artist_id = :artistId
+            AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)`;
 
-        const ownPayments = parseFloat((await Payment.sum('amount', {
-          where: { artist_id: artistIdNum, paid_by_brand_id: req.user.brand_id, status: 'succeeded' }
-        }) || 0).toFixed(2));
+        // Build earning query params based on perspective
+        let ownEarningQuery: string | null = null;
+        let ownEarningReplacements: any = null;
+        if (releaseIds.length > 0) {
+          // Always query unbranded earnings (sub-label's own) and derive parent's as total - unbranded
+          ownEarningQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
+            WHERE release_id IN (:releaseIds) AND (recorded_by_brand_id IS NULL)`;
+          ownEarningReplacements = { releaseIds };
+        }
+
+        // Build brand name lookup promise
+        const otherLabelNamePromise: Promise<string | undefined> = isViewingSubLabelArtist
+          ? Brand.findByPk(artist.brand_id, { attributes: ['brand_name'] }).then(b => b?.brand_name)
+          : Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] }).then(async adminBrand => {
+              if (adminBrand?.parent_brand) {
+                const parentBrand = await Brand.findByPk(adminBrand.parent_brand, { attributes: ['brand_name'] });
+                return parentBrand?.brand_name;
+              }
+              return undefined;
+            });
+
+        // Run unbranded royalties, own payments, own earnings, and brand name lookup in parallel
+        const [unbrandedRoyaltyRow, ownPaymentsRaw, ownEarningRow, otherLabelName]: any[] = await Promise.all([
+          sequelize.query(unbrandedRoyaltyQuery, { replacements: { artistId: artistIdNum }, type: 'SELECT' })
+            .then(rows => rows[0]),
+          Payment.sum('amount', {
+            where: { artist_id: artistIdNum, paid_by_brand_id: req.user.brand_id, status: 'succeeded' }
+          }),
+          ownEarningQuery
+            ? sequelize.query(ownEarningQuery, { replacements: ownEarningReplacements, type: 'SELECT' })
+                .then(rows => rows[0])
+            : Promise.resolve(null),
+          otherLabelNamePromise,
+        ]);
+
+        // Unbranded royalties = sub-label's portion. Derive each perspective's "own" from this.
+        const sublabelRoyalties = parseFloat(parseFloat(unbrandedRoyaltyRow.total || 0).toFixed(2));
+        const ownRoyalties = isViewingSubLabelArtist
+          ? parseFloat((totalRoyalties - sublabelRoyalties).toFixed(2)) // parent's own = total - sublabel
+          : sublabelRoyalties;                                           // sublabel's own = unbranded
+        const parentRoyalties = isViewingSubLabelArtist
+          ? sublabelRoyalties                                            // parent view: "other" = sublabel's unbranded
+          : parseFloat((totalRoyalties - sublabelRoyalties).toFixed(2)); // sublabel view: "other" = parent's branded
+
+        const ownPayments = parseFloat((ownPaymentsRaw || 0).toFixed(2));
         const parentPayments = parseFloat((totalPayments - ownPayments).toFixed(2));
 
-        let ownEarnings = 0;
-        let parentEarnings = 0;
-        if (releaseIds.length > 0) {
-          let ownEarningQuery: string;
-          let ownEarningReplacements: any;
-          if (isViewingSubLabelArtist) {
-            ownEarningQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
-              WHERE release_id IN (:releaseIds) AND recorded_by_brand_id = :brandId`;
-            ownEarningReplacements = { releaseIds, brandId: req.user.brand_id };
-          } else {
-            ownEarningQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
-              WHERE release_id IN (:releaseIds) AND (recorded_by_brand_id IS NULL)`;
-            ownEarningReplacements = { releaseIds };
-          }
-          const [ownEarningRow]: any[] = await sequelize.query(ownEarningQuery, {
-            replacements: ownEarningReplacements, type: 'SELECT'
-          });
-          ownEarnings = parseFloat(parseFloat(ownEarningRow.total || 0).toFixed(2));
-          parentEarnings = parseFloat((totalEarnings - ownEarnings).toFixed(2));
-        }
-
-        // Other label name: sub-label name when parent is viewing, parent brand name otherwise
-        let otherLabelName: string | undefined;
-        if (isViewingSubLabelArtist) {
-          const subLabelBrand = await Brand.findByPk(artist.brand_id, { attributes: ['brand_name'] });
-          otherLabelName = subLabelBrand?.brand_name;
-        } else {
-          const adminBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
-          if (adminBrand?.parent_brand) {
-            const parentBrand = await Brand.findByPk(adminBrand.parent_brand, { attributes: ['brand_name'] });
-            otherLabelName = parentBrand?.brand_name;
-          }
-        }
+        const sublabelEarnings = ownEarningRow ? parseFloat(parseFloat(ownEarningRow.total || 0).toFixed(2)) : 0;
+        const ownEarnings = isViewingSubLabelArtist
+          ? parseFloat((totalEarnings - sublabelEarnings).toFixed(2))
+          : sublabelEarnings;
+        const parentEarnings = isViewingSubLabelArtist
+          ? sublabelEarnings
+          : parseFloat((totalEarnings - sublabelEarnings).toFixed(2));
 
         summary.breakdown = {
           own_royalties: ownRoyalties,
@@ -1552,45 +1547,28 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         };
       }
     } else {
-      // Brand-wide summary
-      const earningsResult = await Earning.findAll({
-        include: [{
-          model: Release,
-          as: 'release',
-          where: { brand_id: req.user.brand_id }
-        }],
-        attributes: [
-          [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
-        ],
-        raw: true
-      });
+      // Brand-wide summary — run all three aggregate queries in parallel
+      const [earningsResult, royaltiesResult, paymentsResult] = await Promise.all([
+        Earning.findAll({
+          include: [{ model: Release, as: 'release', where: { brand_id: req.user.brand_id } }],
+          attributes: [[require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']],
+          raw: true
+        }),
+        Royalty.findAll({
+          include: [{ model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } }],
+          attributes: [[require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']],
+          raw: true
+        }),
+        Payment.findAll({
+          where: { status: 'succeeded' },
+          include: [{ model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } }],
+          attributes: [[require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']],
+          raw: true
+        }),
+      ]);
+
       const totalEarnings = (earningsResult[0] as any)?.total || 0;
-
-      const royaltiesResult = await Royalty.findAll({
-        include: [{
-          model: Artist,
-          as: 'artist',
-          where: { brand_id: req.user.brand_id }
-        }],
-        attributes: [
-          [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
-        ],
-        raw: true
-      });
       const totalRoyalties = (royaltiesResult[0] as any)?.total || 0;
-
-      const paymentsResult = await Payment.findAll({
-        where: { status: 'succeeded' },
-        include: [{
-          model: Artist,
-          as: 'artist',
-          where: { brand_id: req.user.brand_id }
-        }],
-        attributes: [
-          [require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']
-        ],
-        raw: true
-      });
       const totalPayments = (paymentsResult[0] as any)?.total || 0;
 
       summary = {
