@@ -921,6 +921,7 @@ export const sendSublabelPaymentNotification = async (
 // Send release submission notification to admins
 export const sendReleaseSubmissionNotification = async (
   releaseData: {
+    id: number;
     title: string;
     catalog_no: string;
     release_date: string;
@@ -930,14 +931,6 @@ export const sendReleaseSubmissionNotification = async (
   brandId: number
 ): Promise<boolean> => {
   try {
-    // Get brand administrators including parent brand admins
-    const adminEmails = await getBrandAndParentAdministrators(brandId);
-
-    if (adminEmails.length === 0) {
-      console.log('No administrators found for brand, skipping release submission notification');
-      return false;
-    }
-
     // Fetch brand information
     const brand = await Brand.findByPk(brandId);
     if (!brand) {
@@ -945,35 +938,61 @@ export const sendReleaseSubmissionNotification = async (
       return false;
     }
 
-    // Get brand frontend URL for dashboard link
-    const dashboardUrl = await getBrandFrontendUrl(brandId);
+    // Build list of brand IDs to notify: the release's brand and its parent (if any)
+    const brandIds: number[] = [brandId];
+    if ((brand as any)?.parent_brand) {
+      brandIds.push((brand as any).parent_brand);
+    }
 
-    // Load email template
+    // Load email template once
     const templatePath = path.join(__dirname, '../assets/templates/release_submission_notification.html');
-    let template = fs.readFileSync(templatePath, 'utf8');
+    const templateSource = fs.readFileSync(templatePath, 'utf8');
 
-    // Format release date
+    // Format release date once
     const formattedDate = new Date(releaseData.release_date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
 
-    // Replace placeholders
-    template = template
-      .replace(/%BRAND_NAME%/g, brand.brand_name || 'Dashboard')
-      .replace(/%BRAND_COLOR%/g, brand.brand_color || '#1595e7')
-      .replace(/%LOGO%/g, brand.logo_url || '')
-      .replace(/%ARTIST_NAME%/g, artistName)
-      .replace(/%RELEASE_TITLE%/g, releaseData.title)
-      .replace(/%CATALOG_NO%/g, releaseData.catalog_no)
-      .replace(/%RELEASE_DATE%/g, formattedDate)
-      .replace(/%TRACK_COUNT%/g, releaseData.track_count.toString())
-      .replace(/%DASHBOARD_URL%/g, dashboardUrl);
-
     const subject = `New Release Submitted: ${releaseData.title}`;
+    let anySent = false;
 
-    return await sendEmail(adminEmails, subject, template, brand.id);
+    // Send a separate email per brand so the "Review Release" link uses each recipient's domain
+    for (const bid of brandIds) {
+      const adminUsers = await User.findAll({
+        where: { brand_id: bid, is_admin: true },
+        attributes: ['email_address']
+      });
+      const emails = [...new Set(adminUsers.filter(u => u.email_address).map(u => u.email_address))];
+      if (emails.length === 0) continue;
+
+      const recipientBrand = bid === brandId ? brand : await Brand.findByPk(bid);
+      if (!recipientBrand) continue;
+
+      const brandUrl = await getBrandFrontendUrl(bid);
+      const releaseUrl = `${brandUrl}/music/releases/edit/${releaseData.id}`;
+
+      let template = templateSource
+        .replace(/%BRAND_NAME%/g, brand.brand_name || 'Dashboard')
+        .replace(/%BRAND_COLOR%/g, brand.brand_color || '#1595e7')
+        .replace(/%LOGO%/g, brand.logo_url || '')
+        .replace(/%ARTIST_NAME%/g, artistName)
+        .replace(/%RELEASE_TITLE%/g, releaseData.title)
+        .replace(/%CATALOG_NO%/g, releaseData.catalog_no)
+        .replace(/%RELEASE_DATE%/g, formattedDate)
+        .replace(/%TRACK_COUNT%/g, releaseData.track_count.toString())
+        .replace(/%DASHBOARD_URL%/g, releaseUrl);
+
+      const sent = await sendEmail(emails, subject, template, brand.id);
+      if (sent) anySent = true;
+    }
+
+    if (!anySent) {
+      console.log('No administrators found for brand, skipping release submission notification');
+    }
+
+    return anySent;
   } catch (error) {
     console.error('Error sending release submission notification:', error);
     return false;
