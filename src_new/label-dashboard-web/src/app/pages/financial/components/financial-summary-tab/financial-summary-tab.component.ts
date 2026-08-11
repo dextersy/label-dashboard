@@ -24,6 +24,27 @@ export class FinancialSummaryTabComponent {
 
   activeMobileTab: 'earnings' | 'royalties' = 'earnings';
 
+  get isParentView(): boolean {
+    return !!this.summary?.breakdown?.is_parent_view;
+  }
+
+  get showBreakdown(): boolean {
+    return !!this.summary?.breakdown;
+  }
+
+  get breakdownYourLabel(): { name: string; royalties: number; payments: number; earnings: number } | null {
+    const b = this.summary?.breakdown;
+    if (!b) return null;
+    return { name: 'Your label', royalties: b.own_royalties, payments: b.own_payments, earnings: b.own_earnings };
+  }
+
+  get breakdownOtherLabel(): { name: string; royalties: number; payments: number; earnings: number } | null {
+    const b = this.summary?.breakdown;
+    if (!b) return null;
+    const name = b.other_label_name || (this.isParentView ? 'Sub-label' : 'Parent label');
+    return { name, royalties: b.parent_royalties, payments: b.parent_payments, earnings: b.parent_earnings };
+  }
+
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
