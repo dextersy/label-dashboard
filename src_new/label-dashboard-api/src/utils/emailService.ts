@@ -99,6 +99,25 @@ const getBrandAdministrators = async (brandId: number): Promise<string[]> => {
   }
 };
 
+// Helper function to get admin emails for a brand and its parent brand
+const getBrandAndParentAdministrators = async (brandId: number): Promise<string[]> => {
+  try {
+    const brand = await Brand.findByPk(brandId, { attributes: ['id', 'parent_brand'] });
+    const brandIds: number[] = [brandId];
+    if ((brand as any)?.parent_brand) {
+      brandIds.push((brand as any).parent_brand);
+    }
+    const adminUsers = await User.findAll({
+      where: { brand_id: brandIds, is_admin: true },
+      attributes: ['email_address']
+    });
+    return [...new Set(adminUsers.filter(u => u.email_address).map(u => u.email_address))];
+  } catch (error) {
+    console.error('Error fetching brand and parent administrators:', error);
+    return [];
+  }
+};
+
 export const sendNotificationEmail = async (
   type: 'login_success' | 'login_failure' | 'admin_alert',
   data: any,
@@ -911,8 +930,8 @@ export const sendReleaseSubmissionNotification = async (
   brandId: number
 ): Promise<boolean> => {
   try {
-    // Get brand administrators
-    const adminEmails = await getBrandAdministrators(brandId);
+    // Get brand administrators including parent brand admins
+    const adminEmails = await getBrandAndParentAdministrators(brandId);
 
     if (adminEmails.length === 0) {
       console.log('No administrators found for brand, skipping release submission notification');
