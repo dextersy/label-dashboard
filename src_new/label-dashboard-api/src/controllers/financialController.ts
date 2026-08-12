@@ -1060,8 +1060,8 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
          FROM royalty r
          JOIN earning e ON r.earning_id = e.id
          WHERE r.artist_id = :artistId
-           AND e.recorded_by_brand_id IS NOT NULL`,
-        { replacements: { artistId: artistIdNum }, type: 'SELECT' }
+           AND e.recorded_by_brand_id = :parentBrandId`,
+        { replacements: { artistId: artistIdNum, parentBrandId: req.user.brand_id }, type: 'SELECT' }
       );
       const parentPayableRoyalties = parseFloat(royaltyResult.total || 0);
 
@@ -2225,9 +2225,9 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
            FROM royalty r
            JOIN earning e ON r.earning_id = e.id
            WHERE r.artist_id IN (:artistIds)
-             AND e.recorded_by_brand_id IS NOT NULL
+             AND e.recorded_by_brand_id = :parentBrandId
            GROUP BY r.artist_id`,
-          { replacements: { artistIds }, type: 'SELECT' }
+          { replacements: { artistIds, parentBrandId: req.user.brand_id }, type: 'SELECT' }
         );
         royaltyRows.forEach(row => {
           royaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
@@ -2269,9 +2269,9 @@ export const getAdminBalanceSummary = async (req: AuthRequest, res: Response) =>
            FROM royalty r
            JOIN earning e ON r.earning_id = e.id
            WHERE r.artist_id IN (:artistIds)
-             AND e.recorded_by_brand_id IS NOT NULL
+             AND e.recorded_by_brand_id = :parentBrandId
            GROUP BY r.artist_id`,
-          { replacements: { artistIds }, type: 'SELECT' }
+          { replacements: { artistIds, parentBrandId: req.user.brand_id }, type: 'SELECT' }
         );
         parentRoyaltyRows.forEach(row => {
           parentRoyaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
@@ -2811,8 +2811,8 @@ const getParentPayableBalance = async (artistId: number, parentBrandId: number):
     SELECT COALESCE(SUM(r.amount), 0) AS parent_royalties
     FROM royalty r
     JOIN earning e ON r.earning_id = e.id
-    WHERE r.artist_id = :artistId AND e.recorded_by_brand_id IS NOT NULL
-  `, { replacements: { artistId }, type: 'SELECT' });
+    WHERE r.artist_id = :artistId AND e.recorded_by_brand_id = :parentBrandId
+  `, { replacements: { artistId, parentBrandId }, type: 'SELECT' });
 
   const [paymentRows]: any = await sequelize.query(`
     SELECT COALESCE(SUM(amount), 0) AS parent_payments
@@ -2852,9 +2852,9 @@ export const getArtistsReadyForPayment = async (req: AuthRequest, res: Response)
         `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
          FROM royalty r
          JOIN earning e ON r.earning_id = e.id
-         WHERE r.artist_id IN (:artistIds) AND e.recorded_by_brand_id IS NOT NULL
+         WHERE r.artist_id IN (:artistIds) AND e.recorded_by_brand_id = :parentBrandId
          GROUP BY r.artist_id`,
-        { replacements: { artistIds }, type: 'SELECT' }
+        { replacements: { artistIds, parentBrandId: req.user.brand_id }, type: 'SELECT' }
       );
       const royaltiesByArtist: Record<number, number> = {};
       royaltyRows.forEach(row => { royaltiesByArtist[row.artist_id] = parseFloat(row.total); });
