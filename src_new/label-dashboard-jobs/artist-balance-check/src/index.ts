@@ -44,7 +44,6 @@ interface WalletBalance {
 
 interface WalletBalancesResponse {
   total_brands: number;
-  total_balance: number;
   wallets: WalletBalance[];
   currency: string;
 }
@@ -52,11 +51,6 @@ interface WalletBalancesResponse {
 interface ArtistBalanceSummary {
   artists: (ArtistBalance & { brand_name: string })[];
   total_amount: number;
-  wallet_info?: {
-    total_balance: number;
-    is_sufficient: boolean;
-    shortage: number;
-  };
 }
 
 class ArtistBalanceCheckService {
@@ -175,7 +169,7 @@ class ArtistBalanceCheckService {
       const response = await this.apiRequest<WalletBalancesResponse>('/api/system/wallet-balances');
 
       console.log(`Retrieved wallet balances for ${response.total_brands} brands`);
-      console.log(`Total available balance: ₱${response.total_balance.toFixed(2)}`);
+
 
       return response;
     } catch (error: any) {
@@ -189,7 +183,7 @@ class ArtistBalanceCheckService {
    * Returns a summary scoped to artists ready for payment for the superadmin email,
    * and the full brand list for per-brand reminder emails.
    */
-  async fetchArtistsReadyForPayment(): Promise<{ summary: ArtistBalanceSummary; brands: BrandBalance[] }> {
+  async fetchArtistsReadyForPayment(): Promise<{ summary: ArtistBalanceSummary; brands: BrandBalance[]; walletsByBrandId: Map<number, number> }> {
     console.log('Fetching artist balances from System API (cross-brand)...');
 
     try {
@@ -219,24 +213,12 @@ class ArtistBalanceCheckService {
       console.log(`\nTotal: ${readyArtists.length} artists ready for payment across ${Object.keys(brandCounts).length} brands`);
       console.log(`Total amount due: ₱${totalAmount.toFixed(2)}`);
 
-      // Fetch wallet balances
+      // Fetch per-brand wallet balances for use in per-brand reminder emails
+      const walletsByBrandId = new Map<number, number>();
       const walletBalances = await this.fetchWalletBalances();
-
-      let walletInfo = undefined;
       if (walletBalances) {
-        const isSufficient = walletBalances.total_balance >= totalAmount;
-        const shortage = isSufficient ? 0 : totalAmount - walletBalances.total_balance;
-
-        walletInfo = {
-          total_balance: walletBalances.total_balance,
-          is_sufficient: isSufficient,
-          shortage
-        };
-
-        console.log(`\nWallet Balance: ₱${walletBalances.total_balance.toFixed(2)}`);
-        console.log(`Sufficient for payments: ${isSufficient ? 'YES ✓' : 'NO ✗'}`);
-        if (!isSufficient) {
-          console.log(`Shortage: ₱${shortage.toFixed(2)}`);
+        for (const wallet of walletBalances.wallets) {
+          walletsByBrandId.set(wallet.brand_id, wallet.available_balance);
         }
       }
 
@@ -244,9 +226,9 @@ class ArtistBalanceCheckService {
         summary: {
           artists: readyArtists,
           total_amount: totalAmount,
-          wallet_info: walletInfo,
         },
         brands,
+        walletsByBrandId,
       };
     } catch (error: any) {
       console.error('Error fetching artist balances:', error.message);
@@ -327,36 +309,6 @@ class ArtistBalanceCheckService {
               </div>
 
               ${
-                summary.wallet_info
-                  ? `
-              <!-- Wallet Balance Card -->
-              <div style="background-color: ${summary.wallet_info.is_sufficient ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${summary.wallet_info.is_sufficient ? '#059669' : '#dc2626'}; padding: 20px; border-radius: 6px; margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <div>
-                    <p style="margin: 0 0 4px 0; color: ${summary.wallet_info.is_sufficient ? '#065f46' : '#991b1b'}; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-                      Paymongo Wallet Balance
-                    </p>
-                    <p style="margin: 0; color: ${summary.wallet_info.is_sufficient ? '#059669' : '#dc2626'}; font-size: 28px; font-weight: 700;">
-                      ₱${summary.wallet_info.total_balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    ${
-                      !summary.wallet_info.is_sufficient
-                        ? `<p style="margin: 8px 0 0 0; color: #dc2626; font-size: 14px; font-weight: 600;">
-                             ⚠️ Shortage: ₱${summary.wallet_info.shortage.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                           </p>`
-                        : ''
-                    }
-                  </div>
-                  <div style="background-color: ${summary.wallet_info.is_sufficient ? '#059669' : '#dc2626'}; color: #ffffff; padding: 12px 20px; border-radius: 50%; font-size: 24px; line-height: 1;">
-                    ${summary.wallet_info.is_sufficient ? '✓' : '✗'}
-                  </div>
-                </div>
-              </div>
-              `
-                  : ''
-              }
-
-              ${
                 summary.artists.length > 0
                   ? `
               <!-- Artists Table -->
@@ -430,16 +382,6 @@ class ArtistBalanceCheckService {
     text += `TOTAL AMOUNT DUE: ₱${summary.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
     text += `ARTISTS READY FOR PAYMENT: ${summary.artists.length}\n\n`;
 
-    if (summary.wallet_info) {
-      text += `PAYMONGO WALLET BALANCE: ₱${summary.wallet_info.total_balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n`;
-      if (summary.wallet_info.is_sufficient) {
-        text += `STATUS: SUFFICIENT ✓\n\n`;
-      } else {
-        text += `STATUS: INSUFFICIENT ✗\n`;
-        text += `SHORTAGE: ₱${summary.wallet_info.shortage.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\n\n`;
-      }
-    }
-
     if (summary.artists.length > 0) {
       text += `BREAKDOWN BY ARTIST:\n`;
       text += `-------------------------------------------\n\n`;
@@ -462,7 +404,7 @@ class ArtistBalanceCheckService {
   /**
    * Generate HTML for a per-brand balance reminder email sent to brand admins
    */
-  private generateBrandReminderHTML(brand: BrandBalance): string {
+  private generateBrandReminderHTML(brand: BrandBalance, walletBalance: number | null): string {
     const currentDate = new Date().toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -474,21 +416,42 @@ class ArtistBalanceCheckService {
       ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
       : `<div style="font-size: 22px; font-weight: bold; color: #ffffff;">${brand.brand_name}</div>`;
 
-    const artistRows = brand.artists
-      .map(
-        (artist) => `
+    const renderArtistRow = (artist: ArtistBalance) => `
         <tr>
           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #374151;">
             ${artist.artist_name}
-            ${artist.sublabel_name ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">${artist.sublabel_name}</div>` : ''}
           </td>
           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #059669;">
             ₱${artist.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </td>
-        </tr>
-      `
-      )
-      .join('');
+        </tr>`;
+
+    const renderSectionHeader = (label: string) => `
+        <tr>
+          <td colspan="2" style="padding: 10px 12px 6px 12px; background-color: #f9fafb; font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; border-bottom: 1px solid #e5e7eb;">
+            ${label}
+          </td>
+        </tr>`;
+
+    const ownArtists = brand.artists.filter(a => !a.sublabel_name);
+    const sublabelGroups = new Map<string, ArtistBalance[]>();
+    for (const artist of brand.artists) {
+      if (artist.sublabel_name) {
+        if (!sublabelGroups.has(artist.sublabel_name)) sublabelGroups.set(artist.sublabel_name, []);
+        sublabelGroups.get(artist.sublabel_name)!.push(artist);
+      }
+    }
+
+    const hasSections = ownArtists.length > 0 && sublabelGroups.size > 0 || sublabelGroups.size > 1;
+
+    const artistRows = [
+      ...(ownArtists.length > 0 && hasSections ? [renderSectionHeader(brand.brand_name)] : []),
+      ...ownArtists.map(renderArtistRow),
+      ...[...sublabelGroups.entries()].flatMap(([sublabelName, artists]) => [
+        renderSectionHeader(sublabelName),
+        ...artists.map(renderArtistRow),
+      ]),
+    ].join('');
 
     return `
 <!DOCTYPE html>
@@ -516,12 +479,29 @@ class ArtistBalanceCheckService {
               <h2 style="margin: 0 0 8px 0; color: #111827; font-size: 20px; font-weight: 700;">Artist Balance Reminder</h2>
               <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">${currentDate}</p>
 
-              <div style="background-color: #f0fdf4; border-left: 4px solid #059669; padding: 16px 20px; border-radius: 6px; margin-bottom: 24px;">
+              <div style="background-color: #f0fdf4; border-left: 4px solid #059669; padding: 16px 20px; border-radius: 6px; margin-bottom: 16px;">
                 <p style="margin: 0 0 4px 0; color: #065f46; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Payable</p>
                 <p style="margin: 0; color: #059669; font-size: 28px; font-weight: 700;">
                   ₱${brand.total_payable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
+
+              ${walletBalance !== null ? (() => {
+                const isSufficient = walletBalance >= brand.total_payable;
+                const shortage = isSufficient ? 0 : brand.total_payable - walletBalance;
+                return `
+              <div style="background-color: ${isSufficient ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${isSufficient ? '#059669' : '#dc2626'}; padding: 16px 20px; border-radius: 6px; margin-bottom: 24px;">
+                <p style="margin: 0 0 4px 0; color: ${isSufficient ? '#065f46' : '#991b1b'}; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Paymongo Wallet Balance</p>
+                <p style="margin: 0; color: ${isSufficient ? '#059669' : '#dc2626'}; font-size: 24px; font-weight: 700;">
+                  ₱${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span style="font-size: 14px; font-weight: 600; margin-left: 8px;">${isSufficient ? '✓ Sufficient' : '✗ Insufficient'}</span>
+                </p>
+                ${!isSufficient ? `<p style="margin: 6px 0 0 0; color: #dc2626; font-size: 13px; font-weight: 600;">⚠️ Shortage: ₱${shortage.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>` : ''}
+              </div>`;
+              })() : `
+              <div style="background-color: #fafafa; border-left: 4px solid #d1d5db; padding: 16px 20px; border-radius: 6px; margin-bottom: 24px;">
+                <p style="margin: 0; color: #6b7280; font-size: 13px;">No Paymongo wallet configured. You will have to pay this manually.</p>
+              </div>`}
 
               <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;">
                 <thead>
@@ -567,19 +547,10 @@ class ArtistBalanceCheckService {
   async sendEmailSummary(summary: ArtistBalanceSummary): Promise<void> {
     console.log(`Sending email summary to ${this.superadminEmail}...`);
 
-    let subject = `Artist Balance Summary - ${summary.artists.length} Artists Ready for Payment (₱${summary.total_amount.toLocaleString('en-US', {
+    const subject = `Artist Balance Summary - ${summary.artists.length} Artists Ready for Payment (₱${summary.total_amount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })})`;
-
-    // Add wallet status to subject if available
-    if (summary.wallet_info) {
-      if (summary.wallet_info.is_sufficient) {
-        subject += ' ✓';
-      } else {
-        subject = `⚠️ ${subject} - INSUFFICIENT WALLET BALANCE`;
-      }
-    }
 
     const htmlBody = this.generateEmailHTML(summary);
     const textBody = this.generateEmailText(summary);
@@ -604,7 +575,7 @@ class ArtistBalanceCheckService {
   /**
    * Send per-brand balance reminder emails to opted-in brand admins
    */
-  async sendBrandBalanceReminders(brands: BrandBalance[]): Promise<void> {
+  async sendBrandBalanceReminders(brands: BrandBalance[], walletsByBrandId: Map<number, number>): Promise<void> {
     const reminderBrands = brands.filter(b => b.send_artist_balance_reminders && b.admin_emails.length > 0);
 
     if (reminderBrands.length === 0) {
@@ -621,7 +592,7 @@ class ArtistBalanceCheckService {
         from: `${brand.brand_name} <${this.fromEmail}>`,
         to: brand.admin_emails.join(', '),
         subject: `Artist Balance Reminder — ${brand.brand_name}`,
-        html: this.generateBrandReminderHTML(brand),
+        html: this.generateBrandReminderHTML(brand, walletsByBrandId.get(brand.brand_id) ?? null),
       };
 
       try {
@@ -645,13 +616,13 @@ class ArtistBalanceCheckService {
       await this.authenticate();
 
       // Fetch artist balances
-      const { summary, brands } = await this.fetchArtistsReadyForPayment();
+      const { summary, brands, walletsByBrandId } = await this.fetchArtistsReadyForPayment();
 
       // Send superadmin summary email
       await this.sendEmailSummary(summary);
 
       // Send per-brand reminder emails to opted-in brands
-      await this.sendBrandBalanceReminders(brands);
+      await this.sendBrandBalanceReminders(brands, walletsByBrandId);
 
       console.log('Artist balance check completed successfully');
 

@@ -3,6 +3,7 @@ import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocu
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
+import { sequelize } from '../config/database';
 
 /**
  * System Controller
@@ -26,11 +27,10 @@ import { Op, literal } from 'sequelize';
  */
 export const getArtistsDuePayment = async (req: Request, res: Response) => {
   try {
-    // Returns all brands with their artists' payable balances (royalties - payments).
-    // Each brand includes: admin emails, reminder opt-in flag, sublabel artists, and
-    // per-artist payment readiness (balance > payout_point + has payment method).
+    // Returns all brands with artist payable balances. Each brand includes its own
+    // direct artists plus any sublabel artists, scoped to amounts owed by that brand.
+    // Parent brands and sublabels are each processed independently.
     const brands = await Brand.findAll({
-      where: { parent_brand: null },
       attributes: ['id', 'brand_name', 'logo_url', 'send_artist_balance_reminders'],
     });
 
@@ -40,33 +40,107 @@ export const getArtistsDuePayment = async (req: Request, res: Response) => {
         attributes: ['id', 'brand_name'],
       });
       const brandIdScope = [brand.id, ...sublabels.map(s => s.id)];
+      const sublabelNameById = new Map(sublabels.map(s => [s.id, s.brand_name]));
 
       const artists = await Artist.findAll({
         where: { brand_id: { [Op.in]: brandIdScope } },
-        include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name'] }],
         order: [['name', 'ASC']],
+        attributes: ['id', 'name', 'brand_id', 'payout_point', 'hold_payouts'],
       });
 
-      const artistsWithBalance = await Promise.all(
-        artists.map(async (artist) => {
-          const totalRoyalties = (await Royalty.sum('amount', { where: { artist_id: artist.id } })) || 0;
-          const totalPayments = (await Payment.sum('amount', { where: { artist_id: artist.id, status: 'succeeded' } })) || 0;
-          const balance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
-          const paymentMethods = await PaymentMethod.findAll({ where: { artist_id: artist.id } });
-          return {
-            artist_id: artist.id,
-            artist_name: artist.name,
-            sublabel_name: artist.brand_id !== brand.id ? (artist as any).brand?.brand_name ?? null : null,
-            balance,
-            total_royalties: parseFloat(totalRoyalties.toFixed(2)),
-            total_payments: parseFloat(totalPayments.toFixed(2)),
-            payout_point: artist.payout_point,
-            hold_payouts: artist.hold_payouts,
-            has_payment_method: paymentMethods.length > 0,
-            is_ready_for_payment: balance > artist.payout_point && paymentMethods.length > 0,
-          };
-        })
+      if (artists.length === 0) {
+        const adminUsers = await User.findAll({
+          where: { brand_id: brand.id, is_admin: true },
+          attributes: ['email_address'],
+        });
+        return {
+          brand_id: brand.id,
+          brand_name: brand.brand_name,
+          logo_url: brand.logo_url ?? null,
+          send_artist_balance_reminders: brand.send_artist_balance_reminders ?? false,
+          admin_emails: adminUsers.map(u => (u as any).email_address).filter(Boolean),
+          artists: [],
+          total_payable: 0,
+        };
+      }
+
+      const artistIds = artists.map(a => a.id);
+      const ownArtistIds = artists.filter(a => a.brand_id === brand.id).map(a => a.id);
+      const sublabelArtistIds = artists.filter(a => a.brand_id !== brand.id).map(a => a.id);
+
+      // Royalties split by artist group to match the dashboard's balance view:
+      // - Own-brand artists: royalties from earnings recorded by this brand (recorded_by_brand_id IS NULL)
+      // - Sublabel artists: royalties from earnings recorded by the parent brand (recorded_by_brand_id IS NOT NULL)
+      const allRoyaltyRows: any[] = [];
+      if (ownArtistIds.length > 0) {
+        const ownRoyaltyRows: any[] = await sequelize.query(
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           LEFT JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)
+           GROUP BY r.artist_id`,
+          { replacements: { artistIds: ownArtistIds }, type: 'SELECT' }
+        );
+        allRoyaltyRows.push(...ownRoyaltyRows);
+      }
+      if (sublabelArtistIds.length > 0) {
+        const sublabelRoyaltyRows: any[] = await sequelize.query(
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND e.recorded_by_brand_id = :parentBrandId
+           GROUP BY r.artist_id`,
+          { replacements: { artistIds: sublabelArtistIds, parentBrandId: brand.id }, type: 'SELECT' }
+        );
+        allRoyaltyRows.push(...sublabelRoyaltyRows);
+      }
+      const royaltiesByArtist: Record<number, number> = {};
+      allRoyaltyRows.forEach((row: any) => {
+        royaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+      });
+
+      // Payments made by this parent brand (matches the dashboard's parent-view scoping)
+      const paymentRows: any[] = await sequelize.query(
+        `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
+         FROM payment
+         WHERE artist_id IN (:artistIds)
+           AND paid_by_brand_id = :parentBrandId
+           AND status = 'succeeded'
+         GROUP BY artist_id`,
+        { replacements: { artistIds, parentBrandId: brand.id }, type: 'SELECT' }
       );
+      const paymentsByArtist: Record<number, number> = {};
+      paymentRows.forEach((row: any) => {
+        paymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+      });
+
+      // Batch payment method lookup
+      const pmRows: any[] = await sequelize.query(
+        `SELECT DISTINCT artist_id FROM payment_method WHERE artist_id IN (:artistIds)`,
+        { replacements: { artistIds }, type: 'SELECT' }
+      );
+      const hasPaymentMethodByArtist = new Set(pmRows.map((r: any) => r.artist_id));
+
+      const artistsWithBalance = artists.map(artist => {
+        const totalRoyalties = royaltiesByArtist[artist.id] ?? 0;
+        const totalPayments = paymentsByArtist[artist.id] ?? 0;
+        const balance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
+        const hasPaymentMethod = hasPaymentMethodByArtist.has(artist.id);
+        return {
+          artist_id: artist.id,
+          artist_name: artist.name,
+          sublabel_name: sublabelNameById.get(artist.brand_id) ?? null,
+          balance,
+          total_royalties: totalRoyalties,
+          total_payments: totalPayments,
+          payout_point: artist.payout_point,
+          hold_payouts: artist.hold_payouts,
+          has_payment_method: hasPaymentMethod,
+          is_ready_for_payment: balance > artist.payout_point && hasPaymentMethod,
+        };
+      });
 
       const payableArtists = artistsWithBalance.filter(a => a.balance > 0);
 
@@ -82,7 +156,7 @@ export const getArtistsDuePayment = async (req: Request, res: Response) => {
         send_artist_balance_reminders: brand.send_artist_balance_reminders ?? false,
         admin_emails: adminUsers.map(u => (u as any).email_address).filter(Boolean),
         artists: payableArtists,
-        total_payable: parseFloat(payableArtists.reduce((sum, a) => sum + a.balance, 0).toFixed(2)),
+        total_payable: parseFloat(payableArtists.filter(a => a.is_ready_for_payment).reduce((sum, a) => sum + a.balance, 0).toFixed(2)),
       };
     }));
 
@@ -110,9 +184,7 @@ export const getWalletBalances = async (req: Request, res: Response) => {
     // Get all brands with wallet IDs
     const brands = await Brand.findAll({
       where: {
-        paymongo_wallet_id: {
-          [require('sequelize').Op.not]: null
-        }
+        paymongo_wallet_id: { [Op.not]: null },
       },
       attributes: ['id', 'brand_name', 'paymongo_wallet_id']
     });
@@ -134,20 +206,13 @@ export const getWalletBalances = async (req: Request, res: Response) => {
       })
     );
 
-    // Calculate total across all brands
-    const totalBalance = walletBalances.reduce((sum, wallet) => {
-      return sum + (wallet.available_balance > 0 ? wallet.available_balance : 0);
-    }, 0);
-
     // Log data access
     auditLogger.logDataAccess(req, 'wallet-balances', 'READ', walletBalances.length, {
       brandCount: brands.length,
-      totalBalance
     });
 
     res.json({
       total_brands: brands.length,
-      total_balance: parseFloat(totalBalance.toFixed(2)),
       wallets: walletBalances.map(w => ({
         ...w,
         available_balance: w.available_balance > 0 ? parseFloat(w.available_balance.toFixed(2)) : 0
