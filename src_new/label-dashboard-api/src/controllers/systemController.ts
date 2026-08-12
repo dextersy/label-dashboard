@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { Op, literal } from 'sequelize';
@@ -26,102 +26,71 @@ import { Op, literal } from 'sequelize';
  */
 export const getArtistsDuePayment = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100); // Max 100
-    const offset = (page - 1) * limit;
-
-    // Optional filter for minimum balance
-    const minBalance = parseFloat(req.query.min_balance as string) || 0;
-
-    // Query ALL artists across ALL brands (no brand_id filter)
-    const { count, rows: artists } = await Artist.findAndCountAll({
-      include: [
-        {
-          model: Brand,
-          as: 'brand',
-          attributes: ['id', 'brand_name'],
-          required: true // Ensure artist has a valid brand
-        }
-      ],
-      limit,
-      offset,
-      order: [['brand_id', 'ASC'], ['name', 'ASC']] // Order by brand first, then artist name
+    // Returns all brands with their artists' payable balances (royalties - payments).
+    // Each brand includes: admin emails, reminder opt-in flag, sublabel artists, and
+    // per-artist payment readiness (balance > payout_point + has payment method).
+    const brands = await Brand.findAll({
+      where: { parent_brand: null },
+      attributes: ['id', 'brand_name', 'logo_url', 'send_artist_balance_reminders'],
     });
 
-    // Calculate balances and filter by payment readiness
-    const artistsWithBalance = await Promise.all(
-      artists.map(async (artist) => {
-        // Calculate total royalties (earnings)
-        const totalRoyalties = await Royalty.sum('amount', {
-          where: {
-            artist_id: artist.id
-          }
-        }) || 0;
+    const results = await Promise.all(brands.map(async (brand) => {
+      const sublabels = await Brand.findAll({
+        where: { parent_brand: brand.id },
+        attributes: ['id', 'brand_name'],
+      });
+      const brandIdScope = [brand.id, ...sublabels.map(s => s.id)];
 
-        // Calculate total payments made
-        const totalPayments = await Payment.sum('amount', {
-          where: {
+      const artists = await Artist.findAll({
+        where: { brand_id: { [Op.in]: brandIdScope } },
+        include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name'] }],
+        order: [['name', 'ASC']],
+      });
+
+      const artistsWithBalance = await Promise.all(
+        artists.map(async (artist) => {
+          const totalRoyalties = (await Royalty.sum('amount', { where: { artist_id: artist.id } })) || 0;
+          const totalPayments = (await Payment.sum('amount', { where: { artist_id: artist.id, status: 'succeeded' } })) || 0;
+          const balance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
+          const paymentMethods = await PaymentMethod.findAll({ where: { artist_id: artist.id } });
+          return {
             artist_id: artist.id,
-            status: 'succeeded'
-          }
-        }) || 0;
+            artist_name: artist.name,
+            sublabel_name: artist.brand_id !== brand.id ? (artist as any).brand?.brand_name ?? null : null,
+            balance,
+            total_royalties: parseFloat(totalRoyalties.toFixed(2)),
+            total_payments: parseFloat(totalPayments.toFixed(2)),
+            payout_point: artist.payout_point,
+            hold_payouts: artist.hold_payouts,
+            has_payment_method: paymentMethods.length > 0,
+            is_ready_for_payment: balance > artist.payout_point && paymentMethods.length > 0,
+          };
+        })
+      );
 
-        // Calculate pending balance
-        const balance = totalRoyalties - totalPayments;
+      const payableArtists = artistsWithBalance.filter(a => a.balance > 0);
 
-        // Check if artist has payment methods
-        const paymentMethods = await PaymentMethod.findAll({
-          where: { artist_id: artist.id }
-        });
+      const adminUsers = await User.findAll({
+        where: { brand_id: brand.id, is_admin: true },
+        attributes: ['email_address'],
+      });
 
-        // Artist is ready for payment if:
-        // 1. balance > payout_point (not >=, must exceed)
-        // 2. has at least one payment method
-        // 3. hold_payouts = false (already filtered in query)
-        const isReadyForPayment = balance > artist.payout_point && paymentMethods.length > 0;
+      return {
+        brand_id: brand.id,
+        brand_name: brand.brand_name,
+        logo_url: brand.logo_url ?? null,
+        send_artist_balance_reminders: brand.send_artist_balance_reminders ?? false,
+        admin_emails: adminUsers.map(u => (u as any).email_address).filter(Boolean),
+        artists: payableArtists,
+        total_payable: parseFloat(payableArtists.reduce((sum, a) => sum + a.balance, 0).toFixed(2)),
+      };
+    }));
 
-        return {
-          artist_id: artist.id,
-          artist_name: artist.name,
-          brand_id: artist.brand_id,
-          brand_name: artist.brand?.brand_name,
-          balance: parseFloat(balance.toFixed(2)),
-          total_royalties: parseFloat(totalRoyalties.toFixed(2)),
-          total_payments: parseFloat(totalPayments.toFixed(2)),
-          payout_point: artist.payout_point,
-          hold_payouts: artist.hold_payouts,
-          has_payment_method: paymentMethods.length > 0,
-          is_ready_for_payment: isReadyForPayment,
-          last_updated: artist.updatedAt
-        };
-      })
-    );
-
-    // Filter by:
-    // 1. Minimum balance
-    // 2. Must be ready for payment (balance > payout_point AND has payment method)
-    const filteredArtists = artistsWithBalance.filter(
-      a => a.balance >= minBalance && a.is_ready_for_payment
-    );
-
-    // Log data access
-    auditLogger.logDataAccess(req, 'artists-due-payment', 'READ', filteredArtists.length, {
-      page,
-      limit,
-      minBalance,
-      totalArtists: count
+    auditLogger.logDataAccess(req, 'artists-due-payment', 'READ', results.length, {
+      brandCount: results.length,
     });
 
-    res.json({
-      total: count,
-      page,
-      limit,
-      totalPages: Math.ceil(count / limit),
-      results: filteredArtists,
-      filters: {
-        min_balance: minBalance
-      }
-    });
+    res.json({ brands: results });
 
   } catch (error) {
     console.error('Error fetching artists due payment:', error);
@@ -679,4 +648,5 @@ export const getReleaseStatus = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 

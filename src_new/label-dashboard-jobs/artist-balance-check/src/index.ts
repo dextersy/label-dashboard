@@ -10,8 +10,7 @@ interface LambdaResponse {
 interface ArtistBalance {
   artist_id: number;
   artist_name: string;
-  brand_id: number;
-  brand_name: string;
+  sublabel_name: string | null;
   balance: number;
   total_royalties: number;
   total_payments: number;
@@ -19,19 +18,20 @@ interface ArtistBalance {
   hold_payouts: boolean;
   has_payment_method: boolean;
   is_ready_for_payment: boolean;
-  last_updated: string;
 }
 
-interface SystemApiResponse {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  results: ArtistBalance[];
-  filters: {
-    min_balance: number;
-    brand_id?: number;
-  };
+interface BrandBalance {
+  brand_id: number;
+  brand_name: string;
+  logo_url: string | null;
+  send_artist_balance_reminders: boolean;
+  admin_emails: string[];
+  artists: ArtistBalance[];
+  total_payable: number;
+}
+
+interface ArtistsDuePaymentResponse {
+  brands: BrandBalance[];
 }
 
 interface WalletBalance {
@@ -50,7 +50,7 @@ interface WalletBalancesResponse {
 }
 
 interface ArtistBalanceSummary {
-  artists: ArtistBalance[];
+  artists: (ArtistBalance & { brand_name: string })[];
   total_amount: number;
   wallet_info?: {
     total_balance: number;
@@ -185,41 +185,25 @@ class ArtistBalanceCheckService {
   }
 
   /**
-   * Fetch artists ready for payment from the System API
-   *
-   * The System API automatically filters for artists that are ready for payment:
-   * - balance > payout_point (not >=, must exceed)
-   * - has at least one payment method
-   * - hold_payouts = false
+   * Fetch all brands with their artist payable balances from the System API.
+   * Returns a summary scoped to artists ready for payment for the superadmin email,
+   * and the full brand list for per-brand reminder emails.
    */
-  async fetchArtistsReadyForPayment(): Promise<ArtistBalanceSummary> {
-    console.log('Fetching artists ready for payment from System API (cross-brand)...');
+  async fetchArtistsReadyForPayment(): Promise<{ summary: ArtistBalanceSummary; brands: BrandBalance[] }> {
+    console.log('Fetching artist balances from System API (cross-brand)...');
 
     try {
-      // Fetch all artists ready for payment across all brands using System API
-      // The API automatically filters by payment readiness
-      let allArtists: ArtistBalance[] = [];
-      let currentPage = 1;
-      let hasMorePages = true;
+      const { brands } = await this.apiRequest<ArtistsDuePaymentResponse>('/api/system/artists-due-payment');
 
-      while (hasMorePages) {
-        // System API filters artists who are truly ready for payment
-        // min_balance=0 means we get all artists that meet the payment readiness criteria
-        const endpoint = `/api/system/artists-due-payment?page=${currentPage}&limit=100&min_balance=0`;
-        const response = await this.apiRequest<SystemApiResponse>(endpoint);
-
-        allArtists = allArtists.concat(response.results);
-
-        console.log(`Fetched page ${currentPage} of ${response.totalPages} (${response.results.length} artists ready for payment)`);
-
-        hasMorePages = currentPage < response.totalPages;
-        currentPage++;
-      }
-
-      console.log(`Retrieved ${allArtists.length} total artists ready for payment from all brands`);
+      // Flatten artists ready for payment across all brands for the superadmin summary
+      const readyArtists = brands.flatMap(brand =>
+        brand.artists
+          .filter(a => a.is_ready_for_payment)
+          .map(a => ({ ...a, brand_name: brand.brand_name }))
+      );
 
       // Group by brand for logging
-      const brandCounts = allArtists.reduce((acc, artist) => {
+      const brandCounts = readyArtists.reduce((acc, artist) => {
         const brandName = artist.brand_name || 'Unknown';
         acc[brandName] = (acc[brandName] || 0) + 1;
         return acc;
@@ -230,10 +214,9 @@ class ArtistBalanceCheckService {
         console.log(`  - ${brandName}: ${count} artist${count === 1 ? '' : 's'}`);
       });
 
-      // Calculate total amount
-      const totalAmount = allArtists.reduce((sum, artist) => sum + artist.balance, 0);
+      const totalAmount = readyArtists.reduce((sum, artist) => sum + artist.balance, 0);
 
-      console.log(`\nTotal: ${allArtists.length} artists ready for payment across ${Object.keys(brandCounts).length} brands`);
+      console.log(`\nTotal: ${readyArtists.length} artists ready for payment across ${Object.keys(brandCounts).length} brands`);
       console.log(`Total amount due: ₱${totalAmount.toFixed(2)}`);
 
       // Fetch wallet balances
@@ -258,9 +241,12 @@ class ArtistBalanceCheckService {
       }
 
       return {
-        artists: allArtists,
-        total_amount: totalAmount,
-        wallet_info: walletInfo
+        summary: {
+          artists: readyArtists,
+          total_amount: totalAmount,
+          wallet_info: walletInfo,
+        },
+        brands,
       };
     } catch (error: any) {
       console.error('Error fetching artist balances:', error.message);
@@ -285,7 +271,7 @@ class ArtistBalanceCheckService {
         <tr>
           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #374151;">
             ${artist.artist_name}
-            <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">${artist.brand_name}</div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">${artist.brand_name}${artist.sublabel_name ? ` / ${artist.sublabel_name}` : ''}</div>
           </td>
           <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #059669;">
             ₱${artist.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -474,6 +460,108 @@ class ArtistBalanceCheckService {
   }
 
   /**
+   * Generate HTML for a per-brand balance reminder email sent to brand admins
+   */
+  private generateBrandReminderHTML(brand: BrandBalance): string {
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const logoHtml = brand.logo_url
+      ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+      : `<div style="font-size: 22px; font-weight: bold; color: #ffffff;">${brand.brand_name}</div>`;
+
+    const artistRows = brand.artists
+      .map(
+        (artist) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #374151;">
+            ${artist.artist_name}
+            ${artist.sublabel_name ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">${artist.sublabel_name}</div>` : ''}
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #059669;">
+            ₱${artist.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </td>
+        </tr>
+      `
+      )
+      .join('');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artist Balance Reminder</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 24px; background-color: #222222; border-radius: 8px 8px 0 0; text-align: center;">
+              ${logoHtml}
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 32px;">
+              <h2 style="margin: 0 0 8px 0; color: #111827; font-size: 20px; font-weight: 700;">Artist Balance Reminder</h2>
+              <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">${currentDate}</p>
+
+              <div style="background-color: #f0fdf4; border-left: 4px solid #059669; padding: 16px 20px; border-radius: 6px; margin-bottom: 24px;">
+                <p style="margin: 0 0 4px 0; color: #065f46; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Payable</p>
+                <p style="margin: 0; color: #059669; font-size: 28px; font-weight: 700;">
+                  ₱${brand.total_payable.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden;">
+                <thead>
+                  <tr style="background-color: #f9fafb;">
+                    <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                      Artist
+                    </th>
+                    <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e5e7eb;">
+                      Balance
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${artistRows}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #6b7280; font-size: 12px; text-align: center;">
+                This is an automated report generated by the Artist Balance Check system.
+              </p>
+              <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px; text-align: center;">
+                Report generated on ${new Date().toLocaleString('en-US')}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+  }
+
+  /**
    * Send email summary using SMTP
    */
   async sendEmailSummary(summary: ArtistBalanceSummary): Promise<void> {
@@ -497,7 +585,7 @@ class ArtistBalanceCheckService {
     const textBody = this.generateEmailText(summary);
 
     const mailOptions = {
-      from: `Spindly - System Notifications <${this.fromEmail}>`,
+      from: `System Notifications <${this.fromEmail}>`,
       to: this.superadminEmail,
       subject: `[artist-balance-check] ${subject}`,
       html: htmlBody,
@@ -514,6 +602,39 @@ class ArtistBalanceCheckService {
   }
 
   /**
+   * Send per-brand balance reminder emails to opted-in brand admins
+   */
+  async sendBrandBalanceReminders(brands: BrandBalance[]): Promise<void> {
+    const reminderBrands = brands.filter(b => b.send_artist_balance_reminders && b.admin_emails.length > 0);
+
+    if (reminderBrands.length === 0) {
+      console.log('No brands opted in to balance reminders — skipping per-brand emails.');
+      return;
+    }
+
+    console.log(`Sending balance reminders for ${reminderBrands.length} opted-in brand(s)...`);
+
+    for (const brand of reminderBrands) {
+      console.log(`Sending reminder for "${brand.brand_name}" to: ${brand.admin_emails.join(', ')} (${brand.artists.length} artist(s), ₱${brand.total_payable.toFixed(2)})`);
+
+      const mailOptions = {
+        from: `${brand.brand_name} <${this.fromEmail}>`,
+        to: brand.admin_emails.join(', '),
+        subject: `Artist Balance Reminder — ${brand.brand_name}`,
+        html: this.generateBrandReminderHTML(brand),
+      };
+
+      try {
+        const info = await this.transporter.sendMail(mailOptions);
+        console.log('Reminder sent successfully. Message ID:', info.messageId);
+      } catch (error: any) {
+        console.error(`Error sending reminder for "${brand.brand_name}":`, error.message);
+        // Continue with other brands rather than failing the whole job
+      }
+    }
+  }
+
+  /**
    * Main process to check balances and send email
    */
   async checkAndNotify(): Promise<{ artistCount: number; totalAmount: number }> {
@@ -524,10 +645,13 @@ class ArtistBalanceCheckService {
       await this.authenticate();
 
       // Fetch artist balances
-      const summary = await this.fetchArtistsReadyForPayment();
+      const { summary, brands } = await this.fetchArtistsReadyForPayment();
 
-      // Send email summary
+      // Send superadmin summary email
       await this.sendEmailSummary(summary);
+
+      // Send per-brand reminder emails to opted-in brands
+      await this.sendBrandBalanceReminders(brands);
 
       console.log('Artist balance check completed successfully');
 
