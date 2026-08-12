@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { AdminService, BrandSettings, Domain, DomainVerificationState, DomainVerificationEvent, SublabelCreationState, ArtistCustomField } from '../../../services/admin.service';
+import { HasUnsavedChanges } from '../../../guards/unsaved-changes.guard';
 import { NotificationService } from '../../../services/notification.service';
 import { BrandService } from '../../../services/brand.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
@@ -16,18 +17,23 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
     InPageNavComponent,
     FloatingActionBarComponent,
-    BreadcrumbComponent
-, IconComponent],
+    BreadcrumbComponent,
+    IconComponent
+  ],
   templateUrl: './label-setup.component.html',
   styleUrls: []
 })
-export class LabelSetupComponent implements OnInit, OnDestroy {
+export class LabelSetupComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   loading: boolean = false;
+  saving: boolean = false;
   brandSettings: BrandSettings | null = null;
-  brandForm: FormGroup;
+  editingSettings: any = {};
+  private savedSettings: any = null;
+  editingFields: Set<string> = new Set();
+  dirtyFields: Set<string> = new Set();
+  private fieldOriginals: Map<string, any> = new Map();
   domains: Domain[] = [];
   newDomainName: string = '';
   showPaymongoWalletId: boolean = false;
@@ -52,22 +58,10 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
 
   constructor(
     private adminService: AdminService,
-    private fb: FormBuilder,
     private notificationService: NotificationService,
     private brandService: BrandService,
     private confirmationService: ConfirmationService
-  ) {
-    this.brandForm = this.fb.group({
-      name: ['', Validators.required],
-      brand_website: [''],
-      brand_color: ['#800080', Validators.required],
-      catalog_prefix: [''],
-      release_submission_url: [''],
-      paymongo_wallet_id: [''],
-      payment_processing_fee_for_payouts: [0, [Validators.min(0)]],
-      about_us: ['', [Validators.maxLength(5000)]]
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
     this.loadBrandSettings();
@@ -118,9 +112,13 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
     this.adminService.getBrandSettings().subscribe({
       next: (settings) => {
         this.brandSettings = settings;
-        this.brandForm.patchValue(settings);
+        this.editingSettings = { ...settings };
+        this.savedSettings = { ...settings };
         this.customFields = settings.artist_custom_fields ? [...settings.artist_custom_fields] : [];
         this.customFieldsDirty = false;
+        this.dirtyFields.clear();
+        this.editingFields.clear();
+        this.fieldOriginals.clear();
         this.loadDomains();
       },
       error: () => {
@@ -147,20 +145,67 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
     });
   }
 
+  startEditing(field: string): void {
+    this.fieldOriginals.set(field, this.editingSettings[field]);
+    this.editingFields.add(field);
+  }
+
+  stopEditing(field: string): void {
+    this.fieldOriginals.delete(field);
+    this.editingFields.delete(field);
+    const savedValue = this.savedSettings ? this.savedSettings[field] : undefined;
+    if (this.editingSettings[field] !== savedValue) {
+      this.dirtyFields.add(field);
+    } else {
+      this.dirtyFields.delete(field);
+    }
+  }
+
+  cancelEditing(field: string): void {
+    if (this.fieldOriginals.has(field)) {
+      this.editingSettings[field] = this.fieldOriginals.get(field);
+      this.fieldOriginals.delete(field);
+    }
+    this.editingFields.delete(field);
+    const savedValue = this.savedSettings ? this.savedSettings[field] : undefined;
+    if (this.editingSettings[field] !== savedValue) {
+      this.dirtyFields.add(field);
+    } else {
+      this.dirtyFields.delete(field);
+    }
+  }
+
+  isEditing(field: string): boolean {
+    return this.editingFields.has(field);
+  }
+
+  hasDirtyFields(): boolean {
+    return this.dirtyFields.size > 0 || this.customFieldsDirty;
+  }
+
+  isFormDirty(): boolean {
+    return this.hasDirtyFields();
+  }
+
   saveBrandSettings(): void {
-    if (!this.brandForm.valid) {
-      this.brandForm.markAllAsTouched();
+    if (!this.editingSettings.name?.trim()) {
+      this.notificationService.showError('Brand name is required');
+      return;
+    }
+    if ((this.editingSettings.about_us || '').length > 5000) {
+      this.notificationService.showError('About Us must be 5,000 characters or fewer');
       return;
     }
     if (this.brandSettings) {
-      this.loading = true;
-      const formData = { ...this.brandSettings, ...this.brandForm.value, artist_custom_fields: this.customFields };
+      this.saving = true;
+      const formData = { ...this.brandSettings, ...this.editingSettings, artist_custom_fields: this.customFields };
 
       this.adminService.updateBrandSettings(formData).subscribe({
         next: (response) => {
           if (response.brand) {
             this.brandSettings = response.brand;
-            this.brandForm.patchValue(response.brand);
+            this.editingSettings = { ...response.brand };
+            this.savedSettings = { ...response.brand };
             const brandServiceSettings = {
               id: response.brand.id,
               name: response.brand.name,
@@ -177,14 +222,17 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
           if (response.brand?.artist_custom_fields !== undefined) {
             this.customFields = response.brand.artist_custom_fields || [];
           }
+          this.dirtyFields.clear();
+          this.editingFields.clear();
+          this.fieldOriginals.clear();
           this.customFieldsDirty = false;
           this.notificationService.showSuccess('Brand settings saved successfully');
-          this.loading = false;
+          this.saving = false;
         },
         error: (err) => {
           const message = err?.error?.error || 'Error saving brand settings';
           this.notificationService.showError(message);
-          this.loading = false;
+          this.saving = false;
         }
       });
     }
@@ -203,6 +251,8 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (this.brandSettings) {
             this.brandSettings.logo_url = response.logo_url;
+            this.editingSettings.logo_url = response.logo_url;
+            if (this.savedSettings) this.savedSettings.logo_url = response.logo_url;
             const brandServiceSettings = {
               id: this.brandSettings.id,
               name: this.brandSettings.name,
@@ -240,6 +290,8 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (this.brandSettings) {
             this.brandSettings.favicon_url = response.favicon_url;
+            this.editingSettings.favicon_url = response.favicon_url;
+            if (this.savedSettings) this.savedSettings.favicon_url = response.favicon_url;
             const brandServiceSettings = {
               id: this.brandSettings.id,
               name: this.brandSettings.name,
@@ -268,7 +320,7 @@ export class LabelSetupComponent implements OnInit, OnDestroy {
     const hexValue = event.target.value;
     const hexPattern = /^#[0-9A-Fa-f]{6}$/;
     if (hexPattern.test(hexValue)) {
-      this.brandForm.patchValue({ brand_color: hexValue.toLowerCase() });
+      this.editingSettings.brand_color = hexValue.toLowerCase();
     }
   }
 

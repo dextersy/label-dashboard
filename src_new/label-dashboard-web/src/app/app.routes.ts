@@ -191,7 +191,7 @@ export const routes: Routes = [
       { path: 'discography', component: LabelsDiscographyComponent },
       { path: 'earnings', component: LabelsComponent },
       { path: 'sublabels', component: LabelsSubLabelsComponent },
-      { path: 'setup', component: LabelSetupComponent },
+      { path: 'setup', component: LabelSetupComponent, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'reports/music-earnings', component: AdminComponent, data: { tab: 'reports-music-earnings' } },
       { path: 'reports/artist-balances', component: AdminComponent, data: { tab: 'reports-artist-balances' } },
       { path: 'reports/payments-royalties', component: AdminComponent, data: { tab: 'reports-payments-royalties' } },

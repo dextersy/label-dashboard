@@ -6,219 +6,329 @@
 
   <!-- Brand Settings Tab -->
   <div *ngIf="activeSection === 'brand-settings'">
-    <form [formGroup]="brandForm" *ngIf="brandSettings">
-      <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
+    <div *ngIf="brandSettings" class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-6">
 
-        <!-- General Settings -->
-        <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
-          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">General Settings</h3>
-          <div class="tw-space-y-4">
+      <!-- General Settings -->
+      <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">General Settings</h3>
+        <div class="tw-space-y-5">
 
-            <div>
-              <label for="logo" class="tw-label">Logo</label>
-              <img [src]="brandSettings.logo_url || 'assets/img/placeholder.jpg'"
-                   width="250"
-                   [style.background-color]="brandForm.get('brand_color')?.value || '#cccccc'"
-                   class="tw-block tw-mb-3">
-              <input type="file"
-                     class="tw-block tw-w-full tw-text-sm tw-text-gray-500
-                            file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
-                            file:tw-rounded file:tw-border-0
-                            file:tw-text-sm file:tw-font-medium
-                            file:tw-bg-gray-100 file:tw-text-gray-700
-                            hover:file:tw-bg-gray-200 tw-cursor-pointer"
-                     id="logo"
-                     accept=".jpg,.png"
-                     (change)="onLogoFileSelected($event)">
+          <!-- Logo -->
+          <div>
+            <label class="tw-label">Logo</label>
+            <img [src]="editingSettings.logo_url || 'assets/img/placeholder.jpg'"
+                 width="250"
+                 [style.background-color]="editingSettings.brand_color || '#cccccc'"
+                 class="tw-block tw-mb-2">
+            <input type="file"
+                   class="tw-block tw-w-full tw-text-sm tw-text-gray-500
+                          file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
+                          file:tw-rounded file:tw-border-0
+                          file:tw-text-sm file:tw-font-medium
+                          file:tw-bg-gray-100 file:tw-text-gray-700
+                          hover:file:tw-bg-gray-200 tw-cursor-pointer"
+                   accept=".jpg,.png"
+                   (change)="onLogoFileSelected($event)">
+          </div>
+
+          <!-- Name -->
+          <div>
+            <label class="tw-label">Name</label>
+            <div *ngIf="!isEditing('name')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+              <span class="tw-text-sm tw-text-body">{{ editingSettings.name || '—' }}</span>
+              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('name')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
             </div>
-
-            <div>
-              <label for="name" class="tw-label">Name</label>
-              <input type="text" class="tw-input" id="name" formControlName="name" placeholder="Brand Name">
+            <div *ngIf="isEditing('name')" class="tw-flex tw-items-center tw-gap-1">
+              <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editingSettings.name" placeholder="Brand Name">
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('name')" title="Confirm">
+                <app-icon name="check" iconOnly />
+              </button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('name')" title="Cancel">
+                <app-icon name="x" iconOnly />
+              </button>
             </div>
+          </div>
 
-            <div>
-              <label for="brand_website" class="tw-label">
-                Website
-                <app-icon name="info" class="tw-ml-1 tw-text-gray-400" title="This will be linked to your logo. Include http or https in the URL" />
-              </label>
-              <input type="text" class="tw-input" id="brand_website" formControlName="brand_website" placeholder="Brand Website">
+          <!-- Website -->
+          <div>
+            <label class="tw-label">
+              Website
+              <app-icon name="info" class="tw-ml-1 tw-text-gray-400" title="This will be linked to your logo. Include http or https in the URL" />
+            </label>
+            <div *ngIf="!isEditing('brand_website')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+              <span class="tw-text-sm tw-text-body tw-break-all">{{ editingSettings.brand_website || '—' }}</span>
+              <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('brand_website')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
             </div>
-
-            <div>
-              <label for="about_us" class="tw-label">About Us</label>
-              <textarea class="tw-input" id="about_us" formControlName="about_us" rows="5"
-                placeholder="Tell audiences about your label or organization..."></textarea>
-              @if (brandForm.get('about_us')?.errors?.['maxlength'] && brandForm.get('about_us')?.touched) {
-                <div class="tw-error-message">Must be 5,000 characters or fewer.</div>
-              }
+            <div *ngIf="isEditing('brand_website')" class="tw-flex tw-items-center tw-gap-1">
+              <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editingSettings.brand_website" placeholder="https://yourbrand.com">
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('brand_website')" title="Confirm">
+                <app-icon name="check" iconOnly />
+              </button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('brand_website')" title="Cancel">
+                <app-icon name="x" iconOnly />
+              </button>
             </div>
+          </div>
 
-            <div>
-              <label for="brand_color" class="tw-label">Brand Color</label>
-              <div class="tw-flex tw-items-center tw-gap-3">
+          <!-- About Us -->
+          <div>
+            <label class="tw-label">About Us</label>
+            <div *ngIf="!isEditing('about_us')" class="tw-flex tw-items-start tw-gap-1 tw-min-h-[32px]">
+              <span class="tw-text-sm tw-text-body tw-whitespace-pre-line">{{ editingSettings.about_us || '—' }}</span>
+              <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('about_us')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="isEditing('about_us')" class="tw-flex tw-flex-col tw-gap-1">
+              <textarea class="tw-input" [(ngModel)]="editingSettings.about_us" rows="5"
+                placeholder="Tell audiences about your label or organization..." maxlength="5000"></textarea>
+              <div class="tw-flex tw-items-center tw-justify-between">
+                <span class="tw-text-xs tw-text-muted">{{ (editingSettings.about_us || '').length }}/5000</span>
+                <span class="tw-flex tw-gap-1">
+                  <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('about_us')" title="Confirm">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('about_us')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Brand Color -->
+          <div>
+            <label class="tw-label">Brand Color</label>
+            <div *ngIf="!isEditing('brand_color')" class="tw-flex tw-items-center tw-gap-2 tw-min-h-[32px]">
+              <div class="tw-rounded tw-border-2 tw-border-gray-200 tw-shrink-0"
+                   [style.background-color]="editingSettings.brand_color"
+                   style="width: 24px; height: 24px;"></div>
+              <span class="tw-text-sm tw-text-body" style="font-family: 'Courier New', monospace;">{{ (editingSettings.brand_color || '').toUpperCase() }}</span>
+              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('brand_color')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="isEditing('brand_color')">
+              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2">
                 <div class="tw-flex tw-items-center tw-justify-center tw-rounded tw-border-2 tw-border-gray-200 tw-shrink-0"
-                     [style.background-color]="brandForm.get('brand_color')?.value"
+                     [style.background-color]="editingSettings.brand_color"
                      style="width: 44px; height: 38px;">
                   <app-icon name="palette" class="tw-text-white" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);" />
                 </div>
                 <input type="color"
                        class="tw-border-0 tw-rounded tw-cursor-pointer tw-shrink-0"
-                       id="brand_color"
-                       formControlName="brand_color"
+                       [(ngModel)]="editingSettings.brand_color"
                        style="width: 44px; height: 38px; padding: 2px;">
                 <input type="text"
                        class="tw-input"
-                       [value]="brandForm.get('brand_color')?.value?.toUpperCase()"
+                       [value]="editingSettings.brand_color?.toUpperCase()"
                        (input)="onHexColorChange($event)"
                        placeholder="#800080"
                        pattern="^#[0-9A-Fa-f]{6}$"
                        style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('brand_color')" title="Confirm">
+                  <app-icon name="check" iconOnly />
+                </button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('brand_color')" title="Cancel">
+                  <app-icon name="x" iconOnly />
+                </button>
               </div>
-              <p class="tw-mt-1 tw-text-xs tw-text-muted">Enter hex color code (e.g., #800080)</p>
+              <p class="tw-text-xs tw-text-muted">Enter hex color code (e.g., #800080)</p>
             </div>
-
-            <div>
-              <label for="favicon" class="tw-label">Favicon</label>
-              <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2">
-                <img [src]="brandSettings.favicon_url || 'assets/img/placeholder.jpg'"
-                     width="20"
-                     style="background-color:#cccccc;">
-                <span class="tw-text-xs tw-text-muted">Current favicon</span>
-              </div>
-              <input type="file"
-                     class="tw-block tw-w-full tw-text-sm tw-text-gray-500
-                            file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
-                            file:tw-rounded file:tw-border-0
-                            file:tw-text-sm file:tw-font-medium
-                            file:tw-bg-gray-100 file:tw-text-gray-700
-                            hover:file:tw-bg-gray-200 tw-cursor-pointer"
-                     id="favicon"
-                     accept=".png"
-                     (change)="onFaviconFileSelected($event)">
-            </div>
-
           </div>
+
+          <!-- Favicon -->
+          <div>
+            <label class="tw-label">Favicon</label>
+            <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2">
+              <img [src]="editingSettings.favicon_url || 'assets/img/placeholder.jpg'"
+                   width="20"
+                   style="background-color:#cccccc;">
+              <span class="tw-text-xs tw-text-muted">Current favicon</span>
+            </div>
+            <input type="file"
+                   class="tw-block tw-w-full tw-text-sm tw-text-gray-500
+                          file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
+                          file:tw-rounded file:tw-border-0
+                          file:tw-text-sm file:tw-font-medium
+                          file:tw-bg-gray-100 file:tw-text-gray-700
+                          hover:file:tw-bg-gray-200 tw-cursor-pointer"
+                   accept=".png"
+                   (change)="onFaviconFileSelected($event)">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="tw-space-y-6">
+
+        <!-- Catalog -->
+        <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Catalog</h3>
+          <div class="tw-space-y-5">
+
+            <!-- Catalog Prefix -->
+            <div>
+              <label class="tw-label">
+                Catalog Prefix
+                <app-icon name="info" class="tw-ml-1 tw-text-gray-400" title="For autogenerated catalog number (e.g. CAT001)" />
+              </label>
+              <div *ngIf="!isEditing('catalog_prefix')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                <span class="tw-text-sm tw-text-body">{{ editingSettings.catalog_prefix || '—' }}</span>
+                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('catalog_prefix')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </div>
+              <div *ngIf="isEditing('catalog_prefix')" class="tw-flex tw-items-center tw-gap-1">
+                <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editingSettings.catalog_prefix" placeholder="Catalog Prefix">
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('catalog_prefix')" title="Confirm">
+                  <app-icon name="check" iconOnly />
+                </button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('catalog_prefix')" title="Cancel">
+                  <app-icon name="x" iconOnly />
+                </button>
+              </div>
+            </div>
+
+
+</div>
         </div>
 
-        <div class="tw-space-y-6">
+        <!-- Payments -->
+        <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Payments</h3>
+          <div class="tw-space-y-5">
 
-          <!-- Catalog -->
-          <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
-            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Catalog</h3>
-            <div class="tw-space-y-4">
-              <div>
-                <label for="catalog_prefix" class="tw-label">
-                  Catalog Prefix
-                  <app-icon name="info" class="tw-ml-1 tw-text-gray-400" title="For autogenerated catalog number (e.g. CAT001)" />
-                </label>
-                <input type="text" class="tw-input" id="catalog_prefix" formControlName="catalog_prefix" placeholder="Catalog Prefix">
+            <!-- Paymongo Wallet ID -->
+            <div>
+              <label class="tw-label">Paymongo Wallet ID <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+              <div *ngIf="!isEditing('paymongo_wallet_id')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                <span class="tw-text-sm tw-text-body" style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                  {{ editingSettings.paymongo_wallet_id ? '••••••••' : '—' }}
+                </span>
+                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('paymongo_wallet_id')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
               </div>
-              <div>
-                <label for="release_submission_url" class="tw-label">
-                  Release Submission URL
-                  <app-icon name="info" class="tw-ml-1 tw-text-gray-400" title="Link to the form where your artists should submit their releases." />
-                </label>
-                <input type="text" class="tw-input" id="release_submission_url" formControlName="release_submission_url" placeholder="Release Submission URL">
-              </div>
-            </div>
-          </div>
-
-          <!-- Payments -->
-          <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
-            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Payments</h3>
-            <div class="tw-space-y-4">
-              <div>
-                <label for="paymongo_wallet_id" class="tw-label">Paymongo Wallet ID <span class="tw-text-muted tw-font-normal">(optional)</span></label>
-                <div class="input-group">
+              <div *ngIf="isEditing('paymongo_wallet_id')" class="tw-flex tw-items-center tw-gap-1">
+                <div class="tw-relative tw-flex-1">
                   <input [type]="showPaymongoWalletId ? 'text' : 'password'"
-                         class="tw-input"
-                         id="paymongo_wallet_id"
-                         formControlName="paymongo_wallet_id"
+                         class="tw-input tw-pr-10"
+                         [(ngModel)]="editingSettings.paymongo_wallet_id"
                          placeholder="Paymongo Wallet ID">
                   <button type="button"
-                          class="btn-secondary password-toggle-btn"
+                          class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
                           (click)="togglePaymongoWalletIdVisibility()"
+                          tabindex="-1"
                           title="Toggle visibility">
                     <app-icon [name]="showPaymongoWalletId ? 'eye-off' : 'eye'" />
                   </button>
                 </div>
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('paymongo_wallet_id')" title="Confirm">
+                  <app-icon name="check" iconOnly />
+                </button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('paymongo_wallet_id')" title="Cancel">
+                  <app-icon name="x" iconOnly />
+                </button>
               </div>
-              <div>
-                <label for="processing_fee" class="tw-label">Processing Fee for Payouts</label>
-                <div class="input-group">
+            </div>
+
+            <!-- Processing Fee -->
+            <div>
+              <label class="tw-label">Processing Fee for Payouts</label>
+              <div *ngIf="!isEditing('payment_processing_fee_for_payouts')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                <span class="tw-text-sm tw-text-body">
+                  {{ editingSettings.payment_processing_fee_for_payouts != null ? ('₱' + editingSettings.payment_processing_fee_for_payouts) : '—' }}
+                </span>
+                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('payment_processing_fee_for_payouts')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </div>
+              <div *ngIf="isEditing('payment_processing_fee_for_payouts')" class="tw-flex tw-items-center tw-gap-1">
+                <div class="input-group tw-flex-1">
                   <div class="input-group-prepend"><span class="input-group-text">₱</span></div>
-                  <input type="number" class="tw-input" id="processing_fee"
-                         formControlName="payment_processing_fee_for_payouts"
+                  <input type="number" class="tw-input"
+                         [(ngModel)]="editingSettings.payment_processing_fee_for_payouts"
                          placeholder="0.00" min="0" step="0.01">
                 </div>
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('payment_processing_fee_for_payouts')" title="Confirm">
+                  <app-icon name="check" iconOnly />
+                </button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('payment_processing_fee_for_payouts')" title="Cancel">
+                  <app-icon name="x" iconOnly />
+                </button>
               </div>
             </div>
-          </div>
 
+          </div>
         </div>
+
+      </div>
+    </div>
+
+    <!-- Artist Custom Fields (full width) -->
+    <div *ngIf="brandSettings" class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6 tw-mt-6">
+      <div class="tw-flex tw-items-center tw-justify-between tw-mb-5">
+        <div>
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-1">Artist Registration Custom Fields</h3>
+          <p class="tw-text-xs tw-text-muted tw-mb-0">These fields appear on the public artist registration form and on each artist's profile page.</p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="addCustomField()">
+          <app-icon name="plus" /> Add Field
+        </button>
       </div>
 
-      <!-- Artist Custom Fields (full width) -->
-      <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6 tw-mt-6">
-        <div class="tw-flex tw-items-center tw-justify-between tw-mb-5">
+      <p *ngIf="!customFields || customFields.length === 0" class="tw-text-sm tw-text-muted">No custom fields defined.</p>
+
+      <div *ngIf="customFields && customFields.length > 0" class="tw-space-y-3">
+        <div *ngFor="let field of customFields; let i = index"
+             class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-[1fr_1fr_1fr_auto_auto] tw-gap-2 tw-items-center tw-p-3 tw-rounded-lg tw-border tw-border-subtle tw-bg-gray-50">
           <div>
-            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-1">Artist Registration Custom Fields</h3>
-            <p class="tw-text-xs tw-text-muted tw-mb-0">These fields appear on the public artist registration form and on each artist's profile page.</p>
+            <label class="tw-label tw-text-xs">Key</label>
+            <input type="text" class="tw-input tw-input-sm" [(ngModel)]="field.key" [ngModelOptions]="{standalone: true}" placeholder="e.g. years_participated" (ngModelChange)="onCustomFieldsChanged()">
           </div>
-          <button type="button" class="btn btn-secondary btn-sm" (click)="addCustomField()">
-            <app-icon name="plus" /> Add Field
-          </button>
-        </div>
+          <div>
+            <label class="tw-label tw-text-xs">Label</label>
+            <input type="text" class="tw-input tw-input-sm" [(ngModel)]="field.label" [ngModelOptions]="{standalone: true}" placeholder="e.g. Years Participated" (ngModelChange)="onCustomFieldsChanged()">
+          </div>
+          <div>
+            <label class="tw-label tw-text-xs">Type</label>
+            <select class="tw-input tw-input-sm" [(ngModel)]="field.type" [ngModelOptions]="{standalone: true}" (ngModelChange)="onCustomFieldsChanged()">
+              <option value="text">Text</option>
+              <option value="textarea">Textarea</option>
+              <option value="number">Number</option>
+              <option value="select">Select</option>
+              <option value="array">Array (comma-separated)</option>
+            </select>
+          </div>
+          <div class="tw-flex tw-items-center tw-gap-1 tw-mt-4 sm:tw-mt-0">
+            <input type="checkbox" [id]="'req_' + i" [(ngModel)]="field.required" [ngModelOptions]="{standalone: true}" (ngModelChange)="onCustomFieldsChanged()">
+            <label [for]="'req_' + i" class="tw-text-xs tw-text-gray-600 tw-cursor-pointer">Required</label>
+          </div>
+          <div class="tw-flex tw-justify-end sm:tw-mt-4">
+            <button type="button" class="btn btn-sm btn-ghost text-danger" (click)="removeCustomField(i)" title="Remove field">
+              <app-icon name="trash" iconOnly />
+            </button>
+          </div>
 
-        <p *ngIf="!customFields || customFields.length === 0" class="tw-text-sm tw-text-muted">No custom fields defined.</p>
-
-        <div *ngIf="customFields && customFields.length > 0" class="tw-space-y-3">
-          <div *ngFor="let field of customFields; let i = index"
-               class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-[1fr_1fr_1fr_auto_auto] tw-gap-2 tw-items-center tw-p-3 tw-rounded-lg tw-border tw-border-subtle tw-bg-gray-50">
-            <div>
-              <label class="tw-label tw-text-xs">Key</label>
-              <input type="text" class="tw-input tw-input-sm" [(ngModel)]="field.key" [ngModelOptions]="{standalone: true}" placeholder="e.g. years_participated" (ngModelChange)="onCustomFieldsChanged()">
-            </div>
-            <div>
-              <label class="tw-label tw-text-xs">Label</label>
-              <input type="text" class="tw-input tw-input-sm" [(ngModel)]="field.label" [ngModelOptions]="{standalone: true}" placeholder="e.g. Years Participated" (ngModelChange)="onCustomFieldsChanged()">
-            </div>
-            <div>
-              <label class="tw-label tw-text-xs">Type</label>
-              <select class="tw-input tw-input-sm" [(ngModel)]="field.type" [ngModelOptions]="{standalone: true}" (ngModelChange)="onCustomFieldsChanged()">
-                <option value="text">Text</option>
-                <option value="textarea">Textarea</option>
-                <option value="number">Number</option>
-                <option value="select">Select</option>
-                <option value="array">Array (comma-separated)</option>
-              </select>
-            </div>
-            <div class="tw-flex tw-items-center tw-gap-1 tw-mt-4 sm:tw-mt-0">
-              <input type="checkbox" [id]="'req_' + i" [(ngModel)]="field.required" [ngModelOptions]="{standalone: true}" (ngModelChange)="onCustomFieldsChanged()">
-              <label [for]="'req_' + i" class="tw-text-xs tw-text-gray-600 tw-cursor-pointer">Required</label>
-            </div>
-            <div class="tw-flex tw-justify-end sm:tw-mt-4">
-              <button type="button" class="btn btn-sm btn-ghost text-danger" (click)="removeCustomField(i)" title="Remove field">
-                <app-icon name="trash" iconOnly />
-              </button>
-            </div>
-
-            <!-- Select options -->
-            <div *ngIf="field.type === 'select'" class="sm:tw-col-span-5">
-              <label class="tw-label tw-text-xs">Options (comma-separated)</label>
-              <input type="text"
-                     class="tw-input tw-input-sm"
-                     [ngModel]="field.options?.join(', ')"
-                     [ngModelOptions]="{standalone: true}"
-                     placeholder="Option 1, Option 2, Option 3"
-                     (ngModelChange)="onSelectOptionsChanged(i, $event)">
-            </div>
+          <!-- Select options -->
+          <div *ngIf="field.type === 'select'" class="sm:tw-col-span-5">
+            <label class="tw-label tw-text-xs">Options (comma-separated)</label>
+            <input type="text"
+                   class="tw-input tw-input-sm"
+                   [ngModel]="field.options?.join(', ')"
+                   [ngModelOptions]="{standalone: true}"
+                   placeholder="Option 1, Option 2, Option 3"
+                   (ngModelChange)="onSelectOptionsChanged(i, $event)">
           </div>
         </div>
       </div>
+    </div>
 
-    </form>
   </div>
 
   <!-- Domains Tab -->
@@ -353,8 +463,8 @@
           type="button"
           class="btn-primary fab-primary-btn"
           (click)="saveBrandSettings()"
-          [disabled]="loading">
-    <app-icon name="save" class="" /> Save Settings
+          [disabled]="saving || !hasDirtyFields()">
+    <app-icon name="save" /> {{ saving ? 'Saving…' : 'Save Settings' }}
   </button>
 </app-floating-action-bar>
 
