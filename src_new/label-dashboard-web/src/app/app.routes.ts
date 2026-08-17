@@ -41,6 +41,7 @@ import { SyncLicensingComponent } from './pages/sync-licensing/sync-licensing.co
 import { PressCampaignsComponent } from './pages/press-campaigns/press-campaigns.component';
 import { PressCampaignPublicComponent } from './pages/press-campaign-public/press-campaign-public.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
+import { LabelSubscriptionComponent } from './pages/labels/label-subscription/label-subscription.component';
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
@@ -177,7 +178,8 @@ export const routes: Routes = [
       { path: 'reports/recuperable-expense-balance', redirectTo: '/labels/reports/recuperable-expense-balance', pathMatch: 'full' },
       { path: 'tools/email-logs', component: AdminComponent, data: { tab: 'tools-email-logs' } },
       { path: 'tools/bulk-add-earnings', component: AdminComponent, data: { tab: 'tools-bulk-add-earnings' } },
-      { path: 'users', component: AdminComponent, data: { tab: 'users' } }
+      { path: 'users', component: AdminComponent, data: { tab: 'users' } },
+      { path: 'subscription', component: LabelSubscriptionComponent }
     ]
   },
 

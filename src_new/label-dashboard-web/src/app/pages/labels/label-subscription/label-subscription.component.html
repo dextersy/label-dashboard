@@ -1,0 +1,250 @@
+<div class="tw-flex tw-flex-col" style="min-height: calc(100vh - 130px)">
+
+  <app-breadcrumb></app-breadcrumb>
+
+  <div class="tw-px-6 tw-py-6 tw-max-w-6xl tw-mx-auto tw-w-full">
+
+    <!-- Page heading -->
+    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+      <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+        <h3 class="tw-mb-2">
+          <app-icon name="credit-card" class="tw-mr-2" />
+          Subscription &amp; Billing
+        </h3>
+        <p class="tw-mb-0 tw-text-muted">Manage your plan and billing cycle.</p>
+        <p class="tw-mt-3 tw-mb-0 tw-text-sm tw-text-[var(--color-muted)] tw-bg-[var(--color-surface-subtle)] tw-rounded tw-px-3 tw-py-2">
+          Online subscriptions are coming soon. Contact us to upgrade your plan.
+        </p>
+      </div>
+    </div>
+
+    <!-- Return-from-checkout banner -->
+    @if (returnStatus === 'success') {
+      <div class="alert alert-success tw-mb-6">
+        Your subscription is now active.
+      </div>
+    }
+    @if (returnStatus === 'pending') {
+      <div class="alert alert-warning tw-mb-6">
+        Payment received — your plan will activate shortly. Refresh this page in a moment.
+      </div>
+    }
+
+    <!-- Loading state -->
+    @if (loading) {
+      <div class="tw-flex tw-justify-center tw-py-20">
+        <div class="spinner-border text-secondary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }
+
+    @if (!loading) {
+
+      <!-- Current subscription summary -->
+      @if (currentSubscription) {
+        <div class="card tw-mb-8">
+          <div class="card-body tw-flex tw-flex-col tw-gap-1 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
+            <div>
+              <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Current Plan</p>
+              <div class="tw-flex tw-items-center tw-gap-3">
+                <span class="tw-font-heading tw-text-xl tw-font-semibold tw-text-[var(--color-heading)]">
+                  {{ currentPlanName }}
+                </span>
+                <span class="status-badge {{ statusBadgeClass(currentSubscription.status) }}">
+                  {{ statusLabel(currentSubscription.status) }}
+                </span>
+              </div>
+              <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mt-1">
+                Billed {{ currentSubscription.billing_cycle }}
+                &bull;
+                Active since {{ currentSubscription.started_at | date:'mediumDate' }}
+              </p>
+            </div>
+            @if (currentSubscription.status === 'active' && isCurrentPlanPaid) {
+              <button class="btn btn-danger btn-sm tw-self-start sm:tw-self-center tw-mt-3 sm:tw-mt-0"
+                      (click)="cancelSubscription()"
+                      [disabled]="actionLoading">
+                Cancel subscription
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Billing cycle toggle -->
+      <div class="tw-flex tw-items-center tw-justify-center tw-gap-3 tw-mb-8">
+        <span class="tw-text-sm tw-font-medium"
+              [class.tw-text-[var(--color-heading)]]="billingCycle === 'monthly'"
+              [class.tw-text-[var(--color-muted)]]="billingCycle !== 'monthly'">
+          Monthly
+        </span>
+        <div class="form-check form-switch tw-mb-0">
+          <input class="form-check-input tw-cursor-pointer"
+                 type="checkbox"
+                 role="switch"
+                 id="billingToggle"
+                 [checked]="billingCycle === 'annual'"
+                 (change)="billingCycle = billingCycle === 'monthly' ? 'annual' : 'monthly'">
+          <label class="form-check-label tw-sr-only" for="billingToggle">Annual billing</label>
+        </div>
+        <span class="tw-text-sm tw-font-medium"
+              [class.tw-text-[var(--color-heading)]]="billingCycle === 'annual'"
+              [class.tw-text-[var(--color-muted)]]="billingCycle !== 'annual'">
+          Annual
+          <span class="tw-ml-1 tw-text-xs tw-font-semibold tw-text-green-600 tw-bg-green-50 tw-rounded-full tw-px-2 tw-py-0.5">
+            Save ~{{ annualSavingsPercent }}%
+          </span>
+        </span>
+      </div>
+
+      <!-- Plan cards -->
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-5">
+        @for (plan of plans; track plan.id) {
+          <div class="card tw-flex tw-flex-col tw-relative tw-overflow-hidden"
+               [class.tw-ring-2]="isCurrentPlan(plan)"
+               [style.--tw-ring-color]="isCurrentPlan(plan) ? 'var(--brand-color)' : 'transparent'">
+
+            <!-- Current plan indicator strip -->
+            @if (isCurrentPlan(plan)) {
+              <div class="tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-h-1" style="background: var(--brand-color)"></div>
+            }
+
+            <div class="card-body tw-flex tw-flex-col tw-gap-4 tw-pt-6">
+
+              <!-- Plan name + current badge -->
+              <div>
+                <div class="tw-flex tw-items-center tw-justify-between tw-mb-1">
+                  <h2 class="tw-font-heading tw-text-base tw-font-semibold tw-text-[var(--color-heading)] tw-mb-0">
+                    {{ plan.name }}
+                  </h2>
+                  @if (isCurrentPlan(plan)) {
+                    <span class="status-badge status-info tw-text-xs">Current</span>
+                  }
+                </div>
+                <!-- Price -->
+                <div class="tw-mt-2">
+                  @if (plan.price_monthly === 0) {
+                    <span class="tw-font-heading tw-text-3xl tw-font-bold tw-text-[var(--color-heading)]">Free</span>
+                  } @else {
+                    <span class="tw-font-heading tw-text-3xl tw-font-bold tw-text-[var(--color-heading)]">
+                      ₱{{ displayPrice(plan) | number }}
+                    </span>
+                    <span class="tw-text-sm tw-text-[var(--color-muted)] tw-ml-1">
+                      /{{ billingCycle === 'monthly' ? 'mo' : 'yr' }}
+                    </span>
+                  }
+                </div>
+                @if (plan.price_monthly > 0 && billingCycle === 'annual') {
+                  <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mt-0.5">
+                    (₱{{ (plan.price_annual / 12) | number:'1.0-0' }}/mo billed annually)
+                  </p>
+                }
+              </div>
+
+              <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
+
+              <!-- Inclusions -->
+              <div class="tw-flex tw-flex-col tw-gap-2 tw-text-sm">
+                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Inclusions</p>
+                <div class="tw-flex tw-justify-between">
+                  <span class="tw-text-[var(--color-muted)]">Artists</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_artists) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between">
+                  <span class="tw-text-[var(--color-muted)]">Releases / artist</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_releases_per_artist) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between">
+                  <span class="tw-text-[var(--color-muted)]">Press campaigns / mo</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_press_campaigns_per_month) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between">
+                  <span class="tw-text-[var(--color-muted)]">Sync pitches / mo</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_sync_pitches_per_month) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between">
+                  <span class="tw-text-[var(--color-muted)]">Storage</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">
+                    {{ plan.limit_storage_gb === null ? 'Unlimited' : plan.limit_storage_gb + ' GB' }}
+                  </span>
+                </div>
+              </div>
+
+              <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
+
+              <!-- Fees -->
+              <div class="tw-flex tw-flex-col tw-gap-2 tw-text-sm">
+                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Add-on Rates</p>
+                <div class="tw-flex tw-flex-col tw-gap-0.5">
+                  <span class="tw-text-[var(--color-muted)]">Events</span>
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ feeLabel(plan, 'event') }}</span>
+                    @if (feeSaving(plan, 'event'); as saving) {
+                      <span class="tw-text-xs tw-font-semibold tw-text-green-700 tw-bg-green-100 tw-rounded-full tw-px-2 tw-py-0.5">{{ saving }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="tw-flex tw-flex-col tw-gap-0.5">
+                  <span class="tw-text-[var(--color-muted)]">Fundraisers</span>
+                  <div class="tw-flex tw-items-center tw-gap-2">
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ feeLabel(plan, 'fundraiser') }}</span>
+                    @if (feeSaving(plan, 'fundraiser'); as saving) {
+                      <span class="tw-text-xs tw-font-semibold tw-text-green-700 tw-bg-green-100 tw-rounded-full tw-px-2 tw-py-0.5">{{ saving }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- CTA -->
+              <div class="tw-mt-auto tw-pt-2">
+                @if (isCurrentPlan(plan)) {
+                  <button class="btn btn-secondary tw-w-full" disabled>Current plan</button>
+                } @else if (plan.price_monthly === 0) {
+                  <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)]"
+                          (click)="selectPlan(plan)"
+                          [disabled]="actionLoading">
+                    Switch to {{ plan.name }}
+                  </button>
+                } @else {
+                  <button class="btn btn-primary tw-w-full" disabled title="Online subscriptions coming soon">
+                    Coming Soon
+                  </button>
+                }
+              </div>
+
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Dev-only plan override panel -->
+      @if (isDev) {
+        <div class="tw-mt-10 tw-border tw-border-dashed tw-border-yellow-400 tw-rounded-lg tw-p-4 tw-bg-yellow-50">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-text-yellow-700 tw-mb-3">
+            ⚠ Dev tools — not visible in production
+          </p>
+          <div class="tw-flex tw-flex-wrap tw-gap-2">
+            @for (plan of plans; track plan.id) {
+              <button class="btn btn-sm tw-border tw-border-yellow-400 tw-bg-white tw-text-yellow-800"
+                      (click)="devOverride(plan)"
+                      [disabled]="actionLoading || isCurrentPlan(plan)">
+                Set: {{ plan.name }}
+              </button>
+            }
+          </div>
+          <p class="tw-text-xs tw-text-yellow-600 tw-mt-2">
+            Billing cycle used: <strong>{{ billingCycle }}</strong> — toggle above to change.
+          </p>
+        </div>
+      }
+
+      <!-- Footer note -->
+      <p class="tw-text-xs tw-text-[var(--color-muted)] tw-text-center tw-mt-8">
+        Subscriptions are billed via PayMongo. Accepted: Visa, Mastercard, Maya.
+        Processing fees still apply for payment gateway charges.
+      </p>
+
+    }
+  </div>
+</div>

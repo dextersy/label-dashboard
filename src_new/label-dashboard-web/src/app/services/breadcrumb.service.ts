@@ -89,6 +89,7 @@ export class BreadcrumbService {
     '/labels/earnings': { label: 'Financials', icon: 'coins', parent: '/labels' },
     '/labels/sublabels': { label: 'Sublabels', icon: 'layers', parent: '/labels' },
     '/labels/setup': { label: 'Settings', icon: 'settings', parent: '/labels' },
+    '/admin/subscription': { label: 'Subscription', icon: 'credit-card', parent: '/admin' },
     '/labels/reports': { label: 'Reports', icon: 'chart-line', parent: '/labels' },
     '/labels/reports/music-earnings': { label: 'Music Earnings', parent: '/labels/reports' },
     '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },

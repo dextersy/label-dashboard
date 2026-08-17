@@ -200,6 +200,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 { route: '/labels/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
               ]
             },
+            { route: '/admin/subscription', title: 'Subscription', adminOnly: true },
             { route: '/admin/users', title: 'Users', adminOnly: true },
             {
               route: '/admin/tools',
@@ -292,7 +293,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 case '/labels/discography': icon = 'music';    break;
                 case '/labels/earnings':    icon = 'coins';    break;
                 case '/labels/sublabels':   icon = 'layers';   break;
-                case '/labels/setup':       icon = 'settings'; break;
+                case '/labels/setup':         icon = 'settings';    break;
               }
               return { ...child, icon };
             });
@@ -336,6 +337,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
                   case '/admin/users':
                     icon = 'users';
                     break;
+                  case '/admin/subscription':
+                    icon = 'credit-card';
+                    break;
                 }
                 return {
                   ...child,
@@ -370,8 +374,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     
     this.router.events.subscribe(() => {
       this.currentRoute = this.router.url;
-      // Only auto-expand parent menus for active routes, don't persist expansion
-      // The isSubmenuExpanded method will handle showing active child routes
     });
 
     // Subscribe to sidebar state changes
