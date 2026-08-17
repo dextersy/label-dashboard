@@ -119,6 +119,15 @@ const startServer = async () => {
 
     // SECURITY: Body parsers applied AFTER CORS/CSRF to prevent resource exhaustion attacks
     // Malicious requests are rejected before parsing large payloads (up to 50mb)
+    //
+    // Preserve raw body for the PayMongo webhook route so signature verification
+    // uses the exact bytes received, not a re-serialized version.
+    app.use('/api/subscription/webhook', express.json({
+      limit: '1mb',
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf.toString('utf8');
+      },
+    }));
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ extended: true, limit: '50mb' }));
     app.use(cookieParser());
@@ -148,7 +157,8 @@ const startServer = async () => {
       { name: 'scanner', path: './routes/scanner' },
       { name: 'notifications', path: './routes/notifications' },
       { name: 'pressCampaign', path: './routes/pressCampaign' },
-      { name: 'deliveryAddresses', path: './routes/deliveryAddresses' }
+      { name: 'deliveryAddresses', path: './routes/deliveryAddresses' },
+      { name: 'subscription', path: './routes/subscription' }
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -205,6 +215,7 @@ const startServer = async () => {
     const notificationRoutes = routes.notifications;
     const pressCampaignRoutes = routes.pressCampaign;
     const deliveryAddressRoutes = routes.deliveryAddresses;
+    const subscriptionRoutes = routes.subscription;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -226,6 +237,7 @@ const startServer = async () => {
     app.use('/api/sync-licensing', syncLicensingRoutes);
     app.use('/api/press-campaigns', pressCampaignRoutes);
     app.use('/api/delivery-addresses', deliveryAddressRoutes);
+    app.use('/api/subscription', subscriptionRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);

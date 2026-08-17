@@ -51,6 +51,8 @@ import SavedDeliveryAddress from './SavedDeliveryAddress';
 import EventAddOnPayment from './EventAddOnPayment';
 import EventLike from './EventLike';
 import AudienceFollow from './AudienceFollow';
+import Plan from './Plan';
+import BrandPlan from './BrandPlan';
 
 // Define relationships
 // Brand relationships
@@ -65,6 +67,12 @@ Brand.hasMany(Domain, { foreignKey: 'brand_id', as: 'domains' });
 Brand.hasMany(LabelPaymentMethod, { foreignKey: 'brand_id', as: 'labelPaymentMethods' });
 Brand.hasMany(LabelPayment, { foreignKey: 'brand_id', as: 'labelPayments' });
 Brand.hasMany(Fundraiser, { foreignKey: 'brand_id', as: 'fundraisers' });
+
+// Plan / BrandPlan relationships
+Plan.hasMany(BrandPlan, { foreignKey: 'plan_id', as: 'brandPlans' });
+BrandPlan.belongsTo(Plan, { foreignKey: 'plan_id', as: 'plan' });
+Brand.hasMany(BrandPlan, { foreignKey: 'brand_id', as: 'brandPlans' });
+BrandPlan.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 
 // Brand self-referencing relationships for parent-child hierarchy
 Brand.hasMany(Brand, { foreignKey: 'parent_brand', as: 'childBrands' });
@@ -399,6 +407,8 @@ export {
   EventAddOnPayment,
   EventLike,
   AudienceFollow,
+  Plan,
+  BrandPlan,
 };
 
 // Initialize database connection
