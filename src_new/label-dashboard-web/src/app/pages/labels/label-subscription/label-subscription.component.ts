@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { SubscriptionService, Plan, CurrentSubscription } from '../../../services/subscription.service';
+import { forkJoin } from 'rxjs';
+import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits } from '../../../services/subscription.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService, ConfirmationDialogData } from '../../../services/confirmation.service';
 import { environment } from '../../../../environments/environment';
@@ -20,6 +21,9 @@ export class LabelSubscriptionComponent implements OnInit {
 
   plans: Plan[] = [];
   currentSubscription: CurrentSubscription | null = null;
+  usageLimits: EffectiveLimits | null = null;
+  usageArtists = 0;
+  usageReleasesPerArtist: Record<number, number> = {};
   billingCycle: 'monthly' | 'annual' = 'monthly';
 
   // Show a banner if returning from a PayMongo checkout
@@ -45,10 +49,16 @@ export class LabelSubscriptionComponent implements OnInit {
 
   loadPlans(): void {
     this.loading = true;
-    this.subscriptionService.getPlans().subscribe({
-      next: (data) => {
-        this.plans = data.plans;
-        this.currentSubscription = data.currentSubscription;
+    forkJoin({
+      plans: this.subscriptionService.getPlans(),
+      usage: this.subscriptionService.getUsage(),
+    }).subscribe({
+      next: ({ plans, usage }) => {
+        this.plans = plans.plans;
+        this.currentSubscription = plans.currentSubscription;
+        this.usageLimits = usage.limits;
+        this.usageArtists = usage.usage.artists;
+        this.usageReleasesPerArtist = usage.usage.releases_per_artist;
         // Pre-select billing cycle to match current subscription
         if (this.currentSubscription) {
           this.billingCycle = this.currentSubscription.billing_cycle;
@@ -64,6 +74,28 @@ export class LabelSubscriptionComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  usageBarWidth(used: number, limit: number | null): string {
+    if (limit === null) return '0%';
+    const pct = Math.min(100, Math.round((used / limit) * 100));
+    return `${pct}%`;
+  }
+
+  usageBarClass(used: number, limit: number | null): string {
+    if (limit === null) return '';
+    const pct = (used / limit) * 100;
+    if (pct >= 100) return 'tw-bg-red-500';
+    if (pct >= 80) return 'tw-bg-amber-500';
+    return 'tw-bg-[var(--brand-color)]';
+  }
+
+  get totalReleases(): number {
+    return Object.values(this.usageReleasesPerArtist).reduce((sum, n) => sum + n, 0);
+  }
+
+  get maxReleasesPerArtist(): number {
+    return Object.values(this.usageReleasesPerArtist).reduce((max, n) => Math.max(max, n), 0);
   }
 
   get annualSavingsPercent(): number {

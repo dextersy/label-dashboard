@@ -44,29 +44,88 @@
       <!-- Current subscription summary -->
       @if (currentSubscription) {
         <div class="card tw-mb-8">
-          <div class="card-body tw-flex tw-flex-col tw-gap-1 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
-            <div>
-              <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Current Plan</p>
-              <div class="tw-flex tw-items-center tw-gap-3">
-                <span class="tw-font-heading tw-text-xl tw-font-semibold tw-text-[var(--color-heading)]">
-                  {{ currentPlanName }}
-                </span>
-                <span class="status-badge {{ statusBadgeClass(currentSubscription.status) }}">
-                  {{ statusLabel(currentSubscription.status) }}
-                </span>
+          <div class="card-body">
+            <!-- Plan header row -->
+            <div class="tw-flex tw-flex-col tw-gap-1 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between tw-mb-5">
+              <div>
+                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Current Plan</p>
+                <div class="tw-flex tw-items-center tw-gap-3">
+                  <span class="tw-font-heading tw-text-xl tw-font-semibold tw-text-[var(--color-heading)]">
+                    {{ currentPlanName }}
+                  </span>
+                  <span class="status-badge {{ statusBadgeClass(currentSubscription.status) }}">
+                    {{ statusLabel(currentSubscription.status) }}
+                  </span>
+                </div>
+                <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mt-1">
+                  Billed {{ currentSubscription.billing_cycle }}
+                  &bull;
+                  Active since {{ currentSubscription.started_at | date:'mediumDate' }}
+                </p>
               </div>
-              <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mt-1">
-                Billed {{ currentSubscription.billing_cycle }}
-                &bull;
-                Active since {{ currentSubscription.started_at | date:'mediumDate' }}
-              </p>
+              @if (currentSubscription.status === 'active' && isCurrentPlanPaid) {
+                <button class="btn btn-danger btn-sm tw-self-start sm:tw-self-center tw-mt-3 sm:tw-mt-0"
+                        (click)="cancelSubscription()"
+                        [disabled]="actionLoading">
+                  Cancel subscription
+                </button>
+              }
             </div>
-            @if (currentSubscription.status === 'active' && isCurrentPlanPaid) {
-              <button class="btn btn-danger btn-sm tw-self-start sm:tw-self-center tw-mt-3 sm:tw-mt-0"
-                      (click)="cancelSubscription()"
-                      [disabled]="actionLoading">
-                Cancel subscription
-              </button>
+
+            <!-- Usage meters -->
+            @if (usageLimits) {
+              <div>
+                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-3">Usage</p>
+                <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-x-8 tw-gap-y-4">
+
+                  <!-- Artists -->
+                  <div>
+                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
+                      <span class="tw-text-[var(--color-muted)]">Artists</span>
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">
+                        {{ usageArtists }}
+                        @if (usageLimits.limit_artists !== null) {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_artists }}</span>
+                        } @else {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                        }
+                      </span>
+                    </div>
+                    @if (usageLimits.limit_artists !== null) {
+                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                        <div class="tw-h-full tw-rounded-full tw-transition-all"
+                             [class]="usageBarClass(usageArtists, usageLimits.limit_artists)"
+                             [style.width]="usageBarWidth(usageArtists, usageLimits.limit_artists)">
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Releases per artist -->
+                  <div>
+                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
+                      <span class="tw-text-[var(--color-muted)]">Releases (highest per artist)</span>
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">
+                        {{ maxReleasesPerArtist }}
+                        @if (usageLimits.limit_releases_per_artist !== null) {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_releases_per_artist }}</span>
+                        } @else {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                        }
+                      </span>
+                    </div>
+                    @if (usageLimits.limit_releases_per_artist !== null) {
+                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                        <div class="tw-h-full tw-rounded-full tw-transition-all"
+                             [class]="usageBarClass(maxReleasesPerArtist, usageLimits.limit_releases_per_artist)"
+                             [style.width]="usageBarWidth(maxReleasesPerArtist, usageLimits.limit_releases_per_artist)">
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                </div>
+              </div>
             }
           </div>
         </div>
