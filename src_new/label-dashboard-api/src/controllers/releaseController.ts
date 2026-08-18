@@ -207,13 +207,20 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ error: 'Catalog number already exists' });
     }
 
-    // Enforce plan releases-per-artist limit
-    if (artists && artists.length > 0) {
+    // Enforce plan releases-per-artist limit.
+    // Draft and For Submission releases don't count — only Live and Pending do.
+    // Only check if the release is being created directly in a counted status.
+    const COUNTED_RELEASE_STATUSES = ['Live', 'Pending'];
+    const creationStatus = req.body.status || 'Draft';
+    if (artists && artists.length > 0 && COUNTED_RELEASE_STATUSES.includes(creationStatus)) {
       const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
       if (limits && limits.limit_releases_per_artist !== null) {
         const artistIds = artists.map((a: any) => a.artist_id).filter(Boolean);
         for (const artistId of artistIds) {
-          const releaseCount = await ReleaseArtist.count({ where: { artist_id: artistId } });
+          const releaseCount = await ReleaseArtist.count({
+            where: { artist_id: artistId },
+            include: [{ model: Release, as: 'release', where: { status: { [Op.in]: COUNTED_RELEASE_STATUSES } }, required: true }],
+          });
           if (releaseCount >= limits.limit_releases_per_artist) {
             return res.status(402).json({
               error: 'LIMIT_REACHED',
@@ -397,6 +404,26 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     // Save original status before update for email notification check
     const originalStatus = release.status;
+
+    // Check per-artist release limit when transitioning from a free status into a counted status.
+    // Free: Draft, For Submission, Taken Down. Counted: Live, Pending.
+    const COUNTED_STATUSES = ['Live', 'Pending'];
+    const FREE_STATUSES = ['Draft', 'For Submission', 'Taken Down'];
+    if (status && FREE_STATUSES.includes(originalStatus) && COUNTED_STATUSES.includes(status) && req.user.is_admin) {
+      const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
+      if (limits && limits.limit_releases_per_artist !== null) {
+        const releaseArtists = await ReleaseArtist.findAll({ where: { release_id: releaseId } });
+        for (const ra of releaseArtists) {
+          const releaseCount = await ReleaseArtist.count({
+            where: { artist_id: (ra as any).artist_id },
+            include: [{ model: Release, as: 'release', attributes: [], where: { status: { [Op.in]: COUNTED_STATUSES } }, required: true }],
+          });
+          if (releaseCount >= limits.limit_releases_per_artist) {
+            return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'releases_per_artist', limit: limits.limit_releases_per_artist });
+          }
+        }
+      }
+    }
 
     // Delete old cover art from S3 if new one is uploaded
     if (coverArtUrl && release.cover_art && release.cover_art.startsWith('https://')) {

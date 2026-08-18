@@ -6,7 +6,7 @@ import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
 import User from '../models/User';
 import Artist from '../models/Artist';
-import { ReleaseArtist } from '../models';
+import { ReleaseArtist, Release } from '../models';
 import {
   createPayMongoCustomer,
   syncPlanToPayMongo,
@@ -77,8 +77,8 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
     const brandId = (req as any).user?.brand_id;
     const limits = await getEffectiveLimitsForBrand(brandId);
 
-    // Count artists for this brand
-    const artistCount = await Artist.count({ where: { brand_id: brandId } });
+    // Count active artists for this brand (inactive artists don't consume a slot)
+    const artistCount = await Artist.count({ where: { brand_id: brandId, status: 'Active' } });
 
     // Count admin users for this brand
     const adminUserCount = await User.count({ where: { brand_id: brandId, is_admin: true } });
@@ -95,7 +95,8 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
       const releaseCounts = await ReleaseArtist.findAll({
         attributes: ['artist_id', [fn('COUNT', literal('*')), 'release_count']],
         where: { artist_id: { [Op.in]: artistIds } },
-        group: ['artist_id'],
+        include: [{ model: Release, as: 'release', attributes: [], where: { status: { [Op.in]: ['Live', 'Pending'] } }, required: true }],
+        group: [literal('"ReleaseArtist"."artist_id"') as any],
         raw: true,
       }) as any[];
       for (const row of releaseCounts) {

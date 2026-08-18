@@ -8,6 +8,7 @@ import { environment } from 'environments/environment';
 import { QuillModule } from 'ngx-quill';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { PlanLimitService } from '../../../../services/plan-limit.service';
 
 export interface ArtistProfile extends Artist {
   bio?: string;
@@ -151,7 +152,7 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
   bioCharLimit = 5000;
   bioCharCount = 0;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private planLimitService: PlanLimitService) {}
 
   onBioContentChanged(event: any): void {
     // event.text contains the plain text without HTML tags
@@ -190,9 +191,14 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     }
   }
 
-  setStatus(status: 'Active' | 'Inactive'): void {
+  async setStatus(status: 'Active' | 'Inactive'): Promise<void> {
     if (!this.artist || !this.isAdmin || this.savingStatus) return;
     if (this.editingProfile.status === status) return;
+
+    if (status === 'Active') {
+      const blocked = await this.planLimitService.checkLimit('artists');
+      if (blocked) return;
+    }
 
     this.savingStatus = true;
     const headers = this.getAuthHeaders();

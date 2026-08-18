@@ -65,7 +65,7 @@
                        id="artistStatusToggle"
                        [checked]="editingProfile.status !== 'Inactive'"
                        [disabled]="savingStatus"
-                       (change)="setStatus(editingProfile.status === 'Inactive' ? 'Active' : 'Inactive')">
+                       (click)="$event.preventDefault(); setStatus(editingProfile.status === 'Inactive' ? 'Active' : 'Inactive')">
               </div>
               <div *ngIf="savingStatus" class="loading-spinner"></div>
             </div>

@@ -12,6 +12,7 @@ import { IconComponent } from '../../../../components/shared/icon/icon.component
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { SongFormComponent } from '../song-form/song-form.component';
 import { QuillModule } from 'ngx-quill';
+import { PlanLimitService } from '../../../../services/plan-limit.service';
 
 @Component({
   selector: 'app-release-view',
@@ -196,7 +197,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  saveRelease(): void {
+  async saveRelease(): Promise<void> {
     if (!this.release) return;
 
     if ((this.editingRelease.catalog_no || '').length > 6) {
@@ -210,6 +211,17 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     if (this.linerNotesCharCount > this.linerNotesCharLimit) {
       this.alertMessage.emit({ type: 'error', message: `Liner notes exceed the ${this.linerNotesCharLimit.toLocaleString()} character limit.` });
       return;
+    }
+
+    // Check release limit when transitioning from a free status (Draft, For Submission, Taken Down)
+    // into a counted status (Live, Pending).
+    const freeStatuses = ['Draft', 'For Submission', 'Taken Down'];
+    const countedStatuses = ['Live', 'Pending'];
+    if (freeStatuses.includes(this.release.status) && countedStatuses.includes(this.editingRelease.status)) {
+      for (const artist of this.release.artists ?? []) {
+        const blocked = await this.planLimitService.checkLimit('releases_per_artist', artist.id);
+        if (blocked) return;
+      }
     }
 
     this.saving = true;
@@ -248,6 +260,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
       },
       error: (error) => {
         this.saving = false;
+        if (this.planLimitService.handleLimitError(error)) return;
         const msg = error.error?.error || 'Failed to save release.';
         this.alertMessage.emit({ type: 'error', message: msg });
       }
@@ -258,7 +271,8 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     private audioPlayerService: AudioPlayerService,
     private sanitizer: DomSanitizer,
     private releaseService: ReleaseService,
-    private songService: SongService
+    private songService: SongService,
+    private planLimitService: PlanLimitService
   ) {}
 
   @HostListener('document:click')
@@ -704,9 +718,15 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
            (this.release.status === 'Draft' || this.release.status === 'For Submission');
   }
 
-  onSubmitRelease(): void {
+  async onSubmitRelease(): Promise<void> {
     if (this.submittingRelease || !this.release || !this.canSubmitRelease()) {
       return;
+    }
+
+    // Submitting moves the release to Pending (a counted status) — check limit first
+    for (const artist of this.release.artists ?? []) {
+      const blocked = await this.planLimitService.checkLimit('releases_per_artist', artist.id);
+      if (blocked) return;
     }
 
     this.submittingRelease = true;
@@ -723,6 +743,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
       error: (error) => {
         console.error('Error submitting release:', error);
         this.submittingRelease = false;
+        if (this.planLimitService.handleLimitError(error)) return;
 
         let errorMessage = 'Failed to submit release.';
         if (error.error?.error) {

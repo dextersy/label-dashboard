@@ -198,7 +198,7 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
     // Enforce plan artist limit
     const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
     if (limits && limits.limit_artists !== null) {
-      const artistCount = await Artist.count({ where: { brand_id: req.user.brand_id } });
+      const artistCount = await Artist.count({ where: { brand_id: req.user.brand_id, status: 'Active' } });
       if (artistCount >= limits.limit_artists) {
         return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'artists', limit: limits.limit_artists });
       }
@@ -391,6 +391,18 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
 
     // Store original values for change notification and status transition detection
     const originalStatus = artist.status;
+
+    // If reactivating an inactive artist, check the artist limit
+    if (status === 'Active' && originalStatus !== 'Active' && req.user.is_admin) {
+      const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
+      if (limits && limits.limit_artists !== null) {
+        const activeCount = await Artist.count({ where: { brand_id: req.user.brand_id, status: 'Active' } });
+        if (activeCount >= limits.limit_artists) {
+          return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'artists', limit: limits.limit_artists });
+        }
+      }
+    }
+
     const originalValues = {
       name: artist.name,
       bio: artist.bio,

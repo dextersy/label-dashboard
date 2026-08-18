@@ -143,14 +143,8 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
         if (releaseId) {
           this.loadReleaseForEditing(+releaseId);
         } else {
-          // New release — check limit before showing the form
-          const artistId = this.artist?.id;
-          if (artistId != null) {
-            const blocked = await this.planLimitService.checkLimit('releases_per_artist', artistId);
-            if (blocked) {
-              this.router.navigate(['/artist/releases']);
-            }
-          }
+          // New releases start as Draft, which doesn't count toward the limit.
+          // The limit is enforced when the release is promoted to Live/Pending.
         }
       })
     );

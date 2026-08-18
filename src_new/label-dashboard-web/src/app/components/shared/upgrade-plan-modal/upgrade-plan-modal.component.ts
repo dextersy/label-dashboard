@@ -89,7 +89,7 @@ export class UpgradePlanModalComponent implements OnInit, OnDestroy {
     if (!this.context) return '';
     const map: Record<string, string> = {
       artists: 'deactivate an existing artist',
-      releases_per_artist: 'delete an existing release',
+      releases_per_artist: 'take down an existing release',
       admin_users: 'remove an existing admin',
     };
     return map[this.context.limit_type] ?? 'free up a slot';
