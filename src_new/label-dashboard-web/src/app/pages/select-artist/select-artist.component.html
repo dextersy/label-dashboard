@@ -31,45 +31,58 @@
       <div class="no-artists-icon tw-mb-4">
         <app-icon name="users" />
       </div>
-      <h3>No Artists Found</h3>
-      <p class="tw-text-muted">You don't have any artists yet.</p>
-      <button *ngIf="isAdmin" class="btn-primary tw-mt-3" (click)="addNewArtist()">
-        <app-icon name="plus" class="tw-mr-2" />Add New Artist
-      </button>
+      <ng-container *ngIf="isAdmin">
+        <h3>No Artists Found</h3>
+        <p class="tw-text-muted">You don't have any artists yet.</p>
+        <button class="btn-primary tw-mt-3" (click)="addNewArtist()">
+          <app-icon name="plus" class="tw-mr-2" />Add New Artist
+        </button>
+      </ng-container>
+      <ng-container *ngIf="!isAdmin">
+        <h3>No Artists Available</h3>
+        <p class="tw-text-muted">You don't currently have access to any active artist profiles.<br>Please contact your label administrator.</p>
+      </ng-container>
     </div>
 
     <!-- Artist Grid -->
     <div *ngIf="artists.length > 0" class="artist-grid">
-      <div 
-        *ngFor="let artist of artists" 
+      <div
+        *ngFor="let artist of artists"
         class="artist-card"
+        [class.artist-card--inactive]="isArtistInactive(artist)"
+        [class.artist-card--locked]="isArtistLocked(artist)"
         (click)="selectArtist(artist)"
         tabindex="0"
         (keydown.enter)="selectArtist(artist)"
         (keydown.space)="selectArtist(artist); $event.preventDefault()">
         <div class="artist-photo-container">
-          <img 
-            *ngIf="getArtistPhotoUrl(artist)" 
-            [src]="getArtistPhotoUrl(artist)" 
+          <img
+            *ngIf="getArtistPhotoUrl(artist)"
+            [src]="getArtistPhotoUrl(artist)"
             [alt]="artist.name"
             class="artist-photo">
           <div *ngIf="!getArtistPhotoUrl(artist)" class="artist-photo-placeholder">
             {{ getArtistInitials(artist) }}
           </div>
+          <div *ngIf="isArtistLocked(artist)" class="artist-lock-overlay">
+            <app-icon name="lock" iconOnly />
+          </div>
         </div>
         <div class="artist-info">
           <h3 class="artist-name">{{ artist.name }}</h3>
           <p *ngIf="artist.band_members" class="artist-members">{{ artist.band_members }}</p>
-          <span *ngIf="artist.status === 'Inactive'" class="status-badge status-secondary tw-mt-1">Inactive</span>
+          <span *ngIf="isArtistLocked(artist)" class="status-badge status-warning tw-mt-1">Locked</span>
+          <span *ngIf="isArtistInactive(artist)" class="status-badge status-secondary tw-mt-1">Inactive</span>
         </div>
         <div class="artist-select-indicator">
-          <app-icon name="chevron-right" />
+          <app-icon *ngIf="isArtistLocked(artist)" name="lock" iconOnly />
+          <app-icon *ngIf="!isArtistLocked(artist)" name="chevron-right" />
         </div>
       </div>
 
       <!-- Add New Artist Card (Admin Only) -->
-      <div 
-        *ngIf="isAdmin" 
+      <div
+        *ngIf="isAdmin"
         class="artist-card add-artist-card"
         (click)="addNewArtist()"
         tabindex="0"

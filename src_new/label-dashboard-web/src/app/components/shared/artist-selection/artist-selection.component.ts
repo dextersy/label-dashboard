@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router, NavigationEnd } from '@angular/router';
 import { ArtistStateService } from '../../../services/artist-state.service';
 import { AuthService } from '../../../services/auth.service';
+import { PlanLimitService } from '../../../services/plan-limit.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { environment } from 'environments/environment';
@@ -34,13 +35,15 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   isNewArtistMode = false;
   currentPage = 0;
   readonly pageSize = 5;
+
   private refreshSubscription: Subscription = new Subscription();
 
   constructor(
     private http: HttpClient,
     private router: Router,
     private artistStateService: ArtistStateService,
-    private authService: AuthService
+    private authService: AuthService,
+    private planLimitService: PlanLimitService,
   ) {}
 
   ngOnInit(): void {
@@ -121,6 +124,10 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
 
         if (artistToSelect) {
           this.selectArtist(artistToSelect, false);
+        } else if (!this.isAdmin && this.artists.length === 0) {
+          // Non-admin has no accessible artists — clear stale selection and redirect.
+          localStorage.removeItem('selected_artist_id');
+          this.router.navigate(['/artist']);
         }
 
         this.loading = false;
@@ -132,7 +139,20 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  isArtistLocked(artist: Artist): boolean {
+    return artist.locked === true;
+  }
+
+  isArtistInactive(artist: Artist): boolean {
+    return artist.status === 'Inactive' && !artist.locked;
+  }
+
   selectArtist(artist: Artist, userInitiated: boolean = false): void {
+    if (userInitiated && this.isArtistLocked(artist)) {
+      this.isModalOpen = false;
+      this.planLimitService.showUpgradeModal({ limit_type: 'artists' });
+      return;
+    }
     this.selectedArtist = artist;
     this.isModalOpen = false;
     this.saveArtistId(artist.id);
@@ -233,6 +253,12 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
             this.loading = false;
             return;
           }
+        }
+
+        if (!this.isAdmin && this.artists.length === 0) {
+          localStorage.removeItem('selected_artist_id');
+          this.router.navigate(['/artist']);
+          return;
         }
 
         this.restoreArtistSelection();

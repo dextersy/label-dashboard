@@ -67,16 +67,21 @@
           <button *ngFor="let artist of pagedArtists"
                   class="artist-modal-item"
                   [class.active]="selectedArtist?.id === artist.id"
+                  [class.artist-modal-item--inactive]="isArtistInactive(artist)"
+                  [class.artist-modal-item--locked]="isArtistLocked(artist)"
                   (click)="selectArtist(artist, true)">
-            <app-icon name="check" iconOnly class="artist-modal-check" *ngIf="selectedArtist?.id === artist.id" />
-            <img *ngIf="hasProfilePhoto(artist)"
-                 [src]="getProfilePhotoUrl(artist)"
-                 class="artist-modal-photo"
-                 [alt]="artist.name"
-                 loading="lazy">
-            <div *ngIf="!hasProfilePhoto(artist)"
-                 class="artist-modal-photo artist-modal-initials">{{ getArtistInitials(artist.name) }}</div>
+            <app-icon name="check" iconOnly class="artist-modal-check" *ngIf="selectedArtist?.id === artist.id && !isArtistLocked(artist)" />
+            <div class="artist-modal-photo-wrap">
+              <img *ngIf="hasProfilePhoto(artist)"
+                   [src]="getProfilePhotoUrl(artist)"
+                   class="artist-modal-photo"
+                   [alt]="artist.name"
+                   loading="lazy">
+              <div *ngIf="!hasProfilePhoto(artist)"
+                   class="artist-modal-photo artist-modal-initials">{{ getArtistInitials(artist.name) }}</div>
+            </div>
             <span class="artist-modal-name">{{ artist.name }}</span>
+            <app-icon *ngIf="isArtistLocked(artist)" name="lock" iconOnly class="artist-modal-lock-icon" />
             <span *ngIf="getSublabelName(artist) as labelName" class="artist-sublabel-badge">{{ labelName }}</span>
           </button>
 

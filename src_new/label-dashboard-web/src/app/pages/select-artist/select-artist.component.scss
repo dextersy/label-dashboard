@@ -108,6 +108,38 @@
   &:active {
     transform: translateY(0);
   }
+
+  // Inactive: grayed out and italic text
+  &--inactive {
+    opacity: 0.55;
+
+    .artist-name,
+    .artist-members {
+      font-style: italic;
+    }
+
+    .artist-photo,
+    .artist-photo-placeholder {
+      filter: grayscale(100%);
+    }
+  }
+
+  // Locked: grayed out, not interactive feel
+  &--locked {
+    opacity: 0.5;
+    cursor: default;
+
+    .artist-photo,
+    .artist-photo-placeholder {
+      filter: grayscale(100%);
+    }
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: var(--border-color, #e9ecef);
+    }
+  }
 }
 
 // Artist Photo
@@ -115,6 +147,19 @@
   flex-shrink: 0;
   width: 72px;
   height: 72px;
+  position: relative;
+}
+
+.artist-lock-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
 }
 
 .artist-photo {

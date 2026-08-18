@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
@@ -68,40 +68,81 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
       const childBrands = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
       const allBrandIds = [req.user.brand_id, ...childBrands.map((b: any) => b.id)];
 
-      artists = await Artist.findAll({
-        where: { brand_id: { [Op.in]: allBrandIds } },
-        include: [
-          { model: Brand, as: 'brand' },
-          { model: Release, as: 'releases' },
-          { model: ArtistImage, as: 'images' },
-          { model: ArtistImage, as: 'profilePhotoImage' }
-        ],
-        order: [['name', 'ASC']]
+      const [rawArtists, limits] = await Promise.all([
+        Artist.findAll({
+          where: { brand_id: { [Op.in]: allBrandIds } },
+          include: [
+            { model: Brand, as: 'brand' },
+            { model: Release, as: 'releases' },
+            { model: ArtistImage, as: 'images' },
+            { model: ArtistImage, as: 'profilePhotoImage' }
+          ],
+          order: [[literal(`CASE WHEN "Artist"."status" = 'Active' THEN 0 ELSE 1 END`), 'ASC'], ['name', 'ASC']]
+        }),
+        getEffectiveLimitsForBrand(req.user.brand_id),
+      ]);
+
+      // Tag each artist as locked based on the plan's active artist limit.
+      // Active artists beyond the first `limit` (in returned order) are locked,
+      // and all inactive artists are locked when over the limit.
+      const artistLimit = limits?.limit_artists ?? null;
+      let activesSeen = 0;
+      const activeCount = rawArtists.filter((a: any) => a.status === 'Active').length;
+      const overLimit = artistLimit !== null && activeCount > artistLimit;
+
+      artists = rawArtists.map((artist: any) => {
+        let locked = false;
+        if (artistLimit !== null) {
+          if (artist.status === 'Active') {
+            activesSeen++;
+            locked = activesSeen > artistLimit;
+          } else {
+            locked = overLimit;
+          }
+        }
+        return { ...artist.toJSON(), locked };
       });
     } else {
-      // Non-admin users can only see artists they have access to
-      const artistAccess = await ArtistAccess.findAll({
-        where: { 
-          user_id: req.user.id,
-          status: 'Accepted'
-        },
-        include: [
-          {
-            model: Artist,
-            as: 'artist',
-            where: { brand_id: req.user.brand_id, status: 'Active' },
-            include: [
-              { model: Brand, as: 'brand' },
-              { model: Release, as: 'releases' },
-              { model: ArtistImage, as: 'images' },
-              { model: ArtistImage, as: 'profilePhotoImage' }
-            ]
-          }
-        ],
-        order: [[{ model: Artist, as: 'artist' }, 'name', 'ASC']]
-      });
+      // Non-admin users can only see active artists they have access to,
+      // excluding any that are over the brand's plan limit.
+      // "Within limit" is defined the same way the admin frontend does it:
+      // the first `limit_artists` active artists ordered by name brand-wide.
+      const [artistAccess, limits] = await Promise.all([
+        ArtistAccess.findAll({
+          where: { user_id: req.user.id, status: 'Accepted' },
+          include: [
+            {
+              model: Artist,
+              as: 'artist',
+              where: { brand_id: req.user.brand_id, status: 'Active' },
+              include: [
+                { model: Brand, as: 'brand' },
+                { model: Release, as: 'releases' },
+                { model: ArtistImage, as: 'images' },
+                { model: ArtistImage, as: 'profilePhotoImage' }
+              ]
+            }
+          ],
+          order: [[{ model: Artist, as: 'artist' }, 'name', 'ASC']]
+        }),
+        getEffectiveLimitsForBrand(req.user.brand_id),
+      ]);
 
-      artists = artistAccess.map(access => access.artist);
+      artists = artistAccess.map(access => ({ ...(access.artist as any).toJSON(), locked: false }));
+
+      // Apply plan artist limit using the same brand-wide ordering the admin sees,
+      // so admins and non-admins always agree on which artists are accessible.
+      if (limits?.limit_artists !== null && limits?.limit_artists !== undefined) {
+        const allowedArtists = await Artist.findAll({
+          where: { brand_id: req.user.brand_id, status: 'Active' },
+          attributes: ['id'],
+          order: [['name', 'ASC']],
+          limit: limits.limit_artists,
+          raw: true,
+        });
+        const allowedIds = new Set(allowedArtists.map((a: any) => a.id));
+        artists = artists.filter(a => allowedIds.has(a.id));
+      }
     }
 
     res.json({ 

@@ -7,6 +7,7 @@ import { Artist } from '../../models/artist.model';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { environment } from 'environments/environment';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { PlanLimitService } from '../../services/plan-limit.service';
 
 @Component({
   selector: 'app-select-artist',
@@ -27,7 +28,8 @@ export class SelectArtistComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     private route: ActivatedRoute,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private planLimitService: PlanLimitService,
   ) {}
 
   ngOnInit(): void {
@@ -75,13 +77,22 @@ export class SelectArtistComponent implements OnInit {
     });
   }
 
+  isArtistLocked(artist: Artist): boolean {
+    return artist.locked === true;
+  }
+
+  isArtistInactive(artist: Artist): boolean {
+    return artist.status === 'Inactive' && !artist.locked;
+  }
+
   selectArtist(artist: Artist, redirectTo = '/dashboard'): void {
-    // Save to localStorage
+    if (this.isArtistLocked(artist)) {
+      this.planLimitService.showUpgradeModal({ limit_type: 'artists' });
+      return;
+    }
+
     localStorage.setItem('selected_artist_id', artist.id.toString());
-
-    // Update the state service
     this.artistStateService.setSelectedArtist(artist);
-
     this.router.navigate([redirectTo]);
   }
 

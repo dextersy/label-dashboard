@@ -5,6 +5,7 @@ export interface Artist {
   band_members?: string;
   profile_photo_id?: number;
   status?: 'Active' | 'Inactive';
+  locked?: boolean;
   custom_data?: Record<string, any>;
   brand_id?: number;
   brand?: { id: number; brand_name: string };
