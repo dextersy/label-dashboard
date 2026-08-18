@@ -1,16 +1,19 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 import { sequelize } from '../config/database';
 import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
 import User from '../models/User';
+import Artist from '../models/Artist';
+import { ReleaseArtist } from '../models';
 import {
   createPayMongoCustomer,
   syncPlanToPayMongo,
   createPayMongoSubscription,
   cancelPayMongoSubscription,
   resolveEffectiveLimits,
+  getEffectiveLimitsForBrand,
 } from '../services/subscriptionService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 
@@ -61,6 +64,56 @@ export const getPlans = async (req: Request, res: Response): Promise<void> => {
   } catch (error: any) {
     console.error('getPlans error:', error);
     res.status(500).json({ error: 'Failed to load plans' });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// GET /api/subscription/usage
+// Returns current usage counts alongside effective limits for the brand.
+// Used by the frontend to gate creation screens before the user fills a form.
+// ---------------------------------------------------------------------------
+export const getUsage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId = (req as any).user?.brand_id;
+    const limits = await getEffectiveLimitsForBrand(brandId);
+
+    // Count artists for this brand
+    const artistCount = await Artist.count({ where: { brand_id: brandId } });
+
+    // Count admin users for this brand
+    const adminUserCount = await User.count({ where: { brand_id: brandId, is_admin: true } });
+
+    // Get this brand's artist IDs, then count releases per artist in one GROUP BY query
+    const artistIds = (await Artist.findAll({
+      where: { brand_id: brandId },
+      attributes: ['id'],
+      raw: true,
+    }) as any[]).map((a: any) => a.id);
+
+    const releasesPerArtist: Record<number, number> = {};
+    if (artistIds.length > 0) {
+      const releaseCounts = await ReleaseArtist.findAll({
+        attributes: ['artist_id', [fn('COUNT', literal('*')), 'release_count']],
+        where: { artist_id: { [Op.in]: artistIds } },
+        group: ['artist_id'],
+        raw: true,
+      }) as any[];
+      for (const row of releaseCounts) {
+        releasesPerArtist[row.artist_id] = parseInt(row.release_count, 10);
+      }
+    }
+
+    res.json({
+      limits,
+      usage: {
+        artists: artistCount,
+        admin_users: adminUserCount,
+        releases_per_artist: releasesPerArtist,
+      },
+    });
+  } catch (error: any) {
+    console.error('getUsage error:', error);
+    res.status(500).json({ error: 'Failed to load usage' });
   }
 };
 

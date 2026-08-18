@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import crypto from 'crypto';
 import { sequelize } from '../config/database';
+import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -192,6 +193,15 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 
     if (!name) {
       return res.status(400).json({ error: 'Artist name is required' });
+    }
+
+    // Enforce plan artist limit
+    const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
+    if (limits && limits.limit_artists !== null) {
+      const artistCount = await Artist.count({ where: { brand_id: req.user.brand_id } });
+      if (artistCount >= limits.limit_artists) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'artists', limit: limits.limit_artists });
+      }
     }
 
     // Handle profile photo upload if provided

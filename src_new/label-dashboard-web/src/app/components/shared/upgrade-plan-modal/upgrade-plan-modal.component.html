@@ -1,0 +1,107 @@
+@if (visible) {
+  <!-- Backdrop -->
+  <div class="modal-backdrop fade show" (click)="close()"></div>
+
+  <!-- Modal -->
+  <div class="modal fade show tw-flex tw-items-center tw-justify-center" style="display:block; z-index:1055;" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable tw-w-full" role="document">
+      <div class="modal-content">
+
+        <!-- Header -->
+        <div class="modal-header tw-border-b tw-border-[var(--color-border-subtle)]">
+          <div>
+            <h5 class="modal-title tw-font-heading tw-font-semibold tw-text-[var(--color-heading)]">
+              <app-icon name="lock" class="tw-mr-2 tw-text-warning" />
+              Upgrade your plan
+            </h5>
+            @if (context) {
+              <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mb-0 tw-mt-0.5">
+                You've reached your plan's limit for
+                <strong class="tw-text-[var(--color-body)]">{{ limitMessage }}s</strong>.
+                Upgrade to add more, or <strong class="tw-text-[var(--color-body)]">{{ freeUpAction }}</strong> to free up a slot.
+              </p>
+            }
+          </div>
+          <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body tw-p-6">
+          @if (loading) {
+            <div class="tw-flex tw-justify-center tw-py-12">
+              <div class="spinner-border text-secondary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          } @else {
+            <!-- Plan cards (read-only comparison) -->
+            <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-4">
+              @for (plan of plans; track plan.id) {
+                <div class="card tw-flex tw-flex-col tw-relative tw-overflow-hidden"
+                     [class.tw-ring-2]="isCurrentPlan(plan)"
+                     [style.--tw-ring-color]="isCurrentPlan(plan) ? 'var(--brand-color)' : 'transparent'">
+
+                  @if (isCurrentPlan(plan)) {
+                    <div class="tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-h-1" style="background:var(--brand-color)"></div>
+                  }
+
+                  <div class="card-body tw-flex tw-flex-col tw-gap-3 tw-pt-6">
+
+                    <!-- Name + badge -->
+                    <div class="tw-flex tw-items-center tw-justify-between">
+                      <h2 class="tw-font-heading tw-text-base tw-font-semibold tw-text-[var(--color-heading)] tw-mb-0">{{ plan.name }}</h2>
+                      @if (isCurrentPlan(plan)) {
+                        <span class="status-badge status-info tw-text-xs">Current</span>
+                      }
+                    </div>
+
+                    <!-- Price -->
+                    <div>
+                      @if (plan.price_monthly === 0) {
+                        <span class="tw-font-heading tw-text-2xl tw-font-bold tw-text-[var(--color-heading)]">Free</span>
+                      } @else {
+                        <span class="tw-font-heading tw-text-2xl tw-font-bold tw-text-[var(--color-heading)]">
+                          ₱{{ plan.price_monthly | number }}
+                        </span>
+                        <span class="tw-text-sm tw-text-[var(--color-muted)] tw-ml-1">/mo</span>
+                      }
+                    </div>
+
+                    <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
+
+                    <!-- Key limits -->
+                    <div class="tw-flex tw-flex-col tw-gap-1.5 tw-text-sm">
+                      <div class="tw-flex tw-justify-between">
+                        <span class="tw-text-[var(--color-muted)]">Artists</span>
+                        <span class="tw-font-medium">{{ limitLabel(plan.limit_artists) }}</span>
+                      </div>
+                      <div class="tw-flex tw-justify-between">
+                        <span class="tw-text-[var(--color-muted)]">Releases / artist</span>
+                        <span class="tw-font-medium">{{ limitLabel(plan.limit_releases_per_artist) }}</span>
+                      </div>
+                      <div class="tw-flex tw-justify-between">
+                        <span class="tw-text-[var(--color-muted)]">Admin users</span>
+                        <span class="tw-font-medium">{{ limitLabel(plan.limit_admin_users) }}</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer tw-border-t tw-border-[var(--color-border-subtle)]">
+          <button class="btn btn-secondary" (click)="close()">Close</button>
+          <button class="btn btn-primary" (click)="goToSubscription()">
+            <app-icon name="arrow-up-circle" class="tw-mr-1.5" />
+            Upgrade plan
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

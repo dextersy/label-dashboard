@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { ArtistStateService } from '../../../services/artist-state.service';
+import { PlanLimitService } from '../../../services/plan-limit.service';
 import { environment } from 'environments/environment';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 
@@ -27,7 +28,7 @@ export interface NewArtistData {
     templateUrl: './add-new-artist.component.html',
     styleUrl: './add-new-artist.component.scss'
 })
-export class AddNewArtistComponent {
+export class AddNewArtistComponent implements OnInit {
   @Output() artistCreated = new EventEmitter<any>();
 
   alertMessage: {type: 'success' | 'error', message: string} | null = null;
@@ -50,9 +51,10 @@ export class AddNewArtistComponent {
   previewImageUrl: string | null = null;
 
   constructor(
-    private http: HttpClient, 
+    private http: HttpClient,
     private router: Router,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private planLimitService: PlanLimitService,
   ) {}
 
   private getAuthHeaders(): HttpHeaders {
@@ -92,6 +94,13 @@ export class AddNewArtistComponent {
         this.previewImageUrl = e.target.result;
       };
       reader.readAsDataURL(file);
+    }
+  }
+
+  async ngOnInit(): Promise<void> {
+    const blocked = await this.planLimitService.checkLimit('artists');
+    if (blocked) {
+      this.router.navigate(['/artist']);
     }
   }
 
@@ -169,12 +178,13 @@ export class AddNewArtistComponent {
       },
       error: (error) => {
         console.error('Error creating artist:', error);
+        this.creating = false;
+        this.uploadProgress = 0;
+        if (this.planLimitService.handleLimitError(error)) return;
         this.alertMessage = {
           type: 'error',
           message: 'An error occurred while creating the artist.'
         };
-        this.creating = false;
-        this.uploadProgress = 0;
       }
     });
   }

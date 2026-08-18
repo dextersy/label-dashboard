@@ -7,6 +7,7 @@ import { ReleaseService } from '../../../../services/release.service';
 import { AuthService } from '../../../../services/auth.service';
 import { ApiService } from '../../../../services/api.service';
 import { ReleaseValidationService, ValidationResult } from '../../../../services/release-validation.service';
+import { PlanLimitService } from '../../../../services/plan-limit.service';
 import { QuillModule } from 'ngx-quill';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
@@ -81,7 +82,8 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
     private releaseService: ReleaseService,
     private authService: AuthService,
     private apiService: ApiService,
-    private validationService: ReleaseValidationService
+    private validationService: ReleaseValidationService,
+    private planLimitService: PlanLimitService,
   ) {
     this.releaseForm = this.createForm();
   }
@@ -473,6 +475,7 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
       }
     } catch (error: any) {
       console.error('Error saving release:', error);
+      if (this.planLimitService.handleLimitError(error)) return;
       this.alertMessage.emit({
         type: 'error',
         message: error.error?.error || 'Failed to save release information. Please try again.'

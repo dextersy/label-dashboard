@@ -8,6 +8,7 @@ import { generateSecureToken } from '../utils/tokenUtils';
 import { hashPassword, hasPassword } from '../utils/passwordUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
+import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -791,14 +792,23 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      where: { 
+      where: {
         email_address,
-        brand_id: req.user.brand_id 
+        brand_id: req.user.brand_id
       }
     });
 
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    // Enforce plan admin user limit
+    const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
+    if (limits && limits.limit_admin_users !== null) {
+      const adminCount = await User.count({ where: { brand_id: req.user.brand_id, is_admin: true } });
+      if (adminCount >= limits.limit_admin_users) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'admin_users', limit: limits.limit_admin_users });
+      }
     }
 
     // Generate cryptographically strong invite hash

@@ -8,6 +8,7 @@ import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRo
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
 import { createNotificationsForUsers, getBrandAdminUserIds, getBrandAndParentAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -204,6 +205,24 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
 
     if (existingRelease) {
       return res.status(409).json({ error: 'Catalog number already exists' });
+    }
+
+    // Enforce plan releases-per-artist limit
+    if (artists && artists.length > 0) {
+      const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
+      if (limits && limits.limit_releases_per_artist !== null) {
+        const artistIds = artists.map((a: any) => a.artist_id).filter(Boolean);
+        for (const artistId of artistIds) {
+          const releaseCount = await ReleaseArtist.count({ where: { artist_id: artistId } });
+          if (releaseCount >= limits.limit_releases_per_artist) {
+            return res.status(402).json({
+              error: 'LIMIT_REACHED',
+              limit_type: 'releases_per_artist',
+              limit: limits.limit_releases_per_artist,
+            });
+          }
+        }
+      }
     }
 
     // Handle cover art file upload to S3

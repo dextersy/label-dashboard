@@ -190,6 +190,20 @@ export async function cancelPayMongoSubscription(subscriptionId: string): Promis
 // Resolves the actual limit a brand should see, applying overrides over plan defaults.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Fetch effective limits for a brand by ID (used by controllers for enforcement)
+// ---------------------------------------------------------------------------
+
+export async function getEffectiveLimitsForBrand(brandId: number) {
+  const brandPlan = await BrandPlan.findOne({
+    where: { brand_id: brandId },
+    include: [{ model: Plan, as: 'plan' }],
+    order: [['createdAt', 'DESC']],
+  });
+  if (!brandPlan || !brandPlan.plan) return null;
+  return resolveEffectiveLimits(brandPlan.plan, brandPlan);
+}
+
 export function resolveEffectiveLimits(plan: Plan, brandPlan: BrandPlan) {
   return {
     limit_artists:

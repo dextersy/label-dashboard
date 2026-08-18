@@ -12,6 +12,7 @@ import { EventPublishedModalComponent } from './components/shared/event-publishe
 import { ReleaseSubmittedModalComponent } from './components/shared/release-submitted-modal/release-submitted-modal.component';
 import { AudioPlayerPopupComponent } from './components/shared/audio-player-popup/audio-player-popup.component';
 import { OnboardingComponent } from './components/onboarding/onboarding.component';
+import { UpgradePlanModalComponent } from './components/shared/upgrade-plan-modal/upgrade-plan-modal.component';
 import { BrandService } from './services/brand.service';
 import { AuthService } from './services/auth.service';
 import { AdminService, SublabelCompletionEvent } from './services/admin.service';
@@ -26,7 +27,7 @@ import { filter } from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
-    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent, EventPublishedModalComponent, ReleaseSubmittedModalComponent, AudioPlayerPopupComponent, OnboardingComponent],
+    imports: [CommonModule, RouterOutlet, SidebarComponent, NavbarComponent, GlobalNotificationComponent, ConnectionOverlayComponent, AppNotificationBannerComponent, ConfirmationDialogComponent, EventPublishedModalComponent, ReleaseSubmittedModalComponent, AudioPlayerPopupComponent, OnboardingComponent, UpgradePlanModalComponent],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })

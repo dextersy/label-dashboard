@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getPlans,
+  getUsage,
   initiateCheckout,
   cancelSubscription,
   devOverridePlan,
@@ -15,6 +16,7 @@ router.post('/webhook', handleSubscriptionWebhook);
 
 // Protected
 router.get('/plans', authenticateToken, getPlans);
+router.get('/usage', authenticateToken, getUsage);
 router.post('/dev-override', authenticateToken, requireAdmin, devOverridePlan);
 router.post('/checkout', authenticateToken, requireAdmin, initiateCheckout);
 router.post('/cancel', authenticateToken, requireAdmin, cancelSubscription);

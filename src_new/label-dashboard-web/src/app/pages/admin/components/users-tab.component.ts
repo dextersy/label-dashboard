@@ -8,6 +8,7 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, Head
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { BrandService } from '../../../services/brand.service';
+import { PlanLimitService } from '../../../services/plan-limit.service';
 
 @Component({
     selector: 'app-users-tab',
@@ -194,7 +195,8 @@ export class UsersTabComponent implements OnInit {
     private adminService: AdminService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
-    private brandService: BrandService
+    private brandService: BrandService,
+    private planLimitService: PlanLimitService,
   ) {}
 
   ngOnInit(): void {
@@ -336,7 +338,9 @@ export class UsersTabComponent implements OnInit {
   }
 
   // Admin invite functions
-  openInviteModal(): void {
+  async openInviteModal(): Promise<void> {
+    const blocked = await this.planLimitService.checkLimit('admin_users');
+    if (blocked) return;
     this.showInviteModal = true;
     this.inviteForm = {
       email_address: '',
@@ -369,8 +373,9 @@ export class UsersTabComponent implements OnInit {
         this.inviteLoading = false;
       },
       error: (error) => {
-        this.notificationService.showError(error.error?.error || 'Failed to send invitation');
         this.inviteLoading = false;
+        if (this.planLimitService.handleLimitError(error)) return;
+        this.notificationService.showError(error.error?.error || 'Failed to send invitation');
       }
     });
   }

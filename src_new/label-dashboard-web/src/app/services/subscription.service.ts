@@ -56,6 +56,15 @@ export interface PlansResponse {
   currentSubscription: CurrentSubscription | null;
 }
 
+export interface UsageResponse {
+  limits: EffectiveLimits | null;
+  usage: {
+    artists: number;
+    admin_users: number;
+    releases_per_artist: Record<number, number>;
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class SubscriptionService {
   private readonly apiUrl = `${environment.apiUrl}/subscription`;
@@ -64,6 +73,10 @@ export class SubscriptionService {
 
   getPlans(): Observable<PlansResponse> {
     return this.http.get<PlansResponse>(`${this.apiUrl}/plans`);
+  }
+
+  getUsage(): Observable<UsageResponse> {
+    return this.http.get<UsageResponse>(`${this.apiUrl}/usage`);
   }
 
   initiateCheckout(planId: number, billingCycle: 'monthly' | 'annual'): Observable<{ checkout_url?: string; immediate?: boolean }> {

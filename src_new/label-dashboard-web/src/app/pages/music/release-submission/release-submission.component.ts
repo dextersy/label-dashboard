@@ -8,6 +8,7 @@ import { AuthService } from '../../../services/auth.service';
 import { SongService } from '../../../services/song.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
+import { PlanLimitService } from '../../../services/plan-limit.service';
 import { ArtistStateService } from '../../../services/artist-state.service';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { ReleaseInfoSectionComponent, ReleaseInfoData } from './release-info-section/release-info-section.component';
@@ -85,6 +86,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
     private artistStateService: ArtistStateService,
     private validationService: ReleaseValidationService,
     private releaseSubmittedService: ReleaseSubmittedService,
+    private planLimitService: PlanLimitService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
@@ -136,10 +138,19 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
 
     // Check if we're editing an existing release
     this.subscriptions.add(
-      this.route.params.subscribe(params => {
+      this.route.params.subscribe(async params => {
         const releaseId = params['id'];
         if (releaseId) {
           this.loadReleaseForEditing(+releaseId);
+        } else {
+          // New release — check limit before showing the form
+          const artistId = this.artist?.id;
+          if (artistId != null) {
+            const blocked = await this.planLimitService.checkLimit('releases_per_artist', artistId);
+            if (blocked) {
+              this.router.navigate(['/artist/releases']);
+            }
+          }
         }
       })
     );
