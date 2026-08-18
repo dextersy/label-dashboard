@@ -24,6 +24,8 @@ export class LabelSubscriptionComponent implements OnInit {
   usageLimits: EffectiveLimits | null = null;
   usageArtists = 0;
   usageReleasesPerArtist: Record<number, number> = {};
+  usagePressCampaignsThisMonth = 0;
+  usageSyncPitchesThisMonth = 0;
   billingCycle: 'monthly' | 'annual' = 'monthly';
 
   // Show a banner if returning from a PayMongo checkout
@@ -59,6 +61,8 @@ export class LabelSubscriptionComponent implements OnInit {
         this.usageLimits = usage.limits;
         this.usageArtists = usage.usage.artists;
         this.usageReleasesPerArtist = usage.usage.releases_per_artist;
+        this.usagePressCampaignsThisMonth = usage.usage.press_campaigns_this_month;
+        this.usageSyncPitchesThisMonth = usage.usage.sync_pitches_this_month;
         // Pre-select billing cycle to match current subscription
         if (this.currentSubscription) {
           this.billingCycle = this.currentSubscription.billing_cycle;

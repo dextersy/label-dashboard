@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
+import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 import multer from 'multer';
 import Groq from 'groq-sdk';
 import {
@@ -378,6 +379,27 @@ export const createPressCampaign = async (req: Request, res: Response) => {
 
     if (!title || !title.trim()) {
       return res.status(400).json({ error: 'Title is required' });
+    }
+
+    // Enforce plan press campaigns per month limit
+    const limits = await getEffectiveLimitsForBrand(brandId);
+    if (limits && limits.limit_press_campaigns_per_month !== null) {
+      const now = new Date();
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+      const countThisMonth = await PressCampaign.count({
+        where: {
+          brand_id: brandId,
+          createdAt: { [Op.gte]: monthStart, [Op.lt]: monthEnd },
+        },
+      });
+      if (countThisMonth >= limits.limit_press_campaigns_per_month) {
+        return res.status(402).json({
+          error: 'LIMIT_REACHED',
+          limit_type: 'press_campaigns',
+          limit: limits.limit_press_campaigns_per_month,
+        });
+      }
     }
 
     const type: 'release' | 'event' = campaign_type === 'event' ? 'event' : 'release';

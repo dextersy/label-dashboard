@@ -5,7 +5,6 @@ import { AuthService } from './auth.service';
 
 export interface UpgradeModalContext {
   limit_type: string;
-  limit: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -26,7 +25,7 @@ export class PlanLimitService {
    * @param limitType  The quota to check.
    * @param artistId   Required when limitType is 'releases_per_artist'.
    */
-  async checkLimit(limitType: 'artists' | 'releases_per_artist' | 'admin_users', artistId?: number): Promise<boolean> {
+  async checkLimit(limitType: 'artists' | 'releases_per_artist' | 'admin_users' | 'press_campaigns' | 'sync_pitches', artistId?: number): Promise<boolean> {
     if (!this.authService.isAdmin()) return false;
     try {
       const data = await firstValueFrom(this.subscriptionService.getUsage());
@@ -36,7 +35,7 @@ export class PlanLimitService {
       if (limitType === 'artists') {
         const limit = data.limits.limit_artists;
         if (limit !== null && data.usage.artists >= limit) {
-          this.showUpgradeModal({ limit_type: 'artists', limit });
+          this.showUpgradeModal({ limit_type: 'artists' });
           return true;
         }
       }
@@ -45,7 +44,7 @@ export class PlanLimitService {
         const limit = data.limits.limit_releases_per_artist;
         const count = data.usage.releases_per_artist[artistId] ?? 0;
         if (limit !== null && count >= limit) {
-          this.showUpgradeModal({ limit_type: 'releases_per_artist', limit });
+          this.showUpgradeModal({ limit_type: 'releases_per_artist' });
           return true;
         }
       }
@@ -53,7 +52,23 @@ export class PlanLimitService {
       if (limitType === 'admin_users') {
         const limit = data.limits.limit_admin_users;
         if (limit !== null && data.usage.admin_users >= limit) {
-          this.showUpgradeModal({ limit_type: 'admin_users', limit });
+          this.showUpgradeModal({ limit_type: 'admin_users' });
+          return true;
+        }
+      }
+
+      if (limitType === 'press_campaigns') {
+        const limit = data.limits.limit_press_campaigns_per_month;
+        if (limit !== null && data.usage.press_campaigns_this_month >= limit) {
+          this.showUpgradeModal({ limit_type: 'press_campaigns' });
+          return true;
+        }
+      }
+
+      if (limitType === 'sync_pitches') {
+        const limit = data.limits.limit_sync_pitches_per_month;
+        if (limit !== null && data.usage.sync_pitches_this_month >= limit) {
+          this.showUpgradeModal({ limit_type: 'sync_pitches' });
           return true;
         }
       }
@@ -77,7 +92,6 @@ export class PlanLimitService {
     if (error?.status === 402 && error?.error?.error === 'LIMIT_REACHED' && this.authService.isAdmin()) {
       this.showUpgradeModal({
         limit_type: error.error.limit_type,
-        limit: error.error.limit,
       });
       return true;
     }

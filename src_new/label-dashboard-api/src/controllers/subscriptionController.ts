@@ -6,7 +6,7 @@ import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
 import User from '../models/User';
 import Artist from '../models/Artist';
-import { ReleaseArtist, Release } from '../models';
+import { ReleaseArtist, Release, PressCampaign, SyncLicensingPitch } from '../models';
 import {
   createPayMongoCustomer,
   syncPlanToPayMongo,
@@ -104,12 +104,34 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
+    // Count press campaigns and sync pitches created this calendar month (excluding Deleted)
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+
+    const pressCampaignsThisMonth = await PressCampaign.count({
+      where: {
+        brand_id: brandId,
+        createdAt: { [Op.gte]: monthStart, [Op.lt]: monthEnd },
+      },
+    });
+
+    const syncPitchesThisMonth = await SyncLicensingPitch.count({
+      where: {
+        brand_id: brandId,
+        status: { [Op.notIn]: ['Deleted'] },
+        createdAt: { [Op.gte]: monthStart, [Op.lt]: monthEnd },
+      },
+    });
+
     res.json({
       limits,
       usage: {
         artists: artistCount,
         admin_users: adminUserCount,
         releases_per_artist: releasesPerArtist,
+        press_campaigns_this_month: pressCampaignsThisMonth,
+        sync_pitches_this_month: syncPitchesThisMonth,
       },
     });
   } catch (error: any) {

@@ -124,6 +124,52 @@
                     }
                   </div>
 
+                  <!-- Press campaigns this month -->
+                  <div>
+                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
+                      <span class="tw-text-[var(--color-muted)]">Press campaigns this month</span>
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">
+                        {{ usagePressCampaignsThisMonth }}
+                        @if (usageLimits.limit_press_campaigns_per_month !== null) {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_press_campaigns_per_month }}</span>
+                        } @else {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                        }
+                      </span>
+                    </div>
+                    @if (usageLimits.limit_press_campaigns_per_month !== null) {
+                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                        <div class="tw-h-full tw-rounded-full tw-transition-all"
+                             [class]="usageBarClass(usagePressCampaignsThisMonth, usageLimits.limit_press_campaigns_per_month)"
+                             [style.width]="usageBarWidth(usagePressCampaignsThisMonth, usageLimits.limit_press_campaigns_per_month)">
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Sync licensing pitches this month -->
+                  <div>
+                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
+                      <span class="tw-text-[var(--color-muted)]">Sync pitches this month</span>
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">
+                        {{ usageSyncPitchesThisMonth }}
+                        @if (usageLimits.limit_sync_pitches_per_month !== null) {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_sync_pitches_per_month }}</span>
+                        } @else {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                        }
+                      </span>
+                    </div>
+                    @if (usageLimits.limit_sync_pitches_per_month !== null) {
+                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                        <div class="tw-h-full tw-rounded-full tw-transition-all"
+                             [class]="usageBarClass(usageSyncPitchesThisMonth, usageLimits.limit_sync_pitches_per_month)"
+                             [style.width]="usageBarWidth(usageSyncPitchesThisMonth, usageLimits.limit_sync_pitches_per_month)">
+                        </div>
+                      </div>
+                    }
+                  </div>
+
                 </div>
               </div>
             }

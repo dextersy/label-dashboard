@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { SyncLicensingService, SyncLicensingPitch, SyncLicensingPitchStatus, SongForPitch, SongRecommendation } from '../../services/sync-licensing.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
+import { PlanLimitService } from '../../services/plan-limit.service';
 import { AudioPlayerService, AudioPlayerState } from '../../services/audio-player.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters, SortInfo } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
@@ -213,6 +214,7 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     private syncLicensingService: SyncLicensingService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
+    private planLimitService: PlanLimitService,
     private route: ActivatedRoute,
     public audioPlayerService: AudioPlayerService,
   ) {}
@@ -286,7 +288,9 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
     this.loadPitches(1);
   }
 
-  openCreateModal(): void {
+  async openCreateModal(): Promise<void> {
+    const blocked = await this.planLimitService.checkLimit('sync_pitches');
+    if (blocked) return;
     this.editingPitch = null;
     this.pitchForm = { title: '', description: '' };
     this.selectedSongs = [];
@@ -474,9 +478,13 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
             this.savingPitch = false;
           },
           error: (error) => {
+            this.savingPitch = false;
+            if (this.planLimitService.handleLimitError(error)) {
+              this.closeModal();
+              return;
+            }
             console.error('Failed to create pitch:', error);
             this.notificationService.showError('Failed to create pitch');
-            this.savingPitch = false;
           }
         })
       );

@@ -7,6 +7,7 @@ import Groq from 'groq-sdk';
 import { SyncLicensingPitch, SyncLicensingPitchSong, Song, Release, ReleaseSong, Artist, User, Brand, SongAuthor, SongComposer, Songwriter } from '../models';
 import { getS3ObjectStream } from '../utils/s3Service';
 import { generateSongSummaryBackground } from '../utils/songAI';
+import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 
 /**
  * Escape SQL LIKE wildcard characters so user input is treated as literal text.
@@ -359,6 +360,28 @@ export const createPitch = async (req: Request, res: Response) => {
 
     if (!title || title.trim() === '') {
       return res.status(400).json({ error: 'Title is required' });
+    }
+
+    // Enforce plan sync pitches per month limit
+    const limits = await getEffectiveLimitsForBrand(brandId);
+    if (limits && limits.limit_sync_pitches_per_month !== null) {
+      const now = new Date();
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+      const countThisMonth = await SyncLicensingPitch.count({
+        where: {
+          brand_id: brandId,
+          status: { [Op.notIn]: ['Deleted'] },
+          createdAt: { [Op.gte]: monthStart, [Op.lt]: monthEnd },
+        },
+      });
+      if (countThisMonth >= limits.limit_sync_pitches_per_month) {
+        return res.status(402).json({
+          error: 'LIMIT_REACHED',
+          limit_type: 'sync_pitches',
+          limit: limits.limit_sync_pitches_per_month,
+        });
+      }
     }
 
     const allowedStatuses = ['Draft', 'Sent'];

@@ -81,6 +81,8 @@ export class UpgradePlanModalComponent implements OnInit, OnDestroy {
       artists: 'artist',
       releases_per_artist: 'release for this artist',
       admin_users: 'admin user',
+      press_campaigns: 'press campaign this month',
+      sync_pitches: 'sync licensing pitch this month',
     };
     return map[this.context.limit_type] ?? this.context.limit_type;
   }
@@ -91,6 +93,8 @@ export class UpgradePlanModalComponent implements OnInit, OnDestroy {
       artists: 'deactivate an existing artist',
       releases_per_artist: 'take down an existing release',
       admin_users: 'remove an existing admin',
+      press_campaigns: 'wait until next month or upgrade your plan',
+      sync_pitches: 'wait until next month or upgrade your plan',
     };
     return map[this.context.limit_type] ?? 'free up a slot';
   }

@@ -13,6 +13,7 @@ import { IconComponent } from '../../components/shared/icon/icon.component';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { NotificationService } from '../../services/notification.service';
+import { PlanLimitService } from '../../services/plan-limit.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -199,6 +200,7 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     private pressCampaignService: PressCampaignService,
     private brandService: BrandService,
     private notification: NotificationService,
+    private planLimitService: PlanLimitService,
     private route: ActivatedRoute,
   ) {}
 
@@ -346,7 +348,9 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
 
   // --- Create modal ---
 
-  openCreateModal(): void {
+  async openCreateModal(): Promise<void> {
+    const blocked = await this.planLimitService.checkLimit('press_campaigns');
+    if (blocked) return;
     this.resetForm();
     this.showModal = true;
   }
@@ -430,6 +434,10 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.saving = false;
+        if (this.planLimitService.handleLimitError(err)) {
+          this.closeModal();
+          return;
+        }
         const msg = err?.error?.error || 'Failed to save campaign.';
         this.notification.showError(msg);
       },
