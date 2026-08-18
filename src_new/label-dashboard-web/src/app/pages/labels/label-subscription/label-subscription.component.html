@@ -73,29 +73,26 @@
       }
 
       <!-- Billing cycle toggle -->
-      <div class="tw-flex tw-items-center tw-justify-center tw-gap-3 tw-mb-8">
-        <span class="tw-text-sm tw-font-medium"
-              [class.tw-text-[var(--color-heading)]]="billingCycle === 'monthly'"
-              [class.tw-text-[var(--color-muted)]]="billingCycle !== 'monthly'">
-          Monthly
-        </span>
-        <div class="form-check form-switch tw-mb-0">
-          <input class="form-check-input tw-cursor-pointer"
-                 type="checkbox"
-                 role="switch"
-                 id="billingToggle"
-                 [checked]="billingCycle === 'annual'"
-                 (change)="billingCycle = billingCycle === 'monthly' ? 'annual' : 'monthly'">
-          <label class="form-check-label tw-sr-only" for="billingToggle">Annual billing</label>
+      <div class="tw-flex tw-flex-col tw-items-center tw-mb-8">
+        <div class="sub-tab-toggle" role="group" aria-label="Billing cycle">
+          <button type="button"
+                  class="sub-tab-btn"
+                  [class.sub-tab-btn-active]="billingCycle === 'monthly'"
+                  (click)="billingCycle = 'monthly'"
+                  [attr.aria-pressed]="billingCycle === 'monthly'">
+            Monthly
+          </button>
+          <button type="button"
+                  class="sub-tab-btn"
+                  [class.sub-tab-btn-active]="billingCycle === 'annual'"
+                  (click)="billingCycle = 'annual'"
+                  [attr.aria-pressed]="billingCycle === 'annual'">
+            Annual
+            <span class="tw-text-xs tw-font-semibold tw-text-green-600 tw-bg-green-50 tw-rounded-full tw-px-2 tw-py-0.5">
+              Save ~{{ annualSavingsPercent }}%
+            </span>
+          </button>
         </div>
-        <span class="tw-text-sm tw-font-medium"
-              [class.tw-text-[var(--color-heading)]]="billingCycle === 'annual'"
-              [class.tw-text-[var(--color-muted)]]="billingCycle !== 'annual'">
-          Annual
-          <span class="tw-ml-1 tw-text-xs tw-font-semibold tw-text-green-600 tw-bg-green-50 tw-rounded-full tw-px-2 tw-py-0.5">
-            Save ~{{ annualSavingsPercent }}%
-          </span>
-        </span>
       </div>
 
       <!-- Plan cards -->

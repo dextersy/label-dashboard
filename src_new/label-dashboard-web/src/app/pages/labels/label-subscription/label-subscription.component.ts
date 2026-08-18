@@ -12,7 +12,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
   selector: 'app-label-subscription',
   imports: [CommonModule, BreadcrumbComponent, IconComponent],
   templateUrl: './label-subscription.component.html',
-  styleUrls: [],
+  styleUrls: ['./label-subscription.component.scss'],
 })
 export class LabelSubscriptionComponent implements OnInit {
   loading = true;
