@@ -9,7 +9,43 @@ export interface PlatformFeeCalculation {
 }
 
 /**
- * Calculate platform fee for a music earning based on brand fee settings
+ * Resolve effective music fee settings for a brand.
+ * Brand-level values act as overrides; NULL means fall back to the plan's default.
+ */
+async function resolveMusicFeeSettings(brandId: number): Promise<{
+  transactionFixedFee: number;
+  revenuePercentageFee: number;
+  feeRevenueType: 'net' | 'gross';
+}> {
+  const brand = await Brand.findByPk(brandId);
+  if (!brand) throw new Error('Brand not found');
+
+  // If the brand has explicit fee values set, use them directly
+  if (brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null) {
+    return {
+      transactionFixedFee: brand.music_transaction_fixed_fee ?? 0,
+      revenuePercentageFee: brand.music_revenue_percentage_fee ?? 0,
+      feeRevenueType: brand.music_fee_revenue_type ?? 'net',
+    };
+  }
+
+  // Fall back to plan defaults
+  const brandPlan = await BrandPlan.findOne({
+    where: { brand_id: brandId },
+    include: [{ model: Plan, as: 'plan' }],
+  });
+  const plan = brandPlan?.plan;
+
+  return {
+    transactionFixedFee: plan?.default_music_transaction_fixed_fee ?? 0,
+    revenuePercentageFee: plan?.default_music_revenue_percentage_fee ?? 0,
+    feeRevenueType: plan?.default_music_fee_revenue_type ?? 'net',
+  };
+}
+
+/**
+ * Calculate platform fee for a music earning based on brand fee settings,
+ * falling back to plan defaults when no brand-level override is set.
  * @param brandId - The brand ID
  * @param grossAmount - The gross earning amount
  * @param netRevenue - The net revenue after recuperable expenses and royalties
@@ -20,24 +56,21 @@ export async function calculatePlatformFeeForMusicEarnings(
   grossAmount: number,
   netRevenue: number
 ): Promise<PlatformFeeCalculation> {
-  const brand = await Brand.findByPk(brandId);
-
-  if (!brand) {
-    throw new Error('Brand not found');
-  }
+  const { transactionFixedFee, revenuePercentageFee, feeRevenueType } =
+    await resolveMusicFeeSettings(brandId);
 
   let fixedFee = 0;
   let percentageFee = 0;
 
-  if (brand.music_transaction_fixed_fee && brand.music_transaction_fixed_fee > 0) {
-    fixedFee = brand.music_transaction_fixed_fee;
+  if (transactionFixedFee > 0) {
+    fixedFee = transactionFixedFee;
   }
 
-  if (brand.music_revenue_percentage_fee && brand.music_revenue_percentage_fee > 0) {
-    if (brand.music_fee_revenue_type === 'gross') {
-      percentageFee = (grossAmount * brand.music_revenue_percentage_fee) / 100;
-    } else if (brand.music_fee_revenue_type === 'net') {
-      percentageFee = (netRevenue * brand.music_revenue_percentage_fee) / 100;
+  if (revenuePercentageFee > 0) {
+    if (feeRevenueType === 'gross') {
+      percentageFee = (grossAmount * revenuePercentageFee) / 100;
+    } else if (feeRevenueType === 'net') {
+      percentageFee = (netRevenue * revenuePercentageFee) / 100;
     }
   }
 

@@ -16,6 +16,9 @@ interface PlanAttributes {
   limit_admin_users?: number | null;
 
   // Default processing fees (can be overridden per brand in Brand model fields)
+  default_music_transaction_fixed_fee?: number;
+  default_music_revenue_percentage_fee?: number;
+  default_music_fee_revenue_type?: 'net' | 'gross';
   default_event_transaction_fixed_fee?: number;
   default_event_revenue_percentage_fee?: number;
   default_event_fee_revenue_type?: 'net' | 'gross';
@@ -59,6 +62,9 @@ class Plan extends Model<PlanAttributes, PlanCreationAttributes> implements Plan
   public limit_storage_gb?: number | null;
   public limit_admin_users?: number | null;
 
+  public default_music_transaction_fixed_fee?: number;
+  public default_music_revenue_percentage_fee?: number;
+  public default_music_fee_revenue_type?: 'net' | 'gross';
   public default_event_transaction_fixed_fee?: number;
   public default_event_revenue_percentage_fee?: number;
   public default_event_fee_revenue_type?: 'net' | 'gross';
@@ -148,6 +154,29 @@ Plan.init(
     },
 
     // Default fees
+    default_music_transaction_fixed_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('default_music_transaction_fixed_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+    },
+    default_music_revenue_percentage_fee: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('default_music_revenue_percentage_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+    },
+    default_music_fee_revenue_type: {
+      type: DataTypes.ENUM('net', 'gross'),
+      allowNull: true,
+      defaultValue: 'net',
+    },
     default_event_transaction_fixed_fee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,

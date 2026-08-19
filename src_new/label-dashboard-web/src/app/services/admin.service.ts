@@ -48,8 +48,15 @@ export interface FeeSettingsSectionOverride {
   fee_revenue_type: 'net' | 'gross' | null;
 }
 
+export interface FeePlan {
+  id: number;
+  name: string;
+  price_monthly: number;
+}
+
 export interface FeeSettings {
   id: number;
+  plan: FeePlan | null;
   music: FeeSettingsSection;
   event: FeeSettingsSection;
   fundraiser: FeeSettingsSection;

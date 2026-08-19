@@ -210,15 +210,35 @@ export const getFeeSettings = async (req: Request, res: Response) => {
     });
     const plan = (brandPlan as any)?.plan ?? null;
 
+    const hasMusicOverride = brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null;
     const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
     const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
 
     res.json({
       id: brand.id,
+      plan: plan ? { id: plan.id, name: plan.name, price_monthly: plan.price_monthly } : null,
       music: {
-        transaction_fixed_fee: brand.music_transaction_fixed_fee || 0,
-        revenue_percentage_fee: brand.music_revenue_percentage_fee || 0,
-        fee_revenue_type: brand.music_fee_revenue_type || 'net'
+        // Effective values — brand override if set, otherwise plan default
+        transaction_fixed_fee: hasMusicOverride
+          ? (brand.music_transaction_fixed_fee ?? 0)
+          : (plan?.default_music_transaction_fixed_fee ?? 0),
+        revenue_percentage_fee: hasMusicOverride
+          ? (brand.music_revenue_percentage_fee ?? 0)
+          : (plan?.default_music_revenue_percentage_fee ?? 0),
+        fee_revenue_type: hasMusicOverride
+          ? (brand.music_fee_revenue_type ?? 'net')
+          : (plan?.default_music_fee_revenue_type ?? 'net'),
+        // Whether a brand-level override is active (null = following plan)
+        override: hasMusicOverride ? {
+          transaction_fixed_fee: brand.music_transaction_fixed_fee,
+          revenue_percentage_fee: brand.music_revenue_percentage_fee,
+          fee_revenue_type: brand.music_fee_revenue_type,
+        } : null,
+        plan_default: {
+          transaction_fixed_fee: plan?.default_music_transaction_fixed_fee ?? 0,
+          revenue_percentage_fee: plan?.default_music_revenue_percentage_fee ?? 0,
+          fee_revenue_type: plan?.default_music_fee_revenue_type ?? 'net',
+        },
       },
       event: {
         // Effective values — brand override if set, otherwise plan default
@@ -323,10 +343,15 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
     }
 
     // Update all fee settings on the brand.
-    // For event/fundraiser, passing null explicitly clears the override (brand will follow plan defaults).
+    // For music/event/fundraiser, passing null explicitly clears the override (brand will follow plan defaults).
     const updateData: any = {};
 
-    if (music) {
+    // Sending music: null clears all fields for that category (reverts to plan default)
+    if (music === null) {
+      updateData.music_transaction_fixed_fee = null;
+      updateData.music_revenue_percentage_fee = null;
+      updateData.music_fee_revenue_type = null;
+    } else if (music) {
       if (music.transaction_fixed_fee !== undefined) updateData.music_transaction_fixed_fee = music.transaction_fixed_fee;
       if (music.revenue_percentage_fee !== undefined) updateData.music_revenue_percentage_fee = music.revenue_percentage_fee;
       if (music.fee_revenue_type !== undefined) updateData.music_fee_revenue_type = music.fee_revenue_type;
@@ -361,6 +386,7 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
     });
     const plan = (brandPlan as any)?.plan ?? null;
 
+    const hasMusicOverride = brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null;
     const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
     const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
 
@@ -369,9 +395,25 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       feeSettings: {
         id: brand.id,
         music: {
-          transaction_fixed_fee: brand.music_transaction_fixed_fee,
-          revenue_percentage_fee: brand.music_revenue_percentage_fee,
-          fee_revenue_type: brand.music_fee_revenue_type
+          transaction_fixed_fee: hasMusicOverride
+            ? (brand.music_transaction_fixed_fee ?? 0)
+            : (plan?.default_music_transaction_fixed_fee ?? 0),
+          revenue_percentage_fee: hasMusicOverride
+            ? (brand.music_revenue_percentage_fee ?? 0)
+            : (plan?.default_music_revenue_percentage_fee ?? 0),
+          fee_revenue_type: hasMusicOverride
+            ? (brand.music_fee_revenue_type ?? 'net')
+            : (plan?.default_music_fee_revenue_type ?? 'net'),
+          override: hasMusicOverride ? {
+            transaction_fixed_fee: brand.music_transaction_fixed_fee,
+            revenue_percentage_fee: brand.music_revenue_percentage_fee,
+            fee_revenue_type: brand.music_fee_revenue_type,
+          } : null,
+          plan_default: {
+            transaction_fixed_fee: plan?.default_music_transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: plan?.default_music_revenue_percentage_fee ?? 0,
+            fee_revenue_type: plan?.default_music_fee_revenue_type ?? 'net',
+          },
         },
         event: {
           transaction_fixed_fee: hasEventOverride
@@ -388,6 +430,11 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
             revenue_percentage_fee: brand.event_revenue_percentage_fee,
             fee_revenue_type: brand.event_fee_revenue_type,
           } : null,
+          plan_default: {
+            transaction_fixed_fee: plan?.default_event_transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: plan?.default_event_revenue_percentage_fee ?? 0,
+            fee_revenue_type: plan?.default_event_fee_revenue_type ?? 'net',
+          },
         },
         fundraiser: {
           transaction_fixed_fee: hasFundraiserOverride
@@ -404,6 +451,11 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
             revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee,
             fee_revenue_type: brand.fundraiser_fee_revenue_type,
           } : null,
+          plan_default: {
+            transaction_fixed_fee: plan?.default_fundraiser_transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
+            fee_revenue_type: plan?.default_fundraiser_fee_revenue_type ?? 'net',
+          },
         }
       }
     });

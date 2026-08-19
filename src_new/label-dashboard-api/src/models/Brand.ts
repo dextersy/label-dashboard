@@ -13,9 +13,9 @@ interface BrandAttributes {
   release_submission_url?: string;
   catalog_prefix?: string;
   parent_brand?: number;
-  music_transaction_fixed_fee?: number;
-  music_revenue_percentage_fee?: number;
-  music_fee_revenue_type?: 'net' | 'gross';
+  music_transaction_fixed_fee?: number | null;
+  music_revenue_percentage_fee?: number | null;
+  music_fee_revenue_type?: 'net' | 'gross' | null;
   event_transaction_fixed_fee?: number | null;
   event_revenue_percentage_fee?: number | null;
   event_fee_revenue_type?: 'net' | 'gross' | null;
@@ -46,9 +46,9 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public release_submission_url?: string;
   public catalog_prefix?: string;
   public parent_brand?: number;
-  public music_transaction_fixed_fee?: number;
-  public music_revenue_percentage_fee?: number;
-  public music_fee_revenue_type?: 'net' | 'gross';
+  public music_transaction_fixed_fee?: number | null;
+  public music_revenue_percentage_fee?: number | null;
+  public music_fee_revenue_type?: 'net' | 'gross' | null;
   public event_transaction_fixed_fee?: number | null;
   public event_revenue_percentage_fee?: number | null;
   public event_fee_revenue_type?: 'net' | 'gross' | null;
@@ -136,34 +136,32 @@ Brand.init(
         key: 'id'
       }
     },
+    // NULL means "follow the subscribed plan's default music fee"
     music_transaction_fixed_fee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-      defaultValue: 0,
       get() {
         const value = this.getDataValue('music_transaction_fixed_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
       set(value: any) {
-        this.setDataValue('music_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+        this.setDataValue('music_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : null);
       }
     },
     music_revenue_percentage_fee: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
-      defaultValue: 0,
       get() {
         const value = this.getDataValue('music_revenue_percentage_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
       set(value: any) {
-        this.setDataValue('music_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+        this.setDataValue('music_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : null);
       }
     },
     music_fee_revenue_type: {
       type: DataTypes.ENUM('net', 'gross'),
       allowNull: true,
-      defaultValue: 'net'
     },
     // NULL means "follow the subscribed plan's default fee"
     event_transaction_fixed_fee: {

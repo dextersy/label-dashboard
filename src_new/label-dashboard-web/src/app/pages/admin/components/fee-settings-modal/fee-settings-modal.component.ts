@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AdminService, FeeSettings, FeeSettingsSection } from '../../../../services/admin.service';
+import { AdminService, FeeSettings, FeeSettingsSection, FeePlan } from '../../../../services/admin.service';
 import { NotificationService } from '../../../../services/notification.service';
 import { ModalToBodyDirective } from '../../../../directives/modal-to-body.directive';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
@@ -22,12 +22,17 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   feeForm!: FormGroup;
   loading: boolean = false;
 
-  // Whether to use a brand-level override for event/fundraiser fees.
+  // Whether to use a brand-level override for each fee category.
   // When false, null is sent to the API so the brand follows its plan's defaults.
+  overrideMusic: boolean = false;
   overrideEvent: boolean = false;
   overrideFundraiser: boolean = false;
 
+  // Plan info for the brand
+  planInfo: FeePlan | null = null;
+
   // Plan defaults shown as placeholder when override is disabled
+  musicPlanDefault: FeeSettingsSection | null = null;
   eventPlanDefault: FeeSettingsSection | null = null;
   fundraiserPlanDefault: FeeSettingsSection | null = null;
 
@@ -75,24 +80,24 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
     this.loading = true;
     this.adminService.getFeeSettings(this.brandId).subscribe({
       next: (settings) => {
-        this.feeForm.patchValue({
-          music: {
-            transaction_fixed_fee: settings.music.transaction_fixed_fee || 0,
-            revenue_percentage_fee: settings.music.revenue_percentage_fee || 0,
-            fee_revenue_type: settings.music.fee_revenue_type || 'net'
-          }
-        });
-
-        // Store plan defaults for display
+        // Store plan info and defaults for display
+        this.planInfo = settings.plan ?? null;
+        this.musicPlanDefault = settings.music.plan_default ?? null;
         this.eventPlanDefault = settings.event.plan_default ?? null;
         this.fundraiserPlanDefault = settings.fundraiser.plan_default ?? null;
 
         // Override is active when the API returns a non-null override object
+        this.overrideMusic = settings.music.override !== null && settings.music.override !== undefined;
         this.overrideEvent = settings.event.override !== null && settings.event.override !== undefined;
         this.overrideFundraiser = settings.fundraiser.override !== null && settings.fundraiser.override !== undefined;
 
-        // Populate override form fields with current effective values (override if set, else plan default)
+        // Populate form fields with current effective values (override if set, else plan default)
         this.feeForm.patchValue({
+          music: {
+            transaction_fixed_fee: settings.music.transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: settings.music.revenue_percentage_fee ?? 0,
+            fee_revenue_type: settings.music.fee_revenue_type ?? 'net'
+          },
           event: {
             transaction_fixed_fee: settings.event.transaction_fixed_fee ?? 0,
             revenue_percentage_fee: settings.event.revenue_percentage_fee ?? 0,
@@ -125,6 +130,7 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   }
 
   showMusicPreview(): boolean {
+    if (!this.overrideMusic) return false;
     const music = this.feeForm.get('music')?.value;
     if (!music) return false;
     return music.transaction_fixed_fee > 0 || music.revenue_percentage_fee > 0;
@@ -152,8 +158,8 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
 
     this.loading = true;
     const feeSettings = {
-      music: this.feeForm.get('music')?.value,
       // Send null to clear override (follow plan); send values to set override
+      music: this.overrideMusic ? this.feeForm.get('music')?.value : null,
       event: this.overrideEvent ? this.feeForm.get('event')?.value : null,
       fundraiser: this.overrideFundraiser ? this.feeForm.get('fundraiser')?.value : null,
     };
@@ -163,6 +169,7 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         this.notificationService.showSuccess('Fee settings updated successfully');
         this.saved.emit(response.feeSettings || {
           id: this.brandId!,
+          plan: this.planInfo,
           music: feeSettings.music,
           event: feeSettings.event,
           fundraiser: feeSettings.fundraiser
