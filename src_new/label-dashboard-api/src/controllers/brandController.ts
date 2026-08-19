@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import Brand from '../models/Brand';
 import Domain from '../models/Domain';
 import User from '../models/User';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, Fundraiser, Donation, EventAddOnPayment } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, Fundraiser, Donation, EventAddOnPayment, Plan, BrandPlan } from '../models';
 import { Op, literal, fn, col } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
@@ -1523,6 +1523,22 @@ const createSublabelAsync = async (
     });
 
     console.log(`[Async] Created admin user with ID: ${newUser.id}`);
+
+    // Assign the free plan to the new sublabel
+    const freePlan = await Plan.findOne({ where: { is_default_free: true, is_active: true } });
+    if (freePlan) {
+      await BrandPlan.create({
+        brand_id: newBrand.id,
+        plan_id: freePlan.id,
+        billing_cycle: 'monthly',
+        status: 'active',
+        started_at: new Date(),
+        paymongo_subscription_id: null,
+      });
+      console.log(`[Async] Assigned free plan (ID: ${freePlan.id}) to new sublabel brand ID: ${newBrand.id}`);
+    } else {
+      console.warn(`[Async] No active default free plan found; sublabel brand ID: ${newBrand.id} will have no plan assigned`);
+    }
 
     // Log successful completion
     console.log(`[Async] Sublabel "${brand_name}" created successfully for parent brand "${parentBrandName}"`);

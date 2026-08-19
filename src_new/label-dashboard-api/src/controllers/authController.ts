@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import axios from 'axios';
-import { User, Brand, Domain, LoginAttempt } from '../models';
+import { User, Brand, Domain, LoginAttempt, Plan, BrandPlan } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { createNotification, createNotificationsForUsers, getBrandAdminUserIds } from '../utils/notificationService';
 import { getBrandIdFromDomain, getBrandFrontendUrl } from '../utils/brandUtils';
@@ -874,6 +874,19 @@ export const organizerSignup = async (req: Request, res: Response) => {
       terms_accepted_at: new Date(),
     });
 
+    // Assign the free plan to the new organizer brand
+    const freePlan = await Plan.findOne({ where: { is_default_free: true, is_active: true } });
+    if (freePlan) {
+      await BrandPlan.create({
+        brand_id: newBrand.id,
+        plan_id: freePlan.id,
+        billing_cycle: 'monthly',
+        status: 'active',
+        started_at: new Date(),
+        paymongo_subscription_id: null,
+      });
+    }
+
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is required');
     }
@@ -1175,6 +1188,19 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
       onboarding_completed: false,
       // No username or terms_accepted_at yet — both collected in the complete-profile step
     });
+
+    // Assign the free plan to the new organizer brand
+    const freePlanForGoogle = await Plan.findOne({ where: { is_default_free: true, is_active: true } });
+    if (freePlanForGoogle) {
+      await BrandPlan.create({
+        brand_id: newBrand.id,
+        plan_id: freePlanForGoogle.id,
+        billing_cycle: 'monthly',
+        status: 'active',
+        started_at: new Date(),
+        paymongo_subscription_id: null,
+      });
+    }
 
     const exchangeCode = createExchangeCode({ userId: newUser.id, brandId: newUser.brand_id, profileIncomplete: true, needsTerms: true, needsBrandName: true });
     return res.redirect(`${frontendUrl}/app/google-callback?code=${exchangeCode}`);
