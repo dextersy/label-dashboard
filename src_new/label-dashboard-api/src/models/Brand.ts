@@ -13,7 +13,6 @@ interface BrandAttributes {
   release_submission_url?: string;
   catalog_prefix?: string;
   parent_brand?: number;
-  monthly_fee?: number;
   music_transaction_fixed_fee?: number;
   music_revenue_percentage_fee?: number;
   music_fee_revenue_type?: 'net' | 'gross';
@@ -47,7 +46,6 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public release_submission_url?: string;
   public catalog_prefix?: string;
   public parent_brand?: number;
-  public monthly_fee?: number;
   public music_transaction_fixed_fee?: number;
   public music_revenue_percentage_fee?: number;
   public music_fee_revenue_type?: 'net' | 'gross';
@@ -136,18 +134,6 @@ Brand.init(
       references: {
         model: 'brand',
         key: 'id'
-      }
-    },
-    monthly_fee: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: true,
-      defaultValue: 0,
-      get() {
-        const value = this.getDataValue('monthly_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
-      },
-      set(value: any) {
-        this.setDataValue('monthly_fee', value !== null && value !== undefined ? parseFloat(value) : value);
       }
     },
     music_transaction_fixed_fee: {

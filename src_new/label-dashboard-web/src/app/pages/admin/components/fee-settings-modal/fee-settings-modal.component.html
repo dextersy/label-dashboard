@@ -10,43 +10,9 @@
           
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
             <app-icon name="info" class="tw-mr-2" />
-            Configure the fees that will be charged to this sublabel. The monthly fee applies to both music and event earnings, while transaction and percentage fees can be set separately. All values can be set to 0 if no fees apply.
+            Configure the fees that will be charged to this sublabel. Transaction and percentage fees can be set separately per category. All values can be set to 0 if no fees apply.
           </div>
 
-          <!-- General Monthly Fee -->
-          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
-            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
-              <h6 class="tw-mb-0">
-                <app-icon name="calendar" class="tw-mr-2 tw-text-success" />
-                General Monthly Fee
-              </h6>
-            </div>
-            <div class="tw-px-card-pad tw-pb-card-pad">
-              <div class="tw-mb-3">
-                <label for="monthlyFee" class="tw-label">
-                  Monthly Fee (₱)
-                  <app-icon name="info" class="tw-ml-1 tw-text-muted" title="Not yet supported" 
-                     data-bs-toggle="tooltip" 
-                     data-bs-placement="top" />
-                </label>
-                <input
-                  type="number"
-                  id="monthlyFee"
-                  class="tw-input"
-                  formControlName="monthly_fee"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
-                  title="Not yet supported"
-                  [class.is-invalid]="feeForm.get('monthly_fee')?.invalid && feeForm.get('monthly_fee')?.touched">
-                <div class="form-text tw-text-muted">Fixed monthly fee charged to brand (coming soon)</div>
-                <div class="invalid-feedback" *ngIf="feeForm.get('monthly_fee')?.invalid && feeForm.get('monthly_fee')?.touched">
-                  Monthly fee must be a non-negative number
-                </div>
-              </div>
-            </div>
-          </div>
-          
           <!-- Music Fee Settings -->
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4">
@@ -315,19 +281,6 @@
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50 tw-mt-4" *ngIf="showPreview()">
             <div class="tw-px-card-pad tw-pb-card-pad">
               <h6 class="card-title">Fee Summary</h6>
-              
-              <!-- General Monthly Fee Summary -->
-              <div *ngIf="showMonthlyPreview()" class="tw-mb-3">
-                <strong class="tw-text-success">
-                  <app-icon name="calendar" class="tw-mr-2" />General Monthly Fee:
-                </strong>
-                <ul class="list-unstyled tw-mb-0 tw-ml-3">
-                  <li>
-                    <app-icon name="calendar" class="tw-mr-2 tw-text-success" />
-                    Monthly: ₱{{ feeForm.get('monthly_fee')?.value | number:'1.2-2' }} (applies to both music and events)
-                  </li>
-                </ul>
-              </div>
               
               <!-- Music Fees Summary -->
               <div *ngIf="showMusicPreview()" class="tw-mb-3">

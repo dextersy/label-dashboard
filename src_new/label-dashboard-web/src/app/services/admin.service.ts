@@ -15,7 +15,6 @@ export interface BrandSettings {
   release_submission_url?: string;
   paymongo_wallet_id?: string;
   payment_processing_fee_for_payouts?: number;
-  monthly_fee?: number;
   music_transaction_fixed_fee?: number;
   music_revenue_percentage_fee?: number;
   music_fee_revenue_type?: 'net' | 'gross';
@@ -51,7 +50,6 @@ export interface FeeSettingsSectionOverride {
 
 export interface FeeSettings {
   id: number;
-  monthly_fee: number;
   music: FeeSettingsSection;
   event: FeeSettingsSection;
   fundraiser: FeeSettingsSection;

@@ -51,7 +51,6 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
 
   private initializeForm(): void {
     this.feeForm = this.fb.group({
-      monthly_fee: [{value: 0, disabled: true}, [Validators.min(0)]],
       music: this.fb.group({
         transaction_fixed_fee: [0, [Validators.min(0)]],
         revenue_percentage_fee: [0, [Validators.min(0), Validators.max(100)]],
@@ -76,8 +75,6 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
     this.loading = true;
     this.adminService.getFeeSettings(this.brandId).subscribe({
       next: (settings) => {
-        this.feeForm.get('monthly_fee')?.setValue(settings.monthly_fee || 0);
-
         this.feeForm.patchValue({
           music: {
             transaction_fixed_fee: settings.music.transaction_fixed_fee || 0,
@@ -114,7 +111,6 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         console.error('Error loading fee settings:', error);
         this.notificationService.showError('Failed to load fee settings');
         this.loading = false;
-        this.feeForm.get('monthly_fee')?.setValue(0);
         this.feeForm.patchValue({
           music: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
           event: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
@@ -125,11 +121,7 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   }
 
   showPreview(): boolean {
-    return this.showMonthlyPreview() || this.showMusicPreview() || this.showEventPreview() || this.showFundraiserPreview();
-  }
-
-  showMonthlyPreview(): boolean {
-    return (this.feeForm.get('monthly_fee')?.value || 0) > 0;
+    return this.showMusicPreview() || this.showEventPreview() || this.showFundraiserPreview();
   }
 
   showMusicPreview(): boolean {
@@ -160,7 +152,6 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
 
     this.loading = true;
     const feeSettings = {
-      monthly_fee: this.feeForm.get('monthly_fee')?.value || 0,
       music: this.feeForm.get('music')?.value,
       // Send null to clear override (follow plan); send values to set override
       event: this.overrideEvent ? this.feeForm.get('event')?.value : null,
@@ -172,7 +163,6 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         this.notificationService.showSuccess('Fee settings updated successfully');
         this.saved.emit(response.feeSettings || {
           id: this.brandId!,
-          monthly_fee: feeSettings.monthly_fee,
           music: feeSettings.music,
           event: feeSettings.event,
           fundraiser: feeSettings.fundraiser

@@ -215,7 +215,6 @@ export const getFeeSettings = async (req: Request, res: Response) => {
 
     res.json({
       id: brand.id,
-      monthly_fee: brand.monthly_fee || 0,
       music: {
         transaction_fixed_fee: brand.music_transaction_fixed_fee || 0,
         revenue_percentage_fee: brand.music_revenue_percentage_fee || 0,
@@ -276,17 +275,12 @@ export const getFeeSettings = async (req: Request, res: Response) => {
 export const updateFeeSettings = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { monthly_fee, music, event, fundraiser } = req.body;
+    const { music, event, fundraiser } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
 
     if (!brand) {
       return res.status(404).json({ error: 'Brand not found' });
-    }
-
-    // Validate monthly fee
-    if (monthly_fee !== undefined && (isNaN(monthly_fee) || monthly_fee < 0)) {
-      return res.status(400).json({ error: 'Monthly fee must be a non-negative number' });
     }
 
     // Validate music fee values
@@ -332,8 +326,6 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
     // For event/fundraiser, passing null explicitly clears the override (brand will follow plan defaults).
     const updateData: any = {};
 
-    if (monthly_fee !== undefined) updateData.monthly_fee = monthly_fee;
-
     if (music) {
       if (music.transaction_fixed_fee !== undefined) updateData.music_transaction_fixed_fee = music.transaction_fixed_fee;
       if (music.revenue_percentage_fee !== undefined) updateData.music_revenue_percentage_fee = music.revenue_percentage_fee;
@@ -376,7 +368,6 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       message: 'Fee settings updated successfully',
       feeSettings: {
         id: brand.id,
-        monthly_fee: brand.monthly_fee,
         music: {
           transaction_fixed_fee: brand.music_transaction_fixed_fee,
           revenue_percentage_fee: brand.music_revenue_percentage_fee,
