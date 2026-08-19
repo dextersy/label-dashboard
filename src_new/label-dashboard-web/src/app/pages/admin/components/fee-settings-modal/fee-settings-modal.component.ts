@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AdminService, FeeSettings, FeeSettingsSection, FeePlan } from '../../../../services/admin.service';
 import { NotificationService } from '../../../../services/notification.service';
+import { AuthService } from '../../../../services/auth.service';
 import { ModalToBodyDirective } from '../../../../directives/modal-to-body.directive';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
@@ -36,10 +37,15 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   eventPlanDefault: FeeSettingsSection | null = null;
   fundraiserPlanDefault: FeeSettingsSection | null = null;
 
+  get isSuperAdmin(): boolean {
+    return this.authService.currentUserValue?.is_superadmin ?? false;
+  }
+
   constructor(
     private fb: FormBuilder,
     private adminService: AdminService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private authService: AuthService
   ) {
     this.initializeForm();
   }

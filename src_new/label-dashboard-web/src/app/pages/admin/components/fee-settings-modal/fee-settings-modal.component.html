@@ -19,6 +19,11 @@
             Configure the fees that will be charged to this sublabel. Each category can either override the plan's default or inherit it. Enable the override checkbox to set custom fees for that category.
           </div>
 
+          <div *ngIf="!isSuperAdmin" class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-yellow-200 tw-bg-yellow-50 tw-text-yellow-800">
+            <app-icon name="lock" class="tw-mr-2" />
+            Plan overrides can only be configured by a superadmin. You can view the current fee settings below.
+          </div>
+
           <!-- Music Fee Settings -->
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
             <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-items-center tw-justify-between">
@@ -26,7 +31,7 @@
                 <app-icon name="music" class="tw-mr-2 text-primary" />
                 Music Earnings Fee Settings
               </h6>
-              <div class="form-check tw-mb-0">
+              <div *ngIf="isSuperAdmin" class="form-check tw-mb-0">
                 <input
                   class="form-check-input"
                   type="checkbox"
@@ -117,7 +122,7 @@
                 <app-icon name="calendar" class="tw-mr-2 tw-text-warning" />
                 Event Earnings Fee Settings
               </h6>
-              <div class="form-check tw-mb-0">
+              <div *ngIf="isSuperAdmin" class="form-check tw-mb-0">
                 <input
                   class="form-check-input"
                   type="checkbox"
@@ -208,7 +213,7 @@
                 <app-icon name="heart" class="tw-mr-2 tw-text-danger" />
                 Fundraiser Earnings Fee Settings
               </h6>
-              <div class="form-check tw-mb-0">
+              <div *ngIf="isSuperAdmin" class="form-check tw-mb-0">
                 <input
                   class="form-check-input"
                   type="checkbox"
@@ -360,9 +365,9 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="loading">
-          Cancel
+          {{ isSuperAdmin ? 'Cancel' : 'Close' }}
         </button>
-        <button type="button" class="btn-primary" (click)="onSubmit()" [disabled]="loading || feeForm.invalid">
+        <button *ngIf="isSuperAdmin" type="button" class="btn-primary" (click)="onSubmit()" [disabled]="loading || feeForm.invalid">
           <span *ngIf="loading">
             <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" />Saving...
           </span>

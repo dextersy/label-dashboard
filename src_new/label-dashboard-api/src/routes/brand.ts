@@ -43,7 +43,7 @@ router.post('/:brandId/sublabels', authenticateToken, requireSuperAdmin, createS
 
 // Fee settings routes
 router.get('/:brandId/fee-settings', authenticateToken, requireAdmin, getFeeSettings);
-router.put('/:brandId/fee-settings', authenticateToken, requireAdmin, updateFeeSettings);
+router.put('/:brandId/fee-settings', authenticateToken, requireSuperAdmin, updateFeeSettings);
 
 // Feature toggle routes
 router.get('/:brandId/feature-toggles', authenticateToken, requireAdmin, getFeatureToggles);
