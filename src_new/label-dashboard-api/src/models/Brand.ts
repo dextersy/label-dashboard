@@ -17,12 +17,12 @@ interface BrandAttributes {
   music_transaction_fixed_fee?: number;
   music_revenue_percentage_fee?: number;
   music_fee_revenue_type?: 'net' | 'gross';
-  event_transaction_fixed_fee?: number;
-  event_revenue_percentage_fee?: number;
-  event_fee_revenue_type?: 'net' | 'gross';
-  fundraiser_transaction_fixed_fee?: number;
-  fundraiser_revenue_percentage_fee?: number;
-  fundraiser_fee_revenue_type?: 'net' | 'gross';
+  event_transaction_fixed_fee?: number | null;
+  event_revenue_percentage_fee?: number | null;
+  event_fee_revenue_type?: 'net' | 'gross' | null;
+  fundraiser_transaction_fixed_fee?: number | null;
+  fundraiser_revenue_percentage_fee?: number | null;
+  fundraiser_fee_revenue_type?: 'net' | 'gross' | null;
   feature_music_workspace?: boolean;
   feature_campaigns_workspace?: boolean;
   feature_sublabels?: boolean;
@@ -51,12 +51,12 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public music_transaction_fixed_fee?: number;
   public music_revenue_percentage_fee?: number;
   public music_fee_revenue_type?: 'net' | 'gross';
-  public event_transaction_fixed_fee?: number;
-  public event_revenue_percentage_fee?: number;
-  public event_fee_revenue_type?: 'net' | 'gross';
-  public fundraiser_transaction_fixed_fee?: number;
-  public fundraiser_revenue_percentage_fee?: number;
-  public fundraiser_fee_revenue_type?: 'net' | 'gross';
+  public event_transaction_fixed_fee?: number | null;
+  public event_revenue_percentage_fee?: number | null;
+  public event_fee_revenue_type?: 'net' | 'gross' | null;
+  public fundraiser_transaction_fixed_fee?: number | null;
+  public fundraiser_revenue_percentage_fee?: number | null;
+  public fundraiser_fee_revenue_type?: 'net' | 'gross' | null;
   public feature_music_workspace?: boolean;
   public feature_campaigns_workspace?: boolean;
   public feature_sublabels?: boolean;
@@ -179,63 +179,58 @@ Brand.init(
       allowNull: true,
       defaultValue: 'net'
     },
+    // NULL means "follow the subscribed plan's default fee"
     event_transaction_fixed_fee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-      defaultValue: 0,
       get() {
         const value = this.getDataValue('event_transaction_fixed_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
       set(value: any) {
-        this.setDataValue('event_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+        this.setDataValue('event_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : null);
       }
     },
     event_revenue_percentage_fee: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
-      defaultValue: 0,
       get() {
         const value = this.getDataValue('event_revenue_percentage_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
       set(value: any) {
-        this.setDataValue('event_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+        this.setDataValue('event_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : null);
       }
     },
     event_fee_revenue_type: {
       type: DataTypes.ENUM('net', 'gross'),
       allowNull: true,
-      defaultValue: 'net'
     },
     fundraiser_transaction_fixed_fee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-      defaultValue: 0,
       get() {
         const value = this.getDataValue('fundraiser_transaction_fixed_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
       set(value: any) {
-        this.setDataValue('fundraiser_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+        this.setDataValue('fundraiser_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : null);
       }
     },
     fundraiser_revenue_percentage_fee: {
       type: DataTypes.DECIMAL(5, 2),
       allowNull: true,
-      defaultValue: 0,
       get() {
         const value = this.getDataValue('fundraiser_revenue_percentage_fee');
-        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
       set(value: any) {
-        this.setDataValue('fundraiser_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : value);
+        this.setDataValue('fundraiser_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : null);
       }
     },
     fundraiser_fee_revenue_type: {
       type: DataTypes.ENUM('net', 'gross'),
       allowNull: true,
-      defaultValue: 'net'
     },
     feature_music_workspace: {
       type: DataTypes.BOOLEAN,

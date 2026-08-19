@@ -838,7 +838,8 @@ export const organizerSignup = async (req: Request, res: Response) => {
     const first_name = nameParts[0];
     const last_name = nameParts.slice(1).join(' ') || '';
 
-    // Create a new sub-brand under the configured parent, inheriting default fee settings from parent brand
+    // Create a new sub-brand under the configured parent
+    // Event and fundraiser fees are inherited from the assigned plan's defaults (no brand-level override)
     const newBrand = await Brand.create({
       brand_name: brand_name.trim(),
       parent_brand: parentBrandId,
@@ -846,15 +847,9 @@ export const organizerSignup = async (req: Request, res: Response) => {
       feature_music_workspace: false,
       feature_campaigns_workspace: true,
       feature_sublabels: false,
-      event_transaction_fixed_fee: parentBrand.event_transaction_fixed_fee ?? 0,
-      event_revenue_percentage_fee: parentBrand.event_revenue_percentage_fee ?? 9,
-      event_fee_revenue_type: parentBrand.event_fee_revenue_type ?? 'gross',
       music_transaction_fixed_fee: parentBrand.music_transaction_fixed_fee ?? 0,
       music_revenue_percentage_fee: parentBrand.music_revenue_percentage_fee ?? 0,
       music_fee_revenue_type: parentBrand.music_fee_revenue_type ?? 'net',
-      fundraiser_transaction_fixed_fee: parentBrand.fundraiser_transaction_fixed_fee ?? 0,
-      fundraiser_revenue_percentage_fee: parentBrand.fundraiser_revenue_percentage_fee ?? 0,
-      fundraiser_fee_revenue_type: parentBrand.fundraiser_fee_revenue_type ?? 'net',
     });
 
     // Hash password with bcrypt

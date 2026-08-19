@@ -1,4 +1,6 @@
-import { Brand, Release, RecuperableExpense, Royalty } from '../models';
+import { Brand } from '../models';
+import BrandPlan from '../models/BrandPlan';
+import Plan from '../models/Plan';
 
 export interface PlatformFeeCalculation {
   fixedFee: number;
@@ -18,9 +20,8 @@ export async function calculatePlatformFeeForMusicEarnings(
   grossAmount: number,
   netRevenue: number
 ): Promise<PlatformFeeCalculation> {
-  // Get brand fee settings
   const brand = await Brand.findByPk(brandId);
-  
+
   if (!brand) {
     throw new Error('Brand not found');
   }
@@ -28,18 +29,14 @@ export async function calculatePlatformFeeForMusicEarnings(
   let fixedFee = 0;
   let percentageFee = 0;
 
-  // 1. Fixed fee per transaction
   if (brand.music_transaction_fixed_fee && brand.music_transaction_fixed_fee > 0) {
     fixedFee = brand.music_transaction_fixed_fee;
   }
 
-  // 2. Percentage fee calculation
   if (brand.music_revenue_percentage_fee && brand.music_revenue_percentage_fee > 0) {
     if (brand.music_fee_revenue_type === 'gross') {
-      // Apply percentage to gross earning amount
       percentageFee = (grossAmount * brand.music_revenue_percentage_fee) / 100;
     } else if (brand.music_fee_revenue_type === 'net') {
-      // Apply percentage to net revenue
       percentageFee = (netRevenue * brand.music_revenue_percentage_fee) / 100;
     }
   }
@@ -54,7 +51,78 @@ export async function calculatePlatformFeeForMusicEarnings(
 }
 
 /**
- * Calculate platform fee for an event ticket based on brand fee settings
+ * Resolve effective event fee settings for a brand.
+ * Brand-level values act as overrides; NULL means fall back to the plan's default.
+ */
+async function resolveEventFeeSettings(brandId: number): Promise<{
+  transactionFixedFee: number;
+  revenuePercentageFee: number;
+  feeRevenueType: 'net' | 'gross';
+}> {
+  const brand = await Brand.findByPk(brandId);
+  if (!brand) throw new Error('Brand not found');
+
+  // If the brand has explicit fee values set, use them directly
+  if (brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null) {
+    return {
+      transactionFixedFee: brand.event_transaction_fixed_fee ?? 0,
+      revenuePercentageFee: brand.event_revenue_percentage_fee ?? 0,
+      feeRevenueType: brand.event_fee_revenue_type ?? 'net',
+    };
+  }
+
+  // Fall back to plan defaults
+  const brandPlan = await BrandPlan.findOne({
+    where: { brand_id: brandId },
+    include: [{ model: Plan, as: 'plan' }],
+  });
+  const plan = brandPlan?.plan;
+
+  return {
+    transactionFixedFee: plan?.default_event_transaction_fixed_fee ?? 0,
+    revenuePercentageFee: plan?.default_event_revenue_percentage_fee ?? 0,
+    feeRevenueType: plan?.default_event_fee_revenue_type ?? 'net',
+  };
+}
+
+/**
+ * Resolve effective fundraiser fee settings for a brand.
+ * Brand-level values act as overrides; NULL means fall back to the plan's default.
+ */
+async function resolveFundraiserFeeSettings(brandId: number): Promise<{
+  transactionFixedFee: number;
+  revenuePercentageFee: number;
+  feeRevenueType: 'net' | 'gross';
+}> {
+  const brand = await Brand.findByPk(brandId);
+  if (!brand) throw new Error('Brand not found');
+
+  // If the brand has explicit fee values set, use them directly
+  if (brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null) {
+    return {
+      transactionFixedFee: brand.fundraiser_transaction_fixed_fee ?? 0,
+      revenuePercentageFee: brand.fundraiser_revenue_percentage_fee ?? 0,
+      feeRevenueType: brand.fundraiser_fee_revenue_type ?? 'net',
+    };
+  }
+
+  // Fall back to plan defaults
+  const brandPlan = await BrandPlan.findOne({
+    where: { brand_id: brandId },
+    include: [{ model: Plan, as: 'plan' }],
+  });
+  const plan = brandPlan?.plan;
+
+  return {
+    transactionFixedFee: plan?.default_fundraiser_transaction_fixed_fee ?? 0,
+    revenuePercentageFee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
+    feeRevenueType: plan?.default_fundraiser_fee_revenue_type ?? 'net',
+  };
+}
+
+/**
+ * Calculate platform fee for an event ticket.
+ * Uses the brand-level fee override if set, otherwise falls back to the plan's default fee.
  * @param brandId - The brand ID
  * @param pricePerTicket - The price per ticket
  * @param numberOfEntries - The number of entries (tickets purchased)
@@ -67,44 +135,33 @@ export async function calculatePlatformFeeForEventTickets(
   numberOfEntries: number,
   paymentProcessingFee: number = 0
 ): Promise<PlatformFeeCalculation> {
-  // Get brand fee settings
-  const brand = await Brand.findByPk(brandId);
-  
-  if (!brand) {
-    throw new Error('Brand not found');
-  }
+  const { transactionFixedFee, revenuePercentageFee, feeRevenueType } =
+    await resolveEventFeeSettings(brandId);
 
   let fixedFee = 0;
   let percentageFee = 0;
 
-  // Calculate gross revenue (price of tickets times number of entries)
   const grossRevenue = pricePerTicket * numberOfEntries;
-
-  // Calculate net revenue (gross minus processing fees, then subtract 0.5% tax)
   const afterProcessingFees = grossRevenue - paymentProcessingFee;
   const tax = afterProcessingFees * 0.005; // 0.5% tax
   const netRevenue = afterProcessingFees - tax;
 
-  // 1. Fixed fee per transaction
-  if (brand.event_transaction_fixed_fee && brand.event_transaction_fixed_fee > 0) {
-    fixedFee = brand.event_transaction_fixed_fee;
+  if (transactionFixedFee > 0) {
+    fixedFee = transactionFixedFee;
   }
 
-  // 2. Percentage fee calculation
-  if (brand.event_revenue_percentage_fee && brand.event_revenue_percentage_fee > 0) {
-    if (brand.event_fee_revenue_type === 'gross') {
-      // Apply percentage to gross revenue
-      percentageFee = (grossRevenue * brand.event_revenue_percentage_fee) / 100;
-    } else if (brand.event_fee_revenue_type === 'net') {
-      // Apply percentage to net revenue
-      percentageFee = (netRevenue * brand.event_revenue_percentage_fee) / 100;
+  if (revenuePercentageFee > 0) {
+    if (feeRevenueType === 'gross') {
+      percentageFee = (grossRevenue * revenuePercentageFee) / 100;
+    } else if (feeRevenueType === 'net') {
+      percentageFee = (netRevenue * revenuePercentageFee) / 100;
     }
-  } else if (brand.event_revenue_percentage_fee === 0 || !brand.event_revenue_percentage_fee) {
+  } else {
     // Special case: When fee is 0%, platform fee depends on revenue type
-    if (brand.event_fee_revenue_type === 'net') {
+    if (feeRevenueType === 'net') {
       // For net revenue with 0% fee: platform fee = processing fee + tax
       percentageFee = paymentProcessingFee + tax;
-    } else if (brand.event_fee_revenue_type === 'gross') {
+    } else if (feeRevenueType === 'gross') {
       // For gross revenue with 0% fee: platform fee = 0
       percentageFee = 0;
     }
@@ -120,7 +177,8 @@ export async function calculatePlatformFeeForEventTickets(
 }
 
 /**
- * Calculate platform fee for a fundraiser donation based on brand fee settings
+ * Calculate platform fee for a fundraiser donation.
+ * Uses the brand-level fee override if set, otherwise falls back to the plan's default fee.
  * @param brandId - The brand ID
  * @param donationAmount - The donation amount
  * @param paymentProcessingFee - The payment processing fee already charged
@@ -131,35 +189,24 @@ export async function calculatePlatformFeeForFundraiserDonation(
   donationAmount: number,
   paymentProcessingFee: number = 0
 ): Promise<PlatformFeeCalculation> {
-  // Get brand fee settings
-  const brand = await Brand.findByPk(brandId);
-
-  if (!brand) {
-    throw new Error('Brand not found');
-  }
+  const { transactionFixedFee, revenuePercentageFee, feeRevenueType } =
+    await resolveFundraiserFeeSettings(brandId);
 
   let fixedFee = 0;
   let percentageFee = 0;
 
-  // Calculate gross revenue (donation amount)
   const grossRevenue = donationAmount;
-
-  // Calculate net revenue (gross minus processing fees)
   const netRevenue = grossRevenue - paymentProcessingFee;
 
-  // 1. Fixed fee per transaction
-  if (brand.fundraiser_transaction_fixed_fee && brand.fundraiser_transaction_fixed_fee > 0) {
-    fixedFee = brand.fundraiser_transaction_fixed_fee;
+  if (transactionFixedFee > 0) {
+    fixedFee = transactionFixedFee;
   }
 
-  // 2. Percentage fee calculation
-  if (brand.fundraiser_revenue_percentage_fee && brand.fundraiser_revenue_percentage_fee > 0) {
-    if (brand.fundraiser_fee_revenue_type === 'gross') {
-      // Apply percentage to gross revenue (donation amount)
-      percentageFee = (grossRevenue * brand.fundraiser_revenue_percentage_fee) / 100;
-    } else if (brand.fundraiser_fee_revenue_type === 'net') {
-      // Apply percentage to net revenue (after processing fees)
-      percentageFee = (netRevenue * brand.fundraiser_revenue_percentage_fee) / 100;
+  if (revenuePercentageFee > 0) {
+    if (feeRevenueType === 'gross') {
+      percentageFee = (grossRevenue * revenuePercentageFee) / 100;
+    } else if (feeRevenueType === 'net') {
+      percentageFee = (netRevenue * revenuePercentageFee) / 100;
     }
   }
   // When percentage fee is 0%, percentageFee stays 0
@@ -172,4 +219,3 @@ export async function calculatePlatformFeeForFundraiserDonation(
     totalPlatformFee
   };
 }
-

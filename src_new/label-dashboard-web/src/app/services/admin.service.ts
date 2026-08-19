@@ -38,6 +38,15 @@ export interface FeeSettingsSection {
   transaction_fixed_fee: number;
   revenue_percentage_fee: number;
   fee_revenue_type: 'net' | 'gross';
+  // Present on event/fundraiser sections: null means no override (following plan default)
+  override?: FeeSettingsSectionOverride | null;
+  plan_default?: FeeSettingsSection;
+}
+
+export interface FeeSettingsSectionOverride {
+  transaction_fixed_fee: number | null;
+  revenue_percentage_fee: number | null;
+  fee_revenue_type: 'net' | 'gross' | null;
 }
 
 export interface FeeSettings {

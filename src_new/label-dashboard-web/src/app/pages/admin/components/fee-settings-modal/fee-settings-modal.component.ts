@@ -22,6 +22,15 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   feeForm!: FormGroup;
   loading: boolean = false;
 
+  // Whether to use a brand-level override for event/fundraiser fees.
+  // When false, null is sent to the API so the brand follows its plan's defaults.
+  overrideEvent: boolean = false;
+  overrideFundraiser: boolean = false;
+
+  // Plan defaults shown as placeholder when override is disabled
+  eventPlanDefault: FeeSettingsSection | null = null;
+  fundraiserPlanDefault: FeeSettingsSection | null = null;
+
   constructor(
     private fb: FormBuilder,
     private adminService: AdminService,
@@ -67,51 +76,49 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
     this.loading = true;
     this.adminService.getFeeSettings(this.brandId).subscribe({
       next: (settings) => {
-        // Set the monthly fee value for disabled control
         this.feeForm.get('monthly_fee')?.setValue(settings.monthly_fee || 0);
-        
+
         this.feeForm.patchValue({
           music: {
             transaction_fixed_fee: settings.music.transaction_fixed_fee || 0,
             revenue_percentage_fee: settings.music.revenue_percentage_fee || 0,
             fee_revenue_type: settings.music.fee_revenue_type || 'net'
-          },
-          event: {
-            transaction_fixed_fee: settings.event.transaction_fixed_fee || 0,
-            revenue_percentage_fee: settings.event.revenue_percentage_fee || 0,
-            fee_revenue_type: settings.event.fee_revenue_type || 'net'
-          },
-          fundraiser: {
-            transaction_fixed_fee: settings.fundraiser?.transaction_fixed_fee || 0,
-            revenue_percentage_fee: settings.fundraiser?.revenue_percentage_fee || 0,
-            fee_revenue_type: settings.fundraiser?.fee_revenue_type || 'net'
           }
         });
+
+        // Store plan defaults for display
+        this.eventPlanDefault = settings.event.plan_default ?? null;
+        this.fundraiserPlanDefault = settings.fundraiser.plan_default ?? null;
+
+        // Override is active when the API returns a non-null override object
+        this.overrideEvent = settings.event.override !== null && settings.event.override !== undefined;
+        this.overrideFundraiser = settings.fundraiser.override !== null && settings.fundraiser.override !== undefined;
+
+        // Populate override form fields with current effective values (override if set, else plan default)
+        this.feeForm.patchValue({
+          event: {
+            transaction_fixed_fee: settings.event.transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: settings.event.revenue_percentage_fee ?? 0,
+            fee_revenue_type: settings.event.fee_revenue_type ?? 'net'
+          },
+          fundraiser: {
+            transaction_fixed_fee: settings.fundraiser.transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: settings.fundraiser.revenue_percentage_fee ?? 0,
+            fee_revenue_type: settings.fundraiser.fee_revenue_type ?? 'net'
+          }
+        });
+
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading fee settings:', error);
         this.notificationService.showError('Failed to load fee settings');
         this.loading = false;
-        // Initialize with default values on error
         this.feeForm.get('monthly_fee')?.setValue(0);
-
         this.feeForm.patchValue({
-          music: {
-            transaction_fixed_fee: 0,
-            revenue_percentage_fee: 0,
-            fee_revenue_type: 'net'
-          },
-          event: {
-            transaction_fixed_fee: 0,
-            revenue_percentage_fee: 0,
-            fee_revenue_type: 'net'
-          },
-          fundraiser: {
-            transaction_fixed_fee: 0,
-            revenue_percentage_fee: 0,
-            fee_revenue_type: 'net'
-          }
+          music: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
+          event: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
+          fundraiser: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' }
         });
       }
     });
@@ -122,30 +129,27 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   }
 
   showMonthlyPreview(): boolean {
-    const monthlyFeeControl = this.feeForm.get('monthly_fee');
-    const monthlyFee = monthlyFeeControl?.value;
-    return monthlyFee > 0;
+    return (this.feeForm.get('monthly_fee')?.value || 0) > 0;
   }
 
   showMusicPreview(): boolean {
     const music = this.feeForm.get('music')?.value;
     if (!music) return false;
-    return (music.transaction_fixed_fee > 0) || 
-           (music.revenue_percentage_fee > 0);
+    return music.transaction_fixed_fee > 0 || music.revenue_percentage_fee > 0;
   }
 
   showEventPreview(): boolean {
+    if (!this.overrideEvent) return false;
     const event = this.feeForm.get('event')?.value;
     if (!event) return false;
-    return (event.transaction_fixed_fee > 0) ||
-           (event.revenue_percentage_fee > 0);
+    return event.transaction_fixed_fee > 0 || event.revenue_percentage_fee > 0;
   }
 
   showFundraiserPreview(): boolean {
+    if (!this.overrideFundraiser) return false;
     const fundraiser = this.feeForm.get('fundraiser')?.value;
     if (!fundraiser) return false;
-    return (fundraiser.transaction_fixed_fee > 0) ||
-           (fundraiser.revenue_percentage_fee > 0);
+    return fundraiser.transaction_fixed_fee > 0 || fundraiser.revenue_percentage_fee > 0;
   }
 
   onSubmit(): void {
@@ -158,8 +162,9 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
     const feeSettings = {
       monthly_fee: this.feeForm.get('monthly_fee')?.value || 0,
       music: this.feeForm.get('music')?.value,
-      event: this.feeForm.get('event')?.value,
-      fundraiser: this.feeForm.get('fundraiser')?.value
+      // Send null to clear override (follow plan); send values to set override
+      event: this.overrideEvent ? this.feeForm.get('event')?.value : null,
+      fundraiser: this.overrideFundraiser ? this.feeForm.get('fundraiser')?.value : null,
     };
 
     this.adminService.updateFeeSettings(this.brandId, feeSettings).subscribe({

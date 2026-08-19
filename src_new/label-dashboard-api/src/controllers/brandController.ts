@@ -104,13 +104,6 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       catalog_prefix: brand.catalog_prefix || 'REL',
       paymongo_wallet_id: brand.paymongo_wallet_id,
       payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts || 0,
-      monthly_fee: brand.monthly_fee || 0,
-      music_transaction_fixed_fee: brand.music_transaction_fixed_fee || 0,
-      music_revenue_percentage_fee: brand.music_revenue_percentage_fee || 0,
-      music_fee_revenue_type: brand.music_fee_revenue_type || 'net',
-      event_transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
-      event_revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
-      event_fee_revenue_type: brand.event_fee_revenue_type || 'net',
       artist_custom_fields: brand.artist_custom_fields || [],
       about_us: brand.about_us || null
     });
@@ -132,13 +125,6 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       release_submission_url,
       paymongo_wallet_id,
       payment_processing_fee_for_payouts,
-      monthly_fee,
-      music_transaction_fixed_fee,
-      music_revenue_percentage_fee,
-      music_fee_revenue_type,
-      event_transaction_fixed_fee,
-      event_revenue_percentage_fee,
-      event_fee_revenue_type,
       artist_custom_fields,
       about_us
     } = req.body;
@@ -180,13 +166,6 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       release_submission_url: release_submission_url || null,
       paymongo_wallet_id: paymongo_wallet_id || null,
       payment_processing_fee_for_payouts: payment_processing_fee_for_payouts || 0,
-      monthly_fee: monthly_fee !== undefined ? monthly_fee : brand.monthly_fee,
-      music_transaction_fixed_fee: music_transaction_fixed_fee !== undefined ? music_transaction_fixed_fee : brand.music_transaction_fixed_fee,
-      music_revenue_percentage_fee: music_revenue_percentage_fee !== undefined ? music_revenue_percentage_fee : brand.music_revenue_percentage_fee,
-      music_fee_revenue_type: music_fee_revenue_type || brand.music_fee_revenue_type,
-      event_transaction_fixed_fee: event_transaction_fixed_fee !== undefined ? event_transaction_fixed_fee : brand.event_transaction_fixed_fee,
-      event_revenue_percentage_fee: event_revenue_percentage_fee !== undefined ? event_revenue_percentage_fee : brand.event_revenue_percentage_fee,
-      event_fee_revenue_type: event_fee_revenue_type || brand.event_fee_revenue_type,
       artist_custom_fields: artist_custom_fields !== undefined ? artist_custom_fields : brand.artist_custom_fields,
       about_us: about_us !== undefined ? (about_us || null) : brand.about_us
     });
@@ -204,13 +183,6 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         catalog_prefix: brand.catalog_prefix,
         paymongo_wallet_id: brand.paymongo_wallet_id,
         payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts,
-        monthly_fee: brand.monthly_fee,
-        music_transaction_fixed_fee: brand.music_transaction_fixed_fee,
-        music_revenue_percentage_fee: brand.music_revenue_percentage_fee,
-        music_fee_revenue_type: brand.music_fee_revenue_type,
-        event_transaction_fixed_fee: brand.event_transaction_fixed_fee,
-        event_revenue_percentage_fee: brand.event_revenue_percentage_fee,
-        event_fee_revenue_type: brand.event_fee_revenue_type,
         artist_custom_fields: brand.artist_custom_fields,
         about_us: brand.about_us || null
       }
@@ -232,6 +204,15 @@ export const getFeeSettings = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Brand not found' });
     }
 
+    const brandPlan = await BrandPlan.findOne({
+      where: { brand_id: brandId },
+      include: [{ model: Plan, as: 'plan' }],
+    });
+    const plan = (brandPlan as any)?.plan ?? null;
+
+    const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
+    const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
+
     res.json({
       id: brand.id,
       monthly_fee: brand.monthly_fee || 0,
@@ -241,14 +222,48 @@ export const getFeeSettings = async (req: Request, res: Response) => {
         fee_revenue_type: brand.music_fee_revenue_type || 'net'
       },
       event: {
-        transaction_fixed_fee: brand.event_transaction_fixed_fee || 0,
-        revenue_percentage_fee: brand.event_revenue_percentage_fee || 0,
-        fee_revenue_type: brand.event_fee_revenue_type || 'net'
+        // Effective values — brand override if set, otherwise plan default
+        transaction_fixed_fee: hasEventOverride
+          ? (brand.event_transaction_fixed_fee ?? 0)
+          : (plan?.default_event_transaction_fixed_fee ?? 0),
+        revenue_percentage_fee: hasEventOverride
+          ? (brand.event_revenue_percentage_fee ?? 0)
+          : (plan?.default_event_revenue_percentage_fee ?? 0),
+        fee_revenue_type: hasEventOverride
+          ? (brand.event_fee_revenue_type ?? 'net')
+          : (plan?.default_event_fee_revenue_type ?? 'net'),
+        // Whether a brand-level override is active (null = following plan)
+        override: hasEventOverride ? {
+          transaction_fixed_fee: brand.event_transaction_fixed_fee,
+          revenue_percentage_fee: brand.event_revenue_percentage_fee,
+          fee_revenue_type: brand.event_fee_revenue_type,
+        } : null,
+        plan_default: {
+          transaction_fixed_fee: plan?.default_event_transaction_fixed_fee ?? 0,
+          revenue_percentage_fee: plan?.default_event_revenue_percentage_fee ?? 0,
+          fee_revenue_type: plan?.default_event_fee_revenue_type ?? 'net',
+        },
       },
       fundraiser: {
-        transaction_fixed_fee: brand.fundraiser_transaction_fixed_fee || 0,
-        revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee || 0,
-        fee_revenue_type: brand.fundraiser_fee_revenue_type || 'net'
+        transaction_fixed_fee: hasFundraiserOverride
+          ? (brand.fundraiser_transaction_fixed_fee ?? 0)
+          : (plan?.default_fundraiser_transaction_fixed_fee ?? 0),
+        revenue_percentage_fee: hasFundraiserOverride
+          ? (brand.fundraiser_revenue_percentage_fee ?? 0)
+          : (plan?.default_fundraiser_revenue_percentage_fee ?? 0),
+        fee_revenue_type: hasFundraiserOverride
+          ? (brand.fundraiser_fee_revenue_type ?? 'net')
+          : (plan?.default_fundraiser_fee_revenue_type ?? 'net'),
+        override: hasFundraiserOverride ? {
+          transaction_fixed_fee: brand.fundraiser_transaction_fixed_fee,
+          revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee,
+          fee_revenue_type: brand.fundraiser_fee_revenue_type,
+        } : null,
+        plan_default: {
+          transaction_fixed_fee: plan?.default_fundraiser_transaction_fixed_fee ?? 0,
+          revenue_percentage_fee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
+          fee_revenue_type: plan?.default_fundraiser_fee_revenue_type ?? 'net',
+        },
       }
     });
 
@@ -313,30 +328,49 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       }
     }
 
-    // Update fee settings
+    // Update all fee settings on the brand.
+    // For event/fundraiser, passing null explicitly clears the override (brand will follow plan defaults).
     const updateData: any = {};
-    
+
     if (monthly_fee !== undefined) updateData.monthly_fee = monthly_fee;
-    
+
     if (music) {
       if (music.transaction_fixed_fee !== undefined) updateData.music_transaction_fixed_fee = music.transaction_fixed_fee;
       if (music.revenue_percentage_fee !== undefined) updateData.music_revenue_percentage_fee = music.revenue_percentage_fee;
       if (music.fee_revenue_type !== undefined) updateData.music_fee_revenue_type = music.fee_revenue_type;
     }
-    
-    if (event) {
+
+    // Sending event: null or fundraiser: null clears all fields for that category (reverts to plan default)
+    if (event === null) {
+      updateData.event_transaction_fixed_fee = null;
+      updateData.event_revenue_percentage_fee = null;
+      updateData.event_fee_revenue_type = null;
+    } else if (event) {
       if (event.transaction_fixed_fee !== undefined) updateData.event_transaction_fixed_fee = event.transaction_fixed_fee;
       if (event.revenue_percentage_fee !== undefined) updateData.event_revenue_percentage_fee = event.revenue_percentage_fee;
       if (event.fee_revenue_type !== undefined) updateData.event_fee_revenue_type = event.fee_revenue_type;
     }
 
-    if (fundraiser) {
+    if (fundraiser === null) {
+      updateData.fundraiser_transaction_fixed_fee = null;
+      updateData.fundraiser_revenue_percentage_fee = null;
+      updateData.fundraiser_fee_revenue_type = null;
+    } else if (fundraiser) {
       if (fundraiser.transaction_fixed_fee !== undefined) updateData.fundraiser_transaction_fixed_fee = fundraiser.transaction_fixed_fee;
       if (fundraiser.revenue_percentage_fee !== undefined) updateData.fundraiser_revenue_percentage_fee = fundraiser.revenue_percentage_fee;
       if (fundraiser.fee_revenue_type !== undefined) updateData.fundraiser_fee_revenue_type = fundraiser.fee_revenue_type;
     }
 
     await brand.update(updateData);
+
+    const brandPlan = await BrandPlan.findOne({
+      where: { brand_id: brand.id },
+      include: [{ model: Plan, as: 'plan' }],
+    });
+    const plan = (brandPlan as any)?.plan ?? null;
+
+    const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
+    const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
 
     res.json({
       message: 'Fee settings updated successfully',
@@ -349,14 +383,36 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
           fee_revenue_type: brand.music_fee_revenue_type
         },
         event: {
-          transaction_fixed_fee: brand.event_transaction_fixed_fee,
-          revenue_percentage_fee: brand.event_revenue_percentage_fee,
-          fee_revenue_type: brand.event_fee_revenue_type
+          transaction_fixed_fee: hasEventOverride
+            ? (brand.event_transaction_fixed_fee ?? 0)
+            : (plan?.default_event_transaction_fixed_fee ?? 0),
+          revenue_percentage_fee: hasEventOverride
+            ? (brand.event_revenue_percentage_fee ?? 0)
+            : (plan?.default_event_revenue_percentage_fee ?? 0),
+          fee_revenue_type: hasEventOverride
+            ? (brand.event_fee_revenue_type ?? 'net')
+            : (plan?.default_event_fee_revenue_type ?? 'net'),
+          override: hasEventOverride ? {
+            transaction_fixed_fee: brand.event_transaction_fixed_fee,
+            revenue_percentage_fee: brand.event_revenue_percentage_fee,
+            fee_revenue_type: brand.event_fee_revenue_type,
+          } : null,
         },
         fundraiser: {
-          transaction_fixed_fee: brand.fundraiser_transaction_fixed_fee,
-          revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee,
-          fee_revenue_type: brand.fundraiser_fee_revenue_type
+          transaction_fixed_fee: hasFundraiserOverride
+            ? (brand.fundraiser_transaction_fixed_fee ?? 0)
+            : (plan?.default_fundraiser_transaction_fixed_fee ?? 0),
+          revenue_percentage_fee: hasFundraiserOverride
+            ? (brand.fundraiser_revenue_percentage_fee ?? 0)
+            : (plan?.default_fundraiser_revenue_percentage_fee ?? 0),
+          fee_revenue_type: hasFundraiserOverride
+            ? (brand.fundraiser_fee_revenue_type ?? 'net')
+            : (plan?.default_fundraiser_fee_revenue_type ?? 'net'),
+          override: hasFundraiserOverride ? {
+            transaction_fixed_fee: brand.fundraiser_transaction_fixed_fee,
+            revenue_percentage_fee: brand.fundraiser_revenue_percentage_fee,
+            fee_revenue_type: brand.fundraiser_fee_revenue_type,
+          } : null,
         }
       }
     });
