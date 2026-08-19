@@ -114,12 +114,12 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
       formatter: (c: PressCampaign) => {
         const imgSrc = c.release?.cover_art || c.event?.poster_url;
         const avatar = imgSrc
-          ? `<img src="${imgSrc}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;flex-shrink:0;" alt="" />`
+          ? `<img src="${this.escapeHtml(imgSrc)}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;flex-shrink:0;" alt="" />`
           : `<span style="width:36px;height:36px;border-radius:50%;background:#e5e7eb;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">&#9835;</span>`;
         const typeBadge = c.campaign_type === 'event'
           ? `<span class="status-badge status-info tw-mr-1">Event</span>`
           : `<span class="status-badge status-secondary tw-mr-1">Release</span>`;
-        return `<span style="display:inline-flex;align-items:center;gap:10px;">${avatar}<span><strong>${c.title}</strong> ${typeBadge}</span></span>`;
+        return `<span style="display:inline-flex;align-items:center;gap:10px;">${avatar}<span><strong>${this.escapeHtml(c.title)}</strong> ${typeBadge}</span></span>`;
       },
     },
     {
@@ -159,8 +159,8 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
           .map(n => n![0].toUpperCase())
           .join('') || (c.creator.username ? c.creator.username[0].toUpperCase() : '?');
         return `<span class="tw-inline-flex tw-items-center tw-gap-2">
-          <span class="tw-inline-flex tw-items-center tw-justify-center tw-w-7 tw-h-7 tw-rounded-full tw-bg-gray-200 tw-text-gray-600 tw-text-xs tw-font-semibold tw-flex-shrink-0">${initials}</span>
-          <span>${fullName}</span>
+          <span class="tw-inline-flex tw-items-center tw-justify-center tw-w-7 tw-h-7 tw-rounded-full tw-bg-gray-200 tw-text-gray-600 tw-text-xs tw-font-semibold tw-flex-shrink-0">${this.escapeHtml(initials)}</span>
+          <span>${this.escapeHtml(fullName)}</span>
         </span>`;
       },
     },
@@ -797,5 +797,14 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
   publishDraftCampaign(): void {
     this.campaignForm.status = 'Published';
     this.saveCampaignDetails();
+  }
+
+  private escapeHtml(text: string): string {
+    return (text ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
   }
 }

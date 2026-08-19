@@ -676,11 +676,12 @@ export class SyncLicensingComponent implements OnInit, OnDestroy {
 
   // Helpers
   private escapeHtml(text: string): string {
-    return text
+    return (text ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
   }
 
   truncateText(text: string | undefined, maxLength: number): string {
