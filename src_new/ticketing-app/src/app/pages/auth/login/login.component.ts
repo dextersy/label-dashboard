@@ -521,6 +521,7 @@ export class LoginComponent implements OnInit {
   resetTokenValid = signal(false);
   resetDone = signal(false);
   resetPasswordValue = signal('');
+  organizerPasswordValue = signal('');
   error = signal('');
   loggedOut = signal(false);
   showPassword = signal(false);
@@ -646,6 +647,8 @@ export class LoginComponent implements OnInit {
         });
       return;
     }
+
+    this.organizerForm.get('password')!.valueChanges.subscribe(v => this.organizerPasswordValue.set(v || ''));
 
     // Redirect if already logged in
     if (this.audienceAuth.isLoggedIn() && this.mode() !== 'organizer') {
@@ -850,7 +853,7 @@ export class LoginComponent implements OnInit {
 
   // Password strength for organizer signup
   passwordStrength = computed(() => {
-    const p = this.organizerForm.get('password')?.value || '';
+    const p = this.organizerPasswordValue();
     let score = 0;
     if (p.length >= 8) score++;
     if (/[A-Z]/.test(p)) score++;
