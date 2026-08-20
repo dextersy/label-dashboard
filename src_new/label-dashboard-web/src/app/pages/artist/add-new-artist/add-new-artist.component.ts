@@ -9,6 +9,7 @@ import { ArtistStateService } from '../../../services/artist-state.service';
 import { PlanLimitService } from '../../../services/plan-limit.service';
 import { environment } from 'environments/environment';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { FileUploadComponent } from '../../../components/shared/file-upload/file-upload.component';
 
 export interface NewArtistData {
   name: string;
@@ -24,7 +25,7 @@ export interface NewArtistData {
 
 @Component({
     selector: 'app-add-new-artist',
-    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent, IconComponent],
+    imports: [CommonModule, FormsModule, BreadcrumbComponent, FloatingActionBarComponent, IconComponent, FileUploadComponent],
     templateUrl: './add-new-artist.component.html',
     styleUrl: './add-new-artist.component.scss'
 })
@@ -64,37 +65,34 @@ export class AddNewArtistComponent implements OnInit {
     });
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        this.alertMessage = {
-          type: 'error',
-          message: 'Please select a valid image file (JPEG, PNG, or GIF).'
-        };
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.alertMessage = {
-          type: 'error',
-          message: 'File size must be less than 5MB.'
-        };
-        return;
-      }
-
-      this.selectedFile = file;
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.previewImageUrl = e.target.result;
+  onFileSelected(file: File): void {
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      this.alertMessage = {
+        type: 'error',
+        message: 'Please select a valid image file (JPEG, PNG, or GIF).'
       };
-      reader.readAsDataURL(file);
+      return;
     }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertMessage = {
+        type: 'error',
+        message: 'File size must be less than 5MB.'
+      };
+      return;
+    }
+
+    this.selectedFile = file;
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.previewImageUrl = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   async ngOnInit(): Promise<void> {

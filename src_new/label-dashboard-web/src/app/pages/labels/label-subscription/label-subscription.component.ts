@@ -26,6 +26,7 @@ export class LabelSubscriptionComponent implements OnInit {
   usageReleasesPerArtist: Record<number, number> = {};
   usagePressCampaignsThisMonth = 0;
   usageSyncPitchesThisMonth = 0;
+  usageStorageBytes = 0;
   billingCycle: 'monthly' | 'annual' = 'monthly';
 
   // Show a banner if returning from a PayMongo checkout
@@ -63,6 +64,7 @@ export class LabelSubscriptionComponent implements OnInit {
         this.usageReleasesPerArtist = usage.usage.releases_per_artist;
         this.usagePressCampaignsThisMonth = usage.usage.press_campaigns_this_month;
         this.usageSyncPitchesThisMonth = usage.usage.sync_pitches_this_month;
+        this.usageStorageBytes = usage.usage.storage_used_bytes ?? 0;
         // Pre-select billing cycle to match current subscription
         if (this.currentSubscription) {
           this.billingCycle = this.currentSubscription.billing_cycle;
@@ -78,6 +80,18 @@ export class LabelSubscriptionComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  formatBytes(bytes: number): string {
+    if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return bytes + ' B';
+  }
+
+  get storageLimitBytes(): number | null {
+    const gb = this.usageLimits?.limit_storage_gb ?? null;
+    return gb !== null ? Math.round(gb * 1024 * 1024 * 1024) : null;
   }
 
   usageBarWidth(used: number, limit: number | null): string {

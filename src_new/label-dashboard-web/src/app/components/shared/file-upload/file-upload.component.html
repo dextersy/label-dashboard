@@ -1,0 +1,84 @@
+<div class="tw-flex tw-flex-col tw-gap-2">
+
+  <!-- Hidden file input (used by both modes) -->
+  <input #fileInput
+         type="file"
+         class="tw-hidden"
+         [accept]="accept"
+         [multiple]="multiple"
+         [disabled]="disabled"
+         (change)="onFileChange($event)" />
+
+  @if (multiple) {
+    <!-- Drag-and-drop zone (multiple mode) -->
+    <div class="tw-relative tw-rounded-lg tw-border-2 tw-border-dashed tw-px-5 tw-py-10
+                tw-text-center tw-transition-all tw-cursor-pointer tw-mb-2"
+         [class.tw-border-[#337ab7]]="isDragOver"
+         [class.tw-bg-gray-50]="isDragOver"
+         [class.hover:tw-border-[#337ab7]]="!isDragOver"
+         [class.hover:tw-bg-gray-50]="!isDragOver"
+         [class.tw-border-gray-300]="!isDragOver"
+         [class.tw-opacity-50]="isBlocked"
+         [class.tw-pointer-events-none]="isBlocked"
+         (click)="openFilePicker()"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)">
+      <app-icon name="upload" [size]="48" iconOnly
+                class="tw-text-[#337ab7] tw-mb-3" />
+      <p class="tw-mb-1 tw-text-base tw-text-gray-800">
+        {{ isDragOver ? 'Drop files here' : label }}
+      </p>
+      @if (hint) {
+        <small class="tw-text-gray-500">{{ hint }}</small>
+      }
+    </div>
+  } @else {
+    <!-- Button trigger (single mode) -->
+    <label class="tw-inline-flex tw-items-center tw-gap-2 btn btn-secondary btn-sm tw-cursor-pointer tw-self-start"
+           [class.tw-opacity-50]="isBlocked"
+           [class.tw-pointer-events-none]="isBlocked"
+           (click)="$event.preventDefault(); openFilePicker()">
+      <app-icon name="upload" />
+      {{ label }}
+    </label>
+
+    <!-- Current file name -->
+    @if (currentFileName) {
+      <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mb-0">
+        Current: <span class="tw-font-medium tw-text-[var(--color-body)]">{{ currentFileName }}</span>
+      </p>
+    }
+
+    @if (hint) {
+      <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mb-0">{{ hint }}</p>
+    }
+  }
+
+  <!-- Storage indicator (only when enforcing limit and limit is set) -->
+  @if (enforceStorageLimit && storageInfo && storageInfo.limitBytes !== null) {
+    <div class="tw-mt-1">
+      <div class="tw-flex tw-justify-between tw-text-xs tw-text-[var(--color-muted)] tw-mb-1">
+        <span>Storage used: {{ formatBytes(storageInfo.usedBytes) }} / {{ formatBytes(storageInfo.limitBytes) }}</span>
+        @if (remainingBytes !== null) {
+          <span [class.tw-text-red-600]="remainingBytes === 0"
+                [class.tw-font-semibold]="remainingBytes === 0">
+            {{ remainingBytes === 0 ? 'Full' : formatBytes(remainingBytes) + ' remaining' }}
+          </span>
+        }
+      </div>
+      <div class="tw-h-1 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+        <div class="tw-h-full tw-rounded-full tw-transition-all"
+             [class]="storageBarClass"
+             [style.width]="storageBarPercent + '%'">
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Error message -->
+  @if (errorMessage) {
+    <p class="tw-text-xs tw-text-red-600 tw-mb-0">{{ errorMessage }}</p>
+  }
+
+</div>

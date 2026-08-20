@@ -7,6 +7,7 @@ interface PressCampaignArtistPhotoAttributes {
   path: string;
   label?: string;
   sort_order: number;
+  file_size?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -19,6 +20,7 @@ class PressCampaignArtistPhoto extends Model<PressCampaignArtistPhotoAttributes,
   public path!: string;
   public label?: string;
   public sort_order!: number;
+  public file_size?: number;
 
   public campaign?: any;
 
@@ -52,6 +54,10 @@ PressCampaignArtistPhoto.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
+    },
+    file_size: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
     },
   },
   {

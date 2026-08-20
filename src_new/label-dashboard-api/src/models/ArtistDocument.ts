@@ -7,9 +7,10 @@ interface ArtistDocumentAttributes {
   path: string;
   date_uploaded?: Date;
   artist_id: number;
+  file_size?: number;
 }
 
-interface ArtistDocumentCreationAttributes extends Optional<ArtistDocumentAttributes, 'id'> {}
+interface ArtistDocumentCreationAttributes extends Optional<ArtistDocumentAttributes, 'id' | 'file_size'> {}
 
 class ArtistDocument extends Model<ArtistDocumentAttributes, ArtistDocumentCreationAttributes> implements ArtistDocumentAttributes {
   public id!: number;
@@ -17,6 +18,7 @@ class ArtistDocument extends Model<ArtistDocumentAttributes, ArtistDocumentCreat
   public path!: string;
   public date_uploaded?: Date;
   public artist_id!: number;
+  public file_size?: number;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -44,6 +46,10 @@ ArtistDocument.init(
     artist_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+    file_size: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
     },
   },
   {

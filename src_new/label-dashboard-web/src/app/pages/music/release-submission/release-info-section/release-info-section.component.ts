@@ -11,6 +11,7 @@ import { PlanLimitService } from '../../../../services/plan-limit.service';
 import { QuillModule } from 'ngx-quill';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
+import { FileUploadComponent } from '../../../../components/shared/file-upload/file-upload.component';
 
 export interface ReleaseInfoData {
   title: string;
@@ -26,7 +27,7 @@ export interface ReleaseInfoData {
 
 @Component({
     selector: 'app-release-info-section',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent, FloatingActionBarComponent],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, QuillModule, IconComponent, FloatingActionBarComponent, FileUploadComponent],
     templateUrl: './release-info-section.component.html',
     styleUrl: './release-info-section.component.scss'
 })
@@ -280,38 +281,35 @@ export class ReleaseInfoSectionComponent implements OnInit, OnChanges {
     }));
   }
 
-  onCoverArtSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'Please select a valid image file'
-        });
-        return;
-      }
-
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'Image file size must be less than 5MB'
-        });
-        return;
-      }
-
-      this.selectedCoverArt = file;
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.coverArtPreview = e.target?.result as string;
-        this.emitFormData();
-        this.emitValidity();
-      };
-      reader.readAsDataURL(file);
+  onCoverArtSelected(file: File): void {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: 'Please select a valid image file'
+      });
+      return;
     }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: 'Image file size must be less than 5MB'
+      });
+      return;
+    }
+
+    this.selectedCoverArt = file;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.coverArtPreview = e.target?.result as string;
+      this.emitFormData();
+      this.emitValidity();
+    };
+    reader.readAsDataURL(file);
   }
 
   removeCoverArt(): void {

@@ -61,7 +61,7 @@ router.put('/:id/payment-methods/:paymentMethodId/set-default', setDefaultPaymen
 
 // Photo gallery operations
 router.get('/:id/photos', getArtistPhotos);
-router.post('/:id/photos', upload.array('photos', 10), uploadArtistPhotos);
+router.post('/:id/photos', upload.array('photos', 50), uploadArtistPhotos);
 router.put('/:id/photos/reorder', reorderArtistPhotos);
 router.put('/:id/photos/:photoId/caption', updatePhotoCaption);
 router.patch('/:id/photos/:photoId/exclude-from-epk', togglePhotoExcludeFromEPK);

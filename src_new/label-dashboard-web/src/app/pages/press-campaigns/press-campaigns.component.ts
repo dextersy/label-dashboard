@@ -14,12 +14,13 @@ import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-pag
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { NotificationService } from '../../services/notification.service';
 import { PlanLimitService } from '../../services/plan-limit.service';
+import { FileUploadComponent } from '../../components/shared/file-upload/file-upload.component';
 import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-press-campaigns',
   standalone: true,
-  imports: [CommonModule, FormsModule, QuillModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent, InPageNavComponent],
+  imports: [CommonModule, FormsModule, QuillModule, PaginatedTableComponent, BreadcrumbComponent, IconComponent, InPageNavComponent, FileUploadComponent],
   templateUrl: './press-campaigns.component.html',
   styleUrl: './press-campaigns.component.scss',
 })
@@ -631,42 +632,36 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
     });
   }
 
-  onCoverArtSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file || !this.detailCampaign) return;
+  onCoverArtSelected(file: File): void {
+    if (!this.detailCampaign) return;
     this.uploadingCoverArt = true;
     this.pressCampaignService.uploadCoverArt(this.detailCampaign.id, file).subscribe({
       next: res => {
         if (this.detailCampaign) this.detailCampaign.cover_art = res.cover_art;
         this.uploadingCoverArt = false;
         this.loadCampaigns();
+        this.planLimitService.refreshStorageInfo();
       },
-      error: () => { this.uploadingCoverArt = false; this.notification.showError('Failed to upload cover art.'); },
+      error: (err) => { this.uploadingCoverArt = false; if (!this.planLimitService.handleLimitError(err)) this.notification.showError('Failed to upload cover art.'); },
     });
-    input.value = '';
   }
 
-  onMp3Selected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file || !this.detailCampaign) return;
+  onMp3Selected(file: File): void {
+    if (!this.detailCampaign) return;
     this.uploadingMp3 = true;
     this.pressCampaignService.uploadMp3(this.detailCampaign.id, file).subscribe({
       next: res => {
         if (this.detailCampaign) this.detailCampaign.mp3_file = res.mp3_file;
         this.uploadingMp3 = false;
         this.loadCampaigns();
+        this.planLimitService.refreshStorageInfo();
       },
-      error: () => { this.uploadingMp3 = false; this.notification.showError('Failed to upload audio file.'); },
+      error: (err) => { this.uploadingMp3 = false; if (!this.planLimitService.handleLimitError(err)) this.notification.showError('Failed to upload audio file.'); },
     });
-    input.value = '';
   }
 
-  onArtistPhotoSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file || !this.detailCampaign) return;
+  onArtistPhotoSelected(file: File): void {
+    if (!this.detailCampaign) return;
     this.uploadingPhoto = true;
     this.pressCampaignService.uploadArtistPhoto(this.detailCampaign.id, file, this.photoLabelInput || undefined).subscribe({
       next: res => {
@@ -677,10 +672,10 @@ export class PressCampaignsComponent implements OnInit, OnDestroy {
         this.uploadingPhoto = false;
         this.photoLabelInput = '';
         this.loadCampaigns();
+        this.planLimitService.refreshStorageInfo();
       },
-      error: () => { this.uploadingPhoto = false; this.notification.showError('Failed to upload photo.'); },
+      error: (err) => { this.uploadingPhoto = false; if (!this.planLimitService.handleLimitError(err)) this.notification.showError('Failed to upload photo.'); },
     });
-    input.value = '';
   }
 
   deleteArtistPhoto(photoId: number): void {

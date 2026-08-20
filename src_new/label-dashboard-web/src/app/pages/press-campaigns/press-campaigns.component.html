@@ -918,11 +918,12 @@
                 <label class="tw-label">Photo caption (optional)</label>
                 <input type="text" class="tw-input" [(ngModel)]="photoLabelInput" placeholder="e.g. Live at the studio" />
               </div>
-              <label class="btn-secondary tw-cursor-pointer tw-flex-shrink-0">
-                <app-icon name="upload" class="tw-mr-1" />
-                {{ uploadingPhoto ? 'Uploading...' : 'Add Photo' }}
-                <input type="file" accept="image/*" class="tw-hidden" (change)="onArtistPhotoSelected($event)" [disabled]="uploadingPhoto" />
-              </label>
+              <app-file-upload
+                accept="image/*"
+                label="Add Photo"
+                [disabled]="uploadingPhoto"
+                (fileSelected)="onArtistPhotoSelected($event)">
+              </app-file-upload>
             </div>
           </div>
 

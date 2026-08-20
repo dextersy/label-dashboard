@@ -65,22 +65,14 @@
           </div>
 
           <div class="tw-mb-5 tw-mb-3">
-            <label for="documentFile" class="tw-label">Choose File</label>
-            <input
-              type="file"
-              id="documentFile"
-              class="tw-block tw-w-full tw-text-sm tw-text-gray-500
-                     file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
-                     file:tw-rounded file:tw-border-0
-                     file:tw-text-sm file:tw-font-medium
-                     file:tw-bg-gray-100 file:tw-text-gray-700
-                     hover:file:tw-bg-gray-200 tw-cursor-pointer"
-              (change)="onFileSelected($event)"
+            <label class="tw-label">Choose File</label>
+            <app-file-upload
               accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
-              required>
-            <small class="form-text tw-text-muted">
-              Supported formats: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF (Max 25MB)
-            </small>
+              label="Choose file"
+              hint="PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF · max 25 MB"
+              [currentFileName]="documentUploadForm.file?.name ?? null"
+              (fileSelected)="onFileSelected($event)">
+            </app-file-upload>
           </div>
           
           <button 

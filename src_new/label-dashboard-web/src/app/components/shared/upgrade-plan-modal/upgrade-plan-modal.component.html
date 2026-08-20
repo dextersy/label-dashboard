@@ -15,11 +15,18 @@
               Upgrade your plan
             </h5>
             @if (context) {
-              <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mb-0 tw-mt-0.5">
-                You've reached your plan's limit for
-                <strong class="tw-text-[var(--color-body)]">{{ limitMessage }}s</strong>.
-                Upgrade to add more, or <strong class="tw-text-[var(--color-body)]">{{ freeUpAction }}</strong> to free up a slot.
-              </p>
+              @if (isStorageLimit) {
+                <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mb-0 tw-mt-0.5">
+                  You've reached your plan's <strong class="tw-text-[var(--color-body)]">storage limit</strong>.
+                  You can <strong class="tw-text-[var(--color-body)]">{{ freeUpAction }}</strong>.
+                </p>
+              } @else {
+                <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mb-0 tw-mt-0.5">
+                  You've reached your plan's limit for
+                  <strong class="tw-text-[var(--color-body)]">{{ limitMessage }}s</strong>.
+                  Upgrade to add more, or <strong class="tw-text-[var(--color-body)]">{{ freeUpAction }}</strong> to free up a slot.
+                </p>
+              }
             }
           </div>
           <button type="button" class="btn-close" (click)="close()" aria-label="Close"></button>
@@ -82,6 +89,12 @@
                       <div class="tw-flex tw-justify-between">
                         <span class="tw-text-[var(--color-muted)]">Admin users</span>
                         <span class="tw-font-medium">{{ limitLabel(plan.limit_admin_users) }}</span>
+                      </div>
+                      <div class="tw-flex tw-justify-between">
+                        <span class="tw-text-[var(--color-muted)]">Storage</span>
+                        <span class="tw-font-medium">
+                          {{ plan.limit_storage_gb === null ? 'Unlimited' : plan.limit_storage_gb + ' GB' }}
+                        </span>
                       </div>
                     </div>
 

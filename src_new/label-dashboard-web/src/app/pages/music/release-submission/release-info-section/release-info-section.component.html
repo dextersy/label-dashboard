@@ -64,22 +64,17 @@
 
     <!-- Cover Art -->
     <div class="tw-mt-4">
-      <label for="coverArt" class="tw-label">Cover Art <span class="tw-text-danger">*</span></label>
+      <label class="tw-label">Cover Art <span class="tw-text-danger">*</span></label>
       <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
         <div>
-          <input type="file"
-                class="form-control-file"
-                id="coverArt"
-                accept="image/*"
-                (change)="onCoverArtSelected($event)"
-                (click)="$event.stopPropagation()"
-                (cancel)="$event.stopPropagation()"
-                [disabled]="isRestrictedMode()"
-                [class.is-invalid]="!hasCoverArt()">
-          <small class="form-text tw-text-muted">
-            JPG or PNG, max 5MB. {{ editingRelease ? 'Leave empty to keep current cover art.' : 'Accepted formats: JPG, PNG. Maximum size: 5MB' }}
-          </small>
-          <div *ngIf="!hasCoverArt()" class="invalid-feedback tw-block">
+          <app-file-upload
+            accept="image/*"
+            label="Choose cover art"
+            [hint]="editingRelease ? 'JPG or PNG, max 5 MB. Leave empty to keep current.' : 'JPG or PNG, max 5 MB.'"
+            [disabled]="isRestrictedMode()"
+            (fileSelected)="onCoverArtSelected($event)">
+          </app-file-upload>
+          <div *ngIf="!hasCoverArt()" class="tw-text-red-600 tw-text-xs tw-mt-1">
             Cover art is required
           </div>
         </div>

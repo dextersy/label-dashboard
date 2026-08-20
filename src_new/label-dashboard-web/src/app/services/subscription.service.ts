@@ -64,6 +64,7 @@ export interface UsageResponse {
     releases_per_artist: Record<number, number>;
     press_campaigns_this_month: number;
     sync_pitches_this_month: number;
+    storage_used_bytes: number;
   };
 }
 

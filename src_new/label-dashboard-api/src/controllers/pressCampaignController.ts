@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
+import { getEffectiveLimitsForBrand, checkStorageLimitForBrand } from '../services/subscriptionService';
 import multer from 'multer';
 import Groq from 'groq-sdk';
 import {
@@ -567,7 +567,14 @@ export const uploadCoverArt = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Delete old cover art if it was custom
+    // Storage check: net size = new file minus the file being replaced
+    const freedBytes = campaign.cover_art_file_size ?? 0;
+    const storageCheckCoverArt = await checkStorageLimitForBrand(brandId, file.size - freedBytes);
+    if (!storageCheckCoverArt.allowed) {
+      return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+    }
+
+    // Delete old cover art only after the storage check passes
     if (campaign.cover_art) {
       try {
         const key = new URL(campaign.cover_art).pathname.replace(/^\//, '');
@@ -588,6 +595,7 @@ export const uploadCoverArt = async (req: Request, res: Response) => {
     });
 
     campaign.cover_art = result.Location;
+    campaign.cover_art_file_size = file.size;
     await campaign.save();
 
     res.json({ cover_art: result.Location });
@@ -612,7 +620,14 @@ export const uploadMp3 = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    // Delete old MP3 if custom
+    // Storage check: net size = new file minus the file being replaced
+    const freedBytesMp3 = campaign.mp3_file_size ?? 0;
+    const storageCheckMp3 = await checkStorageLimitForBrand(brandId, file.size - freedBytesMp3);
+    if (!storageCheckMp3.allowed) {
+      return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+    }
+
+    // Delete old MP3 only after the storage check passes
     if (campaign.mp3_file) {
       try {
         const key = new URL(campaign.mp3_file).pathname.replace(/^\//, '');
@@ -637,6 +652,7 @@ export const uploadMp3 = async (req: Request, res: Response) => {
     });
 
     campaign.mp3_file = result.Location;
+    campaign.mp3_file_size = file.size;
     await campaign.save();
 
     res.json({ mp3_file: result.Location });
@@ -670,6 +686,11 @@ export const uploadArtistPhoto = async (req: Request, res: Response) => {
     });
     const sortOrder = maxPhoto ? (maxPhoto as any).sort_order + 1 : 0;
 
+    const storageCheckPhoto = await checkStorageLimitForBrand(brandId, file.size);
+    if (!storageCheckPhoto.allowed) {
+      return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+    }
+
     const ext = file.originalname.split('.').pop() || 'jpg';
     const key = `press-campaigns/${brandId}/${id}/photos/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
 
@@ -685,6 +706,7 @@ export const uploadArtistPhoto = async (req: Request, res: Response) => {
       path: result.Location,
       label,
       sort_order: sortOrder,
+      file_size: file.size,
     } as any);
 
     res.status(201).json({ photo });

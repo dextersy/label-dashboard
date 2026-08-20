@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -8,6 +8,8 @@ import { environment } from 'environments/environment';
 import { LightboxComponent } from '../../../../components/shared/lightbox/lightbox.component';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { FileUploadComponent } from '../../../../components/shared/file-upload/file-upload.component';
+import { PlanLimitService } from '../../../../services/plan-limit.service';
 
 export interface ArtistPhoto {
   id: number;
@@ -21,11 +23,11 @@ export interface ArtistPhoto {
 
 @Component({
     selector: 'app-artist-gallery-tab',
-    imports: [CommonModule, FormsModule, LightboxComponent, DragDropModule, IconComponent],
+    imports: [CommonModule, FormsModule, LightboxComponent, DragDropModule, IconComponent, FileUploadComponent],
     templateUrl: './artist-gallery-tab.component.html',
     styleUrl: './artist-gallery-tab.component.scss'
 })
-export class ArtistGalleryTabComponent {
+export class ArtistGalleryTabComponent implements OnInit, OnDestroy {
   @Input() artist: Artist | null = null;
   @Input() isReadOnly = false;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
@@ -35,7 +37,7 @@ export class ArtistGalleryTabComponent {
   epkFilter: 'all' | 'visible' | 'hidden' = 'all';
   loading = false;
   uploading = false;
-  selectedFiles: FileList | null = null;
+  selectedFiles: File[] | null = null;
   uploadProgress = 0;
   editingCaptions: { [key: number]: boolean } = {};
   editingCaptionTexts: { [key: number]: string } = {};
@@ -55,7 +57,8 @@ export class ArtistGalleryTabComponent {
 
   constructor(
     private http: HttpClient,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private planLimitService: PlanLimitService,
   ) {}
 
   ngOnInit(): void {
@@ -63,6 +66,8 @@ export class ArtistGalleryTabComponent {
       this.loadPhotos();
     }
   }
+
+  ngOnDestroy(): void {}
 
   ngOnChanges(): void {
     if (this.artist) {
@@ -114,14 +119,13 @@ export class ArtistGalleryTabComponent {
     });
   }
 
-  onFilesSelected(event: any): void {
-    const files = event.target.files;
-    if (files && files.length > 0) {
+  onFilesSelected(files: File[]): void {
+    if (files.length > 0) {
       this.selectedFiles = files;
     }
   }
 
-  uploadPhotos(): void {
+  async uploadPhotos(): Promise<void> {
     if (!this.artist || !this.selectedFiles || this.selectedFiles.length === 0) {
       return;
     }
@@ -130,11 +134,9 @@ export class ArtistGalleryTabComponent {
     this.uploadProgress = 0;
 
     const formData = new FormData();
-    formData.append('artist_id', this.artist.id.toString());
-    
-    for (let i = 0; i < this.selectedFiles.length; i++) {
-      const file = this.selectedFiles[i];
-      
+
+    for (const file of this.selectedFiles) {
+
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
@@ -176,9 +178,7 @@ export class ArtistGalleryTabComponent {
               message: response.message || 'Photos uploaded successfully!'
             });
             this.selectedFiles = null;
-            // Reset file input
-            const fileInput = document.getElementById('photoUpload') as HTMLInputElement;
-            if (fileInput) fileInput.value = '';
+            this.planLimitService.refreshStorageInfo();
           } else {
             this.alertMessage.emit({
               type: 'error',
@@ -194,13 +194,14 @@ export class ArtistGalleryTabComponent {
         }
       },
       error: (error) => {
+        this.uploading = false;
+        this.uploadProgress = 0;
+        if (this.planLimitService.handleLimitError(error)) return;
         console.error('Error uploading photos:', error);
         this.alertMessage.emit({
           type: 'error',
           message: 'An error occurred while uploading photos.'
         });
-        this.uploading = false;
-        this.uploadProgress = 0;
       }
     });
   }
@@ -360,8 +361,7 @@ export class ArtistGalleryTabComponent {
   }
 
   getSelectedFilesArray(): File[] {
-    if (!this.selectedFiles) return [];
-    return Array.from(this.selectedFiles);
+    return this.selectedFiles ?? [];
   }
 
   // Lightbox methods

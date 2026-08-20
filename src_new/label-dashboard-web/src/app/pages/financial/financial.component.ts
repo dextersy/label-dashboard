@@ -23,6 +23,7 @@ import { DateRangeSelection } from '../../components/shared/date-range-filter/da
 import { SearchFilters } from '../../components/shared/paginated-table/paginated-table.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { PlanLimitService } from '../../services/plan-limit.service';
 
 export type FinancialTabType = 'summary' | 'documents' | 'earnings' | 'royalties' | 'payments' | 'release' | 'new-royalty' | 'new-payment' | 'new-earning';
 
@@ -276,7 +277,8 @@ export class FinancialComponent implements OnInit, OnDestroy {
     private adminService: AdminService,
     private route: ActivatedRoute,
     private router: Router,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private planLimitService: PlanLimitService,
   ) {}
 
   ngOnInit(): void {
@@ -731,6 +733,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
       this.notificationService.showSuccess('Document uploaded successfully');
       this.resetDocumentUploadForm();
       this.loadDocuments();
+      this.planLimitService.refreshStorageInfo();
     } catch (error) {
       console.error('Error uploading document:', error);
       this.notificationService.showError('Failed to upload document');
@@ -762,11 +765,8 @@ export class FinancialComponent implements OnInit, OnDestroy {
     }
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.documentUploadForm.file = file;
-    }
+  onFileSelected(file: File): void {
+    this.documentUploadForm.file = file;
   }
 
   private resetDocumentUploadForm(): void {

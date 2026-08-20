@@ -14,6 +14,7 @@ import {
   cancelPayMongoSubscription,
   resolveEffectiveLimits,
   getEffectiveLimitsForBrand,
+  getStorageUsedBytesForBrand,
 } from '../services/subscriptionService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 
@@ -124,6 +125,8 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
+    const storageUsedBytes = await getStorageUsedBytesForBrand(brandId);
+
     res.json({
       limits,
       usage: {
@@ -132,6 +135,7 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
         releases_per_artist: releasesPerArtist,
         press_campaigns_this_month: pressCampaignsThisMonth,
         sync_pitches_this_month: syncPitchesThisMonth,
+        storage_used_bytes: storageUsedBytes,
       },
     });
   } catch (error: any) {

@@ -175,7 +175,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     this.linerNotesCharCount = text.length;
   }
 
-  onCoverArtSelected(event: any): void {
+  async onCoverArtSelected(event: any): Promise<void> {
     const file = event.target.files?.[0];
     if (!file) return;
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
@@ -185,6 +185,15 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     }
     if (file.size > 5 * 1024 * 1024) {
       this.alertMessage.emit({ type: 'error', message: 'File size must be less than 5 MB.' });
+      return;
+    }
+    const storageResult = await this.planLimitService.checkStorageLimit(file.size);
+    if (storageResult === 'blocked_admin') {
+      this.planLimitService.showUpgradeModal({ limit_type: 'storage' });
+      return;
+    }
+    if (storageResult === 'blocked_nonadmin') {
+      this.alertMessage.emit({ type: 'error', message: 'No storage space left. Contact your label representative for support.' });
       return;
     }
     this.selectedCoverArt = file;

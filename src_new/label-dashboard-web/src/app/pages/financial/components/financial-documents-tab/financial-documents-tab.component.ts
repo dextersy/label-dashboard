@@ -6,10 +6,11 @@ import { Document } from '../../financial.component';
 import { DocumentViewerComponent } from '../../../../components/shared/document-viewer/document-viewer.component';
 import { PaginatedTableComponent, TableAction, TableColumn } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { FileUploadComponent } from '../../../../components/shared/file-upload/file-upload.component';
 
 @Component({
     selector: 'app-financial-documents-tab',
-    imports: [CommonModule, FormsModule, DocumentViewerComponent, PaginatedTableComponent, IconComponent],
+    imports: [CommonModule, FormsModule, DocumentViewerComponent, PaginatedTableComponent, IconComponent, FileUploadComponent],
     templateUrl: './financial-documents-tab.component.html',
     styleUrl: './financial-documents-tab.component.scss'
 })
@@ -21,7 +22,7 @@ export class FinancialDocumentsTabComponent {
   @Input() uploadingDocument: boolean = false;
   @Input() onUploadDocument: () => Promise<void> = async () => {};
   @Input() onDeleteDocument: (documentId: number) => Promise<void> = async () => {};
-  @Input() onFileSelected: (event: any) => void = () => {};
+  @Input() onFileSelected: (file: File) => void = () => {};
 
   // Document viewer state
   selectedDocument: Document | null = null;

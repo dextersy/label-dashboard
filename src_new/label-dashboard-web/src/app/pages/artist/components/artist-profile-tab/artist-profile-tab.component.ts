@@ -8,6 +8,7 @@ import { environment } from 'environments/environment';
 import { QuillModule } from 'ngx-quill';
 import { FloatingActionBarComponent } from '../../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { FileUploadComponent } from '../../../../components/shared/file-upload/file-upload.component';
 import { PlanLimitService } from '../../../../services/plan-limit.service';
 
 export interface ArtistProfile extends Artist {
@@ -31,7 +32,7 @@ export interface ArtistProfile extends Artist {
 
 @Component({
     selector: 'app-artist-profile-tab',
-    imports: [CommonModule, FormsModule, QuillModule, FloatingActionBarComponent, IconComponent],
+    imports: [CommonModule, FormsModule, QuillModule, FloatingActionBarComponent, IconComponent, FileUploadComponent],
     templateUrl: './artist-profile-tab.component.html',
     styleUrl: './artist-profile-tab.component.scss'
 })
@@ -256,40 +257,37 @@ export class ArtistProfileTabComponent implements OnInit, OnChanges {
     });
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'Please select a valid image file (JPEG, PNG, or GIF).'
-        });
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.alertMessage.emit({
-          type: 'error',
-          message: 'File size must be less than 5MB.'
-        });
-        return;
-      }
-
-      this.selectedFile = file;
-      this.dirtyFields.add('profile_photo');
-
-      // Preview the selected image
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          this.editingProfile.profile_photo = e.target.result as string;
-        }
-      };
-      reader.readAsDataURL(file);
+  onFileSelected(file: File): void {
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: 'Please select a valid image file (JPEG, PNG, or GIF).'
+      });
+      return;
     }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertMessage.emit({
+        type: 'error',
+        message: 'File size must be less than 5MB.'
+      });
+      return;
+    }
+
+    this.selectedFile = file;
+    this.dirtyFields.add('profile_photo');
+
+    // Preview the selected image
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        this.editingProfile.profile_photo = e.target.result as string;
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   saveProfile(): void {

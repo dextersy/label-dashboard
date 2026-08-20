@@ -8,7 +8,7 @@ import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRo
 import { sendReleaseSubmissionNotification, sendReleasePendingNotification } from '../utils/emailService';
 import { createNotificationsForUsers, getBrandAdminUserIds, getBrandAndParentAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
-import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
+import { getEffectiveLimitsForBrand, checkStorageLimitForBrand } from '../services/subscriptionService';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -234,7 +234,12 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
 
     // Handle cover art file upload to S3
     let coverArtUrl = null;
+    let coverArtFileSize: number | undefined;
     if (req.file) {
+      const storageCheck = await checkStorageLimitForBrand(req.user.brand_id, req.file.size);
+      if (!storageCheck.allowed) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+      }
       try {
         // Generate unique filename for S3
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -249,6 +254,7 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
           ContentType: req.file.mimetype
         });
         coverArtUrl = result.Location;
+        coverArtFileSize = req.file.size;
       } catch (uploadError) {
         console.error('S3 upload error:', uploadError);
         return res.status(500).json({ error: 'Failed to upload cover art' });
@@ -270,6 +276,7 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       release_date,
       status,
       cover_art: coverArtUrl,
+      cover_art_file_size: coverArtFileSize,
       description,
       liner_notes,
       brand_id: req.user.brand_id
@@ -367,13 +374,18 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     // Handle cover art file upload to S3
     let coverArtUrl = null;
+    let newCoverArtFileSize: number | undefined;
     if (req.file) {
+      const storageCheck = await checkStorageLimitForBrand(req.user.brand_id, req.file.size);
+      if (!storageCheck.allowed) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+      }
       try {
         // Generate unique filename for S3
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const extension = path.extname(req.file.originalname);
         const fileName = `cover-art/${releaseId}-${uniqueSuffix}${extension}`;
-        
+
         // Upload to S3
         const result = await uploadToS3({
           Bucket: process.env.S3_BUCKET!,
@@ -382,6 +394,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
           ContentType: req.file.mimetype
         });
         coverArtUrl = result.Location;
+        newCoverArtFileSize = req.file.size;
       } catch (uploadError) {
         console.error('S3 upload error:', uploadError);
         return res.status(500).json({ error: 'Failed to upload cover art' });
@@ -445,6 +458,7 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       title: title || release.title,
       release_date: release_date !== undefined ? release_date : release.release_date,
       cover_art: coverArtUrl || release.cover_art,
+      cover_art_file_size: newCoverArtFileSize !== undefined ? newCoverArtFileSize : release.cover_art_file_size,
       description: description !== undefined ? description : release.description,
       liner_notes: liner_notes !== undefined ? liner_notes : release.liner_notes
     };

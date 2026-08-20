@@ -9,6 +9,7 @@ import { SongFormComponent } from '../song-form/song-form.component';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
+import { PlanLimitService } from '../../../../services/plan-limit.service';
 
 export interface TrackListData {
   songs: Song[];
@@ -61,7 +62,8 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
     private releaseService: ReleaseService,
     private authService: AuthService,
     private validationService: ReleaseValidationService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private planLimitService: PlanLimitService,
   ) {
     this.isAdmin = this.authService.isAdmin();
   }
@@ -163,7 +165,7 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.wav,audio/wav,audio/x-wav';
-    input.onchange = (e: any) => {
+    input.onchange = async (e: any) => {
       const file = e.target.files[0];
       if (file && song.id) {
         // Validate file type
@@ -172,6 +174,16 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
             type: 'error',
             message: 'Only WAV files are allowed for audio masters'
           });
+          return;
+        }
+        // Check storage limit
+        const storageResult = await this.planLimitService.checkStorageLimit(file.size);
+        if (storageResult === 'blocked_admin') {
+          this.planLimitService.showUpgradeModal({ limit_type: 'storage' });
+          return;
+        }
+        if (storageResult === 'blocked_nonadmin') {
+          this.alertMessage.emit({ type: 'error', message: 'No storage space left. Contact your label representative for support.' });
           return;
         }
         this.uploadAudioFile(song.id, file);
@@ -198,10 +210,12 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
             message: 'Audio file uploaded successfully'
           });
           this.loadSongs();
+          this.planLimitService.refreshStorageInfo();
         }
       },
       error: (error) => {
         delete this.uploadProgress[songId];
+        if (this.planLimitService.handleLimitError(error)) return;
         console.error('Error uploading audio:', error);
         this.alertMessage.emit({
           type: 'error',

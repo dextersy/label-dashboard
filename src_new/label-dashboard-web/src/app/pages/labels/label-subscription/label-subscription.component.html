@@ -170,6 +170,29 @@
                     }
                   </div>
 
+                  <!-- Storage -->
+                  <div class="sm:tw-col-span-2">
+                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
+                      <span class="tw-text-[var(--color-muted)]">Storage</span>
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">
+                        {{ formatBytes(usageStorageBytes) }}
+                        @if (storageLimitBytes !== null) {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_storage_gb }} GB</span>
+                        } @else {
+                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                        }
+                      </span>
+                    </div>
+                    @if (storageLimitBytes !== null) {
+                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                        <div class="tw-h-full tw-rounded-full tw-transition-all"
+                             [class]="usageBarClass(usageStorageBytes, storageLimitBytes)"
+                             [style.width]="usageBarWidth(usageStorageBytes, storageLimitBytes)">
+                        </div>
+                      </div>
+                    }
+                  </div>
+
                 </div>
               </div>
             }

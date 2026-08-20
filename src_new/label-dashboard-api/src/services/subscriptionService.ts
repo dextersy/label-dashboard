@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Transaction } from 'sequelize';
+import { Transaction, QueryTypes } from 'sequelize';
 import { sequelize } from '../config/database';
 import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
@@ -202,6 +202,89 @@ export async function getEffectiveLimitsForBrand(brandId: number) {
   });
   if (!brandPlan || !brandPlan.plan) return null;
   return resolveEffectiveLimits(brandPlan.plan, brandPlan);
+}
+
+/**
+ * Returns the total storage used (in bytes) by a brand across all tracked models.
+ *
+ * Tracked models (per product decision):
+ *   ArtistImage, ArtistDocument, Release.cover_art,
+ *   Song (audio_file + audio_file_mp3), PressCampaign (cover_art + mp3_file),
+ *   PressCampaignArtistPhoto
+ */
+export async function getStorageUsedBytesForBrand(brandId: number): Promise<number> {
+  const [result]: any[] = await sequelize.query(
+    `
+    SELECT COALESCE(SUM(bytes), 0)::BIGINT AS total_bytes
+    FROM (
+      -- Artist images (via artist.brand_id)
+      SELECT COALESCE(ai.file_size, 0) AS bytes
+      FROM artist_image ai
+      JOIN artist a ON a.id = ai.artist_id
+      WHERE a.brand_id = :brandId AND ai.file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Artist documents (via artist.brand_id)
+      SELECT COALESCE(ad.file_size, 0) AS bytes
+      FROM artist_documents ad
+      JOIN artist a ON a.id = ad.artist_id
+      WHERE a.brand_id = :brandId AND ad.file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Release cover art
+      SELECT COALESCE(cover_art_file_size, 0) AS bytes
+      FROM release
+      WHERE brand_id = :brandId AND cover_art_file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Song audio files
+      SELECT COALESCE(audio_file_size, 0) + COALESCE(audio_file_mp3_size, 0) AS bytes
+      FROM song
+      WHERE brand_id = :brandId
+        AND (audio_file_size IS NOT NULL OR audio_file_mp3_size IS NOT NULL)
+
+      UNION ALL
+
+      -- Press campaign cover art and mp3
+      SELECT COALESCE(cover_art_file_size, 0) + COALESCE(mp3_file_size, 0) AS bytes
+      FROM press_campaign
+      WHERE brand_id = :brandId
+        AND (cover_art_file_size IS NOT NULL OR mp3_file_size IS NOT NULL)
+
+      UNION ALL
+
+      -- Press campaign artist photos (via press_campaign.brand_id)
+      SELECT COALESCE(pcap.file_size, 0) AS bytes
+      FROM press_campaign_artist_photo pcap
+      JOIN press_campaign pc ON pc.id = pcap.campaign_id
+      WHERE pc.brand_id = :brandId AND pcap.file_size IS NOT NULL
+    ) AS storage_rows
+    `,
+    {
+      replacements: { brandId },
+      type: QueryTypes.SELECT,
+    }
+  );
+  return Number(result?.total_bytes ?? 0);
+}
+
+/**
+ * Checks whether adding additionalBytes to a brand's storage would exceed its plan limit.
+ * Returns the limit in bytes (null = unlimited), and whether the action is blocked.
+ */
+export async function checkStorageLimitForBrand(
+  brandId: number,
+  additionalBytes: number
+): Promise<{ allowed: boolean; usedBytes: number; limitBytes: number | null }> {
+  const limits = await getEffectiveLimitsForBrand(brandId);
+  const limitGb = limits?.limit_storage_gb ?? null;
+  const limitBytes = limitGb !== null ? Math.round(limitGb * 1024 * 1024 * 1024) : null;
+  const usedBytes = await getStorageUsedBytesForBrand(brandId);
+  const allowed = limitBytes === null || usedBytes + additionalBytes <= limitBytes;
+  return { allowed, usedBytes, limitBytes };
 }
 
 export function resolveEffectiveLimits(plan: Plan, brandPlan: BrandPlan) {

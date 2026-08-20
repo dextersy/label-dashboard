@@ -83,6 +83,7 @@ export class UpgradePlanModalComponent implements OnInit, OnDestroy {
       admin_users: 'admin user',
       press_campaigns: 'press campaign this month',
       sync_pitches: 'sync licensing pitch this month',
+      storage: 'file',
     };
     return map[this.context.limit_type] ?? this.context.limit_type;
   }
@@ -95,7 +96,12 @@ export class UpgradePlanModalComponent implements OnInit, OnDestroy {
       admin_users: 'remove an existing admin',
       press_campaigns: 'wait until next month or upgrade your plan',
       sync_pitches: 'wait until next month or upgrade your plan',
+      storage: 'delete unused files to free up space, or upgrade your plan for more storage',
     };
     return map[this.context.limit_type] ?? 'free up a slot';
+  }
+
+  get isStorageLimit(): boolean {
+    return this.context?.limit_type === 'storage';
   }
 }

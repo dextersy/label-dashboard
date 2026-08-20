@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom, Subject, switchMap, startWith, shareReplay } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { SubscriptionService } from './subscription.service';
 import { AuthService } from './auth.service';
 
@@ -7,15 +8,64 @@ export interface UpgradeModalContext {
   limit_type: string;
 }
 
+export interface StorageInfo {
+  usedBytes: number;
+  limitBytes: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlanLimitService {
   private _modal$ = new BehaviorSubject<UpgradeModalContext | null>(null);
   readonly upgradeModal$ = this._modal$.asObservable();
 
+  private _refresh$ = new Subject<void>();
+
+  /** Live storage info stream — re-emits whenever refreshStorageInfo() is called. */
+  readonly storageInfo$: Observable<StorageInfo> = this._refresh$.pipe(
+    startWith(undefined),
+    switchMap(() => this.subscriptionService.getUsage()),
+    map(data => {
+      const limitGb = data.limits?.limit_storage_gb ?? null;
+      return {
+        usedBytes: data.usage.storage_used_bytes ?? 0,
+        limitBytes: limitGb !== null ? Math.round(limitGb * 1024 * 1024 * 1024) : null,
+      };
+    }),
+    shareReplay(1),
+  );
+
   constructor(
     private subscriptionService: SubscriptionService,
     private authService: AuthService,
   ) {}
+
+  /** Triggers a fresh fetch of storage usage, updating all subscribers of storageInfo$. */
+  refreshStorageInfo(): void {
+    this._refresh$.next();
+  }
+
+  /** Returns current storage usage info as an Observable. */
+  getStorageInfo(): Observable<StorageInfo> {
+    return this.storageInfo$;
+  }
+
+  /**
+   * Checks if adding fileSizeBytes would exceed the storage quota.
+   * Returns 'ok', 'blocked_admin', or 'blocked_nonadmin'.
+   */
+  async checkStorageLimit(fileSizeBytes: number): Promise<'ok' | 'blocked_admin' | 'blocked_nonadmin'> {
+    try {
+      const data = await firstValueFrom(this.subscriptionService.getUsage());
+      const limitGb = data.limits?.limit_storage_gb ?? null;
+      if (limitGb === null) return 'ok';
+      const limitBytes = Math.round(limitGb * 1024 * 1024 * 1024);
+      const usedBytes = data.usage.storage_used_bytes ?? 0;
+      if (usedBytes + fileSizeBytes <= limitBytes) return 'ok';
+      return this.authService.isAdmin() ? 'blocked_admin' : 'blocked_nonadmin';
+    } catch {
+      return 'ok'; // Fail open to avoid blocking uploads on errors
+    }
+  }
 
   /**
    * Checks a specific limit before the user enters a creation flow.

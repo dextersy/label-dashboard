@@ -60,19 +60,13 @@
                  alt="Artist photo preview"
                  class="tw-w-32 tw-h-32 tw-rounded-full tw-object-cover tw-border-2 tw-border-gray-100">
             <div class="tw-w-full tw-space-y-1">
-              <label for="profilePhoto" class="tw-label">Upload Photo</label>
-              <input type="file"
-                     class="tw-block tw-w-full tw-text-sm tw-text-gray-500
-                            file:tw-mr-3 file:tw-py-1.5 file:tw-px-3
-                            file:tw-rounded file:tw-border-0
-                            file:tw-text-sm file:tw-font-medium
-                            file:tw-bg-gray-100 file:tw-text-gray-700
-                            hover:file:tw-bg-gray-200 tw-cursor-pointer"
-                     id="profilePhoto"
-                     name="profilePhoto"
-                     (change)="onFileSelected($event)"
-                     accept="image/jpeg,image/jpg,image/png,image/gif">
-              <p class="tw-text-xs tw-text-muted">JPEG, PNG or GIF · max 5 MB</p>
+              <label class="tw-label">Upload Photo</label>
+              <app-file-upload
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                label="Choose photo"
+                hint="JPEG, PNG or GIF · max 5 MB"
+                (fileSelected)="onFileSelected($event)">
+              </app-file-upload>
             </div>
             <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="tw-w-full">
               <div class="tw-w-full tw-bg-gray-100 tw-rounded-full tw-h-1.5">

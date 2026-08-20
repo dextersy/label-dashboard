@@ -177,30 +177,26 @@
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Photos</h3>
     </div>
     <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
-      <div class="upload-area">
-        <input type="file"
-               id="photoUpload"
-               class="form-control-file"
-               multiple
-               accept="image/jpeg,image/jpg,image/png,image/gif"
-               (change)="onFilesSelected($event)">
-        <label for="photoUpload" class="upload-label">
-          <app-icon name="upload" [size]="48" iconOnly />
-          <p>Click to select photos or drag and drop</p>
-          <small>Supported formats: JPEG, PNG, GIF (Max 10MB each)</small>
-        </label>
-      </div>
+      <app-file-upload
+        [multiple]="true"
+        [maxFiles]="50"
+        accept="image/jpeg,image/jpg,image/png,image/gif"
+        label="Select Photos"
+        hint="JPEG, PNG or GIF · max 10 MB each · up to 50 files"
+        [disabled]="uploading"
+        (filesSelected)="onFilesSelected($event)">
+      </app-file-upload>
 
-      <div *ngIf="selectedFiles && selectedFiles.length > 0" class="selected-files">
+      <div *ngIf="selectedFiles && selectedFiles.length > 0" class="selected-files tw-mt-3">
         <h6>Selected Files:</h6>
         <ul>
-          <li *ngFor="let file of getSelectedFilesArray(); let i = index">
+          <li *ngFor="let file of getSelectedFilesArray()">
             {{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }}MB)
           </li>
         </ul>
       </div>
 
-      <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress">
+      <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress tw-mt-3">
         <div class="progress-bar"
              role="progressbar"
              [style.width.%]="uploadProgress">
@@ -209,7 +205,7 @@
       </div>
 
       <button type="button"
-              class="btn-primary"
+              class="btn-primary tw-mt-3"
               (click)="uploadPhotos()"
               [disabled]="!selectedFiles || selectedFiles.length === 0 || uploading">
         <div class="loading-spinner" *ngIf="uploading"></div>

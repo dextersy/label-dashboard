@@ -14,6 +14,7 @@ interface ReleaseAttributes {
   release_date?: Date;
   status: ReleaseStatus;
   cover_art?: string;
+  cover_art_file_size?: number;
   description?: string;
   liner_notes?: string;
   brand_id: number;
@@ -33,6 +34,7 @@ class Release extends Model<ReleaseAttributes, ReleaseCreationAttributes> implem
   public release_date?: Date;
   public status!: ReleaseStatus;
   public cover_art?: string;
+  public cover_art_file_size?: number;
   public description?: string;
   public liner_notes?: string;
   public brand_id!: number;
@@ -93,6 +95,10 @@ Release.init(
     },
     cover_art: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    cover_art_file_size: {
+      type: DataTypes.BIGINT,
       allowNull: true,
     },
     description: {

@@ -11,7 +11,9 @@ interface PressCampaignAttributes {
   artist_id?: number;
   event_id?: number;
   cover_art?: string;
+  cover_art_file_size?: number;
   mp3_file?: string;
+  mp3_file_size?: number;
   public_slug: string;
   status: 'Draft' | 'Published' | 'Sent';
   created_by: number;
@@ -31,7 +33,9 @@ class PressCampaign extends Model<PressCampaignAttributes, PressCampaignCreation
   public artist_id?: number;
   public event_id?: number;
   public cover_art?: string;
+  public cover_art_file_size?: number;
   public mp3_file?: string;
+  public mp3_file_size?: number;
   public public_slug!: string;
   public status!: 'Draft' | 'Published' | 'Sent';
   public created_by!: number;
@@ -98,8 +102,16 @@ PressCampaign.init(
       type: DataTypes.STRING(512),
       allowNull: true,
     },
+    cover_art_file_size: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+    },
     mp3_file: {
       type: DataTypes.STRING(512),
+      allowNull: true,
+    },
+    mp3_file_size: {
+      type: DataTypes.BIGINT,
       allowNull: true,
     },
     public_slug: {

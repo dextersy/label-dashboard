@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
+import { checkStorageLimitForBrand } from '../services/subscriptionService';
 import { extractDSPFeatures, extractMoodScores } from '../utils/audioFeatures';
 import { generateSongSummaryBackground } from '../utils/songAI';
 import { Readable } from 'stream';
@@ -713,6 +714,12 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
     // Check permissions: admins can upload audio anytime, non-admins can only upload on Draft releases
     if (!req.user.is_admin && release.status !== 'Draft') {
       return res.status(403).json({ error: 'Cannot upload audio on non-draft releases. Contact your label administrator.' });
+    }
+
+    // Check storage limit before uploading
+    const storageCheck = await checkStorageLimitForBrand(song.brand_id, req.file.size);
+    if (!storageCheck.allowed) {
+      return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
     }
 
     // Get brand name

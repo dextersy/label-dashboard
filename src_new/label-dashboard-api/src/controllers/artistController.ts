@@ -12,7 +12,7 @@ import { promisify } from 'util';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import crypto from 'crypto';
 import { sequelize } from '../config/database';
-import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
+import { getEffectiveLimitsForBrand, checkStorageLimitForBrand } from '../services/subscriptionService';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -247,7 +247,14 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 
     // Handle profile photo upload if provided
     let profilePhotoUrl = null;
+    let profilePhotoFileSize: number | undefined;
     if (req.file) {
+      // Check storage limit before uploading
+      const storageCheck = await checkStorageLimitForBrand(req.user.brand_id, req.file.size);
+      if (!storageCheck.allowed) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+      }
+
       // Generate unique filename for S3
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       const extension = path.extname(req.file.originalname);
@@ -264,6 +271,7 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
 
         // Store the S3 URL temporarily for gallery entry creation after artist creation
         profilePhotoUrl = result.Location;
+        profilePhotoFileSize = req.file.size;
       } catch (uploadError) {
         console.error('Error uploading profile photo:', uploadError);
         // Continue creating artist without photo
@@ -292,7 +300,8 @@ export const createArtist = async (req: AuthRequest, res: Response) => {
           path: profilePhotoUrl,
           credits: 'Profile photo',
           artist_id: artist.id,
-          date_uploaded: new Date()
+          date_uploaded: new Date(),
+          file_size: profilePhotoFileSize,
         });
 
         // Update artist to reference the gallery image
@@ -370,6 +379,12 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
     let profilePhotoUrl = artist.profile_photo;
     let newProfilePhotoId = artist.profile_photo_id;
     if (req.file) {
+      // Check storage limit before uploading
+      const storageCheck = await checkStorageLimitForBrand(req.user.brand_id, req.file.size);
+      if (!storageCheck.allowed) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+      }
+
       // Generate unique filename for S3
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       const extension = path.extname(req.file.originalname);
@@ -390,7 +405,8 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
           path: result.Location,
           credits: 'Profile photo',
           artist_id: parseInt(id as string),
-          date_uploaded: new Date()
+          date_uploaded: new Date(),
+          file_size: req.file.size,
         });
 
         newProfilePhotoId = artistImage.id;
@@ -1050,6 +1066,12 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
     const uploadedPhotos = [];
 
     for (const file of req.files as Express.Multer.File[]) {
+      // Check storage limit before uploading this file
+      const storageCheck = await checkStorageLimitForBrand(req.user.brand_id, file.size);
+      if (!storageCheck.allowed) {
+        return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+      }
+
       // Generate unique filename
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       const extension = path.extname(file.originalname);
@@ -1064,13 +1086,14 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
           ContentType: file.mimetype
         });
 
-        // Save to database with S3 URL
+        // Save to database with S3 URL and file size
         const artistImage = await ArtistImage.create({
           path: result.Location,
           credits: '', // Empty caption initially
           artist_id: parseInt(id as string),
           date_uploaded: new Date(),
-          display_order: nextOrder++
+          display_order: nextOrder++,
+          file_size: file.size,
         });
 
         uploadedPhotos.push({
@@ -2320,6 +2343,12 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
     const extension = path.extname(req.file.originalname);
     const fileName = `artist-document-${id}-${uniqueSuffix}${extension}`;
 
+    // Check storage limit before uploading
+    const docStorageCheck = await checkStorageLimitForBrand(req.user.brand_id, req.file.size);
+    if (!docStorageCheck.allowed) {
+      return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'storage' });
+    }
+
     try {
       // Upload to S3
       const result = await uploadToS3({
@@ -2329,12 +2358,13 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
         ContentType: req.file.mimetype
       });
 
-      // Save to database with S3 URL
+      // Save to database with S3 URL and file size
       const artistDocument = await ArtistDocument.create({
         title: title.trim(),
         path: result.Location,
         artist_id: parseInt(id as string),
-        date_uploaded: new Date()
+        date_uploaded: new Date(),
+        file_size: req.file.size,
       });
 
       res.json({
