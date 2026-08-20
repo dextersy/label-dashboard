@@ -156,7 +156,7 @@ export class FileUploadComponent implements OnInit, OnDestroy {
         return;
       }
       if (result === 'blocked_nonadmin') {
-        this.errorMessage = 'No storage space left. Contact your label representative for support.';
+        this.errorMessage = 'Not enough storage. Select smaller files or contact your label representative for support.';
         return;
       }
     }

@@ -193,7 +193,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
     if (storageResult === 'blocked_nonadmin') {
-      this.alertMessage.emit({ type: 'error', message: 'No storage space left. Contact your label representative for support.' });
+      this.alertMessage.emit({ type: 'error', message: 'Not enough storage. Select smaller files or contact your label representative for support.' });
       return;
     }
     this.selectedCoverArt = file;
