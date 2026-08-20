@@ -2500,20 +2500,27 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
     }
 
     // Single aggregated query: sum expenses per release, join artists
+    // NOTE: expense sum is pre-aggregated in a subquery to avoid multiplication
+    // when a release has multiple artists (each artist row would otherwise
+    // duplicate every recuperable_expense row in the outer SUM).
     const rawRows: any[] = await sequelize.query(
       `SELECT
          r.id AS release_id,
          r.catalog_no,
          r.title,
          COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
-         COALESCE(SUM(re.expense_amount), 0) AS remaining_expense
+         COALESCE(re_agg.expense_sum, 0) AS remaining_expense
        FROM release r
-       LEFT JOIN recuperable_expense re ON re.release_id = r.id
+       LEFT JOIN (
+         SELECT release_id, SUM(expense_amount) AS expense_sum
+         FROM recuperable_expense
+         GROUP BY release_id
+       ) re_agg ON re_agg.release_id = r.id
        LEFT JOIN release_artist ra ON ra.release_id = r.id
        LEFT JOIN artist a ON a.id = ra.artist_id
        WHERE ${releaseConditions.join(' AND ')}
-       GROUP BY r.id, r.catalog_no, r.title
-       HAVING COALESCE(SUM(re.expense_amount), 0) > 0`,
+       GROUP BY r.id, r.catalog_no, r.title, re_agg.expense_sum
+       HAVING COALESCE(re_agg.expense_sum, 0) > 0`,
       { replacements, type: 'SELECT' }
     );
 
@@ -2619,23 +2626,34 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
       replacements.title = `%${filters.title}%`;
     }
 
-    // Single aggregated query with CASE to split positive/negative amounts
+    // Single aggregated query with CASE to split positive/negative amounts.
+    // NOTE: expense sums are pre-aggregated in a subquery to avoid multiplication
+    // when a release has multiple artists (each artist row would otherwise
+    // duplicate every recuperable_expense row in the outer SUM).
     const rawRows: any[] = await sequelize.query(
       `SELECT
          r.id AS release_id,
          r.catalog_no,
          r.title,
          COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
-         COALESCE(SUM(CASE WHEN re.expense_amount > 0 THEN re.expense_amount ELSE 0 END), 0) AS new_expense,
-         COALESCE(ABS(SUM(CASE WHEN re.expense_amount < 0 THEN re.expense_amount ELSE 0 END)), 0) AS recuperated_expense
+         COALESCE(re_agg.new_expense, 0) AS new_expense,
+         COALESCE(re_agg.recuperated_expense, 0) AS recuperated_expense
        FROM release r
-       INNER JOIN recuperable_expense re ON re.release_id = r.id AND re.date_recorded BETWEEN :startDate AND :endDate
+       INNER JOIN (
+         SELECT
+           release_id,
+           SUM(CASE WHEN expense_amount > 0 THEN expense_amount ELSE 0 END) AS new_expense,
+           ABS(SUM(CASE WHEN expense_amount < 0 THEN expense_amount ELSE 0 END)) AS recuperated_expense
+         FROM recuperable_expense
+         WHERE date_recorded BETWEEN :startDate AND :endDate
+         GROUP BY release_id
+       ) re_agg ON re_agg.release_id = r.id
        LEFT JOIN release_artist ra ON ra.release_id = r.id
        LEFT JOIN artist a ON a.id = ra.artist_id
        WHERE ${releaseConditions.join(' AND ')}
-       GROUP BY r.id, r.catalog_no, r.title
-       HAVING COALESCE(SUM(CASE WHEN re.expense_amount > 0 THEN re.expense_amount ELSE 0 END), 0) > 0
-           OR COALESCE(ABS(SUM(CASE WHEN re.expense_amount < 0 THEN re.expense_amount ELSE 0 END)), 0) > 0`,
+       GROUP BY r.id, r.catalog_no, r.title, re_agg.new_expense, re_agg.recuperated_expense
+       HAVING COALESCE(re_agg.new_expense, 0) > 0
+           OR COALESCE(re_agg.recuperated_expense, 0) > 0`,
       { replacements, type: 'SELECT' }
     );
 
