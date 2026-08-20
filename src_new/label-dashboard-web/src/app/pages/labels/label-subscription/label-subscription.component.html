@@ -2,10 +2,10 @@
 
   <app-breadcrumb></app-breadcrumb>
 
-  <div class="tw-px-6 tw-py-6 tw-max-w-6xl tw-mx-auto tw-w-full">
+  <div class="tw-py-6 tw-max-w-6xl tw-mx-auto tw-w-full sm:tw-px-6">
 
     <!-- Page heading -->
-    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6 tw-px-6 sm:tw-px-0">
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
         <h3 class="tw-mb-2">
           <app-icon name="credit-card" class="tw-mr-2" />
@@ -13,7 +13,11 @@
         </h3>
         <p class="tw-mb-0 tw-text-muted">Manage your plan and billing cycle.</p>
         <p class="tw-mt-3 tw-mb-0 tw-text-sm tw-text-[var(--color-muted)] tw-bg-[var(--color-surface-subtle)] tw-rounded tw-px-3 tw-py-2">
-          Online subscriptions are coming soon. Contact us to upgrade your plan.
+          Online subscriptions are coming soon.
+          <a href="mailto:support@melt-records.com" class="tw-text-[var(--brand-color)] tw-font-medium tw-inline-flex tw-items-center tw-gap-0.5">
+            Contact us <app-icon name="arrow-right" class="tw-text-xs" />
+          </a>
+          to upgrade your plan.
         </p>
       </div>
     </div>
@@ -43,10 +47,11 @@
 
       <!-- Current subscription summary -->
       @if (currentSubscription) {
-        <div class="card tw-mb-8">
+        <div class="card tw-mb-8 tw-mt-4 sm:tw-mt-0">
           <div class="card-body">
+
             <!-- Plan header row -->
-            <div class="tw-flex tw-flex-col tw-gap-1 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between tw-mb-5">
+            <div class="tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between tw-mb-5">
               <div>
                 <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Current Plan</p>
                 <div class="tw-flex tw-items-center tw-gap-3">
@@ -63,137 +68,166 @@
                   Active since {{ currentSubscription.started_at | date:'mediumDate' }}
                 </p>
               </div>
-              @if (currentSubscription.status === 'active' && isCurrentPlanPaid) {
-                <button class="btn btn-danger btn-sm tw-self-start sm:tw-self-center tw-mt-3 sm:tw-mt-0"
-                        (click)="cancelSubscription()"
-                        [disabled]="actionLoading">
-                  Cancel subscription
+
+              <!-- Actions row -->
+              <div class="tw-flex tw-items-center tw-gap-4 tw-self-start sm:tw-self-center">
+                <button class="btn btn-primary btn-sm" (click)="scrollToPlans()">
+                  Upgrade plan
                 </button>
-              }
+                @if (currentSubscription.status === 'active' && isCurrentPlanPaid) {
+                  <button class="tw-text-sm tw-text-[var(--color-muted)] tw-underline tw-underline-offset-2 tw-decoration-dotted tw-bg-transparent tw-border-0 tw-p-0"
+                          (click)="cancelSubscription()"
+                          [disabled]="actionLoading">
+                    Cancel subscription
+                  </button>
+                }
+              </div>
             </div>
 
             <!-- Usage meters -->
             @if (usageLimits) {
               <div>
-                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-3">Usage</p>
-                <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-x-8 tw-gap-y-4">
+                <!-- Usage header -->
+                <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+                  <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-0">Usage</p>
+                  @if (anyOverLimit) {
+                    <span class="tw-text-xs tw-font-semibold tw-text-danger tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-full tw-px-2 tw-py-0.5 tw-leading-none">
+                      Over limit
+                    </span>
+                  }
+                </div>
+
+                <!-- Meters grid: 4-col stacked on mobile, inline on sm+ -->
+                <div class="tw-grid tw-grid-cols-4 tw-gap-2 sm:tw-flex sm:tw-flex-wrap sm:tw-gap-x-5 sm:tw-gap-y-3">
 
                   <!-- Artists -->
-                  <div>
-                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
-                      <span class="tw-text-[var(--color-muted)]">Artists</span>
-                      <span class="tw-font-medium tw-text-[var(--color-body)]">
-                        {{ usageArtists }}
-                        @if (usageLimits.limit_artists !== null) {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_artists }}</span>
+                  <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 sm:tw-flex-row sm:tw-gap-2">
+                    <svg class="tw-w-5 tw-h-5 tw-shrink-0 tw-rotate-[-90deg]" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--color-border-subtle)" stroke-width="4"/>
+                      @if (usageLimits.limit_artists !== null) {
+                        @if (usageArtists > usageLimits.limit_artists) {
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444" stroke-width="4"
+                                  stroke-dasharray="99.9 0" stroke-dashoffset="0"/>
                         } @else {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke-width="4"
+                                  [attr.stroke]="usageBarStroke(usageArtists, usageLimits.limit_artists)"
+                                  stroke-linecap="round"
+                                  [attr.stroke-dasharray]="usageCircleDash(usageArtists, usageLimits.limit_artists)"
+                                  stroke-dashoffset="0"/>
                         }
+                      }
+                    </svg>
+                    <span class="tw-text-center sm:tw-text-left">
+                      <span class="tw-block tw-text-xs tw-whitespace-nowrap sm:tw-inline sm:tw-text-sm"
+                            [class.tw-text-danger]="usageLimits.limit_artists !== null && usageArtists > usageLimits.limit_artists"
+                            [class.tw-text-warning]="usageLimits.limit_artists !== null && usageArtists === usageLimits.limit_artists"
+                            [class.tw-text-[var(--color-muted)]]="!(usageLimits.limit_artists !== null && usageArtists >= usageLimits.limit_artists)">
+                        {{ usageArtists }}&nbsp;/&nbsp;{{ usageLimits.limit_artists !== null ? usageLimits.limit_artists : '∞' }}
                       </span>
-                    </div>
-                    @if (usageLimits.limit_artists !== null) {
-                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
-                        <div class="tw-h-full tw-rounded-full tw-transition-all"
-                             [class]="usageBarClass(usageArtists, usageLimits.limit_artists)"
-                             [style.width]="usageBarWidth(usageArtists, usageLimits.limit_artists)">
-                        </div>
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Releases per artist -->
-                  <div>
-                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
-                      <span class="tw-text-[var(--color-muted)]">Releases (highest per artist)</span>
-                      <span class="tw-font-medium tw-text-[var(--color-body)]">
-                        {{ maxReleasesPerArtist }}
-                        @if (usageLimits.limit_releases_per_artist !== null) {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_releases_per_artist }}</span>
-                        } @else {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
-                        }
-                      </span>
-                    </div>
-                    @if (usageLimits.limit_releases_per_artist !== null) {
-                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
-                        <div class="tw-h-full tw-rounded-full tw-transition-all"
-                             [class]="usageBarClass(maxReleasesPerArtist, usageLimits.limit_releases_per_artist)"
-                             [style.width]="usageBarWidth(maxReleasesPerArtist, usageLimits.limit_releases_per_artist)">
-                        </div>
-                      </div>
-                    }
+                      <span class="tw-block tw-text-xs tw-text-[var(--color-muted)] sm:tw-hidden">Artists</span>
+                      <span class="tw-hidden sm:tw-inline tw-text-sm tw-font-medium tw-text-[var(--color-body)]">&nbsp;Artists</span>
+                    </span>
                   </div>
 
                   <!-- Press campaigns this month -->
-                  <div>
-                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
-                      <span class="tw-text-[var(--color-muted)]">Press campaigns this month</span>
-                      <span class="tw-font-medium tw-text-[var(--color-body)]">
-                        {{ usagePressCampaignsThisMonth }}
-                        @if (usageLimits.limit_press_campaigns_per_month !== null) {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_press_campaigns_per_month }}</span>
+                  <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 sm:tw-flex-row sm:tw-gap-2">
+                    <svg class="tw-w-5 tw-h-5 tw-shrink-0 tw-rotate-[-90deg]" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--color-border-subtle)" stroke-width="4"/>
+                      @if (usageLimits.limit_press_campaigns_per_month !== null) {
+                        @if (usagePressCampaignsThisMonth > usageLimits.limit_press_campaigns_per_month) {
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444" stroke-width="4"
+                                  stroke-dasharray="99.9 0" stroke-dashoffset="0"/>
                         } @else {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke-width="4"
+                                  [attr.stroke]="usageBarStroke(usagePressCampaignsThisMonth, usageLimits.limit_press_campaigns_per_month)"
+                                  stroke-linecap="round"
+                                  [attr.stroke-dasharray]="usageCircleDash(usagePressCampaignsThisMonth, usageLimits.limit_press_campaigns_per_month)"
+                                  stroke-dashoffset="0"/>
                         }
+                      }
+                    </svg>
+                    <span class="tw-text-center sm:tw-text-left">
+                      <span class="tw-block tw-text-xs tw-whitespace-nowrap sm:tw-inline sm:tw-text-sm"
+                            [class.tw-text-danger]="usageLimits.limit_press_campaigns_per_month !== null && usagePressCampaignsThisMonth > usageLimits.limit_press_campaigns_per_month"
+                            [class.tw-text-warning]="usageLimits.limit_press_campaigns_per_month !== null && usagePressCampaignsThisMonth === usageLimits.limit_press_campaigns_per_month"
+                            [class.tw-text-[var(--color-muted)]]="!(usageLimits.limit_press_campaigns_per_month !== null && usagePressCampaignsThisMonth >= usageLimits.limit_press_campaigns_per_month)">
+                        {{ usagePressCampaignsThisMonth }}&nbsp;/&nbsp;{{ usageLimits.limit_press_campaigns_per_month !== null ? usageLimits.limit_press_campaigns_per_month : '∞' }}
                       </span>
-                    </div>
-                    @if (usageLimits.limit_press_campaigns_per_month !== null) {
-                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
-                        <div class="tw-h-full tw-rounded-full tw-transition-all"
-                             [class]="usageBarClass(usagePressCampaignsThisMonth, usageLimits.limit_press_campaigns_per_month)"
-                             [style.width]="usageBarWidth(usagePressCampaignsThisMonth, usageLimits.limit_press_campaigns_per_month)">
-                        </div>
-                      </div>
-                    }
+                      <span class="tw-block tw-text-xs tw-text-[var(--color-muted)] sm:tw-hidden">Press</span>
+                      <span class="tw-hidden sm:tw-inline tw-text-sm tw-font-medium tw-text-[var(--color-body)]">&nbsp;Press</span>
+                    </span>
                   </div>
 
-                  <!-- Sync licensing pitches this month -->
-                  <div>
-                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
-                      <span class="tw-text-[var(--color-muted)]">Sync pitches this month</span>
-                      <span class="tw-font-medium tw-text-[var(--color-body)]">
-                        {{ usageSyncPitchesThisMonth }}
-                        @if (usageLimits.limit_sync_pitches_per_month !== null) {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_sync_pitches_per_month }}</span>
+                  <!-- Sync pitches this month -->
+                  <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 sm:tw-flex-row sm:tw-gap-2">
+                    <svg class="tw-w-5 tw-h-5 tw-shrink-0 tw-rotate-[-90deg]" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--color-border-subtle)" stroke-width="4"/>
+                      @if (usageLimits.limit_sync_pitches_per_month !== null) {
+                        @if (usageSyncPitchesThisMonth > usageLimits.limit_sync_pitches_per_month) {
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444" stroke-width="4"
+                                  stroke-dasharray="99.9 0" stroke-dashoffset="0"/>
                         } @else {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke-width="4"
+                                  [attr.stroke]="usageBarStroke(usageSyncPitchesThisMonth, usageLimits.limit_sync_pitches_per_month)"
+                                  stroke-linecap="round"
+                                  [attr.stroke-dasharray]="usageCircleDash(usageSyncPitchesThisMonth, usageLimits.limit_sync_pitches_per_month)"
+                                  stroke-dashoffset="0"/>
                         }
+                      }
+                    </svg>
+                    <span class="tw-text-center sm:tw-text-left">
+                      <span class="tw-block tw-text-xs tw-whitespace-nowrap sm:tw-inline sm:tw-text-sm"
+                            [class.tw-text-danger]="usageLimits.limit_sync_pitches_per_month !== null && usageSyncPitchesThisMonth > usageLimits.limit_sync_pitches_per_month"
+                            [class.tw-text-warning]="usageLimits.limit_sync_pitches_per_month !== null && usageSyncPitchesThisMonth === usageLimits.limit_sync_pitches_per_month"
+                            [class.tw-text-[var(--color-muted)]]="!(usageLimits.limit_sync_pitches_per_month !== null && usageSyncPitchesThisMonth >= usageLimits.limit_sync_pitches_per_month)">
+                        {{ usageSyncPitchesThisMonth }}&nbsp;/&nbsp;{{ usageLimits.limit_sync_pitches_per_month !== null ? usageLimits.limit_sync_pitches_per_month : '∞' }}
                       </span>
-                    </div>
-                    @if (usageLimits.limit_sync_pitches_per_month !== null) {
-                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
-                        <div class="tw-h-full tw-rounded-full tw-transition-all"
-                             [class]="usageBarClass(usageSyncPitchesThisMonth, usageLimits.limit_sync_pitches_per_month)"
-                             [style.width]="usageBarWidth(usageSyncPitchesThisMonth, usageLimits.limit_sync_pitches_per_month)">
-                        </div>
-                      </div>
-                    }
+                      <span class="tw-block tw-text-xs tw-text-[var(--color-muted)] sm:tw-hidden">Sync</span>
+                      <span class="tw-hidden sm:tw-inline tw-text-sm tw-font-medium tw-text-[var(--color-body)]">&nbsp;Sync</span>
+                    </span>
                   </div>
 
                   <!-- Storage -->
-                  <div class="sm:tw-col-span-2">
-                    <div class="tw-flex tw-justify-between tw-text-sm tw-mb-1">
-                      <span class="tw-text-[var(--color-muted)]">Storage</span>
-                      <span class="tw-font-medium tw-text-[var(--color-body)]">
-                        {{ formatBytes(usageStorageBytes) }}
-                        @if (storageLimitBytes !== null) {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / {{ usageLimits.limit_storage_gb }} GB</span>
+                  <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 sm:tw-flex-row sm:tw-gap-2">
+                    <svg class="tw-w-5 tw-h-5 tw-shrink-0 tw-rotate-[-90deg]" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--color-border-subtle)" stroke-width="4"/>
+                      @if (storageLimitBytes !== null) {
+                        @if (usageStorageBytes > storageLimitBytes) {
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444" stroke-width="4"
+                                  stroke-dasharray="99.9 0" stroke-dashoffset="0"/>
                         } @else {
-                          <span class="tw-text-[var(--color-muted)] tw-font-normal"> / Unlimited</span>
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke-width="4"
+                                  [attr.stroke]="usageBarStroke(usageStorageBytes, storageLimitBytes)"
+                                  stroke-linecap="round"
+                                  [attr.stroke-dasharray]="usageCircleDash(usageStorageBytes, storageLimitBytes)"
+                                  stroke-dashoffset="0"/>
                         }
+                      }
+                    </svg>
+                    <span class="tw-text-center sm:tw-text-left">
+                      <span class="tw-block tw-text-xs tw-whitespace-nowrap sm:tw-inline sm:tw-text-sm"
+                            [class.tw-text-danger]="storageLimitBytes !== null && usageStorageBytes > storageLimitBytes"
+                            [class.tw-text-warning]="storageLimitBytes !== null && usageStorageBytes === storageLimitBytes"
+                            [class.tw-text-[var(--color-muted)]]="!(storageLimitBytes !== null && usageStorageBytes >= storageLimitBytes)">
+                        {{ formatBytes(usageStorageBytes) }}&nbsp;/&nbsp;{{ storageLimitBytes !== null ? usageLimits.limit_storage_gb + ' GB' : '∞' }}
                       </span>
-                    </div>
-                    @if (storageLimitBytes !== null) {
-                      <div class="tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
-                        <div class="tw-h-full tw-rounded-full tw-transition-all"
-                             [class]="usageBarClass(usageStorageBytes, storageLimitBytes)"
-                             [style.width]="usageBarWidth(usageStorageBytes, storageLimitBytes)">
-                        </div>
-                      </div>
-                    }
+                      <span class="tw-block tw-text-xs tw-text-[var(--color-muted)] sm:tw-hidden">Storage</span>
+                      <span class="tw-hidden sm:tw-inline tw-text-sm tw-font-medium tw-text-[var(--color-body)]">&nbsp;Storage</span>
+                    </span>
                   </div>
 
                 </div>
+
+                <!-- Over-limit warning banners -->
+                @for (warning of overLimitWarnings; track warning.metric) {
+                  <div class="tw-mt-3 tw-text-sm tw-text-danger tw-bg-red-50 tw-border tw-border-red-200 tw-rounded tw-px-3 tw-py-2">
+                    You're using <strong>{{ warning.value }}</strong> of <strong>{{ warning.max }}</strong> included {{ warning.metric }}
+                    ({{ warning.over }} over).
+                    <button class="tw-font-semibold tw-underline tw-underline-offset-2 tw-bg-transparent tw-border-0 tw-p-0 tw-text-danger" (click)="scrollToPlans()">Upgrade your plan</button>
+                    to avoid service limits.
+                  </div>
+                }
+
               </div>
             }
           </div>
@@ -201,7 +235,7 @@
       }
 
       <!-- Billing cycle toggle -->
-      <div class="tw-flex tw-flex-col tw-items-center tw-mb-8">
+      <div #plansSection class="tw-flex tw-flex-col tw-items-center tw-mb-8 tw-scroll-mt-6 tw-px-6 sm:tw-px-0">
         <div class="sub-tab-toggle" role="group" aria-label="Billing cycle">
           <button type="button"
                   class="sub-tab-btn"
@@ -226,120 +260,122 @@
       <!-- Plan cards -->
       <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-5">
         @for (plan of plans; track plan.id) {
-          <div class="card tw-flex tw-flex-col tw-relative tw-overflow-hidden"
-               [class.tw-ring-2]="isCurrentPlan(plan)"
-               [style.--tw-ring-color]="isCurrentPlan(plan) ? 'var(--brand-color)' : 'transparent'">
+          @if (plan.is_public || isCurrentPlan(plan)) {
+            <div class="card tw-flex tw-flex-col tw-relative tw-overflow-hidden"
+                 [class.tw-ring-2]="isCurrentPlan(plan)"
+                 [style.--tw-ring-color]="isCurrentPlan(plan) ? 'var(--brand-color)' : 'transparent'">
 
-            <!-- Current plan indicator strip -->
-            @if (isCurrentPlan(plan)) {
-              <div class="tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-h-1" style="background: var(--brand-color)"></div>
-            }
+              <!-- Current plan indicator strip -->
+              @if (isCurrentPlan(plan)) {
+                <div class="tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-h-1" style="background: var(--brand-color)"></div>
+              }
 
-            <div class="card-body tw-flex tw-flex-col tw-gap-4 tw-pt-6">
+              <div class="card-body tw-flex tw-flex-col tw-gap-4 tw-pt-6">
 
-              <!-- Plan name + current badge -->
-              <div>
-                <div class="tw-flex tw-items-center tw-justify-between tw-mb-1">
-                  <h2 class="tw-font-heading tw-text-base tw-font-semibold tw-text-[var(--color-heading)] tw-mb-0">
-                    {{ plan.name }}
-                  </h2>
+                <!-- Plan name + current badge -->
+                <div>
+                  <div class="tw-flex tw-items-center tw-justify-between tw-mb-1">
+                    <h2 class="tw-font-heading tw-text-base tw-font-semibold tw-text-[var(--color-heading)] tw-mb-0">
+                      {{ plan.name }}
+                    </h2>
+                    @if (isCurrentPlan(plan)) {
+                      <span class="status-badge status-info tw-text-xs">Current</span>
+                    }
+                  </div>
+                  <!-- Price -->
+                  <div class="tw-mt-2">
+                    @if (plan.price_monthly === 0) {
+                      <span class="tw-font-heading tw-text-3xl tw-font-bold tw-text-[var(--color-heading)]">Free</span>
+                    } @else {
+                      <span class="tw-font-heading tw-text-3xl tw-font-bold tw-text-[var(--color-heading)]">
+                        ₱{{ displayPrice(plan) | number }}
+                      </span>
+                      <span class="tw-text-sm tw-text-[var(--color-muted)] tw-ml-1">
+                        /{{ billingCycle === 'monthly' ? 'mo' : 'yr' }}
+                      </span>
+                    }
+                  </div>
+                  @if (plan.price_monthly > 0 && billingCycle === 'annual') {
+                    <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mt-0.5">
+                      (₱{{ (plan.price_annual / 12) | number:'1.0-0' }}/mo billed annually)
+                    </p>
+                  }
+                </div>
+
+                <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
+
+                <!-- Inclusions -->
+                <div class="tw-flex tw-flex-col tw-gap-2 tw-text-sm">
+                  <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Inclusions</p>
+                  <div class="tw-flex tw-justify-between">
+                    <span class="tw-text-[var(--color-muted)]">Artists</span>
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_artists) }}</span>
+                  </div>
+                  <div class="tw-flex tw-justify-between">
+                    <span class="tw-text-[var(--color-muted)]">Releases / artist</span>
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_releases_per_artist) }}</span>
+                  </div>
+                  <div class="tw-flex tw-justify-between">
+                    <span class="tw-text-[var(--color-muted)]">Press campaigns / mo</span>
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_press_campaigns_per_month) }}</span>
+                  </div>
+                  <div class="tw-flex tw-justify-between">
+                    <span class="tw-text-[var(--color-muted)]">Sync pitches / mo</span>
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_sync_pitches_per_month) }}</span>
+                  </div>
+                  <div class="tw-flex tw-justify-between">
+                    <span class="tw-text-[var(--color-muted)]">Storage</span>
+                    <span class="tw-font-medium tw-text-[var(--color-body)]">
+                      {{ plan.limit_storage_gb === null ? '∞' : plan.limit_storage_gb + ' GB' }}
+                    </span>
+                  </div>
+                </div>
+
+                <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
+
+                <!-- Fees -->
+                <div class="tw-flex tw-flex-col tw-gap-2 tw-text-sm">
+                  <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Add-on Rates</p>
+                  <div class="tw-flex tw-flex-col tw-gap-0.5">
+                    <span class="tw-text-[var(--color-muted)]">Events</span>
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">{{ feeLabel(plan, 'event') }}</span>
+                      @if (feeSaving(plan, 'event'); as saving) {
+                        <span class="tw-text-xs tw-font-semibold tw-text-green-700 tw-bg-green-100 tw-rounded-full tw-px-2 tw-py-0.5">{{ saving }}</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="tw-flex tw-flex-col tw-gap-0.5">
+                    <span class="tw-text-[var(--color-muted)]">Fundraisers</span>
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <span class="tw-font-medium tw-text-[var(--color-body)]">{{ feeLabel(plan, 'fundraiser') }}</span>
+                      @if (feeSaving(plan, 'fundraiser'); as saving) {
+                        <span class="tw-text-xs tw-font-semibold tw-text-green-700 tw-bg-green-100 tw-rounded-full tw-px-2 tw-py-0.5">{{ saving }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="tw-mt-auto tw-pt-2">
                   @if (isCurrentPlan(plan)) {
-                    <span class="status-badge status-info tw-text-xs">Current</span>
-                  }
-                </div>
-                <!-- Price -->
-                <div class="tw-mt-2">
-                  @if (plan.price_monthly === 0) {
-                    <span class="tw-font-heading tw-text-3xl tw-font-bold tw-text-[var(--color-heading)]">Free</span>
+                    <button class="btn btn-secondary tw-w-full" disabled>Current plan</button>
+                  } @else if (plan.price_monthly === 0) {
+                    <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)]"
+                            (click)="selectPlan(plan)"
+                            [disabled]="actionLoading">
+                      Switch to {{ plan.name }}
+                    </button>
                   } @else {
-                    <span class="tw-font-heading tw-text-3xl tw-font-bold tw-text-[var(--color-heading)]">
-                      ₱{{ displayPrice(plan) | number }}
-                    </span>
-                    <span class="tw-text-sm tw-text-[var(--color-muted)] tw-ml-1">
-                      /{{ billingCycle === 'monthly' ? 'mo' : 'yr' }}
-                    </span>
+                    <button class="btn btn-primary tw-w-full" disabled title="Online subscriptions coming soon">
+                      Coming Soon
+                    </button>
                   }
                 </div>
-                @if (plan.price_monthly > 0 && billingCycle === 'annual') {
-                  <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mt-0.5">
-                    (₱{{ (plan.price_annual / 12) | number:'1.0-0' }}/mo billed annually)
-                  </p>
-                }
+
               </div>
-
-              <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
-
-              <!-- Inclusions -->
-              <div class="tw-flex tw-flex-col tw-gap-2 tw-text-sm">
-                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Inclusions</p>
-                <div class="tw-flex tw-justify-between">
-                  <span class="tw-text-[var(--color-muted)]">Artists</span>
-                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_artists) }}</span>
-                </div>
-                <div class="tw-flex tw-justify-between">
-                  <span class="tw-text-[var(--color-muted)]">Releases / artist</span>
-                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_releases_per_artist) }}</span>
-                </div>
-                <div class="tw-flex tw-justify-between">
-                  <span class="tw-text-[var(--color-muted)]">Press campaigns / mo</span>
-                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_press_campaigns_per_month) }}</span>
-                </div>
-                <div class="tw-flex tw-justify-between">
-                  <span class="tw-text-[var(--color-muted)]">Sync pitches / mo</span>
-                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_sync_pitches_per_month) }}</span>
-                </div>
-                <div class="tw-flex tw-justify-between">
-                  <span class="tw-text-[var(--color-muted)]">Storage</span>
-                  <span class="tw-font-medium tw-text-[var(--color-body)]">
-                    {{ plan.limit_storage_gb === null ? 'Unlimited' : plan.limit_storage_gb + ' GB' }}
-                  </span>
-                </div>
-              </div>
-
-              <hr class="tw-my-0 tw-border-[var(--color-border-subtle)]">
-
-              <!-- Fees -->
-              <div class="tw-flex tw-flex-col tw-gap-2 tw-text-sm">
-                <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-text-[var(--color-muted)] tw-font-semibold tw-mb-1">Add-on Rates</p>
-                <div class="tw-flex tw-flex-col tw-gap-0.5">
-                  <span class="tw-text-[var(--color-muted)]">Events</span>
-                  <div class="tw-flex tw-items-center tw-gap-2">
-                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ feeLabel(plan, 'event') }}</span>
-                    @if (feeSaving(plan, 'event'); as saving) {
-                      <span class="tw-text-xs tw-font-semibold tw-text-green-700 tw-bg-green-100 tw-rounded-full tw-px-2 tw-py-0.5">{{ saving }}</span>
-                    }
-                  </div>
-                </div>
-                <div class="tw-flex tw-flex-col tw-gap-0.5">
-                  <span class="tw-text-[var(--color-muted)]">Fundraisers</span>
-                  <div class="tw-flex tw-items-center tw-gap-2">
-                    <span class="tw-font-medium tw-text-[var(--color-body)]">{{ feeLabel(plan, 'fundraiser') }}</span>
-                    @if (feeSaving(plan, 'fundraiser'); as saving) {
-                      <span class="tw-text-xs tw-font-semibold tw-text-green-700 tw-bg-green-100 tw-rounded-full tw-px-2 tw-py-0.5">{{ saving }}</span>
-                    }
-                  </div>
-                </div>
-              </div>
-
-              <!-- CTA -->
-              <div class="tw-mt-auto tw-pt-2">
-                @if (isCurrentPlan(plan)) {
-                  <button class="btn btn-secondary tw-w-full" disabled>Current plan</button>
-                } @else if (plan.price_monthly === 0) {
-                  <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)]"
-                          (click)="selectPlan(plan)"
-                          [disabled]="actionLoading">
-                    Switch to {{ plan.name }}
-                  </button>
-                } @else {
-                  <button class="btn btn-primary tw-w-full" disabled title="Online subscriptions coming soon">
-                    Coming Soon
-                  </button>
-                }
-              </div>
-
             </div>
-          </div>
+          }
         }
       </div>
 
@@ -365,7 +401,7 @@
       }
 
       <!-- Footer note -->
-      <p class="tw-text-xs tw-text-[var(--color-muted)] tw-text-center tw-mt-8">
+      <p class="tw-text-xs tw-text-[var(--color-muted)] tw-text-center tw-mt-8 tw-px-6 sm:tw-px-0">
         Subscriptions are billed via PayMongo. Accepted: Visa, Mastercard, Maya.
         Processing fees still apply for payment gateway charges.
       </p>

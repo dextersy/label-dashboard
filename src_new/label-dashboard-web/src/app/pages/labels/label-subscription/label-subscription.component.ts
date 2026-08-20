@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -16,6 +16,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
   styleUrls: ['./label-subscription.component.scss'],
 })
 export class LabelSubscriptionComponent implements OnInit {
+  @ViewChild('plansSection') plansSection!: ElementRef<HTMLElement>;
   loading = true;
   actionLoading = false;
 
@@ -103,9 +104,74 @@ export class LabelSubscriptionComponent implements OnInit {
   usageBarClass(used: number, limit: number | null): string {
     if (limit === null) return '';
     const pct = (used / limit) * 100;
-    if (pct >= 100) return 'tw-bg-red-500';
+    if (pct > 100) return 'tw-bg-red-500';
+    if (pct === 100) return 'tw-bg-amber-500';
     if (pct >= 80) return 'tw-bg-amber-500';
     return 'tw-bg-[var(--brand-color)]';
+  }
+
+  // SVG circumference for r=15.9 ≈ 99.9 ≈ 100
+  private readonly CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 15.9;
+
+  usageCircleDash(used: number, limit: number): string {
+    const pct = Math.min(1, used / limit);
+    const filled = pct * this.CIRCLE_CIRCUMFERENCE;
+    return `${filled} ${this.CIRCLE_CIRCUMFERENCE - filled}`;
+  }
+
+  usageBarStroke(used: number, limit: number): string {
+    // Over-limit is handled in template (full red ring); this handles normal range
+    if (used === limit) return '#d97706'; // amber (at limit)
+    if (used / limit >= 0.8) return '#d97706'; // amber (near limit)
+    return 'var(--brand-color)';
+  }
+
+  get anyOverLimit(): boolean {
+    if (!this.usageLimits) return false;
+    return (
+      (this.usageLimits.limit_artists !== null && this.usageArtists > this.usageLimits.limit_artists) ||
+      (this.usageLimits.limit_press_campaigns_per_month !== null && this.usagePressCampaignsThisMonth > this.usageLimits.limit_press_campaigns_per_month) ||
+      (this.usageLimits.limit_sync_pitches_per_month !== null && this.usageSyncPitchesThisMonth > this.usageLimits.limit_sync_pitches_per_month) ||
+      (this.storageLimitBytes !== null && this.usageStorageBytes > this.storageLimitBytes)
+    );
+  }
+
+  get overLimitWarnings(): Array<{ metric: string; value: string; max: string; over: string }> {
+    if (!this.usageLimits) return [];
+    const warnings = [];
+    if (this.usageLimits.limit_artists !== null && this.usageArtists > this.usageLimits.limit_artists) {
+      warnings.push({
+        metric: 'artists',
+        value: String(this.usageArtists),
+        max: String(this.usageLimits.limit_artists),
+        over: String(this.usageArtists - this.usageLimits.limit_artists),
+      });
+    }
+    if (this.usageLimits.limit_press_campaigns_per_month !== null && this.usagePressCampaignsThisMonth > this.usageLimits.limit_press_campaigns_per_month) {
+      warnings.push({
+        metric: 'press campaigns this month',
+        value: String(this.usagePressCampaignsThisMonth),
+        max: String(this.usageLimits.limit_press_campaigns_per_month),
+        over: String(this.usagePressCampaignsThisMonth - this.usageLimits.limit_press_campaigns_per_month),
+      });
+    }
+    if (this.usageLimits.limit_sync_pitches_per_month !== null && this.usageSyncPitchesThisMonth > this.usageLimits.limit_sync_pitches_per_month) {
+      warnings.push({
+        metric: 'sync pitches this month',
+        value: String(this.usageSyncPitchesThisMonth),
+        max: String(this.usageLimits.limit_sync_pitches_per_month),
+        over: String(this.usageSyncPitchesThisMonth - this.usageLimits.limit_sync_pitches_per_month),
+      });
+    }
+    if (this.storageLimitBytes !== null && this.usageStorageBytes > this.storageLimitBytes) {
+      warnings.push({
+        metric: 'storage',
+        value: this.formatBytes(this.usageStorageBytes),
+        max: this.usageLimits.limit_storage_gb + ' GB',
+        over: this.formatBytes(this.usageStorageBytes - this.storageLimitBytes),
+      });
+    }
+    return warnings;
   }
 
   get totalReleases(): number {
@@ -266,6 +332,10 @@ export class LabelSubscriptionComponent implements OnInit {
         this.actionLoading = false;
       },
     });
+  }
+
+  scrollToPlans(): void {
+    this.plansSection.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async cancelSubscription(): Promise<void> {
