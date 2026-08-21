@@ -47,6 +47,8 @@ interface PublicEventView {
   external_ticket_link?: string | null;
   like_count?: number;
   user_liked?: boolean;
+  member_discount_type?: 'fixed' | 'percent' | null;
+  member_discount_amount?: number | null;
 }
 
 @Component({
@@ -175,30 +177,63 @@ interface PublicEventView {
                 }
 
                 <!-- Status / CTA + attending count -->
-                <div class="flex items-center gap-5">
-                  @if (event()!.ticketing_enabled === false) {
-                    <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
-                      <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                      Listing Only
-                    </div>
-                  } @else if (event()!.is_closed) {
-                    <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
-                      <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
-                      Tickets Closed
-                    </div>
-                  } @else if (event()!.external_ticket_link) {
-                    <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
-                      class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
-                      <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
-                      <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }} · External site</span>
-                    </a>
-                  } @else if (event()!.buy_shortlink) {
-                    <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
-                      class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
-                      <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets →</span>
-                      <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }}</span>
-                    </a>
-                  }
+                <div class="flex flex-wrap items-center gap-4">
+                  <div class="flex flex-wrap items-center gap-3">
+                    @if (event()!.ticketing_enabled === false) {
+                      <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
+                        Listing Only
+                      </div>
+                    } @else if (event()!.is_closed) {
+                      <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
+                        Tickets Closed
+                      </div>
+                    } @else if (event()!.external_ticket_link) {
+                      <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
+                        <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
+                        <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }} · External site</span>
+                      </a>
+                    } @else if (event()!.buy_shortlink) {
+                      <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
+                        class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
+                        <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets →</span>
+                        <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }}</span>
+                      </a>
+                    }
+
+                    @if (event()!.member_discount_type && event()!.member_discount_amount) {
+                      @if (isAudienceLoggedIn()) {
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 border border-yellow-400/40 bg-yellow-400/10">
+                          <svg class="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                          </svg>
+                          <span class="text-xs font-mono text-yellow-400 uppercase tracking-wide">
+                            @if (event()!.member_discount_type === 'fixed') {
+                              <strong>₱{{ event()!.member_discount_amount | number:'1.0-0' }} off</strong> for <strong>Your Scene&#8482;</strong> members
+                            } @else {
+                              <strong>{{ event()!.member_discount_amount }}% off</strong> for <strong>Your Scene&#8482;</strong> members
+                            }
+                          </span>
+                        </div>
+                      } @else {
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 border border-white/15 bg-white/5">
+                          <svg class="w-3.5 h-3.5 text-white/40 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                          </svg>
+                          <span class="text-xs font-mono text-white/40 uppercase tracking-wide">
+                            @if (event()!.member_discount_type === 'fixed') {
+                              <strong>₱{{ event()!.member_discount_amount | number:'1.0-0' }} off</strong> for <strong>Your Scene&#8482;</strong> members ·
+                            } @else {
+                              <strong>{{ event()!.member_discount_amount }}% off</strong> for <strong>Your Scene&#8482;</strong> members ·
+                            }
+                          </span>
+                          <a routerLink="/login" [queryParams]="{ mode: 'audience' }" class="text-xs font-mono text-yellow-400/80 hover:text-yellow-400 uppercase tracking-wide transition-colors">Sign up</a>
+                        </div>
+                      }
+                    }
+                  </div>
 
                   @if (event()!.tickets_sold && event()!.tickets_sold! > 0) {
                     <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10">
