@@ -34,6 +34,14 @@
   }
 
 
+  &__discount {
+    margin-top: 6px;
+    padding-left: calc(15px + 6px);
+    font-size: 0.75rem;
+    color: #15803d;
+    font-weight: 600;
+  }
+
   &__claimed {
     margin-top: 6px;
     padding-left: calc(15px + 6px);

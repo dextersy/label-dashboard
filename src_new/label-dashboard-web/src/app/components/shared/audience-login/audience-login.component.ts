@@ -13,6 +13,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class AudienceLoginComponent implements OnInit, OnDestroy {
   @Input() customNote?: string;
+  @Input() discountMessage?: string;
   @Output() loggedIn = new EventEmitter<AudienceUser>();
   @Output() loggedOut = new EventEmitter<void>();
 

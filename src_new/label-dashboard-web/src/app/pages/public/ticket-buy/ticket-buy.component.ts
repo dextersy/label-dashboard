@@ -310,6 +310,15 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return this.totalAmount - this.memberDiscount;
   }
 
+  getMemberDiscountCongrats(): string {
+    if (!this.audienceAuthService.isLoggedIn()) return '';
+    if (!this.event?.member_discount_type || !this.event?.member_discount_amount) return '';
+    if (this.event.member_discount_type === 'percent') {
+      return `Congratulations, you've got ${this.event.member_discount_amount}% off this order!`;
+    }
+    return `Congratulations, you've got \u20B1${this.formatPrice(this.event.member_discount_amount)} off this order!`;
+  }
+
   getMemberDiscountTeaser(): string {
     if (!this.event?.member_discount_type || !this.event?.member_discount_amount) return '';
     if (this.event.member_discount_type === 'percent') {

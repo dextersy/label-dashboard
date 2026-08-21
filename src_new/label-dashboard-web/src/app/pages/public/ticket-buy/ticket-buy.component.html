@@ -141,6 +141,7 @@
           <div class="tw-mb-5">
             <app-audience-login
               [customNote]="getMemberDiscountTeaser() || undefined"
+              [discountMessage]="getMemberDiscountCongrats() || undefined"
               (loggedIn)="onAudienceLoggedIn($event)"
               (loggedOut)="onAudienceLoggedOut()">
             </app-audience-login>
