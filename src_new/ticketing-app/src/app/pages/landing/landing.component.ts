@@ -20,6 +20,7 @@ interface PublicEvent {
   is_closed: boolean;
   tickets_sold?: number;
   brand_name?: string;
+  brand_id?: number;
   event_type?: string | null;
   tags?: { id: number; name: string }[];
   ticketing_enabled?: boolean;
@@ -200,7 +201,12 @@ interface PublicBrand {
                 <!-- Info -->
                 <div class="p-4 flex flex-col flex-1">
                   @if (event.brand_name) {
-                    <p class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate">{{ event.brand_name }}</p>
+                    @if (event.brand_id) {
+                      <a [routerLink]="['/organizers', event.brand_id]"
+                        class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate hover:text-yellow-400/70 transition-colors inline-block">{{ event.brand_name }}</a>
+                    } @else {
+                      <p class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate">{{ event.brand_name }}</p>
+                    }
                   }
                   <a [routerLink]="['/events', event.id]">
                     <h3 class="font-black text-white text-base leading-snug line-clamp-2 mb-3 uppercase hover:text-yellow-400 transition-colors">{{ event.title }}</h3>
@@ -409,7 +415,7 @@ export class LandingComponent implements OnInit, OnDestroy {
       `${environment.apiUrl}/public/events/domain/${environment.publicListingDomain}`
     ).subscribe({
       next: (res) => {
-        const events = res.brands.flatMap(b => b.events.map(e => ({ ...e, brand_name: b.name })));
+        const events = res.brands.flatMap(b => b.events.map(e => ({ ...e, brand_name: b.name, brand_id: b.id })));
         events.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
         this.allEvents.set(events);
         this.loading.set(false);
