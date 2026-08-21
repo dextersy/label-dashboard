@@ -18,10 +18,10 @@
       </div>
 
       <button class="switch-workspace-btn"
-              *ngIf="availableWorkspaceInfos.length > 1"
-              (click)="openWorkspaceSwitchModal()">
+              *ngIf="availableWorkspaceInfos.length > 1 && !(isCollapsed && !isMobileView)"
+              (click)="openWorkspaceSwitchModal()"
+              title="Switch workspace">
         <app-icon name="shuffle" iconOnly />
-        <span>Switch workspace</span>
       </button>
     </div>
 
