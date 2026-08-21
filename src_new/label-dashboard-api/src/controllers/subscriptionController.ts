@@ -350,6 +350,105 @@ export const devOverridePlan = async (req: Request, res: Response): Promise<void
   }
 };
 
+// Fields that may be set by the superadmin UI. PayMongo plan IDs are intentionally
+// excluded — they are managed internally by syncPlanToPayMongo and must never be
+// overwritten via the API.
+const PLAN_EDITABLE_FIELDS = [
+  'name',
+  'sort_order',
+  'is_active',
+  'is_public',
+  'is_default_free',
+  'price_monthly',
+  'price_annual',
+  'limit_artists',
+  'limit_releases_per_artist',
+  'limit_press_campaigns_per_month',
+  'limit_sync_pitches_per_month',
+  'limit_storage_gb',
+  'limit_admin_users',
+  'default_music_transaction_fixed_fee',
+  'default_music_revenue_percentage_fee',
+  'default_music_fee_revenue_type',
+  'default_event_transaction_fixed_fee',
+  'default_event_revenue_percentage_fee',
+  'default_event_fee_revenue_type',
+  'default_fundraiser_transaction_fixed_fee',
+  'default_fundraiser_revenue_percentage_fee',
+  'default_fundraiser_fee_revenue_type',
+  'feature_music_workspace',
+  'feature_campaigns_workspace',
+  'feature_sublabels',
+  'feature_artist_profiles',
+  'feature_music_releases',
+  'feature_press_campaigns',
+  'feature_sync_licensing',
+  'feature_events',
+  'feature_fundraisers',
+] as const;
+
+function pickEditableFields(body: any): Partial<Record<typeof PLAN_EDITABLE_FIELDS[number], any>> {
+  const result: any = {};
+  for (const field of PLAN_EDITABLE_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      result[field] = body[field];
+    }
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/subscription/admin/plans  (superadmin only)
+// Returns ALL plans (public and non-public, active and inactive) for management.
+// PayMongo plan IDs are excluded from the response.
+// ---------------------------------------------------------------------------
+export const getAdminPlans = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const plans = await Plan.findAll({
+      order: [['sort_order', 'ASC'], ['id', 'ASC']],
+      attributes: { exclude: ['paymongo_plan_id_monthly', 'paymongo_plan_id_annual'] },
+    });
+    res.json({ plans });
+  } catch (error: any) {
+    console.error('getAdminPlans error:', error);
+    res.status(500).json({ error: 'Failed to load plans' });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// POST /api/subscription/admin/plans  (superadmin only)
+// Creates a new plan. Only whitelisted fields are accepted.
+// ---------------------------------------------------------------------------
+export const createPlan = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const plan = await Plan.create(pickEditableFields(req.body) as any);
+    res.status(201).json({ plan });
+  } catch (error: any) {
+    console.error('createPlan error:', error);
+    res.status(500).json({ error: 'Failed to create plan' });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// PUT /api/subscription/admin/plans/:id  (superadmin only)
+// Updates an existing plan. Only whitelisted fields are accepted.
+// ---------------------------------------------------------------------------
+export const updatePlan = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const plan = await Plan.findByPk(id as string);
+    if (!plan) {
+      res.status(404).json({ error: 'Plan not found' });
+      return;
+    }
+    await plan.update(pickEditableFields(req.body));
+    res.json({ plan });
+  } catch (error: any) {
+    console.error('updatePlan error:', error);
+    res.status(500).json({ error: 'Failed to update plan' });
+  }
+};
+
 // ---------------------------------------------------------------------------
 // POST /api/subscription/webhook
 // Public endpoint — PayMongo subscription lifecycle webhook.

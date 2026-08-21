@@ -33,6 +33,16 @@ export interface Plan {
   sort_order: number;
 }
 
+export interface AdminPlan extends Plan {
+  default_music_transaction_fixed_fee: number;
+  default_music_revenue_percentage_fee: number;
+  default_music_fee_revenue_type: 'net' | 'gross';
+  is_active: boolean;
+  is_default_free: boolean;
+}
+
+export type PlanInput = Partial<Omit<AdminPlan, 'id'>>;
+
 export interface EffectiveLimits {
   limit_artists: number | null;
   limit_releases_per_artist: number | null;
@@ -98,5 +108,17 @@ export class SubscriptionService {
       plan_id: planId,
       billing_cycle: billingCycle,
     });
+  }
+
+  getAdminPlans(): Observable<{ plans: AdminPlan[] }> {
+    return this.http.get<{ plans: AdminPlan[] }>(`${this.apiUrl}/admin/plans`);
+  }
+
+  createAdminPlan(data: PlanInput): Observable<{ plan: AdminPlan }> {
+    return this.http.post<{ plan: AdminPlan }>(`${this.apiUrl}/admin/plans`, data);
+  }
+
+  updateAdminPlan(id: number, data: PlanInput): Observable<{ plan: AdminPlan }> {
+    return this.http.put<{ plan: AdminPlan }>(`${this.apiUrl}/admin/plans/${id}`, data);
   }
 }

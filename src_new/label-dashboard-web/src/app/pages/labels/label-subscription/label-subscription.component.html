@@ -7,11 +7,20 @@
     <!-- Page heading -->
     <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6 tw-px-6 sm:tw-px-0">
       <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-        <h3 class="tw-mb-2">
-          <app-icon name="credit-card" class="tw-mr-2" />
-          Subscription &amp; Billing
-        </h3>
-        <p class="tw-mb-0 tw-text-muted">Manage your plan and billing cycle.</p>
+        <div class="tw-flex tw-items-start tw-justify-between tw-gap-4">
+          <div>
+            <h3 class="tw-mb-2">
+              <app-icon name="credit-card" class="tw-mr-2" />
+              Subscription &amp; Billing
+            </h3>
+            <p class="tw-mb-0 tw-text-muted">Manage your plan and billing cycle.</p>
+          </div>
+          @if (isSuperadmin) {
+            <a [routerLink]="['/admin/plans']" class="btn btn-icon tw-shrink-0" title="Manage plans">
+              <app-icon name="edit" />
+            </a>
+          }
+        </div>
         <p class="tw-mt-3 tw-mb-0 tw-text-sm tw-text-[var(--color-muted)] tw-bg-[var(--color-surface-subtle)] tw-rounded tw-px-3 tw-py-2">
           Online subscriptions are coming soon.
           <a href="mailto:support@melt-records.com" class="tw-text-[var(--brand-color)] tw-font-medium tw-inline-flex tw-items-center tw-gap-0.5">

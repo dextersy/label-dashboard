@@ -1,6 +1,6 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits } from '../../../services/subscription.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -11,7 +11,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 @Component({
   selector: 'app-label-subscription',
-  imports: [CommonModule, BreadcrumbComponent, IconComponent],
+  imports: [CommonModule, BreadcrumbComponent, IconComponent, RouterLink],
   templateUrl: './label-subscription.component.html',
   styleUrls: ['./label-subscription.component.scss'],
 })
@@ -34,6 +34,15 @@ export class LabelSubscriptionComponent implements OnInit {
   returnStatus: 'success' | 'pending' | null = null;
 
   readonly isDev = !environment.production;
+
+  get isSuperadmin(): boolean {
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser') ?? '{}');
+      return !!user?.is_superadmin;
+    } catch {
+      return false;
+    }
+  }
 
   constructor(
     private subscriptionService: SubscriptionService,

@@ -1,0 +1,346 @@
+<div class="tw-flex tw-flex-col" style="min-height: calc(100vh - 130px)">
+
+  <app-breadcrumb></app-breadcrumb>
+
+  <div class="tw-py-6 tw-max-w-5xl tw-mx-auto tw-w-full sm:tw-px-6">
+
+    <!-- Page heading -->
+    <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6 tw-px-6 sm:tw-px-0">
+      <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-items-center tw-justify-between tw-gap-4">
+        <div>
+          <h3 class="tw-mb-1">
+            <app-icon name="credit-card" class="tw-mr-2" />
+            Plan Management
+          </h3>
+          <p class="tw-mb-0 tw-text-muted tw-text-sm">Create and edit subscription plans. Superadmin only.</p>
+        </div>
+        <button class="btn btn-primary btn-sm tw-shrink-0" (click)="openNewForm()">
+          <app-icon name="plus" class="tw-mr-1" />
+          New Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    @if (loading) {
+      <div class="tw-flex tw-justify-center tw-py-20">
+        <div class="spinner-border text-secondary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }
+
+    @if (!loading) {
+
+      <!-- New Plan Form -->
+      @if (showNewForm) {
+        <div class="card tw-mb-6 tw-border-2 tw-border-[var(--brand-color)]">
+          <div class="card-body">
+            <div class="tw-flex tw-items-center tw-justify-between tw-mb-4">
+              <h5 class="tw-mb-0 tw-font-heading tw-font-semibold">New Plan</h5>
+              <button class="btn btn-icon" (click)="cancelNew()">
+                <app-icon name="x" />
+              </button>
+            </div>
+            <ng-container *ngTemplateOutlet="planFormTpl; context: { $implicit: newForm, saving: newFormSaving }"></ng-container>
+            <div class="tw-flex tw-gap-3 tw-mt-5 tw-pt-4 tw-border-t tw-border-[var(--color-border-subtle)]">
+              <button class="btn btn-primary" (click)="createPlan()" [disabled]="newFormSaving">
+                @if (newFormSaving) { <span class="spinner-border spinner-border-sm tw-mr-1"></span> }
+                Create Plan
+              </button>
+              <button class="btn btn-ghost" (click)="cancelNew()" [disabled]="newFormSaving">Cancel</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Public Plans -->
+      <div class="tw-mb-6">
+        <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3 tw-px-6 sm:tw-px-0">
+          Public Plans ({{ publicPlans.length }})
+        </p>
+        @if (publicPlans.length === 0) {
+          <div class="tw-text-sm tw-text-[var(--color-muted)] tw-px-6 sm:tw-px-0">No public plans.</div>
+        }
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-3">
+          @for (plan of publicPlans; track plan.id) {
+            <ng-container *ngTemplateOutlet="planRowTpl; context: { $implicit: plan }"></ng-container>
+          }
+        </div>
+      </div>
+
+      <!-- Hidden / Non-public Plans -->
+      <div class="tw-mb-6">
+        <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3 tw-px-6 sm:tw-px-0">
+          Hidden Plans ({{ hiddenPlans.length }})
+        </p>
+        @if (hiddenPlans.length === 0) {
+          <div class="tw-text-sm tw-text-[var(--color-muted)] tw-px-6 sm:tw-px-0">No hidden plans.</div>
+        }
+        <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-3">
+          @for (plan of hiddenPlans; track plan.id) {
+            <ng-container *ngTemplateOutlet="planRowTpl; context: { $implicit: plan }"></ng-container>
+          }
+        </div>
+      </div>
+
+    }
+  </div>
+</div>
+
+<!-- Plan row template -->
+<ng-template #planRowTpl let-plan>
+  <div class="card tw-overflow-hidden" [class.tw-opacity-60]="!plan.is_active">
+
+    <!-- View mode -->
+    @if (!plan._isEditing) {
+      <div class="card-body tw-flex tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-items-center sm:tw-justify-between">
+        <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
+          <div class="tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
+            <span class="tw-font-heading tw-font-semibold tw-text-[var(--color-heading)]">{{ plan.name }}</span>
+            <span class="status-badge" [class.status-success]="plan.is_active" [class.status-secondary]="!plan.is_active">
+              {{ plan.is_active ? 'Active' : 'Inactive' }}
+            </span>
+            @if (plan.is_public) {
+              <span class="status-badge status-info">Public</span>
+            }
+            @if (plan.is_default_free) {
+              <span class="status-badge status-secondary">Default Free</span>
+            }
+          </div>
+          <div class="tw-flex tw-flex-wrap tw-gap-x-4 tw-gap-y-0.5 tw-text-sm tw-text-[var(--color-muted)]">
+            <span>₱{{ plan.price_monthly | number }}/mo · ₱{{ plan.price_annual | number }}/yr</span>
+            <span>Artists: {{ limitDisplay(plan.limit_artists) }}</span>
+            <span>Storage: {{ plan.limit_storage_gb === null ? '∞' : plan.limit_storage_gb + ' GB' }}</span>
+            <span>Sort: {{ plan.sort_order }}</span>
+          </div>
+        </div>
+        <button class="btn btn-icon tw-shrink-0 tw-self-start sm:tw-self-center" (click)="startEdit(plan)" title="Edit plan">
+          <app-icon name="edit" />
+        </button>
+      </div>
+    }
+
+    <!-- Edit mode -->
+    @if (plan._isEditing) {
+      <div class="card-body">
+        <div class="tw-flex tw-items-center tw-justify-between tw-mb-4">
+          <h5 class="tw-mb-0 tw-font-heading tw-font-semibold">Editing: {{ plan.name }}</h5>
+          <button class="btn btn-icon" (click)="cancelEdit(plan)">
+            <app-icon name="x" />
+          </button>
+        </div>
+        <ng-container *ngTemplateOutlet="planFormTpl; context: { $implicit: plan._form, saving: plan._saving }"></ng-container>
+        <div class="tw-flex tw-gap-3 tw-mt-5 tw-pt-4 tw-border-t tw-border-[var(--color-border-subtle)]">
+          <button class="btn btn-primary" (click)="savePlan(plan)" [disabled]="plan._saving">
+            @if (plan._saving) { <span class="spinner-border spinner-border-sm tw-mr-1"></span> }
+            Save
+          </button>
+          <button class="btn btn-ghost" (click)="cancelEdit(plan)" [disabled]="plan._saving">Cancel</button>
+        </div>
+      </div>
+    }
+
+  </div>
+</ng-template>
+
+<!-- Shared plan form fields template -->
+<ng-template #planFormTpl let-form let-saving="saving">
+  <div class="tw-flex tw-flex-col tw-gap-5">
+
+    <!-- Basic -->
+    <div>
+      <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3">Basic</p>
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-3">
+        <div class="sm:tw-col-span-2">
+          <label class="tw-label">Name *</label>
+          <input class="tw-input tw-w-full" type="text" [(ngModel)]="form.name" placeholder="e.g. Pro" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Sort Order</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.sort_order" min="0" [disabled]="saving">
+        </div>
+        <div class="tw-flex tw-flex-col tw-gap-2">
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="sw_active_{{form.name}}" [(ngModel)]="form.is_active" [disabled]="saving">
+            <label class="form-check-label tw-text-sm" [for]="'sw_active_' + form.name">Active</label>
+          </div>
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="sw_public_{{form.name}}" [(ngModel)]="form.is_public" [disabled]="saving">
+            <label class="form-check-label tw-text-sm" [for]="'sw_public_' + form.name">Public (visible to users)</label>
+          </div>
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="sw_free_{{form.name}}" [(ngModel)]="form.is_default_free" [disabled]="saving">
+            <label class="form-check-label tw-text-sm" [for]="'sw_free_' + form.name">Default Free plan</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="tw-border-[var(--color-border-subtle)] tw-my-0">
+
+    <!-- Pricing -->
+    <div>
+      <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3">Pricing</p>
+      <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-3">
+        <div>
+          <label class="tw-label">Monthly Price (₱)</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.price_monthly" min="0" step="0.01" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Annual Price (₱)</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.price_annual" min="0" step="0.01" [disabled]="saving">
+        </div>
+      </div>
+    </div>
+
+    <hr class="tw-border-[var(--color-border-subtle)] tw-my-0">
+
+    <!-- Limits -->
+    <div>
+      <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-1">Limits</p>
+      <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mb-3">Leave blank for unlimited (null).</p>
+      <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-3">
+        <div>
+          <label class="tw-label">Artists</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.limit_artists" min="0" placeholder="∞" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Releases / Artist</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.limit_releases_per_artist" min="0" placeholder="∞" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Press Campaigns / Mo</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.limit_press_campaigns_per_month" min="0" placeholder="∞" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Sync Pitches / Mo</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.limit_sync_pitches_per_month" min="0" placeholder="∞" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Storage (GB)</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.limit_storage_gb" min="0" step="0.01" placeholder="∞" [disabled]="saving">
+        </div>
+        <div>
+          <label class="tw-label">Admin Users</label>
+          <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.limit_admin_users" min="0" placeholder="∞" [disabled]="saving">
+        </div>
+      </div>
+    </div>
+
+    <hr class="tw-border-[var(--color-border-subtle)] tw-my-0">
+
+    <!-- Fees -->
+    <div>
+      <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3">Default Fees</p>
+      <div class="tw-flex tw-flex-col tw-gap-4">
+
+        @for (type of ['music', 'event', 'fundraiser']; track type) {
+          <div>
+            <p class="tw-text-xs tw-font-semibold tw-text-[var(--color-body)] tw-mb-2 tw-capitalize">{{ type }}</p>
+            <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-3">
+              @if (type === 'music') {
+                <div>
+                  <label class="tw-label">Fixed Fee (₱)</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_music_transaction_fixed_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">% Fee</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_music_revenue_percentage_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">Revenue Basis</label>
+                  <select class="tw-input tw-w-full" [(ngModel)]="form.default_music_fee_revenue_type" [disabled]="saving">
+                    <option value="net">Net</option>
+                    <option value="gross">Gross</option>
+                  </select>
+                </div>
+              }
+              @if (type === 'event') {
+                <div>
+                  <label class="tw-label">Fixed Fee (₱)</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_event_transaction_fixed_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">% Fee</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_event_revenue_percentage_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">Revenue Basis</label>
+                  <select class="tw-input tw-w-full" [(ngModel)]="form.default_event_fee_revenue_type" [disabled]="saving">
+                    <option value="net">Net</option>
+                    <option value="gross">Gross</option>
+                  </select>
+                </div>
+              }
+              @if (type === 'fundraiser') {
+                <div>
+                  <label class="tw-label">Fixed Fee (₱)</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_fundraiser_transaction_fixed_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">% Fee</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_fundraiser_revenue_percentage_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">Revenue Basis</label>
+                  <select class="tw-input tw-w-full" [(ngModel)]="form.default_fundraiser_fee_revenue_type" [disabled]="saving">
+                    <option value="net">Net</option>
+                    <option value="gross">Gross</option>
+                  </select>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+    </div>
+
+    <hr class="tw-border-[var(--color-border-subtle)] tw-my-0">
+
+    <!-- Feature flags -->
+    <div>
+      <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3">Features</p>
+      <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-2">
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_music_ws_{{form.name}}" [(ngModel)]="form.feature_music_workspace" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_music_ws_' + form.name">Music Workspace</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_campaigns_ws_{{form.name}}" [(ngModel)]="form.feature_campaigns_workspace" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_campaigns_ws_' + form.name">Campaigns Workspace</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_sublabels_{{form.name}}" [(ngModel)]="form.feature_sublabels" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_sublabels_' + form.name">Sub-labels</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_profiles_{{form.name}}" [(ngModel)]="form.feature_artist_profiles" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_profiles_' + form.name">Artist Profiles</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_releases_{{form.name}}" [(ngModel)]="form.feature_music_releases" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_releases_' + form.name">Music Releases</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_press_{{form.name}}" [(ngModel)]="form.feature_press_campaigns" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_press_' + form.name">Press Campaigns</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_sync_{{form.name}}" [(ngModel)]="form.feature_sync_licensing" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_sync_' + form.name">Sync Licensing</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_events_{{form.name}}" [(ngModel)]="form.feature_events" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_events_' + form.name">Events</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_fundraisers_{{form.name}}" [(ngModel)]="form.feature_fundraisers" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_fundraisers_' + form.name">Fundraisers</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ng-template>
