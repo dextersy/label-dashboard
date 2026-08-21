@@ -24,13 +24,17 @@
   padding-bottom: 1rem;
 }
 
+/* ─── Workspace header ───────────────────────────────────────────── */
+.workspace-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
 /* ─── Workspace indicator ────────────────────────────────────────── */
 .workspace-indicator {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid #e9ecef;
+  padding: 14px 16px 4px;
   cursor: default;
   overflow: hidden;
 
@@ -80,7 +84,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 6px 12px 4px;
+  margin: 2px 12px 6px;
   padding: 5px 10px;
   background: none;
   border: none;
@@ -245,7 +249,6 @@
     margin: 0;
     border-radius: 0;
     border: none;
-    border-bottom: 1px solid #e9ecef;
     background: transparent;
     box-shadow: none;
   }

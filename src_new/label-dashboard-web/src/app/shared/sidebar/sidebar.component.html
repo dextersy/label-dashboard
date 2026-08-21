@@ -6,23 +6,24 @@
   <div class="sidebar-wrapper">
 
     <!-- Workspace indicator -->
-    <div class="workspace-indicator"
-         *ngIf="currentWorkspace"
-         [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1"
-         (click)="onWorkspaceIndicatorClick()"
-         [title]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1 ? 'Switch workspace' : ''">
-      <span class="workspace-icon-wrap">
-        <app-icon [name]="getWorkspaceInfo(currentWorkspace).icon" iconOnly />
-      </span>
-      <span class="workspace-label">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
-    </div>
+    <div class="workspace-header" *ngIf="currentWorkspace">
+      <div class="workspace-indicator"
+           [class.workspace-indicator-clickable]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1"
+           (click)="onWorkspaceIndicatorClick()"
+           [title]="isCollapsed && !isMobileView && availableWorkspaceInfos.length > 1 ? 'Switch workspace' : ''">
+        <span class="workspace-icon-wrap">
+          <app-icon [name]="getWorkspaceInfo(currentWorkspace).icon" iconOnly />
+        </span>
+        <span class="workspace-label">{{ getWorkspaceInfo(currentWorkspace).label }}</span>
+      </div>
 
-    <button class="switch-workspace-btn"
-            *ngIf="availableWorkspaceInfos.length > 1"
-            (click)="openWorkspaceSwitchModal()">
-      <app-icon name="shuffle" iconOnly />
-      <span>Switch workspace</span>
-    </button>
+      <button class="switch-workspace-btn"
+              *ngIf="availableWorkspaceInfos.length > 1"
+              (click)="openWorkspaceSwitchModal()">
+        <app-icon name="shuffle" iconOnly />
+        <span>Switch workspace</span>
+      </button>
+    </div>
 
     <!-- Nav -->
     <nav *ngIf="isInitialized">
