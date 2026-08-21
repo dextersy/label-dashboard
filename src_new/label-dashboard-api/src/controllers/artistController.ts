@@ -13,7 +13,7 @@ import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import crypto from 'crypto';
 import { sequelize } from '../config/database';
 import { getEffectiveLimitsForBrand, checkStorageLimitForBrand } from '../services/subscriptionService';
-import { isArtistLocked, getLockedArtistIds } from '../utils/artistUtils';
+import { isArtistLocked, getLockedArtistIds, getLockedArtistIdsForBrands } from '../utils/artistUtils';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -77,24 +77,18 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
       const childBrands = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
       const allBrandIds = [req.user.brand_id, ...childBrands.map((b: any) => b.id)];
 
-      const rawArtists = await Artist.findAll({
-        where: { brand_id: { [Op.in]: allBrandIds } },
-        include: [
-          { model: Brand, as: 'brand' },
-          { model: Release, as: 'releases' },
-          { model: ArtistImage, as: 'images' },
-          { model: ArtistImage, as: 'profilePhotoImage' }
-        ],
-        order: [[literal(`CASE WHEN "Artist"."status" = 'Active' THEN 0 ELSE 1 END`), 'ASC'], ['name', 'ASC']]
-      });
-
-      // Compute locked status per brand so each brand's own plan limit is applied correctly.
-      const lockedByBrand = new Map<number, Set<number>>();
-      await Promise.all(
-        allBrandIds.map(async (brandId) => {
-          lockedByBrand.set(brandId, await getLockedArtistIds(brandId));
-        })
-      );
+      const [rawArtists, lockedByBrand] = await Promise.all([
+        Artist.findAll({
+          where: { brand_id: { [Op.in]: allBrandIds } },
+          include: [
+            { model: Brand, as: 'brand' },
+            { model: ArtistImage, as: 'images' },
+            { model: ArtistImage, as: 'profilePhotoImage' }
+          ],
+          order: [[literal(`CASE WHEN "Artist"."status" = 'Active' THEN 0 ELSE 1 END`), 'ASC'], ['name', 'ASC']]
+        }),
+        getLockedArtistIdsForBrands(allBrandIds),
+      ]);
 
       artists = rawArtists.map((artist: any) => ({
         ...artist.toJSON(),
@@ -115,7 +109,6 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
               where: { brand_id: req.user.brand_id, status: 'Active' },
               include: [
                 { model: Brand, as: 'brand' },
-                { model: Release, as: 'releases' },
                 { model: ArtistImage, as: 'images' },
                 { model: ArtistImage, as: 'profilePhotoImage' }
               ]
