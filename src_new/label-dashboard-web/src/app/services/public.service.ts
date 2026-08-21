@@ -59,6 +59,8 @@ export interface PublicEvent {
     sold_count?: number;
     special_instructions?: string | null;
   }>;
+  member_discount_type?: 'fixed' | 'percent' | null;
+  member_discount_amount?: number | null;
 }
 
 export interface TicketPurchaseRequest {
@@ -76,6 +78,7 @@ export interface TicketPurchaseResponse {
   ticket_id: number;
   ticket_code: string;
   total_amount: number;
+  member_discount?: number;
   url: string;
   message: string;
 }

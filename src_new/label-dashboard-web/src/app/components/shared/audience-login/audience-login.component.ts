@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
 import { IconComponent } from '../icon/icon.component';
@@ -12,6 +12,7 @@ import { environment } from '../../../../environments/environment';
   styleUrls: ['./audience-login.component.scss']
 })
 export class AudienceLoginComponent implements OnInit, OnDestroy {
+  @Input() customNote?: string;
   @Output() loggedIn = new EventEmitter<AudienceUser>();
   @Output() loggedOut = new EventEmitter<void>();
 

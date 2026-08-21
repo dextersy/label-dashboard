@@ -44,6 +44,8 @@ interface EventAttributes {
   walk_in_supports_gcash: boolean;
   walk_in_supports_card: boolean;
   walk_in_max_count: number;
+  member_discount_type?: 'fixed' | 'percent' | null;
+  member_discount_amount?: number | null;
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -91,6 +93,8 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public walk_in_supports_gcash!: boolean;
   public walk_in_supports_card!: boolean;
   public walk_in_max_count!: number;
+  public member_discount_type?: 'fixed' | 'percent' | null;
+  public member_discount_amount?: number | null;
 
   // Association properties
   public brand?: any;
@@ -303,6 +307,20 @@ Event.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
+    },
+    member_discount_type: {
+      type: DataTypes.ENUM('fixed', 'percent'),
+      allowNull: true,
+      defaultValue: null,
+    },
+    member_discount_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: null,
+      get() {
+        const value = this.getDataValue('member_discount_amount');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
+      },
     },
   },
   {

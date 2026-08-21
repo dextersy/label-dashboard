@@ -255,6 +255,7 @@ export class ConnectComponent implements OnInit {
 
   googleAuthEnabled = environment.googleAuthEnabled;
   private returnTo = '';
+  private signupFromEventId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -281,6 +282,10 @@ export class ConnectComponent implements OnInit {
   ngOnInit(): void {
     const params = this.route.snapshot.queryParamMap;
     this.returnTo = params.get('return_to') || '';
+
+    // Extract event ID from return_to URL for signup tracking (e.g. /tickets/buy/123)
+    const eventMatch = this.returnTo.match(/\/tickets\/buy\/(\d+)/);
+    this.signupFromEventId = eventMatch ? eventMatch[1] : null;
 
     // Handle Google OAuth return: ?audience_code=<code>
     const audienceCode = params.get('audience_code');
@@ -340,7 +345,9 @@ export class ConnectComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
     const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed } = this.signupForm.value;
-    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed).subscribe({
+    const signed_up_from = this.signupFromEventId ? 'event_tickets' : undefined;
+    const signup_reference = this.signupFromEventId ?? undefined;
+    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference).subscribe({
       next: () => { this.loading.set(false); this.signupPendingEmail.set(email); },
       error: (err: any) => {
         this.loading.set(false);

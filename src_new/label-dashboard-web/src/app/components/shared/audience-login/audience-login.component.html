@@ -25,9 +25,13 @@
         <span class="ys-connect__btn-optional">Optional</span>
       </span>
     </button>
-    <p class="ys-connect__note">
+    <p *ngIf="!customNote" class="ys-connect__note">
       <app-icon name="info" [size]="12" iconOnly class="ys-connect__note-icon" />
       Fill your information automatically and keep your tickets in one place
+    </p>
+    <p *ngIf="customNote" class="ys-connect__note ys-connect__note--discount">
+      <app-icon name="tag" [size]="12" iconOnly class="ys-connect__note-icon" />
+      {{ customNote }}
     </p>
   </div>
 </ng-template>

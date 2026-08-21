@@ -67,6 +67,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   isSubmitting = false;
   isError = false;
   totalAmount = 0;
+  memberDiscount = 0;
   brandColor = '#6f42c1';
   referralCode: string | null = null;
   currentBrand: BrandSettings | null = null;
@@ -294,6 +295,27 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     const numberOfTickets = this.ticketForm.get('number_of_entries')?.value || 0;
     const ticketPrice = this.selectedTicketType != null ? (this.selectedTicketType.price ?? 0) : (this.event?.ticket_price ?? 0);
     this.totalAmount = ticketPrice * numberOfTickets;
+
+    this.memberDiscount = 0;
+    if (this.audienceAuthService.isLoggedIn() && this.event?.member_discount_type && this.event?.member_discount_amount) {
+      if (this.event.member_discount_type === 'fixed') {
+        this.memberDiscount = Math.min(this.event.member_discount_amount, this.totalAmount);
+      } else if (this.event.member_discount_type === 'percent') {
+        this.memberDiscount = Math.round(this.totalAmount * this.event.member_discount_amount / 100 * 100) / 100;
+      }
+    }
+  }
+
+  get discountedTotal(): number {
+    return this.totalAmount - this.memberDiscount;
+  }
+
+  getMemberDiscountTeaser(): string {
+    if (!this.event?.member_discount_type || !this.event?.member_discount_amount) return '';
+    if (this.event.member_discount_type === 'percent') {
+      return `Get ${this.event.member_discount_amount}% off with a Your Scene\u2122 account`;
+    }
+    return `Get \u20B1${this.formatPrice(this.event.member_discount_amount)} off with a Your Scene\u2122 account`;
   }
 
   get isEventLoaded(): boolean {
@@ -462,10 +484,12 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     if (user.contact_number && !this.ticketForm.value.contact_number) {
       this.ticketForm.patchValue({ contact_number: user.contact_number });
     }
+    this.calculateTotal();
     this.notificationService.showSuccess('Your Scene™ account connected.', undefined, 3000);
   }
 
   onAudienceLoggedOut(): void {
+    this.calculateTotal();
     this.notificationService.showInfo('Your Scene™ account disconnected.', undefined, 3000);
   }
 

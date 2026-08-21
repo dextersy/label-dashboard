@@ -57,8 +57,8 @@ export class AudienceAuthService {
       .pipe(tap(res => this.storeAuth(res)));
   }
 
-  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed });
+  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean, signed_up_from?: string, signup_reference?: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference });
   }
 
   acceptTerms(terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean): Observable<AudienceUser> {

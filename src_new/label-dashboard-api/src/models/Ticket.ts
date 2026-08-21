@@ -21,6 +21,7 @@ interface TicketAttributes {
   price_per_ticket?: number;
   payment_processing_fee?: number;
   platform_fee?: number;
+  member_discount_amount?: number | null;
   referrer_id?: number;
   audience_user_id?: number;
   order_timestamp?: Date;
@@ -47,6 +48,7 @@ class Ticket extends Model<TicketAttributes, TicketCreationAttributes> implement
   public price_per_ticket?: number;
   public payment_processing_fee?: number;
   public platform_fee?: number;
+  public member_discount_amount?: number | null;
   public referrer_id?: number;
   public audience_user_id?: number;
   public order_timestamp?: Date;
@@ -167,6 +169,15 @@ Ticket.init(
         // Force conversion to number when writing to database
         this.setDataValue('platform_fee', value !== null && value !== undefined ? parseFloat(value) : value);
       }
+    },
+    member_discount_amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: null,
+      get() {
+        const value = this.getDataValue('member_discount_amount');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
+      },
     },
     referrer_id: {
       type: DataTypes.INTEGER,

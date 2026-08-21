@@ -265,7 +265,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         } : null,
         ticketTypes: processedTicketTypes,
         like_count: likeCount,
-        user_liked: userLiked
+        user_liked: userLiked,
+        member_discount_type: event.member_discount_type || null,
+        member_discount_amount: event.member_discount_amount ?? null
       }
     });
   } catch (error) {
@@ -649,6 +651,18 @@ export const buyTicket = async (req: Request, res: Response) => {
 
     // Calculate total amount
     const totalAmount = ticketPrice * number_of_entries;
+
+    // Apply member discount for logged-in audience users
+    let memberDiscountAmount = 0;
+    if (audienceUserId && event.member_discount_type && event.member_discount_amount) {
+      if (event.member_discount_type === 'fixed') {
+        memberDiscountAmount = Math.min(Number(event.member_discount_amount), totalAmount);
+      } else if (event.member_discount_type === 'percent') {
+        memberDiscountAmount = Math.round(totalAmount * Number(event.member_discount_amount) / 100 * 100) / 100;
+      }
+    }
+    const chargedAmount = totalAmount - memberDiscountAmount;
+
     const ticketTypeName = selectedTicketType?.name || event.ticket_naming || 'Regular';
     const description = `${event.title} - ${number_of_entries} ${ticketTypeName} ${number_of_entries === 1 ? 'ticket' : 'tickets'}`;
 
@@ -664,8 +678,8 @@ export const buyTicket = async (req: Request, res: Response) => {
       }).catch(() => {});
     }
 
-    // Handle FREE tickets (skip payment workflow)
-    if (totalAmount === 0) {
+    // Handle FREE tickets (skip payment workflow — includes discounted-to-zero cases)
+    if (chargedAmount === 0) {
       // Create ticket record with "Ticket sent." status
       const ticket = await Ticket.create({
         event_id: eventIdNum,
@@ -675,10 +689,11 @@ export const buyTicket = async (req: Request, res: Response) => {
         number_of_entries,
         ticket_code: ticketCode,
         status: 'Ticket sent.',
-        price_per_ticket: 0,
+        price_per_ticket: ticketPrice,
         ticket_type_id: selectedTicketType?.id || null,
         referrer_id: referrer?.id || null,
         audience_user_id: audienceUserId || undefined,
+        member_discount_amount: memberDiscountAmount > 0 ? memberDiscountAmount : null,
         order_timestamp: new Date(),
         date_paid: new Date()
       });
@@ -728,6 +743,7 @@ export const buyTicket = async (req: Request, res: Response) => {
         ticket_id: ticket.id,
         ticket_code: ticketCode,
         total_amount: 0,
+        member_discount: memberDiscountAmount > 0 ? memberDiscountAmount : undefined,
         url: `${brandDomain}/public/tickets/success`,
         message: 'Free ticket registered successfully!'
       });
@@ -739,22 +755,23 @@ export const buyTicket = async (req: Request, res: Response) => {
     const MIN_AMOUNT_DOB  = process.env.MIN_AMOUNT_DOB  ? parseFloat(process.env.MIN_AMOUNT_DOB)  : null;
 
     const paymentMethods: string[] = [];
-    if (event.supports_card && (MIN_AMOUNT_CARD === null || totalAmount >= MIN_AMOUNT_CARD)) paymentMethods.push('card');
+    if (event.supports_card && (MIN_AMOUNT_CARD === null || chargedAmount >= MIN_AMOUNT_CARD)) paymentMethods.push('card');
     if (event.supports_gcash) paymentMethods.push('gcash');
-    if (event.supports_ubp  && (MIN_AMOUNT_DOB  === null || totalAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob_ubp');
-    if (event.supports_dob  && (MIN_AMOUNT_DOB  === null || totalAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob');
+    if (event.supports_ubp  && (MIN_AMOUNT_DOB  === null || chargedAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob_ubp');
+    if (event.supports_dob  && (MIN_AMOUNT_DOB  === null || chargedAmount >= MIN_AMOUNT_DOB))  paymentMethods.push('dob');
     if (event.supports_qrph) paymentMethods.push('qrph');
     if (event.supports_maya) paymentMethods.push('paymaya');
     if (event.supports_grabpay) paymentMethods.push('grab_pay');
 
     // Create checkout session with billing information (matching PHP implementation)
+    // When a member discount is applied, send the full order as a single line item to avoid
+    // per-ticket rounding errors (e.g. ₱270 / 3 tickets could round to ₱90.01 each).
+    const lineItems = memberDiscountAmount > 0
+      ? [{ name: 'Tickets', amount: Math.round(chargedAmount * 100), currency: 'PHP', quantity: 1 }]
+      : [{ name: 'Tickets', amount: ticketPrice * 100, currency: 'PHP', quantity: number_of_entries }];
+
     const checkoutSession = await paymentService.createCheckoutSession({
-      line_items: [{
-        name: 'Tickets',
-        amount: ticketPrice * 100, // Convert to cents
-        currency: 'PHP',
-        quantity: number_of_entries
-      }],
+      line_items: lineItems,
       payment_method_types: paymentMethods,
       success_url: `${brandDomain}/public/tickets/success`,
       description,
@@ -782,6 +799,7 @@ export const buyTicket = async (req: Request, res: Response) => {
       ticket_type_id: selectedTicketType?.id || null,
       referrer_id: referrer?.id || null,
       audience_user_id: audienceUserId || undefined,
+      member_discount_amount: memberDiscountAmount > 0 ? memberDiscountAmount : null,
       order_timestamp: new Date()
     });
 
@@ -799,7 +817,8 @@ export const buyTicket = async (req: Request, res: Response) => {
       success: true,
       ticket_id: ticket.id,
       ticket_code: ticketCode,
-      total_amount: totalAmount,
+      total_amount: chargedAmount,
+      member_discount: memberDiscountAmount > 0 ? memberDiscountAmount : undefined,
       url: checkoutSession.attributes.checkout_url,
       message: 'Ticket created successfully. Redirecting to payment...'
     });

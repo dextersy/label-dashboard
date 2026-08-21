@@ -81,6 +81,12 @@
     font-size: 0.6875rem;
     color: #9ca3af;
     line-height: 1.4;
+
+    &--discount {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
   }
 
   &__note-icon {

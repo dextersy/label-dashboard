@@ -139,7 +139,11 @@
 
           <!-- Audience account hint -->
           <div class="tw-mb-5">
-            <app-audience-login (loggedIn)="onAudienceLoggedIn($event)" (loggedOut)="onAudienceLoggedOut()"></app-audience-login>
+            <app-audience-login
+              [customNote]="getMemberDiscountTeaser() || undefined"
+              (loggedIn)="onAudienceLoggedIn($event)"
+              (loggedOut)="onAudienceLoggedOut()">
+            </app-audience-login>
           </div>
 
           <!-- Name -->
@@ -330,18 +334,24 @@
                 <span class="tw-text-xs tw-text-gray-400">
                   {{ ticketForm.get('number_of_entries')?.value || 1 }}x {{ selectedTicketType?.name || event.ticket_naming || 'Regular' }} ticket
                 </span>
+                <span *ngIf="memberDiscount > 0" class="tw-text-xs tw-text-green-600 tw-font-semibold">
+                  Your Scene™ discount (-₱{{ formatPrice(memberDiscount) }})
+                </span>
               </div>
-              <span *ngIf="totalAmount > 0" class="tw-text-2xl tw-font-extrabold tw-text-gray-900">₱{{ formatPrice(totalAmount) }}</span>
-              <span *ngIf="totalAmount === 0" class="tw-flex tw-items-center tw-gap-1.5 tw-text-green-600 tw-font-bold tw-text-lg">
-                <app-icon name="check-circle" /> FREE
-              </span>
+              <div class="tw-flex tw-flex-col tw-items-end tw-gap-0.5">
+                <span *ngIf="discountedTotal > 0" class="tw-text-2xl tw-font-extrabold" [class.tw-text-green-600]="memberDiscount > 0" [class.tw-text-gray-900]="memberDiscount === 0">₱{{ formatPrice(discountedTotal) }}</span>
+                <span *ngIf="discountedTotal === 0" class="tw-flex tw-items-center tw-gap-1.5 tw-text-green-600 tw-font-bold tw-text-lg">
+                  <app-icon name="check-circle" /> FREE
+                </span>
+                <span *ngIf="memberDiscount > 0" class="tw-text-xs tw-text-gray-400 tw-line-through">₱{{ formatPrice(totalAmount) }}</span>
+              </div>
             </div>
             <button type="submit" class="btn-primary tw-w-full tw-py-4"
               [disabled]="ticketForm.invalid || isSubmitting || isPreview">
-              <app-icon [name]="totalAmount > 0 ? 'credit-card' : 'user-check'" class="tw-mr-2" />
-              {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (totalAmount > 0 ? 'Proceed to Payment' : 'Register Now')) }}
+              <app-icon [name]="discountedTotal > 0 ? 'credit-card' : 'user-check'" class="tw-mr-2" />
+              {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (discountedTotal > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>
-            <p *ngIf="totalAmount > 0" class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">
+            <p *ngIf="discountedTotal > 0" class="tw-text-xs tw-text-gray-400 tw-text-center tw-mt-2">
               You'll be redirected to Paymongo to complete payment. Payee information will be <strong>Melt Records</strong>.
             </p>
           </div><!-- end content-inner -->

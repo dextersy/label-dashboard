@@ -19,6 +19,8 @@ interface AudienceUserAttributes {
   terms_accepted_at?: Date;
   privacy_accepted_at?: Date;
   age_confirmed_at?: Date;
+  signed_up_from?: string | null;
+  signup_reference?: string | null;
 }
 
 interface AudienceUserCreationAttributes extends Optional<AudienceUserAttributes, 'id'> {}
@@ -41,6 +43,8 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public terms_accepted_at?: Date;
   public privacy_accepted_at?: Date;
   public age_confirmed_at?: Date;
+  public signed_up_from?: string | null;
+  public signup_reference?: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -119,6 +123,14 @@ AudienceUser.init(
     },
     age_confirmed_at: {
       type: DataTypes.DATE,
+      allowNull: true,
+    },
+    signed_up_from: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    signup_reference: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
   },

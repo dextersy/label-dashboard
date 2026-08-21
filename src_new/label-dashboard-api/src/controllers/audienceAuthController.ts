@@ -110,7 +110,7 @@ async function sendVerificationEmail(user: AudienceUser): Promise<void> {
 
 export const audienceSignup = async (req: Request, res: Response) => {
   try {
-    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed } = req.body;
+    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference } = req.body;
 
     if (!email || !password || !first_name || !last_name) {
       return res.status(400).json({ error: 'Email, password, first name, and last name are required' });
@@ -150,6 +150,8 @@ export const audienceSignup = async (req: Request, res: Response) => {
       terms_accepted_at: now,
       privacy_accepted_at: now,
       age_confirmed_at: now,
+      signed_up_from: signed_up_from || null,
+      signup_reference: signup_reference ? String(signup_reference) : null,
     });
 
     // Send verification email (non-blocking — don't fail signup if email fails)
