@@ -249,6 +249,10 @@
       filter: grayscale(100%);
     }
 
+    .artist-modal-name {
+      font-weight: 400;
+    }
+
     &:hover {
       background: #fff;
     }

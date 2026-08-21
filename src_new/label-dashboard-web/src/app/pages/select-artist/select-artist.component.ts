@@ -86,11 +86,6 @@ export class SelectArtistComponent implements OnInit {
   }
 
   selectArtist(artist: Artist, redirectTo = '/dashboard'): void {
-    if (this.isArtistLocked(artist)) {
-      this.planLimitService.showUpgradeModal({ limit_type: 'artists' });
-      return;
-    }
-
     localStorage.setItem('selected_artist_id', artist.id.toString());
     this.artistStateService.setSelectedArtist(artist);
     this.router.navigate([redirectTo]);

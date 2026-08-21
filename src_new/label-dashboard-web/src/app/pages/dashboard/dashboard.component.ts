@@ -51,12 +51,17 @@ interface DashboardData {
         IconComponent
     ],
     templateUrl: './dashboard.component.html',
-    styleUrl: './dashboard.component.scss'
+    styleUrl: './dashboard.component.scss',
+    host: { '[class.locked-overlay-host]': 'isLockedArtist' }
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   dashboardData: DashboardData | null = null;
   selectedArtist: Artist | null = null;
   loading = true;
+
+  get isLockedArtist(): boolean {
+    return this.selectedArtist?.locked === true;
+  }
   error: string | null = null;
   private artistSubscription = new Subscription();
   brandColor: string = '#667eea';

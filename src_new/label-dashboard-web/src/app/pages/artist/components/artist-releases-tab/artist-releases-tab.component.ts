@@ -429,7 +429,7 @@ export class ArtistReleasesTabComponent {
   }
 
   canEditRelease(release: ArtistRelease): boolean {
-    return release.status === 'Draft';
+    return !this.artist?.locked && release.status === 'Draft';
   }
 
   canDeleteRelease(release: ArtistRelease): boolean {

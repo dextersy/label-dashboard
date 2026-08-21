@@ -39,10 +39,6 @@
               <app-icon name="eye-off" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
             </button>
           </div>
-          <button *ngIf="artist" type="button" class="btn-sm btn-primary" (click)="navigateToCreateRelease()">
-            <app-icon [name]="isAdmin ? 'plus' : 'upload'" />
-            <span class="tw-ml-1">{{ isAdmin ? 'Create Release' : 'Submit Release' }}</span>
-          </button>
         </div>
       </div>
 
@@ -65,7 +61,7 @@
                (click)="$event.stopPropagation()">
 
             <!-- Cover art — clickable -->
-            <div class="release-card__cover" (click)="onEditRelease(release)">
+            <div class="release-card__cover" (click)="canEditRelease(release) ? onEditRelease(release) : null">
               <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-card__img">
               <div class="release-card__overlay">
                 <span class="release-chip release-chip--alert release-chip--alert-error tw-ml-auto"

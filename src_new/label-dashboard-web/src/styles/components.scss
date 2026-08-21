@@ -756,3 +756,28 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 .dropdown-divider {
   @apply tw-h-0 tw-my-[6px] tw-overflow-hidden tw-border-t tw-border-border-subtle;
 }
+
+/* ----------------------------------------------------------------- */
+/* LOCKED ARTIST OVERLAY                                              */
+/* A subtle diagonal-striped click-through overlay for locked pages. */
+/* Usage: add class="locked-overlay-host" to the page root element.  */
+/* ----------------------------------------------------------------- */
+.locked-overlay-host {
+  position: relative;
+  min-height: 100%;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(0, 0, 0, 0.018) 0px,
+      rgba(0, 0, 0, 0.018) 8px,
+      transparent 8px,
+      transparent 20px
+    );
+  }
+}

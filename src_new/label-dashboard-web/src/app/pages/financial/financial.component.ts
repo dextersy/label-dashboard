@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Artist } from '../../models/artist.model';
 import { FinancialSummaryTabComponent } from './components/financial-summary-tab/financial-summary-tab.component';
@@ -142,8 +142,9 @@ export interface ReleaseInfo {
         NewRoyaltyFormComponent,
         NewPaymentFormComponent,
         NewEarningFormComponent,
-        BreadcrumbComponent
-, IconComponent],
+        BreadcrumbComponent,
+        IconComponent,
+        RouterLink],
     templateUrl: './financial.component.html',
     styleUrl: './financial.component.scss'
 })
@@ -161,6 +162,10 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
   get isSubLabelArtist(): boolean {
     return !!(this.isAdmin && this.selectedArtist && this.authService.currentUserValue?.brand_id !== this.selectedArtist.brand_id);
+  }
+
+  get isLockedArtist(): boolean {
+    return this.selectedArtist?.locked === true;
   }
   private routeSubscription: Subscription = new Subscription();
 

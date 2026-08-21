@@ -148,11 +148,6 @@ export class ArtistSelectionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   selectArtist(artist: Artist, userInitiated: boolean = false): void {
-    if (userInitiated && this.isArtistLocked(artist)) {
-      this.isModalOpen = false;
-      this.planLimitService.showUpgradeModal({ limit_type: 'artists' });
-      return;
-    }
     this.selectedArtist = artist;
     this.isModalOpen = false;
     this.saveArtistId(artist.id);

@@ -202,8 +202,8 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
           this.artistStateService.setSelectedArtist(releaseArtist);
         }
 
-        // Check if this is a non-draft release - show read-only view
-        if (response.release.status !== 'Draft') {
+        // Check if this is a non-draft release or belongs to a locked artist - show read-only view
+        if (response.release.status !== 'Draft' || this.artist?.locked) {
           this.showReadOnlyView = true;
           this.releaseForView = response.release;
           return;
