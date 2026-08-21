@@ -95,5 +95,56 @@
     This event will not appear on the public events listing.
   </div>
 
+  <!-- Member Discount (superadmin only) -->
+  <ng-container *ngIf="isSuperAdmin">
+    <hr class="tw-my-5 tw-border-border-default">
+    <p class="ef-section-label tw-flex tw-items-center tw-gap-2">
+      Member Discount
+      <span class="tw-text-xs tw-font-normal tw-px-2 tw-py-0.5 tw-rounded tw-bg-purple-100 tw-text-purple-700">Superadmin</span>
+    </p>
+    <div class="tw-mb-4">
+      <div class="form-check form-switch tw-mb-1">
+        <input class="form-check-input" type="checkbox" role="switch"
+               id="memberDiscountEnabled"
+               [(ngModel)]="memberDiscountEnabled">
+        <label class="form-check-label" for="memberDiscountEnabled">
+          Enable member discount
+        </label>
+      </div>
+      <p class="tw-text-xs tw-text-muted">Logged-in Your Scene members will receive this discount at checkout.</p>
+    </div>
+
+    <div *ngIf="memberDiscountEnabled" class="tw-grid tw-grid-cols-2 tw-gap-4 tw-mb-4">
+      <div>
+        <label for="memberDiscountType" class="tw-label">Discount Type</label>
+        <select id="memberDiscountType" [(ngModel)]="memberDiscountType" class="tw-input">
+          <option value="fixed">Fixed amount (₱)</option>
+          <option value="percent">Percentage (%)</option>
+        </select>
+      </div>
+      <div>
+        <label for="memberDiscountAmount" class="tw-label">
+          {{ memberDiscountType === 'percent' ? 'Discount (%)' : 'Discount Amount (₱)' }}
+        </label>
+        <input
+          id="memberDiscountAmount"
+          type="number"
+          [(ngModel)]="memberDiscountAmount"
+          class="tw-input"
+          [placeholder]="memberDiscountType === 'percent' ? 'e.g. 10' : 'e.g. 50'"
+          min="0"
+          [max]="memberDiscountType === 'percent' ? 100 : null">
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="btn-primary btn-sm tw-w-full md:tw-w-auto"
+      (click)="saveMemberDiscount()"
+      [disabled]="savingMemberDiscount || (memberDiscountEnabled && (!memberDiscountAmount || memberDiscountAmount <= 0))">
+      {{ savingMemberDiscount ? 'Saving…' : 'Save Member Discount' }}
+    </button>
+  </ng-container>
+
 
 </div>

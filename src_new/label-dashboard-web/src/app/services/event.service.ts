@@ -161,6 +161,9 @@ export interface Event {
   listed_on_ticketing?: boolean;
   show_attendee_count?: boolean;
   tags?: EventTag[];
+  // Member discount
+  member_discount_type?: 'fixed' | 'percent' | null;
+  member_discount_amount?: number | null;
 }
 
 export interface EventTag {
@@ -1014,6 +1017,18 @@ export class EventService {
       return throwError(() => new Error('Invalid event ID provided'));
     }
     return this.http.put<{ event: Event }>(`${environment.apiUrl}/events/${eventId}`, data, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      map(response => response.event),
+      catchError(this.handleError)
+    );
+  }
+
+  updateEventMemberDiscount(eventId: number, data: { member_discount_type: 'fixed' | 'percent' | null; member_discount_amount: number | null }): Observable<Event> {
+    if (!eventId || isNaN(eventId) || eventId <= 0) {
+      return throwError(() => new Error('Invalid event ID provided'));
+    }
+    return this.http.put<{ event: Event }>(`${environment.apiUrl}/events/${eventId}/member-discount`, data, {
       headers: this.getAuthHeaders()
     }).pipe(
       map(response => response.event),

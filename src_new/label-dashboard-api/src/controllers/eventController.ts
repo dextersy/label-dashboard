@@ -3302,3 +3302,53 @@ export const getEventPreview = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const updateEventMemberDiscount = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const eventId = parseInt(id as string, 10);
+
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const { member_discount_type, member_discount_amount } = req.body;
+
+    // Validate discount type
+    if (member_discount_type !== null && member_discount_type !== undefined) {
+      if (!['fixed', 'percent'].includes(member_discount_type)) {
+        return res.status(400).json({ error: 'member_discount_type must be "fixed", "percent", or null' });
+      }
+    }
+
+    // Validate discount amount
+    if (member_discount_amount !== null && member_discount_amount !== undefined) {
+      const amount = parseFloat(member_discount_amount);
+      if (isNaN(amount) || amount < 0) {
+        return res.status(400).json({ error: 'member_discount_amount must be a non-negative number' });
+      }
+    }
+
+    // If type is set, amount must be set (and vice versa)
+    const hasType = member_discount_type !== null && member_discount_type !== undefined && member_discount_type !== '';
+    const hasAmount = member_discount_amount !== null && member_discount_amount !== undefined;
+    if (hasType !== hasAmount) {
+      return res.status(400).json({ error: 'member_discount_type and member_discount_amount must both be set or both be null' });
+    }
+
+    const event = await Event.findByPk(eventId);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await event.update({
+      member_discount_type: hasType ? member_discount_type : null,
+      member_discount_amount: hasAmount ? parseFloat(member_discount_amount) : null,
+    });
+
+    return res.json({ event });
+  } catch (error) {
+    console.error('Update event member discount error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

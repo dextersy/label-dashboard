@@ -28,7 +28,8 @@ import {
   publishEvent,
   unpublishEvent,
   getPaymentConfig,
-  getEventPreview
+  getEventPreview,
+  updateEventMemberDiscount
 } from '../controllers/eventController';
 import {
   getTicketTypes,
@@ -59,7 +60,7 @@ import {
   rejectWristbandOrder,
   upload as wristbandUpload,
 } from '../controllers/wristbandOrderController';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -141,6 +142,7 @@ router.post('/send-test-email', requireAdmin, sendTestEventEmail);
 router.get('/:id/preview', requireAdmin, getEventPreview);
 router.get('/:id', getEvent);
 router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
+router.put('/:id/member-discount', requireSuperAdmin, updateEventMemberDiscount);
 router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
 
 // Event status operations

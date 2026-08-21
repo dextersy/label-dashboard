@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventService, Event, EventTag } from '../../../../services/event.service';
+import { AuthService } from '../../../../services/auth.service';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { environment } from '../../../../../environments/environment';
 
@@ -27,6 +28,12 @@ export class EventListingTabComponent implements OnInit, OnChanges {
   eventType: string = '';
   saving = false;
 
+  // Member discount (superadmin only)
+  memberDiscountEnabled = false;
+  memberDiscountType: 'fixed' | 'percent' = 'fixed';
+  memberDiscountAmount: number | null = null;
+  savingMemberDiscount = false;
+
   readonly ticketingAppUrl = environment.ticketingAppUrl;
 
   readonly eventTypeOptions = [
@@ -43,7 +50,11 @@ export class EventListingTabComponent implements OnInit, OnChanges {
     { value: 'other', label: 'Other' },
   ];
 
-  constructor(private eventService: EventService) {}
+  constructor(private eventService: EventService, private authService: AuthService) {}
+
+  get isSuperAdmin(): boolean {
+    return this.authService.currentUserValue?.is_superadmin ?? false;
+  }
 
   ngOnInit(): void {
     this.loadTags();
@@ -71,6 +82,10 @@ export class EventListingTabComponent implements OnInit, OnChanges {
     this.showAttendeeCount = this.selectedEvent.show_attendee_count !== false;
     this.eventType = this.selectedEvent.event_type || '';
     this.selectedTagIds = this.selectedEvent.tags?.map(t => t.id) || [];
+    // Member discount
+    this.memberDiscountEnabled = !!(this.selectedEvent.member_discount_type && this.selectedEvent.member_discount_amount !== null && this.selectedEvent.member_discount_amount !== undefined);
+    this.memberDiscountType = this.selectedEvent.member_discount_type || 'fixed';
+    this.memberDiscountAmount = this.selectedEvent.member_discount_amount ?? null;
   }
 
   isTagSelected(tagId: number): boolean {
@@ -120,6 +135,32 @@ export class EventListingTabComponent implements OnInit, OnChanges {
       error: (err) => {
         this.saving = false;
         this.alertMessage.emit({ type: 'error', text: err.message || 'Failed to save listing settings.' });
+      }
+    });
+  }
+
+  saveMemberDiscount(): void {
+    if (!this.selectedEvent) return;
+    this.savingMemberDiscount = true;
+
+    const data = this.memberDiscountEnabled
+      ? { member_discount_type: this.memberDiscountType, member_discount_amount: this.memberDiscountAmount }
+      : { member_discount_type: null as null, member_discount_amount: null as null };
+
+    this.eventService.updateEventMemberDiscount(this.selectedEvent.id, data).subscribe({
+      next: (updatedEvent) => {
+        this.savingMemberDiscount = false;
+        // Update only the member discount fields on the local event reference to avoid
+        // triggering ngOnChanges and resetting tag/listing state from a partial response.
+        if (this.selectedEvent) {
+          this.selectedEvent.member_discount_type = updatedEvent.member_discount_type;
+          this.selectedEvent.member_discount_amount = updatedEvent.member_discount_amount;
+        }
+        this.alertMessage.emit({ type: 'success', text: 'Member discount saved.' });
+      },
+      error: (err) => {
+        this.savingMemberDiscount = false;
+        this.alertMessage.emit({ type: 'error', text: err.message || 'Failed to save member discount.' });
       }
     });
   }
