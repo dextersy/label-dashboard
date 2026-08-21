@@ -13,6 +13,7 @@ import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import crypto from 'crypto';
 import { sequelize } from '../config/database';
 import { getEffectiveLimitsForBrand, checkStorageLimitForBrand } from '../services/subscriptionService';
+import { isArtistLocked, getLockedArtistIds } from '../utils/artistUtils';
 
 const unlinkAsync = promisify(fs.unlink);
 
@@ -21,11 +22,16 @@ interface AuthRequest extends Request {
 }
 
 // Helper function to check if user has access to an artist
-const checkArtistAccess = async (artistId: number, userId: number, brandId: number, isAdmin: boolean, allowedBrandIds?: number[]): Promise<Artist | null> => {
+type WriteAccessResult =
+  | { status: 'ok'; artist: Artist }
+  | { status: 'not_found' }
+  | { status: 'forbidden'; reason: string };
+
+/** Write-path access check. Blocks locked artists for non-admins. Do NOT use for read endpoints. */
+const checkArtistWriteAccess = async (artistId: number, userId: number, brandId: number, isAdmin: boolean, allowedBrandIds?: number[]): Promise<WriteAccessResult> => {
   const brandWhere = allowedBrandIds && allowedBrandIds.length > 1
     ? { [Op.in]: allowedBrandIds }
     : brandId;
-  // First check if artist exists and belongs to user's brand
   const artist = await Artist.findOne({
     where: {
       id: artistId,
@@ -34,13 +40,16 @@ const checkArtistAccess = async (artistId: number, userId: number, brandId: numb
   });
 
   if (!artist) {
-    return null;
+    return { status: 'not_found' };
   }
 
-  // For non-admin users, check if they have access to this artist
   if (!isAdmin) {
     if (artist.status !== 'Active') {
-      return null;
+      return { status: 'not_found' };
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return { status: 'forbidden', reason: 'This artist is locked due to plan limits and cannot be modified' };
     }
 
     const hasAccess = await ArtistAccess.findOne({
@@ -52,11 +61,11 @@ const checkArtistAccess = async (artistId: number, userId: number, brandId: numb
     });
 
     if (!hasAccess) {
-      return null;
+      return { status: 'not_found' };
     }
   }
 
-  return artist;
+  return { status: 'ok', artist };
 };
 
 export const getArtists = async (req: AuthRequest, res: Response) => {
@@ -68,46 +77,35 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
       const childBrands = await Brand.findAll({ where: { parent_brand: req.user.brand_id }, attributes: ['id'] });
       const allBrandIds = [req.user.brand_id, ...childBrands.map((b: any) => b.id)];
 
-      const [rawArtists, limits] = await Promise.all([
-        Artist.findAll({
-          where: { brand_id: { [Op.in]: allBrandIds } },
-          include: [
-            { model: Brand, as: 'brand' },
-            { model: Release, as: 'releases' },
-            { model: ArtistImage, as: 'images' },
-            { model: ArtistImage, as: 'profilePhotoImage' }
-          ],
-          order: [[literal(`CASE WHEN "Artist"."status" = 'Active' THEN 0 ELSE 1 END`), 'ASC'], ['name', 'ASC']]
-        }),
-        getEffectiveLimitsForBrand(req.user.brand_id),
-      ]);
-
-      // Tag each artist as locked based on the plan's active artist limit.
-      // Active artists beyond the first `limit` (in returned order) are locked,
-      // and all inactive artists are locked when over the limit.
-      const artistLimit = limits?.limit_artists ?? null;
-      let activesSeen = 0;
-      const activeCount = rawArtists.filter((a: any) => a.status === 'Active').length;
-      const overLimit = artistLimit !== null && activeCount > artistLimit;
-
-      artists = rawArtists.map((artist: any) => {
-        let locked = false;
-        if (artistLimit !== null) {
-          if (artist.status === 'Active') {
-            activesSeen++;
-            locked = activesSeen > artistLimit;
-          } else {
-            locked = overLimit;
-          }
-        }
-        return { ...artist.toJSON(), locked };
+      const rawArtists = await Artist.findAll({
+        where: { brand_id: { [Op.in]: allBrandIds } },
+        include: [
+          { model: Brand, as: 'brand' },
+          { model: Release, as: 'releases' },
+          { model: ArtistImage, as: 'images' },
+          { model: ArtistImage, as: 'profilePhotoImage' }
+        ],
+        order: [[literal(`CASE WHEN "Artist"."status" = 'Active' THEN 0 ELSE 1 END`), 'ASC'], ['name', 'ASC']]
       });
+
+      // Compute locked status per brand so each brand's own plan limit is applied correctly.
+      const lockedByBrand = new Map<number, Set<number>>();
+      await Promise.all(
+        allBrandIds.map(async (brandId) => {
+          lockedByBrand.set(brandId, await getLockedArtistIds(brandId));
+        })
+      );
+
+      artists = rawArtists.map((artist: any) => ({
+        ...artist.toJSON(),
+        locked: lockedByBrand.get(artist.brand_id)?.has(artist.id) ?? false,
+      }));
     } else {
       // Non-admin users can only see active artists they have access to,
       // excluding any that are over the brand's plan limit.
       // "Within limit" is defined the same way the admin frontend does it:
       // the first `limit_artists` active artists ordered by name brand-wide.
-      const [artistAccess, limits] = await Promise.all([
+      const [artistAccess, lockedIds] = await Promise.all([
         ArtistAccess.findAll({
           where: { user_id: req.user.id, status: 'Accepted' },
           include: [
@@ -125,24 +123,12 @@ export const getArtists = async (req: AuthRequest, res: Response) => {
           ],
           order: [[{ model: Artist, as: 'artist' }, 'name', 'ASC']]
         }),
-        getEffectiveLimitsForBrand(req.user.brand_id),
+        getLockedArtistIds(req.user.brand_id),
       ]);
 
-      artists = artistAccess.map(access => ({ ...(access.artist as any).toJSON(), locked: false }));
-
-      // Apply plan artist limit using the same brand-wide ordering the admin sees,
-      // so admins and non-admins always agree on which artists are accessible.
-      if (limits?.limit_artists !== null && limits?.limit_artists !== undefined) {
-        const allowedArtists = await Artist.findAll({
-          where: { brand_id: req.user.brand_id, status: 'Active' },
-          attributes: ['id'],
-          order: [['name', 'ASC']],
-          limit: limits.limit_artists,
-          raw: true,
-        });
-        const allowedIds = new Set(allowedArtists.map((a: any) => a.id));
-        artists = artists.filter(a => allowedIds.has(a.id));
-      }
+      // Include locked artists as read-only — non-admins can still view them.
+      artists = artistAccess
+        .map(access => ({ ...(access.artist as any).toJSON(), locked: lockedIds.has((access.artist as any).id) }));
     }
 
     res.json({ 
@@ -193,6 +179,10 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
 
     // For non-admin users, check if they have access to this artist
     if (!req.user.is_admin) {
+      if (artist.status !== 'Active') {
+        return res.status(404).json({ error: 'Artist not found' });
+      }
+
       const hasAccess = await ArtistAccess.findOne({
         where: {
           artist_id: artistId,
@@ -206,7 +196,8 @@ export const getArtist = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    res.json({ artist });
+    const locked = await isArtistLocked(artist, artist.brand_id);
+    res.json({ artist, locked });
   } catch (error) {
     console.error('Get artist error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -351,9 +342,12 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
     const allowedBrandIdsForUpdate = [req.user.brand_id, ...childBrandsForUpdate.map((b: any) => b.id)];
 
     // Check if user has access to this artist
-    const artistAccess = await checkArtistAccess(parseInt(id as string), req.user.id, req.user.brand_id, req.user.is_admin, allowedBrandIdsForUpdate);
-    if (!artistAccess) {
+    const artistAccess = await checkArtistWriteAccess(parseInt(id as string), req.user.id, req.user.brand_id, req.user.is_admin, allowedBrandIdsForUpdate);
+    if (artistAccess.status === 'not_found') {
       return res.status(404).json({ error: 'Artist not found or access denied' });
+    }
+    if (artistAccess.status === 'forbidden') {
+      return res.status(403).json({ error: artistAccess.reason });
     }
 
     const artist = await Artist.findOne({
@@ -373,6 +367,10 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Handle profile photo upload if provided
@@ -690,6 +688,10 @@ export const deleteArtist = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     await artist.destroy();
 
     res.json({ message: 'Artist deleted successfully' });
@@ -802,6 +804,10 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     const oldPayoutPoint = artist.payout_point;
@@ -1051,6 +1057,10 @@ export const uploadArtistPhotos = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
       return res.status(400).json({ error: 'No files uploaded' });
     }
@@ -1152,6 +1162,10 @@ export const reorderArtistPhotos = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Verify all photos belong to this artist
     const photos = await ArtistImage.findAll({
       where: { artist_id: artistId },
@@ -1222,6 +1236,10 @@ export const updatePhotoCaption = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Find and update the photo
     const photo = await ArtistImage.findOne({
       where: {
@@ -1280,6 +1298,10 @@ export const togglePhotoExcludeFromEPK = async (req: AuthRequest, res: Response)
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Find and update the photo
     const photo = await ArtistImage.findOne({
       where: {
@@ -1333,6 +1355,10 @@ export const setAsProfilePhoto = async (req: AuthRequest, res: Response) => {
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Find the photo
@@ -1389,6 +1415,10 @@ export const deleteArtistPhoto = async (req: AuthRequest, res: Response) => {
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Find the photo
@@ -1629,6 +1659,10 @@ export const updateRoyalties = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Update each release's royalty percentages
     for (const releaseData of releases) {
       await ReleaseArtist.update({
@@ -1735,6 +1769,10 @@ export const inviteTeamMember = async (req: AuthRequest, res: Response) => {
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Check if user exists
@@ -1846,6 +1884,10 @@ export const resendTeamInvite = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Find the team member and validate brand
     const access = await ArtistAccess.findOne({
       where: { artist_id: artistId, user_id: memberIdNum },
@@ -1922,6 +1964,10 @@ export const removeTeamMember = async (req: AuthRequest, res: Response) => {
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Find and remove the team member access, validate brand
@@ -2030,6 +2076,10 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // If this is set as default, remove default from other methods
     if (is_default) {
       await PaymentMethod.update(
@@ -2128,6 +2178,10 @@ export const deletePaymentMethod = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Find the payment method
     const paymentMethod = await PaymentMethod.findOne({
       where: {
@@ -2201,6 +2255,10 @@ export const setDefaultPaymentMethod = async (req: AuthRequest, res: Response) =
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Find the payment method
@@ -2330,6 +2388,10 @@ export const uploadArtistDocument = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: 'No document uploaded' });
     }
@@ -2416,6 +2478,10 @@ export const deleteArtistDocument = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
     }
 
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
+    }
+
     // Find the document
     const document = await ArtistDocument.findOne({
       where: {
@@ -2469,13 +2535,21 @@ export const updateEPKSettings = async (req: AuthRequest, res: Response) => {
     const allowedBrandIdsForEPK = [req.user.brand_id, ...childBrandsForEPK.map((b: any) => b.id)];
 
     // Check if user has access to this artist
-    const artist = await checkArtistAccess(artistId, req.user.id, req.user.brand_id, req.user.is_admin, allowedBrandIdsForEPK);
-    if (!artist) {
+    const writeAccess = await checkArtistWriteAccess(artistId, req.user.id, req.user.brand_id, req.user.is_admin, allowedBrandIdsForEPK);
+    if (writeAccess.status === 'not_found') {
       return res.status(404).json({ error: 'Artist not found or access denied' });
     }
+    if (writeAccess.status === 'forbidden') {
+      return res.status(403).json({ error: writeAccess.reason });
+    }
+    const artist = writeAccess.artist;
 
     if (artist.brand_id !== req.user.brand_id) {
       return res.status(403).json({ error: 'Read-only access: this artist belongs to a sub-label' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot be modified' });
     }
 
     // Build update object based on provided fields

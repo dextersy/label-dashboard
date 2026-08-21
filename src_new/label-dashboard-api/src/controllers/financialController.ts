@@ -6,6 +6,7 @@ import { sendEarningsNotification, sendEarningAdminNotification } from '../utils
 import { createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { PaymentService } from '../utils/paymentService';
 import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
+import { getLockedArtistIds, isArtistLocked } from '../utils/artistUtils';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import csv from 'csv-parser';
 import * as fuzz from 'fuzzball';
@@ -78,17 +79,17 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       // Process both recuperable expenses and royalties
       recuperationInfo = await processEarningRoyalties(earning);
     }
-    
+
     // Calculate and set the platform fee (regardless of royalty calculation)
     const grossAmount = parseFloat(amount.toFixed(2));
     let netRevenue = grossAmount;
-    
+
     if (calculate_royalties && recuperationInfo) {
       // If royalties are calculated, use net revenue after recuperable expenses and royalties
       netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
     }
     // If royalties are not calculated, use the gross amount as net revenue
-    
+
     const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
       release.brand_id,
       grossAmount,
@@ -105,12 +106,16 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       ? await Brand.findByPk(req.user.brand_id, { attributes: ['id', 'brand_name'] })
       : null;
 
+    // Pre-compute locked IDs once for this earning's brand
+    const earningLockedIds = await getLockedArtistIds(release.brand_id);
+
     // Send earning notification emails (matching PHP logic)
     await sendEarningNotifications(
       earning,
       release.brand_id,
       recuperationInfo,
-      postedByBrand ? { id: postedByBrand.id, brand_name: postedByBrand.brand_name } : null
+      postedByBrand ? { id: postedByBrand.id, brand_name: postedByBrand.brand_name } : null,
+      earningLockedIds
     );
 
     res.status(201).json({
@@ -138,10 +143,30 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
     const createdEarnings = [];
     const errors = [];
 
+    // Cache locked artist IDs per brand for the duration of this bulk request,
+    // so we don't repeat the same queries for every row that shares a brand.
+    const lockedIdsCache = new Map<number, Set<number>>();
+    const getLockedIdsCached = async (brandId: number): Promise<Set<number>> => {
+      if (!lockedIdsCache.has(brandId)) {
+        lockedIdsCache.set(brandId, await getLockedArtistIds(brandId));
+      }
+      return lockedIdsCache.get(brandId)!;
+    };
+
+    // Also cache the parent brand info (used for sublabel notifications)
+    let cachedParentBrand: { id: number; brand_name: string } | null | undefined = undefined;
+    const getParentBrand = async () => {
+      if (cachedParentBrand === undefined) {
+        const b = await Brand.findByPk(req.user.brand_id, { attributes: ['id', 'brand_name'] });
+        cachedParentBrand = b ? { id: b.id, brand_name: b.brand_name } : null;
+      }
+      return cachedParentBrand;
+    };
+
     for (let i = 0; i < earnings.length; i++) {
       try {
         const earningData = earnings[i];
-        
+
         // Verify release exists and belongs to user's brand or a direct child brand
         const release = await Release.findOne({ where: { id: earningData.release_id } });
 
@@ -182,17 +207,17 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
           // Process both recuperable expenses and royalties
           recuperationInfo = await processEarningRoyalties(earning);
         }
-        
+
         // Calculate and set the platform fee (regardless of royalty calculation)
         const grossAmount = parseFloat(earningData.amount.toFixed(2));
         let netRevenue = grossAmount;
-        
+
         if (earningData.calculate_royalties && recuperationInfo) {
           // If royalties are calculated, use net revenue after recuperable expenses and royalties
           netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
         }
         // If royalties are not calculated, use the gross amount as net revenue
-        
+
         const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
           release.brand_id,
           grossAmount,
@@ -205,16 +230,11 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
         });
 
         // If parent recorded for sublabel, pass parent brand info for notifications
-        let rowPostedByBrand: { id: number; brand_name: string } | null = null;
-        if (rowRecordedByBrandId) {
-          const parentBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['id', 'brand_name'] });
-          if (parentBrand) {
-            rowPostedByBrand = { id: parentBrand.id, brand_name: parentBrand.brand_name };
-          }
-        }
+        const rowPostedByBrand = rowRecordedByBrandId ? await getParentBrand() : null;
 
         // Send earning notification emails (matching PHP logic)
-        await sendEarningNotifications(earning, release.brand_id, recuperationInfo, rowPostedByBrand);
+        const rowLockedIds = await getLockedIdsCached(release.brand_id);
+        await sendEarningNotifications(earning, release.brand_id, recuperationInfo, rowPostedByBrand, rowLockedIds);
 
         createdEarnings.push(earning);
       } catch (error) {
@@ -350,31 +370,61 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
     }
 
     // Get all releases for the brand and all child brands
-    const ownReleases = await Release.findAll({
-      where: { brand_id: req.user.brand_id }
-    });
-
-    const childBrands = await Brand.findAll({
-      where: { parent_brand: req.user.brand_id }
-    });
+    const [ownReleases, childBrands, ownLockedIds] = await Promise.all([
+      Release.findAll({ where: { brand_id: req.user.brand_id } }),
+      Brand.findAll({ where: { parent_brand: req.user.brand_id } }),
+      getLockedArtistIds(req.user.brand_id),
+    ]);
 
     // Build a map from brand id to brand info for child brand releases
     const childBrandById: Map<number, any> = new Map();
     const childBrandReleaseMap: Map<string, { brand: any; releases: any[] }> = new Map();
+    const childLockedIdsByBrand: Map<number, Set<number>> = new Map();
 
     const allChildReleases: any[] = [];
     for (const cb of childBrands) {
-      const cbReleases = await Release.findAll({ where: { brand_id: (cb as any).id } });
-      childBrandById.set((cb as any).id, cb);
+      const cbId = (cb as any).id;
+      const [cbReleases, cbLockedIds] = await Promise.all([
+        Release.findAll({ where: { brand_id: cbId } }),
+        getLockedArtistIds(cbId),
+      ]);
+      childBrandById.set(cbId, cb);
       childBrandReleaseMap.set(
         ((cb as any).brand_name || '').toLowerCase().trim(),
         { brand: cb, releases: cbReleases }
       );
+      childLockedIdsByBrand.set(cbId, cbLockedIds);
       allChildReleases.push(...cbReleases);
     }
 
     // Combined pool: own releases first, then child brand releases
-    const releases = [...ownReleases, ...allChildReleases];
+    const allReleases = [...ownReleases, ...allChildReleases];
+
+    // Filter out releases where all associated artists are locked.
+    // Fetch ReleaseArtist associations for the full pool in one query.
+    const allReleaseIds = allReleases.map((r: any) => r.id);
+    const releaseArtistRows: any[] = allReleaseIds.length > 0
+      ? await ReleaseArtist.findAll({
+          where: { release_id: { [Op.in]: allReleaseIds } },
+          attributes: ['release_id', 'artist_id'],
+          raw: true,
+        })
+      : [];
+
+    const artistIdsByRelease: Map<number, number[]> = new Map();
+    for (const row of releaseArtistRows) {
+      if (!artistIdsByRelease.has(row.release_id)) artistIdsByRelease.set(row.release_id, []);
+      artistIdsByRelease.get(row.release_id)!.push(row.artist_id);
+    }
+
+    const releases = allReleases.filter((release: any) => {
+      const artistIds = artistIdsByRelease.get(release.id) || [];
+      if (artistIds.length === 0) return true; // no artists → keep (not a locked-artist release)
+      const lockedIds = childBrandById.has(release.brand_id)
+        ? (childLockedIdsByBrand.get(release.brand_id) ?? new Set())
+        : ownLockedIds;
+      return artistIds.some((id) => !lockedIds.has(id));
+    });
 
     const csvData: CsvRow[] = [];
     const processedRows: ProcessedEarningRow[] = [];
@@ -645,6 +695,10 @@ export const addRoyalty = async (req: AuthRequest, res: Response) => {
 
     if (!artist) {
       return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    if (await isArtistLocked(artist, artist.brand_id)) {
+      return res.status(403).json({ error: 'This artist is locked due to plan limits and cannot receive royalties' });
     }
 
     const royalty = await Royalty.create({
@@ -2005,7 +2059,8 @@ async function sendEarningNotifications(
   earning: any,
   brandId: number,
   recuperationInfo: any = null,
-  postedByBrand: { id: number; brand_name: string } | null = null
+  postedByBrand: { id: number; brand_name: string } | null = null,
+  lockedArtistIds?: Set<number>
 ) {
   try {
     // Get release with associated artists and brand
@@ -2032,9 +2087,16 @@ async function sendEarningNotifications(
       return;
     }
 
+    const lockedIds = lockedArtistIds ?? await getLockedArtistIds(brandId);
+
     // Process each artist (matching PHP logic)
     for (const releaseArtist of release.releaseArtists) {
       if (!releaseArtist.artist) {
+        continue;
+      }
+
+      // Skip locked artists — they are excluded from financial operations and notifications
+      if (lockedIds.has(releaseArtist.artist.id)) {
         continue;
       }
 

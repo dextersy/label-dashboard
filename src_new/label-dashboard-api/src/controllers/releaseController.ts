@@ -9,6 +9,7 @@ import { sendReleaseSubmissionNotification, sendReleasePendingNotification } fro
 import { createNotificationsForUsers, getBrandAdminUserIds, getBrandAndParentAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 import { getEffectiveLimitsForBrand, checkStorageLimitForBrand } from '../services/subscriptionService';
+import { getLockedArtistIds } from '../utils/artistUtils';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -38,20 +39,32 @@ export const getReleases = async (req: AuthRequest, res: Response) => {
       brandId = (childBrand as any).id;
     }
 
-    const releases = await Release.findAll({
-      where: { brand_id: brandId },
-      include: [
-        { model: Brand, as: 'brand' },
-        {
-          model: Artist,
-          as: 'artists',
-          through: { attributes: ['streaming_royalty_percentage', 'sync_royalty_percentage'] }
-        },
-        { model: Earning, as: 'earnings', separate: true },
-        { model: RecuperableExpense, as: 'expenses', separate: true }
-      ],
-      order: [['release_date', 'DESC']]
-    });
+    const [rawReleases, lockedIds] = await Promise.all([
+      Release.findAll({
+        where: { brand_id: brandId },
+        include: [
+          { model: Brand, as: 'brand' },
+          {
+            model: Artist,
+            as: 'artists',
+            through: { attributes: ['streaming_royalty_percentage', 'sync_royalty_percentage'] }
+          },
+          { model: Earning, as: 'earnings', separate: true },
+          { model: RecuperableExpense, as: 'expenses', separate: true }
+        ],
+        order: [['release_date', 'DESC']]
+      }),
+      getLockedArtistIds(brandId),
+    ]);
+
+    // Exclude releases where every associated artist is locked.
+    // If a release has at least one non-locked artist it remains available.
+    const releases = lockedIds.size === 0
+      ? rawReleases
+      : rawReleases.filter((release: any) => {
+          const artists: any[] = release.artists || [];
+          return artists.length === 0 || artists.some((a: any) => !lockedIds.has(a.id));
+        });
 
     res.json({ releases });
   } catch (error) {
