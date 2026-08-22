@@ -529,6 +529,7 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
 
     // Find or create audience user
     let user = await AudienceUser.findOne({ where: { email_address: email.toLowerCase() } });
+    let isNewUser = false;
     if (!user) {
       user = await AudienceUser.create({
         email_address: email.toLowerCase(),
@@ -538,6 +539,7 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
         email_verification_token: null as any,
         email_verification_expires_at: null as any,
       });
+      isNewUser = true;
     } else if (!user.email_verified) {
       // Google confirmed ownership of this email — mark it verified
       await user.update({
@@ -549,6 +551,11 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
 
     // Auto-claim any unlinked tickets
     await claimTicketsByEmailInternal(user.id, user.email_address);
+
+    // Send welcome email to new Google sign-up users (fire-and-forget)
+    if (isNewUser) {
+      sendWelcomeEmail(user).catch((err) => console.error('Failed to send welcome email:', err));
+    }
 
     const exchangeCode = createAudienceExchangeCode(user.id);
 
