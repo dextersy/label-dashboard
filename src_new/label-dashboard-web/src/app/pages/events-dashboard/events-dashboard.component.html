@@ -18,13 +18,15 @@
   <!-- ─────────────────────────────────────────────────────── -->
   <!-- ZONE 1: HERO STRIP                                      -->
   <!-- ─────────────────────────────────────────────────────── -->
-  <div class="hero-strip tw-relative tw-bg-white tw-bg-cover tw-bg-center"
+  <div class="hero-strip tw-relative tw-bg-cover tw-bg-center"
        [style.background-image]="dashboardData.upcomingEvents?.[0]?.poster_url ? 'url(' + dashboardData.upcomingEvents[0].poster_url + ')' : null"
+       [style.background-color]="!dashboardData.upcomingEvents?.[0]?.poster_url ? '#f9fafb' : null"
        style="border-bottom: 0.5px solid #e5e7eb;">
-    <!-- Dark overlay when poster is present -->
+
+    <!-- Dark overlay — always present when poster exists, guarantees text contrast -->
     <div *ngIf="dashboardData.upcomingEvents?.[0]?.poster_url"
          class="tw-absolute tw-inset-0"
-         style="background: linear-gradient(to right, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.45) 100%);"></div>
+         style="background: rgba(10,10,30,0.72);"></div>
 
     <div class="tw-relative tw-px-4 tw-py-6 sm:tw-px-8 sm:tw-py-8" style="max-width: 1100px; margin: 0 auto;">
 
@@ -39,68 +41,97 @@
         <div class="tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-gap-5 sm:tw-gap-8"
              [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
 
-          <!-- Left: proximity · title · date/venue -->
-          <div class="tw-flex-1 tw-min-w-0">
-            <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-2 tw-mt-0"
-               [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
-               [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">
-              Next event · {{ getDaysAwayLabel(dashboardData.upcomingEvents[0].date_and_time) }}
-            </p>
-            <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug"
+          <!-- Left: countdown pill · title · date/venue -->
+          <div class="tw-flex-1 tw-min-w-0 tw-w-full tw-text-center sm:tw-text-left">
+
+            <!-- Countdown pill/badge -->
+            <span class="tw-inline-flex tw-items-center tw-gap-1.5 tw-mb-3 tw-px-2.5 tw-py-1 tw-rounded-full tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-widest"
+                  [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'"
+                  [style.color]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.9)' : '#6b7280'"
+                  [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(0,0,0,0.1)'">
+              Next event &nbsp;·&nbsp; {{ getDaysAwayLabel(dashboardData.upcomingEvents[0].date_and_time) }}
+            </span>
+
+            <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug tw-w-full"
                 [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
               {{ dashboardData.upcomingEvents[0].title }}
             </h3>
-            <p class="tw-text-sm tw-font-mono tw-mb-0"
+            <p class="tw-text-sm tw-mb-0"
                [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
-               [class.tw-opacity-80]="dashboardData.upcomingEvents[0].poster_url"
+               [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
                [class.tw-text-muted]="!dashboardData.upcomingEvents[0].poster_url">
               {{ dashboardData.upcomingEvents[0].date_and_time | date:'EEE, MMM d · h:mm a' }}<span *ngIf="dashboardData.upcomingEvents[0].venue"> · {{ dashboardData.upcomingEvents[0].venue }}</span>
             </p>
           </div>
 
-          <!-- Right: stats + buttons -->
-          <div class="tw-flex tw-items-center tw-gap-6 sm:tw-gap-8 tw-flex-shrink-0 tw-flex-wrap sm:tw-flex-nowrap">
+          <!-- Right: stats + divider + buttons -->
+          <div class="tw-flex tw-flex-col tw-gap-3 tw-flex-shrink-0 tw-w-full sm:tw-w-auto">
 
             <!-- Stat columns -->
-            <div class="tw-flex tw-gap-6 sm:tw-gap-8">
-              <div class="tw-text-right">
+            <div class="tw-grid tw-grid-cols-2 tw-gap-2 sm:tw-flex sm:tw-gap-8 sm:tw-justify-end">
+
+              <!-- Tickets sold -->
+              <div class="tw-text-center sm:tw-text-right">
                 <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-1.5 tw-mt-0"
                    [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
                    [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
                    [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">Tickets sold</p>
-                <p class="tw-text-3xl tw-font-mono tw-font-semibold tw-leading-none tw-mb-0"
-                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
-                   [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url">
+                <p class="tw-text-2xl tw-leading-none tw-mb-0 tw-text-white"
+                   [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-opacity-40]="!dashboardData.upcomingEvents[0].poster_url && dashboardData.upcomingEvents[0].tickets_sold === 0">
                   {{ dashboardData.upcomingEvents[0].tickets_sold }}
                 </p>
+                <p *ngIf="dashboardData.upcomingEvents[0].tickets_sold === 0"
+                   class="tw-text-[10px] tw-mt-1 tw-mb-0 tw-whitespace-nowrap"
+                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                   style="opacity: 0.45;">No sales yet</p>
               </div>
-              <div class="tw-text-right">
+
+              <!-- Net revenue -->
+              <div class="tw-text-center sm:tw-text-right">
                 <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-1.5 tw-mt-0"
                    [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
                    [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
                    [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">Net revenue</p>
-                <p class="tw-text-2xl tw-font-mono tw-font-semibold tw-whitespace-nowrap tw-leading-none tw-mb-0"
-                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
-                   [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url">
+                <p class="tw-text-2xl tw-whitespace-nowrap tw-leading-none tw-mb-0 tw-text-white"
+                   [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url"
+                   [class.tw-opacity-40]="!dashboardData.upcomingEvents[0].poster_url && dashboardData.upcomingEvents[0].net_earnings === 0">
                   {{ formatCurrency(dashboardData.upcomingEvents[0].net_earnings) }}
                 </p>
+                <p *ngIf="dashboardData.upcomingEvents[0].net_earnings === 0"
+                   class="tw-text-[10px] tw-mt-1 tw-mb-0 tw-whitespace-nowrap"
+                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                   style="opacity: 0.45;">Share to start selling</p>
               </div>
+
             </div>
 
+            <!-- Divider -->
+            <div [style.border-top]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.15)' : '1px solid #e5e7eb'"></div>
+
             <!-- Action buttons -->
-            <div class="tw-flex tw-flex-row sm:tw-flex-col tw-gap-2 tw-w-full sm:tw-w-auto">
-              <button class="btn btn-primary btn-sm tw-whitespace-nowrap tw-flex-1 sm:tw-flex-none"
+            <div class="tw-flex tw-flex-row sm:tw-flex-col tw-gap-2">
+
+              <!-- Primary CTA: View tickets -->
+              <button class="btn btn-sm tw-whitespace-nowrap tw-flex-[1.4] sm:tw-flex-none tw-font-semibold"
+                      [style.background]="dashboardData.upcomingEvents[0].poster_url ? '#fff' : null"
+                      [style.color]="dashboardData.upcomingEvents[0].poster_url ? '#111' : null"
+                      [style.border]="dashboardData.upcomingEvents[0].poster_url ? 'none' : null"
+                      [class.btn-primary]="!dashboardData.upcomingEvents[0].poster_url"
                       (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
                 View tickets
               </button>
+
+              <!-- Secondary CTA: Manage -->
               <button class="btn btn-sm tw-whitespace-nowrap tw-flex-1 sm:tw-flex-none"
-                      [class.btn-ghost]="!dashboardData.upcomingEvents[0].poster_url"
-                      [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.15)' : null"
+                      [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.12)' : null"
                       [style.color]="dashboardData.upcomingEvents[0].poster_url ? '#fff' : null"
-                      [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.35)' : null"
+                      [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1.5px solid rgba(255,255,255,0.6)' : null"
+                      [class.btn-secondary]="!dashboardData.upcomingEvents[0].poster_url"
                       (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'details')">
                 Manage
               </button>
+
             </div>
 
           </div>
