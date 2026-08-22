@@ -44,6 +44,8 @@ export interface Release {
     id: number;
     name: string;
     profile_photo?: string;
+    locked?: boolean;
+    status?: 'Active' | 'Inactive';
     ReleaseArtist?: {
       streaming_royalty_percentage: number;
       sync_royalty_percentage: number;

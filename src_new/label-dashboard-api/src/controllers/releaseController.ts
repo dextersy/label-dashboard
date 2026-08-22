@@ -160,6 +160,15 @@ export const getRelease = async (req: AuthRequest, res: Response) => {
         .sort((a: any, b: any) => (a.track_number || 0) - (b.track_number || 0));
     }
 
+    // Annotate each artist with their locked status
+    if (releaseJson.artists && releaseJson.artists.length > 0) {
+      const lockedIds = await getLockedArtistIds(req.user.brand_id);
+      releaseJson.artists = releaseJson.artists.map((a: any) => ({
+        ...a,
+        locked: lockedIds.has(a.id)
+      }));
+    }
+
     res.json({ release: releaseJson });
   } catch (error) {
     console.error('Get release error:', error);
@@ -441,12 +450,13 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     // Block adding locked artists as new collaborators.
     // Editing a release that already has locked collaborators is allowed.
-    if (artists && artists.length > 0) {
+    const parsedArtistsForLockCheck = typeof artists === 'string' ? (() => { try { return JSON.parse(artists); } catch { return null; } })() : artists;
+    if (Array.isArray(parsedArtistsForLockCheck) && parsedArtistsForLockCheck.length > 0) {
       const lockedIds = await getLockedArtistIds(req.user.brand_id);
       if (lockedIds.size > 0) {
         const existingReleaseArtists = await ReleaseArtist.findAll({ where: { release_id: releaseId } });
         const existingArtistIds = new Set(existingReleaseArtists.map((ra: any) => ra.artist_id));
-        const incomingArtistIds = artists.map((a: any) => a.artist_id).filter(Boolean);
+        const incomingArtistIds = parsedArtistsForLockCheck.map((a: any) => a.artist_id).filter(Boolean);
         const hasNewLockedArtist = incomingArtistIds.some((id: number) => lockedIds.has(id) && !existingArtistIds.has(id));
         if (hasNewLockedArtist) {
           return res.status(403).json({ error: 'Cannot add a locked artist as a collaborator' });
@@ -513,6 +523,21 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
     } else {
       // Allow non-admins to submit drafts for review
       if (status === 'For Submission' && release.status === 'Draft') {
+        // Block submission only if all release artists are locked or deactivated
+        const raRecords = await ReleaseArtist.findAll({ where: { release_id: releaseId } });
+        if (raRecords.length > 0) {
+          const artistIds = raRecords.map((ra: any) => ra.artist_id);
+          const [lockedIds, artistRecords] = await Promise.all([
+            getLockedArtistIds(req.user.brand_id),
+            Artist.findAll({ where: { id: artistIds }, attributes: ['id', 'status'] })
+          ]);
+          const allRestricted = artistRecords.every((a: any) =>
+            lockedIds.has(a.id) || a.status === 'Inactive'
+          );
+          if (allRestricted) {
+            return res.status(403).json({ error: 'Cannot submit a release for a locked or deactivated artist' });
+          }
+        }
         updateData.status = 'For Submission';
       }
     }
@@ -1377,10 +1402,13 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ error: 'Invalid release ID' });
     }
 
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const release = await Release.findOne({
       where: {
         id: releaseId,
-        brand_id: req.user.brand_id
+        brand_id: { [Op.in]: allowedBrandIds }
       },
       include: [
         { model: Artist, as: 'artists' }
@@ -1389,6 +1417,18 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Block priority pitch generation only if all release artists are locked or deactivated
+    const releaseArtists = (release as any).artists ?? [];
+    if (releaseArtists.length > 0) {
+      const lockedIds = await getLockedArtistIds(req.user.brand_id);
+      const allRestricted = releaseArtists.every((a: any) =>
+        lockedIds.has(a.id) || a.status === 'Inactive'
+      );
+      if (allRestricted) {
+        return res.status(403).json({ error: 'Cannot generate a priority pitch for a locked or deactivated artist' });
+      }
     }
 
     // Get songs via join table with all associations

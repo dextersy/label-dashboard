@@ -199,7 +199,9 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
           profile_photo: rawArtist.profile_photo ?? '',
           band_members: rawArtist.band_members,
           profile_photo_id: rawArtist.profile_photo_id,
-          profilePhotoImage: rawArtist.profilePhotoImage
+          profilePhotoImage: rawArtist.profilePhotoImage,
+          locked: rawArtist.locked,
+          status: rawArtist.status
         } : undefined;
         if (releaseArtist && releaseArtist.id !== this.artistStateService.getSelectedArtist()?.id) {
           localStorage.setItem('selected_artist_id', String(releaseArtist.id));
@@ -207,8 +209,8 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
           this.artistStateService.setSelectedArtist(releaseArtist);
         }
 
-        // Check if this is a non-draft release or belongs to a locked artist - show read-only view
-        if (response.release.status !== 'Draft' || this.artist?.locked) {
+        // Check if this is a non-draft release or belongs to a locked/deactivated artist - show read-only view
+        if (response.release.status !== 'Draft' || this.artist?.locked || this.artist?.status === 'Inactive') {
           this.showReadOnlyView = true;
           this.releaseForView = response.release;
           return;
@@ -455,6 +457,11 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
   async onSubmit(): Promise<void> {
     if (!this.releaseId) {
       this.notificationService.showError('Cannot submit release: No release ID found. Please save the release information first.');
+      return;
+    }
+
+    if (this.artist?.locked || this.artist?.status === 'Inactive') {
+      this.notificationService.showError('Cannot submit a release for a locked or deactivated artist.');
       return;
     }
 

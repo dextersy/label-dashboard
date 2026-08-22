@@ -6,6 +6,7 @@
     <app-release-view
       [release]="releaseForView"
       [isAdmin]="isUserAdmin"
+      [isArtistRestricted]="artist?.locked || artist?.status === 'Inactive'"
       (alertMessage)="onAlertMessage($event)"
       (releaseSubmitted)="onReleaseSubmitted($event)"
       (releaseUpdated)="onReleaseUpdated($event)">

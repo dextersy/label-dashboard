@@ -24,6 +24,7 @@ import { PlanLimitService } from '../../../../services/plan-limit.service';
 export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   @Input() release: Release | null = null;
   @Input() isAdmin: boolean = false;
+  @Input() isArtistRestricted: boolean = false;
   @Output() alertMessage = new EventEmitter<{type: 'success' | 'error', message: string}>();
   @Output() releaseSubmitted = new EventEmitter<Release>();
   @Output() releaseUpdated = new EventEmitter<Release>();
@@ -653,7 +654,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onDownloadPriorityPitch(): void {
-    if (this.downloadingPriorityPitch || !this.release) {
+    if (this.downloadingPriorityPitch || !this.release || this.isArtistRestricted) {
       return;
     }
 
@@ -721,10 +722,16 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  get canEdit(): boolean {
+    return this.isAdmin && !this.isArtistRestricted;
+  }
+
   canSubmitRelease(): boolean {
     // Only admins can submit, and only for Draft or For Submission status
+    // Blocked if the selected artist is locked or deactivated
     return this.isAdmin && this.release !== null &&
-           (this.release.status === 'Draft' || this.release.status === 'For Submission');
+           (this.release.status === 'Draft' || this.release.status === 'For Submission') &&
+           !this.isArtistRestricted;
   }
 
   async onSubmitRelease(): Promise<void> {

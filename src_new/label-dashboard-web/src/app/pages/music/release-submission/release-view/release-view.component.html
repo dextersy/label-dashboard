@@ -4,7 +4,7 @@
     <!-- Title with inline editing (admin only) -->
     <div *ngIf="!isAdmin || !isEditing('title')" class="tw-flex tw-items-center tw-gap-1">
       <h2 class="release-title tw-mb-0">{{ editingRelease.title }}</h2>
-      <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('title')" title="Edit title">
+      <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('title')" title="Edit title">
         <app-icon name="edit" iconOnly />
       </button>
     </div>
@@ -33,7 +33,7 @@
                   [class.tw-animate-spin]="submittingRelease" />
         <span class="tw-ml-1">{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}</span>
       </button>
-      <button *ngIf="isAdmin"
+      <button *ngIf="isAdmin && !isArtistRestricted"
               class="btn-secondary btn-sm"
               (click)="onDownloadPriorityPitch()"
               [disabled]="downloadingPriorityPitch"
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Mobile kebab menu -->
-    <div class="kebab-menu" *ngIf="canSubmitRelease() || isAdmin">
+    <div class="kebab-menu" *ngIf="canSubmitRelease() || (isAdmin && !isArtistRestricted)">
       <button class="kebab-toggle" (click)="kebabOpen = !kebabOpen">
         <app-icon name="more-vertical" />
       </button>
@@ -55,7 +55,7 @@
                 [disabled]="submittingRelease">
           <app-icon name="paper-plane" class="tw-mr-2" />{{ submittingRelease ? 'Submitting...' : 'Submit Release' }}
         </button>
-        <button *ngIf="isAdmin"
+        <button *ngIf="isAdmin && !isArtistRestricted"
                 (click)="onDownloadPriorityPitch(); kebabOpen = false"
                 [disabled]="downloadingPriorityPitch">
           <app-icon name="file" class="tw-mr-2" />{{ downloadingPriorityPitch ? 'Downloading...' : 'Priority Pitch' }}
@@ -88,7 +88,7 @@
       <div class="info-grid">
         <!-- Cover Art -->
         <div class="cover-art-container">
-          <ng-container *ngIf="isAdmin; else coverArtReadOnly">
+          <ng-container *ngIf="canEdit; else coverArtReadOnly">
             <label class="tw-cursor-pointer tw-block tw-relative tw-group" title="Click to change cover art">
               <img *ngIf="coverArtPreview || editingRelease.cover_art"
                    [src]="coverArtPreview || editingRelease.cover_art"
@@ -120,7 +120,7 @@
             <span class="detail-value">
               <ng-container *ngIf="!isAdmin || !isEditing('catalog_no')">
                 {{ editingRelease.catalog_no || '—' }}
-                <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('catalog_no')" title="Edit">
+                <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('catalog_no')" title="Edit">
                   <app-icon name="edit" iconOnly />
                 </button>
               </ng-container>
@@ -146,7 +146,7 @@
                   </button>
                 </span>
                 <span *ngIf="!editingRelease.UPC">—</span>
-                <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('UPC')" title="Edit">
+                <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('UPC')" title="Edit">
                   <app-icon name="edit" iconOnly />
                 </button>
               </ng-container>
@@ -166,7 +166,7 @@
               <ng-container *ngIf="!isAdmin || !isEditing('release_date')">
                 <span class="tw-flex tw-items-center tw-gap-2">
                   {{ formatDate(editingRelease.release_date) }}
-                  <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('release_date')" title="Edit">
+                  <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('release_date')" title="Edit">
                     <app-icon name="edit" iconOnly />
                   </button>
                 </span>
@@ -186,7 +186,7 @@
               <ng-container *ngIf="!isAdmin || !isEditing('status')">
                 <span class="tw-flex tw-items-center tw-gap-2">
                   <span class="badge" [ngClass]="getStatusBadgeClass(editingRelease.status)">{{ editingRelease.status }}</span>
-                  <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('status')" title="Edit">
+                  <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('status')" title="Edit">
                     <app-icon name="edit" iconOnly />
                   </button>
                 </span>
@@ -213,7 +213,7 @@
                   </a>
                 </ng-container>
                 <span *ngIf="!editingRelease.description">—</span>
-                <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('description')" title="Edit">
+                <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditing('description')" title="Edit">
                   <app-icon name="edit" iconOnly />
                 </button>
               </ng-container>
@@ -257,7 +257,7 @@
               <button *ngIf="editingRelease.spotify_link" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="copyLink(editingRelease.spotify_link, 'spotify_link')" [title]="copiedLink === 'spotify_link' ? 'Copied!' : 'Copy link'">
                 <app-icon [name]="copiedLink === 'spotify_link' ? 'check' : 'copy'" iconOnly />
               </button>
-              <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('spotify_link')" title="Edit">
+              <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('spotify_link')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
             </ng-container>
@@ -277,7 +277,7 @@
               <button *ngIf="editingRelease.apple_music_link" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="copyLink(editingRelease.apple_music_link, 'apple_music_link')" [title]="copiedLink === 'apple_music_link' ? 'Copied!' : 'Copy link'">
                 <app-icon [name]="copiedLink === 'apple_music_link' ? 'check' : 'copy'" iconOnly />
               </button>
-              <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('apple_music_link')" title="Edit">
+              <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('apple_music_link')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
             </ng-container>
@@ -297,7 +297,7 @@
               <button *ngIf="editingRelease.youtube_link" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="copyLink(editingRelease.youtube_link, 'youtube_link')" [title]="copiedLink === 'youtube_link' ? 'Copied!' : 'Copy link'">
                 <app-icon [name]="copiedLink === 'youtube_link' ? 'check' : 'copy'" iconOnly />
               </button>
-              <button *ngIf="isAdmin" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_link')" title="Edit">
+              <button *ngIf="canEdit" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('youtube_link')" title="Edit">
                 <app-icon name="edit" iconOnly />
               </button>
             </ng-container>
@@ -355,7 +355,7 @@
       <div class="liner-notes">
         <h3 class="subsection-title tw-flex tw-items-center tw-gap-1">
           Liner Notes
-          <button *ngIf="isAdmin && !isEditing('liner_notes')" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('liner_notes')" title="Edit liner notes">
+          <button *ngIf="canEdit && !isEditing('liner_notes')" type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('liner_notes')" title="Edit liner notes">
             <app-icon name="edit" iconOnly />
           </button>
         </h3>
@@ -463,7 +463,7 @@
             </span>
             <span class="track-duration">{{ formatDuration(song.duration) }}</span>
             <span class="track-actions">
-              <button *ngIf="isAdmin" class="btn-icon btn-sm" type="button" (click)="onEditSong(song); $event.stopPropagation()" title="Edit track">
+              <button *ngIf="canEdit" class="btn-icon btn-sm" type="button" (click)="onEditSong(song); $event.stopPropagation()" title="Edit track">
                 <app-icon name="edit" iconOnly />
               </button>
               <button class="track-expand-btn" (click)="toggleTrackExpand(song.id)">
@@ -589,7 +589,7 @@
 
   <!-- Song Edit Form (admin only) -->
   <app-song-form
-    *ngIf="isAdmin"
+    *ngIf="canEdit"
     [isVisible]="showSongForm"
     [releaseId]="release?.id || 0"
     [song]="editingSong"
