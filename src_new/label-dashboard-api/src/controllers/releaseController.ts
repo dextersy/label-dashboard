@@ -245,6 +245,17 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Block creating releases for locked artists
+    if (artists && artists.length > 0) {
+      const artistIds = artists.map((a: any) => a.artist_id).filter(Boolean);
+      if (artistIds.length > 0) {
+        const lockedIds = await getLockedArtistIds(req.user.brand_id);
+        if (artistIds.some((id: number) => lockedIds.has(id))) {
+          return res.status(403).json({ error: 'Cannot create a release for a locked artist' });
+        }
+      }
+    }
+
     // Handle cover art file upload to S3
     let coverArtUrl = null;
     let coverArtFileSize: number | undefined;
@@ -426,6 +437,21 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
+    }
+
+    // Block adding locked artists as new collaborators.
+    // Editing a release that already has locked collaborators is allowed.
+    if (artists && artists.length > 0) {
+      const lockedIds = await getLockedArtistIds(req.user.brand_id);
+      if (lockedIds.size > 0) {
+        const existingReleaseArtists = await ReleaseArtist.findAll({ where: { release_id: releaseId } });
+        const existingArtistIds = new Set(existingReleaseArtists.map((ra: any) => ra.artist_id));
+        const incomingArtistIds = artists.map((a: any) => a.artist_id).filter(Boolean);
+        const hasNewLockedArtist = incomingArtistIds.some((id: number) => lockedIds.has(id) && !existingArtistIds.has(id));
+        if (hasNewLockedArtist) {
+          return res.status(403).json({ error: 'Cannot add a locked artist as a collaborator' });
+        }
+      }
     }
 
     // Save original status before update for email notification check
