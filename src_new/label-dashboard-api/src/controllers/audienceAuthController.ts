@@ -7,7 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { Op } from 'sequelize';
-import { AudienceUser, Ticket } from '../models';
+import { AudienceUser, Event, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { uploadToS3, deleteFromS3, getS3PublicUrl } from '../utils/s3Service';
@@ -104,6 +104,125 @@ async function sendVerificationEmail(user: AudienceUser): Promise<void> {
     .replace(/%LOGO_URL%/g, logoUrl);
 
   await sendAudienceEmail(user.email_address, 'Verify your email address', html);
+}
+
+async function sendWelcomeEmail(user: AudienceUser): Promise<void> {
+  const platformName = process.env.PLATFORM_NAME || 'Your Scene';
+  const audienceUrl = getAudienceFrontendUrl();
+
+  // Fetch the next 2 upcoming published events listed on the ticketing platform
+  const upcomingEvents = await Event.findAll({
+    where: {
+      status: 'published',
+      listed_on_ticketing: true,
+      date_and_time: { [Op.gte]: new Date() },
+    },
+    order: [['date_and_time', 'ASC']],
+    limit: 2,
+    attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url'],
+  });
+
+  const templatePath = path.join(__dirname, '../assets/templates/audience_welcome_email.html');
+  let html = fs.readFileSync(templatePath, 'utf-8');
+  const logoUrl = `${process.env.AUDIENCE_APP_URL || ''}/assets/logo-dark-bg.png`;
+
+  let upcomingShowsSection = '';
+  if (upcomingEvents.length > 0) {
+    const eventCards = upcomingEvents.map((event) => {
+      const eventUrl = `${audienceUrl}/events/${event.id}`;
+      const dateStr = new Date(event.date_and_time).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      const timeStr = new Date(event.date_and_time).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      const posterBlock = event.poster_url
+        ? `<img src="${event.poster_url}" width="80" height="80" alt="${event.title}" style="display: block; border-radius: 6px; object-fit: cover; width: 80px; height: 80px;" />`
+        : `<div style="width: 80px; height: 80px; border-radius: 6px; background-color: #2a2a2a; display: inline-block;"></div>`;
+      return `
+        <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation"
+            style="background-color: #222222; border-radius: 8px; border: 1px solid #2a2a2a; margin-bottom: 12px;">
+          <tr>
+            <td style="padding: 16px;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td width="80" valign="top" style="padding-right: 16px;">
+                    ${posterBlock}
+                  </td>
+                  <td valign="top">
+                    <div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; line-height: 20px; padding-bottom: 4px;">
+                      <a href="${eventUrl}" target="_blank" style="color: #ffffff; text-decoration: none;">${event.title}</a>
+                    </div>
+                    <div style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #aaaaaa; line-height: 18px; padding-bottom: 4px;">
+                      ${dateStr} &middot; ${timeStr}
+                    </div>
+                    ${event.venue ? `<div style="font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #888888; line-height: 18px; padding-bottom: 10px;">${event.venue}</div>` : ''}
+                    <!--[if mso]>
+                    <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td valign="middle" align="center" style="border-radius: 6px; background-color: #facc15; padding: 8px 20px;" bgcolor="#facc15">
+                          <a class="pc-font-alt" style="display: inline-block; text-decoration: none; font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: 13px; color: #000000;" href="${eventUrl}" target="_blank">See More</a>
+                        </td>
+                      </tr>
+                    </table>
+                    <![endif]-->
+                    <!--[if !mso]><!-- -->
+                    <a href="${eventUrl}" target="_blank"
+                        style="display: inline-block; border-radius: 6px; background-color: #facc15; padding: 8px 20px; font-family: Arial, Helvetica, sans-serif; font-weight: 700; font-size: 13px; color: #000000; text-decoration: none; -webkit-text-size-adjust: none;">
+                      See More
+                    </a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>`;
+    }).join('');
+
+    upcomingShowsSection = `
+      <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td align="center" style="padding-bottom: 20px;">
+            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 700; line-height: 18px; color: #facc15; text-align: center; letter-spacing: 2px; text-transform: uppercase;">
+              Here are a few upcoming shows to check out!
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            ${eventCards}
+          </td>
+        </tr>
+      </table>`;
+  } else {
+    upcomingShowsSection = `
+      <table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+          <td align="center" style="padding-bottom: 8px;">
+            <div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; font-weight: 400; line-height: 26px; color: #aaaaaa; text-align: center;">
+              There are no upcoming shows right now &mdash; check back soon!
+            </div>
+          </td>
+        </tr>
+      </table>`;
+  }
+
+  const showsUrl = `${audienceUrl}/#shows`;
+
+  html = html
+    .replace(/%PLATFORM_NAME%/g, platformName)
+    .replace(/%FIRST_NAME%/g, user.first_name || 'there')
+    .replace(/%LOGO_URL%/g, logoUrl)
+    .replace(/%UPCOMING_SHOWS_SECTION%/g, upcomingShowsSection)
+    .replace(/%SHOWS_URL%/g, showsUrl);
+
+  await sendAudienceEmail(user.email_address, `Welcome to ${platformName}!`, html);
 }
 
 // ─── Controllers ──────────────────────────────────────────────────────────────
@@ -467,6 +586,9 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
 
     // Now that the email is confirmed, claim any tickets purchased with this address
     const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address);
+
+    // Send welcome email (fire-and-forget — don't block the response)
+    sendWelcomeEmail(user).catch((err) => console.error('Failed to send welcome email:', err));
 
     const authToken = signAudienceToken(user.id);
     return res.json({
