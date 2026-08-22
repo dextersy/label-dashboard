@@ -15,6 +15,7 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { headS3Object, getS3ObjectStream, getS3PublicUrl } from '../utils/s3Service';
 import { getRequestDomain } from '../utils/requestUtils';
+import { getLockedArtistIds } from '../utils/artistUtils';
 import archiver from 'archiver';
 import path from 'path';
 
@@ -2315,7 +2316,9 @@ export const getArtistEPK = async (req: Request, res: Response) => {
         'youtube_channel',
         'website_page_url',
         'epk_template',
-        'band_members'
+        'band_members',
+        'status',
+        'brand_id'
       ]
     });
 
@@ -2336,8 +2339,12 @@ export const getArtistEPK = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
-    // Check if EPK is disabled (template = 0)
-    if (artist.epk_template === 0) {
+    const lockedIds = await getLockedArtistIds((artist as any).brand_id);
+    if (
+      artist.epk_template === 0 ||
+      (artist as any).status === 'Inactive' ||
+      lockedIds.has(artistId)
+    ) {
       return res.status(404).json({ error: 'EPK is not available for this artist' });
     }
 
@@ -2481,6 +2488,15 @@ export const generateArtistEPKSEOPage = async (req: Request, res: Response) => {
     });
 
     if (!artist) {
+      return res.status(404).send('Artist not found');
+    }
+
+    // SEO page is not available for inactive or locked artists
+    if ((artist as any).status === 'Inactive') {
+      return res.status(404).send('Artist not found');
+    }
+    const lockedIdsForSEO = await getLockedArtistIds((artist as any).brand_id);
+    if (lockedIdsForSEO.has(artistId)) {
       return res.status(404).send('Artist not found');
     }
 
