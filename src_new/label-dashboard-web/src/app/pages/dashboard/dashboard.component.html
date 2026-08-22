@@ -55,7 +55,7 @@
         </div>
 
       </div>
-      <a *ngIf="featureMusicReleases"
+      <a *ngIf="featureMusicReleases && !isLockedArtist"
          routerLink="/music/releases/new"
          class="btn btn-primary btn-sm tw-flex-shrink-0 tw-no-underline tw-flex tw-items-center tw-gap-1 tw-w-full sm:tw-w-auto tw-justify-center">
         <app-icon name="plus" iconOnly /> Submit a release

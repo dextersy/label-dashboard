@@ -143,6 +143,11 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
         if (releaseId) {
           this.loadReleaseForEditing(+releaseId);
         } else {
+          // Locked artists cannot create new releases.
+          if (this.artist?.locked) {
+            this.router.navigate(['/music/releases']);
+            return;
+          }
           // New releases start as Draft, which doesn't count toward the limit.
           // The limit is enforced when the release is promoted to Live/Pending.
         }

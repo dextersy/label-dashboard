@@ -340,9 +340,13 @@ export class AlbumCreditsSectionComponent implements OnInit, OnChanges {
       .map((control, index) => index !== currentIndex ? control.get('artist_id')?.value : null)
       .filter(id => id);
 
-    return this.allArtists.filter(artist =>
-      !selectedArtistIds.includes(artist.id) || artist.id === currentArtistId
-    );
+    const existingCollaboratorIds = new Set((this.editingRelease?.artists ?? []).map((a: any) => a.id));
+
+    return this.allArtists.filter(artist => {
+      const notAlreadySelected = !selectedArtistIds.includes(artist.id) || artist.id === currentArtistId;
+      const lockedButAlreadyCollaborator = artist.locked && (existingCollaboratorIds.has(artist.id) || artist.id === currentArtistId);
+      return notAlreadySelected && (!artist.locked || lockedButAlreadyCollaborator);
+    });
   }
 
   getRoyaltyTotal(type: 'streaming' | 'sync' | 'download' | 'physical'): number {
