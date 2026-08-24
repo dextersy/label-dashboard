@@ -18,7 +18,7 @@ import { Event } from '../../models/event.model';
       </div>
 
       <!-- Stat Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div class="grid grid-cols-3 gap-4 mb-8">
         <div class="bg-white border border-gray-200 p-5">
           <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-3">Total Events</p>
           <p class="text-3xl font-black text-gray-900">{{ events().length }}</p>
