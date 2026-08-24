@@ -32,7 +32,8 @@ import {
   getArtistRegistrationInfo,
   getOrganizerProfile,
   toggleOrganizerFollow,
-  getFollowedOrganizers
+  getFollowedOrganizers,
+  getTicketingSitemap
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 import { authenticateAudienceToken } from '../middleware/auth';
@@ -82,6 +83,9 @@ router.post('/lead-inquiry', publicRateLimit, submitLeadInquiry);
 router.get('/artists/directory', publicRateLimit, getArtistDirectory);
 router.get('/artists/registration-info', publicRateLimit, getArtistRegistrationInfo);
 router.post('/artists/register', publicRateLimit, upload.single('profile_photo'), registerArtist);
+
+// Sitemap
+router.get('/sitemap.xml', getTicketingSitemap);
 
 // Organizer profile (public)
 router.get('/organizers/:brandId', publicRateLimit, getOrganizerProfile);
