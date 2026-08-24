@@ -1,5 +1,12 @@
 User-agent: *
 Allow: /
+Allow: /events/
+Allow: /organizers/
+Disallow: /app/
+Disallow: /my-shows
+Disallow: /login
+
+Sitemap: https://yourscene.live/sitemap.xml
 
 User-agent: facebookexternalhit
 Allow: /

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, signal, computed, HostListener } from '@a
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Title, Meta } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { AudienceAuthService } from '../../services/audience-auth.service';
@@ -242,7 +243,6 @@ interface PublicBrand {
                       <a [href]="event.external_ticket_link" target="_blank" rel="noopener"
                         class="inline-flex flex-col px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
                         <span class="text-xs font-bold uppercase tracking-wider leading-tight">Get Tickets →</span>
-                        <span class="text-[10px] font-mono leading-tight opacity-70">{{ event.ticket_price_display }}</span>
                       </a>
                     } @else if (event.buy_shortlink && !event.is_closed && event.ticketing_enabled !== false) {
                       <a [href]="event.buy_shortlink" target="_blank" rel="noopener"
@@ -367,7 +367,9 @@ export class LandingComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private audienceAuth: AudienceAuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private titleService: Title,
+    private metaService: Meta
   ) {}
 
   isLoggedIn = () => this.auth.isLoggedIn();
@@ -411,6 +413,16 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const homeTitle = 'Your Scene – Local Shows, Indie Concerts & Live Music in the Philippines';
+    const homeDesc = 'Discover local shows, indie concerts, and live music events in the Philippines — Cebu, Manila, and beyond. Browse upcoming gigs, get tickets, and support your local scene.';
+    this.titleService.setTitle(homeTitle);
+    this.metaService.updateTag({ name: 'description', content: homeDesc });
+    this.metaService.updateTag({ property: 'og:title', content: homeTitle });
+    this.metaService.updateTag({ property: 'og:description', content: homeDesc });
+    this.metaService.updateTag({ property: 'og:url', content: window.location.href });
+    this.metaService.updateTag({ name: 'twitter:title', content: homeTitle });
+    this.metaService.updateTag({ name: 'twitter:description', content: homeDesc });
+
     this.http.get<{ brands: PublicBrand[] }>(
       `${environment.apiUrl}/public/events/domain/${environment.publicListingDomain}`
     ).subscribe({
