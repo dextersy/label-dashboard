@@ -16,11 +16,17 @@
 <ng-container *ngIf="!loading && !error && dashboardData">
   <div class="tw-px-4 tw-py-6 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
 
-    <!-- Locked artist banner -->
-    <div *ngIf="isLockedArtist" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
+    <!-- Locked / inactive artist banner -->
+    <div *ngIf="isRestrictedArtist" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
       <app-icon name="lock" class="tw-flex-shrink-0" />
-      <span *ngIf="isAdmin"><strong>This artist is locked</strong> — your plan's active artist limit has been reached. Access is read-only. Deactivate other artists or <a routerLink="/admin/subscription" class="tw-font-semibold tw-underline tw-text-amber-800">upgrade your plan</a> to unlock this artist.</span>
-      <span *ngIf="!isAdmin"><strong>This artist is locked</strong> — your label's active artist limit has been reached. Access is read-only. Contact your label representatives for support.</span>
+      <ng-container *ngIf="isLockedArtist">
+        <span *ngIf="isAdmin"><strong>This artist is locked</strong> — your plan's active artist limit has been reached. Access is read-only. Deactivate other artists or <a routerLink="/admin/subscription" class="tw-font-semibold tw-underline tw-text-amber-800">upgrade your plan</a> to unlock this artist.</span>
+        <span *ngIf="!isAdmin"><strong>This artist is locked</strong> — your label's active artist limit has been reached. Access is read-only. Contact your label representatives for support.</span>
+      </ng-container>
+      <ng-container *ngIf="isInactiveArtist">
+        <span *ngIf="isAdmin"><strong>This artist is inactive</strong> — access is read-only. You can reactivate this artist from their <a routerLink="/artist" class="tw-font-semibold tw-underline tw-text-amber-800">artist profile</a>.</span>
+        <span *ngIf="!isAdmin"><strong>This artist is inactive</strong> — access is read-only. Contact your label representatives for support.</span>
+      </ng-container>
     </div>
 
     <!-- ── Page header ────────────────────────────────────────── -->
@@ -55,7 +61,7 @@
         </div>
 
       </div>
-      <a *ngIf="featureMusicReleases && !isLockedArtist"
+      <a *ngIf="featureMusicReleases && !isRestrictedArtist"
          routerLink="/music/releases/new"
          class="btn btn-primary btn-sm tw-flex-shrink-0 tw-no-underline tw-flex tw-items-center tw-gap-1 tw-w-full sm:tw-w-auto tw-justify-center">
         <app-icon name="plus" iconOnly /> Submit a release

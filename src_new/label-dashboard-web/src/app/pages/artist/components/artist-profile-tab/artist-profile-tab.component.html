@@ -47,8 +47,8 @@
         <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Basic Information</h3>
         <div class="tw-space-y-5">
 
-          <!-- Artist Status (Admin Only) -->
-          <div *ngIf="isAdmin && !isReadOnly">
+          <!-- Artist Status (Admin Only) — always visible to admin so they can reactivate locked/inactive artists -->
+          <div *ngIf="isAdmin">
             <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Status</p>
             <div class="tw-flex tw-items-center tw-gap-3">
               <p class="tw-mb-0 tw-font-semibold tw-text-gray-800">{{ editingProfile.status || 'Active' }}</p>

@@ -53,6 +53,14 @@ export class ArtistComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   get isLockedArtist(): boolean {
     return this.selectedArtist?.locked === true;
   }
+
+  get isInactiveArtist(): boolean {
+    return this.selectedArtist?.status === 'Inactive' && !this.selectedArtist?.locked;
+  }
+
+  get isRestrictedArtist(): boolean {
+    return this.isLockedArtist || this.isInactiveArtist;
+  }
   private routeSubscription: Subscription = new Subscription();
 
   isFormDirty(): boolean {

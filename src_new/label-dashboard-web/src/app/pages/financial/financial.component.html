@@ -1,4 +1,4 @@
-<div class="financial-page" [class.locked-overlay-host]="isLockedArtist">
+<div class="financial-page" [class.locked-overlay-host]="isRestrictedArtist">
   <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
 
@@ -6,11 +6,17 @@
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="selectedArtist">
       <div class="tw-col-span-12">
 
-        <!-- Locked artist banner -->
-        <div *ngIf="isLockedArtist" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
+        <!-- Locked / inactive artist banner -->
+        <div *ngIf="isRestrictedArtist" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
           <app-icon name="lock" class="tw-flex-shrink-0" />
-          <span *ngIf="isAdmin"><strong>This artist is locked</strong> — your plan's active artist limit has been reached. Access is read-only. Deactivate other artists or <a routerLink="/admin/subscription" class="tw-font-semibold tw-underline tw-text-amber-800">upgrade your plan</a> to unlock this artist.</span>
-          <span *ngIf="!isAdmin"><strong>This artist is locked</strong> — your label's active artist limit has been reached. Access is read-only. Contact your label representatives for support.</span>
+          <ng-container *ngIf="isLockedArtist">
+            <span *ngIf="isAdmin"><strong>This artist is locked</strong> — your plan's active artist limit has been reached. Access is read-only. Deactivate other artists or <a routerLink="/admin/subscription" class="tw-font-semibold tw-underline tw-text-amber-800">upgrade your plan</a> to unlock this artist.</span>
+            <span *ngIf="!isAdmin"><strong>This artist is locked</strong> — your label's active artist limit has been reached. Access is read-only. Contact your label representatives for support.</span>
+          </ng-container>
+          <ng-container *ngIf="isInactiveArtist">
+            <span *ngIf="isAdmin"><strong>This artist is inactive</strong> — access is read-only. You can reactivate this artist from their <a routerLink="/artist" class="tw-font-semibold tw-underline tw-text-amber-800">artist profile</a>.</span>
+            <span *ngIf="!isAdmin"><strong>This artist is inactive</strong> — access is read-only. Contact your label representatives for support.</span>
+          </ng-container>
         </div>
 
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
@@ -33,7 +39,7 @@
         <!-- Documents Tab -->
         <div *ngIf="activeTab === 'documents'">
           <app-financial-documents-tab
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             [documents]="documents"
             [documentUploadForm]="documentUploadForm"
             [uploadingDocument]="uploadingDocument"
@@ -56,7 +62,7 @@
             (pageChange)="onEarningsPageChange($event)"
             (filtersChange)="onEarningsFiltersChange($event)"
             (sortChange)="onEarningsSortChange($event)"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             (dateRangeChange)="onEarningsDateRangeChange($event)"></app-financial-earnings-tab>
         </div>
         
@@ -73,7 +79,7 @@
             (pageChange)="onRoyaltiesPageChange($event)"
             (filtersChange)="onRoyaltiesFiltersChange($event)"
             (sortChange)="onRoyaltiesSortChange($event)"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             (dateRangeChange)="onRoyaltiesDateRangeChange($event)"></app-financial-royalties-tab>
         </div>
         
@@ -106,7 +112,7 @@
           <app-financial-release-tab
             [releases]="releases"
             [isAdmin]="isAdmin"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             [editingRoyalties]="editingRoyalties"
             [updatingRoyalties]="updatingRoyalties"
             [toggleEditRoyalties]="toggleEditRoyalties.bind(this)"
@@ -118,7 +124,7 @@
         </div>
 
         <!-- New Royalty Tab -->
-        <div *ngIf="activeTab === 'new-royalty' && isAdmin && !isSubLabelArtist && !isLockedArtist">
+        <div *ngIf="activeTab === 'new-royalty' && isAdmin && !isSubLabelArtist && !isRestrictedArtist">
           <app-new-royalty-form
             [newRoyaltyForm]="newRoyaltyForm"
             [releases]="releases"
@@ -141,7 +147,7 @@
         </div>
 
         <!-- New Earning Tab -->
-        <div *ngIf="activeTab === 'new-earning' && isAdmin && !isSubLabelArtist && !isLockedArtist">
+        <div *ngIf="activeTab === 'new-earning' && isAdmin && !isSubLabelArtist && !isRestrictedArtist">
           <app-new-earning-form
             [newEarningForm]="newEarningForm"
             [releases]="releases"

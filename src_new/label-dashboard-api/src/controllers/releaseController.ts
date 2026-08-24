@@ -254,13 +254,17 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Block creating releases for locked artists
+    // Block creating releases for locked or inactive artists
     if (artists && artists.length > 0) {
       const artistIds = artists.map((a: any) => a.artist_id).filter(Boolean);
       if (artistIds.length > 0) {
-        const lockedIds = await getLockedArtistIds(req.user.brand_id);
-        if (artistIds.some((id: number) => lockedIds.has(id))) {
-          return res.status(403).json({ error: 'Cannot create a release for a locked artist' });
+        const [lockedIds, inactiveArtists] = await Promise.all([
+          getLockedArtistIds(req.user.brand_id),
+          Artist.findAll({ where: { id: artistIds, status: 'Inactive' }, attributes: ['id'] }),
+        ]);
+        const inactiveIds = new Set(inactiveArtists.map((a: any) => a.id));
+        if (artistIds.some((id: number) => lockedIds.has(id) || inactiveIds.has(id))) {
+          return res.status(403).json({ error: 'Cannot create a release for a locked or inactive artist' });
         }
       }
     }
@@ -448,18 +452,24 @@ export const updateRelease = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    // Block adding locked artists as new collaborators.
-    // Editing a release that already has locked collaborators is allowed.
+    // Block adding locked or inactive artists as new collaborators.
+    // Editing a release that already has locked/inactive collaborators is allowed.
     const parsedArtistsForLockCheck = typeof artists === 'string' ? (() => { try { return JSON.parse(artists); } catch { return null; } })() : artists;
     if (Array.isArray(parsedArtistsForLockCheck) && parsedArtistsForLockCheck.length > 0) {
-      const lockedIds = await getLockedArtistIds(req.user.brand_id);
-      if (lockedIds.size > 0) {
-        const existingReleaseArtists = await ReleaseArtist.findAll({ where: { release_id: releaseId } });
+      const incomingArtistIds: number[] = parsedArtistsForLockCheck.map((a: any) => a.artist_id).filter(Boolean);
+      if (incomingArtistIds.length > 0) {
+        const [lockedIds, existingReleaseArtists, inactiveArtists] = await Promise.all([
+          getLockedArtistIds(req.user.brand_id),
+          ReleaseArtist.findAll({ where: { release_id: releaseId } }),
+          Artist.findAll({ where: { id: incomingArtistIds, status: 'Inactive' }, attributes: ['id'] }),
+        ]);
         const existingArtistIds = new Set(existingReleaseArtists.map((ra: any) => ra.artist_id));
-        const incomingArtistIds = parsedArtistsForLockCheck.map((a: any) => a.artist_id).filter(Boolean);
-        const hasNewLockedArtist = incomingArtistIds.some((id: number) => lockedIds.has(id) && !existingArtistIds.has(id));
-        if (hasNewLockedArtist) {
-          return res.status(403).json({ error: 'Cannot add a locked artist as a collaborator' });
+        const inactiveIds = new Set(inactiveArtists.map((a: any) => a.id));
+        const hasNewRestrictedArtist = incomingArtistIds.some(
+          (id: number) => (lockedIds.has(id) || inactiveIds.has(id)) && !existingArtistIds.has(id)
+        );
+        if (hasNewRestrictedArtist) {
+          return res.status(403).json({ error: 'Cannot add a locked or inactive artist as a collaborator' });
         }
       }
     }

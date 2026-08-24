@@ -1,4 +1,4 @@
-<div class="release-submission-page" [class.locked-overlay-host]="artist?.locked">
+<div class="release-submission-page" [class.locked-overlay-host]="artist?.locked || artist?.status === 'Inactive'">
   <app-breadcrumb></app-breadcrumb>
 
   <!-- Read-Only View for non-Draft releases -->

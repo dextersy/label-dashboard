@@ -52,7 +52,7 @@ interface DashboardData {
     ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss',
-    host: { '[class.locked-overlay-host]': 'isLockedArtist' }
+    host: { '[class.locked-overlay-host]': 'isRestrictedArtist' }
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   dashboardData: DashboardData | null = null;
@@ -61,6 +61,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get isLockedArtist(): boolean {
     return this.selectedArtist?.locked === true;
+  }
+
+  get isInactiveArtist(): boolean {
+    return this.selectedArtist?.status === 'Inactive' && !this.selectedArtist?.locked;
+  }
+
+  get isRestrictedArtist(): boolean {
+    return this.isLockedArtist || this.isInactiveArtist;
   }
   error: string | null = null;
   private artistSubscription = new Subscription();

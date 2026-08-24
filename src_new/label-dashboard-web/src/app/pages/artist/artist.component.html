@@ -1,15 +1,21 @@
-<div class="artist-page" [class.locked-overlay-host]="isLockedArtist">
+<div class="artist-page" [class.locked-overlay-host]="isRestrictedArtist">
   <app-breadcrumb></app-breadcrumb>
   <div class="container-fluid">
     <!-- Main Content -->
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="selectedArtist">
       <div class="tw-col-span-12">
 
-        <!-- Locked artist banner -->
-        <div *ngIf="isLockedArtist" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
+        <!-- Locked / inactive artist banner -->
+        <div *ngIf="isRestrictedArtist" class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
           <app-icon name="lock" class="tw-flex-shrink-0" />
-          <span *ngIf="isAdmin"><strong>This artist is locked</strong> — your plan's active artist limit has been reached. Access is read-only. Deactivate other artists or <a routerLink="/admin/subscription" class="tw-font-semibold tw-underline tw-text-amber-800">upgrade your plan</a> to unlock this artist.</span>
-          <span *ngIf="!isAdmin"><strong>This artist is locked</strong> — your label's active artist limit has been reached. Access is read-only. Contact your label representatives for support.</span>
+          <ng-container *ngIf="isLockedArtist">
+            <span *ngIf="isAdmin"><strong>This artist is locked</strong> — your plan's active artist limit has been reached. Access is read-only. Deactivate other artists or <a routerLink="/admin/subscription" class="tw-font-semibold tw-underline tw-text-amber-800">upgrade your plan</a> to unlock this artist.</span>
+            <span *ngIf="!isAdmin"><strong>This artist is locked</strong> — your label's active artist limit has been reached. Access is read-only. Contact your label representatives for support.</span>
+          </ng-container>
+          <ng-container *ngIf="isInactiveArtist">
+            <span *ngIf="isAdmin"><strong>This artist is inactive</strong> — access is read-only. Set their status back to Active below to restore full access.</span>
+            <span *ngIf="!isAdmin"><strong>This artist is inactive</strong> — access is read-only. Contact your label representatives for support.</span>
+          </ng-container>
         </div>
 
         <!-- Tab Content (no navigation needed, handled by sidebar) -->
@@ -18,7 +24,7 @@
           <app-artist-profile-tab
             [artist]="selectedArtist"
             [isAdmin]="isAdmin"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             [customFields]="artistCustomFields"
             (alertMessage)="onAlertMessage($event)"
             (artistUpdated)="onArtistUpdated($event)">
@@ -29,7 +35,7 @@
         <div *ngIf="activeTab === 'gallery'">
           <app-artist-gallery-tab
             [artist]="selectedArtist"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             (alertMessage)="onAlertMessage($event)"
             (profilePhotoUpdated)="onArtistUpdated($event)">
           </app-artist-gallery-tab>
@@ -47,7 +53,7 @@
         <div *ngIf="activeTab === 'team'">
           <app-artist-team-tab
             [artist]="selectedArtist"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             (alertMessage)="onAlertMessage($event)">
           </app-artist-team-tab>
         </div>
@@ -56,7 +62,7 @@
         <div *ngIf="activeTab === 'manage-epk'">
           <app-artist-manage-epk-tab
             [artist]="selectedArtist"
-            [isReadOnly]="isSubLabelArtist || isLockedArtist"
+            [isReadOnly]="isSubLabelArtist || isRestrictedArtist"
             (alertMessage)="onAlertMessage($event)"
             (artistUpdated)="onArtistUpdated($event)">
           </app-artist-manage-epk-tab>
