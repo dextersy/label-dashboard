@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -17,7 +17,19 @@ import { EventReferrer } from '../../../models/event-referrer.model';
 @Component({
   selector: 'app-event-detail',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
+  styles: [`
+    .prose-event h2 { font-size: 0.95rem; font-weight: 700; margin: 0.6rem 0 0.2rem; }
+    .prose-event h3 { font-size: 0.875rem; font-weight: 600; margin: 0.4rem 0 0.2rem; }
+    .prose-event p { margin: 0 0 0.4rem; }
+    .prose-event p:last-child { margin-bottom: 0; }
+    .prose-event ul, .prose-event ol { margin: 0.2rem 0 0.4rem 1.25rem; }
+    .prose-event ul { list-style-type: disc; }
+    .prose-event ol { list-style-type: decimal; }
+    .prose-event a { color: #ca8a04; text-decoration: underline; }
+    .prose-event strong { font-weight: 700; }
+  `],
   template: `
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -191,7 +203,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
               @if (event()?.description) {
                 <div class="sm:col-span-2">
                   <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Description</dt>
-                  <dd class="text-sm text-gray-600">{{ event()?.description }}</dd>
+                  <dd class="text-sm text-gray-600 prose-event" [innerHTML]="formatDescription(event()!.description!)"></dd>
                 </div>
               }
             </dl>
@@ -1104,6 +1116,13 @@ import { EventReferrer } from '../../../models/event-referrer.model';
   `
 })
 export class EventDetailComponent implements OnInit {
+  formatDescription(text: string): string {
+    const looksLikeHtml = /<[a-z][\s\S]*>/i.test(text);
+    if (looksLikeHtml) return text;
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped.replace(/\n/g, '<br>');
+  }
+
   // Core state
   event = signal<Event | null>(null);
   activeTab = signal('overview');

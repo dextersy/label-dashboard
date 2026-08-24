@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { QuillModule } from 'ngx-quill';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { EventsService } from '../../../services/events.service';
@@ -45,13 +46,43 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, CommonModule, RouterLink],
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, RouterLink, QuillModule],
   styles: [`
     .venue-dropdown {
       position: absolute; top: 100%; left: 0; right: 0; z-index: 9999;
       background: white; border: 1px solid rgba(0,0,0,0.12); border-radius: 0;
       box-shadow: 0 4px 20px rgba(0,0,0,0.12); max-height: 260px;
       overflow-y: auto; margin-top: 2px;
+    }
+    .quill-event-editor { display: block; }
+    .quill-event-editor .ql-toolbar {
+      border: 1px solid #d1d5db;
+      border-bottom: none;
+      background: #f9fafb;
+      border-radius: 0;
+      padding: 6px 8px;
+    }
+    .quill-event-editor .ql-container {
+      border: 1px solid #d1d5db;
+      border-radius: 0;
+      font-size: 0.875rem;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+    .quill-event-editor .ql-editor {
+      min-height: 120px;
+      color: #111827;
+      padding: 10px 12px;
+    }
+    .quill-event-editor .ql-editor.ql-blank::before {
+      color: #9ca3af;
+      font-style: normal;
+    }
+    .quill-event-editor .ql-container:focus-within {
+      border-color: #facc15;
+    }
+    .quill-event-editor .ql-container:focus-within + .ql-toolbar,
+    .quill-event-editor .ql-toolbar:has(+ .ql-container:focus-within) {
+      border-color: #facc15;
     }
   `],
   template: `
@@ -75,7 +106,7 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
       }
 
       <!-- Tab Nav -->
-      <div class="flex gap-0 border-b border-gray-200 mb-6 overflow-x-auto">
+      <div class="sticky top-0 z-10 bg-zinc-50 flex gap-0 border-b border-gray-200 mb-6 overflow-x-auto -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
         @for (tab of tabs; track tab.id) {
           <button type="button" (click)="activeTab.set(tab.id)"
             class="flex items-center gap-1.5 px-5 py-3 text-xs font-mono uppercase tracking-widest whitespace-nowrap border-b-2 transition-colors"
@@ -112,35 +143,11 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                   placeholder="Concert Night 2025">
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Start Date & Time *</label>
-                  <input type="datetime-local" formControlName="date_and_time"
-                    (change)="onEventDateChange()"
-                    class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
-                </div>
-
-                <div>
-                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Close Ticket Sales</label>
-                  <label class="flex items-center gap-2 mb-2 cursor-pointer select-none">
-                    <input type="checkbox" [(ngModel)]="closeAtShowTime" [ngModelOptions]="{standalone:true}"
-                      (change)="onCloseAtShowTimeChange()"
-                      class="w-4 h-4 accent-yellow-400">
-                    <span class="text-xs font-mono text-gray-500">At show time</span>
-                  </label>
-                  @if (!closeAtShowTime) {
-                    <input type="datetime-local" formControlName="close_time"
-                      class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
-                    <div class="flex flex-wrap gap-1.5 mt-2">
-                      @for (s of closeTimeSuggestions; track s.label) {
-                        <button type="button" (click)="applyCloseTimeSuggestion(s.offsetMinutes)"
-                          class="px-2 py-0.5 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 hover:border-gray-500 transition-colors">
-                          {{ s.label }}
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Start Date & Time *</label>
+                <input type="datetime-local" formControlName="date_and_time"
+                  (change)="onEventDateChange()"
+                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
               </div>
             </div>
 
@@ -192,9 +199,12 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
 
               <div>
                 <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Description</label>
-                <textarea formControlName="description" rows="5"
-                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
-                  placeholder="Describe your event..."></textarea>
+                <quill-editor
+                  formControlName="description"
+                  [modules]="quillModules"
+                  placeholder="Describe your event..."
+                  class="quill-event-editor">
+                </quill-editor>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -263,6 +273,29 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
             }
 
             @if (form.get('ticketing_enabled')?.value) {
+
+              <!-- Close Ticket Sales -->
+              <div class="bg-white border border-gray-200 p-6 space-y-3">
+                <h2 class="text-xs font-black text-gray-900 uppercase tracking-widest">Close Ticket Sales</h2>
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="closeAtShowTime" [ngModelOptions]="{standalone:true}"
+                    (change)="onCloseAtShowTimeChange()"
+                    class="w-4 h-4 accent-yellow-400">
+                  <span class="text-xs font-mono text-gray-500">At show time</span>
+                </label>
+                @if (!closeAtShowTime) {
+                  <input type="datetime-local" formControlName="close_time"
+                    class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (s of closeTimeSuggestions; track s.label) {
+                      <button type="button" (click)="applyCloseTimeSuggestion(s.offsetMinutes)"
+                        class="px-2 py-0.5 text-xs font-mono border border-gray-300 text-gray-400 hover:text-gray-900 hover:border-gray-500 transition-colors">
+                        {{ s.label }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
 
               <!-- Fee info -->
               @if (feeSettings(); as fee) {
@@ -668,10 +701,21 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                class="px-4 py-2.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
               Cancel
             </a>
-            <button type="submit" [disabled]="loading()"
-              class="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
-              {{ loading() ? 'Saving...' : (isEdit() ? 'Save Changes' : 'Create Event') }}
-            </button>
+            @if (isEdit()) {
+              <button type="submit" [disabled]="loading()"
+                class="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
+                {{ loading() ? 'Saving...' : 'Save Changes' }}
+              </button>
+            } @else {
+              <button type="button" [disabled]="loading()" (click)="submitDraft()"
+                class="px-6 py-2.5 border border-gray-300 text-gray-600 text-xs font-black hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider disabled:opacity-50 transition-colors">
+                {{ loading() && !pendingPublish ? 'Saving...' : 'Save Draft' }}
+              </button>
+              <button type="button" [disabled]="loading()" (click)="submitAndPublish()"
+                class="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
+                {{ loading() && pendingPublish ? 'Publishing...' : 'Publish' }}
+              </button>
+            }
           </div>
         </div>
 
@@ -708,7 +752,18 @@ export class EventFormComponent implements OnInit, OnDestroy {
   selectedTagIds = signal<number[]>([]);
   newTagInput = '';
 
+  quillModules = {
+    toolbar: [
+      [{ header: [2, 3, false] }],
+      ['bold', 'italic'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      ['clean']
+    ]
+  };
+
   hasExternalLink = false;
+  pendingPublish = false;
 
   // Close time
   closeAtShowTime = true;
@@ -814,15 +869,17 @@ export class EventFormComponent implements OnInit, OnDestroy {
         next: (event) => {
           this.form.patchValue({
             title: event.title,
-            date_and_time: event.date_and_time?.slice(0, 16),
-            close_time: event.close_time?.slice(0, 16) || '',
+            date_and_time: event.date_and_time ? this.toLocalDatetimeString(new Date(event.date_and_time)) : '',
+            close_time: event.close_time ? this.toLocalDatetimeString(new Date(event.close_time)) : '',
             venue: event.venue || '',
             description: event.description || '',
             rsvp_link: event.rsvp_link || '',
             event_type: event.event_type || '',
             listed_on_ticketing: event.listed_on_ticketing ?? true,
             ticketing_enabled: event.ticketing_enabled !== undefined ? event.ticketing_enabled : true,
-            external_ticket_link: event.external_ticket_link || '',
+            external_ticket_link: event.external_ticket_link
+              ? (/^https?:\/\//i.test(event.external_ticket_link) ? event.external_ticket_link : 'https://' + event.external_ticket_link)
+              : '',
             supports_gcash: event.supports_gcash ?? false,
             supports_qrph: event.supports_qrph ?? false,
             supports_card: event.supports_card ?? false,
@@ -859,8 +916,8 @@ export class EventFormComponent implements OnInit, OnDestroy {
             isFree: tt.price === 0,
             max_tickets: tt.max_tickets,
             isUnlimited: tt.max_tickets === 0,
-            start_date: tt.start_date?.slice(0, 16) || null,
-            end_date: tt.end_date?.slice(0, 16) || null,
+            start_date: tt.start_date ? this.toLocalDatetimeString(new Date(tt.start_date)) : null,
+            end_date: tt.end_date ? this.toLocalDatetimeString(new Date(tt.end_date)) : null,
             showDateRange: !!(tt.start_date || tt.end_date),
             disabled: tt.disabled,
             special_instructions: tt.special_instructions || null,
@@ -1064,6 +1121,15 @@ export class EventFormComponent implements OnInit, OnDestroy {
     // Clear external ticket link if toggle is disabled
     if (!this.hasExternalLink) data.external_ticket_link = '';
 
+    // Normalize external ticket link to ensure it has a protocol
+    if (data.external_ticket_link && !/^https?:\/\//i.test(data.external_ticket_link)) {
+      data.external_ticket_link = 'https://' + data.external_ticket_link;
+    }
+
+    // Convert datetime-local strings (local time) to UTC ISO strings for the API
+    if (data.date_and_time) data.date_and_time = new Date(data.date_and_time).toISOString();
+    if (data.close_time) data.close_time = new Date(data.close_time).toISOString();
+
     // Close time
     if (this.closeAtShowTime) data.close_time = '';
 
@@ -1107,11 +1173,30 @@ export class EventFormComponent implements OnInit, OnDestroy {
       : this.eventsService.createEvent(data);
 
     action.subscribe({
-      next: (res) => this.router.navigate(['/app/events', res.event.id]),
+      next: (res) => {
+        if (!this.isEdit() && this.pendingPublish) {
+          this.eventsService.publishEvent(res.event.id).subscribe({
+            next: () => this.router.navigate(['/app/events', res.event.id]),
+            error: () => this.router.navigate(['/app/events', res.event.id])
+          });
+        } else {
+          this.router.navigate(['/app/events', res.event.id]);
+        }
+      },
       error: (err) => {
         this.error.set(err.error?.error || 'Failed to save event.');
         this.loading.set(false);
       }
     });
+  }
+
+  submitDraft(): void {
+    this.pendingPublish = false;
+    this.submit();
+  }
+
+  submitAndPublish(): void {
+    this.pendingPublish = true;
+    this.submit();
   }
 }
