@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, OnDestroy } from '@angular/core';
+import { Component, OnInit, signal, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -54,7 +54,21 @@ interface PublicEventView {
 @Component({
   selector: 'app-event-view',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, RouterLink, DatePipe, ShareModalComponent, AudienceAuthModalComponent],
+  styles: [`
+    .prose-event h2 { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.9); margin: 0.75rem 0 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .prose-event h3 { font-size: 0.875rem; font-weight: 700; color: rgba(255,255,255,0.8); margin: 0.5rem 0 0.25rem; }
+    .prose-event p { margin: 0 0 0.5rem; }
+    .prose-event p:last-child { margin-bottom: 0; }
+    .prose-event ul, .prose-event ol { margin: 0.25rem 0 0.5rem 1.25rem; }
+    .prose-event li { margin: 0.15rem 0; }
+    .prose-event ul { list-style-type: disc; }
+    .prose-event ol { list-style-type: decimal; }
+    .prose-event a { color: #facc15; text-decoration: underline; }
+    .prose-event a:hover { color: #fde047; }
+    .prose-event strong { color: rgba(255,255,255,0.9); }
+  `],
   template: `
     <!-- Nav -->
     <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
@@ -179,7 +193,12 @@ interface PublicEventView {
                 <!-- Status / CTA + attending count -->
                 <div class="flex flex-wrap items-center gap-4">
                   <div class="flex flex-wrap items-center gap-3">
-                    @if (event()!.ticketing_enabled === false) {
+                    @if (event()!.external_ticket_link) {
+                      <a [href]="normalizeUrl(event()!.external_ticket_link)" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
+                        <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
+                      </a>
+                    } @else if (event()!.ticketing_enabled === false) {
                       <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-white/20 text-white/30 text-sm font-bold uppercase tracking-wider">
                         <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                         Listing Only
@@ -189,12 +208,6 @@ interface PublicEventView {
                         <span class="w-2 h-2 rounded-full bg-white/20 flex-shrink-0"></span>
                         Tickets Closed
                       </div>
-                    } @else if (event()!.external_ticket_link) {
-                      <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
-                        <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
-                        <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }} · External site</span>
-                      </a>
                     } @else if (event()!.buy_shortlink) {
                       <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
                         class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
@@ -262,7 +275,7 @@ interface PublicEventView {
               @if (event()!.description) {
                 <div>
                   <h2 class="text-xs font-mono text-white/30 uppercase tracking-widest mb-4">About this show</h2>
-                  <p class="text-white/70 text-sm leading-relaxed font-mono" [innerHTML]="event()!.description"></p>
+                  <div class="text-white/70 text-sm leading-relaxed font-mono prose-event" [innerHTML]="formatDescription(event()!.description!)"></div>
                 </div>
               }
 
@@ -299,10 +312,9 @@ interface PublicEventView {
                   @if (!event()!.is_closed && (event()!.external_ticket_link || event()!.buy_shortlink)) {
                     <div class="mt-6">
                       @if (event()!.external_ticket_link) {
-                        <a [href]="event()!.external_ticket_link" target="_blank" rel="noopener noreferrer"
+                        <a [href]="normalizeUrl(event()!.external_ticket_link)" target="_blank" rel="noopener noreferrer"
                           class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
                           <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
-                          <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }} · External site</span>
                         </a>
                       } @else {
                         <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
@@ -468,6 +480,7 @@ export class EventViewComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Reset meta tags when leaving the page
     this.metaService.removeTag('name="description"');
+    this.metaService.removeTag('name="keywords"');
     this.metaService.removeTag('property="og:title"');
     this.metaService.removeTag('property="og:description"');
     this.metaService.removeTag('property="og:image"');
@@ -492,6 +505,11 @@ export class EventViewComponent implements OnInit, OnDestroy {
     this.toggleLike();
   }
 
+  normalizeUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+  }
+
   toggleLike(): void {
     const ev = this.event();
     if (!ev) return;
@@ -503,6 +521,20 @@ export class EventViewComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatDescription(text: string): string {
+    // If the content looks like HTML (from the rich text editor), render it directly.
+    // Otherwise treat as plain text and convert newlines to <br>.
+    const looksLikeHtml = /<[a-z][\s\S]*>/i.test(text);
+    if (looksLikeHtml) {
+      return text;
+    }
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return escaped.replace(/\n/g, '<br>');
+  }
+
   private updateSEOTags(event: PublicEventView): void {
     const dateStr = new Intl.DateTimeFormat('en-PH', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
@@ -511,18 +543,23 @@ export class EventViewComponent implements OnInit, OnDestroy {
     const venue = event.venue || event.venue_address || '';
     const description = event.description
       ? event.description.slice(0, 160)
-      : `${dateStr}${venue ? ' · ' + venue : ''} · ${event.ticket_price_display}`;
+      : `${event.title} — local ${event.event_type || 'show'} in the Philippines. ${dateStr}${venue ? ' · ' + venue : ''} · ${event.ticket_price_display}`;
 
-    const pageTitle = `${event.title}${venue ? ' at ' + venue : ''} | Your Scene`;
+    const pageTitle = `${event.title}${venue ? ' at ' + venue : ''} | Local Show | Your Scene Philippines`;
+
+    // Keywords: always include local/indie base terms + event tags + event name
+    const tagNames = (event.tags || []).map(t => t.name);
+    const keywords = ['local', 'indie', event.title, ...tagNames, 'local show', 'indie show', 'local concert', 'Philippines', 'live music', event.event_type].filter(Boolean).join(', ');
 
     this.titleService.setTitle(pageTitle);
 
     // Standard meta
     this.metaService.updateTag({ name: 'description', content: description });
+    this.metaService.updateTag({ name: 'keywords', content: keywords });
 
     // Open Graph (Facebook, LinkedIn, WhatsApp, etc.)
     this.metaService.updateTag({ property: 'og:type', content: 'event' });
-    this.metaService.updateTag({ property: 'og:title', content: event.title });
+    this.metaService.updateTag({ property: 'og:title', content: `${event.title} | Local Show | Your Scene` });
     this.metaService.updateTag({ property: 'og:description', content: description });
     if (event.poster_url) {
       this.metaService.updateTag({ property: 'og:image', content: event.poster_url });
@@ -531,7 +568,7 @@ export class EventViewComponent implements OnInit, OnDestroy {
 
     // Twitter card
     this.metaService.updateTag({ name: 'twitter:card', content: event.poster_url ? 'summary_large_image' : 'summary' });
-    this.metaService.updateTag({ name: 'twitter:title', content: event.title });
+    this.metaService.updateTag({ name: 'twitter:title', content: `${event.title} | Local Show | Your Scene` });
     this.metaService.updateTag({ name: 'twitter:description', content: description });
     if (event.poster_url) {
       this.metaService.updateTag({ name: 'twitter:image', content: event.poster_url });
