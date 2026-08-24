@@ -194,8 +194,13 @@ export const createRelease = async (req: AuthRequest, res: Response) => {
       status,
       description,
       liner_notes,
-      artists // Array of { artist_id, royalty_percentages }
     } = req.body;
+
+    // Parse artists early — multipart form data sends it as a JSON string
+    let artists = req.body.artists;
+    if (typeof artists === 'string') {
+      try { artists = JSON.parse(artists); } catch { artists = null; }
+    }
 
     // Auto-generate catalog number for non-admins if not provided
     if (!catalog_no) {
