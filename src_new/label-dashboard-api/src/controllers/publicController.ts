@@ -1867,6 +1867,106 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
   }
 };
 
+export const getTicketingEvents = async (req: Request, res: Response) => {
+  try {
+    const events = await Event.findAll({
+      where: {
+        date_and_time: { [Op.gte]: new Date() },
+        status: 'published',
+        listed_on_ticketing: true,
+      },
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+        },
+        {
+          model: TicketType,
+          as: 'ticketTypes',
+          attributes: ['id', 'name', 'price'],
+          where: { disabled: false },
+          required: false,
+        },
+        {
+          model: EventTag,
+          as: 'tags',
+          through: { attributes: [] },
+          attributes: ['id', 'name', 'is_custom'],
+          required: false,
+        },
+      ],
+      order: [['date_and_time', 'ASC']],
+    });
+
+    const eventIds = events.map(e => e.id);
+    const ticketCounts: Record<number, number> = {};
+    if (eventIds.length > 0) {
+      const countRows = await Ticket.findAll({
+        attributes: [
+          'event_id',
+          [sequelize.fn('SUM', sequelize.col('number_of_entries')), 'total'],
+        ],
+        where: {
+          event_id: { [Op.in]: eventIds },
+          status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] },
+        },
+        group: ['event_id'],
+        raw: true,
+      }) as any[];
+      for (const row of countRows) {
+        ticketCounts[row.event_id] = parseInt(row.total, 10) || 0;
+      }
+    }
+
+    const likeCounts: Record<number, number> = {};
+    if (eventIds.length > 0) {
+      const likeCountRows = await EventLike.findAll({
+        attributes: [
+          'event_id',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'total'],
+        ],
+        where: { event_id: { [Op.in]: eventIds } },
+        group: ['event_id'],
+        raw: true,
+      }) as any[];
+      for (const row of likeCountRows) {
+        likeCounts[row.event_id] = parseInt(row.total, 10) || 0;
+      }
+    }
+
+    const result = events.map(event => {
+      const priceDisplay = getEventDisplayPriceSync(event);
+      const brand = (event as any).brand;
+      return {
+        id: event.id,
+        title: event.title,
+        date_and_time: event.date_and_time,
+        venue: event.venue,
+        poster_url: event.poster_url,
+        ticket_price: priceDisplay.amount,
+        ticket_price_display: priceDisplay.displayText,
+        ticket_naming: event.ticket_naming,
+        buy_shortlink: event.buy_shortlink,
+        is_closed: new Date() > new Date(event.close_time || event.date_and_time),
+        tickets_sold: event.show_attendee_count !== false ? (ticketCounts[event.id] || 0) : undefined,
+        event_type: event.event_type || null,
+        tags: (event as any).tags || [],
+        ticketing_enabled: event.ticketing_enabled !== false,
+        external_ticket_link: event.external_ticket_link || null,
+        like_count: likeCounts[event.id] || 0,
+        brand_name: brand?.brand_name || null,
+        brand_id: brand?.id || null,
+      };
+    });
+
+    return res.json({ events: result });
+  } catch (error) {
+    console.error('getTicketingEvents error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Generate SEO page for public events listing
 export const generateEventsListSEOPage = async (req: Request, res: Response) => {
   try {

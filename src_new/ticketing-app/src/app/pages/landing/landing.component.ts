@@ -29,14 +29,6 @@ interface PublicEvent {
   like_count?: number;
 }
 
-interface PublicBrand {
-  id: number;
-  name: string;
-  color?: string;
-  logo_url?: string;
-  events: PublicEvent[];
-}
-
 @Component({
   selector: 'app-landing',
   standalone: true,
@@ -423,12 +415,11 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.metaService.updateTag({ name: 'twitter:title', content: homeTitle });
     this.metaService.updateTag({ name: 'twitter:description', content: homeDesc });
 
-    this.http.get<{ brands: PublicBrand[] }>(
-      `${environment.apiUrl}/public/events/domain/${environment.publicListingDomain}`
+    this.http.get<{ events: PublicEvent[] }>(
+      `${environment.apiUrl}/public/events`
     ).subscribe({
       next: (res) => {
-        const events = res.brands.flatMap(b => b.events.map(e => ({ ...e, brand_name: b.name, brand_id: b.id })));
-        events.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+        const events = res.events;
         this.allEvents.set(events);
         this.loading.set(false);
         this.startHeroCarousel();

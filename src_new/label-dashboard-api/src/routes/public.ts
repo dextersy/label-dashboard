@@ -33,7 +33,8 @@ import {
   getOrganizerProfile,
   toggleOrganizerFollow,
   getFollowedOrganizers,
-  getTicketingSitemap
+  getTicketingSitemap,
+  getTicketingEvents
 } from '../controllers/publicController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 import { authenticateAudienceToken } from '../middleware/auth';
@@ -44,6 +45,7 @@ const router = Router();
 // Public API routes (no authentication required)
 router.get('/brand/domain/:domain', getBrandByDomain);
 router.get('/events/domain/:domain', getAllEventsForDomain);
+router.get('/events', getTicketingEvents);
 router.get('/events/:id', getEventForPublic);
 router.get('/events/:id/info', getPublicEventInfo);
 router.get('/events/ticket-types/available', getAvailableTicketTypesPublic);
