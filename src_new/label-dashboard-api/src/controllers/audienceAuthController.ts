@@ -514,8 +514,8 @@ function buildOAuthSuccessRedirect(
 /** Step 1 — redirect the browser to Google's OAuth consent screen */
 export const audienceGoogleRedirect = async (req: Request, res: Response) => {
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.TICKETING_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.TICKETING_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
       return res.status(501).json({ error: 'Google Sign-In is not configured on this server' });
     }
@@ -570,8 +570,8 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
   if (!code) return errorRedirect('missing_code');
 
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID!;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const clientId = (process.env.TICKETING_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)!;
+    const clientSecret = (process.env.TICKETING_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)!;
     const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
     const redirectUri = `${serverUrl}/api/auth/audience/google/callback`;
 

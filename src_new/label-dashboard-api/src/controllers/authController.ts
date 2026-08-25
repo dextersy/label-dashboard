@@ -1010,7 +1010,7 @@ export const organizerLogin = async (req: Request, res: Response) => {
 // The frontend POSTs that code to POST /auth/ticketing/google/exchange to get the JWT —
 // keeping all tokens out of URLs, logs, and browser history.
 //
-// The GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET never leave the server.
+// The Google credentials (TICKETING_GOOGLE_CLIENT_ID/SECRET or the shared GOOGLE_CLIENT_ID/SECRET fallback) never leave the server.
 // To add Google Sign-In to the main dashboard in the future, create equivalent
 // organizerGoogleRedirect / organizerGoogleCallback functions scoped to the desired brand.
 
@@ -1030,8 +1030,8 @@ function getTicketingFrontendUrl(): string {
  */
 export const organizerGoogleRedirect = async (req: Request, res: Response) => {
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.TICKETING_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.TICKETING_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
       return res.status(501).json({ error: 'Google Sign-In is not configured on this server' });
     }
@@ -1101,8 +1101,8 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
   }
 
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID!;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const clientId = (process.env.TICKETING_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)!;
+    const clientSecret = (process.env.TICKETING_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)!;
     const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
     const redirectUri = `${serverUrl}/api/auth/ticketing/google/callback`;
 
@@ -1503,8 +1503,8 @@ export const validateResetHash = async (req: Request, res: Response) => {
  */
 export const dashboardGoogleRedirect = async (req: Request, res: Response) => {
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = process.env.DASHBOARD_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.DASHBOARD_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
       return res.status(501).json({ error: 'Google Sign-In is not configured on this server' });
     }
@@ -1605,8 +1605,8 @@ export const dashboardGoogleCallback = async (req: Request, res: Response) => {
   }
 
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID!;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+    const clientId = (process.env.DASHBOARD_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID)!;
+    const clientSecret = (process.env.DASHBOARD_GOOGLE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET)!;
     const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
     const redirectUri = `${serverUrl}/api/auth/dashboard/google/callback`;
 
