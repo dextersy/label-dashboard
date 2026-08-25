@@ -412,6 +412,9 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.metaService.updateTag({ property: 'og:title', content: homeTitle });
     this.metaService.updateTag({ property: 'og:description', content: homeDesc });
     this.metaService.updateTag({ property: 'og:url', content: window.location.href });
+    this.metaService.updateTag({ property: 'og:image', content: `${window.location.origin}/assets/og-image.png` });
+    this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+    this.metaService.updateTag({ name: 'twitter:image', content: `${window.location.origin}/assets/og-image.png` });
     this.metaService.updateTag({ name: 'twitter:title', content: homeTitle });
     this.metaService.updateTag({ name: 'twitter:description', content: homeDesc });
 
