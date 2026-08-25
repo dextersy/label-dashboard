@@ -39,6 +39,12 @@
               <app-icon name="eye-off" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
             </button>
           </div>
+          <button *ngIf="!artist?.locked && artist?.status !== 'Inactive'"
+                  type="button"
+                  class="btn btn-primary btn-sm tw-flex tw-items-center tw-gap-1"
+                  (click)="navigateToCreateRelease()">
+            <app-icon name="plus" iconOnly /> Create Release
+          </button>
         </div>
       </div>
 
