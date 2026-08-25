@@ -1,0 +1,375 @@
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-dark/95 backdrop-blur-sm border-b border-white/[0.06]">
+  <div class="max-w-5xl mx-auto px-6 flex items-center justify-between h-14">
+    <a routerLink="/" class="shrink-0">
+      <img src="assets/logo.png" alt="Spindly" class="h-9">
+    </a>
+    <div class="flex items-center gap-6">
+      <a routerLink="/login" class="text-sm text-white/60 hover:text-white transition-colors font-medium">sign in →</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ===== CONTENT ===== -->
+<main class="min-h-screen bg-dark pt-14">
+
+  <!-- Dot pattern texture -->
+  <div class="fixed inset-0 opacity-[0.035] pointer-events-none"
+    style="background-image: radial-gradient(circle, #019D92 1px, transparent 1px); background-size: 28px 28px;">
+  </div>
+
+  <div class="relative max-w-3xl mx-auto px-6 py-16 sm:py-24">
+
+    <!-- Header -->
+    <div class="mb-12">
+      <div class="inline-block bg-primary-light text-primary font-display font-bold text-xs px-3 py-1.5 rounded-sm -rotate-1 mb-8 select-none">
+        legal
+      </div>
+      <h1 class="font-display font-black text-white leading-tight mb-4"
+          style="font-size: clamp(1.8rem, 3vw, 2.75rem); line-height: 1.15; letter-spacing: -0.015em;">
+        terms of service.
+      </h1>
+      <p class="text-white/40 text-sm">Last updated: {{ lastUpdated }}</p>
+    </div>
+
+    <!-- Body -->
+    <div class="prose-legal">
+
+      <p>
+        Please read these Terms of Service ("Terms") carefully before using the Spindly website at
+        <strong>spindly.app</strong> and the Spindly label management platform (collectively, the "Service")
+        operated by Spindly ("Spindly", "we", "us", or "our").
+      </p>
+      <p>
+        By accessing or using the Service, you agree to be bound by these Terms. If you disagree with
+        any part of these Terms, you may not access the Service.
+      </p>
+
+      <!-- 1 -->
+      <h2>1. Description of the Service</h2>
+      <p>
+        Spindly is a label management platform designed for independent music labels. The Service allows
+        labels to manage artist rosters, track music releases and royalties, process payments, run events
+        and fundraisers, generate press materials, and provide artists with transparent access to their
+        financial information.
+      </p>
+      <p>
+        Access to the platform is by invitation only. Labels are onboarded by the Spindly team after an
+        inquiry and review process. Each label receives its own isolated, branded workspace.
+      </p>
+
+      <!-- 2 -->
+      <h2>2. Accounts and access</h2>
+      <h3>a. Account creation</h3>
+      <p>
+        To access the platform, you must be invited by Spindly or by an administrator of an existing
+        label account. You are responsible for maintaining the confidentiality of your login credentials
+        and for all activity that occurs under your account.
+      </p>
+      <h3>b. Accurate information</h3>
+      <p>
+        You agree to provide accurate, current, and complete information when creating or updating your
+        account. You must notify us immediately at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a>
+        if you suspect any unauthorised use of your account.
+      </p>
+      <h3>c. Account security</h3>
+      <p>
+        You are responsible for all actions taken under your account. Spindly will not be liable for any
+        loss or damage arising from your failure to safeguard your credentials. After a configurable
+        number of failed login attempts, your account may be temporarily locked as a security measure.
+      </p>
+      <h3>d. Role-based access</h3>
+      <p>
+        The platform uses role-based access controls. Label administrators may invite and manage team
+        members and artists. Each user role has defined permissions. Attempting to access features or
+        data outside your permitted role is a violation of these Terms.
+      </p>
+
+      <!-- 3 -->
+      <h2>3. Acceptable use</h2>
+      <p>You agree not to use the Service to:</p>
+      <ul>
+        <li>Upload, transmit, or store content that infringes any intellectual property rights, including copyrights, trademarks, or trade secrets.</li>
+        <li>Process, store, or distribute personal data in violation of applicable privacy laws, including the GDPR and the Data Privacy Act of 2012.</li>
+        <li>Engage in fraudulent activity, including falsifying financial records or misrepresenting royalty information to artists.</li>
+        <li>Attempt to gain unauthorised access to the platform, other accounts, or Spindly's systems.</li>
+        <li>Introduce malware, viruses, or any harmful code into the Service.</li>
+        <li>Scrape, crawl, or reverse-engineer the Service without our written permission.</li>
+        <li>Use the Service in any manner that violates applicable local, national, or international laws or regulations.</li>
+        <li>Harass, abuse, or harm any other user or third party through the Service.</li>
+      </ul>
+
+      <!-- 4 -->
+      <h2>4. Content and intellectual property</h2>
+      <h3>a. Your content</h3>
+      <p>
+        You retain full ownership of all content you upload to the Service, including music files, cover
+        art, artist biographies, contracts, and other materials ("Your Content"). By uploading content,
+        you grant Spindly a limited, non-exclusive, royalty-free licence to host, store, and display
+        Your Content solely to the extent necessary to provide the Service to you.
+      </p>
+      <h3>b. Responsibility for content</h3>
+      <p>
+        You are solely responsible for Your Content and for ensuring you have the right to upload and
+        use it within the Service. You represent and warrant that Your Content does not infringe any
+        third-party rights and does not violate any applicable law.
+      </p>
+      <h3>c. Spindly's intellectual property</h3>
+      <p>
+        The Service, including its software, design, logos, and documentation, is the exclusive property
+        of Spindly and is protected by copyright, trademark, and other intellectual property laws. You
+        may not copy, modify, distribute, sell, or lease any part of the Service, or reverse-engineer
+        any of our software, without our express written consent.
+      </p>
+      <h3>d. AI-generated content</h3>
+      <p>
+        The Service includes optional AI-powered features (such as AI-generated press releases and song
+        summaries) that produce output based on text-based metadata you provide. <strong>Audio files and
+        images are never transmitted to third-party AI providers</strong> — only text metadata such as
+        song titles, genre, mood tags, lyrics, or pitch descriptions. AI-generated output is provided
+        as-is for your convenience. You are responsible for reviewing, editing, and verifying any
+        AI-generated content before use. Spindly makes no warranty as to its accuracy, originality,
+        or fitness for any particular purpose.
+      </p>
+
+      <!-- 5 -->
+      <h2>5. Financial features and payments</h2>
+      <h3>a. Platform subscription</h3>
+      <p>
+        Access to the Spindly platform is subject to a subscription fee based on the plan selected
+        during onboarding. Subscription fees are billed monthly or annually as indicated at the time
+        of purchase. All fees are exclusive of applicable taxes.
+      </p>
+      <h3>b. Payment processing</h3>
+      <p>
+        Subscription payments are processed by PayMongo. By providing payment information, you authorise
+        us to charge the applicable fees to your payment method. Spindly does not store your card numbers
+        or full payment credentials — these are held by PayMongo in accordance with PCI-DSS standards.
+      </p>
+      <h3>c. Ticket and donation payments</h3>
+      <p>
+        Labels may use the platform to collect ticket sales and donations on behalf of their events or
+        fundraisers, processed via PayMongo. Spindly facilitates these transactions but is not the
+        merchant of record for individual event sales. The label is responsible for refunds, chargebacks,
+        and compliance with applicable consumer protection laws for their events.
+      </p>
+      <h3>d. Artist royalties</h3>
+      <p>
+        The financial reporting features in Spindly reflect data entered by label administrators.
+        Spindly provides tools for transparent reporting but does not independently verify the accuracy
+        of the financial data entered by labels. The legal and financial relationship between a label
+        and its artists is governed by their separate agreements.
+      </p>
+      <h3>e. Refunds</h3>
+      <p>
+        Subscription fees paid are non-refundable except where required by applicable law or as
+        explicitly stated at the time of purchase. If you believe you have been charged in error,
+        contact us at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a> within 14 days.
+      </p>
+
+      <!-- 6 -->
+      <h2>6. Beta features</h2>
+      <p>
+        Some or all features of the Service may be designated as "beta" or offered free of charge
+        during an early-access period. Beta features are provided without warranty and may be changed,
+        limited, or discontinued at any time. Spindly is not liable for any loss arising from changes
+        to beta features.
+      </p>
+
+      <!-- 7 -->
+      <h2>7. Privacy and data protection</h2>
+      <p>
+        Your use of the Service is also governed by our
+        <a routerLink="/privacy">Privacy Policy</a>, which is incorporated into these Terms by reference.
+        By using the Service, you consent to the data practices described in the Privacy Policy.
+      </p>
+      <p>
+        As a label administrator, you act as a data controller for the personal data of your artists,
+        team members, ticket buyers, and donors. You are responsible for ensuring you have a lawful
+        basis to collect and process that data, and for providing appropriate privacy notices to the
+        individuals whose data you process through the platform.
+      </p>
+
+      <!-- 8 -->
+      <h2>8. Third-party services and integrations</h2>
+      <p>
+        The Service relies on third-party providers for functions such as payment processing, file
+        storage, authentication, email delivery, AI features, and infrastructure. The specific
+        providers we use may change over time. Your use of features that invoke third-party services
+        is also subject to those providers' own terms of service and privacy policies. Spindly is not
+        responsible for the availability, accuracy, or conduct of third-party services.
+      </p>
+
+      <!-- 9 -->
+      <h2>9. Custom domains and branding</h2>
+      <p>
+        Labels on certain plans may configure a custom domain for their branded dashboard. You are
+        responsible for registering, renewing, and maintaining your domain. Spindly facilitates SSL
+        provisioning via Cloudflare or AWS Lightsail but is not responsible for domain-level outages
+        or third-party DNS failures.
+      </p>
+
+      <!-- 10 -->
+      <h2>10. Uptime and availability</h2>
+      <p>
+        Spindly will make reasonable efforts to maintain the availability of the Service, but does not
+        guarantee uninterrupted or error-free operation. We may temporarily suspend the Service for
+        maintenance, upgrades, or security reasons, with or without prior notice. Spindly will not be
+        liable for any loss or damage arising from downtime or service interruptions.
+      </p>
+
+      <!-- 11 -->
+      <h2>11. Termination</h2>
+      <h3>a. By you</h3>
+      <p>
+        You may cancel your subscription at any time from within the Spindly dashboard. Cancellation
+        takes effect at the end of your current billing period, and you will retain access to the
+        platform until that period ends. No refund is issued for the remaining time in the period.
+      </p>
+      <h3>b. By Spindly</h3>
+      <p>
+        We may suspend or terminate your access to the Service immediately, without notice, if you
+        materially breach these Terms, fail to pay applicable fees, or if we are required to do so by
+        law. We may also terminate the Service with 30 days' written notice at our discretion.
+      </p>
+      <h3>c. Effect of termination</h3>
+      <p>
+        Upon termination, your right to access the Service ceases. We will retain your data for the
+        periods set out in our Privacy Policy, after which it will be deleted. You may request an
+        export of your data within 30 days of termination by contacting us. Clauses that by their
+        nature should survive termination will do so, including Sections 4(c), 12, 13, and 14.
+      </p>
+
+      <!-- 12 -->
+      <h2>12. Disclaimers</h2>
+      <p>
+        THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT ANY WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+        PURPOSE, OR NON-INFRINGEMENT. SPINDLY DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED,
+        SECURE, OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED.
+      </p>
+      <p>
+        Spindly does not provide legal, financial, tax, or accounting advice. The financial reporting
+        tools in the platform are management aids only. You should consult a qualified professional
+        for any legal, financial, or tax matters.
+      </p>
+
+      <!-- 13 -->
+      <h2>13. Limitation of liability</h2>
+      <p>
+        TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL SPINDLY, ITS OFFICERS,
+        DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL,
+        OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, LOSS OF DATA, LOSS OF GOODWILL, OR BUSINESS
+        INTERRUPTION, ARISING OUT OF OR IN CONNECTION WITH YOUR USE OF THE SERVICE, EVEN IF SPINDLY
+        HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+      </p>
+      <p>
+        SPINDLY'S TOTAL LIABILITY TO YOU FOR ANY CLAIM ARISING OUT OF OR RELATING TO THESE TERMS OR THE
+        SERVICE SHALL NOT EXCEED THE TOTAL FEES YOU PAID TO SPINDLY IN THE TWELVE (12) MONTHS PRECEDING
+        THE CLAIM.
+      </p>
+      <p>
+        Some jurisdictions do not allow the exclusion of certain warranties or the limitation of liability
+        for certain types of damages. In such jurisdictions, the above limitations apply to the fullest
+        extent permitted by law.
+      </p>
+
+      <!-- 14 -->
+      <h2>14. Indemnification</h2>
+      <p>
+        You agree to indemnify, defend, and hold harmless Spindly and its officers, directors, employees,
+        and agents from and against any claims, liabilities, damages, losses, and expenses (including
+        reasonable legal fees) arising out of or in any way connected with: (a) your use of the Service;
+        (b) your violation of these Terms; (c) Your Content; or (d) your violation of any third-party
+        rights, including intellectual property rights or privacy rights.
+      </p>
+
+      <!-- 15 -->
+      <h2>15. Governing law and dispute resolution</h2>
+      <p>
+        These Terms are governed by and construed in accordance with the laws of the Republic of the
+        Philippines, without regard to its conflict of law provisions. Any dispute arising out of or
+        relating to these Terms or the Service shall be submitted to the exclusive jurisdiction of the
+        courts of the Philippines.
+      </p>
+      <p>
+        If you are a consumer resident in the EEA or UK, you may also have the right to bring a claim
+        in the courts of your country of residence.
+      </p>
+
+      <!-- 16 -->
+      <h2>16. Changes to these Terms</h2>
+      <p>
+        We may update these Terms from time to time. We will notify registered users of material changes
+        by email at least 14 days before the changes take effect. Continued use of the Service after
+        the effective date constitutes acceptance of the revised Terms. If you do not agree to the
+        revised Terms, you must stop using the Service before the effective date.
+      </p>
+
+      <!-- 17 -->
+      <h2>17. Miscellaneous</h2>
+      <ul>
+        <li>
+          <strong>Entire agreement:</strong> These Terms, together with the Privacy Policy, constitute the
+          entire agreement between you and Spindly regarding the Service and supersede all prior agreements.
+        </li>
+        <li>
+          <strong>Severability:</strong> If any provision of these Terms is found to be unenforceable, the
+          remaining provisions will continue in full force and effect.
+        </li>
+        <li>
+          <strong>Waiver:</strong> Spindly's failure to enforce any right or provision of these Terms will
+          not be considered a waiver of those rights.
+        </li>
+        <li>
+          <strong>Assignment:</strong> You may not assign these Terms or any rights hereunder without our
+          prior written consent. Spindly may assign these Terms in connection with a merger, acquisition,
+          or sale of assets.
+        </li>
+        <li>
+          <strong>Force majeure:</strong> Spindly will not be liable for any failure or delay in performance
+          due to causes beyond our reasonable control.
+        </li>
+      </ul>
+
+      <!-- 18 -->
+      <h2>18. Contact us</h2>
+      <p>
+        If you have questions about these Terms, please contact us:
+      </p>
+      <p>
+        <strong>Email:</strong> <a href="mailto:hi@melt-records.com">hi@melt-records.com</a><br>
+        <strong>Website:</strong> <a href="https://spindly.app/contact" routerLink="/contact">spindly.app/contact</a>
+      </p>
+
+    </div>
+
+    <!-- Back link -->
+    <div class="mt-16 pt-8 border-t border-white/[0.06]">
+      <a routerLink="/" class="text-sm text-white/30 hover:text-primary transition-colors">← back to home</a>
+    </div>
+
+  </div>
+</main>
+
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-dark border-t border-white/[0.06] py-10">
+  <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <img src="assets/logo.png" alt="Spindly" class="h-6 mb-2">
+      <p class="text-white/25 text-xs">label management for independent music.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-white/30 text-sm">
+      <a routerLink="/contact" class="hover:text-white/60 transition-colors">get in touch</a>
+      <a routerLink="/privacy" class="hover:text-white/60 transition-colors">privacy</a>
+      <a routerLink="/terms" class="hover:text-white/60 transition-colors">terms</a>
+      <a routerLink="/login" class="hover:text-white/60 transition-colors">sign in</a>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-6 mt-8 pt-6 border-t border-white/[0.05] flex items-center justify-between">
+    <p class="text-white/20 text-xs">&copy; 2026 Spindly.</p>
+    <p class="text-white/20 text-xs">made with love for indie music ♥</p>
+  </div>
+</footer>

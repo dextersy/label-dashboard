@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Meta, Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-landing',
@@ -7,7 +8,17 @@ import { RouterLink } from '@angular/router';
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss'
 })
-export class LandingComponent {
+export class LandingComponent implements OnInit {
+  constructor(private title: Title, private meta: Meta) {}
+
+  ngOnInit(): void {
+    this.title.setTitle('Label Management Platform for Small Indie Labels | Spindly');
+    this.meta.updateTag({ name: 'description', content: 'Spindly is a label management platform built for small indie labels in the Philippines. Label solutions for your music business — artist finances, releases, royalties, and payments in one place.' });
+    this.meta.updateTag({ property: 'og:title', content: 'Label Management Platform for Small Indie Labels | Spindly' });
+    this.meta.updateTag({ property: 'og:description', content: 'Label solutions for your music business. Spindly gives small indie labels in the Philippines transparent artist finances, release tracking, and royalty management — all in one place.' });
+    this.meta.updateTag({ property: 'og:url', content: 'https://spindly.app/' });
+  }
+
   features = [
     {
       image: 'money.png',

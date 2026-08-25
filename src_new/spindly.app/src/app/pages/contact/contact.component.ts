@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -10,7 +11,7 @@ import { environment } from '../../../environments/environment';
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
-export class ContactComponent {
+export class ContactComponent implements OnInit {
   form = {
     name: '',
     contact_number: '',
@@ -23,7 +24,15 @@ export class ContactComponent {
   submitted = signal(false);
   errorMsg = signal('');
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private titleService: Title, private meta: Meta) {}
+
+  ngOnInit(): void {
+    this.titleService.setTitle('Get Started with Spindly | Label Solutions for Indie Labels');
+    this.meta.updateTag({ name: 'description', content: 'Ready to simplify your music business? Get in touch and see how Spindly\'s label management platform can work for your indie label in the Philippines.' });
+    this.meta.updateTag({ property: 'og:title', content: 'Get Started with Spindly | Label Solutions for Indie Labels' });
+    this.meta.updateTag({ property: 'og:description', content: 'Ready to simplify your music business? Get in touch and see how Spindly\'s label management platform can work for your indie label in the Philippines.' });
+    this.meta.updateTag({ property: 'og:url', content: 'https://spindly.app/contact' });
+  }
 
   submit(): void {
     this.errorMsg.set('');

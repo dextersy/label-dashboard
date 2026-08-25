@@ -1,0 +1,375 @@
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-dark/95 backdrop-blur-sm border-b border-white/[0.06]">
+  <div class="max-w-5xl mx-auto px-6 flex items-center justify-between h-14">
+    <a routerLink="/" class="shrink-0">
+      <img src="assets/logo.png" alt="Spindly" class="h-9">
+    </a>
+    <div class="flex items-center gap-6">
+      <a routerLink="/login" class="text-sm text-white/60 hover:text-white transition-colors font-medium">sign in →</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ===== CONTENT ===== -->
+<main class="min-h-screen bg-dark pt-14">
+
+  <!-- Dot pattern texture -->
+  <div class="fixed inset-0 opacity-[0.035] pointer-events-none"
+    style="background-image: radial-gradient(circle, #019D92 1px, transparent 1px); background-size: 28px 28px;">
+  </div>
+
+  <div class="relative max-w-3xl mx-auto px-6 py-16 sm:py-24">
+
+    <!-- Header -->
+    <div class="mb-12">
+      <div class="inline-block bg-primary-light text-primary font-display font-bold text-xs px-3 py-1.5 rounded-sm -rotate-1 mb-8 select-none">
+        legal
+      </div>
+      <h1 class="font-display font-black text-white leading-tight mb-4"
+          style="font-size: clamp(1.8rem, 3vw, 2.75rem); line-height: 1.15; letter-spacing: -0.015em;">
+        privacy policy.
+      </h1>
+      <p class="text-white/40 text-sm">Last updated: {{ lastUpdated }}</p>
+    </div>
+
+    <!-- Body -->
+    <div class="prose-legal">
+
+      <p>
+        Spindly ("Spindly", "we", "us", or "our") is committed to protecting your personal information and
+        your right to privacy. This Privacy Policy explains what information we collect, why we collect it,
+        and how we use it when you use our website at <strong>spindly.app</strong> and the Spindly label
+        management platform (collectively, the "Service").
+      </p>
+      <p>
+        If you are located in the European Economic Area (EEA) or the United Kingdom, this policy also
+        describes how we comply with the General Data Protection Regulation (GDPR). If you are located in
+        the Philippines, it describes how we comply with the Data Privacy Act of 2012 (Republic Act No. 10173).
+      </p>
+      <p>
+        Please read this policy carefully. If you disagree with its terms, please discontinue use of the Service.
+      </p>
+
+      <!-- 1 -->
+      <h2>1. Who is the data controller?</h2>
+      <p>
+        Spindly is the data controller for personal information collected through spindly.app and the
+        Spindly platform. If you have questions about this policy or want to exercise your data rights,
+        contact us at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a>.
+      </p>
+      <p>
+        Labels that use the Spindly platform to manage their artists are independent data controllers
+        (or, in some jurisdictions, joint controllers) for the personal data of their artists, staff,
+        ticket buyers, and donors that they upload or collect through the platform. This policy covers
+        Spindly's own data practices, not those of individual labels.
+      </p>
+
+      <!-- 2 -->
+      <h2>2. Information we collect</h2>
+
+      <h3>a. Information you give us directly</h3>
+      <ul>
+        <li>
+          <strong>Contact form (spindly.app/contact):</strong> When you submit an inquiry, we collect
+          your full name, email address, contact number (optional), label name (optional), and a
+          free-text description of your label.
+        </li>
+        <li>
+          <strong>Account registration:</strong> Label admins are onboarded by invitation. During
+          registration we collect your email address, chosen username, first and last name, and
+          password (stored as a one-way bcrypt hash). You may also add a profile photo.
+        </li>
+        <li>
+          <strong>Platform content:</strong> Any artist profiles, release metadata, financial records,
+          audio files, photos, documents, and contracts you upload through the platform.
+        </li>
+      </ul>
+
+      <h3>b. Information collected automatically</h3>
+      <ul>
+        <li>
+          <strong>Login activity:</strong> When you sign in, we log your IP address, proxy IP (if
+          applicable), the authentication method used (password or Google), timestamp, and associated
+          brand and user ID. This is used for security monitoring and fraud prevention.
+        </li>
+        <li>
+          <strong>Session tokens:</strong> After login, we issue a JSON Web Token (JWT) that is stored
+          in your browser's local storage. We do not use HTTP cookies for session management.
+        </li>
+        <li>
+          <strong>Google Fonts:</strong> Our website loads fonts from Google's servers
+          (fonts.googleapis.com). This causes your browser to send your IP address to Google as part
+          of the font request. Google's privacy policy governs this data transfer.
+        </li>
+      </ul>
+
+      <h3>c. Information from third-party sign-in providers</h3>
+      <p>
+        If you choose to sign in with Google, we receive your name, email address, and Google account ID
+        from Google. We never receive your Google password.
+      </p>
+
+      <!-- 3 -->
+      <h2>3. How we use your information</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Purpose</th>
+            <th>Legal basis (GDPR Art. 6)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>To respond to contact form inquiries and onboard new labels</td>
+            <td>Legitimate interests (Art. 6(1)(f))</td>
+          </tr>
+          <tr>
+            <td>To create and manage your Spindly account</td>
+            <td>Performance of a contract (Art. 6(1)(b))</td>
+          </tr>
+          <tr>
+            <td>To provide and operate the platform (artist management, royalties, releases, events)</td>
+            <td>Performance of a contract (Art. 6(1)(b))</td>
+          </tr>
+          <tr>
+            <td>To process subscription payments via PayMongo</td>
+            <td>Performance of a contract (Art. 6(1)(b))</td>
+          </tr>
+          <tr>
+            <td>To send transactional emails (invites, password resets, account notifications)</td>
+            <td>Performance of a contract (Art. 6(1)(b))</td>
+          </tr>
+          <tr>
+            <td>To detect and prevent fraud, abuse, and unauthorised access (login attempt logging)</td>
+            <td>Legitimate interests (Art. 6(1)(f))</td>
+          </tr>
+          <tr>
+            <td>To comply with legal obligations (tax records, financial reporting)</td>
+            <td>Legal obligation (Art. 6(1)(c))</td>
+          </tr>
+          <tr>
+            <td>To improve the Service through aggregate, anonymised analytics</td>
+            <td>Legitimate interests (Art. 6(1)(f))</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 4 -->
+      <h2>4. Data processed on behalf of labels (label-controlled data)</h2>
+      <p>
+        When a label uses Spindly to manage artists, ticket buyers, or donors, it uploads or generates
+        personal data about those individuals. In this context:
+      </p>
+      <ul>
+        <li>The <strong>label</strong> is the data controller for that data.</li>
+        <li><strong>Spindly</strong> acts as a data processor on the label's behalf.</li>
+        <li>
+          Labels are responsible for having a lawful basis to collect that data and for informing
+          affected individuals about how it will be used.
+        </li>
+        <li>
+          If you are an artist, ticket buyer, or donor whose data appears in the platform as a result
+          of a label's use of Spindly, please contact that label directly to exercise your data rights.
+          You may also contact us at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a> and
+          we will assist where we can.
+        </li>
+      </ul>
+
+      <!-- 5 -->
+      <h2>5. AI-powered features</h2>
+      <p>
+        The platform includes optional AI-powered features such as AI-generated press releases and
+        song summaries. When these features are used, we transmit text-based metadata to a third-party
+        large language model (LLM) provider for processing — for example, a song title, genre, mood
+        tags, lyrics, or a pitch description.
+      </p>
+      <p>
+        <strong>Audio files and images are never sent to third-party AI providers.</strong> Only
+        text-based metadata and descriptions are used to prompt the AI. We do not share personal
+        information about individual users beyond what is strictly necessary for the feature being used.
+      </p>
+
+      <!-- 6 -->
+      <h2>6. Sharing and disclosure</h2>
+      <p>
+        We do not sell your personal data. We share data only in the following circumstances:
+      </p>
+
+      <h3>a. Third-party service providers</h3>
+      <p>
+        To operate the Service, we engage third-party service providers for functions such as file
+        storage, email delivery, payment processing, sign-in authentication, AI feature processing,
+        and infrastructure. These providers are given access to your data only to the extent necessary
+        to perform their functions and are not permitted to use it for other purposes.
+      </p>
+      <p>
+        We may update the specific providers we use from time to time without notice, provided the
+        categories of processing remain the same. If you would like to know which providers we currently
+        use, contact us at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a>.
+      </p>
+
+      <h3>b. Legal requirements</h3>
+      <p>
+        We may disclose your information if required by law, court order, or governmental authority,
+        or to protect the rights, property, or safety of Spindly, our users, or the public.
+      </p>
+
+      <h3>c. Business transfers</h3>
+      <p>
+        If Spindly is involved in a merger, acquisition, or sale of all or substantially all of its
+        assets, your information may be transferred as part of that transaction. We will notify you
+        before your data becomes subject to a different privacy policy.
+      </p>
+
+      <!-- 7 -->
+      <h2>7. International data transfers</h2>
+      <p>
+        Some of our service providers are located outside the Philippines and the EEA. Where we
+        transfer personal data to countries that are not deemed adequate by the European Commission,
+        we rely on standard contractual clauses (SCCs) approved by the European Commission, or other
+        appropriate safeguards. For transfers from the Philippines, we comply with the cross-border
+        transfer rules of the Data Privacy Act of 2012.
+      </p>
+
+      <!-- 8 -->
+      <h2>8. Data retention</h2>
+      <p>
+        We retain personal data for as long as your account is active or as necessary to fulfil the
+        purposes described in this policy. We do not automatically delete data on a fixed schedule —
+        your data remains accessible to you for as long as you use the Service.
+      </p>
+      <p>
+        If you wish to have your personal data deleted, you may request this at any time by contacting
+        us at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a>. We will action deletion
+        requests promptly, subject to any legal obligations that require us to retain certain records
+        (for example, financial transaction records required under applicable tax law).
+      </p>
+      <p>
+        When a label account is terminated, we will retain the account data for a reasonable period
+        to allow for any outstanding billing, disputes, or legal compliance obligations, after which
+        it will be deleted.
+      </p>
+
+      <!-- 9 -->
+      <h2>9. Cookies and local storage</h2>
+      <p>
+        The Spindly platform does not use cookies for session management. Authentication tokens (JWTs)
+        are stored in your browser's <strong>local storage</strong>, not in cookies. This means these
+        tokens are not automatically sent with HTTP requests and are not subject to the EU Cookie
+        Directive in the same way that cookies are.
+      </p>
+      <p>
+        However, our website does load fonts from Google's servers, which may result in Google
+        setting cookies or receiving your IP address. You can prevent this by using a browser extension
+        that blocks third-party requests.
+      </p>
+      <p>
+        We do not currently use any analytics tracking scripts, advertising pixels, or behavioural
+        tracking cookies on spindly.app. If this changes, we will update this policy and, where
+        required, obtain your consent before setting non-essential cookies.
+      </p>
+
+      <!-- 10 -->
+      <h2>10. Your rights</h2>
+
+      <h3>Under GDPR (EEA / UK users)</h3>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Access</strong> — request a copy of the personal data we hold about you.</li>
+        <li><strong>Rectification</strong> — ask us to correct inaccurate or incomplete data.</li>
+        <li><strong>Erasure ("right to be forgotten")</strong> — ask us to delete your data, subject to legal retention obligations.</li>
+        <li><strong>Restriction</strong> — ask us to restrict processing of your data in certain circumstances.</li>
+        <li><strong>Data portability</strong> — receive your data in a structured, machine-readable format.</li>
+        <li><strong>Object</strong> — object to processing based on legitimate interests.</li>
+        <li><strong>Withdraw consent</strong> — where processing is based on consent, withdraw it at any time without affecting the lawfulness of prior processing.</li>
+        <li><strong>Lodge a complaint</strong> — with your local data protection authority if you believe we have violated your rights.</li>
+      </ul>
+
+      <h3>Under the Data Privacy Act of 2012 (Philippine users)</h3>
+      <p>You have the right to:</p>
+      <ul>
+        <li><strong>Be informed</strong> — know how your data is being processed.</li>
+        <li><strong>Access</strong> — request a copy of your personal data.</li>
+        <li><strong>Rectification</strong> — correct inaccurate, false, or incomplete data.</li>
+        <li><strong>Erasure or blocking</strong> — ask us to erase or block data that is unlawfully obtained or no longer necessary.</li>
+        <li><strong>Damages</strong> — be indemnified for damages sustained due to inaccurate, incomplete, outdated, false, or unlawfully obtained personal data.</li>
+        <li><strong>Data portability</strong> — receive your data in a structured, commonly used format.</li>
+        <li><strong>Lodge a complaint</strong> — with the National Privacy Commission (NPC) at <a href="https://www.privacy.gov.ph" target="_blank" rel="noopener">privacy.gov.ph</a>.</li>
+      </ul>
+
+      <p>
+        To exercise any of these rights, email us at <a href="mailto:hi@melt-records.com">hi@melt-records.com</a>.
+        We will respond within 30 days. We may ask you to verify your identity before processing your request.
+      </p>
+
+      <!-- 11 -->
+      <h2>11. Security</h2>
+      <p>
+        We take reasonable technical and organisational measures to protect your personal data,
+        including bcrypt password hashing, HTTPS for all data in transit, and access controls
+        on our storage and database systems. However, no method of transmission over the internet
+        is 100% secure, and we cannot guarantee absolute security.
+      </p>
+      <p>
+        If we become aware of a data breach that is likely to result in a high risk to your rights
+        and freedoms, we will notify you and the relevant supervisory authority as required by law.
+      </p>
+
+      <!-- 12 -->
+      <h2>12. Children's privacy</h2>
+      <p>
+        The Spindly platform is intended for use by businesses and is not directed at individuals
+        under the age of 18. We do not knowingly collect personal data from anyone under 18. If you
+        believe a minor has provided us with personal data, please contact us and we will delete it.
+      </p>
+
+      <!-- 13 -->
+      <h2>13. Changes to this policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time. When we do, we will update the "last
+        updated" date at the top of this page and, where the changes are material, notify registered
+        users by email. Continued use of the Service after changes become effective constitutes
+        acceptance of the revised policy.
+      </p>
+
+      <!-- 14 -->
+      <h2>14. Contact us</h2>
+      <p>
+        If you have any questions about this Privacy Policy or our data practices, please contact us:
+      </p>
+      <p>
+        <strong>Email:</strong> <a href="mailto:hi@melt-records.com">hi@melt-records.com</a><br>
+        <strong>Website:</strong> <a href="https://spindly.app/contact" routerLink="/contact">spindly.app/contact</a>
+      </p>
+
+    </div>
+
+    <!-- Back link -->
+    <div class="mt-16 pt-8 border-t border-white/[0.06]">
+      <a routerLink="/" class="text-sm text-white/30 hover:text-primary transition-colors">← back to home</a>
+    </div>
+
+  </div>
+</main>
+
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-dark border-t border-white/[0.06] py-10">
+  <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+    <div>
+      <img src="assets/logo.png" alt="Spindly" class="h-6 mb-2">
+      <p class="text-white/25 text-xs">label management for independent music.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-white/30 text-sm">
+      <a routerLink="/contact" class="hover:text-white/60 transition-colors">get in touch</a>
+      <a routerLink="/privacy" class="hover:text-white/60 transition-colors">privacy</a>
+      <a routerLink="/terms" class="hover:text-white/60 transition-colors">terms</a>
+      <a routerLink="/login" class="hover:text-white/60 transition-colors">sign in</a>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-6 mt-8 pt-6 border-t border-white/[0.05] flex items-center justify-between">
+    <p class="text-white/20 text-xs">&copy; 2026 Spindly.</p>
+    <p class="text-white/20 text-xs">made with love for indie music ♥</p>
+  </div>
+</footer>
