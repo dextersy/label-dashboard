@@ -1334,7 +1334,8 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
           model: TicketType,
           as: 'ticketTypes',
           attributes: ['id', 'name', 'price'],
-          where: { disabled: false }
+          where: { disabled: false },
+          required: false
         }
       ]
     });
@@ -1343,11 +1344,6 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
       return res.status(404).send('Event not found');
     }
 
-    // Use the brand's primary domain for the frontend URL
-    const brandDomain = event.brand?.domains?.[0]?.domain_name;
-    if (!brandDomain) {
-      return res.status(404).send('Event not found');
-    }
     // Support different URL patterns: the ticketing app uses /events/:id, the
     // dashboard uses /public/tickets/buy/:id. Callers pass ?redirectPath=events
     // to get the ticketing app URL.
@@ -1356,9 +1352,18 @@ export const generateEventSEOPage = async (req: Request, res: Response) => {
     // an API domain and not the frontend URL).
     const isTicketingApp = req.query.redirectPath === 'events';
     const redirectPath = isTicketingApp ? 'events' : 'public/tickets/buy';
-    const frontendHost = isTicketingApp && process.env.TICKETING_FRONTEND_URL
-      ? process.env.TICKETING_FRONTEND_URL as string
-      : `https://` + brandDomain;
+
+    let frontendHost: string;
+    if (isTicketingApp && process.env.TICKETING_FRONTEND_URL) {
+      frontendHost = process.env.TICKETING_FRONTEND_URL as string;
+    } else {
+      // Walk up the brand hierarchy to find a domain (organizer sub-brands inherit the parent domain)
+      try {
+        frontendHost = await getBrandFrontendUrl(event.brand_id);
+      } catch {
+        return res.status(404).send('Event not found');
+      }
+    }
     const frontendUrl = `${frontendHost}/${redirectPath}/${event.id}`;
 
     // Generate meta tags for social sharing
