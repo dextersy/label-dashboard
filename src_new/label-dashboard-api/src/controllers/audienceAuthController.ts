@@ -430,12 +430,86 @@ export const audienceValidateResetHash = async (req: Request, res: Response) => 
   }
 };
 
-// ─── Google OAuth for audience users ─────────────────────────────────────────
+// ─── OAuth shared helpers ────────────────────────────────────────────────────
 
 /** Derives the ticketing frontend URL from env config */
 function getAudienceFrontendUrl(): string {
   return process.env.TICKETING_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:4201';
 }
+
+/**
+ * Shared: find-or-create an audience user from a verified OAuth identity, claim
+ * any unlinked tickets, send a welcome email to new signups, and issue a
+ * one-time exchange code that the frontend can POST to redeem for a JWT.
+ */
+async function findOrCreateAudienceUserAndIssueCode(
+  email: string,
+  firstName: string,
+  lastName: string,
+): Promise<string> {
+  let user = await AudienceUser.findOne({ where: { email_address: email.toLowerCase() } });
+  if (!user) {
+    user = await AudienceUser.create({
+      email_address: email.toLowerCase(),
+      first_name: firstName,
+      last_name: lastName,
+      email_verified: true,
+      email_verification_token: null as any,
+      email_verification_expires_at: null as any,
+    });
+    sendWelcomeEmail(user).catch((err) => console.error('Failed to send welcome email:', err));
+  } else if (!user.email_verified) {
+    // The OAuth provider confirmed ownership of this email — mark it verified
+    await user.update({
+      email_verified: true,
+      email_verification_token: null as any,
+      email_verification_expires_at: null as any,
+    });
+  }
+  await claimTicketsByEmailInternal(user.id, user.email_address);
+  return createAudienceExchangeCode(user.id);
+}
+
+/**
+ * Shared: verify the state JWT from an OAuth callback and extract the returnTo URL.
+ * Returns null and sends an error redirect if the state is invalid.
+ */
+function verifyOAuthState(
+  state: string | undefined,
+  res: Response,
+  defaultFrontendUrl: string,
+): { returnTo: string } | null {
+  if (!state || !process.env.JWT_SECRET) return { returnTo: '' };
+  try {
+    const decoded = jwt.verify(state, process.env.JWT_SECRET) as any;
+    return { returnTo: decoded.returnTo || '' };
+  } catch {
+    res.redirect(`${defaultFrontendUrl}/login?mode=audience&error=invalid_state`);
+    return null;
+  }
+}
+
+/**
+ * Shared: build the final redirect URL for a successful OAuth callback.
+ * Appends the exchange code and provider hint so the frontend knows which
+ * exchange endpoint to call.
+ */
+function buildOAuthSuccessRedirect(
+  returnTo: string,
+  defaultFrontendUrl: string,
+  exchangeCode: string,
+  provider: string,
+): string {
+  if (returnTo) {
+    const url = new URL(returnTo);
+    url.searchParams.set('audience_code', exchangeCode);
+    url.searchParams.set('audience_provider', provider);
+    return url.toString();
+  }
+  return `${defaultFrontendUrl}/login?mode=audience&code=${exchangeCode}&audience_provider=${provider}`;
+}
+
+// ─── Google OAuth for audience users ─────────────────────────────────────────
 
 /** Step 1 — redirect the browser to Google's OAuth consent screen */
 export const audienceGoogleRedirect = async (req: Request, res: Response) => {
@@ -479,18 +553,10 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
   const { code, state, error: googleError } = req.query as Record<string, string>;
   const defaultFrontendUrl = getAudienceFrontendUrl();
 
-  // Extract returnTo from verified state JWT
-  let returnTo = '';
-  if (state && process.env.JWT_SECRET) {
-    try {
-      const decoded = jwt.verify(state, process.env.JWT_SECRET) as any;
-      returnTo = decoded.returnTo || '';
-    } catch {
-      return res.redirect(`${defaultFrontendUrl}/login?mode=audience&error=invalid_state`);
-    }
-  }
+  const stateResult = verifyOAuthState(state, res, defaultFrontendUrl);
+  if (!stateResult) return;
+  const { returnTo } = stateResult;
 
-  // Helper: build error redirect that goes back to the origin UI
   const errorRedirect = (err: string) => {
     if (returnTo) {
       const url = new URL(returnTo);
@@ -527,47 +593,109 @@ export const audienceGoogleCallback = async (req: Request, res: Response) => {
       return errorRedirect('google_unverified_email');
     }
 
-    // Find or create audience user
-    let user = await AudienceUser.findOne({ where: { email_address: email.toLowerCase() } });
-    let isNewUser = false;
-    if (!user) {
-      user = await AudienceUser.create({
-        email_address: email.toLowerCase(),
-        first_name: given_name,
-        last_name: family_name,
-        email_verified: true,
-        email_verification_token: null as any,
-        email_verification_expires_at: null as any,
-      });
-      isNewUser = true;
-    } else if (!user.email_verified) {
-      // Google confirmed ownership of this email — mark it verified
-      await user.update({
-        email_verified: true,
-        email_verification_token: null as any,
-        email_verification_expires_at: null as any,
-      });
-    }
-
-    // Auto-claim any unlinked tickets
-    await claimTicketsByEmailInternal(user.id, user.email_address);
-
-    // Send welcome email to new Google sign-up users (fire-and-forget)
-    if (isNewUser) {
-      sendWelcomeEmail(user).catch((err) => console.error('Failed to send welcome email:', err));
-    }
-
-    const exchangeCode = createAudienceExchangeCode(user.id);
-
-    if (returnTo) {
-      const url = new URL(returnTo);
-      url.searchParams.set('audience_code', exchangeCode);
-      return res.redirect(url.toString());
-    }
-    return res.redirect(`${defaultFrontendUrl}/login?mode=audience&code=${exchangeCode}`);
+    const exchangeCode = await findOrCreateAudienceUserAndIssueCode(email, given_name, family_name);
+    return res.redirect(buildOAuthSuccessRedirect(returnTo, defaultFrontendUrl, exchangeCode, 'google'));
   } catch (error) {
     console.error('Audience Google callback error:', error);
     return errorRedirect('google_auth_failed');
+  }
+};
+
+// ─── Facebook OAuth for audience users ───────────────────────────────────────
+
+/** Step 1 — redirect the browser to Facebook's OAuth consent screen */
+export const audienceFacebookRedirect = async (req: Request, res: Response) => {
+  try {
+    const appId = process.env.FACEBOOK_APP_ID;
+    const appSecret = process.env.FACEBOOK_APP_SECRET;
+    if (!appId || !appSecret) {
+      return res.status(501).json({ error: 'Facebook Sign-In is not configured on this server' });
+    }
+
+    if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+
+    const returnTo = (req.query.return_to as string) || '';
+
+    const state = jwt.sign(
+      { nonce: crypto.randomBytes(16).toString('hex'), returnTo },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const redirectUri = `${serverUrl}/api/auth/audience/facebook/callback`;
+
+    const facebookUrl = new URL('https://www.facebook.com/v21.0/dialog/oauth');
+    facebookUrl.searchParams.set('client_id', appId);
+    facebookUrl.searchParams.set('redirect_uri', redirectUri);
+    facebookUrl.searchParams.set('response_type', 'code');
+    facebookUrl.searchParams.set('scope', 'email');
+    facebookUrl.searchParams.set('state', state);
+
+    return res.redirect(facebookUrl.toString());
+  } catch (error) {
+    console.error('Audience Facebook redirect error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/** Step 2 — handle Facebook's redirect, find-or-create audience user, issue exchange code */
+export const audienceFacebookCallback = async (req: Request, res: Response) => {
+  const { code, state, error: fbError } = req.query as Record<string, string>;
+  const defaultFrontendUrl = getAudienceFrontendUrl();
+
+  const stateResult = verifyOAuthState(state, res, defaultFrontendUrl);
+  if (!stateResult) return;
+  const { returnTo } = stateResult;
+
+  const errorRedirect = (err: string) => {
+    if (returnTo) {
+      const url = new URL(returnTo);
+      url.searchParams.set('audience_error', err);
+      return res.redirect(url.toString());
+    }
+    return res.redirect(`${defaultFrontendUrl}/login?mode=audience&error=${err}`);
+  };
+
+  if (fbError) return errorRedirect('facebook_cancelled');
+  if (!code) return errorRedirect('missing_code');
+
+  try {
+    const appId = process.env.FACEBOOK_APP_ID!;
+    const appSecret = process.env.FACEBOOK_APP_SECRET!;
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+    const redirectUri = `${serverUrl}/api/auth/audience/facebook/callback`;
+
+    // Exchange code for access token
+    const tokenRes = await axios.get('https://graph.facebook.com/v21.0/oauth/access_token', {
+      params: {
+        client_id: appId,
+        client_secret: appSecret,
+        redirect_uri: redirectUri,
+        code,
+      },
+    });
+
+    // Fetch user profile (email is returned only if user granted it and has a verified FB email)
+    const userInfoRes = await axios.get('https://graph.facebook.com/me', {
+      params: {
+        fields: 'email,first_name,last_name',
+        access_token: tokenRes.data.access_token,
+      },
+    });
+
+    const { email, first_name = '', last_name = '' } = userInfoRes.data;
+
+    if (!email) {
+      // Facebook may omit the email if the user's FB account has no verified email
+      return errorRedirect('facebook_no_email');
+    }
+
+    const exchangeCode = await findOrCreateAudienceUserAndIssueCode(email, first_name, last_name);
+    return res.redirect(buildOAuthSuccessRedirect(returnTo, defaultFrontendUrl, exchangeCode, 'facebook'));
+  } catch (error) {
+    console.error('Audience Facebook callback error:', error);
+    return errorRedirect('facebook_auth_failed');
   }
 };
 
@@ -650,8 +778,8 @@ export const audienceResendVerificationByEmail = async (req: Request, res: Respo
   }
 };
 
-/** Step 3 — exchange the one-time code for an audience JWT */
-export const audienceGoogleExchange = async (req: Request, res: Response) => {
+/** Step 3 — exchange the one-time OAuth code for an audience JWT (shared by all providers) */
+export const audienceOAuthExchange = async (req: Request, res: Response) => {
   try {
     const { code } = req.body;
     if (!code || typeof code !== 'string') {
@@ -680,10 +808,13 @@ export const audienceGoogleExchange = async (req: Request, res: Response) => {
       needs_terms_acceptance,
     });
   } catch (error) {
-    console.error('Audience Google exchange error:', error);
+    console.error('Audience OAuth exchange error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Backward-compat alias so existing route wiring still compiles without changes
+export const audienceGoogleExchange = audienceOAuthExchange;
 
 // ─── Membership ID ────────────────────────────────────────────────────────────
 
