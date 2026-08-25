@@ -6,5 +6,6 @@ export const environment = {
   apiUrl: 'https://api.spindly.app:3001/api',
   googleMapsApiKey: 'YOUR_PRODUCTION_GOOGLE_MAPS_API_KEY_HERE',
   googleAuthEnabled: true,
+  facebookAuthEnabled: true,
   publicListingDomain: 'YOUR_PUBLIC_LISTING_DOMAIN_HERE'
 };
