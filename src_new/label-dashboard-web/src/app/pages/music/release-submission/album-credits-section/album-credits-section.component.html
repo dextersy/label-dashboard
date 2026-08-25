@@ -200,7 +200,7 @@
         </div>
 
         <!-- Note block -->
-        <aside class="ac-note-block">
+        <aside *ngIf="isAdmin" class="ac-note-block">
           <strong class="ac-note-bold">Note:</strong>
           Artist percentages for each royalty type should not exceed 100%.
           The label row shows the remaining percentage (100% − total artist percentages).
