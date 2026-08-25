@@ -3664,29 +3664,13 @@ export const getFollowedOrganizers = async (req: Request, res: Response) => {
 export const getTicketingSitemap = async (req: Request, res: Response) => {
   try {
     const frontendUrl = (process.env.TICKETING_FRONTEND_URL || '').replace(/\/$/, '');
-    const parentBrandId = process.env.TICKETING_PARENT_BRAND_ID ? parseInt(process.env.TICKETING_PARENT_BRAND_ID) : null;
 
-    if (!frontendUrl || !parentBrandId) {
+    if (!frontendUrl) {
       return res.status(503).send('Sitemap not configured');
-    }
-
-    // Collect all brand IDs under the ticketing parent
-    const visitedBrandIds = new Set<number>([parentBrandId]);
-    const queue = [parentBrandId];
-    while (queue.length > 0) {
-      const parentIds = queue.splice(0, queue.length);
-      const children = await Brand.findAll({ where: { parent_brand: parentIds } });
-      for (const child of children) {
-        if (!visitedBrandIds.has(child.id)) {
-          visitedBrandIds.add(child.id);
-          queue.push(child.id);
-        }
-      }
     }
 
     const events = await Event.findAll({
       where: {
-        brand_id: { [Op.in]: Array.from(visitedBrandIds) },
         status: 'published',
         listed_on_ticketing: true,
       },
