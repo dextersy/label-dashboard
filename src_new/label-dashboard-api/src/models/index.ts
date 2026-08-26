@@ -53,6 +53,7 @@ import EventLike from './EventLike';
 import AudienceFollow from './AudienceFollow';
 import Plan from './Plan';
 import BrandPlan from './BrandPlan';
+import ReleaseTask from './ReleaseTask';
 
 // Define relationships
 // Brand relationships
@@ -109,6 +110,13 @@ Artist.belongsToMany(Release, {
   as: 'releases' 
 });
 Artist.belongsTo(ArtistImage, { foreignKey: 'profile_photo_id', as: 'profilePhotoImage' });
+
+// ReleaseTask relationships
+Release.hasMany(ReleaseTask, { foreignKey: 'release_id', as: 'tasks' });
+ReleaseTask.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+ReleaseTask.belongsTo(User, { foreignKey: 'assigned_user_id', as: 'assignedUser' });
+ReleaseTask.belongsTo(User, { foreignKey: 'created_by_user_id', as: 'createdByUser' });
+ReleaseTask.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 
 // Release relationships
 Release.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
@@ -409,6 +417,7 @@ export {
   AudienceFollow,
   Plan,
   BrandPlan,
+  ReleaseTask,
 };
 
 // Initialize database connection

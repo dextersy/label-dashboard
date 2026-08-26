@@ -3,14 +3,43 @@
 
   <!-- Read-Only View for non-Draft releases -->
   <ng-container *ngIf="showReadOnlyView && releaseForView">
-    <app-release-view
-      [release]="releaseForView"
-      [isAdmin]="isUserAdmin"
-      [isArtistRestricted]="artist?.locked || artist?.status === 'Inactive'"
-      (alertMessage)="onAlertMessage($event)"
-      (releaseSubmitted)="onReleaseSubmitted($event)"
-      (releaseUpdated)="onReleaseUpdated($event)">
-    </app-release-view>
+    <!-- With planning tab (Pending / Live releases) -->
+    <ng-container *ngIf="showPlanningTab">
+      <app-in-page-nav
+        class="tw-mt-3"
+        [tabs]="readOnlyNavTabs"
+        [activeTab]="activeReadOnlySection"
+        (tabChange)="onReadOnlyTabChange($event)">
+        <ng-container [ngSwitch]="activeReadOnlySection">
+          <app-release-view
+            *ngSwitchCase="'details'"
+            [release]="releaseForView"
+            [isAdmin]="isUserAdmin"
+            [isArtistRestricted]="artist?.locked || artist?.status === 'Inactive'"
+            (alertMessage)="onAlertMessage($event)"
+            (releaseSubmitted)="onReleaseSubmitted($event)"
+            (releaseUpdated)="onReleaseUpdated($event)">
+          </app-release-view>
+          <app-release-planning-tab
+            *ngSwitchCase="'planning'"
+            [release]="releaseForView"
+            [isAdmin]="isUserAdmin">
+          </app-release-planning-tab>
+        </ng-container>
+      </app-in-page-nav>
+    </ng-container>
+
+    <!-- Without planning tab (For Submission / Taken Down releases) -->
+    <ng-container *ngIf="!showPlanningTab">
+      <app-release-view
+        [release]="releaseForView"
+        [isAdmin]="isUserAdmin"
+        [isArtistRestricted]="artist?.locked || artist?.status === 'Inactive'"
+        (alertMessage)="onAlertMessage($event)"
+        (releaseSubmitted)="onReleaseSubmitted($event)"
+        (releaseUpdated)="onReleaseUpdated($event)">
+      </app-release-view>
+    </ng-container>
   </ng-container>
 
   <!-- Edit Form for Draft releases or admin edit mode -->

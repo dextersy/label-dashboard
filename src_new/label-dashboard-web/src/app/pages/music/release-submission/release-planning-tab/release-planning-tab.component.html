@@ -1,0 +1,306 @@
+<div class="planning-tab">
+
+  <!-- Suggestions -->
+  <div class="planning-suggestions">
+    <p class="planning-suggestions__label">Quick add</p>
+    <div class="planning-suggestions__chips" [class.planning-suggestions__chips--collapsed]="!suggestionsExpanded">
+      <button
+        *ngFor="let s of suggestions"
+        class="suggestion-chip"
+        [disabled]="isAddingSuggestion(s)"
+        (click)="addSuggestion(s)">
+        <app-icon *ngIf="isAddingSuggestion(s)" name="spinner" class="tw-animate-spin tw-mr-1" iconOnly />
+        <app-icon *ngIf="!isAddingSuggestion(s)" name="plus" class="tw-mr-1" iconOnly />
+        {{ s }}
+      </button>
+    </div>
+    <button class="planning-suggestions__toggle" (click)="suggestionsExpanded = !suggestionsExpanded">
+      <app-icon [name]="suggestionsExpanded ? 'chevron-up' : 'chevron-down'" iconOnly class="tw-mr-1" />
+      {{ suggestionsExpanded ? 'See fewer' : 'See more suggestions' }}
+    </button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="planning-toolbar">
+    <!-- Segmented filter -->
+    <div class="planning-filter-tabs">
+      <button
+        class="planning-filter-tab"
+        [class.planning-filter-tab--active]="filterMode === 'all'"
+        (click)="setFilter('all')">
+        All
+      </button>
+      <button
+        class="planning-filter-tab"
+        [class.planning-filter-tab--active]="filterMode === 'mine'"
+        (click)="setFilter('mine')">
+        Assigned to me
+      </button>
+      <button
+        class="planning-filter-tab"
+        [class.planning-filter-tab--active]="filterMode === 'unassigned'"
+        (click)="setFilter('unassigned')">
+        Unassigned
+      </button>
+    </div>
+
+    <button class="btn-primary btn-sm" (click)="openNewTaskForm()">
+      <app-icon name="plus" class="tw-mr-1" iconOnly />
+      Add task
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="tw-flex tw-justify-center tw-py-12">
+    <app-icon name="spinner" class="tw-animate-spin tw-text-muted" />
+  </div>
+
+  <!-- Kanban board -->
+  <div class="planning-board-outer">
+  <div class="planning-board-scroll" #boardScroll>
+  <div *ngIf="!loading" class="planning-board">
+    <div *ngFor="let col of columns; trackBy: trackByColId" class="planning-column">
+      <div class="planning-column__header" [ngClass]="'planning-column__header--' + col.id">
+        <span class="planning-column__title">{{ col.label }}</span>
+        <span class="planning-column__count">{{ col.tasks.length }}</span>
+      </div>
+
+      <div class="planning-column__body">
+        <!-- Empty state -->
+        <div *ngIf="col.tasks.length === 0" class="planning-empty">
+          No tasks
+        </div>
+
+        <!-- Task cards -->
+        <div
+          *ngFor="let task of col.tasks; trackBy: trackByTaskId"
+          class="task-card"
+          [class.task-card--done]="task.status === 'done'">
+
+          <!-- Clickable body -->
+          <button class="task-card__body" (click)="openEdit(task)">
+            <p class="task-card__title" [class.task-card__title--done]="task.status === 'done'">
+              {{ task.title }}
+            </p>
+
+            <p *ngIf="task.notes" class="task-card__notes">{{ task.notes }}</p>
+
+            <div class="task-card__meta">
+              <span *ngIf="task.assignedUser" class="task-card__assignee">
+                <span
+                  class="task-avatar task-avatar--xs"
+                  [style.background]="avatarColor(task.assignedUser)">
+                  {{ avatarInitials(task.assignedUser) }}
+                </span>
+                {{ assigneeName(task) }}
+              </span>
+              <span *ngIf="!task.assigned_user_id" class="task-card__unassigned">
+                Unassigned
+              </span>
+
+              <span
+                *ngIf="task.due_date"
+                class="task-card__due"
+                [class.task-card__due--overdue]="isDueSoon(task.due_date) && task.status !== 'done'">
+                <app-icon name="calendar" iconOnly class="tw-mr-0.5" />
+                {{ formatDueDate(task.due_date) }}
+              </span>
+            </div>
+          </button>
+
+          <!-- Card footer row: status badge + delete -->
+          <div class="task-card__footer">
+            <button
+              class="task-status-btn"
+              [class.task-status-btn--not-started]="task.status === 'not_started'"
+              [class.task-status-btn--in-progress]="task.status === 'in_progress'"
+              [class.task-status-btn--done]="task.status === 'done'"
+              [disabled]="savingTaskId === task.id"
+              [title]="statusLabel(task.status)"
+              (click)="openEdit(task)">
+              <app-icon
+                [name]="savingTaskId === task.id ? 'spinner' : statusIcon(task.status)"
+                [class.tw-animate-spin]="savingTaskId === task.id" />
+              <span class="task-status-label">{{ statusLabel(task.status) }}</span>
+            </button>
+
+            <button
+              *ngIf="canDelete(task)"
+              class="task-card__delete"
+              title="Delete task"
+              (click)="deleteTask(task, $event)">
+              <app-icon name="trash" iconOnly />
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div>
+
+</div>
+
+<!-- New Task Form Modal -->
+<div *ngIf="showNewTaskForm" appModalToBody class="planning-modal-overlay" (click)="closeNewTaskForm()">
+  <div class="planning-modal" (click)="$event.stopPropagation()">
+    <div class="planning-modal__header">
+      <h4 class="tw-mb-0">New task</h4>
+      <button class="planning-modal__close" (click)="closeNewTaskForm()">
+        <app-icon name="x" iconOnly />
+      </button>
+    </div>
+    <div class="planning-modal__body">
+      <div class="tw-mb-3">
+        <label class="form-label">Title <span class="tw-text-danger">*</span></label>
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="newTask.title"
+          placeholder="Task title"
+          autofocus />
+      </div>
+      <div class="tw-mb-3">
+        <label class="form-label">Additional notes</label>
+        <textarea
+          class="form-control"
+          [(ngModel)]="newTask.notes"
+          rows="2"
+          placeholder="Optional notes"></textarea>
+      </div>
+      <div class="tw-mb-3">
+        <label class="form-label">Due date</label>
+        <input type="date" class="form-control" [(ngModel)]="newTask.due_date" [min]="todayStr" />
+      </div>
+      <div class="tw-mb-4">
+        <label class="form-label tw-flex tw-items-center tw-justify-between">
+          Assign to
+          <span *ngIf="newTaskAssignee" class="tw-flex tw-items-center tw-gap-1.5 tw-font-normal">
+            <span class="task-avatar task-avatar--sm" [style.background]="avatarColor(newTaskAssignee)">{{ avatarInitials(newTaskAssignee) }}</span>
+            <span class="tw-text-xs" style="color: var(--text-muted)">{{ userDisplayName(newTaskAssignee) }}</span>
+          </span>
+        </label>
+        <div class="tw-flex tw-gap-2 tw-items-center">
+          <select class="form-select tw-flex-1" [(ngModel)]="newTask.assigned_user_id">
+            <option [ngValue]="null">Unassigned</option>
+          <optgroup *ngIf="adminUsers.length" label="Admins">
+            <option *ngFor="let u of adminUsers" [ngValue]="u.id">{{ userDisplayName(u) }}</option>
+          </optgroup>
+          <optgroup *ngIf="teamMemberUsers.length" label="Team members">
+            <option *ngFor="let u of teamMemberUsers" [ngValue]="u.id">{{ userDisplayName(u) }}</option>
+          </optgroup>
+          </select>
+          <button
+            *ngIf="canAssignToSelf"
+            class="btn-secondary btn-sm assign-to-me-btn"
+            type="button"
+            [class.assign-to-me-btn--active]="newTask.assigned_user_id === currentUserId"
+            (click)="newTask.assigned_user_id = newTask.assigned_user_id === currentUserId ? null : currentUserId">
+            Me
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="planning-modal__footer">
+      <button class="btn-secondary btn-sm" (click)="closeNewTaskForm()">Cancel</button>
+      <button
+        class="btn-primary btn-sm"
+        [disabled]="!newTask.title.trim() || savingNew"
+        (click)="submitNewTask()">
+        <app-icon *ngIf="savingNew" name="spinner" class="tw-animate-spin tw-mr-1" iconOnly />
+        {{ savingNew ? 'Adding...' : 'Add task' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div *ngIf="editingTask" appModalToBody class="planning-modal-overlay" (click)="closeEdit()">
+  <div class="planning-modal" (click)="$event.stopPropagation()">
+    <div class="planning-modal__header">
+      <h4 class="tw-mb-0">Edit task</h4>
+      <button class="planning-modal__close" (click)="closeEdit()">
+        <app-icon name="x" iconOnly />
+      </button>
+    </div>
+    <div class="planning-modal__body">
+      <div class="tw-mb-3">
+        <label class="form-label">Title <span class="tw-text-danger">*</span></label>
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="editForm.title"
+          placeholder="Task title" />
+      </div>
+      <div class="tw-mb-3">
+        <label class="form-label">Additional notes</label>
+        <textarea
+          class="form-control"
+          [(ngModel)]="editForm.notes"
+          rows="2"
+          placeholder="Optional notes"></textarea>
+      </div>
+      <div class="tw-mb-3">
+        <label class="form-label">Due date</label>
+        <input type="date" class="form-control" [(ngModel)]="editForm.due_date" />
+      </div>
+      <div class="tw-mb-3">
+        <label class="form-label tw-flex tw-items-center tw-justify-between">
+          Assign to
+          <span *ngIf="editFormAssignee" class="tw-flex tw-items-center tw-gap-1.5 tw-font-normal">
+            <span class="task-avatar task-avatar--sm" [style.background]="avatarColor(editFormAssignee)">{{ avatarInitials(editFormAssignee) }}</span>
+            <span class="tw-text-xs" style="color: var(--text-muted)">{{ userDisplayName(editFormAssignee) }}</span>
+          </span>
+        </label>
+        <div class="tw-flex tw-gap-2 tw-items-center">
+          <select class="form-select tw-flex-1" [(ngModel)]="editForm.assigned_user_id">
+            <option [ngValue]="null">Unassigned</option>
+            <optgroup *ngIf="adminUsers.length" label="Admins">
+              <option *ngFor="let u of adminUsers" [ngValue]="u.id">{{ userDisplayName(u) }}</option>
+            </optgroup>
+            <optgroup *ngIf="teamMemberUsers.length" label="Team members">
+              <option *ngFor="let u of teamMemberUsers" [ngValue]="u.id">{{ userDisplayName(u) }}</option>
+            </optgroup>
+          </select>
+          <button
+            *ngIf="canAssignToSelf"
+            class="btn-secondary btn-sm assign-to-me-btn"
+            type="button"
+            [class.assign-to-me-btn--active]="editForm.assigned_user_id === currentUserId"
+            (click)="editForm.assigned_user_id = editForm.assigned_user_id === currentUserId ? null : currentUserId">
+            Me
+          </button>
+        </div>
+      </div>
+      <div class="tw-mb-4">
+        <label class="form-label">Status</label>
+        <div class="task-status-selector">
+          <button
+            *ngFor="let s of ['not_started', 'in_progress', 'done']"
+            class="task-status-option"
+            [class.task-status-option--active]="editForm.status === s"
+            [class.task-status-option--not-started]="s === 'not_started'"
+            [class.task-status-option--in-progress]="s === 'in_progress'"
+            [class.task-status-option--done]="s === 'done'"
+            [disabled]="!canEditStatus()"
+            (click)="editForm.status = $any(s)">
+            <app-icon [name]="statusIcon($any(s))" class="tw-mr-1" />
+            {{ statusLabel($any(s)) }}
+          </button>
+        </div>
+        <p *ngIf="!canEditStatus()" class="tw-text-muted tw-text-xs tw-mt-1">Only the assigned person or an admin can change the status.</p>
+      </div>
+    </div>
+    <div class="planning-modal__footer">
+      <button class="btn-secondary btn-sm" (click)="closeEdit()">Cancel</button>
+      <button
+        class="btn-primary btn-sm"
+        [disabled]="!editForm.title.trim() || savingEdit"
+        (click)="submitEdit()">
+        <app-icon *ngIf="savingEdit" name="spinner" class="tw-animate-spin tw-mr-1" iconOnly />
+        {{ savingEdit ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -100,7 +100,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       'wristband_order_placed': 'package',
       'wristband_order_accepted': 'check-circle',
       'wristband_order_rejected': 'x-circle',
-      'addon_payment_made': 'credit-card'
+      'addon_payment_made': 'credit-card',
+      'task_assigned': 'list'
     };
     return iconMap[type] || 'info';
   }

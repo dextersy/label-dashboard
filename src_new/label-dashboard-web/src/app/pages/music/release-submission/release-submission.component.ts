@@ -16,6 +16,7 @@ import { TrackListSectionComponent, TrackListData } from './track-list-section/t
 import { AlbumCreditsSectionComponent, AlbumCreditsData } from './album-credits-section/album-credits-section.component';
 import { SubmissionSectionComponent } from './submission-section/submission-section.component';
 import { ReleaseViewComponent } from './release-view/release-view.component';
+import { ReleasePlanningTabComponent } from './release-planning-tab/release-planning-tab.component';
 import { ValidationResult } from '../../../services/release-validation.service';
 import { ReleaseValidationService } from '../../../services/release-validation.service';
 import { ReleaseSubmittedService } from '../../../services/release-submitted.service';
@@ -35,8 +36,9 @@ export type ReleaseSubmissionSection = 'info' | 'credits' | 'tracks' | 'submit';
         AlbumCreditsSectionComponent,
         TrackListSectionComponent,
         SubmissionSectionComponent,
-        ReleaseViewComponent
-, IconComponent],
+        ReleaseViewComponent,
+        ReleasePlanningTabComponent,
+        IconComponent],
     templateUrl: './release-submission.component.html',
     styleUrl: './release-submission.component.scss'
 })
@@ -61,6 +63,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
   isSubmitting = false;
   isEditing = false; // Track if we're editing an existing release
   showReadOnlyView = false; // Track if we should show read-only view for non-draft releases
+  activeReadOnlySection: 'details' | 'planning' = 'details';
 
   // Section data
   releaseInfoData: ReleaseInfoData | null = null;
@@ -127,13 +130,16 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
       })
     );
 
-    // Check for section query parameter synchronously
+    // Check for section/tab query parameters synchronously
     const currentQueryParams = this.route.snapshot.queryParams;
     const section = currentQueryParams['section'];
     if (section && ['info', 'credits', 'tracks', 'submit'].includes(section)) {
       this.activeSection = section as ReleaseSubmissionSection;
       this.sectionFromQueryParam = section as ReleaseSubmissionSection;
       this.cdr.detectChanges();
+    }
+    if (currentQueryParams['tab'] === 'planning') {
+      this.activeReadOnlySection = 'planning';
     }
 
     // Check if we're editing an existing release
@@ -604,6 +610,24 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
   // Check if current user is admin
   get isUserAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  get showPlanningTab(): boolean {
+    return this.releaseForView?.status === 'Pending' || this.releaseForView?.status === 'Live';
+  }
+
+  get readOnlyNavTabs(): InPageNavTab[] {
+    const tabs: InPageNavTab[] = [
+      { id: 'details', label: 'Details', icon: 'info' },
+    ];
+    if (this.showPlanningTab) {
+      tabs.push({ id: 'planning', label: 'Tasks', icon: 'list' });
+    }
+    return tabs;
+  }
+
+  onReadOnlyTabChange(id: string): void {
+    this.activeReadOnlySection = id as 'details' | 'planning';
   }
 
   // Switch from read-only view to edit mode (admin only)

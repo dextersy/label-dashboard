@@ -201,6 +201,12 @@ export class ArtistReleasesTabComponent {
         hidden: (release: ArtistRelease) => !!release.exclude_from_epk
       },
       {
+        icon: 'list',
+        label: 'Plan release',
+        handler: (release: ArtistRelease) => this.onPlanRelease(release),
+        hidden: (release: ArtistRelease) => !this.canPlanRelease(release)
+      },
+      {
         icon: 'trash',
         label: 'Delete',
         type: 'danger',
@@ -208,6 +214,14 @@ export class ArtistReleasesTabComponent {
         hidden: (release: ArtistRelease) => !this.canDeleteRelease(release)
       }
     ];
+  }
+
+  canPlanRelease(release: ArtistRelease): boolean {
+    return release.status === 'Pending' || release.status === 'Live';
+  }
+
+  onPlanRelease(release: ArtistRelease): void {
+    this.router.navigate(['/music/releases/edit', release.id], { queryParams: { tab: 'planning' } });
   }
 
   private getAuthHeaders(): HttpHeaders {

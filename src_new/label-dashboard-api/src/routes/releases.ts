@@ -16,6 +16,13 @@ import {
   downloadPriorityPitch,
   getDiscography
 } from '../controllers/releaseController';
+import {
+  getReleaseTasks,
+  getAssignableUsers,
+  createReleaseTask,
+  updateReleaseTask,
+  deleteReleaseTask,
+} from '../controllers/releaseTaskController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 // Configure multer for file uploads
@@ -67,5 +74,12 @@ router.get('/:id/download-mp3s', downloadMp3s);
 
 // Download Priority Pitch document (admin only)
 router.get('/:id/download-priority-pitch', requireAdmin, downloadPriorityPitch);
+
+// Release planning tasks (must come before generic /:id routes)
+router.get('/:id/tasks/assignable-users', getAssignableUsers);
+router.get('/:id/tasks', getReleaseTasks);
+router.post('/:id/tasks', createReleaseTask);
+router.put('/:id/tasks/:taskId', updateReleaseTask);
+router.delete('/:id/tasks/:taskId', deleteReleaseTask);
 
 export default router;
