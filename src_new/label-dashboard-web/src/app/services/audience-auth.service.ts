@@ -74,13 +74,13 @@ export class AudienceAuthService {
     return this.http.post<{ claimed_tickets_count: number }>(`${this.apiUrl}/public/audience/claim`, {}, { headers });
   }
 
-  /** Reads a ys_auth payload from the URL fragment (Google popup fallback), clears it, and stores the session. */
+  /** Reads a ys_auth payload from sessionStorage (Google popup fallback), clears it, and stores the session. */
   consumeAuthFragment(): AudienceAuthResponse | null {
-    const hash = window.location.hash;
-    if (!hash.startsWith('#ys_auth=')) return null;
+    const raw = sessionStorage.getItem('ys_auth_pending');
+    if (!raw) return null;
+    sessionStorage.removeItem('ys_auth_pending');
     try {
-      const data = JSON.parse(decodeURIComponent(hash.slice('#ys_auth='.length)));
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      const data = JSON.parse(raw);
       if (data.type === 'ys_auth' && data.token && data.user) {
         this.storeSession(data.token, data.user);
         return data as AudienceAuthResponse;

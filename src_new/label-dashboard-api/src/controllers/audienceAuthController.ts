@@ -30,23 +30,32 @@ const sendAudienceEmail = async (to: string, subject: string, html: string): Pro
   await transporter.sendMail({ from: `${fromName} <${fromEmail}>`, to, subject, html });
 };
 
-// ─── One-time Google OAuth exchange codes for audience users ──────────────────
-interface AudienceExchangeEntry {
-  audienceUserId: number;
-  expiresAt: number;
-}
-const audienceOAuthCodes = new Map<string, AudienceExchangeEntry>();
-setInterval(() => {
-  const now = Date.now();
-  for (const [code, entry] of audienceOAuthCodes) {
-    if (entry.expiresAt < now) audienceOAuthCodes.delete(code);
-  }
-}, 60_000);
+// ─── One-time OAuth exchange codes stored in the database ─────────────────────
+// Storing these in the DB (rather than process memory) makes the exchange
+// work correctly across multiple API instances / PM2 cluster processes.
 
-function createAudienceExchangeCode(audienceUserId: number): string {
+async function createAudienceExchangeCode(audienceUserId: number): Promise<string> {
   const code = crypto.randomBytes(32).toString('hex');
-  audienceOAuthCodes.set(code, { audienceUserId, expiresAt: Date.now() + 5 * 60 * 1000 });
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+  await AudienceUser.update(
+    { oauth_exchange_code: code, oauth_exchange_code_expires_at: expiresAt },
+    { where: { id: audienceUserId } },
+  );
   return code;
+}
+
+async function consumeAudienceExchangeCode(
+  code: string,
+): Promise<number | null> {
+  const user = await AudienceUser.findOne({
+    where: {
+      oauth_exchange_code: code,
+      oauth_exchange_code_expires_at: { [Op.gt]: new Date() },
+    },
+  });
+  if (!user) return null;
+  await user.update({ oauth_exchange_code: null, oauth_exchange_code_expires_at: null });
+  return user.id;
 }
 
 // ─── Internal helper ──────────────────────────────────────────────────────────
@@ -479,7 +488,12 @@ function verifyOAuthState(
   res: Response,
   defaultFrontendUrl: string,
 ): { returnTo: string } | null {
-  if (!state || !process.env.JWT_SECRET) return { returnTo: '' };
+  // A missing state means CSRF protection was bypassed — always reject.
+  if (!state) {
+    res.redirect(`${defaultFrontendUrl}/login?mode=audience&error=invalid_state`);
+    return null;
+  }
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not configured');
   try {
     const decoded = jwt.verify(state, process.env.JWT_SECRET) as any;
     return { returnTo: decoded.returnTo || '' };
@@ -506,7 +520,7 @@ function buildOAuthSuccessRedirect(
     url.searchParams.set('audience_provider', provider);
     return url.toString();
   }
-  return `${defaultFrontendUrl}/login?mode=audience&code=${exchangeCode}&audience_provider=${provider}`;
+  return `${defaultFrontendUrl}/login?mode=audience&audience_code=${exchangeCode}&audience_provider=${provider}`;
 }
 
 // ─── Google OAuth for audience users ─────────────────────────────────────────
@@ -786,13 +800,12 @@ export const audienceOAuthExchange = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'code is required' });
     }
 
-    const entry = audienceOAuthCodes.get(code);
-    if (!entry || entry.expiresAt < Date.now()) {
+    const audienceUserId = await consumeAudienceExchangeCode(code);
+    if (!audienceUserId) {
       return res.status(400).json({ error: 'Invalid or expired exchange code' });
     }
-    audienceOAuthCodes.delete(code);
 
-    const user = await AudienceUser.findByPk(entry.audienceUserId);
+    const user = await AudienceUser.findByPk(audienceUserId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     if (!user.membership_id) {

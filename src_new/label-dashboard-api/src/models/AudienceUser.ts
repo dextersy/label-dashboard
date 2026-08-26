@@ -21,6 +21,8 @@ interface AudienceUserAttributes {
   age_confirmed_at?: Date;
   signed_up_from?: string | null;
   signup_reference?: string | null;
+  oauth_exchange_code?: string | null;
+  oauth_exchange_code_expires_at?: Date | null;
 }
 
 interface AudienceUserCreationAttributes extends Optional<AudienceUserAttributes, 'id'> {}
@@ -45,6 +47,8 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public age_confirmed_at?: Date;
   public signed_up_from?: string | null;
   public signup_reference?: string | null;
+  public oauth_exchange_code?: string | null;
+  public oauth_exchange_code_expires_at?: Date | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -131,6 +135,15 @@ AudienceUser.init(
     },
     signup_reference: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    oauth_exchange_code: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+      unique: true,
+    },
+    oauth_exchange_code_expires_at: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
   },

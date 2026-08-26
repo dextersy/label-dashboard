@@ -655,9 +655,8 @@ export class LoginComponent implements OnInit {
     }
 
     // Handle audience OAuth exchange code (redirected back from Google or Facebook).
-    // Backend uses ?audience_code= when return_to is set, ?code= otherwise.
     // ?audience_provider= tells us which exchange endpoint to call.
-    const codeParam = params.get('audience_code') || params.get('code');
+    const codeParam = params.get('audience_code');
     if (codeParam && this.mode() !== 'organizer') {
       const provider = params.get('audience_provider') || 'google';
       const providerLabel = provider === 'facebook' ? 'Facebook' : 'Google';

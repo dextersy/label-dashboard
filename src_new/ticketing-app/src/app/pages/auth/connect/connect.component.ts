@@ -387,19 +387,29 @@ export class ConnectComponent implements OnInit {
 
   private notifyAndClose(res: { token: string; user: any; claimed_tickets_count: number }): void {
     if (window.opener) {
-      // Normal popup flow — postMessage to parent then close
-      const targetOrigin = this.returnTo ? new URL(this.returnTo).origin : '*';
+      // Normal popup flow — postMessage to parent then close.
+      // If we have no returnTo we cannot safely target an origin, so close with
+      // an error rather than broadcasting the token to '*'.
+      if (!this.returnTo) {
+        window.opener.postMessage({ type: 'ys_auth_error', error: 'missing_return_to' }, window.opener.location.origin);
+        window.close();
+        return;
+      }
+      const targetOrigin = new URL(this.returnTo).origin;
       window.opener.postMessage({ type: 'ys_auth', ...res }, targetOrigin);
       window.close();
     } else {
-      // window.opener was severed by Google's COOP headers.
-      // Redirect the popup back to return_to with auth data in the URL fragment.
-      // Fragments are not sent to servers and are cleared immediately by the parent page.
+      // window.opener was severed (e.g. by Google's COOP headers).
+      // Redirect back to return_to. The token is sent only as a postMessage
+      // after the page loads; never placed in the URL to avoid persisting it
+      // in browser history.
       const returnTo = this.returnTo || sessionStorage.getItem('ys_connect_return_to') || '';
       sessionStorage.removeItem('ys_connect_return_to');
       if (returnTo) {
-        const payload = encodeURIComponent(JSON.stringify({ type: 'ys_auth', ...res }));
-        window.location.href = `${returnTo}#ys_auth=${payload}`;
+        // Store auth result in sessionStorage so the destination page can
+        // retrieve it after the redirect, without exposing it in the URL.
+        sessionStorage.setItem('ys_auth_pending', JSON.stringify({ type: 'ys_auth', ...res }));
+        window.location.href = returnTo;
       } else {
         this.router.navigate(['/my-shows']);
       }
