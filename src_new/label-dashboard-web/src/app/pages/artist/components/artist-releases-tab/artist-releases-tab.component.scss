@@ -193,6 +193,167 @@
   }
 }
 
+// List / table view — column width definitions
+.release-list-col {
+  &--cover   { width: 52px; }
+  &--title   { } // flex
+  &--catalog { width: 110px; }
+  &--date    { width: 130px; }
+  &--upc     { width: 140px; }
+  &--epk     { width: 52px; }
+  &--actions { width: 44px; }
+}
+
+.release-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  // On mobile, break out of table layout so colgroup widths don't apply
+  @media (max-width: 575px) {
+    display: block;
+    table-layout: auto;
+
+    colgroup, thead { display: none; }
+    tbody { display: block; }
+
+    &__row { display: block; border-bottom: 1px solid #f3f4f6; }
+    &__row:last-child { border-bottom: none; }
+
+    &__td { display: none; }
+    &__td--mobile { display: block; width: 100%; padding: 10px 12px; }
+  }
+
+  &__th {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+
+    &--cover  { width: 44px; padding-right: 0; }
+    &--actions { width: 44px; text-align: right; }
+  }
+
+  &__row {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.1s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: #f9fafb; }
+  }
+
+  &__td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    font-size: 13px;
+    color: #374151;
+
+    &--cover  { padding-right: 0; width: 44px; }
+    &--actions { text-align: right; padding-left: 4px; }
+  }
+
+  &__title {
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+    display: block;
+  }
+
+  &__upc {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+
+  &__kebab {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    padding: 4px 6px;
+    cursor: pointer;
+    border-radius: 6px;
+    line-height: 1;
+
+    &:hover {
+      color: #374151;
+      background: #f3f4f6;
+    }
+
+    &.active {
+      color: var(--brand-color, #3b82f6);
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, transparent);
+    }
+  }
+}
+
+.release-list-mobile {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+
+  &__thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f3f4f6;
+    cursor: pointer;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__date {
+    font-size: 11px;
+    color: #6b7280;
+  }
+}
+
+.release-list-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f3f4f6;
+  cursor: pointer;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
 // Overlay chips — unified base
 .release-chip {
   display: inline-flex;

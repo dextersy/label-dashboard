@@ -61,6 +61,8 @@ export class ArtistReleasesTabComponent {
   isAdmin = false;
   downloadingMastersId: number | null = null;
 
+  viewMode: 'grid' | 'list' = 'grid';
+
   openKebabRelease: ArtistRelease | null = null;
   openKebabActions: ReleaseAction[] = [];
   menuPosition: { bottom: number; right: number } | null = null;

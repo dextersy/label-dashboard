@@ -39,12 +39,32 @@
               <app-icon name="eye-off" /> <span class="tw-hidden sm:tw-inline tw-ml-1">Hidden from EPK</span>
             </button>
           </div>
-          <button *ngIf="!artist?.locked && artist?.status !== 'Inactive'"
-                  type="button"
-                  class="btn btn-primary btn-sm tw-flex tw-items-center tw-gap-1"
-                  (click)="navigateToCreateRelease()">
-            <app-icon name="plus" iconOnly /> Create Release
-          </button>
+          <div class="tw-flex tw-items-center tw-gap-2">
+            <!-- View toggle -->
+            <div class="release-filter-group" role="group">
+              <button type="button"
+                      class="release-filter-btn"
+                      [class.active]="viewMode === 'grid'"
+                      (click)="viewMode = 'grid'"
+                      title="Grid view">
+                <app-icon name="grid" iconOnly />
+              </button>
+              <button type="button"
+                      class="release-filter-btn"
+                      [class.active]="viewMode === 'list'"
+                      (click)="viewMode = 'list'"
+                      title="List view">
+                <app-icon name="list" iconOnly />
+              </button>
+            </div>
+
+            <button *ngIf="!artist?.locked && artist?.status !== 'Inactive'"
+                    type="button"
+                    class="btn btn-primary btn-sm tw-flex tw-items-center tw-gap-1"
+                    (click)="navigateToCreateRelease()">
+              <app-icon name="plus" iconOnly /> Create Release
+            </button>
+          </div>
         </div>
       </div>
 
@@ -55,8 +75,8 @@
         </div>
       </div>
 
-      <!-- Card grid -->
-      <div *ngIf="!loading" class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+      <!-- Grid view -->
+      <div *ngIf="!loading && viewMode === 'grid'" class="sm:tw-px-card-pad sm:tw-pb-card-pad">
         <div class="release-card-grid">
           <div *ngIf="filteredReleases.length === 0" class="tw-col-span-full tw-text-center tw-py-8 tw-text-muted">
             No releases in this category.
@@ -122,6 +142,151 @@
 
           </div>
         </div>
+      </div>
+
+      <!-- List view -->
+      <div *ngIf="!loading && viewMode === 'list'" class="sm:tw-pb-card-pad">
+        <div *ngIf="filteredReleases.length === 0" class="tw-text-center tw-py-8 tw-text-muted">
+          No releases in this category.
+        </div>
+        <table *ngIf="filteredReleases.length > 0" class="release-list-table">
+          <colgroup>
+            <col class="release-list-col--cover">
+            <col class="release-list-col--title">
+            <col class="release-list-col--catalog">
+            <col class="release-list-col--date">
+            <col class="release-list-col--upc">
+            <col class="release-list-col--epk">
+            <col class="release-list-col--actions">
+          </colgroup>
+          <thead class="release-list-table__head">
+            <tr>
+              <th class="release-list-table__th release-list-table__th--cover"></th>
+              <th class="release-list-table__th">Release</th>
+              <th class="release-list-table__th tw-hidden md:tw-table-cell">Catalog #</th>
+              <th class="release-list-table__th tw-hidden sm:tw-table-cell">Release Date</th>
+              <th class="release-list-table__th tw-hidden lg:tw-table-cell">UPC</th>
+              <th class="release-list-table__th tw-hidden sm:tw-table-cell">EPK</th>
+              <th class="release-list-table__th release-list-table__th--actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let release of filteredReleases"
+                class="release-list-table__row"
+                (click)="$event.stopPropagation()">
+
+              <!-- Mobile: single compressed cell -->
+              <td colspan="7" class="release-list-table__td release-list-table__td--mobile sm:tw-hidden">
+                <div class="release-list-mobile">
+                  <div class="release-list-mobile__thumb"
+                       (click)="canEditRelease(release) ? onEditRelease(release) : null">
+                    <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-list-thumb__img">
+                  </div>
+                  <div class="release-list-mobile__body">
+                    <div class="release-list-mobile__top">
+                      <div class="tw-flex tw-items-center tw-gap-1.5 tw-min-w-0">
+                        <span class="release-list-table__title">{{ release.title }}</span>
+                        <span class="release-chip release-chip--alert release-chip--alert-error tw-shrink-0"
+                              *ngIf="hasValidationErrors(release)"
+                              [title]="getValidationTooltip(release)">!</span>
+                        <span class="release-chip release-chip--alert release-chip--alert-warning tw-shrink-0"
+                              *ngIf="!hasValidationErrors(release) && hasValidationIssues(release)"
+                              [title]="getValidationTooltip(release)">⚠</span>
+                      </div>
+                      <button *ngIf="getVisibleActions(release).length > 0"
+                              class="kebab-btn release-list-table__kebab"
+                              type="button"
+                              (click)="toggleKebab(release, $event)"
+                              [class.active]="openKebabRelease === release">
+                        <app-icon [name]="openKebabRelease === release ? 'x' : 'more-vertical'" iconOnly />
+                      </button>
+                    </div>
+                    <div class="release-list-mobile__chips">
+                      <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
+                      <span [class]="getStatusChipClass(release.status)">{{ release.status }}</span>
+                      <span class="release-list-mobile__date">{{ formatDate(release.release_date) }}</span>
+                      <span *ngIf="release.exclude_from_epk" class="release-chip release-chip--epk" title="Hidden from EPK">
+                        <app-icon name="eye-off" iconOnly />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Floating action menu -->
+                <div *ngIf="openKebabRelease === release && menuPosition"
+                     class="release-card__actions"
+                     [style.bottom.px]="menuPosition!.bottom"
+                     [style.right.px]="menuPosition!.right"
+                     (click)="$event.stopPropagation()">
+                  <button *ngFor="let action of openKebabActions"
+                          type="button"
+                          class="release-card__action-btn"
+                          [class.release-card__action-btn--primary]="action.type === 'primary'"
+                          [class.release-card__action-btn--danger]="action.type === 'danger'"
+                          (click)="onActionClick(action, openKebabRelease!, $event)">
+                    <app-icon [name]="action.icon" class="tw-mr-2 tw-shrink-0" />{{ action.label }}
+                  </button>
+                </div>
+              </td>
+
+              <!-- Desktop cells (hidden on mobile) -->
+              <td class="release-list-table__td release-list-table__td--cover tw-hidden sm:tw-table-cell">
+                <div class="release-list-thumb" (click)="canEditRelease(release) ? onEditRelease(release) : null">
+                  <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-list-thumb__img">
+                </div>
+              </td>
+              <td class="release-list-table__td tw-hidden sm:tw-table-cell">
+                <div class="tw-flex tw-items-center tw-gap-2 tw-min-w-0">
+                  <span class="release-list-table__title">{{ release.title }}</span>
+                  <span class="release-chip release-chip--alert release-chip--alert-error tw-shrink-0"
+                        *ngIf="hasValidationErrors(release)"
+                        [title]="getValidationTooltip(release)">!</span>
+                  <span class="release-chip release-chip--alert release-chip--alert-warning tw-shrink-0"
+                        *ngIf="!hasValidationErrors(release) && hasValidationIssues(release)"
+                        [title]="getValidationTooltip(release)">⚠</span>
+                </div>
+              </td>
+              <td class="release-list-table__td tw-hidden md:tw-table-cell">
+                <span class="release-chip release-chip--catalog">{{ release.catalog_no || '—' }}</span>
+              </td>
+              <td class="release-list-table__td tw-hidden sm:tw-table-cell tw-text-muted">
+                {{ formatDate(release.release_date) }}
+              </td>
+              <td class="release-list-table__td tw-hidden lg:tw-table-cell release-list-table__upc">
+                {{ release.UPC || '—' }}
+              </td>
+              <td class="release-list-table__td tw-hidden sm:tw-table-cell">
+                <app-icon *ngIf="release.exclude_from_epk" name="eye-off" class="tw-text-muted" title="Hidden from EPK" />
+                <app-icon *ngIf="!release.exclude_from_epk" name="globe" class="tw-text-success" title="Visible in EPK" />
+              </td>
+              <td class="release-list-table__td release-list-table__td--actions tw-hidden sm:tw-table-cell">
+                <button *ngIf="getVisibleActions(release).length > 0"
+                        class="kebab-btn release-list-table__kebab"
+                        type="button"
+                        (click)="toggleKebab(release, $event)"
+                        [class.active]="openKebabRelease === release">
+                  <app-icon [name]="openKebabRelease === release ? 'x' : 'more-vertical'" iconOnly />
+                </button>
+
+                <!-- Floating action menu -->
+                <div *ngIf="openKebabRelease === release && menuPosition"
+                     class="release-card__actions"
+                     [style.bottom.px]="menuPosition!.bottom"
+                     [style.right.px]="menuPosition!.right"
+                     (click)="$event.stopPropagation()">
+                  <button *ngFor="let action of openKebabActions"
+                          type="button"
+                          class="release-card__action-btn"
+                          [class.release-card__action-btn--primary]="action.type === 'primary'"
+                          [class.release-card__action-btn--danger]="action.type === 'danger'"
+                          (click)="onActionClick(action, openKebabRelease!, $event)">
+                    <app-icon [name]="action.icon" class="tw-mr-2 tw-shrink-0" />{{ action.label }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
     </div>
