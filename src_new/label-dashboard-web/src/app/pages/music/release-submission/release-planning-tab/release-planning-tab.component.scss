@@ -462,6 +462,172 @@
   }
 }
 
+// --- List view group headers ---
+
+.task-list-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-left: 3px solid transparent;
+  margin-top: 4px;
+
+  &__count {
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 1px 7px;
+  }
+
+  &--no-date {
+    color: #6b7280;
+    border-left-color: #9ca3af;
+    .task-list-group-header__count { background: #e5e7eb; color: #6b7280; }
+  }
+  &--due-now {
+    color: #b91c1c;
+    border-left-color: #dc3545;
+    .task-list-group-header__count { background: #fee2e2; color: #b91c1c; }
+  }
+  &--due-this-week {
+    color: #92400e;
+    border-left-color: #f59e0b;
+    .task-list-group-header__count { background: #fef3c7; color: #92400e; }
+  }
+  &--due-later {
+    color: #065f46;
+    border-left-color: #10b981;
+    .task-list-group-header__count { background: #d1fae5; color: #065f46; }
+  }
+}
+
+// --- List view table ---
+
+.task-list-col {
+  &--status   { width: 140px; }
+  &--title    { } // takes remaining space
+  &--assignee { width: 160px; }
+  &--due      { width: 120px; }
+  &--actions  { width: 44px; }
+}
+
+.task-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-bottom: 8px;
+
+  // On mobile, break out of table layout so colgroup widths don't apply
+  @media (max-width: 575px) {
+    display: block;
+    table-layout: auto;
+
+    colgroup { display: none; }
+
+    tbody { display: block; }
+
+    &__row { display: block; }
+
+    // hide all desktop cells
+    &__td { display: none; }
+
+    // show only the mobile cell as a full-width block
+    &__td--mobile {
+      display: block;
+      width: 100%;
+    }
+  }
+
+  &__th {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #dee2e6);
+    white-space: nowrap;
+
+    &--status  { width: 140px; }
+    &--actions { width: 44px; }
+  }
+
+  &__row {
+    border-bottom: 1px solid var(--border-color, #dee2e6);
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--light-bg, #f8f9fa); }
+
+    &--done {
+      opacity: 0.55;
+    }
+  }
+
+  &__td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    font-size: 13px;
+
+    &--status  { width: 140px; }
+    &--actions { width: 44px; text-align: right; padding-left: 4px; }
+    &--mobile  { padding: 10px 12px; }
+  }
+}
+
+.task-list-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+  }
+}
+
+// re-open for remaining rules
+.task-list-table {
+
+  &__title {
+    font-weight: 500;
+    color: var(--text-primary, #111);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &--done {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+  }
+
+  &__notes {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 // --- Modal ---
 
 .planning-modal-overlay {

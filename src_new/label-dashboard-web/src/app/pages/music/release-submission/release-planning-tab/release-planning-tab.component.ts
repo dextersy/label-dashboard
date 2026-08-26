@@ -47,6 +47,7 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
   tasks: ReleaseTask[] = [];
   assignableUsers: AssignableUser[] = [];
   filterMode: FilterMode = 'all';
+  viewMode: 'kanban' | 'list' = 'kanban';
   loading = false;
   suggestionsExpanded = false;
   savingTaskId: number | null = null;
@@ -103,7 +104,7 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     this.filterMode = mode;
   }
 
-  private get filteredTasks(): ReleaseTask[] {
+  get filteredTasks(): ReleaseTask[] {
     if (this.filterMode === 'mine') {
       return this.tasks.filter(t => t.assigned_user_id === this.currentUserId);
     }

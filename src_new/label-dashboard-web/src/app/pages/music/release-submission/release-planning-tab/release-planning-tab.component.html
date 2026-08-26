@@ -44,10 +44,28 @@
       </button>
     </div>
 
-    <button class="btn-primary btn-sm" (click)="openNewTaskForm()">
-      <app-icon name="plus" class="tw-mr-1" iconOnly />
-      Add task
-    </button>
+    <div class="tw-flex tw-items-center tw-gap-2">
+      <!-- View toggle -->
+      <div class="planning-filter-tabs">
+        <button class="planning-filter-tab"
+                [class.planning-filter-tab--active]="viewMode === 'kanban'"
+                (click)="viewMode = 'kanban'"
+                title="Kanban view">
+          <app-icon name="layers" iconOnly />
+        </button>
+        <button class="planning-filter-tab"
+                [class.planning-filter-tab--active]="viewMode === 'list'"
+                (click)="viewMode = 'list'"
+                title="List view">
+          <app-icon name="list" iconOnly />
+        </button>
+      </div>
+
+      <button class="btn-primary btn-sm" (click)="openNewTaskForm()">
+        <app-icon name="plus" class="tw-mr-1" iconOnly />
+        Add task
+      </button>
+    </div>
   </div>
 
   <!-- Loading -->
@@ -56,6 +74,7 @@
   </div>
 
   <!-- Kanban board -->
+  <ng-container *ngIf="viewMode === 'kanban'">
   <div class="planning-board-outer">
   <div class="planning-board-scroll" #boardScroll>
   <div *ngIf="!loading" class="planning-board">
@@ -139,6 +158,134 @@
   </div>
   </div>
   </div>
+  </ng-container>
+
+  <!-- List view -->
+  <ng-container *ngIf="viewMode === 'list' && !loading">
+    <div *ngIf="filteredTasks.length === 0" class="planning-empty">
+      No tasks
+    </div>
+    <ng-container *ngFor="let col of columns; trackBy: trackByColId">
+      <ng-container *ngIf="col.tasks.length > 0">
+        <div class="task-list-group-header" [ngClass]="'task-list-group-header--' + col.id">
+          {{ col.label }}
+          <span class="task-list-group-header__count">{{ col.tasks.length }}</span>
+        </div>
+        <table class="task-list-table">
+          <colgroup>
+            <col class="task-list-col--status">
+            <col class="task-list-col--title">
+            <col class="task-list-col--assignee">
+            <col class="task-list-col--due">
+            <col class="task-list-col--actions">
+          </colgroup>
+          <tbody>
+            <tr *ngFor="let task of col.tasks; trackBy: trackByTaskId"
+                class="task-list-table__row"
+                [class.task-list-table__row--done]="task.status === 'done'"
+                (click)="openEdit(task)">
+
+              <!-- Mobile: single compressed cell -->
+              <td colspan="5" class="task-list-table__td task-list-table__td--mobile sm:tw-hidden">
+                <div class="task-list-mobile">
+                  <div class="task-list-mobile__top">
+                    <div class="task-list-table__title" [class.task-list-table__title--done]="task.status === 'done'">
+                      {{ task.title }}
+                    </div>
+                    <button
+                      *ngIf="canDelete(task)"
+                      class="task-card__delete"
+                      title="Delete task"
+                      (click)="deleteTask(task, $event)">
+                      <app-icon name="trash" iconOnly />
+                    </button>
+                  </div>
+                  <div *ngIf="task.notes" class="task-list-table__notes">{{ task.notes }}</div>
+                  <div class="task-list-mobile__chips">
+                    <button
+                      class="task-status-btn"
+                      [class.task-status-btn--not-started]="task.status === 'not_started'"
+                      [class.task-status-btn--in-progress]="task.status === 'in_progress'"
+                      [class.task-status-btn--done]="task.status === 'done'"
+                      [disabled]="savingTaskId === task.id"
+                      (click)="cycleStatus(task, $event)">
+                      <app-icon
+                        [name]="savingTaskId === task.id ? 'spinner' : statusIcon(task.status)"
+                        [class.tw-animate-spin]="savingTaskId === task.id" />
+                      <span class="task-status-label">{{ statusLabel(task.status) }}</span>
+                    </button>
+                    <span *ngIf="task.due_date"
+                          class="task-card__due"
+                          [class.task-card__due--overdue]="isDueSoon(task.due_date) && task.status !== 'done'">
+                      <app-icon name="calendar" iconOnly class="tw-mr-0.5" />
+                      {{ formatDueDate(task.due_date) }}
+                    </span>
+                    <span *ngIf="task.assignedUser" class="task-card__assignee">
+                      <span class="task-avatar task-avatar--xs" [style.background]="avatarColor(task.assignedUser)">
+                        {{ avatarInitials(task.assignedUser) }}
+                      </span>
+                      {{ assigneeName(task) }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Desktop: individual cells (hidden on mobile) -->
+              <td class="task-list-table__td task-list-table__td--status tw-hidden sm:tw-table-cell">
+                <button
+                  class="task-status-btn"
+                  [class.task-status-btn--not-started]="task.status === 'not_started'"
+                  [class.task-status-btn--in-progress]="task.status === 'in_progress'"
+                  [class.task-status-btn--done]="task.status === 'done'"
+                  [disabled]="savingTaskId === task.id"
+                  [title]="statusLabel(task.status)"
+                  (click)="cycleStatus(task, $event)">
+                  <app-icon
+                    [name]="savingTaskId === task.id ? 'spinner' : statusIcon(task.status)"
+                    [class.tw-animate-spin]="savingTaskId === task.id" />
+                  <span class="task-status-label">{{ statusLabel(task.status) }}</span>
+                </button>
+              </td>
+              <td class="task-list-table__td tw-hidden sm:tw-table-cell">
+                <div class="task-list-table__title" [class.task-list-table__title--done]="task.status === 'done'">
+                  {{ task.title }}
+                </div>
+                <div *ngIf="task.notes" class="task-list-table__notes">{{ task.notes }}</div>
+              </td>
+              <td class="task-list-table__td tw-hidden sm:tw-table-cell">
+                <span *ngIf="task.assignedUser" class="task-card__assignee">
+                  <span class="task-avatar task-avatar--xs" [style.background]="avatarColor(task.assignedUser)">
+                    {{ avatarInitials(task.assignedUser) }}
+                  </span>
+                  {{ assigneeName(task) }}
+                </span>
+                <span *ngIf="!task.assigned_user_id" class="task-card__unassigned">Unassigned</span>
+              </td>
+              <td class="task-list-table__td tw-hidden md:tw-table-cell">
+                <span *ngIf="task.due_date"
+                      class="task-card__due"
+                      [class.task-card__due--overdue]="isDueSoon(task.due_date) && task.status !== 'done'">
+                  <app-icon name="calendar" iconOnly class="tw-mr-0.5" />
+                  {{ formatDueDate(task.due_date) }}
+                </span>
+                <span *ngIf="!task.due_date" class="task-card__unassigned">—</span>
+              </td>
+              <td class="task-list-table__td task-list-table__td--actions tw-hidden sm:tw-table-cell" (click)="$event.stopPropagation()">
+                <button
+                  *ngIf="canDelete(task)"
+                  class="task-card__delete"
+                  title="Delete task"
+                  (click)="deleteTask(task, $event)">
+                  <app-icon name="trash" iconOnly />
+                </button>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </ng-container>
+    </ng-container>
+  </ng-container>
 
 </div>
 
