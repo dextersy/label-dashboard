@@ -10,6 +10,9 @@ import { OnboardingChecklistComponent, DashboardChecklist } from './components/o
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
 import { ArtistStateService } from '../../services/artist-state.service';
+import { AuthService } from '../../services/auth.service';
+import { ReleaseTaskService } from '../../services/release-task.service';
+import { ReleaseTask } from '../../models/release-task.model';
 import { Artist } from '../../models/artist.model';
 import { environment } from 'environments/environment';
 import { IconComponent } from '../../components/shared/icon/icon.component';
@@ -59,6 +62,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   selectedArtist: Artist | null = null;
   loading = true;
 
+  pendingRelease: LatestRelease | null = null;
+  pendingReleaseTasks: ReleaseTask[] = [];
+  pendingReleaseDaysUntil: number | null = null;
+
   get isLockedArtist(): boolean {
     return this.selectedArtist?.locked === true;
   }
@@ -87,7 +94,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private router: Router,
     private brandService: BrandService,
-    private artistStateService: ArtistStateService
+    private artistStateService: ArtistStateService,
+    private authService: AuthService,
+    private releaseTaskService: ReleaseTaskService
   ) {}
 
   ngOnInit(): void {
@@ -118,6 +127,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.dashboardData = data;
         this.loading = false;
+        this.loadPendingReleaseHero(data);
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
@@ -254,6 +264,60 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     // Return true if the color is light (luminance > 0.5)
     return luminance > 0.5;
+  }
+
+  private loadPendingReleaseHero(data: DashboardData): void {
+    this.pendingRelease = null;
+    this.pendingReleaseTasks = [];
+    this.pendingReleaseDaysUntil = null;
+
+    const pending = (data.latestReleases ?? [])
+      .filter(r => r.status === 'Pending' && r.release_date)
+      .sort((a, b) => new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
+
+    const release = pending[0] ?? null;
+    if (!release) return;
+
+    this.pendingRelease = release;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const releaseDate = new Date(release.release_date);
+    releaseDate.setHours(0, 0, 0, 0);
+    this.pendingReleaseDaysUntil = Math.round(
+      (releaseDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const currentUserId = this.authService.currentUserValue?.id ?? null;
+    if (currentUserId === null) return;
+
+    this.releaseTaskService.getTasks(release.id).subscribe({
+      next: ({ tasks }) => {
+        this.pendingReleaseTasks = tasks.filter(
+          t => t.assigned_user_id === currentUserId && t.status !== 'done'
+        );
+      },
+      error: () => { /* silently ignore */ }
+    });
+  }
+
+  getTaskStatusIcon(status: string): string {
+    switch (status) {
+      case 'in_progress': return 'clock';
+      case 'done':        return 'check-circle';
+      default:            return 'circle';
+    }
+  }
+
+  goToPlanningTab(release: LatestRelease): void {
+    this.router.navigate(['/music/releases/edit', release.id], { queryParams: { tab: 'planning' } });
+  }
+
+  getDaysLabel(days: number | null): string {
+    if (days === null) return '';
+    if (days <= 0) return 'out now';
+    if (days === 1) return 'in 1 day';
+    return `in ${days} days`;
   }
 
   formatCurrency(amount: number): string {

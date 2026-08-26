@@ -68,6 +68,37 @@
       </a>
     </div>
 
+    <!-- ── Pending release hero ───────────────────────────────── -->
+    <div *ngIf="pendingRelease" class="release-countdown-hero tw-mb-5"
+         [style.background-image]="'url(' + getCoverArtUrl(pendingRelease.cover_art) + ')'">
+      <div class="release-countdown-hero__overlay">
+        <div class="release-countdown-hero__cols">
+
+          <!-- Left: title -->
+          <div class="release-countdown-hero__left">
+            <p class="release-countdown-hero__eyebrow">Upcoming release</p>
+            <h2 class="release-countdown-hero__title">
+              <strong>{{ pendingRelease.title }}</strong> is {{ getDaysLabel(pendingReleaseDaysUntil) }}.
+            </h2>
+          </div>
+
+          <!-- Right: tasks -->
+          <div *ngIf="pendingReleaseTasks.length > 0" class="release-countdown-hero__right">
+            <p class="release-countdown-hero__tasks-label">Tasks assigned to you</p>
+            <ul class="release-countdown-hero__tasks">
+              <li *ngFor="let task of pendingReleaseTasks | slice:0:3"
+                  class="release-countdown-hero__task"
+                  (click)="goToPlanningTab(pendingRelease!)">
+                <app-icon [name]="getTaskStatusIcon(task.status)" iconOnly class="release-countdown-hero__task-dot" />
+                {{ task.title }}
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <!-- ── Main grid (2fr + 1fr) ──────────────────────────────── -->
     <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-4">
 

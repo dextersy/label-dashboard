@@ -1,1 +1,96 @@
 :host { display: block; }
+
+.release-countdown-hero {
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+
+  &__overlay {
+    background: linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.45) 100%);
+    backdrop-filter: blur(2px);
+    padding: 28px 32px 32px;
+  }
+
+  &__cols {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    @media (min-width: 992px) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 40px;
+    }
+  }
+
+  &__left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__right {
+    @media (min-width: 992px) {
+      flex: 0 0 280px;
+      border-left: 1px solid rgba(255,255,255,0.15);
+      padding-left: 32px;
+    }
+  }
+
+  &__eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin: 0 0 8px;
+  }
+
+  &__title {
+    font-size: 20px;
+    font-weight: 400;
+    color: #fff;
+    margin: 0 0 0;
+    line-height: 1.35;
+
+    strong { font-weight: 700; }
+  }
+
+  &__tasks-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin: 20px 0 10px;
+  }
+
+  &__tasks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__task {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.88);
+    line-height: 1.4;
+    cursor: pointer;
+    transition: color 0.12s;
+
+    &:hover { color: #fff; }
+  }
+
+  &__task-dot {
+    font-size: 8px;
+    color: rgba(255,255,255,0.45);
+    flex-shrink: 0;
+  }
+}
