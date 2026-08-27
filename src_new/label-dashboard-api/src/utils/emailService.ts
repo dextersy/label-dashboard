@@ -1029,6 +1029,7 @@ export const sendReleasePendingNotification = async (
     // Get brand frontend URL for release link
     const frontendUrl = await getBrandFrontendUrl(brandId);
     const releaseUrl = `${frontendUrl}/music/releases/edit/${releaseData.id}`;
+    const tasksUrl = `${frontendUrl}/music/releases/edit/${releaseData.id}?tab=planning`;
 
     // Load email template
     const templatePath = path.join(__dirname, '../assets/templates/release_pending_notification.html');
@@ -1051,7 +1052,8 @@ export const sendReleasePendingNotification = async (
       .replace(/%CATALOG_NO%/g, releaseData.catalog_no)
       .replace(/%RELEASE_DATE%/g, formattedDate)
       .replace(/%TRACK_COUNT%/g, releaseData.track_count.toString())
-      .replace(/%RELEASE_URL%/g, releaseUrl);
+      .replace(/%RELEASE_URL%/g, releaseUrl)
+      .replace(/%TASKS_URL%/g, tasksUrl);
 
     const subject = `🚀 Your release "${releaseData.title}" is on its way!`;
 
