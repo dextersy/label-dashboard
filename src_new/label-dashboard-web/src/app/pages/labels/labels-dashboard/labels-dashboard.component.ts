@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { TopAlbumsComponent, TopEarningRelease } from '../../dashboard/components/top-albums/top-albums.component';
 import { BalanceTableComponent, ArtistBalance } from '../../dashboard/components/balance-table/balance-table.component';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
@@ -28,6 +30,19 @@ function hashName(name: string): number {
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { LatestRelease } from '../../dashboard/components/latest-albums/latest-albums.component';
 import { PipelineStage } from '../../dashboard/components/release-pipeline/release-pipeline.component';
+import { ReleaseTaskService } from '../../../services/release-task.service';
+import { ReleaseTask } from '../../../models/release-task.model';
+import { AuthService } from '../../../services/auth.service';
+
+interface DiscographyRelease {
+  id: number;
+  title: string;
+  catalog_no: string;
+  cover_art: string | null;
+  release_date: string;
+  status: string;
+  artists: { id: number; name: string }[];
+}
 
 interface DashboardStats {
   latestRelease: {
@@ -80,13 +95,17 @@ export class LabelsDashboardComponent implements OnInit {
   error: string | null = null;
   brandName: string = '';
   featureMusicWorkspace: boolean = true;
+  pendingReleases: { release: DiscographyRelease; daysUntil: number | null; tasks: ReleaseTask[] }[] = [];
+  liveReleasesData: DiscographyRelease[] = [];
 
   constructor(
     private http: HttpClient,
     private router: Router,
     private brandService: BrandService,
     private artistStateService: ArtistStateService,
-    private workspaceService: WorkspaceService
+    private workspaceService: WorkspaceService,
+    private releaseTaskService: ReleaseTaskService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -102,6 +121,8 @@ export class LabelsDashboardComponent implements OnInit {
       next: (data) => {
         this.dashboardData = data;
         this.loading = false;
+        this.loadPendingReleases();
+        this.loadLiveReleases();
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
@@ -109,6 +130,70 @@ export class LabelsDashboardComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  private loadPendingReleases(): void {
+    this.pendingReleases = [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const computeDays = (releaseDate: string): number => {
+      const d = new Date(releaseDate);
+      d.setHours(0, 0, 0, 0);
+      return Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    };
+
+    const currentUserId = this.authService.currentUserValue?.id ?? null;
+
+    this.http.get<{ releases: DiscographyRelease[] }>(
+      `${environment.apiUrl}/releases/discography?status=Pending&limit=5&sortBy=release_date&sortDirection=asc`
+    ).pipe(catchError(() => of({ releases: [] as DiscographyRelease[] }))).subscribe(({ releases }) => {
+      if (!releases.length) return;
+
+      forkJoin(
+        releases.map(r => this.releaseTaskService.getTasks(r.id).pipe(catchError(() => of({ tasks: [] }))))
+      ).subscribe(results => {
+        this.pendingReleases = releases.map((r, i) => ({
+          release: r,
+          daysUntil: r.release_date ? computeDays(r.release_date) : null,
+          tasks: currentUserId
+            ? results[i].tasks.filter(t => t.assigned_user_id === currentUserId && t.status !== 'done')
+            : []
+        }));
+      });
+    });
+  }
+
+  private loadLiveReleases(): void {
+    this.http.get<{ releases: DiscographyRelease[] }>(
+      `${environment.apiUrl}/releases/discography?status=Live&limit=5&sortBy=release_date&sortDirection=desc`
+    ).pipe(catchError(() => of({ releases: [] as DiscographyRelease[] }))).subscribe(({ releases }) => {
+      this.liveReleasesData = releases;
+    });
+  }
+
+  getDaysLabel(days: number | null): string {
+    if (days === null) return '';
+    if (days <= 0) return 'out now';
+    if (days === 1) return 'in 1 day';
+    return `in ${days} days`;
+  }
+
+  getTaskStatusIcon(status: string): string {
+    switch (status) {
+      case 'in_progress': return 'clock';
+      case 'done':        return 'check-circle';
+      default:            return 'circle';
+    }
+  }
+
+  goToPlanningTab(release: DiscographyRelease): void {
+    const primaryArtistId = release.artists?.[0]?.id;
+    if (primaryArtistId) {
+      localStorage.setItem('selected_artist_id', primaryArtistId.toString());
+    }
+    this.router.navigate(['/music/releases/edit', release.id], { queryParams: { tab: 'planning' } });
   }
 
   private loadBrandSettings(): void {
@@ -138,7 +223,7 @@ export class LabelsDashboardComponent implements OnInit {
     this.featureMusicWorkspace = settings.feature_music_workspace !== false;
   }
 
-  getCoverArtUrl(coverArt: string | undefined): string {
+  getCoverArtUrl(coverArt: string | null | undefined): string {
     if (!coverArt || coverArt.trim() === '') {
       return 'assets/img/placeholder.jpg';
     }
@@ -171,9 +256,10 @@ export class LabelsDashboardComponent implements OnInit {
     }
   }
 
-  goToRelease(release: LatestRelease): void {
-    if (release.artist_id) {
-      localStorage.setItem('selected_artist_id', release.artist_id.toString());
+  goToRelease(release: DiscographyRelease): void {
+    const primaryArtistId = release.artists?.[0]?.id;
+    if (primaryArtistId) {
+      localStorage.setItem('selected_artist_id', primaryArtistId.toString());
     }
     this.router.navigate(['/music/releases/edit', release.id]);
   }

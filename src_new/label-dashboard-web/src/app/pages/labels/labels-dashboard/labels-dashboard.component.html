@@ -23,7 +23,7 @@
   <!-- ─────────────────────────────────────────────────────── -->
   <!-- ZONE 1: HERO STRIP                                      -->
   <!-- ─────────────────────────────────────────────────────── -->
-  <div class="tw-bg-white" style="border-bottom: 0.5px solid #e5e7eb;">
+  <div class="tw-bg-white">
     <div class="tw-px-4 tw-pt-6 tw-pb-0 sm:tw-px-8 sm:tw-pt-8" style="max-width: 1100px; margin: 0 auto;">
 
       <!-- Workspace info -->
@@ -142,9 +142,46 @@
   </div>
 
   <!-- ─────────────────────────────────────────────────────── -->
-  <!-- ZONE 2: MAIN BODY — 60/40 on desktop, stacked on mobile -->
+  <!-- ZONE 2: MAIN BODY                                       -->
   <!-- ─────────────────────────────────────────────────────── -->
   <div class="tw-px-4 tw-py-7 sm:tw-px-8 sm:tw-py-8" style="max-width: 1100px; margin: 0 auto;">
+
+    <!-- Row 1: Upcoming releases (full width, 5-column card grid) -->
+    <div *ngIf="pendingReleases.length > 0" class="tw-mb-8">
+      <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-3">Upcoming Releases</p>
+      <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 lg:tw-grid-cols-5 tw-gap-3">
+        <div *ngFor="let item of pendingReleases"
+             class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-cursor-pointer hover:tw-shadow-card-hover tw-transition-shadow"
+             (click)="goToPlanningTab(item.release)">
+
+          <!-- Cover art banner -->
+          <div class="tw-relative tw-bg-gray-100" style="height: 80px;">
+            <img [src]="getCoverArtUrl(item.release.cover_art)"
+                 [alt]="item.release.title"
+                 class="tw-w-full tw-h-full tw-object-cover">
+            <span class="tw-absolute tw-bottom-2 tw-right-2 tw-text-xs tw-bg-black/50 tw-text-white tw-px-2 tw-py-0.5 tw-rounded">
+              {{ getDaysLabel(item.daysUntil) }}
+            </span>
+          </div>
+
+          <!-- Card body -->
+          <div class="tw-px-3 tw-py-3">
+            <div class="tw-text-sm tw-font-semibold tw-text-gray-900 tw-truncate tw-mb-1">{{ item.release.title }}</div>
+            <div *ngIf="item.tasks.length > 0" class="tw-flex tw-flex-col tw-gap-1">
+              <div *ngFor="let task of item.tasks"
+                   class="tw-flex tw-items-center tw-gap-1.5 tw-text-xs tw-text-gray-600">
+                <app-icon [name]="getTaskStatusIcon(task.status)" iconOnly class="tw-text-gray-400 tw-flex-shrink-0" style="font-size: 11px;" />
+                <span class="tw-truncate">{{ task.title }}</span>
+              </div>
+            </div>
+            <p *ngIf="item.tasks.length === 0" class="tw-text-xs tw-text-muted tw-mb-0">No tasks assigned to you</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Latest releases + Quick links -->
     <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-5 tw-gap-6 lg:tw-gap-10 tw-items-start">
 
       <!-- Left: latest releases list (3/5 on desktop) -->
@@ -152,13 +189,13 @@
 
         <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-0" style="border-top: 0.5px solid #e5e7eb; padding-top: 20px;">Latest Releases</p>
 
-        <div *ngIf="!dashboardData.latestReleases?.length"
+        <div *ngIf="!liveReleasesData.length"
              class="tw-py-8 tw-text-sm tw-text-gray-400">
-          No releases yet.
+          No live releases yet.
         </div>
 
-        <div *ngIf="dashboardData.latestReleases?.length">
-          <div *ngFor="let release of dashboardData.latestReleases"
+        <div *ngIf="liveReleasesData.length">
+          <div *ngFor="let release of liveReleasesData"
                class="tw-flex tw-items-center tw-gap-3 tw-py-3 sm:tw-py-3.5 tw-cursor-pointer hover:tw-bg-gray-50 tw-transition-colors"
                style="border-bottom: 0.5px solid #e5e7eb;"
                (click)="goToRelease(release)">
@@ -256,8 +293,8 @@
 
       </div>
 
-    </div>
-  </div>
+    </div><!-- /row 2 grid -->
+  </div><!-- /zone 2 -->
 
   <!-- Earnings section -->
   <div class="tw-px-4 tw-pb-8 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
