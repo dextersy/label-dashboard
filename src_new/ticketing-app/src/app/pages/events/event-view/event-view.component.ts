@@ -16,6 +16,7 @@ interface PublicEventView {
   close_time?: string;
   venue?: string;
   poster_url?: string;
+  ticket_price: number;
   ticket_price_display: string;
   ticket_naming?: string;
   buy_shortlink?: string;
@@ -212,7 +213,7 @@ interface PublicEventView {
                       <a [href]="event()!.buy_shortlink" target="_blank" rel="noopener"
                         class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
                         <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets →</span>
-                        <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price_display }}</span>
+                        <span class="text-xs font-mono leading-tight opacity-70">{{ event()!.ticket_price === 0 ? 'FREE' : event()!.ticket_price_display }}</span>
                       </a>
                     }
 

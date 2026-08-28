@@ -74,7 +74,8 @@ export class MetaService {
   }
 
   updateEventTicketMetadata(event: any, brandName?: string): void {
-    const title = `Buy tickets to ${event.title}`;
+    const allFree = event.ticket_price === 0;
+    const title = allFree ? `Register for ${event.title}` : `Get tickets to ${event.title}`;
     const description = event.description || `Get your tickets for ${event.title} at ${event.venue || 'this amazing event'}.`;
     const image = event.poster_url;
     const siteName = brandName || 'Melt Records';

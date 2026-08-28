@@ -72,7 +72,7 @@
         <div class="tw-mb-8">
 
           <!-- Pre-title -->
-          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-1 tw-text-center">Get tickets to</p>
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-1 tw-text-center">{{ event.ticket_price === 0 ? 'Register for' : 'Get tickets to' }}</p>
 
           <!-- Title -->
           <h1 class="tw-text-4xl tw-font-black tw-text-gray-900 tw-leading-tight tw-tracking-tight tw-mb-1 tw-text-center">{{ event.title }}</h1>

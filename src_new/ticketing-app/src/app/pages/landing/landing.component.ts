@@ -15,6 +15,7 @@ interface PublicEvent {
   date_and_time: string;
   venue?: string;
   poster_url?: string;
+  ticket_price: number;
   ticket_price_display: string;
   ticket_naming?: string;
   buy_shortlink?: string;
@@ -240,7 +241,7 @@ interface PublicEvent {
                       <a [href]="event.buy_shortlink" target="_blank" rel="noopener"
                         class="inline-flex flex-col px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors">
                         <span class="text-xs font-bold uppercase tracking-wider leading-tight">Get Tickets →</span>
-                        <span class="text-[10px] font-mono leading-tight opacity-70">{{ event.ticket_price_display }}</span>
+                        <span class="text-[10px] font-mono leading-tight opacity-70">{{ event.ticket_price === 0 ? 'FREE' : event.ticket_price_display }}</span>
                       </a>
                     } @else if (event.is_closed) {
                       <span class="text-xs text-white/20 font-mono uppercase">closed</span>
