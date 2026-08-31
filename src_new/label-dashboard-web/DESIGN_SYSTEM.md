@@ -391,6 +391,51 @@ Large variant — `padding: 10px 16px`, `font-size: 1rem`. Replaces `form-contro
 - `text-align: right` (mobile: center, button full-width up to 300px)
 - `border-top: 1px solid #e5e7eb`, `margin-top: 32px`
 
+### Toggle Switch
+
+Use `.toggle-switch` for all boolean on/off controls. **Do not use `<input type="checkbox">` directly** for settings toggles — always use this pattern.
+
+```html
+<label class="toggle-switch">
+  <input type="checkbox" [(ngModel)]="value" />
+  <span class="toggle-switch__label">Label text</span>
+</label>
+```
+
+**Behavior:**
+- Off state: gray track (`#d1d5db`), knob at left
+- On state: brand-colored track (`--brand-color`), knob at right
+- Smooth `0.18s` transitions on track color and knob position
+- Disabled: `opacity: 0.5`, `cursor: not-allowed` (add `[disabled]` to the `<input>`)
+- Uses `:has(input:checked)` — no JavaScript needed for visual state
+
+**With Angular two-way binding:**
+```html
+<label class="toggle-switch">
+  <input type="checkbox" [(ngModel)]="notifyEnabled" />
+  <span class="toggle-switch__label">Notify ticket holders by email</span>
+</label>
+```
+
+**Disabled:**
+```html
+<label class="toggle-switch">
+  <input type="checkbox" [(ngModel)]="value" [disabled]="isReadOnly" />
+  <span class="toggle-switch__label">Option</span>
+</label>
+```
+
+**Without label text** (icon-only context — omit the `<span>`):
+```html
+<label class="toggle-switch">
+  <input type="checkbox" [(ngModel)]="value" />
+</label>
+```
+
+Defined in `src/styles/components.scss`. The track and knob are rendered via `::before` / `::after` pseudo-elements on the `<label>`, so no extra wrapper elements are needed.
+
+> **Checkboxes vs. toggles:** Use `.toggle-switch` for settings and feature flags (things you turn on/off). Use native `<input type="checkbox">` with `class="form-check-input"` only for multi-select lists (e.g. selecting rows in a table, confirming terms of service).
+
 ---
 
 ## Tables
