@@ -112,7 +112,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: {
         id: eventId,
-        status: 'published'
+        status: { [Op.in]: ['published', 'canceled'] }
       },
       include: [
         {
@@ -222,6 +222,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       event: {
         id: event.id,
         title: event.title,
+        status: event.status,
         description: event.description,
         date_and_time: event.date_and_time,
         close_time: event.close_time,
@@ -1223,9 +1224,9 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
     const requestDomain = getRequestDomain(req);
 
     const event = await Event.findOne({
-      where: { 
+      where: {
         id,
-        status: 'published'
+        status: { [Op.in]: ['published', 'canceled'] }
       },
       include: [{
         model: Brand,

@@ -6,7 +6,7 @@ import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sen
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
-import { sendEmail, sendEmailWithInlineImages } from '../utils/emailService';
+import { sendEmail, sendEmailWithInlineImages, loadEmailTemplate, processTemplate } from '../utils/emailService';
 
 // Helper function to add responsive image styling to content
 const addResponsiveImageStyling = (content: string): string => {
@@ -3349,6 +3349,216 @@ export const updateEventMemberDiscount = async (req: AuthRequest, res: Response)
     return res.json({ event });
   } catch (error) {
     console.error('Update event member discount error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const cancelEvent = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    const eventId = parseInt(id as string, 10);
+
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    const { refund_tickets = false, notify_ticket_holders = false, custom_message } = req.body;
+
+    const event = await Event.findOne({
+      where: {
+        id: eventId,
+        brand_id: req.user.brand_id
+      }
+    });
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (event.status === 'canceled') {
+      return res.status(400).json({ error: 'Event is already canceled' });
+    }
+
+    // Block if any ticket has been scanned/claimed
+    const claimedTickets = await Ticket.findAll({
+      where: {
+        event_id: eventId,
+        number_of_claimed_entries: { [Op.gt]: 0 }
+      }
+    });
+
+    if (claimedTickets.length > 0) {
+      return res.status(400).json({
+        error: `Cannot cancel: ${claimedTickets.length} ticket(s) have been scanned/claimed`
+      });
+    }
+
+    // Find refundable tickets
+    const refundableTickets = await Ticket.findAll({
+      where: {
+        event_id: eventId,
+        status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] }
+      }
+    });
+
+    let refunded_count = 0;
+    let failed_count = 0;
+    const failed_tickets: Array<{
+      ticket_id: number;
+      ticket_code: string;
+      buyer_name: string;
+      email: string;
+      amount: number;
+      entries: number;
+      error: string;
+    }> = [];
+
+    let manual_count = 0;
+    // Track per-email refund outcome for personalized notification emails
+    const emailRefundOutcome = new Map<string, 'refunded' | 'failed' | 'manual'>();
+    if (refund_tickets && refundableTickets.length > 0) {
+      for (const ticket of refundableTickets) {
+        const ticketEmail = (ticket as any).email_address;
+        // Manually marked tickets have no payment_id — skip PayMongo refund
+        if (!(ticket as any).payment_id && !(ticket as any).payment_link_id && !(ticket as any).checkout_key) {
+          manual_count++;
+          if (ticketEmail && !emailRefundOutcome.has(ticketEmail)) emailRefundOutcome.set(ticketEmail, 'manual');
+          continue;
+        }
+        try {
+          const success = await paymentService.refundTicket(ticket.id, 'Event canceled');
+          if (success) {
+            refunded_count++;
+            if (ticketEmail) emailRefundOutcome.set(ticketEmail, 'refunded');
+          } else {
+            failed_count++;
+            if (ticketEmail && !emailRefundOutcome.has(ticketEmail)) emailRefundOutcome.set(ticketEmail, 'failed');
+            failed_tickets.push({
+              ticket_id: ticket.id,
+              ticket_code: (ticket as any).ticket_code || '',
+              buyer_name: (ticket as any).name || '',
+              email: ticketEmail || '',
+              amount: (ticket as any).price_per_ticket || 0,
+              entries: (ticket as any).number_of_entries || 0,
+              error: 'Refund returned false'
+            });
+          }
+        } catch (err: any) {
+          failed_count++;
+          if (ticketEmail && !emailRefundOutcome.has(ticketEmail)) emailRefundOutcome.set(ticketEmail, 'failed');
+          failed_tickets.push({
+            ticket_id: ticket.id,
+            ticket_code: (ticket as any).ticket_code || '',
+            buyer_name: (ticket as any).name || '',
+            email: ticketEmail || '',
+            amount: (ticket as any).price_per_ticket || 0,
+            entries: (ticket as any).number_of_entries || 0,
+            error: err?.message || 'Unknown error'
+          });
+        }
+      }
+    }
+
+    if (notify_ticket_holders && refundableTickets.length > 0) {
+      // Deduplicate by email
+      const seenEmails = new Set<string>();
+      const recipients: Array<{ email: string; name: string }> = [];
+
+      for (const ticket of refundableTickets) {
+        const email = (ticket as any).email_address;
+        const name = (ticket as any).name;
+        if (email && !seenEmails.has(email)) {
+          seenEmails.add(email);
+          recipients.push({ email, name });
+        }
+      }
+
+      // Load brand for styled email
+      const brand = await Brand.findByPk(event.brand_id);
+      const brandColor = (brand as any)?.brand_color || '#1595e7';
+      const brandName = (brand as any)?.brand_name || '';
+      const logoUrl = (brand as any)?.logo_url || '';
+      const brandLogoHtml = logoUrl
+        ? `<img src="${logoUrl}" alt="${brandName}" style="max-height: 48px; max-width: 180px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">`
+        : '';
+
+      const eventDate = new Date(event.date_and_time).toLocaleDateString('en-PH', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      const defaultMessage = `<p>Dear Ticket Holder,</p><p>We're sorry to inform you that <strong>${event.title}</strong> scheduled on <strong>${eventDate}</strong>${event.venue ? ` at <strong>${event.venue}</strong>` : ''} has been <strong>canceled</strong>.</p><p>We apologize for any inconvenience this may have caused.</p>`;
+
+      const messageContent = (custom_message && custom_message.trim())
+        ? custom_message
+        : defaultMessage;
+
+      const emailTemplate = loadEmailTemplate('event_canceled_email');
+
+      const buildRefundNotice = (outcome: 'refunded' | 'failed' | 'manual' | undefined): string => {
+        const noticeStyle = 'font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.5;';
+        if (outcome === 'refunded') {
+          return `<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-top: 20px;">
+            <tr>
+              <td style="background-color: #fef9c3; border: 1px solid #fde047; border-radius: 6px; padding: 14px 16px;">
+                <div class="pc-font-alt" style="${noticeStyle} color: #713f12;">
+                  A refund for your ticket(s) has been initiated and will be returned to your original payment method within a few business days. Note that platform fees are non-refundable.
+                </div>
+              </td>
+            </tr>
+          </table>`;
+        } else if (outcome === 'failed' || outcome === 'manual') {
+          return `<table width="100%" border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin-top: 20px;">
+            <tr>
+              <td style="background-color: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 14px 16px;">
+                <div class="pc-font-alt" style="${noticeStyle} color: #374151;">
+                  The event organizer will be in touch with you regarding refunds &amp; other concerns.
+                </div>
+              </td>
+            </tr>
+          </table>`;
+        }
+        return '';
+      };
+
+      for (const recipient of recipients) {
+        const subject = `"${event.title}" has been canceled`;
+        const personalizedMessage = messageContent.replace(/Dear Ticket Holder/g, `Dear ${recipient.name || 'Ticket Holder'}`);
+        const outcome = refund_tickets ? (emailRefundOutcome.get(recipient.email) ?? 'failed') : undefined;
+        const refundNoticeHtml = buildRefundNotice(outcome);
+
+        const htmlBody = processTemplate(emailTemplate, {
+          EVENT_TITLE: event.title,
+          BRAND_COLOR: brandColor,
+          BRAND_NAME: brandName,
+          BRAND_LOGO: brandLogoHtml,
+          MESSAGE_CONTENT: personalizedMessage,
+          REFUND_NOTICE: refundNoticeHtml,
+        });
+
+        try {
+          await sendEmail([recipient.email], subject, htmlBody, event.brand_id);
+        } catch (err) {
+          console.error(`Failed to send cancellation email to ${recipient.email}:`, err);
+        }
+      }
+    }
+
+    // Mark event as canceled
+    await event.update({ status: 'canceled' });
+
+    return res.json({
+      success: true,
+      refunded_count,
+      failed_count,
+      manual_count,
+      failed_tickets
+    });
+  } catch (error) {
+    console.error('Cancel event error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

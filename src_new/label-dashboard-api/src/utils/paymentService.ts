@@ -660,7 +660,8 @@ export class PaymentService {
 
   private async processPaymentConfirmation(ticket: any, processingFee: number, paymentId: string | null, payload?: any): Promise<boolean> {
     // Idempotency check - prevent duplicate processing from webhook retries
-    if (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.') {
+    // Also skip refunded tickets — a retried payment webhook must not reinstate a refunded ticket
+    if (ticket.status === 'Payment Confirmed' || ticket.status === 'Ticket sent.' || ticket.status === 'Refunded') {
       this.webhookLog('Ticket already processed (status: ' + ticket.status + '), skipping duplicate webhook');
       return true;
     }

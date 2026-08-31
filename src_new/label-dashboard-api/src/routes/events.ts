@@ -29,7 +29,8 @@ import {
   unpublishEvent,
   getPaymentConfig,
   getEventPreview,
-  updateEventMemberDiscount
+  updateEventMemberDiscount,
+  cancelEvent
 } from '../controllers/eventController';
 import {
   getTicketTypes,
@@ -148,5 +149,6 @@ router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
 // Event status operations
 router.post('/:id/publish', requireAdmin, publishEvent);
 router.post('/:id/unpublish', requireAdmin, unpublishEvent);
+router.post('/:id/cancel', requireAdmin, cancelEvent);
 
 export default router;

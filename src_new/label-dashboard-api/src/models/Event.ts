@@ -33,7 +33,7 @@ interface EventAttributes {
   venue_phone?: string;
   venue_website?: string;
   venue_maps_url?: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'canceled';
   event_type?: 'concert' | 'festival' | 'club_night' | 'open_mic' | 'dj_set' | 'listening_party' | 'album_launch' | 'workshop' | 'meetup' | 'other' | null;
   ticketing_enabled: boolean;
   external_ticket_link?: string | null;
@@ -82,7 +82,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public venue_phone?: string;
   public venue_website?: string;
   public venue_maps_url?: string;
-  public status!: 'draft' | 'published';
+  public status!: 'draft' | 'published' | 'canceled';
   public event_type?: 'concert' | 'festival' | 'club_night' | 'open_mic' | 'dj_set' | 'listening_party' | 'album_launch' | 'workshop' | 'meetup' | 'other' | null;
   public ticketing_enabled!: boolean;
   public external_ticket_link?: string | null;
@@ -251,7 +251,7 @@ Event.init(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM('draft', 'published'),
+      type: DataTypes.ENUM('draft', 'published', 'canceled'),
       allowNull: false,
       defaultValue: 'draft',
     },
