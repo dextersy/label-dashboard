@@ -4,6 +4,24 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { map, catchError, switchMap } from 'rxjs/operators';
 
+export interface FailedRefundTicket {
+  ticket_id: number;
+  ticket_code: string;
+  buyer_name: string;
+  email: string;
+  amount: number;
+  entries: number;
+  error: string;
+}
+
+export interface CancelEventResult {
+  success: boolean;
+  refunded_count: number;
+  failed_count: number;
+  manual_count: number;
+  failed_tickets: FailedRefundTicket[];
+}
+
 export interface WristbandColor {
   id: number;
   slug: string;
@@ -101,7 +119,7 @@ export interface CreateEventForm {
   poster_file?: File;
   rsvp_link: string;
   slug: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'canceled';
   google_place_id?: string;
   venue_address?: string;
   venue_latitude?: number;
@@ -154,6 +172,7 @@ export interface Event {
   venue_phone?: string | null;
   venue_website?: string | null;
   venue_maps_url?: string | null;
+  status?: 'draft' | 'published' | 'canceled';
   // Tagging & listing
   event_type?: string | null;
   ticketing_enabled?: boolean;
@@ -851,6 +870,15 @@ export class EventService {
     );
   }
   
+  /**
+   * Cancel an event with optional refund and notification
+   */
+  cancelEvent(eventId: number, options: { refund_tickets: boolean; notify_ticket_holders: boolean; custom_message?: string }): Observable<CancelEventResult> {
+    return this.http.post<CancelEventResult>(`${environment.apiUrl}/events/${eventId}/cancel`, options, {
+      headers: this.getAuthHeaders()
+    }).pipe(catchError(this.handleError));
+  }
+
   /**
    * Transfer ticket using existing services
    * This method combines cancel + create to achieve the transfer

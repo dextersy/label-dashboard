@@ -52,8 +52,19 @@
 
         <!-- Form Content -->
         <div *ngIf="!loading" class="event-form-content">
+          <!-- Canceled Event Banner -->
+          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="isEventCanceled()">
+            <div class="tw-flex tw-items-center tw-gap-3">
+              <app-icon name="x-circle" class="fs-5 tw-shrink-0" />
+              <div>
+                <strong>This event has been canceled.</strong>
+                <span class="tw-block small tw-mt-1 tw-text-sm">It is no longer visible to the public. No further edits can be made.</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Draft Mode Info Box -->
-          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 draft-notification" *ngIf="!isEventPublished()">
+          <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800 draft-notification" *ngIf="!isEventPublished() && !isEventCanceled()">
             <div class="draft-notification-header" (click)="draftExpanded = !draftExpanded">
               <div class="tw-flex tw-items-center tw-gap-3">
                 <app-icon name="info" class="fs-5 tw-shrink-0" />
@@ -92,7 +103,7 @@
                 <!-- View mode -->
                 <div *ngIf="isDetailsViewMode && !isEditingField('title')" class="tw-flex tw-items-center tw-gap-1">
                   <span class="tw-text-base tw-font-medium">{{ eventData.title || '—' }}</span>
-                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('title')" title="Edit title"><app-icon name="edit" iconOnly /></button>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('title')" title="Edit title" *ngIf="!isEventCanceled()"><app-icon name="edit" iconOnly /></button>
                 </div>
                 <!-- Edit mode -->
                 <div *ngIf="!isDetailsViewMode || isEditingField('title')" class="tw-flex tw-items-center tw-gap-1">
@@ -116,7 +127,7 @@
                 <!-- View mode -->
                 <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time')" class="tw-flex tw-items-center tw-gap-1">
                   <span class="tw-text-base">{{ formatEventDate(eventData.date_and_time) }}</span>
-                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit date and time"><app-icon name="edit" iconOnly /></button>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit date and time" *ngIf="!isEventCanceled()"><app-icon name="edit" iconOnly /></button>
                 </div>
                 <!-- Edit mode -->
                 <div *ngIf="!isDetailsViewMode || isEditingField('date_and_time')" class="tw-flex tw-items-center tw-gap-1">
@@ -143,7 +154,7 @@
                 <!-- View mode -->
                 <div *ngIf="isDetailsViewMode && !isEditingField('venue')" class="tw-flex tw-items-center tw-gap-1">
                   <span class="tw-text-base">{{ eventData.venue || '—' }}</span>
-                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('venue')" title="Edit venue"><app-icon name="edit" iconOnly /></button>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('venue')" title="Edit venue" *ngIf="!isEventCanceled()"><app-icon name="edit" iconOnly /></button>
                 </div>
                 <!-- Edit mode -->
                 <div *ngIf="!isDetailsViewMode || isEditingField('venue')" class="tw-flex tw-items-start tw-gap-1">
@@ -175,7 +186,7 @@
                 <div *ngIf="isDetailsViewMode && !isEditingField('rsvp_link')" class="tw-flex tw-items-center tw-gap-1">
                   <a *ngIf="eventData.rsvp_link" [href]="eventData.rsvp_link" target="_blank" rel="noopener" class="tw-text-base tw-break-all">{{ eventData.rsvp_link }}</a>
                   <span *ngIf="!eventData.rsvp_link" class="tw-text-muted">—</span>
-                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1 tw-shrink-0" (click)="startEditingField('rsvp_link')" title="Edit RSVP link"><app-icon name="edit" iconOnly /></button>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1 tw-shrink-0" (click)="startEditingField('rsvp_link')" title="Edit RSVP link" *ngIf="!isEventCanceled()"><app-icon name="edit" iconOnly /></button>
                 </div>
                 <!-- Edit mode -->
                 <div *ngIf="!isDetailsViewMode || isEditingField('rsvp_link')" class="tw-flex tw-items-center tw-gap-1">
@@ -230,7 +241,7 @@
               <div *ngIf="isDetailsViewMode && !isEditingField('description')" class="tw-flex tw-gap-1">
                 <div class="tw-flex-1 tw-text-sm ql-editor tw-p-0" *ngIf="eventData.description" [innerHTML]="eventData.description"></div>
                 <span class="tw-flex-1 tw-text-muted tw-text-sm" *ngIf="!eventData.description">No description</span>
-                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-shrink-0" (click)="startEditingField('description')" title="Edit description"><app-icon name="edit" iconOnly /></button>
+                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-shrink-0" (click)="startEditingField('description')" title="Edit description" *ngIf="!isEventCanceled()"><app-icon name="edit" iconOnly /></button>
               </div>
               <!-- Edit mode -->
               <div *ngIf="!isDetailsViewMode || isEditingField('description')">
@@ -591,8 +602,98 @@
   </app-in-page-nav>
 </div>
 
+<!-- Cancel Event Dialog (inline modal) -->
+<div *ngIf="cancelDialogVisible" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);" (click)="cancelDialogVisible = false">
+  <div class="modal-dialog modal-dialog-scrollable" style="margin: 1.5rem auto;" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header tw-border-b tw-border-red-100 tw-bg-red-50">
+        <h5 class="modal-title tw-flex tw-items-center tw-gap-2 tw-text-red-700 tw-font-semibold">
+          <app-icon name="x-circle" class="tw-text-red-500" />
+          Cancel Event
+        </h5>
+        <button type="button" class="btn-close" (click)="cancelDialogVisible = false"></button>
+      </div>
+      <div class="modal-body tw-space-y-4">
+        <p class="tw-text-sm tw-text-gray-700">
+          This will permanently cancel the event. It will be removed from the public
+          listing and the ticket page will display a cancellation notice.
+          <strong>This action cannot be undone</strong> — the event cannot be uncanceled or edited afterwards.
+        </p>
+
+        <ng-container *ngIf="refundableTicketCount > 0">
+          <div class="tw-px-4 tw-py-3 tw-rounded-lg tw-bg-amber-50 tw-border tw-border-amber-200 tw-text-sm tw-text-amber-800">
+            There are <strong>{{ refundableTicketCount }}</strong> paid ticket(s) totaling
+            <strong>₱{{ refundableAmount | number:'1.2-2' }}</strong>.
+            We can attempt to refund these payments — successful refunds will be deducted from your balance.
+            Note that platform fees are non-refundable.
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="cancelRefundTickets" />
+            <span class="toggle-switch__label">Refund ticket holders</span>
+          </label>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="cancelNotifyHolders" />
+            <span class="toggle-switch__label">Notify ticket holders by email</span>
+          </label>
+          <ng-container *ngIf="cancelNotifyHolders">
+            <label class="toggle-switch tw-mt-1 tw-ml-6">
+              <input type="checkbox" [(ngModel)]="cancelCustomizeMessage" />
+              <span class="toggle-switch__label">Customize message</span>
+            </label>
+            <div *ngIf="cancelCustomizeMessage" class="tw-mt-2">
+              <quill-editor [(ngModel)]="cancelCustomMessage" [modules]="quillConfig" style="display:block;" class="tw-rounded tw-border tw-border-gray-200"></quill-editor>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="refundableTicketCount === 0">
+          <p class="tw-text-sm tw-text-gray-500 tw-italic">There are no paid tickets to refund.</p>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="cancelNotifyHolders" />
+            <span class="toggle-switch__label">Notify ticket holders by email</span>
+          </label>
+          <ng-container *ngIf="cancelNotifyHolders">
+            <label class="toggle-switch tw-mt-1 tw-ml-6">
+              <input type="checkbox" [(ngModel)]="cancelCustomizeMessage" />
+              <span class="toggle-switch__label">Customize message</span>
+            </label>
+            <div *ngIf="cancelCustomizeMessage" class="tw-mt-2">
+              <quill-editor [(ngModel)]="cancelCustomMessage" [modules]="quillConfig" style="display:block;" class="tw-rounded tw-border tw-border-gray-200"></quill-editor>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="cancelDialogVisible = false">Back</button>
+        <button
+          type="button"
+          class="btn-danger"
+          [disabled]="canceling"
+          (click)="onCancelConfirmed({ refundTickets: cancelRefundTickets, notifyTicketHolders: cancelNotifyHolders })">
+          <app-icon name="spinner" class="tw-animate-spin" *ngIf="canceling" />
+          <app-icon name="x-circle" *ngIf="!canceling" />
+          {{ canceling ? 'Canceling...' : 'Cancel Event' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Floating Action Bar (outside scrollable container) -->
-<app-floating-action-bar>
+<app-floating-action-bar *ngIf="!isEventCanceled()">
+  <!-- Cancel Event button (secondary slot — collapses into drawer on mobile) -->
+  <button
+    type="button"
+    class="btn-danger"
+    (click)="onCancelEvent()"
+    [disabled]="canceling || saving || hasClaimedTickets()"
+    [title]="hasClaimedTickets() ? 'Cannot cancel: one or more tickets have already been scanned.' : ''"
+    *ngIf="!isNewEvent && !isEventCanceled()">
+    <app-icon name="spinner" class="tw-animate-spin" *ngIf="canceling" />
+    <app-icon name="x-circle" *ngIf="!canceling" />
+    <span>{{ canceling ? 'Canceling...' : 'Cancel Event' }}</span>
+  </button>
+
   <!-- Preview Buy Page button -->
   <button
     type="button"

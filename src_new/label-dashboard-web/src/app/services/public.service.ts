@@ -16,6 +16,7 @@ export interface PublicEvent {
   max_tickets?: number;
   remaining_tickets?: number;
   is_closed: boolean;
+  status?: 'draft' | 'published' | 'canceled';
   show_countdown: boolean;
   show_tickets_remaining: boolean;
   supports_card: boolean;

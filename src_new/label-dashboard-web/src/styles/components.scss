@@ -762,6 +762,85 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 /* A subtle diagonal-striped click-through overlay for locked pages. */
 /* Usage: add class="locked-overlay-host" to the page root element.  */
 /* ----------------------------------------------------------------- */
+/* ----------------------------------------------------------------- */
+/* TOGGLE SWITCH                                                      */
+/* Pill-shaped boolean toggle. Wraps a hidden checkbox + track +     */
+/* optional label. Responds to brand color for the on state.         */
+/*                                                                   */
+/* Usage:                                                            */
+/*   <label class="toggle-switch">                                   */
+/*     <input type="checkbox" [(ngModel)]="value" />                 */
+/*     <span class="toggle-switch__label">Label text</span>          */
+/*   </label>                                                        */
+/* ----------------------------------------------------------------- */
+.toggle-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 44px;   /* reserves space for the 36px track + 8px gap */
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+  min-height: 20px;
+
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Track */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: #d1d5db;
+    transition: background 0.18s ease;
+  }
+
+  /* Knob */
+  &::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: left 0.18s ease;
+  }
+
+  /* Checked state — brand-colored track, knob slid right */
+  &:has(input:checked) {
+    &::before { background: var(--brand-color, #3b82f6); }
+    &::after  { left: 19px; }  /* 36 - 14 - 3 = 19 */
+  }
+
+  /* Disabled state */
+  &:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Label text */
+  .toggle-switch__label {
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.4;
+  }
+}
+
 .locked-overlay-host {
   position: relative;
   min-height: 100%;

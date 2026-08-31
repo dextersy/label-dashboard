@@ -91,6 +91,7 @@
       <!-- Event items -->
       <li *ngFor="let event of filteredEvents; let i = index"
           [class.selected]="selectedEvent?.id === event.id"
+          [class.tw-opacity-50]="event.status === 'canceled'"
           class="dropdown-event-item">
         <a (click)="selectEvent(event)" class="dropdown-event-link">
           <!-- Dot icon -->
@@ -104,7 +105,7 @@
           </div>
           <!-- Info -->
           <div class="di-info">
-            <div class="di-title">{{ event.title }}</div>
+            <div class="di-title" [class.tw-italic]="event.status === 'canceled'">{{ event.title }}</div>
             <div class="di-date">{{ event.date_and_time | date:'MMM d, y' }}</div>
           </div>
           <!-- Status -->

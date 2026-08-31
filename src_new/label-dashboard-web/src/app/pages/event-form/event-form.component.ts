@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, of, Observable } from 'rxjs';
-import { EventService, Event } from '../../services/event.service';
+import { EventService, Event, CancelEventResult, FailedRefundTicket } from '../../services/event.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
@@ -145,6 +145,17 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   // Inline editing state (Details section, published events)
   editingFields: Set<string> = new Set();
   private fieldOriginals: Map<string, any> = new Map();
+
+  // Cancel event state
+  canceling = false;
+  cancelDialogVisible = false;
+  refundableAmount = 0;
+  refundableTicketCount = 0;
+  cancelRefundTickets = true;
+  cancelNotifyHolders = true;
+  cancelCustomizeMessage = false;
+  cancelCustomMessage = '';
+  cancelDefaultMessage = '';
 
   // UI state
   isMaxTicketsUnlimited = true;
@@ -823,6 +834,93 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     return status === 'published';
   }
 
+  isEventCanceled(): boolean {
+    if (this.isNewEvent) return false;
+    const status = (this.event as any)?.status || this.eventData?.status;
+    return status === 'canceled';
+  }
+
+  hasClaimedTickets(): boolean {
+    return (this.event?.tickets || []).some((t: any) => t.number_of_claimed_entries > 0);
+  }
+
+  onCancelEvent(): void {
+    const tickets = this.event?.tickets || [];
+    const refundable = tickets.filter((t: any) =>
+      t.status === 'Payment Confirmed' || t.status === 'Ticket sent.'
+    );
+    this.refundableTicketCount = refundable.length;
+    this.refundableAmount = refundable.reduce((sum: number, t: any) => {
+      return sum + ((t.price_per_ticket || 0) * (t.number_of_entries || 1));
+    }, 0);
+    this.cancelRefundTickets = true;
+    this.cancelNotifyHolders = true;
+    this.cancelCustomizeMessage = false;
+    const eventDate = this.event ? new Date((this.event as any).date_and_time).toLocaleDateString('en-PH', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    }) : '';
+    const venue = (this.event as any)?.venue ? ` at <strong>${(this.event as any).venue}</strong>` : '';
+    this.cancelDefaultMessage = `<p>Dear Ticket Holder,</p><p>We're sorry to inform you that <strong>${(this.event as any)?.title || 'this event'}</strong> scheduled on <strong>${eventDate}</strong>${venue} has been <strong>canceled</strong>.</p><p>We apologize for any inconvenience this may have caused.</p>`;
+    this.cancelCustomMessage = this.cancelDefaultMessage;
+    this.cancelDialogVisible = true;
+  }
+
+  onCancelConfirmed(options: { refundTickets: boolean; notifyTicketHolders: boolean }): void {
+    if (!this.eventId) return;
+    this.canceling = true;
+    this.cancelDialogVisible = false;
+
+    this.subscriptions.add(
+      this.eventService.cancelEvent(this.eventId, {
+        refund_tickets: options.refundTickets,
+        notify_ticket_holders: options.notifyTicketHolders,
+        custom_message: (options.notifyTicketHolders && this.cancelCustomizeMessage) ? this.cancelCustomMessage : undefined
+      }).subscribe({
+        next: (result: CancelEventResult) => {
+          this.canceling = false;
+          if (this.event) {
+            (this.event as any).status = 'canceled';
+          }
+          const listed = this.availableEvents.find(e => e.id === this.eventId);
+          if (listed) {
+            (listed as any).status = 'canceled';
+          }
+          if (result.failed_count > 0) {
+            this.notificationService.showWarning(
+              `Event canceled. ${result.refunded_count} refunded, ${result.failed_count} failed.`
+            );
+            this.downloadFailedRefundsCsv(result.failed_tickets);
+          } else {
+            const parts: string[] = ['Event canceled.'];
+            if (result.refunded_count > 0) parts.push(`${result.refunded_count} ticket(s) refunded.`);
+            if (result.manual_count > 0) parts.push(`${result.manual_count} manually-paid ticket(s) were not refunded — handle these manually.`);
+            this.notificationService.showSuccess(parts.join(' '));
+          }
+        },
+        error: (err: any) => {
+          this.canceling = false;
+          const msg = err?.error?.error || 'Failed to cancel event';
+          this.notificationService.showError(msg);
+        }
+      })
+    );
+  }
+
+  downloadFailedRefundsCsv(failedTickets: FailedRefundTicket[]): void {
+    const rows = [
+      ['Ticket Code', 'Buyer Name', 'Email', 'Amount (PHP)', 'Entries', 'Error'],
+      ...failedTickets.map(t => [t.ticket_code, t.buyer_name, t.email, t.amount, t.entries, t.error])
+    ];
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'failed-refunds.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   isEventPast(): boolean {
     // Always reflect the current form value (even if unsaved)
     const dateAndTime = this.eventData?.date_and_time || this.event?.date_and_time;
@@ -869,7 +967,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   get isDetailsViewMode(): boolean {
-    return this.isEventPublished();
+    return this.isEventPublished() || this.isEventCanceled();
   }
 
   startEditingField(field: string): void {

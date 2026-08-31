@@ -93,6 +93,9 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   }
 
   getEventStatusText(event: Event): string {
+    if ((event as any).status === 'canceled') {
+      return 'Canceled';
+    }
     // Check for draft status first
     if ((event as any).status === 'draft') {
       return 'Draft';
@@ -114,6 +117,8 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
   getEventStatusClass(event: Event): string {
     const status = this.getEventStatusText(event);
     switch (status) {
+      case 'Canceled':
+        return 'badge-danger';
       case 'Draft':
         return 'badge-secondary';
       case 'Open':
