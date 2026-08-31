@@ -307,18 +307,28 @@ class TaskDigestService {
     return `${entry.release_title} — Your Tasks: ${parts.join(', ')}`;
   }
 
-  async sendDigestEmails(digests: TaskDigestEntry[]): Promise<{ sent: number; failed: number }> {
+  async sendDigestEmails(digests: TaskDigestEntry[], dryRun: boolean): Promise<{ sent: number; failed: number }> {
     let sent = 0;
     let failed = 0;
 
     for (const entry of digests) {
       if (!entry.user_email) continue;
 
+      const subject = this.buildSubject(entry);
+
+      if (dryRun) {
+        console.log(`[DRY RUN] Would send email to ${entry.user_email} for release "${entry.release_title}"`);
+        console.log(`[DRY RUN]   Subject: ${subject}`);
+        console.log(`[DRY RUN]   Overdue: ${entry.tasks_overdue.length}, Due today: ${entry.tasks_due_today.length}, Due this week: ${entry.tasks_due_this_week.length}`);
+        sent++;
+        continue;
+      }
+
       try {
         await this.transporter.sendMail({
           from: `${entry.brand_name} <${this.fromEmail}>`,
           to: entry.user_email,
-          subject: this.buildSubject(entry),
+          subject,
           html: this.generateEmailHTML(entry),
           text: this.generateEmailText(entry),
         });
@@ -334,6 +344,9 @@ class TaskDigestService {
   }
 
   async run(): Promise<{ emailsSent: number; emailsFailed: number; notificationsCreated: number }> {
+    const dryRun = process.env.DRY_RUN === 'true';
+    if (dryRun) console.log('[DRY RUN] Mode enabled — no emails or notifications will be sent.');
+
     console.log('Starting task digest job...');
 
     await this.authenticate();
@@ -359,21 +372,28 @@ class TaskDigestService {
     console.log(`Sending emails to ${digestsToEmail.length} of ${digests.length} user/release combination(s) (skipping ${digests.length - digestsToEmail.length} with no urgent tasks)...`);
 
     // 2. Send emails
-    const { sent, failed } = await this.sendDigestEmails(digestsToEmail);
-    console.log(`Emails sent: ${sent}, failed: ${failed}`);
+    const { sent, failed } = await this.sendDigestEmails(digestsToEmail, dryRun);
+    console.log(`Emails ${dryRun ? '(dry run) ' : ''}sent: ${sent}, failed: ${failed}`);
 
     // 3. Create in-app notifications for tasks due today
-    console.log('Creating in-app notifications for tasks due today...');
-    const notifResponse = await this.apiPost<{ notifications_created: number }>(
-      '/api/system/task-digest/create-notifications'
-    );
-    console.log(`In-app notifications created: ${notifResponse.notifications_created}`);
+    let notificationsCreated = 0;
+    if (dryRun) {
+      const dueTodayEntries = digests.filter(d => d.tasks_due_today.length > 0);
+      console.log(`[DRY RUN] Would create in-app notifications for ${dueTodayEntries.length} user/release combination(s) with tasks due today`);
+    } else {
+      console.log('Creating in-app notifications for tasks due today...');
+      const notifResponse = await this.apiPost<{ notifications_created: number }>(
+        '/api/system/task-digest/create-notifications'
+      );
+      notificationsCreated = notifResponse.notifications_created;
+      console.log(`In-app notifications created: ${notificationsCreated}`);
+    }
 
-    console.log('Task digest job completed successfully.');
+    console.log(`Task digest job completed successfully${dryRun ? ' (dry run)' : ''}.`);
     return {
       emailsSent: sent,
       emailsFailed: failed,
-      notificationsCreated: notifResponse.notifications_created,
+      notificationsCreated,
     };
   }
 }
