@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User } from '../models';
+import ReleaseTask from '../models/ReleaseTask';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
+import { createNotificationsForUsers } from '../utils/notificationService';
+import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { Op, literal } from 'sequelize';
 import { sequelize } from '../config/database';
 
@@ -710,6 +713,194 @@ export const getReleaseStatus = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching release status:', error);
     auditLogger.logSystemAccess(req, 'ERROR_RELEASE_STATUS', { error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get task digest (cross-brand)
+ *
+ * Returns all incomplete tasks that are overdue, due today, or due within the next 7 days,
+ * grouped by assigned user and release. Used by the daily task-digest Lambda to
+ * send email reminders and trigger in-app notifications.
+ */
+export const getTaskDigest = async (req: Request, res: Response) => {
+  try {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+
+    const weekEnd = new Date(today);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekEndStr = `${weekEnd.getFullYear()}-${pad(weekEnd.getMonth() + 1)}-${pad(weekEnd.getDate())}`;
+
+    const tasks = await ReleaseTask.findAll({
+      where: {
+        assigned_user_id: { [Op.not]: null },
+        status: { [Op.ne]: 'done' },
+        due_date: { [Op.lte]: weekEndStr },
+      },
+      include: [
+        {
+          model: User,
+          as: 'assignedUser',
+          attributes: ['id', 'email_address', 'first_name', 'last_name'],
+          required: true,
+        },
+        {
+          model: Release,
+          as: 'release',
+          attributes: ['id', 'title', 'catalog_no'],
+          required: true,
+        },
+        {
+          model: Brand,
+          as: 'brand',
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          required: true,
+        },
+      ],
+      order: [['due_date', 'ASC']],
+    });
+
+    // Group by user_id + release_id
+    const digestMap = new Map<string, any>();
+
+    for (const task of tasks) {
+      const t = task as any;
+      const key = `${t.assigned_user_id}:${t.release_id}`;
+
+      if (!digestMap.has(key)) {
+        const frontendUrl = await getBrandFrontendUrl(t.brand_id);
+        digestMap.set(key, {
+          user_id: t.assigned_user_id,
+          user_email: t.assignedUser.email_address,
+          user_name: t.assignedUser.first_name
+            ? `${t.assignedUser.first_name} ${t.assignedUser.last_name || ''}`.trim()
+            : t.assignedUser.email_address,
+          release_id: t.release_id,
+          release_title: t.release.title || t.release.catalog_no,
+          brand_id: t.brand_id,
+          brand_name: t.brand.brand_name,
+          brand_color: t.brand.brand_color || null,
+          brand_logo_url: t.brand.logo_url || null,
+          tasks_url: `${frontendUrl}/music/releases/edit/${t.release_id}?tab=planning`,
+          tasks_overdue: [],
+          tasks_due_today: [],
+          tasks_due_this_week: [],
+        });
+      }
+
+      const digest = digestMap.get(key)!;
+      const taskObj = {
+        id: t.id,
+        title: t.title,
+        due_date: t.due_date,
+        status: t.status,
+        notes: t.notes || null,
+      };
+
+      if (t.due_date < todayStr) {
+        digest.tasks_overdue.push(taskObj);
+      } else if (t.due_date === todayStr) {
+        digest.tasks_due_today.push(taskObj);
+      } else {
+        digest.tasks_due_this_week.push(taskObj);
+      }
+    }
+
+    const digests = Array.from(digestMap.values());
+
+    auditLogger.logDataAccess(req, 'task-digest', 'READ', digests.length, {
+      date: todayStr,
+      totalTasks: tasks.length,
+    });
+
+    res.json({ digests, date: todayStr });
+  } catch (error) {
+    console.error('Error fetching task digest:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_TASK_DIGEST', { error: (error as any).message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Create in-app notifications for tasks due today (cross-brand)
+ *
+ * Creates one in-app notification per user per release for tasks due today.
+ * Called by the task-digest Lambda after sending emails.
+ */
+export const createTaskDigestNotifications = async (req: Request, res: Response) => {
+  try {
+    const today = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+
+    const tasks = await ReleaseTask.findAll({
+      where: {
+        assigned_user_id: { [Op.not]: null },
+        status: { [Op.ne]: 'done' },
+        due_date: todayStr,
+      },
+      include: [
+        {
+          model: Release,
+          as: 'release',
+          attributes: ['id', 'title', 'catalog_no'],
+          required: true,
+        },
+      ],
+      order: [['release_id', 'ASC']],
+    });
+
+    if (tasks.length === 0) {
+      return res.json({ notifications_created: 0 });
+    }
+
+    // Group by user_id + release_id so we send one notification per user per release
+    const notifMap = new Map<string, { userId: number; brandId: number; releaseId: number; releaseTitle: string; taskCount: number }>();
+
+    for (const task of tasks) {
+      const t = task as any;
+      const key = `${t.assigned_user_id}:${t.release_id}`;
+      if (!notifMap.has(key)) {
+        notifMap.set(key, {
+          userId: t.assigned_user_id,
+          brandId: t.brand_id,
+          releaseId: t.release_id,
+          releaseTitle: t.release.title || t.release.catalog_no,
+          taskCount: 0,
+        });
+      }
+      notifMap.get(key)!.taskCount++;
+    }
+
+    let notificationsCreated = 0;
+    for (const { userId, brandId, releaseId, releaseTitle, taskCount } of notifMap.values()) {
+      const title = taskCount === 1
+        ? `You have 1 task due today on "${releaseTitle}"`
+        : `You have ${taskCount} tasks due today on "${releaseTitle}"`;
+
+      await createNotificationsForUsers(
+        [userId],
+        brandId,
+        'task_due_today',
+        title,
+        undefined,
+        `/music/releases/edit/${releaseId}?tab=planning`
+      );
+      notificationsCreated++;
+    }
+
+    auditLogger.logDataAccess(req, 'task-digest-notifications', 'CREATE', notificationsCreated, {
+      date: todayStr,
+      totalTasks: tasks.length,
+    });
+
+    res.json({ notifications_created: notificationsCreated, date: todayStr });
+  } catch (error) {
+    console.error('Error creating task digest notifications:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_TASK_DIGEST_NOTIFICATIONS', { error: (error as any).message });
     res.status(500).json({ error: 'Internal server error' });
   }
 };

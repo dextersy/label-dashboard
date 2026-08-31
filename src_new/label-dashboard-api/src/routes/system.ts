@@ -10,7 +10,9 @@ import {
   getWalletBalances,
   getUsedS3Urls,
   getSublabelsDuePayment,
-  getReleaseStatus
+  getReleaseStatus,
+  getTaskDigest,
+  createTaskDigestNotifications,
 } from '../controllers/systemController';
 import {
   getSSLDomains,
@@ -54,6 +56,8 @@ router.get('/sublabels-due-payment', getSublabelsDuePayment);
 router.get('/wallet-balances', getWalletBalances);
 router.get('/s3-used-urls', getUsedS3Urls);
 router.get('/release-status', getReleaseStatus);
+router.get('/task-digest', getTaskDigest);
+router.post('/task-digest/create-notifications', createTaskDigestNotifications);
 
 // SSL domain management endpoints
 router.get('/ssl-domains', getSSLDomains);
