@@ -81,13 +81,15 @@ import { Event } from '../../../models/event.model';
               <div class="flex items-center gap-3 flex-shrink-0">
                 <a [routerLink]="['/app/events', event.id]"
                    class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider transition-colors">View</a>
-                <a [routerLink]="['/app/events', event.id, 'edit']"
-                   class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider transition-colors">Edit</a>
-                <button (click)="togglePublish(event)"
-                   class="text-xs font-mono uppercase tracking-wider transition-colors"
-                   [class]="event.status === 'published' ? 'text-yellow-500/70 hover:text-yellow-500' : 'text-green-600/70 hover:text-green-600'">
-                  {{ event.status === 'published' ? 'Unpublish' : 'Publish' }}
-                </button>
+                @if (event.status !== 'canceled') {
+                  <a [routerLink]="['/app/events', event.id, 'edit']"
+                     class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider transition-colors">Edit</a>
+                  <button (click)="togglePublish(event)"
+                     class="text-xs font-mono uppercase tracking-wider transition-colors"
+                     [class]="event.status === 'published' ? 'text-yellow-500/70 hover:text-yellow-500' : 'text-green-600/70 hover:text-green-600'">
+                    {{ event.status === 'published' ? 'Unpublish' : 'Publish' }}
+                  </button>
+                }
               </div>
             </div>
           }
@@ -118,6 +120,7 @@ export class EventsListComponent implements OnInit {
     switch (status) {
       case 'published': return 'border-green-300 text-green-700 bg-green-50';
       case 'past': return 'border-blue-300 text-blue-700 bg-blue-50';
+      case 'canceled': return 'border-red-300 text-red-700 bg-red-50';
       default: return 'border-gray-300 text-gray-500 bg-gray-50';
     }
   }

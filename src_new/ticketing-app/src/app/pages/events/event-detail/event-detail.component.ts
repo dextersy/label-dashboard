@@ -46,11 +46,7 @@ import { EventReferrer } from '../../../models/event-referrer.model';
               </a>
               <span class="w-px h-3 bg-gray-300"></span>
               <span class="text-xs font-mono uppercase px-2 py-0.5 border"
-                [class]="event()?.status === 'published'
-                  ? 'border-green-300 text-green-700 bg-green-50'
-                  : event()?.status === 'past'
-                  ? 'border-blue-300 text-blue-700 bg-blue-50'
-                  : 'border-gray-300 text-gray-500 bg-gray-50'">
+                [class]="statusClass(event()?.status || '')">
                 {{ event()?.status }}
               </span>
             </div>
@@ -70,17 +66,28 @@ import { EventReferrer } from '../../../models/event-referrer.model';
 
             <!-- Actions -->
             <div class="flex flex-wrap items-center gap-2">
-              <a [routerLink]="['/app/events', routeEventId(), 'edit']"
-                 class="px-3 py-1.5 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
-                Edit Event
-              </a>
-              <button (click)="togglePublish()"
-                 class="px-3 py-1.5 border text-xs font-mono uppercase tracking-wider transition-colors"
-                 [class]="event()?.status === 'published'
-                   ? 'border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 hover:border-yellow-400/60'
-                   : 'border-green-400/30 text-green-400/70 hover:text-green-400 hover:border-green-400/60'">
-                {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
-              </button>
+              @if (event()?.status !== 'canceled') {
+                <a [routerLink]="['/app/events', routeEventId(), 'edit']"
+                   class="px-3 py-1.5 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
+                  Edit Event
+                </a>
+                <button (click)="togglePublish()"
+                   class="px-3 py-1.5 border text-xs font-mono uppercase tracking-wider transition-colors"
+                   [class]="event()?.status === 'published'
+                     ? 'border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 hover:border-yellow-400/60'
+                     : 'border-green-400/30 text-green-400/70 hover:text-green-400 hover:border-green-400/60'">
+                  {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
+                </button>
+                <button (click)="openCancelModal()"
+                   class="px-3 py-1.5 border border-red-300/50 text-red-400/70 hover:text-red-500 hover:border-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                  Cancel Event
+                </button>
+              }
+              @if (event()?.status === 'canceled') {
+                <span class="px-3 py-1.5 border border-red-300 text-red-600 bg-red-50 text-xs font-mono uppercase tracking-wider">
+                  Canceled
+                </span>
+              }
               @if (event()?.external_ticket_link) {
                 <a [href]="event()?.external_ticket_link" target="_blank" rel="noopener noreferrer"
                    class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors"
@@ -975,6 +982,64 @@ import { EventReferrer } from '../../../models/event-referrer.model';
         </div>
       }
 
+      <!-- ====== CANCEL EVENT MODAL ====== -->
+      @if (cancelModalVisible()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div class="fixed inset-0 bg-black/50" (click)="cancelModalVisible.set(false)"></div>
+          <div class="relative bg-white border border-gray-200 shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-sm font-black text-red-700 uppercase tracking-tight mb-3">Cancel Event</h3>
+            <p class="text-sm font-mono text-gray-600 mb-4">
+              This will permanently cancel the event. It will be removed from the public listing.
+              <strong class="text-gray-900">This action cannot be undone.</strong>
+            </p>
+            @if (cancelRefundableCount() > 0) {
+              <div class="mb-4 px-3 py-3 border border-amber-200 bg-amber-50 text-xs font-mono text-amber-800">
+                There are <strong>{{ cancelRefundableCount() }}</strong> paid ticket(s) totaling
+                <strong>{{ cancelRefundableAmount() | currency:'PHP':'symbol':'1.0-0' }}</strong>.
+                We can attempt to refund these payments — successful refunds will be deducted from your balance.
+                Note that platform fees are non-refundable.
+              </div>
+              <label class="relative inline-flex items-center gap-2.5 mb-3 cursor-pointer select-none pl-11 min-h-[20px]">
+                <input type="checkbox" class="absolute opacity-0 w-0 h-0" [checked]="cancelRefundTickets()" (change)="cancelRefundTickets.set(!cancelRefundTickets())">
+                <span class="absolute left-0 top-1/2 -translate-y-1/2 w-9 h-5 rounded-full transition-colors duration-150"
+                  [class]="cancelRefundTickets() ? 'bg-yellow-400' : 'bg-gray-300'"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow transition-all duration-150"
+                  [style.left]="cancelRefundTickets() ? '19px' : '3px'"></span>
+                <span class="text-xs font-mono text-gray-700">Refund ticket holders</span>
+              </label>
+              <label class="relative inline-flex items-center gap-2.5 mb-5 cursor-pointer select-none pl-11 min-h-[20px]">
+                <input type="checkbox" class="absolute opacity-0 w-0 h-0" [checked]="cancelNotifyHolders()" (change)="cancelNotifyHolders.set(!cancelNotifyHolders())">
+                <span class="absolute left-0 top-1/2 -translate-y-1/2 w-9 h-5 rounded-full transition-colors duration-150"
+                  [class]="cancelNotifyHolders() ? 'bg-yellow-400' : 'bg-gray-300'"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow transition-all duration-150"
+                  [style.left]="cancelNotifyHolders() ? '19px' : '3px'"></span>
+                <span class="text-xs font-mono text-gray-700">Notify ticket holders by email</span>
+              </label>
+            } @else {
+              <p class="text-xs font-mono text-gray-400 mb-5">There are no paid tickets to refund.</p>
+              <label class="relative inline-flex items-center gap-2.5 mb-5 cursor-pointer select-none pl-11 min-h-[20px]">
+                <input type="checkbox" class="absolute opacity-0 w-0 h-0" [checked]="cancelNotifyHolders()" (change)="cancelNotifyHolders.set(!cancelNotifyHolders())">
+                <span class="absolute left-0 top-1/2 -translate-y-1/2 w-9 h-5 rounded-full transition-colors duration-150"
+                  [class]="cancelNotifyHolders() ? 'bg-yellow-400' : 'bg-gray-300'"></span>
+                <span class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white shadow transition-all duration-150"
+                  [style.left]="cancelNotifyHolders() ? '19px' : '3px'"></span>
+                <span class="text-xs font-mono text-gray-700">Notify ticket holders by email</span>
+              </label>
+            }
+            <div class="flex justify-end gap-3 pt-3 border-t border-gray-200">
+              <button (click)="cancelModalVisible.set(false)" [disabled]="canceling()"
+                class="px-4 py-2 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
+                Back
+              </button>
+              <button (click)="confirmCancelEvent()" [disabled]="canceling()"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider transition-colors disabled:opacity-50">
+                {{ canceling() ? 'Canceling...' : 'Cancel Event' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- ====== CONFIRM MODAL ====== -->
       @if (confirmModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -1741,10 +1806,66 @@ export class EventDetailComponent implements OnInit {
     this.ticketsService.resendTicket(ticket.id).subscribe();
   }
 
+  // Cancel event state
+  cancelModalVisible = signal(false);
+  canceling = signal(false);
+  cancelRefundTickets = signal(true);
+  cancelNotifyHolders = signal(true);
+  cancelRefundableCount = signal(0);
+  cancelRefundableAmount = signal(0);
+
+  openCancelModal(): void {
+    const e = this.event();
+    if (!e) return;
+    // Use tickets_sold as a proxy; exact refund calc happens server-side
+    this.cancelRefundableCount.set(e.tickets_sold || 0);
+    this.cancelRefundableAmount.set((e.total_revenue || 0));
+    this.cancelModalVisible.set(true);
+  }
+
+  confirmCancelEvent(): void {
+    const e = this.event();
+    if (!e) return;
+    this.canceling.set(true);
+    this.eventsService.cancelEvent(e.id, {
+      refund_tickets: this.cancelRefundTickets(),
+      notify_ticket_holders: this.cancelNotifyHolders()
+    }).subscribe({
+      next: (result: any) => {
+        this.canceling.set(false);
+        this.cancelModalVisible.set(false);
+        this.eventsService.getEvent(e.id).subscribe(ev => this.event.set(ev));
+        if (result.failed_count > 0) {
+          this.downloadFailedRefundsCsv(result.failed_tickets);
+        }
+      },
+      error: (err: any) => {
+        this.canceling.set(false);
+        console.error('Cancel event error:', err);
+      }
+    });
+  }
+
+  downloadFailedRefundsCsv(failedTickets: any[]): void {
+    const rows = [
+      ['Ticket Code', 'Buyer Name', 'Email', 'Amount (PHP)', 'Entries', 'Error'],
+      ...failedTickets.map((t: any) => [t.ticket_code, t.buyer_name, t.email, t.amount, t.entries, t.error])
+    ];
+    const csv = rows.map(r => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'failed-refunds.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   statusClass(status: string): string {
     switch (status) {
       case 'published': return 'border-green-300 text-green-700 bg-green-50';
       case 'past': return 'border-blue-300 text-blue-700 bg-blue-50';
+      case 'canceled': return 'border-red-300 text-red-700 bg-red-50';
       default: return 'border-gray-300 text-gray-500 bg-gray-50';
     }
   }

@@ -37,6 +37,10 @@ export class EventsService {
     return this.http.post(`${this.base}/${id}/unpublish`, {});
   }
 
+  cancelEvent(id: number, options: { refund_tickets: boolean; notify_ticket_holders: boolean }): Observable<any> {
+    return this.http.post(`${this.base}/${id}/cancel`, options);
+  }
+
   getTags(): Observable<EventTag[]> {
     return this.http.get<{ tags: EventTag[] }>(`${this.base}/tags`).pipe(map(r => r.tags));
   }

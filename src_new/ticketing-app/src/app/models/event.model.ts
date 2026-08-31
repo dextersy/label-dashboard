@@ -5,7 +5,7 @@ export interface Event {
   venue?: string;
   date_and_time: string;
   close_time?: string;
-  status: 'draft' | 'published' | 'past';
+  status: 'draft' | 'published' | 'past' | 'canceled';
   poster_url?: string;
   brand_id: number;
   tickets_sold?: number;
