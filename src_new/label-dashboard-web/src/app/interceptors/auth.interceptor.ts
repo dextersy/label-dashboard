@@ -73,7 +73,7 @@ export class AuthInterceptor implements HttpInterceptor {
           this.authService.forceLogout();
           
           // Show session timeout notification
-          this.notificationService.showError('Your session has timed out. Please log in again.');
+          this.notificationService.showInfo('Your session has expired. Please log in again.');
           
           // Small delay to ensure notification shows before navigation
           setTimeout(() => {
