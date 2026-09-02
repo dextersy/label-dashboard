@@ -7,12 +7,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 576px) {
+    align-items: flex-end;
+    overflow: hidden;
+  }
 }
 
 .modal-dialog {
   max-width: 500px;
   width: 90%;
   margin: 0;
+}
+
+// The <form> wraps modal-body + modal-footer, sitting between modal-content
+// (a flex column) and its children. Without this, modal-body's flex-auto
+// has no effect and the content overflows the constrained modal-content height.
+form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .form-label.required::after {

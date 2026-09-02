@@ -150,6 +150,12 @@
     z-index: 1040;
   }
 
+  @media (max-width: 991px) {
+    .modal-backdrop {
+      bottom: 90px !important; // clear the fixed bottom navigation bar
+    }
+  }
+
   /* On mobile: keep modals within safe area between navbar and bottom nav */
   @media (max-width: 991px) {
     .modal {
