@@ -534,6 +534,7 @@ export class LoginComponent implements OnInit {
   view = signal<View>('login');
   mode = signal<'audience' | 'organizer'>('audience');
   returnUrl = signal('');
+  referralCode = signal('');
 
   loginLoading = signal(false);
   audienceLoading = signal(false);
@@ -617,6 +618,21 @@ export class LoginComponent implements OnInit {
     const viewParam = (params.get('view') || routeData['view'] || 'login') as View;
     if (['login', 'signup', 'forgot-password', 'reset-password'].includes(viewParam)) {
       this.view.set(viewParam as View);
+    }
+
+    // Referral code from ?ref= query param — must run after viewParam so it overrides
+    const refParam = params.get('ref');
+    if (refParam) {
+      this.referralCode.set(refParam);
+      // Referral links always land on the audience signup form
+      this.view.set('signup');
+      this.mode.set('audience');
+    }
+
+    // Pre-fill email from ?email= query param (e.g. from invite emails)
+    const emailParam = params.get('email');
+    if (emailParam) {
+      this.audienceForm.get('email')?.setValue(emailParam);
     }
 
     // Handle reset-password: validate hash/code from email link
@@ -792,7 +808,8 @@ export class LoginComponent implements OnInit {
     this.audienceLoading.set(true);
     this.error.set('');
     const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed } = this.audienceForm.value;
-    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed).subscribe({
+    const refCode = this.referralCode() || undefined;
+    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, undefined, undefined, refCode).subscribe({
       next: () => {
         this.audienceLoading.set(false);
         this.signupPendingEmail.set(email);

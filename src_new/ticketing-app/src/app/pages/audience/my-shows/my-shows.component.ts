@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
+import { AudienceHeaderComponent } from '../../../components/audience-header/audience-header.component';
 
 interface EventGroup {
   event: {
@@ -19,53 +20,11 @@ interface EventGroup {
 @Component({
   selector: 'app-my-shows',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AudienceHeaderComponent],
   template: `
     <div class="min-h-screen bg-black text-white">
 
-      <!-- Header -->
-      <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
-          <div class="flex items-center gap-4">
-            <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
-            <span class="text-white/20 text-sm font-mono">/ My Shows</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <div class="relative">
-              <button (click)="menuOpen.set(!menuOpen())"
-                class="w-7 h-7 flex-shrink-0 focus:outline-none overflow-hidden border border-white/20">
-                @if (userPhotoUrl()) {
-                  <img [src]="userPhotoUrl()" alt="Profile" class="w-full h-full object-cover">
-                } @else {
-                  <div class="w-full h-full bg-white flex items-center justify-center">
-                    <span class="text-black text-xs font-black">{{ userInitial() }}</span>
-                  </div>
-                }
-              </button>
-              @if (menuOpen()) {
-                <div class="absolute right-0 top-full mt-2 w-44 bg-black border border-white/20 shadow-xl z-50">
-                  <div class="px-4 py-3 border-b border-white/10">
-                    <p class="text-xs font-mono text-white truncate">{{ userName() }}</p>
-                    <p class="text-xs font-mono text-white/40">Audience</p>
-                  </div>
-                  <a routerLink="/my-shows" (click)="menuOpen.set(false)"
-                    class="flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
-                    My Shows
-                  </a>
-                  <a routerLink="/my-profile" (click)="menuOpen.set(false)"
-                    class="flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
-                    Edit Profile
-                  </a>
-                  <button (click)="logout()"
-                    class="w-full flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors border-t border-white/10">
-                    Log out
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      </header>
+      <app-audience-header></app-audience-header>
 
       <!-- Email verification banner -->
       @if (!emailVerified()) {
@@ -125,7 +84,7 @@ interface EventGroup {
                   </p>
                 </div>
 
-                <!-- Bottom row: name + avatar + edit -->
+                <!-- Bottom row: name + avatar -->
                 <div class="relative z-10 flex items-end justify-between">
                   <div>
                     <p class="text-[9px] font-mono uppercase tracking-widest mb-0.5" [ngClass]="cardLabelClass()">Member</p>
@@ -133,29 +92,28 @@ interface EventGroup {
                       {{ userName() }}
                     </p>
                   </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full overflow-hidden border" [ngClass]="avatarBorderClass()">
-                      @if (userPhotoUrl()) {
-                        <img [src]="userPhotoUrl()" alt="Profile" class="w-full h-full object-cover">
-                      } @else {
-                        <div class="w-full h-full flex items-center justify-center" [ngClass]="avatarBgClass()">
-                          <span class="text-xs font-black" [ngClass]="avatarTextClass()">{{ userInitial() }}</span>
-                        </div>
-                      }
-                    </div>
-                    <a routerLink="/my-profile"
-                      class="text-[10px] font-mono uppercase tracking-widest opacity-50 hover:opacity-100 transition-opacity"
-                      [ngClass]="cardLabelClass()">
-                      Edit ›
-                    </a>
+                  <div class="w-9 h-9 rounded-full overflow-hidden border" [ngClass]="avatarBorderClass()">
+                    @if (userPhotoUrl()) {
+                      <img [src]="userPhotoUrl()" alt="Profile" class="w-full h-full object-cover">
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center" [ngClass]="avatarBgClass()">
+                        <span class="text-xs font-black" [ngClass]="avatarTextClass()">{{ userInitial() }}</span>
+                      </div>
+                    }
                   </div>
                 </div>
 
               </div>
             </div>
 
+            <!-- Edit profile link -->
+            <a routerLink="/my-profile"
+              class="mt-3 flex items-center justify-end gap-1 text-[10px] font-mono text-white/30 hover:text-white/70 uppercase tracking-widest transition-colors">
+              Edit profile ›
+            </a>
+
             <!-- Stats row below card -->
-            <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="mt-2 grid grid-cols-3 gap-3">
               <div class="border border-white/10 rounded-lg p-4">
                 <p class="text-2xl font-black text-white leading-none mb-1">
                   {{ loading() ? '—' : upcomingGroups().length }}
@@ -167,6 +125,14 @@ interface EventGroup {
                   {{ loading() ? '—' : pastGroups().length }}
                 </p>
                 <p class="text-[10px] font-mono text-white/25 uppercase tracking-widest">Past shows</p>
+              </div>
+              <div class="border border-white/10 rounded-lg p-4">
+                <p class="text-2xl font-black leading-none mb-1" [ngClass]="pointsTextClass()">
+                  {{ currentUser()?.points_total ?? 0 }}
+                </p>
+                <p class="text-[10px] font-mono uppercase tracking-widest" [ngClass]="pointsLabelClass()">
+                  {{ currentUser()?.card_level ?? 'Silver' }}
+                </p>
               </div>
             </div>
 
@@ -243,6 +209,7 @@ interface EventGroup {
           </div>
         </div>
       </main>
+
     </div>
   `
 })
@@ -250,7 +217,6 @@ export class MyShowsComponent implements OnInit {
   loading = signal(true);
   error = signal(false);
   eventGroups = signal<EventGroup[]>([]);
-  menuOpen = signal(false);
   emailVerified = signal(true);
   resendingVerification = signal(false);
   verificationSent = signal(false);
@@ -265,9 +231,9 @@ export class MyShowsComponent implements OnInit {
     const u = this.currentUser();
     return u?.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : (u?.email_address || 'Guest');
   };
-  userEmail = () => this.currentUser()?.email_address || '';
   userPhotoUrl = () => this.currentUser()?.profile_photo_url || null;
-  membershipTier = () => this.currentUser()?.membership_tier || 'silver';
+
+  membershipTier = () => (this.currentUser()?.card_level ?? 'Silver').toLowerCase();
 
   formattedMembershipId = () => {
     const id = this.currentUser()?.membership_id;
@@ -344,17 +310,21 @@ export class MyShowsComponent implements OnInit {
     platinum: 'text-white',
   }[this.tier()] ?? 'text-white');
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!(event.target as HTMLElement).closest('.relative')) {
-      this.menuOpen.set(false);
-    }
-  }
+  private cardLevel = () => (this.currentUser()?.card_level ?? 'Silver').toLowerCase();
 
-  constructor(
-    private audienceAuthService: AudienceAuthService,
-    private router: Router
-  ) {}
+  pointsTextClass = () => ({
+    silver:   'text-slate-300',
+    gold:     'text-yellow-400',
+    platinum: 'text-cyan-300',
+  }[this.cardLevel()] ?? 'text-slate-300');
+
+  pointsLabelClass = () => ({
+    silver:   'text-slate-300/60',
+    gold:     'text-yellow-400/60',
+    platinum: 'text-cyan-300/60',
+  }[this.cardLevel()] ?? 'text-slate-300/60');
+
+  constructor(private audienceAuthService: AudienceAuthService) {}
 
   ngOnInit(): void {
     const cached = this.audienceAuthService.getUser();
@@ -426,9 +396,4 @@ export class MyShowsComponent implements OnInit {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  logout(): void {
-    this.audienceAuthService.logout();
-    this.menuOpen.set(false);
-    this.router.navigate(['/']);
-  }
 }

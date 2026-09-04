@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AudienceAuthService } from '../../services/audience-auth.service';
+import { AudienceHeaderComponent } from '../../components/audience-header/audience-header.component';
 import { environment } from '../../../environments/environment';
 
 interface OrganizerProfile {
@@ -26,21 +27,11 @@ interface OrganizerProfile {
 @Component({
   selector: 'app-organizer-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AudienceHeaderComponent],
   template: `
     <div class="min-h-screen bg-black text-white">
 
-      <!-- Header -->
-      <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
-          <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
-          @if (isAudienceLoggedIn()) {
-            <a routerLink="/my-shows" class="text-white/50 hover:text-white text-xs font-mono uppercase tracking-widest transition-colors">My Shows</a>
-          } @else {
-            <a routerLink="/login" class="text-white/50 hover:text-white text-xs font-mono uppercase tracking-widest transition-colors">Log In</a>
-          }
-        </div>
-      </header>
+      <app-audience-header></app-audience-header>
 
       <main class="max-w-3xl mx-auto px-4 pt-20 pb-16">
 

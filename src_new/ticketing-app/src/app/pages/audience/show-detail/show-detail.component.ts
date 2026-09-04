@@ -1,48 +1,17 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AudienceAuthService } from '../../../services/audience-auth.service';
+import { AudienceHeaderComponent } from '../../../components/audience-header/audience-header.component';
 
 @Component({
   selector: 'app-show-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AudienceHeaderComponent],
   template: `
     <div class="min-h-screen bg-black text-white">
 
-      <!-- Header -->
-      <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
-          <div class="flex items-center gap-4">
-            <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
-            <a routerLink="/my-shows" class="text-white/20 text-sm font-mono hover:text-white/40 transition-colors">/ My Shows</a>
-          </div>
-          <div class="flex items-center gap-4">
-            <div class="relative">
-              <button (click)="menuOpen.set(!menuOpen())"
-                class="w-7 h-7 bg-white flex items-center justify-center flex-shrink-0 focus:outline-none">
-                <span class="text-black text-xs font-black">{{ userInitial() }}</span>
-              </button>
-              @if (menuOpen()) {
-                <div class="absolute right-0 top-full mt-2 w-44 bg-black border border-white/20 shadow-xl z-50">
-                  <div class="px-4 py-3 border-b border-white/10">
-                    <p class="text-xs font-mono text-white truncate">{{ userName() }}</p>
-                    <p class="text-xs font-mono text-white/40">Audience</p>
-                  </div>
-                  <a routerLink="/my-shows" (click)="menuOpen.set(false)"
-                    class="flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
-                    My Shows
-                  </a>
-                  <button (click)="logout()"
-                    class="w-full flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors border-t border-white/10">
-                    Log out
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      </header>
+      <app-audience-header></app-audience-header>
 
       <!-- Loading -->
       <div *ngIf="loading()" class="flex justify-center py-20">
@@ -146,24 +115,6 @@ export class ShowDetailComponent implements OnInit {
   error = signal(false);
   event = signal<any>(null);
   tickets = signal<any[]>([]);
-  menuOpen = signal(false);
-
-  userInitial = () => {
-    const u = this.audienceAuthService.getUser();
-    return (u?.first_name?.[0] || u?.email_address?.[0] || 'A').toUpperCase();
-  };
-  userName = () => {
-    const u = this.audienceAuthService.getUser();
-    return u?.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : (u?.email_address || 'Guest');
-  };
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!(event.target as HTMLElement).closest('.relative')) {
-      this.menuOpen.set(false);
-    }
-  }
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -233,9 +184,4 @@ export class ShowDetailComponent implements OnInit {
     });
   }
 
-  logout(): void {
-    this.audienceAuthService.logout();
-    this.menuOpen.set(false);
-    this.router.navigate(['/']);
-  }
 }

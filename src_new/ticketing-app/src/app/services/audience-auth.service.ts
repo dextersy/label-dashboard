@@ -11,11 +11,13 @@ export interface AudienceUser {
   contact_number?: string;
   profile_photo_url?: string;
   membership_id?: string;
-  membership_tier?: string;
   email_verified?: boolean;
   terms_accepted_at?: string | null;
   privacy_accepted_at?: string | null;
   age_confirmed_at?: string | null;
+  points_total?: number;
+  card_level?: string;
+  referral_code?: string | null;
 }
 
 export interface AudienceAuthResponse {
@@ -57,8 +59,8 @@ export class AudienceAuthService {
       .pipe(tap(res => this.storeAuth(res)));
   }
 
-  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean, signed_up_from?: string, signup_reference?: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference });
+  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean, signed_up_from?: string, signup_reference?: string, referral_code?: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, referral_code });
   }
 
   acceptTerms(terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean): Observable<AudienceUser> {
@@ -152,6 +154,11 @@ export class AudienceAuthService {
     return this.http.get<{ followed_brand_ids: number[]; followed_organizers: any[] }>(
       `${this.apiUrl}/public/audience/me/followed-organizers`, { headers }
     );
+  }
+
+  inviteFriend(email: string): Observable<{ message: string }> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<{ message: string }>(`${this.apiUrl}/public/audience/invite`, { email }, { headers });
   }
 
   markEmailVerified(): void {

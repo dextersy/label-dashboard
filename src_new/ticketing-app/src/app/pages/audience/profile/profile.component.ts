@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AudienceAuthService, AudienceUser } from '../../../services/audience-auth.service';
+import { InviteFriendModalComponent } from '../../../components/invite-friend-modal/invite-friend-modal.component';
+import { AudienceHeaderComponent } from '../../../components/audience-header/audience-header.component';
 
 interface FollowedOrganizer {
   id: number;
@@ -15,24 +17,11 @@ interface FollowedOrganizer {
 @Component({
   selector: 'app-audience-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, InviteFriendModalComponent, AudienceHeaderComponent],
   template: `
     <div class="min-h-screen bg-black text-white">
 
-      <!-- Header -->
-      <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
-          <div class="flex items-center gap-4">
-            <a routerLink="/my-shows" class="text-white/40 hover:text-white transition-colors">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-              </svg>
-            </a>
-            <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
-          </div>
-          <span class="text-white/30 text-xs font-mono uppercase tracking-widest">Edit Profile</span>
-        </div>
-      </header>
+      <app-audience-header></app-audience-header>
 
       <main class="max-w-2xl mx-auto px-4 py-10 pt-20">
 
@@ -44,7 +33,7 @@ interface FollowedOrganizer {
           @if (user()?.membership_id) {
             <div class="text-right">
               <p class="text-[10px] font-mono text-white/30 uppercase tracking-widest mb-0.5">
-                {{ (user()?.membership_tier || 'silver') | uppercase }} member
+                {{ (user()?.card_level || 'Silver') | uppercase }} member
               </p>
               <p class="text-xs font-mono text-white/50 tracking-[0.15em]">
                 {{ formattedMembershipId() }}
@@ -155,6 +144,52 @@ interface FollowedOrganizer {
           </a>
         </div>
 
+        <!-- Your Scene Card -->
+        @if (user()?.referral_code) {
+          <div class="mt-8 pt-8 border-t border-white/10">
+            <p class="text-xs font-mono text-white/40 uppercase tracking-[0.2em] mb-4">— your scene card —</p>
+            <div class="bg-white/5 border border-white/10 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <span class="text-[10px] font-mono text-white/30 uppercase tracking-widest block mb-0.5">Card Level</span>
+                  <span class="text-lg font-black uppercase" [class]="cardLevelClass()">{{ user()?.card_level ?? 'Bronze' }}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-mono text-white/30 uppercase tracking-widest block mb-0.5">Points</span>
+                  <span class="text-lg font-black text-white">{{ user()?.points_total ?? 0 }} pts</span>
+                </div>
+              </div>
+              <div class="border-t border-white/10 pt-4">
+                <p class="text-[10px] font-mono text-white/30 uppercase tracking-widest mb-2">Referral Link</p>
+                <div class="flex items-center gap-2">
+                  <span class="flex-1 text-xs font-mono text-white/50 truncate">{{ referralLink() }}</span>
+                  <button type="button" (click)="copyReferralLink()"
+                    class="px-3 py-1.5 border border-white/20 text-[10px] font-mono text-white/60 uppercase tracking-wider hover:border-white/40 hover:text-white transition-colors flex-shrink-0">
+                    {{ copySuccess() ? 'Copied!' : 'Copy' }}
+                  </button>
+                </div>
+                <p class="text-[10px] font-mono text-white/20 mt-1.5">Earn +10 pts when a friend signs up using your link and verifies their email.</p>
+              </div>
+              <div class="border-t border-white/10 pt-4 mt-4">
+                <button type="button" (click)="inviteModalOpen.set(true)"
+                  class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-white/20 text-xs font-mono text-white/60 uppercase tracking-wider hover:border-yellow-400/50 hover:text-yellow-400 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                  Invite a Friend via Email
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (inviteModalOpen()) {
+          <app-invite-friend-modal
+            [referralCode]="user()?.referral_code || ''"
+            (close)="inviteModalOpen.set(false)">
+          </app-invite-friend-modal>
+        }
+
         <!-- Following -->
         <div class="mt-10 pt-8 border-t border-white/10">
           <p class="text-xs font-mono text-white/40 uppercase tracking-[0.2em] mb-4">— following —</p>
@@ -206,6 +241,33 @@ export class AudienceProfileComponent implements OnInit {
   photoSuccess = signal(false);
 
   followedOrganizers = signal<FollowedOrganizer[]>([]);
+  copySuccess = signal(false);
+  inviteModalOpen = signal(false);
+
+  referralLink(): string {
+    const code = this.user()?.referral_code;
+    if (!code) return '';
+    return `${window.location.origin}/login?ref=${code}`;
+  }
+
+  cardLevelClass(): string {
+    const level = (this.user()?.card_level ?? 'Silver').toLowerCase();
+    const map: Record<string, string> = {
+      silver:   'text-slate-300',
+      gold:     'text-yellow-400',
+      platinum: 'text-cyan-300',
+    };
+    return map[level] ?? 'text-slate-300';
+  }
+
+  copyReferralLink(): void {
+    const link = this.referralLink();
+    if (!link) return;
+    navigator.clipboard.writeText(link).then(() => {
+      this.copySuccess.set(true);
+      setTimeout(() => this.copySuccess.set(false), 2000);
+    }).catch(() => {});
+  }
 
   formattedMembershipId(): string {
     const id = this.user()?.membership_id;
