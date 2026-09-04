@@ -61,6 +61,14 @@ export class UsersTabComponent implements OnInit {
         ? `<span class="status-badge status-success">Verified</span>`
         : `<span class="status-badge status-warning">Unverified</span>`;
     }},
+    { key: 'points_total', label: 'Points', type: 'text', searchable: false, sortable: true,
+      formatter: (item: any) => String(item.points_total ?? 0) },
+    { key: 'card_level', label: 'Level', type: 'text', searchable: false, sortable: false, renderHtml: true,
+      formatter: (item: any) => {
+        const level: string = item.card_level ?? 'Silver';
+        const cls = level.toLowerCase();
+        return `<span class="status-badge status-${cls}">${level}</span>`;
+      }},
     { key: 'created_at', label: 'Registered', type: 'date', searchable: false, sortable: true }
   ];
 

@@ -136,8 +136,12 @@
               </span>
             </div>
           </div>
-          <div class="user-card__footer" *ngIf="user.created_at">
-            <app-icon name="clock" /> Registered: {{ user.created_at | date:'mediumDate' }}
+          <div class="user-card__footer">
+            <span class="tw-flex tw-items-center tw-gap-2">
+              <span class="tw-font-semibold">{{ user.points_total ?? 0 }} pts</span>
+              <span class="status-badge status-{{ (user.card_level ?? 'Silver').toLowerCase() }}">{{ user.card_level ?? 'Silver' }}</span>
+            </span>
+            <span *ngIf="user.created_at"><app-icon name="clock" /> Registered: {{ user.created_at | date:'mediumDate' }}</span>
           </div>
         </div>
       </ng-template>

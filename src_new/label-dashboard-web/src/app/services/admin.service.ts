@@ -87,6 +87,8 @@ export interface AudienceUserRecord {
   last_name: string | null;
   contact_number: string | null;
   email_verified: boolean;
+  points_total: number;
+  card_level: string;
   created_at: string;
 }
 
