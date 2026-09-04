@@ -54,6 +54,7 @@ import AudienceFollow from './AudienceFollow';
 import Plan from './Plan';
 import BrandPlan from './BrandPlan';
 import ReleaseTask from './ReleaseTask';
+import AudiencePointTransaction from './AudiencePointTransaction';
 
 // Define relationships
 // Brand relationships
@@ -193,6 +194,8 @@ Ticket.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUs
 AudienceUser.hasMany(Ticket, { foreignKey: 'audience_user_id', as: 'tickets' });
 AudienceUser.hasMany(EventLike, { foreignKey: 'audience_user_id', as: 'eventLikes' });
 AudienceUser.hasMany(AudienceFollow, { foreignKey: 'audience_user_id', as: 'follows' });
+AudienceUser.hasMany(AudiencePointTransaction, { foreignKey: 'audience_user_id', as: 'pointTransactions' });
+AudiencePointTransaction.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
 
 // AudienceFollow relationships
 AudienceFollow.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
@@ -418,6 +421,7 @@ export {
   Plan,
   BrandPlan,
   ReleaseTask,
+  AudiencePointTransaction,
 };
 
 // Initialize database connection

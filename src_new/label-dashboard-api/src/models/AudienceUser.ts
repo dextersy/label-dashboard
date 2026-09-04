@@ -10,7 +10,7 @@ interface AudienceUserAttributes {
   contact_number?: string;
   profile_photo_url?: string;
   membership_id?: string;
-  membership_tier?: string;
+
   reset_hash?: string;
   reset_hash_expires_at?: Date;
   email_verified?: boolean;
@@ -23,6 +23,9 @@ interface AudienceUserAttributes {
   signup_reference?: string | null;
   oauth_exchange_code?: string | null;
   oauth_exchange_code_expires_at?: Date | null;
+  points_total?: number;
+  referral_code?: string | null;
+  referred_by_user_id?: number | null;
 }
 
 interface AudienceUserCreationAttributes extends Optional<AudienceUserAttributes, 'id'> {}
@@ -49,6 +52,9 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public signup_reference?: string | null;
   public oauth_exchange_code?: string | null;
   public oauth_exchange_code_expires_at?: Date | null;
+  public points_total?: number;
+  public referral_code?: string | null;
+  public referred_by_user_id?: number | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -90,11 +96,6 @@ AudienceUser.init(
       type: DataTypes.STRING(12),
       allowNull: true,
       unique: true,
-    },
-    membership_tier: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-      defaultValue: 'silver',
     },
     reset_hash: {
       type: DataTypes.STRING(255),
@@ -144,6 +145,20 @@ AudienceUser.init(
     },
     oauth_exchange_code_expires_at: {
       type: DataTypes.DATE,
+      allowNull: true,
+    },
+    points_total: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    referral_code: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      unique: true,
+    },
+    referred_by_user_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
   },
