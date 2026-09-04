@@ -34,8 +34,10 @@ import {
   toggleOrganizerFollow,
   getFollowedOrganizers,
   getTicketingSitemap,
-  getTicketingEvents
+  getTicketingEvents,
+  trackEventShare
 } from '../controllers/publicController';
+import { audienceInviteFriend } from '../controllers/audienceAuthController';
 import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
 import { authenticateAudienceToken } from '../middleware/auth';
 import { upload } from '../controllers/artistController';
@@ -99,6 +101,8 @@ router.get('/audience/me/followed-organizers', authenticateAudienceToken, getFol
 router.post('/audience/claim', authenticateAudienceToken, claimAudienceTickets);
 router.get('/audience/tickets/:ticketCode/pdf', authenticateAudienceToken, downloadAudienceTicketPDF);
 router.post('/audience/events/:eventId/like', authenticateAudienceToken, toggleEventLike);
+router.post('/audience/events/:eventId/share', authenticateAudienceToken, trackEventShare);
 router.post('/audience/organizers/:brandId/follow', authenticateAudienceToken, toggleOrganizerFollow);
+router.post('/audience/invite', authenticateAudienceToken, audienceInviteFriend);
 
 export default router;

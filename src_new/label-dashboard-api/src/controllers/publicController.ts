@@ -16,6 +16,7 @@ import QRCode from 'qrcode';
 import { headS3Object, getS3ObjectStream, getS3PublicUrl } from '../utils/s3Service';
 import { getRequestDomain } from '../utils/requestUtils';
 import { getLockedArtistIds } from '../utils/artistUtils';
+import { awardTicketPoints, awardSharePoints } from '../utils/audiencePoints';
 import archiver from 'archiver';
 import path from 'path';
 
@@ -699,6 +700,13 @@ export const buyTicket = async (req: Request, res: Response) => {
         order_timestamp: new Date(),
         date_paid: new Date()
       });
+
+      // Award points for free ticket (fire-and-forget)
+      if (audienceUserId) {
+        awardTicketPoints(audienceUserId, [ticket]).catch(err =>
+          console.error('Failed to award free ticket points:', err)
+        );
+      }
 
       // Send ticket email immediately
       try {
@@ -3794,6 +3802,29 @@ export const getTicketingSitemap = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('getTicketingSitemap error:', error);
     return res.status(500).send('Internal server error');
+  }
+};
+
+// ─── Event share tracking ─────────────────────────────────────────────────────
+
+export const trackEventShare = async (req: Request, res: Response) => {
+  try {
+    const audienceUser = (req as any).audienceUser;
+    const eventId = parseInt(req.params['eventId'] as string);
+
+    if (!audienceUser || !audienceUser.id || isNaN(eventId)) {
+      return res.json({ success: true });
+    }
+
+    // Award points silently — don't reveal whether points were given
+    awardSharePoints(audienceUser.id, eventId).catch(err =>
+      console.error('Failed to award share points:', err)
+    );
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('trackEventShare error:', error);
+    return res.json({ success: true });
   }
 };
 

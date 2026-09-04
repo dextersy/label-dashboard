@@ -8,6 +8,7 @@ import { generateSecureToken } from '../utils/tokenUtils';
 import { hashPassword, hasPassword } from '../utils/passwordUtils';
 import { sequelize } from '../config/database';
 import { QueryTypes, Op } from 'sequelize';
+import { getCardLevel } from '../utils/audiencePoints';
 import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 
 interface AuthRequest extends Request {
@@ -1054,7 +1055,7 @@ export const getAudienceUsers = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const sortableFields = ['email_address', 'first_name', 'last_name', 'created_at', 'email_verified'];
+    const sortableFields = ['email_address', 'first_name', 'last_name', 'created_at', 'email_verified', 'points_total'];
     let orderClause: any[] = [['created_at', 'DESC']];
     if (sortBy && sortableFields.includes(sortBy)) {
       orderClause = [[sortBy, sortDirection]];
@@ -1062,7 +1063,7 @@ export const getAudienceUsers = async (req: AuthRequest, res: Response) => {
 
     const { count, rows: audienceUsers } = await AudienceUser.findAndCountAll({
       where: whereCondition,
-      attributes: ['id', 'email_address', 'first_name', 'last_name', 'contact_number', 'email_verified', 'created_at'],
+      attributes: ['id', 'email_address', 'first_name', 'last_name', 'contact_number', 'email_verified', 'points_total', 'created_at'],
       order: orderClause,
       limit,
       offset
@@ -1071,7 +1072,15 @@ export const getAudienceUsers = async (req: AuthRequest, res: Response) => {
     const totalPages = Math.ceil(count / limit);
 
     res.json({
-      data: audienceUsers,
+      data: audienceUsers.map((u) => {
+        const json = u.toJSON() as any;
+        const points = json.points_total ?? 0;
+        return {
+          ...json,
+          points_total: points,
+          card_level: getCardLevel(points),
+        };
+      }),
       pagination: {
         current_page: page,
         total_pages: totalPages,

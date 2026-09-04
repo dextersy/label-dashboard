@@ -9,6 +9,7 @@ import fs from 'fs';
 import { Op } from 'sequelize';
 import { AudienceUser, Event, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
+import { getCardLevel, awardRetroactiveTicketPoints, awardReferralPoints } from '../utils/audiencePoints';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { uploadToS3, deleteFromS3, getS3PublicUrl } from '../utils/s3Service';
 import { extension as mimeExtension } from 'mime-types';
@@ -238,7 +239,7 @@ async function sendWelcomeEmail(user: AudienceUser): Promise<void> {
 
 export const audienceSignup = async (req: Request, res: Response) => {
   try {
-    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference } = req.body;
+    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, referral_code: incomingReferralCode } = req.body;
 
     if (!email || !password || !first_name || !last_name) {
       return res.status(400).json({ error: 'Email, password, first name, and last name are required' });
@@ -264,9 +265,19 @@ export const audienceSignup = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'An account with this email already exists' });
     }
 
+    // Resolve referral code to a user ID if provided
+    let referred_by_user_id: number | null = null;
+    if (incomingReferralCode) {
+      const referrer = await AudienceUser.findOne({ where: { referral_code: incomingReferralCode } });
+      if (referrer) {
+        referred_by_user_id = referrer.id;
+      }
+    }
+
     const now = new Date();
     const password_hash = await hashPassword(password);
     const membership_id = await generateMembershipId();
+    const referral_code = await generateReferralCode();
     const user = await AudienceUser.create({
       email_address: email.toLowerCase(),
       password_hash,
@@ -274,12 +285,13 @@ export const audienceSignup = async (req: Request, res: Response) => {
       last_name,
       email_verified: false,
       membership_id,
-      membership_tier: 'silver',
       terms_accepted_at: now,
       privacy_accepted_at: now,
       age_confirmed_at: now,
       signed_up_from: signed_up_from || null,
       signup_reference: signup_reference ? String(signup_reference) : null,
+      referral_code,
+      referred_by_user_id,
     });
 
     // Send verification email (non-blocking — don't fail signup if email fails)
@@ -322,10 +334,17 @@ export const audienceLogin = async (req: Request, res: Response) => {
       ? await claimTicketsByEmailInternal(user.id, user.email_address)
       : 0;
 
+    // Award retroactive points for any newly claimed (or previously uncredited) tickets
+    if (user.email_verified) {
+      awardRetroactiveTicketPoints(user.id).catch(err =>
+        console.error('Failed to award retroactive ticket points on login:', err)
+      );
+    }
+
     // Lazily assign membership ID to pre-existing accounts that don't have one
     if (!user.membership_id) {
       const membership_id = await generateMembershipId();
-      await user.update({ membership_id, membership_tier: user.membership_tier || 'silver' });
+      await user.update({ membership_id });
     }
 
     const token = signAudienceToken(user.id);
@@ -349,9 +368,12 @@ export const audienceGetMe = async (req: Request, res: Response) => {
     // Lazily assign membership ID to pre-existing accounts that don't have one
     if (!user.membership_id) {
       const membership_id = await generateMembershipId();
-      await user.update({ membership_id, membership_tier: user.membership_tier || 'silver' });
+      await user.update({ membership_id });
     }
-    return res.json(buildUserPayload(user));
+    // Award any uncredited ticket points, then reload from DB so points_total is current
+    await awardRetroactiveTicketPoints(user.id);
+    const freshUser = await AudienceUser.findByPk(user.id);
+    return res.json(buildUserPayload(freshUser ?? user));
   } catch (error) {
     console.error('Audience getMe error:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -736,6 +758,19 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
     // Now that the email is confirmed, claim any tickets purchased with this address
     const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address);
 
+    // Award retroactive ticket points (fire-and-forget)
+    awardRetroactiveTicketPoints(user.id).catch(err =>
+      console.error('Failed to award retroactive ticket points on email verify:', err)
+    );
+
+    // Award referral points to referrer if applicable (fire-and-forget)
+    if (user.referred_by_user_id) {
+      const referredByUserId = user.referred_by_user_id;
+      awardReferralPoints(referredByUserId, user.id).catch(err =>
+        console.error('Failed to award referral points:', err)
+      );
+    }
+
     // Send welcome email (fire-and-forget — don't block the response)
     sendWelcomeEmail(user).catch((err) => console.error('Failed to send welcome email:', err));
 
@@ -810,7 +845,7 @@ export const audienceOAuthExchange = async (req: Request, res: Response) => {
 
     if (!user.membership_id) {
       const membership_id = await generateMembershipId();
-      await user.update({ membership_id, membership_tier: user.membership_tier || 'silver' });
+      await user.update({ membership_id });
     }
 
     const token = signAudienceToken(user.id);
@@ -828,6 +863,22 @@ export const audienceOAuthExchange = async (req: Request, res: Response) => {
 
 // Backward-compat alias so existing route wiring still compiles without changes
 export const audienceGoogleExchange = audienceOAuthExchange;
+
+// ─── Referral code ────────────────────────────────────────────────────────────
+
+/**
+ * Generate a unique 8-character alphanumeric referral code.
+ * Retries on collision.
+ */
+async function generateReferralCode(): Promise<string> {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const code = Array.from({ length: 8 }, () => chars[crypto.randomInt(0, chars.length)]).join('');
+    const existing = await AudienceUser.findOne({ where: { referral_code: code } });
+    if (!existing) return code;
+  }
+  throw new Error('Could not generate a unique referral code after 20 attempts');
+}
 
 // ─── Membership ID ────────────────────────────────────────────────────────────
 
@@ -850,6 +901,7 @@ async function generateMembershipId(): Promise<string> {
 
 /** Helper: build safe user payload to return to the client */
 function buildUserPayload(user: AudienceUser) {
+  const points = user.points_total ?? 0;
   return {
     id: user.id,
     email_address: user.email_address,
@@ -858,11 +910,13 @@ function buildUserPayload(user: AudienceUser) {
     contact_number: user.contact_number,
     profile_photo_url: user.profile_photo_url,
     membership_id: user.membership_id,
-    membership_tier: user.membership_tier || 'silver',
     email_verified: user.email_verified ?? false,
     terms_accepted_at: user.terms_accepted_at ?? null,
     privacy_accepted_at: user.privacy_accepted_at ?? null,
     age_confirmed_at: user.age_confirmed_at ?? null,
+    points_total: points,
+    card_level: getCardLevel(points),
+    referral_code: user.referral_code ?? null,
   };
 }
 
@@ -922,6 +976,50 @@ export const audienceAcceptTerms = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Audience acceptTerms error:', error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const audienceInviteFriend = async (req: Request, res: Response) => {
+  try {
+    const sender = (req as any).audienceUser as AudienceUser;
+    const { email } = req.body;
+
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
+    }
+
+    const referralLink = `${process.env.AUDIENCE_APP_URL}/login?ref=${sender.referral_code}&email=${encodeURIComponent(email.trim())}`;
+    const senderName = sender.first_name
+      ? `${sender.first_name}${sender.last_name ? ' ' + sender.last_name : ''}`
+      : 'A friend';
+
+    await sendAudienceEmail(
+      email.trim(),
+      `${senderName} invited you to Your Scene`,
+      `
+      <div style="font-family: monospace; background: #000; color: #fff; padding: 40px; max-width: 560px; margin: 0 auto;">
+        <img src="${process.env.AUDIENCE_APP_URL}/assets/logo-dark-bg.png" alt="Your Scene" style="height: 28px; margin-bottom: 32px;">
+        <p style="font-size: 13px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 8px;">— you've been invited —</p>
+        <h1 style="font-size: 22px; font-weight: 900; text-transform: uppercase; margin: 0 0 16px;">${senderName} wants you on Your Scene.</h1>
+        <p style="font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 32px;">
+          Discover local shows and engage with your music community. Keep track of your tickets and earn points for more perks all in one place.
+          <br><br>
+          Sign up with the link below and you'll both be rewarded.
+        </p>
+        <a href="${referralLink}" style="display: inline-block; background: #facc15; color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; font-size: 12px; padding: 14px 28px; text-decoration: none;">
+          Join Your Scene →
+        </a>
+        <p style="margin-top: 32px; font-size: 11px; color: rgba(255,255,255,0.2);">
+          Or copy this link: ${referralLink}
+        </p>
+      </div>
+      `,
+    );
+
+    return res.json({ message: 'Invite sent.' });
+  } catch (error) {
+    console.error('audienceInviteFriend error:', error);
+    return res.status(500).json({ error: 'Failed to send invite.' });
   }
 };
 

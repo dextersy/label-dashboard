@@ -668,7 +668,16 @@ export class PaymentService {
 
     // Update ticket payment status
     const paymentUpdated = await this.updateTicketPaymentStatus(ticket.id, processingFee, paymentId);
-    
+
+    if (paymentUpdated && ticket.audience_user_id) {
+      // Award ticket points for paid ticket (fire-and-forget)
+      import('../utils/audiencePoints').then(({ awardTicketPoints }) => {
+        awardTicketPoints(ticket.audience_user_id, [ticket]).catch((err: any) =>
+          console.error('Failed to award paid ticket points:', err)
+        );
+      }).catch(() => {});
+    }
+
     if (!paymentUpdated) {
       this.webhookLog('ERROR: Failed to update ticket payment verification. id = ' + ticket.id + ', processing_fee = ' + processingFee);
       await this.sendAdminFailureNotification('Ticket payment verification failed. Ticket id = ' + ticket.id, ticket.event?.brand_id, payload);
