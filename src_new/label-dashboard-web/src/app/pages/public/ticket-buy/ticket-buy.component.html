@@ -65,11 +65,6 @@
       <!-- CANCELED: event canceled notice -->
       <div *ngIf="event?.status === 'canceled'" class="closed-state-panel">
         <div class="closed-state-header">
-          <div class="closed-icon-circle">
-            <svg xmlns="http://www.w3.org/2000/svg" style="width:22px;height:22px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" class="tw-text-gray-500">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-3.75h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
-            </svg>
-          </div>
           <h2 class="closed-title">This event has been canceled.</h2>
           <p class="closed-subtitle">Information on refunds will be communicated to you by the event organizer.</p>
         </div>
@@ -378,64 +373,69 @@
 
         <!-- State header -->
         <div class="closed-state-header">
-          <div class="closed-icon-circle">
-            <app-icon name="ticket" class="tw-text-gray-400" style="font-size: 18px;" />
-          </div>
           <ng-container *ngIf="event && event.ticketing_enabled === false; else salesEndedHeader">
             <h2 class="closed-title">Listing Only</h2>
             <p class="closed-subtitle">Online ticket sales are not available for this event.</p>
           </ng-container>
           <ng-template #salesEndedHeader>
             <h2 class="closed-title">Online Sales Ended</h2>
-            <p class="closed-subtitle">Online ticket sales for this event have closed. Walk-in tickets are still available at the venue.</p>
+            <p class="closed-subtitle">
+              <ng-container *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots(); else noWalkInSubtitle">
+                Online ticket sales for this event have closed. Walk-in tickets are still available at the venue.
+              </ng-container>
+              <ng-template #noWalkInSubtitle>
+                Online ticket sales for this event have closed. Tickets or walk-in may still be available at the show.
+              </ng-template>
+            </p>
           </ng-template>
         </div>
 
-        <!-- Card 1: Walk-in ticket tiers -->
+        <!-- Walk-in ticket type cards -->
         <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
-          class="walkin-card">
-          <div class="walkin-card-header">
-            <app-icon name="map-pin" style="color: #1d4ed8; font-size: 13px;" />
-            <span>Walk-in tickets at the venue</span>
-          </div>
-          <div class="walkin-rows">
+          class="tw-mb-4">
+          <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-2">Walk-in tickets at the venue</p>
+          <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-2">
             <ng-container *ngFor="let wit of event.walkInTypes">
-              <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0" class="walkin-row">
-                <div>
-                  <span class="walkin-row-name">{{ wit.name }}</span>
-                </div>
-                <span class="walkin-row-price">{{ formatPriceDisplay(wit.price) }}</span>
+              <div *ngIf="wit.remaining_slots === null || wit.remaining_slots > 0"
+                class="tw-flex tw-flex-col tw-gap-0.5 tw-rounded-xl tw-bg-white tw-px-4 tw-py-3" style="border: 0.5px solid #e5e7eb;">
+                <span class="tw-text-sm tw-font-semibold tw-text-gray-900 tw-leading-snug">{{ wit.name }}</span>
+                <span class="tw-text-base tw-font-black tw-text-gray-900">{{ formatPriceDisplay(wit.price) }}</span>
               </div>
             </ng-container>
           </div>
         </div>
 
-        <!-- Card 2: Event details (date & venue) -->
-        <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
-          class="walkin-details-card">
-          <!-- Date & time column -->
-          <div class="walkin-details-col">
-            <app-icon name="calendar" class="walkin-details-icon" iconOnly />
-            <span class="walkin-details-label">Date &amp; time</span>
-            <span class="walkin-details-value">{{ formatEventDate(event.date_and_time) }}</span>
-            <span class="walkin-details-value">{{ formatEventTime(event.date_and_time) }}</span>
-          </div>
-          <!-- Divider -->
-          <div class="walkin-details-divider"></div>
-          <!-- Venue column -->
-          <div class="walkin-details-col" *ngIf="event.venue">
-            <app-icon name="map-pin" class="walkin-details-icon" iconOnly />
-            <span class="walkin-details-label">Venue</span>
-            <span class="walkin-details-value">{{ event.venue }}</span>
-            <span *ngIf="hasVenueAddress(event)" class="walkin-details-subvalue">{{ event.venue_address }}</span>
-          </div>
-        </div>
+        <!-- Card 2: Event details (date & venue) — same style as normal buy page -->
+        <div class="tw-rounded-xl tw-bg-white tw-flex tw-flex-col sm:tw-flex-row tw-divide-y sm:tw-divide-y-0 sm:tw-divide-x tw-divide-gray-100 tw-mb-4" style="border: 0.5px solid #e5e7eb;">
 
-        <!-- No walk-in fallback info -->
-        <div *ngIf="!event.walk_in_enabled || !hasAvailableWalkInSlots()"
-          class="tw-text-sm tw-text-gray-500 tw-text-center tw-mb-4">
-          <p class="tw-mb-1">Tickets or walk-in may still be available at the show.</p>
-          <p class="tw-mb-0">Check <strong>{{ event.brand?.name || 'the event organizer' }}</strong>'s social media for more information.</p>
+          <!-- Date & Time -->
+          <div class="tw-flex tw-items-center tw-gap-3.5 tw-flex-shrink-0 tw-px-5 tw-py-4">
+            <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-12 tw-h-12 tw-text-white" style="background-color: #2D28B8;">
+              <span class="tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(event.date_and_time) }}</span>
+              <span class="tw-text-xl tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[1] }}</span>
+              <span class="tw-text-[9px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[0] }}</span>
+            </div>
+            <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
+              <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
+            </div>
+          </div>
+
+          <!-- Venue -->
+          <div *ngIf="event.venue" class="tw-flex tw-items-center tw-gap-3.5 tw-flex-1 tw-px-5 tw-py-4 tw-min-w-0">
+            <div class="tw-flex tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-8 tw-h-8" style="background-color: #EEEDFE;">
+              <app-icon name="map-pin" class="tw-text-sm" style="color: #534AB7;" iconOnly />
+            </div>
+            <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
+              <span class="tw-text-sm tw-font-semibold tw-text-gray-900 tw-leading-snug">{{ event.venue }}</span>
+              <span *ngIf="hasVenueAddress(event)" class="tw-text-[11px] tw-text-gray-400 tw-leading-snug">{{ event.venue_address }}</span>
+              <a *ngIf="hasVenueMapsLink(event)" [href]="getVenueMapsLink(event)" target="_blank"
+                class="tw-flex tw-items-center tw-gap-1 tw-text-[11px] tw-text-indigo-500 hover:tw-text-indigo-700 tw-no-underline tw-font-medium tw-whitespace-nowrap tw-transition-colors">
+                <app-icon name="external-link" class="tw-text-[10px]" />
+                <span>View on map ↗</span>
+              </a>
+            </div>
+          </div>
+
         </div>
 
         <!-- CTA buttons -->
