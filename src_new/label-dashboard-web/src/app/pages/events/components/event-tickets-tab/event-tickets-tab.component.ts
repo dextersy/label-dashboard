@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../../services/event.service';
 import { CsvService } from '../../../../services/csv.service';
@@ -175,10 +175,13 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     private csvService: CsvService,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
+    const subTab = this.route.snapshot.queryParamMap.get('subTab');
+    if (subTab === 'walk-in') this.activeSubTab = 'walk-in';
     this.loadEventData();
   }
 

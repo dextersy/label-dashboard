@@ -2,12 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { EventSales } from '../dashboard/components/event-sales-chart/event-sales-chart.component';
 import { FundraiserDonations } from '../dashboard/components/fundraiser-donations-chart/fundraiser-donations-chart.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { AnalyticsPanelComponent } from './components/analytics-panel/analytics-panel.component';
 import { BrandService, BrandSettings } from '../../services/brand.service';
-import { EventService } from '../../services/event.service';
+import { EventService, Event as AppEvent } from '../../services/event.service';
 import { FundraiserService } from '../../services/fundraiser.service';
 import { environment } from 'environments/environment';
 import { IconComponent } from '../../components/shared/icon/icon.component';
@@ -89,6 +91,11 @@ export class EventsDashboardComponent implements OnInit {
   error: string | null = null;
   today: Date = new Date();
 
+  todayEventFull: AppEvent | null = null;
+  todayEventTicketSummary: { total_tickets_sold: number; total_checked_in: number } | null = null;
+  todayEventWalkInTotal: number | null = null;
+  copiedField: 'link' | 'pin' | null = null;
+
   constructor(
     private http: HttpClient,
     private router: Router,
@@ -109,6 +116,7 @@ export class EventsDashboardComponent implements OnInit {
       next: (data) => {
         this.dashboardData = data;
         this.loading = false;
+        this.loadTodayEventDetails(data.upcomingEvents);
       },
       error: (error) => {
         console.error('Error loading events dashboard data:', error);
@@ -142,9 +150,9 @@ export class EventsDashboardComponent implements OnInit {
     this.router.navigate(['/campaigns/sync-licensing'], id ? { queryParams: { open: id } } : {});
   }
 
-  navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets'): void {
+  navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets', subTab?: string): void {
     this.eventService.setSelectedEvent(event as any);
-    this.router.navigate([`/campaigns/events/${route}`]);
+    this.router.navigate([`/campaigns/events/${route}`], subTab ? { queryParams: { subTab } } : {});
   }
 
   formatEventDate(dateStr: string): string {
@@ -166,9 +174,52 @@ export class EventsDashboardComponent implements OnInit {
     }).format(amount || 0);
   }
 
+  private loadTodayEventDetails(upcomingEvents: UpcomingEvent[]): void {
+    this.todayEventFull = null;
+    this.todayEventTicketSummary = null;
+    this.todayEventWalkInTotal = null;
+
+    const first = upcomingEvents?.[0];
+    if (!first || this.getDaysAway(first.date_and_time) !== 0) return;
+
+    this.eventService.getEvent(first.id).pipe(catchError(() => of(null))).subscribe(event => {
+      if (!event) return;
+      this.todayEventFull = event;
+
+      const summary$ = this.eventService.getEventTicketSummary(first.id).pipe(catchError(() => of(null)));
+      const walkIn$ = event.walk_in_enabled
+        ? this.eventService.getWalkInTypes(first.id).pipe(catchError(() => of(null)))
+        : of(null);
+
+      forkJoin([summary$, walkIn$]).subscribe(([summary, walkInData]) => {
+        if (summary) this.todayEventTicketSummary = summary;
+        if (walkInData) {
+          this.todayEventWalkInTotal = (walkInData.walkInTypes as any[])
+            .reduce((sum: number, t: any) => sum + (t.sold_count || 0), 0);
+        }
+      });
+    });
+  }
+
+  copyToClipboard(text: string, field: 'link' | 'pin'): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedField = field;
+      setTimeout(() => { this.copiedField = null; }, 2000);
+    });
+  }
+
+  openScannerLink(): void {
+    if (this.todayEventFull?.verification_link) {
+      window.open(this.todayEventFull.verification_link, '_blank');
+    }
+  }
+
   getDaysAway(dateStr: string): number {
-    const diff = new Date(dateStr).getTime() - new Date().getTime();
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    const eventDate = new Date(dateStr);
+    const today = new Date();
+    const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+    const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return Math.max(0, Math.round((eventDay.getTime() - todayDay.getTime()) / (1000 * 60 * 60 * 24)));
   }
 
   getDaysAwayLabel(dateStr: string): string {
