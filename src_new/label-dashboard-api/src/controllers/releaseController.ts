@@ -1106,11 +1106,14 @@ export const downloadMasters = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
 
-    // Get release with songs and artists
+    // Get release with songs and artists (allow parent label to access child brand releases)
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const release = await Release.findOne({
       where: {
         id: releaseId,
-        brand_id: req.user.brand_id
+        brand_id: { [Op.in]: allowedBrandIds }
       },
       include: [
         {
@@ -1283,8 +1286,11 @@ export const downloadMp3s = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid release ID' });
     }
 
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const release = await Release.findOne({
-      where: { id: releaseId, brand_id: req.user.brand_id },
+      where: { id: releaseId, brand_id: { [Op.in]: allowedBrandIds } },
       include: [{ model: Artist, as: 'artists' }]
     });
 

@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, Artist, Release, Brand } from '../models';
+
+// Returns IDs of all direct child brands for the given brand
+async function getChildBrandIds(brandId: number): Promise<number[]> {
+  const children = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'] });
+  return children.map((b: any) => b.id);
+}
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
 import { extractDSPFeatures, extractMoodScores } from '../utils/audioFeatures';
@@ -977,8 +983,11 @@ export const downloadSongMaster = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const song = await Song.findOne({
-      where: { id, brand_id: req.user.brand_id }
+      where: { id, brand_id: { [Op.in]: allowedBrandIds } }
     });
 
     if (!song) {
@@ -1021,8 +1030,11 @@ export const downloadSongMp3 = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const song = await Song.findOne({
-      where: { id, brand_id: req.user.brand_id }
+      where: { id, brand_id: { [Op.in]: allowedBrandIds } }
     });
 
     if (!song) {
