@@ -1878,9 +1878,11 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
 
 export const getTicketingEvents = async (req: Request, res: Response) => {
   try {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
     const events = await Event.findAll({
       where: {
-        date_and_time: { [Op.gte]: new Date() },
+        date_and_time: { [Op.gte]: startOfToday },
         status: 'published',
         listed_on_ticketing: true,
       },
