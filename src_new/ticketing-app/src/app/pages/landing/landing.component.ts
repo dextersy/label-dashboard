@@ -186,20 +186,99 @@ interface PublicEvent {
           <span class="text-xs font-mono text-white/30 uppercase tracking-widest">/ upcoming shows</span>
         </div>
 
+        <!-- Happening Today -->
+        @if (!loading() && todayEvents().length > 0) {
+          <div class="mb-12">
+            <div class="flex items-center gap-3 mb-5">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-400"></span>
+              </span>
+              <h3 class="text-xs font-black text-yellow-400 uppercase tracking-widest">Happening Today</h3>
+            </div>
+            <div class="flex flex-col gap-3">
+              @for (event of todayEvents(); track event.id) {
+                <a [routerLink]="['/events', event.id]"
+                  class="group relative flex items-end min-h-48 border-2 border-yellow-400/40 hover:border-yellow-400 transition-all overflow-hidden"
+                  [style.background-image]="event.poster_url ? 'url(' + event.poster_url + ')' : null"
+                  [style.background-size]="'cover'"
+                  [style.background-position]="'center'">
+                  <!-- Overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/20 group-hover:from-black/80 transition-all"></div>
+                  @if (!event.poster_url) {
+                    <div class="absolute inset-0 bg-yellow-400/5"
+                      style="background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 0, transparent 50%); background-size: 8px 8px;"></div>
+                  }
+                  <!-- Content -->
+                  <div class="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between w-full gap-4 p-5 sm:p-6">
+                    <div class="min-w-0">
+                      @if (event.brand_name) {
+                        <p class="text-[10px] font-mono text-yellow-400/80 uppercase tracking-wider mb-1 truncate">{{ event.brand_name }}</p>
+                      }
+                      <p class="text-2xl font-black text-white group-hover:text-yellow-400 transition-colors uppercase leading-tight mb-1">{{ event.title }}</p>
+                      <div class="flex items-stretch gap-2 mt-1 mb-0.5">
+                        <div class="flex flex-col items-center justify-center border border-yellow-400/40 bg-black/40 px-2 py-1 text-center w-12 sm:w-20 flex-shrink-0">
+                          <p class="text-[9px] font-mono text-yellow-400 uppercase leading-none tracking-wider">today</p>
+                          <p class="text-sm font-black text-white leading-tight">{{ event.date_and_time | date:'h:mm' }}</p>
+                          <p class="text-[9px] font-mono text-white/50 leading-none">{{ event.date_and_time | date:'a' }}</p>
+                        </div>
+                        @if (event.venue) {
+                          <div class="flex flex-col items-center justify-center border border-white/20 bg-black/40 px-2 py-1 text-center flex-1 sm:max-w-48">
+                            <p class="text-[9px] font-mono text-white/40 uppercase leading-none tracking-wider">venue</p>
+                            <p class="text-xs font-black text-white leading-tight">{{ event.venue }}</p>
+                          </div>
+                        }
+                      </div>
+                      @if (event.event_type || (event.tags && event.tags.length > 0)) {
+                        <div class="flex flex-wrap gap-1.5 mt-3">
+                          @if (event.event_type) {
+                            <span class="px-2 py-0.5 text-[10px] font-mono text-yellow-400/80 border border-yellow-400/30 uppercase">{{ event.event_type.replace('_', ' ') }}</span>
+                          }
+                          @for (tag of (event.tags || []).slice(0, 3); track tag.id) {
+                            <span class="px-2 py-0.5 text-[10px] font-mono text-white/50 border border-white/20">{{ tag.name }}</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <!-- CTA -->
+                    <div class="flex-shrink-0 flex flex-col sm:items-end gap-2">
+                      @if (event.external_ticket_link && !event.is_closed) {
+                        <a [href]="event.external_ticket_link" target="_blank" rel="noopener" (click)="$event.stopPropagation()"
+                          class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black uppercase tracking-wider transition-colors">
+                          Get Tickets →
+                        </a>
+                      } @else if (event.buy_shortlink && !event.is_closed && event.ticketing_enabled !== false) {
+                        <a [href]="event.buy_shortlink" target="_blank" rel="noopener" (click)="$event.stopPropagation()"
+                          class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-black uppercase tracking-wider transition-colors">
+                          Get Tickets →
+                        </a>
+                        <p class="text-[10px] font-mono text-white/40">{{ event.ticket_price === 0 ? 'Free' : event.ticket_price_display }}</p>
+                      }
+                      @if (event.tickets_sold && event.tickets_sold > 0) {
+                        <p class="text-[10px] font-mono text-white/40">{{ event.tickets_sold }} attending</p>
+                      }
+                    </div>
+                  </div>
+                </a>
+              }
+            </div>
+          </div>
+        }
+
         @if (loading()) {
           <div class="flex items-center justify-center py-24">
             <p class="text-sm font-mono text-white/30 uppercase tracking-widest animate-pulse">loading...</p>
           </div>
-        } @else if (allEvents().length === 0) {
+        } @else if (upcomingEvents().length === 0 && todayEvents().length === 0) {
           <div class="py-24 border-2 border-dashed border-white/10 text-center">
             <p class="text-white/30 text-sm font-mono mb-4">nothing on yet. check back soon.</p>
             <a routerLink="/app/login" [queryParams]="{ mode: 'organizer' }" class="text-xs font-bold text-yellow-400 hover:text-yellow-300 uppercase tracking-wider transition-colors">
               organizer? list your show →
             </a>
           </div>
-        } @else {
+        } @else if (upcomingEvents().length > 0) {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            @for (event of allEvents(); track event.id) {
+            @for (event of upcomingEvents(); track event.id) {
               <div class="group bg-black hover:bg-zinc-950 transition-colors border border-white/10 flex flex-col">
                 <!-- Poster -->
                 @if (event.poster_url) {
@@ -371,6 +450,20 @@ export class LandingComponent implements OnInit, OnDestroy {
   likedEventIds = signal<Set<number>>(new Set());
   showAuthModal = signal(false);
   pendingLikeEventId = signal<number | null>(null);
+
+  todayEvents = computed(() => {
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    return this.allEvents().filter(e =>
+      new Date(e.date_and_time).toLocaleDateString('en-CA') === todayStr
+    );
+  });
+
+  upcomingEvents = computed(() => {
+    const todayStr = new Date().toLocaleDateString('en-CA');
+    return this.allEvents().filter(e =>
+      new Date(e.date_and_time).toLocaleDateString('en-CA') !== todayStr
+    );
+  });
 
   heroIndex = signal(0);
   heroEvents = computed(() =>
