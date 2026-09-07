@@ -138,6 +138,38 @@ export async function awardSharePoints(
   return awardPoints(audienceUserId, 'event_share', 2, eventId, 'event');
 }
 
+// ─── Profile completion points ────────────────────────────────────────────────
+
+/**
+ * Returns true if all 6 extended profile fields are filled in.
+ */
+export function isProfileComplete(user: {
+  city?: string | null;
+  country?: string | null;
+  date_of_birth?: Date | null;
+  gender_identity?: string | null;
+  music_genres?: string[] | null;
+  event_frequency?: string | null;
+}): boolean {
+  return !!(
+    user.city &&
+    user.country &&
+    user.date_of_birth &&
+    user.gender_identity &&
+    user.music_genres && user.music_genres.length > 0 &&
+    user.event_frequency
+  );
+}
+
+/**
+ * Awards +10 points for completing the extended profile. Idempotent — uses the
+ * user's own id as reference_id with type 'profile' so it can only fire once.
+ * Returns true if points were newly awarded.
+ */
+export async function awardProfileCompletePoints(audienceUserId: number): Promise<boolean> {
+  return awardPoints(audienceUserId, 'profile_complete', 10, audienceUserId, 'profile');
+}
+
 // ─── Referral points ──────────────────────────────────────────────────────────
 
 /**
