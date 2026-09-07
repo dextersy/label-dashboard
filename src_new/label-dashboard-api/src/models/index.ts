@@ -55,6 +55,7 @@ import Plan from './Plan';
 import BrandPlan from './BrandPlan';
 import ReleaseTask from './ReleaseTask';
 import AudiencePointTransaction from './AudiencePointTransaction';
+import AudienceEmailPreference from './AudienceEmailPreference';
 
 // Define relationships
 // Brand relationships
@@ -196,6 +197,8 @@ AudienceUser.hasMany(EventLike, { foreignKey: 'audience_user_id', as: 'eventLike
 AudienceUser.hasMany(AudienceFollow, { foreignKey: 'audience_user_id', as: 'follows' });
 AudienceUser.hasMany(AudiencePointTransaction, { foreignKey: 'audience_user_id', as: 'pointTransactions' });
 AudiencePointTransaction.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
+AudienceUser.hasOne(AudienceEmailPreference, { foreignKey: 'audience_user_id', as: 'emailPreference' });
+AudienceEmailPreference.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
 
 // AudienceFollow relationships
 AudienceFollow.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
@@ -422,6 +425,7 @@ export {
   BrandPlan,
   ReleaseTask,
   AudiencePointTransaction,
+  AudienceEmailPreference,
 };
 
 // Initialize database connection

@@ -7,9 +7,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { Op } from 'sequelize';
-import { AudienceUser, Event, Ticket } from '../models';
+import { AudienceUser, AudienceEmailPreference, Event, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
-import { getCardLevel, awardRetroactiveTicketPoints, awardReferralPoints } from '../utils/audiencePoints';
+import { getCardLevel, awardRetroactiveTicketPoints, awardReferralPoints, isProfileComplete, awardProfileCompletePoints } from '../utils/audiencePoints';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { uploadToS3, deleteFromS3, getS3PublicUrl } from '../utils/s3Service';
 import { extension as mimeExtension } from 'mime-types';
@@ -224,15 +224,46 @@ async function sendWelcomeEmail(user: AudienceUser): Promise<void> {
   }
 
   const showsUrl = `${audienceUrl}/#shows`;
+  const notificationsUrl = `${audienceUrl}/my-notifications`;
+  const profileUrl = `${audienceUrl}/my-profile`;
 
   html = html
     .replace(/%PLATFORM_NAME%/g, platformName)
     .replace(/%FIRST_NAME%/g, user.first_name || 'there')
     .replace(/%LOGO_URL%/g, logoUrl)
     .replace(/%UPCOMING_SHOWS_SECTION%/g, upcomingShowsSection)
-    .replace(/%SHOWS_URL%/g, showsUrl);
+    .replace(/%SHOWS_URL%/g, showsUrl)
+    .replace(/%PROFILE_URL%/g, profileUrl)
+    .replace(/%NOTIFICATIONS_URL%/g, notificationsUrl);
 
-  await sendAudienceEmail(user.email_address, `Welcome to ${platformName}!`, html);
+  await sendAudienceEmail(user.email_address, `Welcome to ${platformName} — complete your profile to earn points!`, html);
+}
+
+/**
+ * Sends the "complete your profile to earn 10 points" email.
+ * Respects the user's marketing_promos email preference (defaults to true if no row exists).
+ */
+async function sendCompleteProfileEmail(user: AudienceUser): Promise<void> {
+  // Check email preference — default to send if no row yet
+  const pref = await AudienceEmailPreference.findOne({ where: { audience_user_id: user.id } });
+  if (pref && !pref.marketing_promos) return;
+
+  const platformName = process.env.PLATFORM_NAME || 'Your Scene';
+  const audienceUrl = getAudienceFrontendUrl();
+  const profileUrl = `${audienceUrl}/my-profile`;
+  const notificationsUrl = `${audienceUrl}/my-notifications`;
+  const logoUrl = `${process.env.AUDIENCE_APP_URL || ''}/assets/logo-dark-bg.png`;
+
+  const templatePath = path.join(__dirname, '../assets/templates/audience_complete_profile_email.html');
+  let html = fs.readFileSync(templatePath, 'utf-8');
+  html = html
+    .replace(/%PLATFORM_NAME%/g, platformName)
+    .replace(/%FIRST_NAME%/g, user.first_name || 'there')
+    .replace(/%LOGO_URL%/g, logoUrl)
+    .replace(/%PROFILE_URL%/g, profileUrl)
+    .replace(/%NOTIFICATIONS_URL%/g, notificationsUrl);
+
+  await sendAudienceEmail(user.email_address, `Complete your profile — earn 10 points`, html);
 }
 
 // ─── Controllers ──────────────────────────────────────────────────────────────
@@ -771,7 +802,7 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
       );
     }
 
-    // Send welcome email (fire-and-forget — don't block the response)
+    // Send welcome email — includes the complete-your-profile CTA block for new users (fire-and-forget)
     sendWelcomeEmail(user).catch((err) => console.error('Failed to send welcome email:', err));
 
     const authToken = signAudienceToken(user.id);
@@ -917,20 +948,66 @@ function buildUserPayload(user: AudienceUser) {
     points_total: points,
     card_level: getCardLevel(points),
     referral_code: user.referral_code ?? null,
+    // Extended profile
+    city: user.city ?? null,
+    country: user.country ?? null,
+    date_of_birth: user.date_of_birth ?? null,
+    gender_identity: user.gender_identity ?? null,
+    music_genres: user.music_genres ?? null,
+    event_frequency: user.event_frequency ?? null,
+    profile_complete: isProfileComplete(user),
   };
 }
 
 export const audienceUpdateProfile = async (req: Request, res: Response) => {
   try {
     const user = (req as any).audienceUser as AudienceUser;
-    const { first_name, last_name, contact_number } = req.body;
+    const { first_name, last_name, contact_number, city, country, date_of_birth, gender_identity, music_genres, event_frequency } = req.body;
 
     if (!first_name || !last_name) {
       return res.status(400).json({ error: 'First name and last name are required' });
     }
 
-    await user.update({ first_name, last_name, contact_number: contact_number || null });
-    return res.json(buildUserPayload(user));
+    // Validate music_genres if provided
+    if (music_genres !== undefined && !Array.isArray(music_genres)) {
+      return res.status(400).json({ error: 'music_genres must be an array' });
+    }
+
+    // Validate gender_identity if provided
+    const validGenders = ['male', 'female', 'non_binary', 'prefer_not_to_say'];
+    if (gender_identity && !validGenders.includes(gender_identity)) {
+      return res.status(400).json({ error: 'Invalid gender_identity value' });
+    }
+
+    // Validate event_frequency if provided
+    const validFrequencies = ['weekly', 'monthly', 'occasionally', 'rarely'];
+    if (event_frequency && !validFrequencies.includes(event_frequency)) {
+      return res.status(400).json({ error: 'Invalid event_frequency value' });
+    }
+
+    const wasComplete = isProfileComplete(user);
+
+    await user.update({
+      first_name,
+      last_name,
+      contact_number: contact_number || null,
+      city: city || null,
+      country: country || null,
+      date_of_birth: date_of_birth || null,
+      gender_identity: gender_identity || null,
+      music_genres: music_genres || null,
+      event_frequency: event_frequency || null,
+    });
+
+    // Award profile completion points if this save completes the profile for the first time.
+    // Must be awaited before reloading the user so the updated points_total is reflected.
+    if (!wasComplete && isProfileComplete(user)) {
+      await awardProfileCompletePoints(user.id);
+    }
+
+    // Reload to get updated points_total
+    const freshUser = await AudienceUser.findByPk(user.id);
+    return res.json(buildUserPayload(freshUser ?? user));
   } catch (error) {
     console.error('Audience updateProfile error:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -1020,6 +1097,65 @@ export const audienceInviteFriend = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('audienceInviteFriend error:', error);
     return res.status(500).json({ error: 'Failed to send invite.' });
+  }
+};
+
+// ─── Email preferences ────────────────────────────────────────────────────────
+
+/** Helper: find or create the preference row for a user, defaulting all to true */
+async function getOrCreateEmailPreference(audienceUserId: number): Promise<AudienceEmailPreference> {
+  const [pref] = await AudienceEmailPreference.findOrCreate({
+    where: { audience_user_id: audienceUserId },
+    defaults: {
+      audience_user_id: audienceUserId,
+      marketing_promos: true,
+      event_recommendations: true,
+      organizer_updates: true,
+      points_rewards: true,
+    },
+  });
+  return pref;
+}
+
+export const audienceGetEmailPreferences = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const pref = await getOrCreateEmailPreference(user.id);
+    return res.json({
+      marketing_promos: pref.marketing_promos,
+      event_recommendations: pref.event_recommendations,
+      organizer_updates: pref.organizer_updates,
+      points_rewards: pref.points_rewards,
+    });
+  } catch (error) {
+    console.error('audienceGetEmailPreferences error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const audienceUpdateEmailPreferences = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const { marketing_promos, event_recommendations, organizer_updates, points_rewards } = req.body;
+
+    const pref = await getOrCreateEmailPreference(user.id);
+
+    await pref.update({
+      marketing_promos: marketing_promos !== undefined ? !!marketing_promos : pref.marketing_promos,
+      event_recommendations: event_recommendations !== undefined ? !!event_recommendations : pref.event_recommendations,
+      organizer_updates: organizer_updates !== undefined ? !!organizer_updates : pref.organizer_updates,
+      points_rewards: points_rewards !== undefined ? !!points_rewards : pref.points_rewards,
+    });
+
+    return res.json({
+      marketing_promos: pref.marketing_promos,
+      event_recommendations: pref.event_recommendations,
+      organizer_updates: pref.organizer_updates,
+      points_rewards: pref.points_rewards,
+    });
+  } catch (error) {
+    console.error('audienceUpdateEmailPreferences error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
