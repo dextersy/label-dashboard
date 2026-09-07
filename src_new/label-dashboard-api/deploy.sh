@@ -216,7 +216,7 @@ EOF
     end_phase "Phases 1-3: Migrations skipped"
 fi
 
-# Phase 4: Upload compiled dist
+# Phase 4: Upload compiled dist + scripts
 start_phase
 print_status "Phase 4: Uploading compiled API files..."
 if tar czf - -C "$SCRIPT_DIR/dist" . | \
@@ -227,7 +227,17 @@ else
     print_error "Failed to upload API dist files"
     exit 1
 fi
-end_phase "Phase 4: Upload API dist files"
+
+print_status "Phase 4b: Uploading scripts folder..."
+if tar czf - -C "$SCRIPT_DIR" scripts | \
+    ssh -i "$SFTP_KEY_PATH" -o StrictHostKeyChecking=no \
+        "$SFTP_USER@$PRODUCTION_HOST" "cd $BACKEND_DEPLOY_PATH && tar xzf -"; then
+    print_success "Scripts folder uploaded"
+else
+    print_error "Failed to upload scripts folder"
+    exit 1
+fi
+end_phase "Phase 4: Upload API dist files + scripts"
 
 # Phase 5: Restart PM2
 start_phase
