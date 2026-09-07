@@ -117,6 +117,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/audience/profile/profile.component').then(m => m.AudienceProfileComponent)
   },
   {
+    path: 'my-notifications',
+    canActivate: [audienceAuthGuard],
+    loadComponent: () => import('./pages/audience/notifications/notifications.component').then(m => m.AudienceNotificationsComponent)
+  },
+  {
     path: 'my-shows/:eventId',
     canActivate: [audienceAuthGuard],
     loadComponent: () => import('./pages/audience/show-detail/show-detail.component').then(m => m.ShowDetailComponent)

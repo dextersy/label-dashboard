@@ -18,6 +18,21 @@ export interface AudienceUser {
   points_total?: number;
   card_level?: string;
   referral_code?: string | null;
+  // Extended profile
+  city?: string | null;
+  country?: string | null;
+  date_of_birth?: string | null;
+  gender_identity?: string | null;
+  music_genres?: string[] | null;
+  event_frequency?: string | null;
+  profile_complete?: boolean;
+}
+
+export interface AudienceEmailPreferences {
+  marketing_promos: boolean;
+  event_recommendations: boolean;
+  organizer_updates: boolean;
+  points_rewards: boolean;
 }
 
 export interface AudienceAuthResponse {
@@ -124,10 +139,30 @@ export class AudienceAuthService {
       .pipe(tap(user => this.updateStoredUser(user)));
   }
 
-  updateProfile(data: { first_name: string; last_name: string; contact_number?: string }): Observable<AudienceUser> {
+  updateProfile(data: {
+    first_name: string;
+    last_name: string;
+    contact_number?: string;
+    city?: string | null;
+    country?: string | null;
+    date_of_birth?: string | null;
+    gender_identity?: string | null;
+    music_genres?: string[] | null;
+    event_frequency?: string | null;
+  }): Observable<AudienceUser> {
     const headers = this.getAuthHeaders();
     return this.http.patch<AudienceUser>(`${this.apiUrl}/auth/audience/me`, data, { headers })
       .pipe(tap(user => this.updateStoredUser(user)));
+  }
+
+  getEmailPreferences(): Observable<AudienceEmailPreferences> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<AudienceEmailPreferences>(`${this.apiUrl}/auth/audience/me/email-preferences`, { headers });
+  }
+
+  updateEmailPreferences(prefs: Partial<AudienceEmailPreferences>): Observable<AudienceEmailPreferences> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<AudienceEmailPreferences>(`${this.apiUrl}/auth/audience/me/email-preferences`, prefs, { headers });
   }
 
   uploadProfilePhoto(file: File): Observable<AudienceUser> {

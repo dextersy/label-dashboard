@@ -122,6 +122,121 @@ interface FollowedOrganizer {
           </div>
         </div>
 
+        <!-- About You -->
+        <div class="bg-white/5 border border-white/10 p-6 mb-6">
+          <div class="flex items-start justify-between mb-4">
+            <p class="text-xs font-mono text-white/40 uppercase tracking-widest">About You</p>
+            @if (!isProfileComplete()) {
+              <span class="text-[10px] font-mono text-yellow-400 bg-yellow-400/10 border border-yellow-400/20 px-2 py-1 uppercase tracking-wider">
+                +10 pts on completion
+              </span>
+            } @else {
+              <span class="text-[10px] font-mono text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-1 uppercase tracking-wider">
+                ✓ Profile complete
+              </span>
+            }
+          </div>
+          <p class="text-xs font-mono text-white/30 mb-5">Used to recommend events you'll like. Fill in all fields to earn +10 points.</p>
+
+          <div class="space-y-4">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono text-white/40 uppercase tracking-wider mb-1.5">City</label>
+                <input [(ngModel)]="city" type="text" name="city"
+                  class="w-full px-3 py-2.5 bg-black border border-white/20 text-sm font-mono text-white focus:outline-none focus:border-yellow-400 placeholder-white/20"
+                  placeholder="">
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-white/40 uppercase tracking-wider mb-1.5">Country</label>
+                <select [(ngModel)]="country" name="country"
+                  class="w-full px-3 py-2.5 bg-black border border-white/20 text-sm font-mono text-white focus:outline-none focus:border-yellow-400">
+                  <option value="">Select country</option>
+                  @for (c of COUNTRIES; track c.code) {
+                    <option [value]="c.code">{{ c.name }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono text-white/40 uppercase tracking-wider mb-1.5">Date of Birth</label>
+                <input [(ngModel)]="dateOfBirth" type="date" name="date_of_birth"
+                  class="w-full px-3 py-2.5 bg-black border border-white/20 text-sm font-mono text-white focus:outline-none focus:border-yellow-400"
+                  [max]="today">
+                <p class="text-[10px] font-mono text-white/20 mt-1">Stored securely. Used for age-gating and birthday promos only.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-white/40 uppercase tracking-wider mb-1.5">Gender Identity</label>
+                <select [(ngModel)]="genderIdentity" name="gender_identity"
+                  class="w-full px-3 py-2.5 bg-black border border-white/20 text-sm font-mono text-white focus:outline-none focus:border-yellow-400">
+                  <option value="">— select —</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="non_binary">Non-binary</option>
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-wider mb-2">Music Genres <span class="text-white/20 normal-case">(pick all that apply)</span></label>
+
+              <!-- Selected genre chips -->
+              @if (musicGenres.length > 0) {
+                <div class="flex flex-wrap gap-2 mb-2">
+                  @for (genre of musicGenres; track genre) {
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 text-black text-xs font-mono uppercase tracking-wider">
+                      {{ genre }}
+                      <button type="button" (click)="toggleGenre(genre)" class="hover:opacity-60 transition-opacity leading-none">&times;</button>
+                    </span>
+                  }
+                </div>
+              }
+
+              <!-- Autocomplete input -->
+              <div class="relative">
+                <input
+                  [(ngModel)]="genreQuery"
+                  (focus)="genreDropdownOpen.set(true)"
+                  (blur)="onGenreBlur()"
+                  (input)="genreDropdownOpen.set(true)"
+                  type="text"
+                  name="genre_search"
+                  autocomplete="off"
+                  placeholder="Search genres…"
+                  class="w-full px-3 py-2.5 bg-black border border-white/20 text-sm font-mono text-white focus:outline-none focus:border-yellow-400 placeholder-white/20">
+
+                @if (genreDropdownOpen() && filteredGenres.length > 0) {
+                  <div class="absolute z-20 left-0 right-0 mt-0.5 bg-[#111] border border-white/20 max-h-48 overflow-y-auto">
+                    @for (genre of filteredGenres; track genre) {
+                      <button type="button"
+                        (mousedown)="selectGenre(genre)"
+                        class="w-full text-left px-3 py-2 text-xs font-mono text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+                        {{ genre }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-mono text-white/40 uppercase tracking-wider mb-1.5">How often do you attend events?</label>
+              <select [(ngModel)]="eventFrequency" name="event_frequency"
+                class="w-full px-3 py-2.5 bg-black border border-white/20 text-sm font-mono text-white focus:outline-none focus:border-yellow-400">
+                <option value="">Select frequency</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="occasionally">Occasionally</option>
+                <option value="rarely">Rarely</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
         @if (saveError()) {
           <div class="border border-red-500/30 bg-red-500/10 px-4 py-3 mb-4">
             <p class="text-xs font-mono text-red-400">{{ saveError() }}</p>
@@ -141,6 +256,12 @@ interface FollowedOrganizer {
           <a routerLink="/my-shows"
             class="px-6 py-3 border border-white/20 text-xs font-mono text-white/60 uppercase tracking-wider hover:border-white/40 hover:text-white transition-colors">
             Cancel
+          </a>
+        </div>
+
+        <div class="mt-4">
+          <a routerLink="/my-notifications" class="text-xs font-mono text-white/30 hover:text-white/60 transition-colors underline underline-offset-2">
+            Manage email notifications
           </a>
         </div>
 
@@ -230,6 +351,62 @@ export class AudienceProfileComponent implements OnInit {
   lastName = '';
   contactNumber = '';
 
+  // Extended profile fields
+  city = '';
+  country = '';
+  dateOfBirth = '';
+  genderIdentity = '';
+  musicGenres: string[] = [];
+  eventFrequency = '';
+
+  readonly GENRES = [
+    // Electronic / Dance
+    'Ambient', 'Bass Music', 'Breakbeat', 'Chillout', 'Chillwave', 'Dance / EDM',
+    'Deep House', 'Disco', 'Drum & Bass', 'Dubstep', 'EBM', 'Electro',
+    'Experimental Electronic', 'Footwork', 'Future Bass', 'Garage', 'House',
+    'Hyperpop', 'IDM', 'Industrial', 'Jersey Club', 'Jungle', 'Lo-Fi',
+    'Melodic Techno', 'Minimal', 'Nu-Disco', 'Psytrance', 'Tech House',
+    'Techno', 'Trance', 'UK Garage', 'Vaporwave',
+    // Hip-Hop / Urban
+    'Afrobeats', 'Afropop', 'Amapiano', 'Drill', 'Grime', 'Hip-Hop / Rap',
+    'R&B / Soul', 'Trap',
+    // Rock / Alternative
+    'Alternative Rock', 'Classic Rock', 'Darkwave', 'Emo', 'Grunge', 'Hardcore',
+    'Indie Rock', 'Math Rock', 'Metal', 'New Wave', 'Noise Rock', 'Post-Metal',
+    'Post-Punk', 'Post-Rock', 'Prog Rock', 'Psychedelic Rock', 'Punk', 'Rock', 'Nu Metal',
+    'Shoegaze', 'Stoner Rock',
+    // Pop
+    'Bedroom Pop', 'Dream Pop', 'Indie Pop', 'K-Pop', 'OPM', 'Pop', 'Synth-Pop',
+    // Jazz / Blues / Soul
+    'Blues', 'Classical', 'Contemporary Jazz', 'Jazz', 'Neo-Soul',
+    // World / Roots
+    'Americana', 'Bluegrass', 'Bossa Nova', 'Country', 'Cumbia', 'Dancehall',
+    'Dub', 'Flamenco', 'Folk / Acoustic', 'Funk', 'Gospel', 'Latin', 'Reggae',
+    'Reggaeton', 'Singer-Songwriter', 'Ska', 'Soca', 'Zouk',
+    // Other
+    'Acoustic', 'Musical Theatre', 'Spoken Word', 'World Music',
+  ].sort();
+
+  genreQuery = '';
+  genreDropdownOpen = signal(false);
+
+  get filteredGenres(): string[] {
+    const q = this.genreQuery.toLowerCase().trim();
+    if (!q) return this.GENRES.filter(g => !this.musicGenres.includes(g));
+    return this.GENRES.filter(g => g.toLowerCase().includes(q) && !this.musicGenres.includes(g));
+  }
+
+  readonly COUNTRIES = [
+    { code: 'PH', name: 'Philippines' }, { code: 'US', name: 'United States' },
+    { code: 'GB', name: 'United Kingdom' }, { code: 'AU', name: 'Australia' },
+    { code: 'CA', name: 'Canada' }, { code: 'SG', name: 'Singapore' },
+    { code: 'MY', name: 'Malaysia' }, { code: 'ID', name: 'Indonesia' },
+    { code: 'TH', name: 'Thailand' }, { code: 'JP', name: 'Japan' },
+    { code: 'KR', name: 'South Korea' }, { code: 'NZ', name: 'New Zealand' },
+    { code: 'DE', name: 'Germany' }, { code: 'FR', name: 'France' },
+    { code: 'AE', name: 'United Arab Emirates' },
+  ];
+
   saving = signal(false);
   saveError = signal('');
   saveSuccess = signal(false);
@@ -287,11 +464,45 @@ export class AudienceProfileComponent implements OnInit {
     this.firstName = u.first_name || '';
     this.lastName = u.last_name || '';
     this.contactNumber = u.contact_number || '';
+    this.city = u.city || '';
+    this.country = u.country || '';
+    this.dateOfBirth = u.date_of_birth ? u.date_of_birth.substring(0, 10) : '';
+    this.genderIdentity = u.gender_identity || '';
+    this.musicGenres = u.music_genres ? [...u.music_genres] : [];
+    this.eventFrequency = u.event_frequency || '';
 
     this.audienceAuthService.getFollowedOrganizers().subscribe({
       next: (res) => this.followedOrganizers.set(res.followed_organizers),
       error: () => {}
     });
+  }
+
+  readonly today = new Date().toISOString().substring(0, 10);
+
+  toggleGenre(genre: string): void {
+    const idx = this.musicGenres.indexOf(genre);
+    if (idx === -1) {
+      this.musicGenres = [...this.musicGenres, genre];
+    } else {
+      this.musicGenres = this.musicGenres.filter(g => g !== genre);
+    }
+  }
+
+  selectGenre(genre: string): void {
+    if (!this.musicGenres.includes(genre)) {
+      this.musicGenres = [...this.musicGenres, genre];
+    }
+    this.genreQuery = '';
+    this.genreDropdownOpen.set(false);
+  }
+
+  onGenreBlur(): void {
+    // Small delay so mousedown on a dropdown item fires before blur closes it
+    setTimeout(() => this.genreDropdownOpen.set(false), 150);
+  }
+
+  isProfileComplete(): boolean {
+    return !!(this.city.trim() && this.country && this.dateOfBirth && this.genderIdentity && this.musicGenres.length > 0 && this.eventFrequency);
   }
 
   userInitial(): string {
@@ -354,6 +565,12 @@ export class AudienceProfileComponent implements OnInit {
       first_name: this.firstName.trim(),
       last_name: this.lastName.trim(),
       contact_number: this.contactNumber.trim() || undefined,
+      city: this.city.trim() || null,
+      country: this.country || null,
+      date_of_birth: this.dateOfBirth || null,
+      gender_identity: this.genderIdentity || null,
+      music_genres: this.musicGenres.length > 0 ? this.musicGenres : null,
+      event_frequency: this.eventFrequency || null,
     }).subscribe({
       next: (updatedUser) => {
         this.user.set(updatedUser);
