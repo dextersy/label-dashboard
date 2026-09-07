@@ -11,6 +11,14 @@ interface AudienceUserAttributes {
   profile_photo_url?: string;
   membership_id?: string;
 
+  // Extended profile fields
+  city?: string | null;
+  country?: string | null;
+  date_of_birth?: Date | null;
+  gender_identity?: string | null;
+  music_genres?: string[] | null;
+  event_frequency?: string | null;
+
   reset_hash?: string;
   reset_hash_expires_at?: Date;
   email_verified?: boolean;
@@ -40,6 +48,15 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public profile_photo_url?: string;
   public membership_id?: string;
   public membership_tier?: string;
+
+  // Extended profile fields
+  public city?: string | null;
+  public country?: string | null;
+  public date_of_birth?: Date | null;
+  public gender_identity?: string | null;
+  public music_genres?: string[] | null;
+  public event_frequency?: string | null;
+
   public reset_hash?: string;
   public reset_hash_expires_at?: Date;
   public email_verified?: boolean;
@@ -96,6 +113,30 @@ AudienceUser.init(
       type: DataTypes.STRING(12),
       allowNull: true,
       unique: true,
+    },
+    city: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    country: {
+      type: DataTypes.STRING(2),
+      allowNull: true,
+    },
+    date_of_birth: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    gender_identity: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+    },
+    music_genres: {
+      type: DataTypes.ARRAY(DataTypes.STRING(50)),
+      allowNull: true,
+    },
+    event_frequency: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
     },
     reset_hash: {
       type: DataTypes.STRING(255),
