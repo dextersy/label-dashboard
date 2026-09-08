@@ -62,6 +62,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
   }
   isSubmitting = false;
   isEditing = false; // Track if we're editing an existing release
+  isLoading = false; // True while the release is being fetched (suppresses premature form flash)
   showReadOnlyView = false; // Track if we should show read-only view for non-draft releases
   activeReadOnlySection: 'details' | 'planning' = 'details';
 
@@ -187,6 +188,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
 
   private loadReleaseForEditing(releaseId: number): void {
     this.isEditing = true;
+    this.isLoading = true;
     this.releaseService.getRelease(releaseId).subscribe({
       next: (response) => {
         // Store the full release data for editing
@@ -219,6 +221,7 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
         if (response.release.status !== 'Draft' || this.artist?.locked || this.artist?.status === 'Inactive') {
           this.showReadOnlyView = true;
           this.releaseForView = response.release;
+          this.isLoading = false;
           return;
         }
         
@@ -235,9 +238,11 @@ export class ReleaseSubmissionComponent implements OnInit, OnDestroy, HasUnsaved
 
         // Perform initial validation with complete data from single API call
         this.performInitialValidation(response.release, response.release.songs || []);
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading release for editing:', error);
+        this.isLoading = false;
         this.notificationService.showError('Failed to load release for editing');
         this.router.navigate(['/music/releases']);
       }

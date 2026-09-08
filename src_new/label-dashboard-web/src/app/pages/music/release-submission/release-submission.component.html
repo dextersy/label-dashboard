@@ -1,8 +1,17 @@
 <div class="release-submission-page" [class.locked-overlay-host]="artist?.locked || artist?.status === 'Inactive'">
   <app-breadcrumb></app-breadcrumb>
 
+  <!-- Loading state while fetching release data -->
+  <div *ngIf="isLoading" class="tw-mt-3">
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad">
+      <div class="loading-dots tw-py-8 tw-flex tw-justify-center">
+        <div></div><div></div><div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Read-Only View for non-Draft releases -->
-  <ng-container *ngIf="showReadOnlyView && releaseForView">
+  <ng-container *ngIf="!isLoading && showReadOnlyView && releaseForView">
     <!-- With planning tab (Pending / Live releases) -->
     <ng-container *ngIf="showPlanningTab">
       <app-in-page-nav
@@ -43,7 +52,7 @@
   </ng-container>
 
   <!-- Edit Form for Draft releases or admin edit mode -->
-  <app-in-page-nav class="tw-mt-3" *ngIf="!showReadOnlyView" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
+  <app-in-page-nav class="tw-mt-3" *ngIf="!isLoading && !showReadOnlyView" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
 
     <div class="release-form-container">
       <!-- Release Info Section -->
