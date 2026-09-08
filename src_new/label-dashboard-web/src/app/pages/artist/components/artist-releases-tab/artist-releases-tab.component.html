@@ -87,7 +87,7 @@
                (click)="$event.stopPropagation()">
 
             <!-- Cover art — clickable -->
-            <div class="release-card__cover" (click)="canEditRelease(release) ? onEditRelease(release) : null">
+            <div class="release-card__cover" (click)="onEditRelease(release)">
               <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-card__img">
               <div class="release-card__overlay">
                 <span class="release-chip release-chip--alert release-chip--alert-error tw-ml-auto"
@@ -100,7 +100,7 @@
             </div>
 
             <!-- Card body -->
-            <div class="release-card__body">
+            <div class="release-card__body" (click)="onEditRelease(release)">
               <div class="release-card__title">{{ release.title }}</div>
               <div class="release-card__meta">
                 <span class="release-card__date">Released on {{ formatDate(release.release_date) }}</span>
@@ -172,14 +172,14 @@
           </thead>
           <tbody>
             <tr *ngFor="let release of filteredReleases"
-                class="release-list-table__row"
-                (click)="$event.stopPropagation()">
+                class="release-list-table__row tw-cursor-pointer"
+                (click)="onEditRelease(release)">
 
               <!-- Mobile: single compressed cell -->
               <td colspan="7" class="release-list-table__td release-list-table__td--mobile sm:tw-hidden">
                 <div class="release-list-mobile">
                   <div class="release-list-mobile__thumb"
-                       (click)="canEditRelease(release) ? onEditRelease(release) : null">
+                       (click)="$event.stopPropagation(); onEditRelease(release)">
                     <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-list-thumb__img">
                   </div>
                   <div class="release-list-mobile__body">
@@ -231,7 +231,7 @@
 
               <!-- Desktop cells (hidden on mobile) -->
               <td class="release-list-table__td release-list-table__td--cover tw-hidden sm:tw-table-cell">
-                <div class="release-list-thumb" (click)="canEditRelease(release) ? onEditRelease(release) : null">
+                <div class="release-list-thumb" (click)="$event.stopPropagation(); onEditRelease(release)">
                   <img [src]="getCoverArtUrl(release.cover_art)" [alt]="release.title" class="release-list-thumb__img">
                 </div>
               </td>
@@ -259,7 +259,8 @@
                 <app-icon *ngIf="release.exclude_from_epk" name="eye-off" class="tw-text-muted" title="Hidden from EPK" />
                 <app-icon *ngIf="!release.exclude_from_epk" name="globe" class="tw-text-success" title="Visible in EPK" />
               </td>
-              <td class="release-list-table__td release-list-table__td--actions tw-hidden sm:tw-table-cell">
+              <td class="release-list-table__td release-list-table__td--actions tw-hidden sm:tw-table-cell"
+                  (click)="$event.stopPropagation()">
                 <button *ngIf="getVisibleActions(release).length > 0"
                         class="kebab-btn release-list-table__kebab"
                         type="button"
