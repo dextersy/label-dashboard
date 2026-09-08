@@ -34,6 +34,12 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   editingSong: any = null;
   submittingSong = false;
 
+  // Add existing song picker state (admin only)
+  showExistingSongPicker = false;
+  existingSongSearchQuery = '';
+  existingSongSearchResults: any[] = [];
+  existingSongSearchLoading = false;
+
   // Audio player state (synced from service)
   playingSongId: number | null = null;
   loadingSongId: number | null = null;
@@ -438,33 +444,114 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
 
   copiedLink: string | null = null;
 
+  onAddTrack(): void {
+    this.editingSong = null;
+    this.showSongForm = true;
+  }
+
+  onAddExistingSong(): void {
+    this.showExistingSongPicker = true;
+    this.existingSongSearchResults = [];
+    this.existingSongSearchQuery = '';
+  }
+
+  onSearchExistingSongs(query: string): void {
+    this.existingSongSearchQuery = query;
+    if (!query.trim() || !this.release?.id) return;
+    this.existingSongSearchLoading = true;
+    this.songService.searchSongsInBrand(query, this.release.id).subscribe({
+      next: (response) => {
+        this.existingSongSearchResults = response.songs;
+        this.existingSongSearchLoading = false;
+      },
+      error: () => {
+        this.existingSongSearchLoading = false;
+      }
+    });
+  }
+
+  onSelectExistingSong(song: any): void {
+    if (!this.release?.id || !song.id) return;
+    this.songService.addExistingSongToRelease(this.release.id, song.id).subscribe({
+      next: () => {
+        this.closeExistingSongPicker();
+        this.alertMessage.emit({ type: 'success', message: `"${song.title}" added to release` });
+        this.releaseService.getRelease(this.release!.id).subscribe({
+          next: (response) => this.releaseUpdated.emit(response.release),
+          error: () => {}
+        });
+      },
+      error: (error) => {
+        this.alertMessage.emit({ type: 'error', message: error.error?.error || 'Failed to add song' });
+      }
+    });
+  }
+
+  closeExistingSongPicker(): void {
+    this.showExistingSongPicker = false;
+    this.existingSongSearchResults = [];
+    this.existingSongSearchQuery = '';
+  }
+
+  getExistingSongArtistNames(song: any): string {
+    if (!song.collaborators?.length) return '';
+    return song.collaborators.map((c: any) => c.artist?.name).filter(Boolean).join(', ');
+  }
+
+  getExistingSongReleaseNames(song: any): string {
+    if (!song.releases?.length) return '';
+    return song.releases.map((r: any) => r.title || r.catalog_no).filter(Boolean).join(', ');
+  }
+
   onEditSong(song: any): void {
     this.editingSong = song;
     this.showSongForm = true;
   }
 
   onSongFormSubmit(songData: any): void {
-    if (!this.editingSong?.id) return;
     this.submittingSong = true;
-    this.songService.updateSong(this.editingSong.id, songData).subscribe({
-      next: () => {
-        this.submittingSong = false;
-        this.showSongForm = false;
-        this.alertMessage.emit({ type: 'success', message: 'Song updated successfully' });
-        // Reload release to refresh track list
-        if (this.release?.id) {
-          this.releaseService.getRelease(this.release.id).subscribe({
-            next: (response) => this.releaseUpdated.emit(response.release),
-            error: () => {}
-          });
-        }
-      },
-      error: (error) => {
-        console.error('Error updating song:', error);
-        this.submittingSong = false;
-        this.alertMessage.emit({ type: 'error', message: error.error?.error || 'Failed to update song' });
+
+    const reloadRelease = () => {
+      if (this.release?.id) {
+        this.releaseService.getRelease(this.release.id).subscribe({
+          next: (response) => this.releaseUpdated.emit(response.release),
+          error: () => {}
+        });
       }
-    });
+    };
+
+    if (this.editingSong?.id) {
+      // Editing an existing song
+      this.songService.updateSong(this.editingSong.id, songData).subscribe({
+        next: () => {
+          this.submittingSong = false;
+          this.showSongForm = false;
+          this.alertMessage.emit({ type: 'success', message: 'Song updated successfully' });
+          reloadRelease();
+        },
+        error: (error) => {
+          console.error('Error updating song:', error);
+          this.submittingSong = false;
+          this.alertMessage.emit({ type: 'error', message: error.error?.error || 'Failed to update song' });
+        }
+      });
+    } else {
+      // Adding a new song
+      if (!this.release?.id) return;
+      this.songService.createSong(songData).subscribe({
+        next: () => {
+          this.submittingSong = false;
+          this.showSongForm = false;
+          this.alertMessage.emit({ type: 'success', message: 'Track added successfully' });
+          reloadRelease();
+        },
+        error: (error) => {
+          console.error('Error adding song:', error);
+          this.submittingSong = false;
+          this.alertMessage.emit({ type: 'error', message: error.error?.error || 'Failed to add track' });
+        }
+      });
+    }
   }
 
   copyLink(url: string, key: string): void {
