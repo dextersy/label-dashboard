@@ -47,7 +47,7 @@ Write only the description, no preamble or labels.`;
 
   const groq = new Groq({ apiKey });
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',
+    model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.5,
   });

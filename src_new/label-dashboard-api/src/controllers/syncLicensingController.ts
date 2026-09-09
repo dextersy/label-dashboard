@@ -1509,7 +1509,7 @@ Return ONLY valid JSON — no markdown fences, no preamble, no trailing text. Ex
 
     const groq = new Groq({ apiKey });
     const completion = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
     });
