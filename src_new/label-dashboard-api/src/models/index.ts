@@ -54,6 +54,9 @@ import AudienceFollow from './AudienceFollow';
 import Plan from './Plan';
 import BrandPlan from './BrandPlan';
 import ReleaseTask from './ReleaseTask';
+import ReleaseTaskTemplate from './ReleaseTaskTemplate';
+import ReleaseTaskTemplateItem from './ReleaseTaskTemplateItem';
+import BrandHiddenTemplate from './BrandHiddenTemplate';
 import AudiencePointTransaction from './AudiencePointTransaction';
 import AudienceEmailPreference from './AudienceEmailPreference';
 
@@ -112,6 +115,14 @@ Artist.belongsToMany(Release, {
   as: 'releases' 
 });
 Artist.belongsTo(ArtistImage, { foreignKey: 'profile_photo_id', as: 'profilePhotoImage' });
+
+// ReleaseTaskTemplate relationships
+ReleaseTaskTemplate.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+ReleaseTaskTemplate.belongsTo(User, { foreignKey: 'created_by_user_id', as: 'createdByUser' });
+ReleaseTaskTemplate.hasMany(ReleaseTaskTemplateItem, { foreignKey: 'template_id', as: 'items', onDelete: 'CASCADE' });
+ReleaseTaskTemplateItem.belongsTo(ReleaseTaskTemplate, { foreignKey: 'template_id', as: 'template' });
+BrandHiddenTemplate.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+BrandHiddenTemplate.belongsTo(ReleaseTaskTemplate, { foreignKey: 'template_id', as: 'template' });
 
 // ReleaseTask relationships
 Release.hasMany(ReleaseTask, { foreignKey: 'release_id', as: 'tasks' });
@@ -424,6 +435,9 @@ export {
   Plan,
   BrandPlan,
   ReleaseTask,
+  ReleaseTaskTemplate,
+  ReleaseTaskTemplateItem,
+  BrandHiddenTemplate,
   AudiencePointTransaction,
   AudienceEmailPreference,
 };

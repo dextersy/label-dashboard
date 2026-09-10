@@ -158,7 +158,8 @@ const startServer = async () => {
       { name: 'notifications', path: './routes/notifications' },
       { name: 'pressCampaign', path: './routes/pressCampaign' },
       { name: 'deliveryAddresses', path: './routes/deliveryAddresses' },
-      { name: 'subscription', path: './routes/subscription' }
+      { name: 'subscription', path: './routes/subscription' },
+      { name: 'releaseTaskTemplates', path: './routes/releaseTaskTemplates' },
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -216,6 +217,7 @@ const startServer = async () => {
     const pressCampaignRoutes = routes.pressCampaign;
     const deliveryAddressRoutes = routes.deliveryAddresses;
     const subscriptionRoutes = routes.subscription;
+    const releaseTaskTemplateRoutes = routes.releaseTaskTemplates;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -238,6 +240,7 @@ const startServer = async () => {
     app.use('/api/press-campaigns', pressCampaignRoutes);
     app.use('/api/delivery-addresses', deliveryAddressRoutes);
     app.use('/api/subscription', subscriptionRoutes);
+    app.use('/api/release-task-templates', releaseTaskTemplateRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);

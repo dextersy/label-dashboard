@@ -23,6 +23,7 @@ import {
   updateReleaseTask,
   deleteReleaseTask,
 } from '../controllers/releaseTaskController';
+import { applyTemplate } from '../controllers/releaseTaskTemplateController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 // Configure multer for file uploads
@@ -77,6 +78,7 @@ router.get('/:id/download-priority-pitch', requireAdmin, downloadPriorityPitch);
 
 // Release planning tasks (must come before generic /:id routes)
 router.get('/:id/tasks/assignable-users', getAssignableUsers);
+router.post('/:id/tasks/apply-template', applyTemplate);
 router.get('/:id/tasks', getReleaseTasks);
 router.post('/:id/tasks', createReleaseTask);
 router.put('/:id/tasks/:taskId', updateReleaseTask);
