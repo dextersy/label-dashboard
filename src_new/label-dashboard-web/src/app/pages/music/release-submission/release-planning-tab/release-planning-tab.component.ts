@@ -147,11 +147,24 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     }
 
     return [
-      { id: 'due-now', label: 'Due now', tasks: dueNow },
-      { id: 'due-this-week', label: 'Due this week', tasks: dueThisWeek },
-      { id: 'due-later', label: 'Due later', tasks: dueLater },
-      { id: 'no-date', label: 'No date', tasks: noDate },
+      { id: 'due-now', label: 'Due now', tasks: this.sortTasks(dueNow) },
+      { id: 'due-this-week', label: 'Due this week', tasks: this.sortTasks(dueThisWeek) },
+      { id: 'due-later', label: 'Due later', tasks: this.sortTasks(dueLater) },
+      { id: 'no-date', label: 'No date', tasks: this.sortTasks(noDate) },
     ];
+  }
+
+  private sortTasks(tasks: ReleaseTask[]): ReleaseTask[] {
+    const statusOrder: Record<ReleaseTaskStatus, number> = { in_progress: 0, not_started: 1, done: 2 };
+    return [...tasks].sort((a, b) => {
+      const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+      if (statusDiff !== 0) return statusDiff;
+      // Most immediate due date first (nulls last)
+      if (!a.due_date && !b.due_date) return 0;
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+    });
   }
 
   // --- Suggestions ---
