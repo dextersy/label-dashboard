@@ -9,6 +9,7 @@ import { ConfirmationService } from '../../../../services/confirmation.service';
 import { ReleaseTask, AssignableUser, ReleaseTaskStatus } from '../../../../models/release-task.model';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { ModalToBodyDirective } from '../../../../directives/modal-to-body.directive';
+import { TemplatePickerModalComponent } from './template-picker-modal/template-picker-modal.component';
 
 type FilterMode = 'all' | 'mine' | 'unassigned';
 
@@ -34,7 +35,7 @@ const TASK_SUGGESTIONS = [
 @Component({
   selector: 'app-release-planning-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, ModalToBodyDirective],
+  imports: [CommonModule, FormsModule, IconComponent, ModalToBodyDirective, TemplatePickerModalComponent],
   templateUrl: './release-planning-tab.component.html',
   styleUrl: './release-planning-tab.component.scss',
 })
@@ -66,6 +67,8 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
   savingEdit = false;
 
   currentUserId: number | null = null;
+
+  showTemplatePicker = false;
 
   constructor(
     private taskService: ReleaseTaskService,
@@ -400,5 +403,19 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
 
   get todayStr(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  // Template modal handlers
+  openTemplatePicker(): void {
+    this.showTemplatePicker = true;
+  }
+
+  closeTemplatePicker(): void {
+    this.showTemplatePicker = false;
+  }
+
+  onTemplateApplied(newTasks: ReleaseTask[]): void {
+    this.tasks = [...this.tasks, ...newTasks];
+    this.showTemplatePicker = false;
   }
 }

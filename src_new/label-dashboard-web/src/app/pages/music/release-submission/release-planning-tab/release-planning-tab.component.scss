@@ -702,3 +702,105 @@
     }
   }
 }
+
+// --- Modal wide variant ---
+
+.planning-modal--wide {
+  max-width: 620px;
+}
+
+// --- Template picker / manager ---
+
+.tpl-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.tpl-picker-row {
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  overflow: hidden;
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      background: var(--light-bg, #f8f9fa);
+    }
+  }
+}
+
+.tpl-picker-preview {
+  padding: 10px 14px;
+  background: var(--light-bg, #f8f9fa);
+  border-top: 1px solid var(--border-color, #dee2e6);
+}
+
+.tpl-preview-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+
+  &:last-child { border-bottom: none; }
+}
+
+.tpl-manager-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+// --- Template editor items ---
+
+.tpl-item {
+  background: var(--light-bg, #f8f9fa);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 6px;
+  padding: 10px;
+
+  &__reorder {
+    background: none;
+    border: none;
+    padding: 1px 2px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 3px;
+    line-height: 1;
+
+    &:disabled { opacity: 0.3; cursor: default; }
+    &:not(:disabled):hover { color: var(--text-primary, #111); }
+  }
+
+  &__remove {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 4px;
+    line-height: 1;
+    align-self: center;
+
+    &:hover { color: var(--danger, #dc3545); }
+  }
+
+  &__days {
+    width: 80px;
+  }
+}

@@ -61,6 +61,11 @@
         </button>
       </div>
 
+      <button class="btn-secondary btn-sm" (click)="openTemplatePicker()" title="Apply a task template">
+        <app-icon name="grid" class="tw-mr-1" />
+        Templates
+      </button>
+
       <button class="btn-primary btn-sm" (click)="openNewTaskForm()">
         <app-icon name="plus" class="tw-mr-1" iconOnly />
         Add task
@@ -361,6 +366,15 @@
     </div>
   </div>
 </div>
+
+<!-- Templates Modal -->
+<app-template-picker-modal
+  *ngIf="showTemplatePicker"
+  [releaseId]="release!.id"
+  [isAdmin]="isAdmin"
+  (applied)="onTemplateApplied($event)"
+  (closed)="closeTemplatePicker()">
+</app-template-picker-modal>
 
 <!-- Edit Task Modal -->
 <div *ngIf="editingTask" appModalToBody class="planning-modal-overlay" (click)="closeEdit()">

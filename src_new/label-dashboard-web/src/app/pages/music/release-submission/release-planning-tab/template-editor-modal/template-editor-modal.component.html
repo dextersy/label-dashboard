@@ -1,0 +1,101 @@
+<div appModalToBody class="planning-modal-overlay" (click)="cancel()">
+  <div class="planning-modal planning-modal--wide" (click)="$event.stopPropagation()">
+    <div class="planning-modal__header">
+      <h4 class="tw-mb-0">{{ template ? 'Edit template' : 'New template' }}</h4>
+      <button class="planning-modal__close" (click)="cancel()">
+        <app-icon name="x" iconOnly />
+      </button>
+    </div>
+
+    <div class="planning-modal__body">
+      <!-- Name -->
+      <div class="tw-mb-3">
+        <label class="form-label">Name <span class="tw-text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="name" placeholder="e.g. Standard release checklist" />
+      </div>
+
+      <!-- Description -->
+      <div class="tw-mb-3">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-control" [(ngModel)]="description" placeholder="Optional description" />
+      </div>
+
+      <!-- Public toggle -->
+      <div class="tw-mb-4">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="tplPublic" [(ngModel)]="isPublic" />
+          <label class="form-check-label" for="tplPublic">
+            Make public
+            <span class="tw-text-muted tw-text-xs tw-ml-1">(visible to all brands)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Task items -->
+      <div class="tw-mb-2 tw-flex tw-items-center tw-justify-between">
+        <label class="form-label tw-mb-0">Tasks</label>
+        <button class="btn-secondary btn-sm" type="button" (click)="addItem()">
+          <app-icon name="plus" class="tw-mr-1" iconOnly />
+          Add task
+        </button>
+      </div>
+
+      <div *ngFor="let item of items; let i = index" class="tpl-item tw-mb-2">
+        <div class="tw-flex tw-gap-2 tw-items-start">
+          <!-- Reorder buttons -->
+          <div class="tw-flex tw-flex-col tw-gap-0.5 tw-pt-1">
+            <button class="tpl-item__reorder" type="button" [disabled]="i === 0" (click)="moveUp(i)" title="Move up">
+              <app-icon name="chevron-up" iconOnly />
+            </button>
+            <button class="tpl-item__reorder" type="button" [disabled]="i === items.length - 1" (click)="moveDown(i)" title="Move down">
+              <app-icon name="chevron-down" iconOnly />
+            </button>
+          </div>
+
+          <div class="tw-flex-1 tw-min-w-0">
+            <input
+              type="text"
+              class="form-control tw-mb-1"
+              [(ngModel)]="item.title"
+              placeholder="Task title *" />
+            <div class="tw-flex tw-gap-2">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [(ngModel)]="item.notes"
+                placeholder="Notes (optional)" />
+              <div class="tw-flex tw-items-center tw-gap-1 tw-flex-shrink-0">
+                <input
+                  type="number"
+                  class="form-control form-control-sm tpl-item__days"
+                  [(ngModel)]="item.days_before_release"
+                  placeholder="Days"
+                  min="0" />
+                <span class="tw-text-xs tw-text-muted tw-whitespace-nowrap">days before</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="tpl-item__remove" type="button" (click)="removeItem(i)" title="Remove">
+            <app-icon name="x" iconOnly />
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="items.length === 0" class="tw-text-muted tw-text-sm tw-py-2">
+        No tasks yet. Click "Add task" to add one.
+      </div>
+    </div>
+
+    <div class="planning-modal__footer">
+      <button class="btn-secondary btn-sm" (click)="cancel()">Cancel</button>
+      <button
+        class="btn-primary btn-sm"
+        [disabled]="!isValid || saving"
+        (click)="save()">
+        <app-icon *ngIf="saving" name="spinner" class="tw-animate-spin tw-mr-1" iconOnly />
+        {{ saving ? 'Saving...' : 'Save template' }}
+      </button>
+    </div>
+  </div>
+</div>

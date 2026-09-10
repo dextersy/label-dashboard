@@ -1,0 +1,145 @@
+<!-- Editor stacked on top -->
+<app-template-editor-modal
+  *ngIf="editingTemplate !== undefined"
+  [template]="editingTemplate"
+  (saved)="onEditorSaved($event)"
+  (cancelled)="onEditorCancelled()">
+</app-template-editor-modal>
+
+<div appModalToBody class="planning-modal-overlay" (click)="close()">
+  <div class="planning-modal planning-modal--wide" (click)="$event.stopPropagation()">
+    <div class="planning-modal__header">
+      <h4 class="tw-mb-0">Templates</h4>
+      <div class="tw-flex tw-items-center tw-gap-2">
+        <button class="btn-primary btn-sm" (click)="openEditor()">
+          <app-icon name="plus" class="tw-mr-1" iconOnly />
+          New template
+        </button>
+        <button class="planning-modal__close" (click)="close()">
+          <app-icon name="x" iconOnly />
+        </button>
+      </div>
+    </div>
+
+    <div class="planning-modal__body">
+      <!-- Loading -->
+      <div *ngIf="loading" class="tw-flex tw-justify-center tw-py-8">
+        <app-icon name="spinner" class="tw-animate-spin tw-text-muted" />
+      </div>
+
+      <ng-container *ngIf="!loading">
+        <!-- Empty state -->
+        <div *ngIf="templates.length === 0" class="tw-text-center tw-py-8 tw-text-muted">
+          <p>No templates yet. Create one to get started.</p>
+        </div>
+
+        <!-- Own brand templates -->
+        <div *ngIf="ownTemplates.length > 0">
+          <p class="tpl-group-label">My brand's templates</p>
+          <div *ngFor="let tpl of ownTemplates" class="tpl-picker-row">
+            <div class="tpl-picker-row__main" (click)="toggleExpand(tpl.id)">
+              <div class="tw-flex-1 tw-min-w-0">
+                <div class="tw-flex tw-items-center tw-gap-2">
+                  <span class="tw-font-medium tw-text-sm">{{ tpl.name }}</span>
+                  <span *ngIf="tpl.is_public" class="badge badge-info tw-text-xs">Public</span>
+                </div>
+                <div class="tw-text-xs tw-text-muted tw-mt-0.5">
+                  {{ itemCountLabel(tpl) }}
+                  <span *ngIf="tpl.description"> · {{ tpl.description }}</span>
+                </div>
+              </div>
+              <div class="tw-flex tw-items-center tw-gap-2 tw-flex-shrink-0">
+                <app-icon [name]="expandedId === tpl.id ? 'chevron-up' : 'chevron-down'" iconOnly class="tw-text-muted" />
+                <button
+                  *ngIf="tpl.created_by_user_id === currentUserId"
+                  class="btn-secondary btn-sm"
+                  title="Edit template"
+                  (click)="openEditTemplate(tpl, $event)">
+                  <app-icon name="edit" iconOnly />
+                </button>
+                <button
+                  *ngIf="isAdmin"
+                  class="btn-secondary btn-sm"
+                  title="Hide from your brand"
+                  [disabled]="hidingId === tpl.id"
+                  (click)="hide(tpl, $event)">
+                  <app-icon *ngIf="hidingId === tpl.id" name="spinner" class="tw-animate-spin" iconOnly />
+                  <app-icon *ngIf="hidingId !== tpl.id" name="eye-off" iconOnly />
+                </button>
+                <button
+                  class="btn-primary btn-sm"
+                  [disabled]="applyingId === tpl.id"
+                  (click)="apply(tpl); $event.stopPropagation()">
+                  <app-icon *ngIf="applyingId === tpl.id" name="spinner" class="tw-animate-spin tw-mr-1" iconOnly />
+                  Apply
+                </button>
+              </div>
+            </div>
+            <!-- Expanded preview -->
+            <div *ngIf="expandedId === tpl.id" class="tpl-picker-preview">
+              <div *ngIf="!tpl.items || tpl.items.length === 0" class="tw-text-muted tw-text-xs tw-py-2">
+                No tasks in this template.
+              </div>
+              <div *ngFor="let item of tpl.items" class="tpl-preview-item">
+                <span class="tw-text-sm">{{ item.title }}</span>
+                <span class="tw-text-xs tw-text-muted tw-ml-2">{{ formatDaysLabel(item.days_before_release) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Public templates from other brands -->
+        <div *ngIf="publicTemplates.length > 0" [class.tw-mt-4]="ownTemplates.length > 0">
+          <p class="tpl-group-label">Public templates</p>
+          <div *ngFor="let tpl of publicTemplates" class="tpl-picker-row">
+            <div class="tpl-picker-row__main" (click)="toggleExpand(tpl.id)">
+              <div class="tw-flex-1 tw-min-w-0">
+                <div class="tw-flex tw-items-center tw-gap-2">
+                  <span class="tw-font-medium tw-text-sm">{{ tpl.name }}</span>
+                  <span class="badge badge-secondary tw-text-xs">{{ tpl.brand?.brand_name }}</span>
+                </div>
+                <div class="tw-text-xs tw-text-muted tw-mt-0.5">
+                  {{ itemCountLabel(tpl) }}
+                  <span *ngIf="tpl.description"> · {{ tpl.description }}</span>
+                </div>
+              </div>
+              <div class="tw-flex tw-items-center tw-gap-2 tw-flex-shrink-0">
+                <button
+                  *ngIf="isAdmin"
+                  class="btn-secondary btn-sm"
+                  title="Hide from your brand"
+                  [disabled]="hidingId === tpl.id"
+                  (click)="hide(tpl, $event)">
+                  <app-icon *ngIf="hidingId === tpl.id" name="spinner" class="tw-animate-spin" iconOnly />
+                  <app-icon *ngIf="hidingId !== tpl.id" name="eye-off" iconOnly />
+                </button>
+                <app-icon [name]="expandedId === tpl.id ? 'chevron-up' : 'chevron-down'" iconOnly class="tw-text-muted" />
+                <button
+                  class="btn-primary btn-sm"
+                  [disabled]="applyingId === tpl.id"
+                  (click)="apply(tpl); $event.stopPropagation()">
+                  <app-icon *ngIf="applyingId === tpl.id" name="spinner" class="tw-animate-spin tw-mr-1" iconOnly />
+                  Apply
+                </button>
+              </div>
+            </div>
+            <!-- Expanded preview -->
+            <div *ngIf="expandedId === tpl.id" class="tpl-picker-preview">
+              <div *ngIf="!tpl.items || tpl.items.length === 0" class="tw-text-muted tw-text-xs tw-py-2">
+                No tasks in this template.
+              </div>
+              <div *ngFor="let item of tpl.items" class="tpl-preview-item">
+                <span class="tw-text-sm">{{ item.title }}</span>
+                <span class="tw-text-xs tw-text-muted tw-ml-2">{{ formatDaysLabel(item.days_before_release) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="planning-modal__footer">
+      <button class="btn-secondary btn-sm" (click)="close()">Close</button>
+    </div>
+  </div>
+</div>
