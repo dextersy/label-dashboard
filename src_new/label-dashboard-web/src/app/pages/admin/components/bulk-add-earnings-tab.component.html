@@ -154,7 +154,8 @@
           </td>
           <td>
             <input type="text" class="tw-input" [(ngModel)]="earning.description"
-                   placeholder="Description">
+                   placeholder="Description" maxlength="45">
+            <div class="tw-text-xs tw-text-right tw-mt-1" [class.tw-text-muted]="(earning.description?.length || 0) < 45" [class.tw-text-red-500]="(earning.description?.length || 0) >= 45">{{ earning.description?.length || 0 }}/45</div>
           </td>
           <td>
             <div class="amount-input-container">
@@ -308,7 +309,8 @@
         <div class="tw-col-span-2">
           <label class="tw-label tw-text-xs">Description</label>
           <input type="text" class="tw-input" [(ngModel)]="earning.description"
-                 placeholder="Description">
+                 placeholder="Description" maxlength="45">
+          <div class="tw-text-xs tw-text-muted tw-text-right tw-mt-1">{{ earning.description?.length || 0 }}/45</div>
         </div>
 
         <!-- Amount -->

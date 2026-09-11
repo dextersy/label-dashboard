@@ -55,7 +55,8 @@
 
             <div>
               <label class="tw-label">Description</label>
-              <textarea class="tw-input" [(ngModel)]="form.description" name="description" rows="2" placeholder="Enter earning description"></textarea>
+              <textarea class="tw-input" [(ngModel)]="form.description" name="description" rows="2" placeholder="Enter earning description" maxlength="45"></textarea>
+              <div class="tw-text-xs tw-text-right tw-mt-1" [class.tw-text-muted]="(form.description?.length || 0) < 45" [class.tw-text-red-500]="(form.description?.length || 0) >= 45">{{ form.description?.length || 0 }}/45</div>
             </div>
 
             <div class="form-check form-switch">

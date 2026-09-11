@@ -29,7 +29,8 @@
 
           <div>
             <label class="tw-label">Description</label>
-            <input type="text" class="tw-input" [(ngModel)]="newPaymentForm.description" name="description" placeholder="Enter payment description" required>
+            <input type="text" class="tw-input" [(ngModel)]="newPaymentForm.description" name="description" placeholder="Enter payment description" maxlength="45" required>
+            <div class="tw-text-xs tw-text-right tw-mt-1" [class.tw-text-muted]="(newPaymentForm.description?.length || 0) < 45" [class.tw-text-red-500]="(newPaymentForm.description?.length || 0) >= 45">{{ newPaymentForm.description?.length || 0 }}/45</div>
           </div>
 
           <div>
