@@ -160,6 +160,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   // UI state
   isMaxTicketsUnlimited = true;
   closeAtEventStart = true;
+  showExternalTicketLink = false;
   
   // Expose Math for template
   Math = Math;
@@ -725,6 +726,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     }
   }
 
+  onShowExternalTicketLinkChange(enabled: boolean): void {
+    if (!enabled) {
+      this.eventData.external_ticket_link = null;
+    }
+  }
+
   addTicketType(): void {
     this.ticketTypes.push(createDefaultTicketType());
   }
@@ -1212,6 +1219,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       ticket_naming: this.eventData.ticket_naming || 'ticket',
       ticketTypes: ticketTypesForApi,
       ticketing_enabled: this.eventData.ticketing_enabled !== undefined ? this.eventData.ticketing_enabled : true,
+      external_ticket_link: this.eventData.external_ticket_link || null,
       // Walk-in settings
       walk_in_enabled: this.eventData.walk_in_enabled,
       walk_in_supports_cash: this.eventData.walk_in_supports_cash,
@@ -1295,6 +1303,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       ticket_naming: this.eventData.ticket_naming || 'ticket',
       ticketTypes: ticketTypesForApi,
       ticketing_enabled: this.eventData.ticketing_enabled !== undefined ? this.eventData.ticketing_enabled : true,
+      external_ticket_link: this.eventData.external_ticket_link || null,
       // Walk-in settings
       walk_in_enabled: this.eventData.walk_in_enabled,
       walk_in_supports_cash: this.eventData.walk_in_supports_cash,
@@ -1353,6 +1362,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       status: (event as any).status || 'draft',
       // Ticketing
       ticketing_enabled: event.ticketing_enabled !== undefined ? event.ticketing_enabled : true,
+      external_ticket_link: event.external_ticket_link || null,
       // Walk-in settings
       walk_in_enabled: !!event.walk_in_enabled,
       walk_in_supports_cash: !!event.walk_in_supports_cash,
@@ -1360,6 +1370,9 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       walk_in_supports_card: !!event.walk_in_supports_card,
       walk_in_max_count: event.walk_in_max_count || 0
     };
+
+    // Initialize external ticket link toggle state
+    this.showExternalTicketLink = !!event.external_ticket_link;
 
     // Initialize description character count from loaded content
     this.descriptionCharCount = this.getPlainTextLength(event.description || '');
