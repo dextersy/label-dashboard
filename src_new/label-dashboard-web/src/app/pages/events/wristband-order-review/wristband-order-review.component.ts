@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
@@ -9,7 +10,7 @@ import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-wristband-order-review',
-  imports: [CommonModule, BreadcrumbComponent, IconComponent],
+  imports: [CommonModule, FormsModule, BreadcrumbComponent, IconComponent],
   templateUrl: './wristband-order-review.component.html',
   styleUrl: './wristband-order-review.component.scss',
 })
@@ -22,6 +23,11 @@ export class WristbandOrderReviewComponent implements OnInit {
   actionResult: 'confirmed' | 'rejected' | null = null;
   actionError: string | null = null;
   actioning = false;
+
+  showShippingFeeForm = false;
+  shippingFeeInput: number | null = null;
+  settingShippingFee = false;
+  shippingFeeError: string | null = null;
 
   wristbandColors: WristbandColor[] = [];
   previewColorSlug = '';
@@ -165,6 +171,72 @@ export class WristbandOrderReviewComponent implements OnInit {
 
   get totalPrice(): number {
     return (this.totalQty / 10) * this.PRICE_PER_10;
+  }
+
+  get grandTotal(): number {
+    return this.totalPrice + parseFloat(String(this.order?.shipping_fee ?? 0));
+  }
+
+  get deliveryAddress(): string | null {
+    const s = (this.order as any)?.event?.wristbandSettings;
+    if (!s) return null;
+    const parts: string[] = [
+      s.delivery_name,
+      s.delivery_street,
+      [s.delivery_city, s.delivery_country, s.delivery_zip].filter(Boolean).join(', '),
+      s.delivery_phone,
+    ].filter(Boolean);
+    return parts.length ? parts.join('\n') : null;
+  }
+
+  openShippingFeeForm(): void {
+    this.shippingFeeInput = this.order?.shipping_fee ?? null;
+    this.shippingFeeError = null;
+    this.showShippingFeeForm = true;
+  }
+
+  cancelShippingFeeForm(): void {
+    this.showShippingFeeForm = false;
+    this.shippingFeeError = null;
+  }
+
+  saveShippingFee(): void {
+    if (!this.order || this.settingShippingFee) return;
+    const fee = this.shippingFeeInput;
+    if (fee !== null && (isNaN(fee) || fee < 0)) {
+      this.shippingFeeError = 'Enter a valid non-negative amount.';
+      return;
+    }
+    this.settingShippingFee = true;
+    this.shippingFeeError = null;
+    this.eventService.setWristbandShippingFee(this.order.id, fee).subscribe({
+      next: (updated) => {
+        this.order = updated;
+        this.settingShippingFee = false;
+        this.showShippingFeeForm = false;
+      },
+      error: (err: any) => {
+        this.settingShippingFee = false;
+        this.shippingFeeError = err?.error?.error ?? 'Failed to save shipping fee.';
+      },
+    });
+  }
+
+  removeShippingFee(): void {
+    if (!this.order || this.settingShippingFee) return;
+    this.settingShippingFee = true;
+    this.shippingFeeError = null;
+    this.eventService.setWristbandShippingFee(this.order.id, null).subscribe({
+      next: (updated) => {
+        this.order = updated;
+        this.settingShippingFee = false;
+        this.showShippingFeeForm = false;
+      },
+      error: (err: any) => {
+        this.settingShippingFee = false;
+        this.shippingFeeError = err?.error?.error ?? 'Failed to remove shipping fee.';
+      },
+    });
   }
 
   statusBadgeClass(status: string): string {

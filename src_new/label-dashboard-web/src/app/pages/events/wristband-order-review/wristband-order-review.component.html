@@ -111,6 +111,14 @@
 
     <div class="tw-max-w-2xl">
 
+      <!-- Delivery address card -->
+      <div *ngIf="deliveryAddress" class="card mb-4">
+        <div class="card-body">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Shipping Address</h3>
+          <p class="tw-text-sm tw-text-gray-700 tw-whitespace-pre-line tw-mb-0">{{ deliveryAddress }}</p>
+        </div>
+      </div>
+
       <!-- Order details card -->
       <div class="card mb-4">
         <div class="card-body">
@@ -130,15 +138,62 @@
                 <td class="text-end">{{ item.quantity }}</td>
                 <td class="text-end">₱{{ ((item.quantity / 10) * PRICE_PER_10) | number:'1.2-2' }}</td>
               </tr>
+              <tr *ngIf="order.shipping_fee != null">
+                <td class="tw-text-gray-500">Shipping fee</td>
+                <td class="text-end tw-text-gray-500">—</td>
+                <td class="text-end tw-text-gray-500">₱{{ order.shipping_fee | number:'1.2-2' }}</td>
+              </tr>
             </tbody>
             <tfoot>
               <tr class="fw-semibold">
                 <td>Total</td>
                 <td class="text-end">{{ totalQty }}</td>
-                <td class="text-end">₱{{ totalPrice | number:'1.2-2' }}</td>
+                <td class="text-end">₱{{ grandTotal | number:'1.2-2' }}</td>
               </tr>
             </tfoot>
           </table>
+
+          <!-- Shipping fee controls -->
+          <div class="tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-100">
+            <ng-container *ngIf="!showShippingFeeForm">
+              <button type="button" class="btn-secondary btn-sm" (click)="openShippingFeeForm()">
+                <app-icon name="truck" />
+                {{ order.shipping_fee != null ? 'Edit shipping fee' : 'Add shipping fee' }}
+              </button>
+              <button
+                *ngIf="order.shipping_fee != null"
+                type="button"
+                class="btn-secondary btn-sm text-danger tw-ml-2"
+                (click)="removeShippingFee()"
+                [disabled]="settingShippingFee"
+              >
+                <app-icon name="x" />
+                Remove
+              </button>
+            </ng-container>
+
+            <ng-container *ngIf="showShippingFeeForm">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
+                <span class="tw-text-sm tw-text-gray-600">₱</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-sm tw-w-36"
+                  placeholder="0.00"
+                  [(ngModel)]="shippingFeeInput"
+                />
+                <button type="button" class="btn-primary btn-sm" (click)="saveShippingFee()" [disabled]="settingShippingFee">
+                  {{ settingShippingFee ? 'Saving…' : 'Save' }}
+                </button>
+                <button type="button" class="btn-secondary btn-sm" (click)="cancelShippingFeeForm()" [disabled]="settingShippingFee">
+                  Cancel
+                </button>
+              </div>
+              <div *ngIf="shippingFeeError" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ shippingFeeError }}</div>
+            </ng-container>
+          </div>
+
         </div>
       </div>
 

@@ -52,6 +52,7 @@ export interface WristbandOrder {
   canvas_width: number | null;
   disclaimer_acknowledged: boolean;
   notes: string | null;
+  shipping_fee: number | null;
   created_by: number;
   createdAt: string;
   updatedAt: string;
@@ -1144,6 +1145,14 @@ export class EventService {
       {},
       { headers: this.getAuthHeaders() }
     ).pipe(catchError(this.handleError));
+  }
+
+  setWristbandShippingFee(orderId: number, shippingFee: number | null): Observable<WristbandOrder> {
+    return this.http.patch<{ order: WristbandOrder }>(
+      `${environment.apiUrl}/events/wristband-orders/${orderId}/shipping-fee`,
+      { shipping_fee: shippingFee },
+      { headers: this.getAuthHeaders() }
+    ).pipe(map(r => r.order), catchError(this.handleError));
   }
 
   // ─── Saved Delivery Addresses ────────────────────────────────────────────
