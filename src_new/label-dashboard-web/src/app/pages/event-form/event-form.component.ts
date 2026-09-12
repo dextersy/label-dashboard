@@ -108,6 +108,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     venue_maps_url: '',
     // Ticketing
     ticketing_enabled: true,
+    external_ticket_link: null as string | null,
     // Ticket purchase settings
     max_tickets: 0,
     close_time: '',
