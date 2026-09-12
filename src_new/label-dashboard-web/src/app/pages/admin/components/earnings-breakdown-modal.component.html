@@ -112,7 +112,13 @@
               <tr>
                 <td class="tw-text-muted">• Less: Platform Fees:</td>
                 <td class="tw-text-right mobile-number">
-                  <span class="tw-text-danger">-₱{{ (childBrand.event_sales - childBrand.event_earnings).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                  <span class="tw-text-danger">-₱{{ childBrand.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="(childBrand.add_on_payments || 0) > 0">
+                <td class="tw-text-muted">• Less: Add-on Payments (e.g. wristbands):</td>
+                <td class="tw-text-right mobile-number">
+                  <span class="tw-text-danger">-₱{{ (childBrand.add_on_payments || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
                 </td>
               </tr>
             </tbody>
@@ -141,7 +147,7 @@
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
             <small>
               <app-icon name="info" class="tw-mr-1" />
-              Net Event Earnings represents the total ticket sales minus platform fees. Processing fees are additional charges applied during ticket purchases. Estimated tax is calculated as 0.5% of gross sales less processing fees.
+              Net Event Earnings = Gross Sales − Platform Fees − Add-on Payments. Processing fees and estimated tax are informational.
             </small>
           </div>
         </div>
@@ -278,6 +284,12 @@
                   <span class="tw-text-danger">-₱{{ aggregatedTotals.event_platform_fees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
                 </td>
               </tr>
+              <tr *ngIf="(aggregatedTotals.add_on_payments || 0) > 0">
+                <td class="tw-text-muted">• Less: Add-on Payments (e.g. wristbands):</td>
+                <td class="tw-text-right mobile-number">
+                  <span class="tw-text-danger">-₱{{ (aggregatedTotals.add_on_payments || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -304,7 +316,7 @@
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-blue-200 tw-bg-blue-50 tw-text-blue-800">
             <small>
               <app-icon name="info" class="tw-mr-1" />
-              This breakdown shows the aggregated totals across all sublabels. Total Event Earnings = Total Gross Event Sales - Platform Fees. Processing fees and estimated tax are informational and represent additional charges during ticket purchases.
+              This breakdown shows the aggregated totals across all sublabels. Net Event Earnings = Gross Sales − Platform Fees − Add-on Payments. Processing fees and estimated tax are informational.
             </small>
           </div>
         </div>

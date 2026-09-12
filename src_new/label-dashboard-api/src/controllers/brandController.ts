@@ -1384,9 +1384,14 @@ export const getChildBrands = async (req: Request, res: Response) => {
     if (allEventIds.length > 0) {
       const addOnRows = await EventAddOnPayment.findAll({
         attributes: ['event_id', [fn('SUM', col('amount')), 'total']],
-        where: { event_id: { [Op.in]: allEventIds }, method: 'balance', status: 'succeeded' },
+        where: {
+          event_id: { [Op.in]: allEventIds },
+          method: 'balance',
+          status: 'succeeded',
+          ...(paidDateCond ? { createdAt: paidDateCond } : {}),
+        },
         group: ['event_id'],
-        raw: true
+        raw: true,
       }) as any[];
       for (const row of addOnRows) {
         const bId = eventIdToBrandId.get(row.event_id);
@@ -1423,7 +1428,8 @@ export const getChildBrands = async (req: Request, res: Response) => {
       const eventSales = eventSalesByBrand.get(bId) || 0;
       const eventPlatformFees = eventPlatformFeesByBrand.get(bId) || 0;
       const eventProcessingFees = eventProcessingFeesByBrand.get(bId) || 0;
-      const eventEarnings = eventSales - eventPlatformFees;
+      const addOnPayments = addOnPaymentsByBrand.get(bId) || 0;
+      const eventEarnings = eventSales - eventPlatformFees - addOnPayments;
       const eventEstimatedTax = (eventSales - eventProcessingFees) * 0.005;
 
       const fundraiserGrossEarnings = fundraiserGrossByBrand.get(bId) || 0;
@@ -1433,11 +1439,10 @@ export const getChildBrands = async (req: Request, res: Response) => {
 
       const payments = paymentsByBrand.get(bId) || 0;
       const artistPayments = artistPaymentsByBrand.get(bId) || 0;
-      const addOnPayments = addOnPaymentsByBrand.get(bId) || 0;
 
       // Payable balance: only parent-recorded music earnings create an obligation;
       // direct (sublabel self-entered) earnings are excluded.
-      const balance = payableMusicEarnings + eventEarnings + fundraiserEarnings - payments - addOnPayments;
+      const balance = payableMusicEarnings + eventEarnings + fundraiserEarnings - payments;
 
       const domainData = domainsByBrand.get(bId) || [];
 
@@ -1459,6 +1464,7 @@ export const getChildBrands = async (req: Request, res: Response) => {
         total_royalties: totalRoyalties,
         artist_payments: artistPayments,
         payments: payments,
+        add_on_payments: addOnPayments,
         platform_fees: musicPlatformFees + eventPlatformFees + fundraiserPlatformFees,
         music_platform_fees: musicPlatformFees,
         event_platform_fees: eventPlatformFees,

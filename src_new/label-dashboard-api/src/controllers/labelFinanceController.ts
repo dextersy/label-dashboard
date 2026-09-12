@@ -245,17 +245,22 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
             event_id: { [Op.in]: brandEventIdList },
             method: 'balance',
             status: 'succeeded',
+            ...(startDateFilter && endDateFilter ? {
+              createdAt: { [Op.between]: [startDateFilter, endDateFilter] }
+            } : {}),
           },
         }) || 0
       : 0;
 
+    const netEventEarnings = eventEarnings - totalAddOnBalancePayments;
+
     // Calculate receivable balance — only parent-recorded music earnings create a payment obligation.
     // Direct (sublabel self-entered) earnings are excluded from what the parent owes.
-    const receivableBalance = payableMusicEarnings + eventEarnings + fundraiserEarnings - totalPayments - totalAddOnBalancePayments;
+    const receivableBalance = payableMusicEarnings + netEventEarnings + fundraiserEarnings - totalPayments;
 
     res.json({
       net_music_earnings: musicEarnings,
-      net_event_earnings: eventEarnings,
+      net_event_earnings: netEventEarnings,
       net_fundraiser_earnings: fundraiserEarnings,
       total_payments: totalPayments,
       total_addon_balance_payments: totalAddOnBalancePayments,
@@ -271,7 +276,8 @@ export const getLabelFinanceDashboard = async (req: AuthRequest, res: Response) 
           sales: eventSales,
           platform_fees: eventPlatformFees,
           processing_fees: eventProcessingFees,
-          net_earnings: eventEarnings
+          addon_payments: totalAddOnBalancePayments,
+          net_earnings: netEventEarnings
         },
         fundraiser: {
           gross_earnings: fundraiserGrossEarnings,

@@ -9,6 +9,7 @@ export interface AggregatedTotals {
   event_processing_fees: number;
   event_estimated_tax: number;
   event_earnings: number;
+  add_on_payments?: number;
   music_platform_fees?: number;
   aggregated_event_platform_fees?: number;
   total_platform_fees?: number;

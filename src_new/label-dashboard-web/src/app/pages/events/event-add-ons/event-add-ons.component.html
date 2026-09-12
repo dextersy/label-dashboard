@@ -144,7 +144,10 @@
                         {{ order.status | titlecase }}
                       </span>
                     </td>
-                    <td class="text-end small">₱{{ orderPrice(order) | number:'1.2-2' }}</td>
+                    <td class="text-end small">
+                      <div>₱{{ orderPrice(order) | number:'1.2-2' }}</div>
+                      <div *ngIf="orderShippingFee(order) > 0" class="tw-text-gray-400 tw-text-xs tw-mt-0.5">+ ₱{{ orderShippingFee(order) | number:'1.2-2' }} shipping</div>
+                    </td>
                     <td class="text-end">
                       <div class="d-flex justify-content-end gap-1">
                         <ng-container *ngIf="canEdit(order)">
@@ -246,7 +249,10 @@
                 <!-- Footer -->
                 <div class="mc-footer">
                   <span class="mc-footer-count">{{ totalOrderQty(order) }} wristbands</span>
-                  <span class="mc-footer-price">₱{{ orderPrice(order) | number:'1.2-2' }}</span>
+                  <span class="mc-footer-price">
+                    ₱{{ orderPrice(order) | number:'1.2-2' }}
+                    <span *ngIf="orderShippingFee(order) > 0" class="tw-text-gray-400 tw-text-xs tw-font-normal tw-block">+ ₱{{ orderShippingFee(order) | number:'1.2-2' }} shipping</span>
+                  </span>
                 </div>
 
                 <!-- Locked note for non-editable placed orders -->

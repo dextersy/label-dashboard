@@ -377,7 +377,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       event_platform_fees: this.childBrands.reduce((total, brand) => total + (brand.event_platform_fees || 0), 0),
       event_processing_fees: this.childBrands.reduce((total, brand) => total + (brand.event_processing_fees || 0), 0),
       event_estimated_tax: this.childBrands.reduce((total, brand) => total + (brand.event_estimated_tax || 0), 0),
-      event_earnings: this.childBrands.reduce((total, brand) => total + (brand.event_earnings || 0), 0)
+      event_earnings: this.childBrands.reduce((total, brand) => total + (brand.event_earnings || 0), 0),
+      add_on_payments: this.childBrands.reduce((total, brand) => total + (brand.add_on_payments || 0), 0)
     };
   }
 

@@ -135,6 +135,7 @@ export interface ChildBrand {
   total_royalties: number;
   artist_payments: number;
   payments: number;
+  add_on_payments: number;
   platform_fees: number;
   music_platform_fees: number;
   event_platform_fees: number;

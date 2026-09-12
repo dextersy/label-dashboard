@@ -748,7 +748,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get mobileOrdersTotalPrice(): number {
-    return this.orders.reduce((s, o) => s + this.orderPrice(o), 0);
+    return this.orders.reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o), 0);
   }
 
   toggleOrderMenu(id: number, event: MouseEvent): void {
