@@ -46,6 +46,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
     { key: 'sales', label: 'Sales', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-number', formatter: (item: any) => this.formatCurrency(item.sales) },
     { key: 'platform_fees', label: 'Platform Fees', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.platform_fees) },
     { key: 'processing_fees', label: 'Processing Fees', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => this.formatCurrency(item.processing_fees) },
+    { key: 'addon_payments', label: 'Add-on Payments', sortable: true, searchable: false, align: 'right', tabletClass: 'tablet-hide', mobileClass: 'mobile-hide', formatter: (item: any) => item.addon_payments > 0 ? this.formatCurrency(item.addon_payments) : '—' },
     { key: 'net_earnings', label: 'Net Earnings', sortable: true, searchable: false, align: 'right', mobileClass: 'mobile-number', renderHtml: true, formatter: (item: any) => { const v = item.net_earnings; return `<span class="${v < 0 ? 'text-danger' : ''}">${this.formatCurrency(v)}</span>`; } },
   ];
 

@@ -482,8 +482,12 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         ? { date_paid: { [Op.between]: [startDateFilter, endDateFilter] } }
         : {};
 
-      // Batch fetch sales and fees grouped by event_id (2 queries instead of 2*N)
-      const [salesRows, feesRows] = await Promise.all([
+      const addOnDateFilter = startDateFilter && endDateFilter
+        ? { createdAt: { [Op.between]: [startDateFilter, endDateFilter] } }
+        : {};
+
+      // Batch fetch sales, fees, and add-on payments grouped by event_id
+      const [salesRows, feesRows, addOnRows] = await Promise.all([
         Ticket.findAll({
           attributes: ['event_id', [literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']],
           where: {
@@ -509,7 +513,20 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
           },
           group: ['event_id'],
           raw: true
-        })
+        }),
+        eventIds.length > 0
+          ? EventAddOnPayment.findAll({
+              attributes: ['event_id', [fn('SUM', col('amount')), 'total']],
+              where: {
+                event_id: { [Op.in]: eventIds },
+                method: 'balance',
+                status: 'succeeded',
+                ...addOnDateFilter,
+              },
+              group: ['event_id'],
+              raw: true,
+            }) as Promise<any[]>
+          : Promise.resolve([]),
       ]);
 
       const salesMap = new Map<number, number>();
@@ -522,20 +539,26 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         platformFeesMap.set(row.event_id, parseFloat(row.total_platform_fee) || 0);
         processingFeesMap.set(row.event_id, parseFloat(row.total_processing_fee) || 0);
       }
+      const addOnMap = new Map<number, number>();
+      for (const row of addOnRows as any[]) {
+        addOnMap.set(row.event_id, parseFloat(row.total) || 0);
+      }
 
       const breakdown = [];
       for (const id of eventIds) {
         const sales = salesMap.get(id) || 0;
         const platformFees = platformFeesMap.get(id) || 0;
         const processingFees = processingFeesMap.get(id) || 0;
-        const netEarnings = sales - platformFees;
+        const addonPayments = addOnMap.get(id) || 0;
+        const netEarnings = sales - platformFees - addonPayments;
 
-        if (sales > 0 || platformFees > 0 || processingFees > 0) {
+        if (sales > 0 || platformFees > 0 || processingFees > 0 || addonPayments > 0) {
           breakdown.push({
             event_name: eventTitleMap.get(id),
             sales,
             platform_fees: platformFees,
             processing_fees: processingFees,
+            addon_payments: addonPayments,
             net_earnings: netEarnings
           });
         }
