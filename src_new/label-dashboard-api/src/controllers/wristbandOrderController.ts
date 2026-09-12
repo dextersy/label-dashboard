@@ -378,7 +378,10 @@ export const getWristbandOrder = async (req: AuthRequest, res: Response) => {
     const order = await WristbandOrder.findByPk(orderId, {
       include: [
         { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
-        { model: Event, as: 'event', attributes: ['id', 'title', 'brand_id'] },
+        {
+          model: Event, as: 'event', attributes: ['id', 'title', 'brand_id'],
+          include: [{ model: EventWristbandSettings, as: 'wristbandSettings' }],
+        },
       ],
     });
     if (!order) return res.status(404).json({ error: 'Order not found' });
@@ -495,6 +498,43 @@ export const deleteWristbandOrder = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Order deleted' });
   } catch (error) {
     console.error('deleteWristbandOrder error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const setWristbandShippingFee = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId) as any;
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const { shipping_fee } = req.body;
+    if (shipping_fee !== null && shipping_fee !== undefined) {
+      const fee = parseFloat(shipping_fee);
+      if (isNaN(fee) || fee < 0) {
+        return res.status(400).json({ error: 'shipping_fee must be a non-negative number' });
+      }
+      await order.update({ shipping_fee: fee });
+    } else {
+      await order.update({ shipping_fee: null });
+    }
+
+    const updated = await WristbandOrder.findByPk(orderId, {
+      include: [
+        { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        {
+          model: Event, as: 'event', attributes: ['id', 'title', 'brand_id'],
+          include: [{ model: EventWristbandSettings, as: 'wristbandSettings' }],
+        },
+      ],
+    });
+    res.json({ order: updated });
+  } catch (error) {
+    console.error('setWristbandShippingFee error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -15,10 +15,11 @@ interface WristbandOrderAttributes {
   canvas_width: number | null;
   disclaimer_acknowledged: boolean;
   notes: string | null;
+  shipping_fee: number | null;
   created_by: number;
 }
 
-interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged'> {}
+interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee'> {}
 
 class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreationAttributes> implements WristbandOrderAttributes {
   public id!: number;
@@ -32,6 +33,7 @@ class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreat
   public canvas_width!: number | null;
   public disclaimer_acknowledged!: boolean;
   public notes!: string | null;
+  public shipping_fee!: number | null;
   public created_by!: number;
 
   public readonly createdAt!: Date;
@@ -85,6 +87,10 @@ WristbandOrder.init(
     },
     notes: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    shipping_fee: {
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
     },
     created_by: {

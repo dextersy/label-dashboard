@@ -1148,7 +1148,16 @@ export const sendWristbandOrderStatusEmail = async (
       })
       .join('');
     const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
-    const totalPrice = ((totalQty / 10) * PRICE_PER_10).toFixed(2);
+    const itemsSubtotal = (totalQty / 10) * PRICE_PER_10;
+    const shippingFee = order.shipping_fee != null ? parseFloat(String(order.shipping_fee)) : 0;
+    const shippingRow = shippingFee > 0
+      ? `<tr style="border-top: 1px solid #e5e5e5;">
+          <td style="font-size: 14px; color: #666666; padding: 8px 12px;">Shipping fee</td>
+          <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">—</td>
+          <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">₱${shippingFee.toFixed(2)}</td>
+        </tr>`
+      : '';
+    const totalPrice = (itemsSubtotal + shippingFee).toFixed(2);
 
     const isConfirmed = status === 'confirmed';
 
@@ -1163,7 +1172,7 @@ export const sendWristbandOrderStatusEmail = async (
         : `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,
       ORDER_ID: escapeHtml(order.id),
       EVENT_TITLE: escapeHtml(event.title),
-      ITEMS_ROWS: itemsRows,
+      ITEMS_ROWS: itemsRows + shippingRow,
       TOTAL_QTY: String(totalQty),
       TOTAL_PRICE: totalPrice,
       CTA_URL: ctaUrl,
