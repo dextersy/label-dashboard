@@ -476,7 +476,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   get addonWristbandTotal(): number {
     return this.orders
       .filter(o => o.status === 'confirmed')
-      .reduce((sum, o) => sum + this.orderPrice(o), 0);
+      .reduce((sum, o) => sum + this.orderPrice(o) + this.orderShippingFee(o), 0);
   }
 
   get addonTotalDue(): number {
@@ -732,6 +732,10 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     return ((order.items ?? []).reduce((s, i) => s + i.quantity, 0) / 10) * this.PRICE_PER_10;
   }
 
+  orderShippingFee(order: WristbandOrder): number {
+    return parseFloat(String(order.shipping_fee ?? 0));
+  }
+
   colorsSummary(order: WristbandOrder): string {
     return (order.items ?? [])
       .filter(i => i.quantity > 0)
@@ -848,7 +852,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get allOrdersTotalPrice(): number {
-    return this.placedOrders.reduce((s, o) => s + this.orderPrice(o), 0);
+    return this.placedOrders.reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o), 0);
   }
 
   get hasPlacedOrders(): boolean {

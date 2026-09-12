@@ -705,17 +705,27 @@
 
               <!-- Line items -->
               <div *ngIf="placedOrders.length > 0">
-                <div *ngFor="let order of placedOrders; let last = last"
-                  class="tw-flex tw-items-start tw-justify-between tw-gap-3 tw-py-2.5"
-                  [class.tw-border-b]="!last"
-                  [class.tw-border-gray-100]="!last"
-                >
-                  <div class="tw-flex-1 tw-min-w-0">
-                    <div class="tw-text-sm tw-font-medium tw-text-gray-800">Wristband <span class="tw-text-gray-400 tw-font-normal">#{{ order.id }}</span></div>
-                    <div *ngIf="colorsSummary(order)" class="tw-text-[0.78rem] tw-text-gray-400 tw-mt-0.5">{{ colorsSummary(order) }}</div>
+                <ng-container *ngFor="let order of placedOrders; let last = last">
+                  <div
+                    class="tw-flex tw-items-start tw-justify-between tw-gap-3 tw-py-2.5"
+                    [class.tw-border-b]="!last || orderShippingFee(order) > 0"
+                    [class.tw-border-gray-100]="!last || orderShippingFee(order) > 0"
+                  >
+                    <div class="tw-flex-1 tw-min-w-0">
+                      <div class="tw-text-sm tw-font-medium tw-text-gray-800">Wristband <span class="tw-text-gray-400 tw-font-normal">#{{ order.id }}</span></div>
+                      <div *ngIf="colorsSummary(order)" class="tw-text-[0.78rem] tw-text-gray-400 tw-mt-0.5">{{ colorsSummary(order) }}</div>
+                    </div>
+                    <div class="tw-text-sm tw-font-medium tw-text-gray-800 tw-whitespace-nowrap tw-shrink-0" style="font-variant-numeric: tabular-nums">₱{{ orderPrice(order) | number:'1.2-2' }}</div>
                   </div>
-                  <div class="tw-text-sm tw-font-medium tw-text-gray-800 tw-whitespace-nowrap tw-shrink-0" style="font-variant-numeric: tabular-nums">₱{{ orderPrice(order) | number:'1.2-2' }}</div>
-                </div>
+                  <div *ngIf="orderShippingFee(order) > 0"
+                    class="tw-flex tw-items-start tw-justify-between tw-gap-3 tw-py-2.5"
+                    [class.tw-border-b]="!last"
+                    [class.tw-border-gray-100]="!last"
+                  >
+                    <div class="tw-text-sm tw-text-gray-500">Shipping <span class="tw-text-gray-400 tw-font-normal">#{{ order.id }}</span></div>
+                    <div class="tw-text-sm tw-text-gray-500 tw-whitespace-nowrap tw-shrink-0" style="font-variant-numeric: tabular-nums">₱{{ orderShippingFee(order) | number:'1.2-2' }}</div>
+                  </div>
+                </ng-container>
 
                 <!-- Totals row -->
                 <div class="tw-flex tw-justify-between tw-items-baseline tw-gap-2 tw-mt-3 tw-pt-3 tw-border-t-2 tw-border-gray-200">
