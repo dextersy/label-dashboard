@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
 import { WristbandOrder, WristbandOrderItem, WristbandColor, EventWristbandSettings, Event } from '../models';
-import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
+import { uploadToS3, deleteFromS3, getS3ObjectStream } from '../utils/s3Service';
 import { sendEmail, sendWristbandOrderStatusEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { createNotificationsForUsers, getBrandAdminUserIds } from '../utils/notificationService';
@@ -495,6 +495,32 @@ export const deleteWristbandOrder = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Order deleted' });
   } catch (error) {
     console.error('deleteWristbandOrder error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const proxyWristbandDesign = async (req: AuthRequest, res: Response) => {
+  try {
+    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId, { attributes: ['id', 'design_url'] }) as any;
+    if (!order?.design_url) return res.status(404).json({ error: 'Design not found' });
+
+    const key = order.design_url.split('/').pop() as string;
+    const { Body, ContentType, ContentLength } = await getS3ObjectStream({
+      Bucket: process.env.S3_BUCKET!,
+      Key: key,
+    });
+
+    res.setHeader('Content-Type', ContentType || 'image/png');
+    if (ContentLength) res.setHeader('Content-Length', ContentLength);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    Body.pipe(res);
+  } catch (error) {
+    console.error('proxyWristbandDesign error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -5,6 +5,7 @@ import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.compo
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { EventService, WristbandColor, WristbandOrder } from '../../../services/event.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-wristband-order-review',
@@ -192,43 +193,55 @@ export class WristbandOrderReviewComponent implements OnInit {
 
     this.downloading = true;
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = this.TEMPLATE_W;
-      canvas.height = this.TEMPLATE_H;
-      const ctx = canvas.getContext('2d')!;
+    const token = localStorage.getItem('auth_token');
+    const proxyUrl = `${environment.apiUrl}/events/wristband-orders/${order.id}/design`;
 
-      // Replicate object-fit: contain — scale image to fit inside (w × h) box while preserving aspect ratio
-      const imgAspect = img.naturalWidth / img.naturalHeight;
-      const boxAspect = w / h;
-      let drawW: number, drawH: number, drawX: number, drawY: number;
-      if (imgAspect > boxAspect) {
-        drawW = w;
-        drawH = w / imgAspect;
-        drawX = x;
-        drawY = y + (h - drawH) / 2;
-      } else {
-        drawH = h;
-        drawW = h * imgAspect;
-        drawX = x + (w - drawW) / 2;
-        drawY = y;
-      }
-      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+    fetch(proxyUrl, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch design');
+        return res.blob();
+      })
+      .then(blob => new Promise<HTMLImageElement>((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { resolve(img); URL.revokeObjectURL(objectUrl); };
+        img.onerror = () => { reject(); URL.revokeObjectURL(objectUrl); };
+        img.src = objectUrl;
+      }))
+      .then(img => {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.TEMPLATE_W;
+        canvas.height = this.TEMPLATE_H;
+        const ctx = canvas.getContext('2d')!;
 
-      canvas.toBlob(blob => {
-        this.downloading = false;
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `wristband-design-order-${order.id}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }, 'image/png');
-    };
-    img.onerror = () => { this.downloading = false; };
-    img.src = order.design_url;
+        // Replicate object-fit: contain — scale image to fit inside (w × h) box while preserving aspect ratio
+        const imgAspect = img.naturalWidth / img.naturalHeight;
+        const boxAspect = w / h;
+        let drawW: number, drawH: number, drawX: number, drawY: number;
+        if (imgAspect > boxAspect) {
+          drawW = w;
+          drawH = w / imgAspect;
+          drawX = x;
+          drawY = y + (h - drawH) / 2;
+        } else {
+          drawH = h;
+          drawW = h * imgAspect;
+          drawX = x + (w - drawW) / 2;
+          drawY = y;
+        }
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+        canvas.toBlob(blob => {
+          this.downloading = false;
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `wristband-design-order-${order.id}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+      })
+      .catch(() => { this.downloading = false; });
   }
 }

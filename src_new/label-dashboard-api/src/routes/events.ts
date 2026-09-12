@@ -59,6 +59,7 @@ import {
   deleteWristbandOrder,
   confirmWristbandOrder,
   rejectWristbandOrder,
+  proxyWristbandDesign,
   upload as wristbandUpload,
 } from '../controllers/wristbandOrderController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
@@ -82,6 +83,7 @@ router.get('/wristband-orders', getWristbandOrders);
 router.post('/wristband-orders', requireAdmin, wristbandUpload.single('design'), createWristbandOrder);
 router.put('/wristband-orders/:id', requireAdmin, wristbandUpload.single('design'), updateWristbandOrder);
 router.get('/wristband-orders/:id', requireAdmin, getWristbandOrder);
+router.get('/wristband-orders/:id/design', requireAdmin, proxyWristbandDesign);
 router.post('/wristband-orders/:id/confirm', requireAdmin, confirmWristbandOrder);
 router.post('/wristband-orders/:id/reject', requireAdmin, rejectWristbandOrder);
 router.delete('/wristband-orders/:id', requireAdmin, deleteWristbandOrder);
