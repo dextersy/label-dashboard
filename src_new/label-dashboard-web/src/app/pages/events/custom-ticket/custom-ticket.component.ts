@@ -357,10 +357,17 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     }
     
     if (this.isEventClosed()) {
-      return 'Ticket sales for this event have closed.';
+      return this.allTicketsFree ? 'Registration for this event has closed.' : 'Ticket sales for this event have closed.';
     }
     
     return '';
+  }
+
+  get allTicketsFree(): boolean {
+    if (this.ticketTypes.length > 0) {
+      return this.ticketTypes.every((tt: any) => !tt.price || tt.price <= 0);
+    }
+    return !this.selectedEvent?.ticket_price || this.selectedEvent.ticket_price <= 0;
   }
 
   canCreateCustomTickets(): boolean {

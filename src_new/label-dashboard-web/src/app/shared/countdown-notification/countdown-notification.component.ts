@@ -13,6 +13,7 @@ export class CountdownNotificationComponent implements OnInit, OnDestroy {
   @Input() closeTime?: string;
   @Input() eventTitle!: string;
   @Input() brandColor: string = '#6f42c1';
+  @Input() allFree: boolean = false;
 
   timeLeft: {
     days: number;
