@@ -30,7 +30,7 @@
       <app-icon name="clock" iconOnly style="font-size: 10px; opacity: 0.7;" />
       <span class="mobile-countdown-inline">
         {{ allFree ? 'Ends in' : 'Closes in' }}
-        <ng-container *ngIf="timeLeft.days > 0"><strong>{{ timeLeft.days }}d</strong> </ng-container><strong>{{ timeLeft.hours.toString().padStart(2, '0') }}h {{ timeLeft.minutes.toString().padStart(2, '0') }}m {{ timeLeft.seconds.toString().padStart(2, '0') }}s</strong>
+        <ng-container *ngIf="timeLeft.days > 0"><strong>{{ timeLeft.days }}d</strong>&nbsp;</ng-container><strong>{{ timeLeft.hours.toString().padStart(2, '0') }}h {{ timeLeft.minutes.toString().padStart(2, '0') }}m {{ timeLeft.seconds.toString().padStart(2, '0') }}s</strong>
       </span>
     </div>
   </div>
