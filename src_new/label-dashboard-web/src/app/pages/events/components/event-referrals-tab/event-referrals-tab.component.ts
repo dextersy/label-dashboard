@@ -109,7 +109,7 @@ export class EventReferralsTabComponent implements OnInit, OnChanges, OnDestroy 
   generateSlug(): void {
     if (this.referrerForm.referral_code) {
       const cleanCode = this.referrerForm.referral_code.replace(/[^A-Z0-9]/gi, '');
-      this.referrerForm.slug = `Buy${cleanCode}`;
+      this.referrerForm.slug = cleanCode;
     }
   }
 
