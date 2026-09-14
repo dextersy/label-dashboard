@@ -11,7 +11,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const token = localStorage.getItem('auth_token');
   
   if (!token) {
-    router.navigate(['/login']);
+    router.navigate(['/login'], { queryParams: { url: state.url } });
     return false;
   }
 
@@ -28,7 +28,7 @@ export const authGuard: CanActivateFn = (route, state) => {
         return true;
       } else {
         // Token is invalid, redirect to login
-        router.navigate(['/login']);
+        router.navigate(['/login'], { queryParams: { url: state.url } });
         return false;
       }
     }),
@@ -38,7 +38,7 @@ export const authGuard: CanActivateFn = (route, state) => {
         // Token is invalid or expired - clear storage and redirect to login
         localStorage.removeItem('auth_token');
         localStorage.removeItem('currentUser');
-        router.navigate(['/login']);
+        router.navigate(['/login'], { queryParams: { url: state.url } });
         return of(false);
       }
       

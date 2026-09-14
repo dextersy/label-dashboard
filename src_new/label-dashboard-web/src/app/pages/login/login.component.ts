@@ -172,7 +172,7 @@ export class LoginComponent implements OnInit {
         // Normal login - redirect to workspace default page or specified URL
         if (response.token) {
           if (this.redirectUrl) {
-            this.router.navigate([this.redirectUrl]);
+            this.router.navigateByUrl(this.redirectUrl);
           } else {
             this.navigateToDefaultPage(response.user?.is_admin ?? false);
           }
