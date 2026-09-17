@@ -33,6 +33,7 @@ import { PipelineStage } from '../../dashboard/components/release-pipeline/relea
 import { ReleaseTaskService } from '../../../services/release-task.service';
 import { ReleaseTask } from '../../../models/release-task.model';
 import { AuthService } from '../../../services/auth.service';
+import { AdminService } from '../../../services/admin.service';
 
 interface DiscographyRelease {
   id: number;
@@ -97,6 +98,7 @@ export class LabelsDashboardComponent implements OnInit {
   featureMusicWorkspace: boolean = true;
   pendingReleases: { release: DiscographyRelease; daysUntil: number | null; tasks: ReleaseTask[] }[] = [];
   liveReleasesData: DiscographyRelease[] = [];
+  hasPayoutAccount: boolean | null = null;
 
   constructor(
     private http: HttpClient,
@@ -105,12 +107,14 @@ export class LabelsDashboardComponent implements OnInit {
     private artistStateService: ArtistStateService,
     private workspaceService: WorkspaceService,
     private releaseTaskService: ReleaseTaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    private adminService: AdminService
   ) {}
 
   ngOnInit(): void {
     this.loadBrandSettings();
     this.loadDashboardData();
+    this.loadPayoutAccountStatus();
   }
 
   loadDashboardData(): void {
@@ -128,6 +132,18 @@ export class LabelsDashboardComponent implements OnInit {
         console.error('Error loading dashboard data:', error);
         this.error = 'Failed to load dashboard data';
         this.loading = false;
+      }
+    });
+  }
+
+  private loadPayoutAccountStatus(): void {
+    this.adminService.getLabelPaymentMethods().subscribe({
+      next: (response) => {
+        const methods = (response as any)?.paymentMethods || response || [];
+        this.hasPayoutAccount = methods.length > 0;
+      },
+      error: () => {
+        this.hasPayoutAccount = null;
       }
     });
   }

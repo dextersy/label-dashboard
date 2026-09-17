@@ -1,4 +1,11 @@
 <div class="label-finance-tab">
+  <!-- No payout account warning -->
+  <div *ngIf="!paymentMethodsLoading && paymentMethods.length === 0"
+       class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800">
+    <app-icon name="warning" [size]="18" class="tw-shrink-0" iconOnly />
+    <span>No payout account has been set up yet. <button type="button" class="tw-bg-transparent tw-border-0 tw-p-0 tw-font-semibold tw-underline tw-text-amber-800 tw-cursor-pointer" (click)="openAddPaymentMethodModal()">Add one now</button> so you can receive payments.</span>
+  </div>
+
   <!-- Date Range Filter -->
   <div class="tw-mb-4">
     <app-date-range-filter

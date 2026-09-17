@@ -65,6 +65,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   }
 
   paymentMethods: LabelPaymentMethod[] = [];
+  paymentMethodsLoading = true;
   payments: LabelPayment[] = [];
   paymentsResponse: LabelPaymentsResponse | null = null;
   paymentsLoading = false;
@@ -248,14 +249,17 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
   }
 
   private loadPaymentMethods(): void {
+    this.paymentMethodsLoading = true;
     this.subscriptions.add(
       this.adminService.getLabelPaymentMethods().subscribe({
         next: (response) => {
           this.paymentMethods = (response as any)?.paymentMethods || response || [];
+          this.paymentMethodsLoading = false;
         },
         error: (error) => {
           console.error('Error loading payment methods:', error);
           this.notificationService.showError('Failed to load payment methods');
+          this.paymentMethodsLoading = false;
         }
       })
     );
