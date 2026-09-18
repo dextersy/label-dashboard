@@ -11,3 +11,12 @@ export const createSubdomainARecord = async (subdomain: string): Promise<boolean
   const ls = await import('./lightsailDNSService');
   return ls.createSubdomainARecord(subdomain);
 };
+
+export const deleteSubdomainARecord = async (subdomain: string): Promise<boolean> => {
+  if (process.env.CF_API_TOKEN && process.env.CF_ZONE_ID) {
+    const cf = await import('./cloudflareDNSService');
+    return cf.deleteSubdomainARecord(subdomain);
+  }
+  const ls = await import('./lightsailDNSService');
+  return ls.deleteSubdomainARecord(subdomain);
+};

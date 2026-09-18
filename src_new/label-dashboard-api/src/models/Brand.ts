@@ -30,6 +30,7 @@ interface BrandAttributes {
   artist_custom_fields?: object;
   about_us?: string;
   send_artist_balance_reminders?: boolean;
+  is_active?: boolean;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -63,6 +64,7 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public artist_custom_fields?: object;
   public about_us?: string;
   public send_artist_balance_reminders?: boolean;
+  public is_active?: boolean;
 
   // Association properties
   public parentBrand?: Brand;
@@ -253,6 +255,11 @@ Brand.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
     },
   },
   {

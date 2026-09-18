@@ -206,6 +206,12 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       icon: 'plus',
       label: 'Add Earning',
       handler: (item) => this.openAddEarningModal(item)
+    },
+    {
+      icon: 'ban',
+      label: 'Deactivate',
+      hidden: () => !this.isSuperAdmin(),
+      handler: (item) => this.deactivateSublabel(item)
     }
   ];
 
@@ -579,6 +585,27 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
           onComplete();
         }
       });
+    });
+  }
+
+  deactivateSublabel(childBrand: ChildBrand): void {
+    const confirmed = window.confirm(
+      `Are you sure you want to deactivate "${childBrand.brand_name}"? ` +
+      `This will remove its domains from SSL and DNS and hide it from the sublabels list.`
+    );
+    if (!confirmed) return;
+
+    this.adminService.deactivateBrand(childBrand.brand_id).subscribe({
+      next: () => {
+        this.notificationService.showSuccess(`${childBrand.brand_name} has been deactivated`);
+        this.childBrands = this.childBrands.filter(b => b.brand_id !== childBrand.brand_id);
+        this.applySorting();
+        this.pagination.total_count = this.childBrands.length;
+      },
+      error: (error) => {
+        const msg = error.error?.error || 'Failed to deactivate brand';
+        this.notificationService.showError(msg);
+      }
     });
   }
 

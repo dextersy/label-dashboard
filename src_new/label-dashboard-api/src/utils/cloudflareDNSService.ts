@@ -103,6 +103,49 @@ export const isValidSubdomain = (subdomain: string): boolean => {
 };
 
 /**
+ * Delete the A record for a subdomain
+ * @param subdomain - The subdomain to delete (e.g., 'oldlabel')
+ * @returns Promise<boolean> - true if deleted or not found (idempotent)
+ */
+export const deleteSubdomainARecord = async (subdomain: string): Promise<boolean> => {
+  const { apiToken, zoneId, domain } = getConfig();
+  const fullName = `${subdomain}.${domain}`;
+
+  console.log(`Deleting Cloudflare DNS A record for ${fullName}`);
+
+  interface CFListResponse {
+    success: boolean;
+    result: Array<{ id: string; name: string }>;
+  }
+
+  const listResponse = await cfRequest<CFListResponse>(
+    'GET',
+    `/client/v4/zones/${zoneId}/dns_records?type=A&name=${encodeURIComponent(fullName)}`,
+    apiToken
+  );
+
+  if (!listResponse.success || listResponse.result.length === 0) {
+    console.warn(`No Cloudflare DNS A record found for ${fullName} — nothing to delete`);
+    return true;
+  }
+
+  const recordId = listResponse.result[0].id;
+
+  const deleteResponse = await cfRequest<CFResponse>(
+    'DELETE',
+    `/client/v4/zones/${zoneId}/dns_records/${recordId}`,
+    apiToken
+  );
+
+  if (deleteResponse.success) {
+    console.log(`Cloudflare DNS A record deleted successfully for ${fullName}`);
+    return true;
+  }
+
+  throw new Error(`Cloudflare API error deleting record: ${JSON.stringify(deleteResponse.errors)}`);
+};
+
+/**
  * Check if subdomain already exists in Cloudflare
  */
 export const subdomainExists = async (subdomain: string): Promise<boolean> => {

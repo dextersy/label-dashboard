@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Domain } from '../models';
+import { Domain, Brand } from '../models';
 import { auditLogger } from '../utils/auditLogger';
 import { promises as dns } from 'dns';
 import { spawn } from 'child_process';
@@ -70,12 +70,22 @@ export const getSSLDomains = async (req: Request, res: Response) => {
 
     console.log(`[API] Frontend IP: ${frontendIP}`);
 
-    // Query domains with status 'Connected' or 'No SSL'
+    // Query domains with status 'Connected' or 'No SSL' for active brands only.
+    // Deactivated brands' domains are excluded — removeDomainFromSSL is called during
+    // deactivateBrand, so they're already gone from the renewal script. This filter
+    // just ensures the Lambda never accidentally re-adds them on future sync runs.
     const domains = await Domain.findAll({
       where: {
         status: ['Connected', 'No SSL']
       },
       attributes: ['domain_name', 'status', 'brand_id'],
+      include: [{
+        model: Brand,
+        as: 'brand',
+        attributes: [],
+        where: { is_active: true },
+        required: true
+      }],
       order: [['domain_name', 'ASC']]
     });
 

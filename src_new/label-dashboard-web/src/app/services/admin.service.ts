@@ -753,6 +753,12 @@ export class AdminService {
     });
   }
 
+  deactivateBrand(sublabelBrandId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/brands/${sublabelBrandId}/deactivate`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Users Management
   getUsers(page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: User[], pagination: any}> {
     let queryParams = `page=${page}&limit=${limit}`;

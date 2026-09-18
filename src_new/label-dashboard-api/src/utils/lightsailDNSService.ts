@@ -1,4 +1,4 @@
-import { LightsailClient, CreateDomainEntryCommand, DomainEntry, CreateDomainEntryRequest } from '@aws-sdk/client-lightsail';
+import { LightsailClient, CreateDomainEntryCommand, DeleteDomainEntryCommand, DomainEntry, CreateDomainEntryRequest } from '@aws-sdk/client-lightsail';
 
 // Lazy-load Lightsail client to ensure environment variables are loaded
 let lightsailClient: LightsailClient | null = null;
@@ -103,6 +103,48 @@ export const createSubdomainARecord = async (subdomain: string): Promise<boolean
       return true; // Consider existing record as success
     }
     
+    throw error;
+  }
+};
+
+/**
+ * Delete the A record for a subdomain
+ * @param subdomain - The subdomain to delete (e.g., 'oldlabel')
+ * @returns Promise<boolean> - true if deleted or not found (idempotent)
+ */
+export const deleteSubdomainARecord = async (subdomain: string): Promise<boolean> => {
+  try {
+    const client = getLightsailClient();
+    const domainName = getDomainName();
+    const fullName = `${subdomain}.${domainName}`;
+
+    console.log(`Deleting Lightsail DNS A record for ${fullName}`);
+
+    const domainEntry: DomainEntry = {
+      name: fullName,
+      type: 'A',
+      target: ''
+    };
+
+    const result = await client.send(new DeleteDomainEntryCommand({
+      domainName,
+      domainEntry
+    }));
+
+    if (result.operation?.status === 'Succeeded' || result.operation?.status === 'Started') {
+      console.log(`Lightsail DNS A record deleted successfully for ${fullName}`);
+      return true;
+    }
+
+    console.error(`Lightsail DNS record deletion failed with status: ${result.operation?.status}`);
+    return false;
+
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes('NotFoundException') || error.message.includes('does not exist'))) {
+      console.warn(`Lightsail DNS record for ${subdomain}.${getDomainName()} not found — nothing to delete`);
+      return true;
+    }
+    console.error('Error deleting Lightsail DNS A record:', error);
     throw error;
   }
 };

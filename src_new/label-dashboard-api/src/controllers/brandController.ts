@@ -10,7 +10,7 @@ import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
-import { createSubdomainARecord } from '../utils/dnsService';
+import { createSubdomainARecord, deleteSubdomainARecord } from '../utils/dnsService';
 import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 import { clearOriginsCache } from '../middleware/csrf';
 
@@ -49,7 +49,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
 
     const brand = domainRecord?.brand;
 
-    if (!brand) {
+    if (!brand || brand.is_active === false) {
       return res.status(404).json({ error: 'Brand not found for this domain' });
     }
 
@@ -1150,9 +1150,9 @@ export const getChildBrands = async (req: Request, res: Response) => {
     const { brandId } = req.params;
     const { start_date, end_date } = req.query as { start_date?: string; end_date?: string };
 
-    // Find all child brands
+    // Find all active child brands
     const childBrands = await Brand.findAll({
-      where: { parent_brand: brandId },
+      where: { parent_brand: brandId, is_active: true },
       attributes: ['id', 'brand_name', 'logo_url', 'brand_color']
     });
 
@@ -1756,6 +1756,64 @@ export const createSublabel = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error starting sublabel creation:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+export const deactivateBrand = async (req: Request, res: Response) => {
+  try {
+    const { brandId } = req.params;
+
+    const brand = await Brand.findByPk(brandId as string);
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    if (brand.is_active === false) {
+      return res.status(400).json({ error: 'Brand is already inactive' });
+    }
+
+    // Load all domains for this brand
+    const domains = await Domain.findAll({ where: { brand_id: brandId } });
+
+    const baseDomain = process.env.LIGHTSAIL_DOMAIN || 'spindly.app';
+
+    for (const domain of domains) {
+      // Remove from SSL if applicable
+      if (domain.status === 'Connected' || domain.status === 'No SSL') {
+        console.log(`[Deactivate][SSL] Removing domain ${domain.domain_name} from SSL certificate`);
+        try {
+          const sslResult = await removeDomainFromSSL(domain.domain_name, true);
+          logSSLOperation(domain.domain_name, sslResult);
+          if (!sslResult.success) {
+            console.error(`[Deactivate][SSL] Warning: failed to remove ${domain.domain_name} from SSL: ${sslResult.error}`);
+          }
+        } catch (sslError) {
+          console.error(`[Deactivate][SSL] Error removing ${domain.domain_name} from SSL:`, sslError);
+        }
+      }
+
+      // Delete DNS record if this is a platform-provisioned subdomain
+      if (isMeltRecordsSubdomain(domain.domain_name)) {
+        const subdomain = domain.domain_name.slice(0, -(`.${baseDomain}`.length));
+        console.log(`[Deactivate][DNS] Deleting DNS A record for subdomain ${subdomain}`);
+        try {
+          await deleteSubdomainARecord(subdomain);
+        } catch (dnsError) {
+          console.error(`[Deactivate][DNS] Error deleting DNS record for ${subdomain}:`, dnsError);
+        }
+      }
+    }
+
+    brand.is_active = false;
+    await brand.save();
+
+    await clearOriginsCache();
+    console.log(`[Deactivate] Brand ${brandId} deactivated. CSRF/CORS cache cleared.`);
+
+    res.json({ message: 'Brand deactivated successfully' });
+
+  } catch (error) {
+    console.error('Error deactivating brand:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
