@@ -19,6 +19,7 @@ import { SublabelPaymentsModalComponent } from '../../admin/components/sublabel-
 import { SublabelAddEarningModalComponent } from '../components/sublabel-add-earning-modal/sublabel-add-earning-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 @Component({
     selector: 'app-labels-sublabels',
@@ -230,7 +231,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private authService: AuthService,
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -588,11 +590,15 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     });
   }
 
-  deactivateSublabel(childBrand: ChildBrand): void {
-    const confirmed = window.confirm(
-      `Are you sure you want to deactivate "${childBrand.brand_name}"? ` +
-      `This will remove its domains from SSL and DNS and hide it from the sublabels list.`
-    );
+  async deactivateSublabel(childBrand: ChildBrand): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Deactivate Brand',
+      message: `Are you sure you want to deactivate "${childBrand.brand_name}"?`,
+      warning: 'This will remove its domains from SSL and DNS and hide it from the sublabels list.',
+      confirmText: 'Deactivate',
+      cancelText: 'Cancel',
+      type: 'danger'
+    });
     if (!confirmed) return;
 
     this.adminService.deactivateBrand(childBrand.brand_id).subscribe({
