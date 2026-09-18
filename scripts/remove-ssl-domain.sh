@@ -210,22 +210,23 @@ main() {
         print_info "The domain has been removed from the renewal script only"
         print_info "Current SSL certificate remains valid and unchanged"
     elif [[ $total_domains -gt 1 ]]; then
-        # Test the lego command with remaining domains
-        print_info "Testing lego command with remaining domains..."
+        # Re-issue the certificate with the remaining domains using 'lego run'.
+        # 'lego renew' reads SANs from the existing cert file and would still include
+        # the removed domain regardless of the --domains flags. 'lego run' issues a
+        # completely fresh certificate with exactly the specified domains.
+        local run_command_part
+        run_command_part=$(echo "$command_part" | sed 's/renew[^&]*/run /')
+        # Remove pm2 restart — not needed for cert re-issuance
+        run_command_part=$(echo "$run_command_part" | sed 's/[[:space:]]*&&[[:space:]]*pm2[[:space:]].*$//')
 
-        # Add --days 999 flag for testing to force certificate generation
-        local test_command_part
-        test_command_part=$(echo "$command_part" | sed 's/ renew / renew --days 999 /')
-
-        print_info "Testing command (with --days 999): $test_command_part"
+        print_info "Re-issuing certificate without removed domain: $run_command_part"
         echo
 
-        # Execute the lego command as a test
-        if eval "$test_command_part"; then
-            print_info "Lego command executed successfully with remaining domains!"
+        if eval "$run_command_part"; then
+            print_info "Certificate re-issued successfully without removed domain!"
             print_info "Proceeding to update wrapper script..."
         else
-            print_error "Lego command failed! One or more remaining domains may not be accessible."
+            print_error "Certificate re-issuance failed! One or more remaining domains may not be accessible."
             print_error "Wrapper script will NOT be updated to prevent future failures."
             print_warning "Please verify that all remaining domains are correctly configured."
             exit 1

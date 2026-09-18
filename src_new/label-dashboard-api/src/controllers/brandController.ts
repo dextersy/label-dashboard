@@ -11,7 +11,7 @@ import pngToIco from 'png-to-ico';
 import dns from 'dns';
 import { promisify } from 'util';
 import { createSubdomainARecord, deleteSubdomainARecord } from '../utils/dnsService';
-import { addDomainToSSL, removeDomainFromSSL, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
+import { addDomainToSSL, removeDomainFromSSL, triggerLegoRun, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 import { clearOriginsCache } from '../middleware/csrf';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
@@ -1777,29 +1777,44 @@ export const deactivateBrand = async (req: Request, res: Response) => {
 
     const baseDomain = process.env.LIGHTSAIL_DOMAIN || 'spindly.app';
 
-    for (const domain of domains) {
-      // Remove from SSL if applicable
-      if (domain.status === 'Connected' || domain.status === 'No SSL') {
-        console.log(`[Deactivate][SSL] Removing domain ${domain.domain_name} from SSL certificate`);
-        try {
-          const sslResult = await removeDomainFromSSL(domain.domain_name, true);
-          logSSLOperation(domain.domain_name, sslResult);
-          if (!sslResult.success) {
-            console.error(`[Deactivate][SSL] Warning: failed to remove ${domain.domain_name} from SSL: ${sslResult.error}`);
-          }
-        } catch (sslError) {
-          console.error(`[Deactivate][SSL] Error removing ${domain.domain_name} from SSL:`, sslError);
-        }
+    // Phase 1: remove all SSL-eligible domains from the renewal wrapper (no cert re-issue yet)
+    const sslDomains = domains.filter(d => d.status === 'Connected' || d.status === 'No SSL');
+    for (const domain of sslDomains) {
+      console.log(`[Deactivate][SSL] Removing ${domain.domain_name} from SSL renewal wrapper`);
+      const sslResult = await removeDomainFromSSL(domain.domain_name, true, true); // force=true, noRenew=true
+      logSSLOperation(domain.domain_name, sslResult);
+      if (!sslResult.success) {
+        console.error(`[Deactivate][SSL] Failed to remove ${domain.domain_name}: ${sslResult.error}`);
+        return res.status(500).json({
+          error: `Failed to remove domain ${domain.domain_name} from SSL renewal script: ${sslResult.error}`
+        });
       }
+    }
 
-      // Delete DNS record if this is a platform-provisioned subdomain
+    // Phase 2: re-issue the certificate once with all remaining domains
+    if (sslDomains.length > 0) {
+      console.log(`[Deactivate][SSL] Re-issuing certificate with remaining domains (lego run)`);
+      const legoResult = await triggerLegoRun();
+      if (!legoResult.success) {
+        console.error(`[Deactivate][SSL] lego run failed: ${legoResult.error}`);
+        return res.status(500).json({
+          error: `SSL certificate re-issuance failed: ${legoResult.error}`
+        });
+      }
+      console.log(`[Deactivate][SSL] Certificate re-issued successfully`);
+    }
+
+    // Phase 3: delete DNS A records for platform-provisioned subdomains
+    for (const domain of domains) {
       if (isMeltRecordsSubdomain(domain.domain_name)) {
         const subdomain = domain.domain_name.slice(0, -(`.${baseDomain}`.length));
         console.log(`[Deactivate][DNS] Deleting DNS A record for subdomain ${subdomain}`);
-        try {
-          await deleteSubdomainARecord(subdomain);
-        } catch (dnsError) {
-          console.error(`[Deactivate][DNS] Error deleting DNS record for ${subdomain}:`, dnsError);
+        const deleted = await deleteSubdomainARecord(subdomain);
+        if (!deleted) {
+          console.error(`[Deactivate][DNS] Failed to delete DNS A record for ${subdomain}`);
+          return res.status(500).json({
+            error: `Failed to delete DNS A record for ${domain.domain_name}`
+          });
         }
       }
     }

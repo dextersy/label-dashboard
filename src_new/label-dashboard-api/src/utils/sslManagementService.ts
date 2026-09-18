@@ -442,6 +442,104 @@ export const removeDomainFromSSL = async (domainName: string, force: boolean = f
 };
 
 /**
+ * Trigger a fresh lego run using the current wrapper script's domains.
+ *
+ * After removing one or more domains from the SSL renewal wrapper (with --no-renew),
+ * call this once to re-issue the certificate with exactly the remaining domains.
+ * It reads the wrapper, substitutes `run` for `renew`, strips the pm2 restart tail,
+ * and executes the result — mirroring what remove-ssl-domain.sh does internally.
+ *
+ * @returns Promise<SSLResult>
+ */
+export const triggerLegoRun = async (): Promise<SSLResult> => {
+  return new Promise((resolve) => {
+    const frontendIP = process.env.FRONTEND_IP;
+    const sshKeyPath = process.env.SSH_KEY_PATH;
+    const sshUser = process.env.SSH_USER;
+    const sslWrapperPath = process.env.SSL_WRAPPER_PATH || '/tmp/ssl-renew-wrapper.sh';
+
+    if (!frontendIP || !sshKeyPath || !sshUser) {
+      resolve({
+        success: false,
+        message: 'Missing SSH environment configuration',
+        error: 'FRONTEND_IP, SSH_KEY_PATH, or SSH_USER not configured'
+      });
+      return;
+    }
+
+    const expandedKeyPath = sshKeyPath.startsWith('~/')
+      ? path.join(process.env.HOME || '', sshKeyPath.slice(2))
+      : sshKeyPath;
+
+    // Read the lego renew line from the wrapper, convert to a `run` command,
+    // strip any trailing pm2 restart (not needed for cert issuance), and execute.
+    const remoteCmd =
+      `grep -E 'lego.*--domains.*renew' ${sslWrapperPath} | head -n 1 | ` +
+      `sed 's/renew[^&]*/run /' | sed 's/[[:space:]]*&&[[:space:]]*pm2[[:space:]].*$//' | bash`;
+
+    const sshCommand = [
+      '-i', expandedKeyPath,
+      '-o', 'StrictHostKeyChecking=no',
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'ConnectTimeout=30',
+      `${sshUser}@${frontendIP}`,
+      remoteCmd
+    ];
+
+    console.log('[SSL] Triggering lego run to re-issue certificate with remaining domains');
+
+    const sshProcess = spawn('ssh', sshCommand, {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 300000 // 5 minute timeout
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    sshProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      stdout += output;
+      console.log(`[SSL] stdout: ${output.trim()}`);
+    });
+
+    sshProcess.stderr.on('data', (data) => {
+      const output = data.toString();
+      stderr += output;
+      console.log(`[SSL] stderr: ${output.trim()}`);
+    });
+
+    sshProcess.on('close', (code) => {
+      console.log(`[SSL] lego run completed with exit code: ${code}`);
+      if (code === 0) {
+        resolve({
+          success: true,
+          message: 'Certificate re-issued successfully with remaining domains',
+          output: stdout
+        });
+      } else {
+        resolve({
+          success: false,
+          message: 'lego run failed — certificate may not have been re-issued',
+          error: stderr || `Process exited with code ${code}`,
+          output: stdout
+        });
+      }
+    });
+
+    sshProcess.on('error', (error) => {
+      console.error('[SSL] SSH process error during lego run:', error);
+      resolve({ success: false, message: 'SSH connection failed during lego run', error: error.message });
+    });
+
+    sshProcess.on('timeout', () => {
+      console.error('[SSL] lego run timed out');
+      sshProcess.kill('SIGKILL');
+      resolve({ success: false, message: 'lego run timed out', error: 'Operation timed out after 5 minutes' });
+    });
+  });
+};
+
+/**
  * Log SSL operation result for debugging and monitoring
  * @param domainName - The domain name
  * @param result - The SSL operation result
