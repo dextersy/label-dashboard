@@ -584,6 +584,22 @@ async function processEarningRoyalties(earning: any) {
   let remainingEarningAmount = earning.amount;
   let recuperatedAmount = 0;
 
+  if (earning.amount < 0) {
+    // Negative earning: add back to recuperable expenses (artist-friendly — never charge a negative royalty)
+    await RecuperableExpense.create({
+      release_id: earning.release_id,
+      brand_id: release.brand_id,
+      expense_description: `${earning.type} reversal`,
+      expense_amount: -earning.amount, // Positive value to increase the balance
+      date_recorded: earning.date_recorded
+    });
+    return {
+      recuperatedAmount: 0,
+      remainingRecuperableBalance: recuperableBalance + (-earning.amount),
+      totalRoyalties: 0
+    };
+  }
+
   // If there are recuperable expenses remaining, deduct from them first
   if (recuperableBalance > 0) {
     if (earning.amount >= recuperableBalance) {
@@ -610,7 +626,7 @@ async function processEarningRoyalties(earning: any) {
 
   // Only calculate royalties on the remaining amount after recuperable expense deduction
   let totalRoyalties = 0;
-  
+
   if (remainingEarningAmount > 0) {
     const releaseArtists = await ReleaseArtist.findAll({
       where: { release_id: earning.release_id },

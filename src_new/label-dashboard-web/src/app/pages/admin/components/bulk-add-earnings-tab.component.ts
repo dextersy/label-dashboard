@@ -208,7 +208,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   saveBulkEarnings(): void {
     const validEarnings = this.bulkEarnings.filter(earning => 
-      earning.release_id > 0 && earning.amount > 0
+      earning.release_id > 0 && earning.amount !== 0
     );
 
     if (validEarnings.length === 0) {
