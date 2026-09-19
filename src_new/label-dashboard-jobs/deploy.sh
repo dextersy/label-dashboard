@@ -50,6 +50,53 @@ end_phase() {
     PHASE_NAMES+=("$name")
 }
 
+send_notification() {
+    [ -z "$DEPLOY_NOTIFY_EMAIL" ] && return 0
+    local total_time subject body
+    total_time=$(format_duration $(( $(date +%s) - DEPLOY_START )))
+    if [ "$DEPLOY_STATUS" = "success" ]; then
+        subject="[Deploy SUCCESS] Lambda jobs — ${total_time}"
+    else
+        subject="[Deploy FAILED] Lambda jobs"
+    fi
+    body="Deploy target : Lambda jobs
+Status        : ${DEPLOY_STATUS}
+Total time    : ${total_time}
+Date          : $(date)
+
+Phase breakdown:"
+    for i in "${!PHASE_NAMES[@]}"; do
+        body+="
+  ${PHASE_NAMES[$i]} — $(format_duration "${PHASE_DURATIONS[$i]}")"
+    done
+
+    if [ -n "$DEPLOY_SMTP_HOST" ]; then
+        local from curl_url curl_ssl_flag port
+        from="${DEPLOY_SMTP_FROM:-$DEPLOY_SMTP_USER}"
+        port="${DEPLOY_SMTP_PORT:-587}"
+        if [ "$port" = "465" ]; then
+            curl_url="smtps://${DEPLOY_SMTP_HOST}:${port}"
+            curl_ssl_flag="--ssl-reqd"
+        else
+            curl_url="smtp://${DEPLOY_SMTP_HOST}:${port}"
+            curl_ssl_flag="--ssl"
+        fi
+        printf "From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s\r\n" \
+            "$from" "$DEPLOY_NOTIFY_EMAIL" "$subject" "$body" | \
+        curl --silent "$curl_ssl_flag" \
+            --url "$curl_url" \
+            --user "${DEPLOY_SMTP_USER}:${DEPLOY_SMTP_PASS}" \
+            --mail-from "$from" \
+            --mail-rcpt "$DEPLOY_NOTIFY_EMAIL" \
+            --upload-file - 2>/dev/null || \
+            print_warning "Failed to send deploy notification email"
+    elif command -v mail &>/dev/null; then
+        echo "$body" | mail -s "$subject" "$DEPLOY_NOTIFY_EMAIL"
+    else
+        print_warning "DEPLOY_NOTIFY_EMAIL is set but no mail method is configured. Set DEPLOY_SMTP_HOST or install the mail command."
+    fi
+}
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CONFIG_FILE="$ROOT_DIR/deploy.config"
@@ -62,6 +109,9 @@ fi
 
 print_status "Loading configuration from $CONFIG_FILE"
 source "$CONFIG_FILE"
+
+DEPLOY_STATUS="failed"
+trap 'send_notification' EXIT
 
 print_status "Starting Lambda jobs deployment..."
 
@@ -170,3 +220,5 @@ for i in "${!PHASE_NAMES[@]}"; do
 done
 echo ""
 print_status "Total deployment time: $(format_duration $DEPLOY_TOTAL)"
+
+DEPLOY_STATUS="success"

@@ -31,3 +31,18 @@ PM2_APP_NAME="app"
 # API Keys Configuration (Optional)
 # If not set here, the script will check environment variables
 # GOOGLE_MAPS_API_KEY_CONFIG="your-google-maps-api-key-here"
+
+# Deployment Notifications (Optional)
+# If set, deploy scripts will send an email on completion (success or failure).
+# DEPLOY_NOTIFY_EMAIL="you@example.com"
+#
+# SMTP method (recommended — works on Git Bash / Windows and Linux):
+# Uses curl to send directly via SMTP. Set all four vars below to enable.
+# DEPLOY_SMTP_HOST="smtp.gmail.com"
+# DEPLOY_SMTP_PORT="587"           # 587 = STARTTLS (most providers), 465 = SSL
+# DEPLOY_SMTP_USER="you@gmail.com"
+# DEPLOY_SMTP_PASS="your-app-password"
+# DEPLOY_SMTP_FROM="you@gmail.com" # Optional — defaults to DEPLOY_SMTP_USER
+#
+# Fallback method (Linux only): if SMTP vars are not set, the scripts will try
+# the system `mail` command instead.
