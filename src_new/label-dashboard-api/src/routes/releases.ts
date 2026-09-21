@@ -14,7 +14,8 @@ import {
   downloadMasters,
   downloadMp3s,
   downloadPriorityPitch,
-  getDiscography
+  getDiscography,
+  autoscanLinks
 } from '../controllers/releaseController';
 import {
   getReleaseTasks,
@@ -75,6 +76,9 @@ router.get('/:id/download-mp3s', downloadMp3s);
 
 // Download Priority Pitch document (admin only)
 router.get('/:id/download-priority-pitch', requireAdmin, downloadPriorityPitch);
+
+// Autoscan streaming links from public APIs (admin only)
+router.post('/:id/autoscan-links', requireAdmin, autoscanLinks);
 
 // Release planning tasks (must come before generic /:id routes)
 router.get('/:id/tasks/assignable-users', getAssignableUsers);

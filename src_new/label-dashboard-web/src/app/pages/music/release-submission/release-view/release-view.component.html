@@ -245,8 +245,20 @@
 
       <!-- Streaming Links -->
       <div class="streaming-links">
-        <h3 class="subsection-title">Streaming Links</h3>
-        <div class="tw-flex tw-flex-wrap tw-gap-x-6 tw-gap-y-2 tw-items-center">
+        <div class="tw-flex tw-items-center tw-gap-2 tw-mb-2 tw-mt-5">
+          <h3 class="subsection-title no-margin">Streaming Links</h3>
+          <button *ngIf="canEdit"
+                  type="button"
+                  class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-text-xs tw-flex tw-items-center tw-gap-1 tw-self-center"
+                  (click)="onAutoscan()"
+                  [disabled]="autoscanLoading"
+                  title="Automatically find streaming links for this release">
+            <app-icon [name]="autoscanLoading ? 'spinner' : 'sparkle'"
+                      [class.tw-animate-spin]="autoscanLoading" />
+            {{ autoscanLoading ? 'Scanning...' : 'Autoscan' }}
+          </button>
+        </div>
+        <div class="tw-flex tw-flex-wrap tw-gap-x-6 tw-gap-y-2 tw-items-center tw-mt-0">
 
           <!-- Spotify -->
           <div class="tw-flex tw-items-center tw-gap-2">
@@ -634,6 +646,99 @@
     </div>
   </div>
   <div class="modal-backdrop fade" [class.show]="lyricsModalSong" *ngIf="lyricsModalSong"></div>
+
+  <!-- Autoscan Links Modal -->
+  <div class="modal fade" [class.show]="autoscanModalOpen" [style.display]="autoscanModalOpen ? 'block' : 'none'"
+       (click)="closeAutoscanModal()">
+    <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <app-icon name="sparkle" class="tw-mr-2" />Autoscan Results
+          </h5>
+          <button type="button" class="btn-close" (click)="closeAutoscanModal()"></button>
+        </div>
+        <div class="modal-body">
+          <p class="tw-text-sm tw-text-muted tw-mb-4">
+            The following links were found for <strong>{{ editingRelease.title }}</strong>.
+            Select the ones you want to apply to this release.
+          </p>
+
+          <!-- Spotify -->
+          <div *ngIf="autoscanResults.spotify_link" class="tw-flex tw-items-start tw-gap-3 tw-mb-3">
+            <div class="form-check tw-mt-0.5">
+              <input class="form-check-input" type="checkbox" id="autoscan-spotify"
+                     [(ngModel)]="autoscanSelected.spotify_link">
+            </div>
+            <label class="form-check-label tw-flex tw-items-center tw-gap-2 tw-cursor-pointer" for="autoscan-spotify">
+              <app-icon name="spotify" class="tw-text-green-500 tw-shrink-0" />
+              <div>
+                <div class="tw-font-medium tw-text-sm">Spotify</div>
+                <a [href]="autoscanResults.spotify_link" target="_blank"
+                   class="tw-text-xs tw-text-muted tw-break-all hover:tw-underline"
+                   (click)="$event.stopPropagation()">{{ autoscanResults.spotify_link }}</a>
+              </div>
+            </label>
+          </div>
+          <div *ngIf="!autoscanResults.spotify_link" class="tw-flex tw-items-center tw-gap-2 tw-mb-3 tw-text-muted tw-text-sm">
+            <app-icon name="spotify" class="tw-shrink-0" />
+            <span>Spotify — not found</span>
+          </div>
+
+          <!-- Apple Music -->
+          <div *ngIf="autoscanResults.apple_music_link" class="tw-flex tw-items-start tw-gap-3 tw-mb-3">
+            <div class="form-check tw-mt-0.5">
+              <input class="form-check-input" type="checkbox" id="autoscan-apple"
+                     [(ngModel)]="autoscanSelected.apple_music_link">
+            </div>
+            <label class="form-check-label tw-flex tw-items-center tw-gap-2 tw-cursor-pointer" for="autoscan-apple">
+              <app-icon name="apple" class="tw-shrink-0" />
+              <div>
+                <div class="tw-font-medium tw-text-sm">Apple Music</div>
+                <a [href]="autoscanResults.apple_music_link" target="_blank"
+                   class="tw-text-xs tw-text-muted tw-break-all hover:tw-underline"
+                   (click)="$event.stopPropagation()">{{ autoscanResults.apple_music_link }}</a>
+              </div>
+            </label>
+          </div>
+          <div *ngIf="!autoscanResults.apple_music_link" class="tw-flex tw-items-center tw-gap-2 tw-mb-3 tw-text-muted tw-text-sm">
+            <app-icon name="apple" class="tw-shrink-0" />
+            <span>Apple Music — not found</span>
+          </div>
+
+          <!-- YouTube -->
+          <div *ngIf="autoscanResults.youtube_link" class="tw-flex tw-items-start tw-gap-3 tw-mb-3">
+            <div class="form-check tw-mt-0.5">
+              <input class="form-check-input" type="checkbox" id="autoscan-youtube"
+                     [(ngModel)]="autoscanSelected.youtube_link">
+            </div>
+            <label class="form-check-label tw-flex tw-items-center tw-gap-2 tw-cursor-pointer" for="autoscan-youtube">
+              <app-icon name="youtube" class="tw-text-red-500 tw-shrink-0" />
+              <div>
+                <div class="tw-font-medium tw-text-sm">YouTube</div>
+                <a [href]="autoscanResults.youtube_link" target="_blank"
+                   class="tw-text-xs tw-text-muted tw-break-all hover:tw-underline"
+                   (click)="$event.stopPropagation()">{{ autoscanResults.youtube_link }}</a>
+              </div>
+            </label>
+          </div>
+          <div *ngIf="!autoscanResults.youtube_link" class="tw-flex tw-items-center tw-gap-2 tw-mb-3 tw-text-muted tw-text-sm">
+            <app-icon name="youtube" class="tw-text-red-500 tw-shrink-0" />
+            <span>YouTube — not found</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary btn-sm" (click)="closeAutoscanModal()">Cancel</button>
+          <button type="button" class="btn-primary btn-sm"
+                  (click)="applyAutoscanLinks()"
+                  [disabled]="!hasAutoscanSelection()">
+            <app-icon name="check" class="tw-mr-1" />Apply Selected
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [class.show]="autoscanModalOpen" *ngIf="autoscanModalOpen"></div>
 
   <!-- Song Edit Form (admin only) -->
   <app-song-form

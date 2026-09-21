@@ -331,6 +331,7 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     }
     document.removeEventListener('scroll', this.scrollCloseHandler, true);
     document.body.classList.remove('modal-open');
+    this.autoscanModalOpen = false;
   }
 
   getStatusBadgeClass(status: string): string {
@@ -443,6 +444,69 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   copiedLink: string | null = null;
+
+  // Autoscan state
+  autoscanLoading = false;
+  autoscanModalOpen = false;
+  autoscanResults: { spotify_link?: string; apple_music_link?: string; youtube_link?: string } = {};
+  autoscanSelected: { spotify_link: boolean; apple_music_link: boolean; youtube_link: boolean } = {
+    spotify_link: true,
+    apple_music_link: true,
+    youtube_link: true,
+  };
+
+  onAutoscan(): void {
+    if (!this.release || this.autoscanLoading) return;
+    this.autoscanLoading = true;
+    this.releaseService.autoscanLinks(this.release.id).subscribe({
+      next: (response) => {
+        this.autoscanLoading = false;
+        this.autoscanResults = response.results || {};
+        this.autoscanSelected = {
+          spotify_link: !!this.autoscanResults.spotify_link,
+          apple_music_link: !!this.autoscanResults.apple_music_link,
+          youtube_link: !!this.autoscanResults.youtube_link,
+        };
+        if (!this.autoscanResults.spotify_link && !this.autoscanResults.apple_music_link && !this.autoscanResults.youtube_link) {
+          this.alertMessage.emit({ type: 'error', message: 'No links found for this release. Try editing the title or artist name for better results.' });
+          return;
+        }
+        this.autoscanModalOpen = true;
+        document.body.classList.add('modal-open');
+      },
+      error: () => {
+        this.autoscanLoading = false;
+        this.alertMessage.emit({ type: 'error', message: 'Failed to scan for links. Please try again.' });
+      }
+    });
+  }
+
+  applyAutoscanLinks(): void {
+    if (this.autoscanSelected.spotify_link && this.autoscanResults.spotify_link) {
+      this.editingRelease.spotify_link = this.autoscanResults.spotify_link;
+      this.dirtyFields.add('spotify_link');
+    }
+    if (this.autoscanSelected.apple_music_link && this.autoscanResults.apple_music_link) {
+      this.editingRelease.apple_music_link = this.autoscanResults.apple_music_link;
+      this.dirtyFields.add('apple_music_link');
+    }
+    if (this.autoscanSelected.youtube_link && this.autoscanResults.youtube_link) {
+      this.editingRelease.youtube_link = this.autoscanResults.youtube_link;
+      this.dirtyFields.add('youtube_link');
+    }
+    this.closeAutoscanModal();
+  }
+
+  closeAutoscanModal(): void {
+    this.autoscanModalOpen = false;
+    document.body.classList.remove('modal-open');
+  }
+
+  hasAutoscanSelection(): boolean {
+    return (this.autoscanSelected.spotify_link && !!this.autoscanResults.spotify_link) ||
+           (this.autoscanSelected.apple_music_link && !!this.autoscanResults.apple_music_link) ||
+           (this.autoscanSelected.youtube_link && !!this.autoscanResults.youtube_link);
+  }
 
   onAddTrack(): void {
     this.editingSong = null;

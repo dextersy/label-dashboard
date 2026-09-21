@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import { fn, col, literal, Op } from 'sequelize';
 import { sequelize } from '../config/database';
 import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
@@ -1876,6 +1877,269 @@ export const getDiscography = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Get discography error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const autoscanLinks = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const releaseId = parseInt(id as string, 10);
+
+    const release = await Release.findOne({
+      where: { id: releaseId, brand_id: req.user.brand_id },
+      include: [
+        { model: Artist, as: 'artists', through: { attributes: [] } },
+        { model: Song, as: 'songs', through: { attributes: [] }, attributes: ['isrc'] },
+      ],
+      attributes: ['id', 'title'],
+    });
+
+    if (!release) {
+      return res.status(404).json({ error: 'Release not found' });
+    }
+
+    const releaseData = release as any;
+    const title: string = releaseData.title || '';
+    const artistName: string = releaseData.artists?.[0]?.name || '';
+    const titleLower = title.toLowerCase();
+    const artistLower = artistName.toLowerCase();
+    const firstIsrc: string | undefined = releaseData.songs?.find((s: any) => s.isrc)?.isrc;
+
+    const results: {
+      spotify_link?: string;
+      apple_music_link?: string;
+      youtube_link?: string;
+    } = {};
+
+    const spotifyClientId = process.env.SPOTIFY_CLIENT_ID;
+    const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    const youtubeApiKey = process.env.YOUTUBE_API_KEY;
+
+    const getSpotifyToken = async (): Promise<string | null> => {
+      if (!spotifyClientId || !spotifyClientSecret) return null;
+      try {
+        const tokenRes = await axios.post(
+          'https://accounts.spotify.com/api/token',
+          'grant_type=client_credentials',
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              Authorization: 'Basic ' + Buffer.from(`${spotifyClientId}:${spotifyClientSecret}`).toString('base64'),
+            },
+            timeout: 8000,
+          }
+        );
+        return tokenRes.data.access_token || null;
+      } catch (e: any) {
+        console.error('[Autoscan Spotify] token error:', e?.message);
+        return null;
+      }
+    };
+
+    // -------------------------------------------------------------------------
+    // Apple Music
+    // -------------------------------------------------------------------------
+
+    // ISRC: iTunes song search by ISRC returns collectionViewUrl (album URL) directly
+    if (firstIsrc) {
+      try {
+        const itunesRes = await axios.get('https://itunes.apple.com/search', {
+          params: { term: firstIsrc, entity: 'song', limit: 5 },
+          timeout: 8000,
+        });
+        const items: any[] = itunesRes.data.results || [];
+        const match = items.find((r: any) => r.collectionViewUrl);
+        if (match?.collectionViewUrl) results.apple_music_link = match.collectionViewUrl;
+      } catch (e: any) {
+        console.error('[Autoscan iTunes ISRC] error:', e?.message);
+      }
+    }
+
+    // Fallback: artist + title album search
+    if (!results.apple_music_link) {
+      try {
+        const itunesRes = await axios.get('https://itunes.apple.com/search', {
+          params: { term: `${artistName} ${title}`.trim(), entity: 'album', limit: 10 },
+          timeout: 8000,
+        });
+        const items: any[] = itunesRes.data.results || [];
+        const match =
+          items.find((r: any) => r.collectionViewUrl && r.collectionName?.toLowerCase() === titleLower) ||
+          items.find((r: any) => r.collectionViewUrl && r.collectionName?.toLowerCase().includes(titleLower)) ||
+          items.find((r: any) => r.collectionViewUrl);
+        if (match?.collectionViewUrl) results.apple_music_link = match.collectionViewUrl;
+      } catch (e: any) {
+        console.error('[Autoscan iTunes] error:', e?.message);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Spotify
+    // -------------------------------------------------------------------------
+    const spotifyToken = await getSpotifyToken();
+    if (spotifyToken) {
+      // ISRC: search by ISRC returns the exact track; grab its album URL
+      if (firstIsrc) {
+        try {
+          const isrcRes = await axios.get('https://api.spotify.com/v1/search', {
+            params: { q: `isrc:${firstIsrc}`, type: 'track', limit: 1 },
+            headers: { Authorization: `Bearer ${spotifyToken}` },
+            timeout: 8000,
+          });
+          const track = isrcRes.data.tracks?.items?.[0];
+          if (track?.album?.external_urls?.spotify) {
+            results.spotify_link = track.album.external_urls.spotify;
+          }
+        } catch (e: any) {
+          console.error('[Autoscan Spotify ISRC] error:', e?.message);
+        }
+      }
+
+      // Fallback: artist + title album search
+      if (!results.spotify_link) {
+        try {
+          const searchRes = await axios.get('https://api.spotify.com/v1/search', {
+            params: { q: `album:${title} artist:${artistName}`, type: 'album', limit: 10 },
+            headers: { Authorization: `Bearer ${spotifyToken}` },
+            timeout: 8000,
+          });
+          const items: any[] = searchRes.data.albums?.items || [];
+          const match =
+            items.find((a: any) => a.external_urls?.spotify && a.name?.toLowerCase() === titleLower) ||
+            items.find((a: any) => a.external_urls?.spotify && a.name?.toLowerCase().includes(titleLower)) ||
+            items.find((a: any) => a.external_urls?.spotify);
+          if (match?.external_urls?.spotify) results.spotify_link = match.external_urls.spotify;
+        } catch (e: any) {
+          console.error('[Autoscan Spotify] error:', e?.message);
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // YouTube: Topic channel lookup → channel-scoped playlist search →
+    //          general playlist search → video search
+    // -------------------------------------------------------------------------
+    if (youtubeApiKey) {
+      try {
+        // Step 1: find the "Artist - Topic" channel
+        const chRes = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+          params: { part: 'snippet', q: `${artistName} - Topic`, type: 'channel', maxResults: 5, key: youtubeApiKey },
+          timeout: 8000,
+        });
+        const topicChannels: any[] = chRes.data.items || [];
+        console.log('[Autoscan YouTube] topic channel search results:', topicChannels.map((c: any) => ({ title: c.snippet?.title, id: c.id?.channelId })));
+        const topicChannel = topicChannels.find((c: any) =>
+          (c.snippet?.title || '').toLowerCase() === `${artistLower} - topic`
+        );
+
+        if (topicChannel?.id?.channelId) {
+          const channelId = topicChannel.id.channelId;
+          console.log('[Autoscan YouTube] found Topic channel:', channelId);
+
+          // Step 2a: use YouTube Music Innertube browse API to get album playlists
+          // (YouTube Data API v3 cannot retrieve playlists from auto-generated Topic channels)
+          try {
+            const browseRes = await axios.post(
+              'https://music.youtube.com/youtubei/v1/browse',
+              {
+                context: {
+                  client: { clientName: 'WEB_REMIX', clientVersion: '1.20230501.01.00', hl: 'en' },
+                },
+                browseId: channelId,
+              },
+              {
+                headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+                timeout: 10000,
+              }
+            );
+            // Extract all OLAK5uy_ playlist IDs from the response
+            const browseStr = JSON.stringify(browseRes.data);
+            const olakMatches = [...new Set(browseStr.match(/OLAK5uy_[a-zA-Z0-9_-]+/g) || [])];
+            console.log('[Autoscan YouTube] Innertube OLAK playlist IDs:', olakMatches);
+
+            if (olakMatches.length > 0) {
+              const plDetailsRes = await axios.get('https://www.googleapis.com/youtube/v3/playlists', {
+                params: { part: 'snippet', id: olakMatches.slice(0, 50).join(','), maxResults: 50, key: youtubeApiKey },
+                timeout: 8000,
+              });
+              const plDetails: any[] = plDetailsRes.data.items || [];
+              console.log('[Autoscan YouTube] OLAK playlists:', plDetails.map((p: any) => ({ title: p.snippet?.title, id: p.id })));
+
+              const plMatch =
+                plDetails.find((p: any) => p.snippet?.title?.toLowerCase() === titleLower) ||
+                plDetails.find((p: any) => p.snippet?.title?.toLowerCase().includes(titleLower));
+              if (plMatch?.id) {
+                results.youtube_link = `https://www.youtube.com/playlist?list=${plMatch.id}`;
+              }
+            }
+          } catch (innertubeErr: any) {
+            console.error('[Autoscan YouTube] Innertube error:', innertubeErr?.message);
+          }
+
+          // Step 2b: if no playlist found, find the best-matching video on the Topic channel
+          // (Topic channel videos are officially licensed content — not "random")
+          if (!results.youtube_link) {
+            const chVidRes = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+              params: { part: 'snippet', channelId, q: title, type: 'video', maxResults: 10, key: youtubeApiKey },
+              timeout: 8000,
+            });
+            const chVidItems: any[] = chVidRes.data.items || [];
+            console.log('[Autoscan YouTube] Topic channel videos:', chVidItems.map((v: any) => ({ title: v.snippet?.title, id: v.id?.videoId })));
+            const chVidMatch =
+              chVidItems.find((v: any) => v.id?.videoId && v.snippet?.title?.toLowerCase() === titleLower) ||
+              chVidItems.find((v: any) => v.id?.videoId && v.snippet?.title?.toLowerCase().includes(titleLower)) ||
+              chVidItems.find((v: any) => v.id?.videoId);
+            if (chVidMatch?.id?.videoId) {
+              results.youtube_link = `https://www.youtube.com/watch?v=${chVidMatch.id.videoId}`;
+            }
+          }
+        }
+
+        // Step 3: general playlist search — prioritise official channels, fall back to title match
+        if (!results.youtube_link) {
+          const plRes = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+            params: { part: 'snippet', q: `"${artistName}" "${title}"`, type: 'playlist', maxResults: 10, key: youtubeApiKey },
+            timeout: 8000,
+          });
+          const plItems: any[] = plRes.data.items || [];
+          console.log('[Autoscan YouTube] general playlists:', plItems.map((p: any) => ({ title: p.snippet?.title, channel: p.snippet?.channelTitle, id: p.id?.playlistId })));
+          const plMatch =
+            plItems.find((p: any) => p.id?.playlistId && (p.snippet?.channelTitle || '').toLowerCase() === `${artistLower} - topic`) ||
+            plItems.find((p: any) => p.id?.playlistId && (p.snippet?.channelTitle || '').toLowerCase() === artistLower) ||
+            plItems.find((p: any) => p.id?.playlistId && (p.snippet?.channelTitle || '').toLowerCase().includes(artistLower)) ||
+            plItems.find((p: any) => p.id?.playlistId && p.snippet?.title?.toLowerCase().includes(titleLower));
+          if (plMatch?.id?.playlistId) {
+            results.youtube_link = `https://www.youtube.com/playlist?list=${plMatch.id.playlistId}`;
+          }
+        }
+
+        // Step 4: last resort — general video search on official channels
+        if (!results.youtube_link) {
+          const vidRes = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+            params: { part: 'snippet', q: `${artistName} ${title}`, type: 'video', videoCategoryId: '10', maxResults: 10, key: youtubeApiKey },
+            timeout: 8000,
+          });
+          const vidItems: any[] = vidRes.data.items || [];
+          console.log('[Autoscan YouTube] general videos:', vidItems.map((v: any) => ({ title: v.snippet?.title, channel: v.snippet?.channelTitle, id: v.id?.videoId })));
+          const vidMatch =
+            vidItems.find((v: any) => v.id?.videoId && (v.snippet?.channelTitle || '').toLowerCase() === `${artistLower} - topic`) ||
+            vidItems.find((v: any) => v.id?.videoId && (v.snippet?.channelTitle || '').toLowerCase() === artistLower) ||
+            vidItems.find((v: any) => v.id?.videoId && (v.snippet?.channelTitle || '').toLowerCase().includes(artistLower));
+          if (vidMatch?.id?.videoId) {
+            results.youtube_link = `https://www.youtube.com/watch?v=${vidMatch.id.videoId}`;
+          }
+        }
+
+        console.log('[Autoscan YouTube] final result:', results.youtube_link || 'not found');
+      } catch (e: any) {
+        console.error('[Autoscan YouTube] error:', e?.message);
+      }
+    }
+
+    res.json({ results });
+  } catch (error) {
+    console.error('Autoscan links error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

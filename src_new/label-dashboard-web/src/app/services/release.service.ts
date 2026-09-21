@@ -197,4 +197,12 @@ export class ReleaseService {
       { headers: this.getAuthHeaders() }
     );
   }
+
+  autoscanLinks(releaseId: number): Observable<{ results: { spotify_link?: string; apple_music_link?: string; youtube_link?: string } }> {
+    return this.http.post<{ results: { spotify_link?: string; apple_music_link?: string; youtube_link?: string } }>(
+      `${this.baseUrl}/releases/${releaseId}/autoscan-links`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

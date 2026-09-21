@@ -178,6 +178,9 @@
       font-weight: 600;
       color: #333;
       margin: 1.25rem 0 0.75rem 0;
+      &.no-margin {
+        margin: 0;
+      }
     }
   }
   
