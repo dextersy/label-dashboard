@@ -195,7 +195,7 @@
                 <select class="tw-input" [(ngModel)]="editingRelease.status">
                   <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
                 </select>
-                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('status')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="confirmStatus()" title="Confirm"><app-icon name="check" iconOnly /></button>
                 <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('status')" title="Cancel"><app-icon name="x" iconOnly /></button>
               </span>
             </span>
@@ -405,11 +405,11 @@
 
     <!-- Track List Section -->
     <section class="view-section">
-      <div class="tw-flex tw-justify-between tw-items-center">
+      <div class="tw-flex tw-flex-wrap tw-justify-between tw-items-center tw-gap-y-2">
         <h3 class="section-title tw-mb-0">
           <app-icon name="music" class="tw-mr-2" />Track List
         </h3>
-        <div class="tw-flex tw-items-center tw-gap-2">
+        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
         <button *ngIf="canEdit" class="btn-secondary btn-sm" type="button" (click)="onAddTrack()" title="Add Track">
           <app-icon name="plus" class="tw-mr-1" />Add Track
         </button>

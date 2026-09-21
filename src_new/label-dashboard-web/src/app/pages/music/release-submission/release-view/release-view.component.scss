@@ -714,13 +714,15 @@
 
   .masters-dropdown {
     .masters-dropdown-toggle {
-      font-weight: 600;
-      font-size: 1rem;
+      font-weight: 500;
+      font-size: 13px;
       color: var(--text-color, #333);
       cursor: pointer;
       user-select: none;
-      display: inline-block;
-      padding: 0.5rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 12px;
+      background: transparent;
 
       &:hover {
         opacity: 0.7;
@@ -736,6 +738,11 @@
       position: absolute;
       right: 0;
       top: 100%;
+
+      @media (max-width: 575px) {
+        right: auto;
+        left: 0;
+      }
       margin-top: 0.5rem;
       background: #fff;
       border: 1px solid var(--border-light, #eee);
