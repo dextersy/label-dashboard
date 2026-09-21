@@ -1886,8 +1886,11 @@ export const autoscanLinks = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const releaseId = parseInt(id as string, 10);
 
+    const childBrandIds = await getChildBrandIds(req.user.brand_id);
+    const allowedBrandIds = [req.user.brand_id, ...childBrandIds];
+
     const release = await Release.findOne({
-      where: { id: releaseId, brand_id: req.user.brand_id },
+      where: { id: releaseId, brand_id: { [Op.in]: allowedBrandIds } },
       include: [
         { model: Artist, as: 'artists', through: { attributes: [] } },
         { model: Song, as: 'songs', through: { attributes: [] }, attributes: ['isrc'] },
