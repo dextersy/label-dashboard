@@ -455,6 +455,20 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
     youtube_link: true,
   };
 
+  confirmStatus(): void {
+    const previousStatus = this.savedRelease?.status ?? this.release?.status;
+    const newStatus = this.editingRelease.status;
+    this.stopEditing('status');
+
+    if (
+      previousStatus === 'Pending' &&
+      newStatus === 'Live' &&
+      (!this.editingRelease.spotify_link || !this.editingRelease.apple_music_link || !this.editingRelease.youtube_link)
+    ) {
+      this.onAutoscan();
+    }
+  }
+
   onAutoscan(): void {
     if (!this.release || this.autoscanLoading) return;
     this.autoscanLoading = true;
