@@ -821,7 +821,7 @@ export const previewWoocommerceEarnings = async (req: AuthRequest, res: Response
         return res.status(502).json({ error: `WooCommerce API error: ${response.status} ${errText}` });
       }
 
-      const orders: any[] = await response.json();
+      const orders = await response.json() as any[];
       if (!Array.isArray(orders) || orders.length === 0) {
         hasMore = false;
         break;
