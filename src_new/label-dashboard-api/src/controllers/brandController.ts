@@ -105,7 +105,13 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       paymongo_wallet_id: brand.paymongo_wallet_id,
       payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts || 0,
       artist_custom_fields: brand.artist_custom_fields || [],
-      about_us: brand.about_us || null
+      about_us: brand.about_us || null,
+      loyverse_enabled: brand.loyverse_enabled || false,
+      loyverse_api_key: brand.loyverse_api_key,
+      woocommerce_enabled: brand.woocommerce_enabled || false,
+      woocommerce_url: brand.woocommerce_url,
+      woocommerce_consumer_key: brand.woocommerce_consumer_key,
+      woocommerce_consumer_secret: brand.woocommerce_consumer_secret,
     });
 
   } catch (error) {
@@ -126,7 +132,13 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       paymongo_wallet_id,
       payment_processing_fee_for_payouts,
       artist_custom_fields,
-      about_us
+      about_us,
+      loyverse_enabled,
+      loyverse_api_key,
+      woocommerce_enabled,
+      woocommerce_url,
+      woocommerce_consumer_key,
+      woocommerce_consumer_secret,
     } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
@@ -164,10 +176,16 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       brand_color: brand_color || brand.brand_color,
       catalog_prefix: catalog_prefix || brand.catalog_prefix,
       release_submission_url: release_submission_url || null,
-      paymongo_wallet_id: paymongo_wallet_id || null,
+      paymongo_wallet_id: paymongo_wallet_id !== undefined ? (paymongo_wallet_id || null) : brand.paymongo_wallet_id,
       payment_processing_fee_for_payouts: payment_processing_fee_for_payouts || 0,
       artist_custom_fields: artist_custom_fields !== undefined ? artist_custom_fields : brand.artist_custom_fields,
-      about_us: about_us !== undefined ? (about_us || null) : brand.about_us
+      about_us: about_us !== undefined ? (about_us || null) : brand.about_us,
+      loyverse_enabled: loyverse_enabled !== undefined ? loyverse_enabled : brand.loyverse_enabled,
+      loyverse_api_key: loyverse_api_key !== undefined ? (loyverse_api_key || null) : brand.loyverse_api_key,
+      woocommerce_enabled: woocommerce_enabled !== undefined ? woocommerce_enabled : brand.woocommerce_enabled,
+      woocommerce_url: woocommerce_url !== undefined ? (woocommerce_url || null) : brand.woocommerce_url,
+      woocommerce_consumer_key: woocommerce_consumer_key !== undefined ? (woocommerce_consumer_key || null) : brand.woocommerce_consumer_key,
+      woocommerce_consumer_secret: woocommerce_consumer_secret !== undefined ? (woocommerce_consumer_secret || null) : brand.woocommerce_consumer_secret,
     });
 
     res.json({
@@ -184,7 +202,13 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         paymongo_wallet_id: brand.paymongo_wallet_id,
         payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts,
         artist_custom_fields: brand.artist_custom_fields,
-        about_us: brand.about_us || null
+        about_us: brand.about_us || null,
+        loyverse_enabled: brand.loyverse_enabled || false,
+        loyverse_api_key: brand.loyverse_api_key,
+        woocommerce_enabled: brand.woocommerce_enabled || false,
+        woocommerce_url: brand.woocommerce_url,
+        woocommerce_consumer_key: brand.woocommerce_consumer_key,
+        woocommerce_consumer_secret: brand.woocommerce_consumer_secret,
       }
     });
 

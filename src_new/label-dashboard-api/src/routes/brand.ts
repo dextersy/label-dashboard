@@ -1,5 +1,6 @@
 import express from 'express';
 import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getServerIp, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles, deactivateBrand } from '../controllers/brandController';
+import { testLoyverseConnection, testWoocommerceConnection } from '../controllers/integrationController';
 import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, deleteLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus } from '../controllers/labelPaymentController';
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
@@ -62,6 +63,10 @@ router.post('/:brandId/payments', authenticateToken, requireAdmin, addLabelPayme
 router.get('/:brandId/payments', authenticateToken, requireAdmin, getLabelPayments);
 router.get('/:brandId/payments/:id', authenticateToken, requireAdmin, getLabelPaymentById);
 router.patch('/:brandId/payments/:id/status', authenticateToken, requireAdmin, updateLabelPaymentStatus);
+
+// Integration connection test routes
+router.post('/:brandId/integrations/test/loyverse', authenticateToken, requireAdmin, testLoyverseConnection);
+router.post('/:brandId/integrations/test/woocommerce', authenticateToken, requireAdmin, testWoocommerceConnection);
 
 // Label finance dashboard routes
 router.get('/:brandId/finance/dashboard', authenticateToken, requireAdmin, getLabelFinanceDashboard);
