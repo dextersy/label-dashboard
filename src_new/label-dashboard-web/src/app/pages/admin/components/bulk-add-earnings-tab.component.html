@@ -530,16 +530,7 @@
       </p>
     </div>
     <ng-template #showTable>
-      <app-paginated-table
-        [data]="csvData"
-        [columns]="csvTableColumns"
-        [pagination]="csvPagination"
-        [loading]="loading"
-        [showSearch]="true"
-        [showSortableHeaders]="true"
-        [title]="'Matched Releases'"
-        (pageChange)="onCsvPageChange($event)">
-      </app-paginated-table>
+      <ng-container [ngTemplateOutlet]="editableImportTable"></ng-container>
     </ng-template>
 
   </div>
@@ -773,16 +764,7 @@
       <h5 class="tw-text-muted">No matches found.</h5>
       <p class="tw-text-muted">Ensure product names match existing release titles in the system.</p>
     </div>
-    <app-paginated-table *ngIf="csvData.length > 0"
-      [data]="csvData"
-      [columns]="csvTableColumns"
-      [pagination]="csvPagination"
-      [loading]="integrationLoading"
-      [showSearch]="true"
-      [showSortableHeaders]="true"
-      [title]="'Matched Releases'"
-      (pageChange)="onCsvPageChange($event)">
-    </app-paginated-table>
+    <ng-container *ngIf="csvData.length > 0" [ngTemplateOutlet]="editableImportTable"></ng-container>
 
   </ng-container>
 </div><!-- /loyverse panel -->
@@ -869,16 +851,7 @@
       <h5 class="tw-text-muted">No matches found.</h5>
       <p class="tw-text-muted">Ensure WooCommerce product names match existing release titles in the system.</p>
     </div>
-    <app-paginated-table *ngIf="csvData.length > 0"
-      [data]="csvData"
-      [columns]="csvTableColumns"
-      [pagination]="csvPagination"
-      [loading]="integrationLoading"
-      [showSearch]="true"
-      [showSortableHeaders]="true"
-      [title]="'Matched Releases'"
-      (pageChange)="onCsvPageChange($event)">
-    </app-paginated-table>
+    <ng-container *ngIf="csvData.length > 0" [ngTemplateOutlet]="editableImportTable"></ng-container>
 
   </ng-container>
 </div><!-- /woocommerce panel -->
@@ -933,3 +906,152 @@
 </app-floating-action-bar>
 
 </div><!-- /import view -->
+
+<!-- Shared editable import table template (outside all *ngIf blocks so ViewChild always resolves it) -->
+<ng-template #editableImportTable>
+  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-5">
+    <!-- Table header -->
+    <div class="tw-px-4 tw-pt-3 tw-pb-2 tw-flex tw-items-center tw-justify-between tw-border-b tw-border-gray-100">
+      <div>
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Matched Releases</h3>
+        <small class="tw-text-muted tw-leading-none">
+          Showing {{ ((csvPagination.current_page - 1) * csvPagination.per_page) + 1 }}–{{ csvPagination.current_page * csvPagination.per_page > csvPagination.total_count ? csvPagination.total_count : csvPagination.current_page * csvPagination.per_page }} of {{ csvPagination.total_count }} entries
+        </small>
+      </div>
+      <small class="tw-text-muted tw-text-xs tw-hidden sm:tw-block">
+        <app-icon name="info" iconOnly class="tw-mr-1" />Click the pencil to edit a row
+      </small>
+    </div>
+    <!-- Table -->
+    <div class="table-responsive">
+      <table class="table table-sm tw-mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="font-size:11px;white-space:nowrap;">Catalog No.</th>
+            <th *ngIf="csvDetectedLabelColumn" style="font-size:11px;">Label</th>
+            <th style="font-size:11px;">Release Title</th>
+            <th *ngIf="csvDetectedDateColumn" style="font-size:11px;">Date</th>
+            <th style="font-size:11px;">Description</th>
+            <th style="font-size:11px;">Type</th>
+            <th style="font-size:11px;text-align:right;">Amount</th>
+            <th style="width:64px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of csvData" [class.table-active]="editingRow === row">
+
+            <!-- Read mode -->
+            <ng-container *ngIf="editingRow !== row">
+              <td style="font-family:monospace;font-size:12px;white-space:nowrap;">{{ row.matched_release?.catalog_no }}</td>
+              <td *ngIf="csvDetectedLabelColumn" style="font-size:13px;">{{ row.matched_brand?.brand_name }}</td>
+              <td style="font-size:13px;">{{ row.matched_release?.title }}</td>
+              <td *ngIf="csvDetectedDateColumn" style="font-size:13px;white-space:nowrap;">{{ row.original_data?.[csvDetectedDateColumn] }}</td>
+              <td style="font-size:13px;" [class.tw-text-muted]="row.row_description === undefined">
+                {{ getRowDescription(row) || '—' }}
+              </td>
+              <td style="font-size:13px;" [class.tw-text-muted]="row.row_type === undefined">
+                {{ getRowType(row) || '—' }}
+              </td>
+              <td style="font-size:13px;text-align:right;white-space:nowrap;" [class.text-danger]="row.earning_amount < 0">
+                {{ formatCurrency(row.earning_amount) }}
+              </td>
+              <td>
+                <button type="button" class="btn-icon tw-text-gray-400 hover:tw-text-gray-700"
+                        title="Edit row"
+                        (click)="startEditRow(row)">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </td>
+            </ng-container>
+
+            <!-- Edit mode -->
+            <ng-container *ngIf="editingRow === row">
+              <td [attr.colspan]="csvDetectedLabelColumn ? 3 : 2" style="min-width:220px;">
+                <div class="tw-relative">
+                  <div class="release-search-wrap">
+                    <app-icon name="search" class="release-search-icon" iconOnly />
+                    <input type="text"
+                           class="tw-input release-search-input"
+                           [value]="editDraft.release_search_term"
+                           (input)="onEditReleaseSearch($any($event.target).value)"
+                           (focus)="onEditReleaseFocus()"
+                           (blur)="onEditReleaseBlur()"
+                           placeholder="Search releases..."
+                           autocomplete="off">
+                  </div>
+                  <div *ngIf="editShowDropdown"
+                       class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
+                       style="z-index:1100;max-height:200px;overflow-y:auto;">
+                    <div *ngIf="editFilteredReleases.length > 0; else noEditResults">
+                      <div *ngFor="let rel of editFilteredReleases"
+                           class="tw-p-2 release-option"
+                           style="cursor:pointer;border-bottom:1px solid #eee;"
+                           (mousedown)="selectEditRelease(rel)">
+                        <strong>{{ rel.catalog_no }}</strong>: {{ rel.title }}
+                        <span *ngIf="rel.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ rel.brand!.brand_name }})</span>
+                      </div>
+                    </div>
+                    <ng-template #noEditResults>
+                      <div class="tw-p-2 tw-text-muted">No releases found</div>
+                    </ng-template>
+                  </div>
+                </div>
+              </td>
+              <td *ngIf="csvDetectedDateColumn" style="font-size:13px;white-space:nowrap;">{{ row.original_data?.[csvDetectedDateColumn] }}</td>
+              <td>
+                <input type="text" class="tw-input tw-input-sm" style="min-width:130px;"
+                       [(ngModel)]="editDraft.description"
+                       placeholder="Description"
+                       maxlength="45">
+              </td>
+              <td>
+                <select class="tw-input tw-input-sm" style="min-width:110px;" [(ngModel)]="editDraft.type">
+                  <option value="" disabled>Type</option>
+                  <option value="Sync">Sync</option>
+                  <option value="Streaming">Streaming</option>
+                  <option value="Downloads">Downloads</option>
+                  <option value="Physical">Physical</option>
+                </select>
+              </td>
+              <td>
+                <div class="tw-flex tw-items-center tw-justify-end tw-gap-1">
+                  <span class="tw-text-muted tw-text-sm">₱</span>
+                  <input type="number" class="tw-input tw-input-sm" style="min-width:90px;text-align:right;"
+                         [(ngModel)]="editDraft.earning_amount"
+                         step="0.01">
+                </div>
+              </td>
+              <td>
+                <div class="tw-flex tw-items-center tw-gap-1">
+                  <button type="button" class="btn-icon tw-text-green-600" title="Confirm" (click)="confirmEditRow()">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="btn-icon tw-text-red-500" title="Cancel" (click)="cancelEditRow()">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Pagination controls -->
+    <div *ngIf="csvPagination.total_pages > 1" class="tw-flex tw-items-center tw-justify-between tw-px-4 tw-py-2 tw-border-t tw-border-gray-100">
+      <small class="tw-text-muted">Page {{ csvPagination.current_page }} of {{ csvPagination.total_pages }}</small>
+      <div class="tw-flex tw-gap-1">
+        <button type="button" class="btn-secondary btn-sm"
+                [disabled]="!csvPagination.has_prev"
+                (click)="onCsvPageChange(csvPagination.current_page - 1)">
+          <app-icon name="chevron-left" iconOnly />
+        </button>
+        <button type="button" class="btn-secondary btn-sm"
+                [disabled]="!csvPagination.has_next"
+                (click)="onCsvPageChange(csvPagination.current_page + 1)">
+          <app-icon name="chevron-right" iconOnly />
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>

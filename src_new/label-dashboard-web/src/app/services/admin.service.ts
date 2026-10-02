@@ -227,6 +227,9 @@ export interface ProcessedEarningRow {
     brand_name: string;
   } | null;
   fuzzy_match_score?: number;
+  // Per-row overrides (set by the user via inline editing)
+  row_description?: string;
+  row_type?: string;
 }
 
 export interface CsvProcessingResult {

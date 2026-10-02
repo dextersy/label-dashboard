@@ -11,6 +11,8 @@ import { getBrandFrontendUrl } from '../utils/brandUtils';
 import csv from 'csv-parser';
 import * as fuzz from 'fuzzball';
 import { Readable } from 'stream';
+// @ts-ignore — no type declarations for wink-bm25-text-search
+import winkBM25 from 'wink-bm25-text-search';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -611,50 +613,91 @@ const loadReleasesForAdmin = async (brandId: number) => {
   return { releases, childBrandById };
 };
 
-// Extract a matchable title from a product name like "Artist - Title [Format]"
-const extractTitleFromProductName = (name: string): string => {
-  // Strip trailing bracket content: [Cassette], [CD], [12" vinyl, limited edition], etc.
-  let title = name.replace(/\s*\[[^\]]*\]\s*$/, '').trim();
-  // Strip leading "Artist - " prefix (everything up to and including the first " - ")
-  const dashIdx = title.indexOf(' - ');
-  if (dashIdx !== -1) {
-    title = title.substring(dashIdx + 3).trim();
+// Normalize for BM25 indexing/querying:
+// - flatten bracket/paren variants: [Vinyl] and (Vinyl) both become "vinyl"
+// - collapse dashes (handles "Artist - Title" pattern)
+// - lowercase, strip punctuation
+const normalizeForBM25 = (s: string): string =>
+  s.replace(/[\[({][^\]})]*[\]})]/g, m => ' ' + m.slice(1, -1) + ' ')
+   .replace(/[-–—]/g, ' ')
+   .toLowerCase()
+   .replace(/[^a-z0-9 ]/g, ' ')
+   .replace(/\s+/g, ' ')
+   .trim();
+
+const bm25PrepTasks = [normalizeForBM25, (s: string) => s.split(' ')];
+
+interface ReleaseIndex {
+  // Maps normalized title → original release objects (for exact-match fast path)
+  byNormTitle: Map<string, any[]>;
+  // BM25 engine (null if corpus too small — exact match covers this edge case)
+  bm25Engine: any | null;
+  // Parallel array: bm25 doc index → release object
+  indexedReleases: any[];
+}
+
+// Build once per request from all releases.
+const buildReleaseIndex = (releases: any[]): ReleaseIndex => {
+  const byNormTitle = new Map<string, any[]>();
+  const indexedReleases: any[] = [];
+
+  for (const release of releases) {
+    const norm = normalizeForBM25(release.title || '');
+    if (!byNormTitle.has(norm)) byNormTitle.set(norm, []);
+    byNormTitle.get(norm)!.push(release);
   }
-  return title;
+
+  // wink-bm25-text-search requires ≥3 docs; with <3 releases the exact-match
+  // path above is sufficient — a catalog that small won't have ambiguous titles.
+  let bm25Engine: any = null;
+  if (releases.length >= 3) {
+    const engine = winkBM25();
+    engine.defineConfig({ fldWeights: { title: 1 } });
+    engine.definePrepTasks(bm25PrepTasks);
+    for (const release of releases) {
+      engine.addDoc({ title: release.title || '' }, indexedReleases.length);
+      indexedReleases.push(release);
+    }
+    engine.consolidate();
+    bm25Engine = engine;
+  } else {
+    indexedReleases.push(...releases);
+  }
+
+  return { byNormTitle, bm25Engine, indexedReleases };
 };
 
-// Find the best release match for a product name, trying progressively:
-// 1. Exact match on extracted title (strips "Artist - " and "[Format]")
-// 2. Exact match on raw name
-// 3. Fuzzy match on extracted title (≥80 score)
-const findMatchingReleaseForProduct = async (
-  releases: any[],
+// Find the best release match for a product name.
+// Uses BM25 which handles token reordering and naturally prefers more-specific
+// titles (e.g. "Title (Vinyl)" over "Title") via IDF weighting.
+// A ≥50% token overlap check prevents low-overlap spurious matches.
+const findMatchingReleaseForProduct = (
+  index: ReleaseIndex,
   productName: string
-): Promise<{ release: any | null; score: number }> => {
-  const extractedTitle = extractTitleFromProductName(productName);
+): { release: any | null; score: number } => {
+  const normQuery = normalizeForBM25(productName);
 
-  // 1. Exact on extracted title
-  if (extractedTitle && extractedTitle !== productName) {
-    const result = await findMatchingRelease(releases, '', extractedTitle);
-    if (result.release) return result;
-  }
+  // Fast path: exact normalized title match — O(1)
+  const exactCandidates = index.byNormTitle.get(normQuery);
+  if (exactCandidates?.length) return { release: exactCandidates[0], score: 100 };
 
-  // 2. Exact on raw name
-  const rawResult = await findMatchingRelease(releases, '', productName);
-  if (rawResult.release) return rawResult;
+  const queryTokens = new Set(normQuery.split(' ').filter((t: string) => t.length > 1));
 
-  // 3. Fuzzy on extracted title
-  const titleToFuzz = extractedTitle || productName;
-  let bestRelease: any = null;
-  let bestScore = 0;
-  for (const release of releases) {
-    const score = fuzz.token_set_ratio(titleToFuzz.toLowerCase(), (release.title || '').toLowerCase());
-    if (score > bestScore && score >= 80) {
-      bestScore = score;
-      bestRelease = release;
+  // BM25 path: token-aware ranked search
+  if (index.bm25Engine) {
+    const results: [string, number][] = index.bm25Engine.search(normQuery);
+    if (results.length > 0) {
+      const [docIndexStr, bm25Score] = results[0];
+      const release = index.indexedReleases[parseInt(docIndexStr, 10)];
+      // Require ≥50% token overlap to prevent spurious single-token matches
+      const titleTokens = new Set(normalizeForBM25(release.title || '').split(' ').filter((t: string) => t.length > 1));
+      const shared = [...queryTokens].filter(t => titleTokens.has(t)).length;
+      const overlap = shared / Math.min(queryTokens.size, titleTokens.size);
+      if (overlap >= 0.5) return { release, score: bm25Score };
     }
   }
-  return { release: bestRelease, score: bestScore };
+
+  return { release: null, score: 0 };
 };
 
 // Shared helper: build CsvProcessingResult from a list of { name, amount, date } rows
@@ -663,12 +706,13 @@ const buildPreviewResult = async (
   releases: any[],
   childBrandById: Map<number, any>
 ) => {
+  const index = buildReleaseIndex(releases);
   const processedRows: ProcessedEarningRow[] = [];
   let totalMatchedAmount = 0;
   let unmatchedCount = 0;
 
   for (const row of rows) {
-    const { release, score } = await findMatchingReleaseForProduct(releases, row.name);
+    const { release, score } = findMatchingReleaseForProduct(index, row.name);
     const processedRow: ProcessedEarningRow = {
       original_data: { name: row.name, amount: String(row.amount), date: row.date },
       catalog_no: '',

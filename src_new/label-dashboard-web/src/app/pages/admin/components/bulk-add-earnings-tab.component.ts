@@ -54,6 +54,12 @@ export class BulkAddEarningsTabComponent implements OnInit {
   csvDetectedLabelColumn: boolean = false;
   csvMobileEditing: boolean = false;
   manualFormCollapsed: boolean = true;
+
+  // Per-row inline editing (import view)
+  editingRow: ProcessedEarningRow | null = null;
+  editDraft: { description: string; earning_amount: number; type: string; release_id: number; release_search_term: string } = { description: '', earning_amount: 0, type: '', release_id: 0, release_search_term: '' };
+  editFilteredReleases: Release[] = [];
+  editShowDropdown: boolean = false;
   csvProcessingResult: CsvProcessingResult | null = null;
   showAddRowsDropdown: boolean = false;
 
@@ -318,6 +324,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
       this.csvDataAll = [];
       this.csvData = [];
       this.csvFile = null;
+      this.editingRow = null;
     }
     this.importSource = source;
   }
@@ -341,6 +348,11 @@ export class BulkAddEarningsTabComponent implements OnInit {
       consolidate: this.integrationConsolidate
     }).subscribe({
       next: (result) => {
+        result.data.forEach(row => {
+          if (row.row_description === undefined) {
+            row.row_description = `Loyverse sale (${row.original_data['name'] || row.release_title})`;
+          }
+        });
         this.csvProcessingResult = result;
         this.csvDataAll = result.data.filter(r => r.matched_release !== null);
         this.csvDetectedDateColumn = this.integrationConsolidate ? '' : 'date';
@@ -367,6 +379,11 @@ export class BulkAddEarningsTabComponent implements OnInit {
       consolidate: this.integrationConsolidate
     }).subscribe({
       next: (result) => {
+        result.data.forEach(row => {
+          if (row.row_description === undefined) {
+            row.row_description = `WooCommerce sale (${row.original_data['name'] || row.release_title})`;
+          }
+        });
         this.csvProcessingResult = result;
         this.csvDataAll = result.data.filter(r => r.matched_release !== null);
         this.csvDetectedDateColumn = this.integrationConsolidate ? '' : 'date';
@@ -385,6 +402,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   }
 
   clearIntegrationPreview(): void {
+    this.editingRow = null;
     this.csvProcessingResult = null;
     this.csvDataAll = [];
     this.csvData = [];
@@ -505,6 +523,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   }
 
   onCsvPageChange(page: number): void {
+    this.cancelEditRow();
     this.csvPagination.current_page = page;
     this.csvPagination.has_prev = page > 1;
     this.csvPagination.has_next = page < this.csvPagination.total_pages;
@@ -512,6 +531,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   }
 
   removeCsvFile(): void {
+    this.editingRow = null;
     this.csvFile = null;
     this.csvData = [];
     this.csvDataAll = [];
@@ -548,8 +568,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
       date_recorded: this.csvDetectedDateColumn
         ? this.parseCsvDate(row.original_data[this.csvDetectedDateColumn] || '')
         : this.csvDateOverride,
-      type: this.csvEarningType,
-      description: this.csvDescription,
+      type: row.row_type !== undefined ? row.row_type : this.csvEarningType,
+      description: row.row_description !== undefined ? row.row_description : this.csvDescription,
       amount: row.earning_amount,
       calculate_royalties: this.csvCalculateRoyalties
     }));
@@ -658,6 +678,88 @@ export class BulkAddEarningsTabComponent implements OnInit {
       return d.toISOString().split('T')[0];
     }
     return this.csvDateOverride;
+  }
+
+  startEditRow(row: ProcessedEarningRow): void {
+    this.editingRow = row;
+    this.editShowDropdown = false;
+    this.editFilteredReleases = [];
+    const rel = row.matched_release;
+    this.editDraft = {
+      description: row.row_description !== undefined ? row.row_description : this.csvDescription,
+      earning_amount: row.earning_amount,
+      type: row.row_type !== undefined ? row.row_type : this.csvEarningType,
+      release_id: rel?.id || 0,
+      release_search_term: rel ? `${rel.catalog_no}: ${rel.title}` : ''
+    };
+  }
+
+  confirmEditRow(): void {
+    if (!this.editingRow) return;
+    this.editingRow.row_description = this.editDraft.description;
+    this.editingRow.row_type = this.editDraft.type;
+    this.editingRow.earning_amount = this.editDraft.earning_amount;
+    if (this.editDraft.release_id && this.editDraft.release_id !== this.editingRow.matched_release?.id) {
+      const rel = this.releases.find(r => r.id === this.editDraft.release_id);
+      if (rel) {
+        this.editingRow.matched_release = { id: rel.id, catalog_no: rel.catalog_no, title: rel.title };
+      }
+    }
+    this.editingRow = null;
+    this.editShowDropdown = false;
+    // Recalculate totals
+    this.csvTotalAmount = this.csvDataAll.reduce((sum, r) => sum + r.earning_amount, 0);
+  }
+
+  cancelEditRow(): void {
+    this.editingRow = null;
+    this.editShowDropdown = false;
+  }
+
+  onEditReleaseSearch(term: string): void {
+    this.editDraft.release_search_term = term;
+    this.editDraft.release_id = 0;
+    if (term.length === 0) {
+      this.editFilteredReleases = [...this.releases];
+    } else {
+      this.editFilteredReleases = this.releases.filter(r =>
+        r.title.toLowerCase().includes(term.toLowerCase()) ||
+        r.catalog_no.toLowerCase().includes(term.toLowerCase())
+      );
+    }
+    this.editShowDropdown = true;
+  }
+
+  onEditReleaseFocus(): void {
+    this.editShowDropdown = true;
+    this.editFilteredReleases = this.editDraft.release_search_term
+      ? this.releases.filter(r =>
+          r.title.toLowerCase().includes(this.editDraft.release_search_term.toLowerCase()) ||
+          r.catalog_no.toLowerCase().includes(this.editDraft.release_search_term.toLowerCase())
+        )
+      : [...this.releases];
+  }
+
+  onEditReleaseBlur(): void {
+    setTimeout(() => { this.editShowDropdown = false; }, 200);
+  }
+
+  selectEditRelease(release: Release): void {
+    this.editDraft.release_id = release.id;
+    this.editDraft.release_search_term = `${release.catalog_no}: ${release.title}`;
+    this.editShowDropdown = false;
+  }
+
+  getRowDescription(row: ProcessedEarningRow): string {
+    return row.row_description !== undefined ? row.row_description : this.csvDescription;
+  }
+
+  getRowType(row: ProcessedEarningRow): string {
+    return row.row_type !== undefined ? row.row_type : this.csvEarningType;
+  }
+
+  hasRowOverride(row: ProcessedEarningRow): boolean {
+    return row.row_description !== undefined || row.row_type !== undefined;
   }
 
   formatCurrency(amount: number): string {

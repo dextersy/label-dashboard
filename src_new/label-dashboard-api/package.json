@@ -61,7 +61,9 @@
     "sequelize": "^6.37.8",
     "sequelize-cli": "^6.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wink-bm25-text-search": "^3.1.2",
+    "wink-nlp-utils": "^2.1.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
