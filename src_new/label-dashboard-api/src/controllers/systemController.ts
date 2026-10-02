@@ -919,7 +919,7 @@ export const processArtistPayouts = async (req: Request, res: Response) => {
          FROM payment
          WHERE artist_id IN (:artistIds)
            AND paid_by_brand_id = :parentBrandId
-           AND status = 'succeeded'
+           AND status IN ('succeeded', 'pending')
          GROUP BY artist_id`,
         { replacements: { artistIds, parentBrandId: brand.id }, type: 'SELECT' }
       );
@@ -1021,6 +1021,25 @@ export const processArtistPayouts = async (req: Request, res: Response) => {
             artist_name: artist.artist_name,
             amount: artist.balance,
             reason: 'Transfer amount after processing fee is zero or negative',
+          });
+          continue;
+        }
+
+        // Guard against concurrent invocations: skip if a pending payment already
+        // exists for this artist+brand (created by a parallel Lambda execution).
+        const existingPending = await Payment.findOne({
+          where: {
+            artist_id: artist.artist_id,
+            paid_by_brand_id: brand.id,
+            status: 'pending',
+          },
+        });
+        if (existingPending) {
+          artistsSkipped.push({
+            artist_id: artist.artist_id,
+            artist_name: artist.artist_name,
+            amount: artist.balance,
+            reason: 'Payment already in progress (pending transfer exists)',
           });
           continue;
         }
