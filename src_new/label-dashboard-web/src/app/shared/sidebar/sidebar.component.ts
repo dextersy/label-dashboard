@@ -201,6 +201,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
               ]
             },
             { route: '/admin/subscription', title: 'Subscription', adminOnly: true },
+            { route: '/admin/integrations', title: 'Integrations', adminOnly: true },
             { route: '/admin/users', title: 'Users', adminOnly: true },
             {
               route: '/admin/tools',
@@ -339,6 +340,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
                     break;
                   case '/admin/subscription':
                     icon = 'credit-card';
+                    break;
+                  case '/admin/integrations':
+                    icon = 'link';
                     break;
                 }
                 return {

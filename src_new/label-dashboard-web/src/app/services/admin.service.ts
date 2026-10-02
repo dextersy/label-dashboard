@@ -23,6 +23,12 @@ export interface BrandSettings {
   event_fee_revenue_type?: 'net' | 'gross';
   artist_custom_fields?: ArtistCustomField[];
   about_us?: string | null;
+  loyverse_enabled?: boolean;
+  loyverse_api_key?: string;
+  woocommerce_enabled?: boolean;
+  woocommerce_url?: string;
+  woocommerce_consumer_key?: string;
+  woocommerce_consumer_secret?: string;
 }
 
 export interface ArtistCustomField {
@@ -580,6 +586,17 @@ export class AdminService {
     return this.http.put(`${environment.apiUrl}/brands/${brandId}`, brandSettings, {
       headers: this.getAuthHeaders()
     });
+  }
+
+  testIntegration(integration: 'loyverse' | 'woocommerce', values: Partial<BrandSettings>): Observable<{ success: boolean; message: string }> {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    if (!brandId) throw new Error('No brand ID found for current user');
+    return this.http.post<{ success: boolean; message: string }>(
+      `${environment.apiUrl}/brands/${brandId}/integrations/test/${integration}`,
+      values,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   uploadBrandLogo(file: File): Observable<any> {

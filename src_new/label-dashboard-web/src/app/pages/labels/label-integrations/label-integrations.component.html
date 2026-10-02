@@ -1,0 +1,332 @@
+<div class="tw-flex tw-flex-col" style="min-height: calc(100vh - 130px)">
+
+<app-breadcrumb></app-breadcrumb>
+
+<div *ngIf="loading" class="tw-flex tw-items-center tw-justify-center tw-py-16">
+  <div class="spinner-border text-secondary" role="status"></div>
+</div>
+
+<div *ngIf="!loading && brandSettings" class="tw-flex tw-flex-col tw-gap-6">
+
+  <!-- Payments Section -->
+  <div>
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Payments</h3>
+    <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
+
+      <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4 sm:tw-gap-6">
+
+        <!-- Logo + description -->
+        <div class="tw-flex tw-items-start tw-gap-3 sm:tw-w-56 tw-shrink-0">
+          <div class="tw-rounded-lg tw-border tw-border-subtle tw-p-2 tw-bg-[#1a1a2e] tw-shrink-0" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;">
+            <img src="assets/img/integrations/paymongo.webp" alt="PayMongo" style="width:36px;height:auto;object-fit:contain;">
+          </div>
+          <div>
+            <p class="tw-text-sm tw-font-semibold tw-text-heading tw-mb-0.5">PayMongo</p>
+            <p class="tw-text-xs tw-text-muted tw-mb-0">Accept payments and send payouts via PayMongo.</p>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="tw-flex-1 tw-space-y-4">
+
+          <!-- Wallet ID -->
+          <div>
+            <label class="tw-label">Wallet ID <span class="tw-text-muted tw-font-normal">(for payouts)</span></label>
+            <div *ngIf="!isEditing('paymongo_wallet_id')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+              <span class="tw-text-sm tw-text-body" style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                {{ editingSettings.paymongo_wallet_id ? '••••••••' : '—' }}
+              </span>
+              <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('paymongo_wallet_id')" title="Edit">
+                <app-icon name="edit" iconOnly />
+              </button>
+            </div>
+            <div *ngIf="isEditing('paymongo_wallet_id')" class="tw-flex tw-items-center tw-gap-1">
+              <div class="tw-relative tw-flex-1">
+                <input [type]="isVisible('paymongo_wallet_id') ? 'text' : 'password'"
+                       class="tw-input tw-pr-10"
+                       [(ngModel)]="editingSettings.paymongo_wallet_id"
+                       placeholder="Wallet ID">
+                <button type="button"
+                        class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+                        (click)="toggleVisibility('paymongo_wallet_id')"
+                        tabindex="-1">
+                  <app-icon [name]="isVisible('paymongo_wallet_id') ? 'eye-off' : 'eye'" />
+                </button>
+              </div>
+              <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('paymongo_wallet_id')" title="Confirm">
+                <app-icon name="check" iconOnly />
+              </button>
+              <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('paymongo_wallet_id')" title="Cancel">
+                <app-icon name="x" iconOnly />
+              </button>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sales Section -->
+  <div>
+    <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Sales</h3>
+    <div class="tw-flex tw-flex-col tw-gap-4">
+
+      <!-- Loyverse POS -->
+      <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
+        <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4 sm:tw-gap-6">
+
+          <!-- Logo + description -->
+          <div class="tw-flex tw-items-start tw-gap-3 sm:tw-w-56 tw-shrink-0">
+            <div class="tw-rounded-lg tw-border tw-border-subtle tw-p-2 tw-bg-white tw-shrink-0" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;">
+              <img src="assets/img/integrations/loyverse.png" alt="Loyverse POS" style="width:36px;height:auto;object-fit:contain;">
+            </div>
+            <div>
+              <p class="tw-text-sm tw-font-semibold tw-text-heading tw-mb-0.5">Loyverse POS</p>
+              <p class="tw-text-xs tw-text-muted tw-mb-0">Sync sales data from Loyverse point-of-sale.</p>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="tw-flex-1 tw-space-y-4">
+
+            <!-- Enable toggle -->
+            <div class="tw-flex tw-items-center tw-justify-between">
+              <div>
+                <p class="tw-text-sm tw-font-medium tw-text-body tw-mb-0">Enable Loyverse integration</p>
+                <p class="tw-text-xs tw-text-muted tw-mb-0">Allow sales data to be imported from Loyverse.</p>
+              </div>
+              <label class="tw-relative tw-inline-flex tw-items-center tw-cursor-pointer">
+                <input type="checkbox"
+                       class="tw-sr-only tw-peer"
+                       [(ngModel)]="editingSettings.loyverse_enabled"
+                       (ngModelChange)="dirtyFields.add('loyverse_enabled')">
+                <div class="tw-w-11 tw-h-6 tw-bg-gray-200 tw-rounded-full tw-peer peer-checked:tw-bg-blue-600 peer-focus:tw-outline-none peer-focus:tw-ring-2 peer-focus:tw-ring-blue-300 tw-transition-colors
+                            after:tw-content-[''] after:tw-absolute after:tw-top-[2px] after:tw-left-[2px] after:tw-bg-white after:tw-rounded-full after:tw-h-5 after:tw-w-5 after:tw-transition-all peer-checked:after:tw-translate-x-full"></div>
+              </label>
+            </div>
+
+            <!-- API Token (shown when enabled) -->
+            <div *ngIf="editingSettings.loyverse_enabled">
+              <label class="tw-label">API Token</label>
+              <div *ngIf="!isEditing('loyverse_api_key')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                <span class="tw-text-sm tw-text-body" style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                  {{ editingSettings.loyverse_api_key ? '••••••••' : '—' }}
+                </span>
+                <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('loyverse_api_key')" title="Edit">
+                  <app-icon name="edit" iconOnly />
+                </button>
+              </div>
+              <div *ngIf="isEditing('loyverse_api_key')" class="tw-flex tw-items-center tw-gap-1">
+                <div class="tw-relative tw-flex-1">
+                  <input [type]="isVisible('loyverse_api_key') ? 'text' : 'password'"
+                         class="tw-input tw-pr-10"
+                         [(ngModel)]="editingSettings.loyverse_api_key"
+                         placeholder="Loyverse API token">
+                  <button type="button"
+                          class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+                          (click)="toggleVisibility('loyverse_api_key')"
+                          tabindex="-1">
+                    <app-icon [name]="isVisible('loyverse_api_key') ? 'eye-off' : 'eye'" />
+                  </button>
+                </div>
+                <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('loyverse_api_key')" title="Confirm">
+                  <app-icon name="check" iconOnly />
+                </button>
+                <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('loyverse_api_key')" title="Cancel">
+                  <app-icon name="x" iconOnly />
+                </button>
+              </div>
+            </div>
+
+            <!-- Test connection -->
+            <div class="tw-flex tw-items-center tw-gap-3 tw-pt-1">
+              <button type="button"
+                      class="btn btn-sm btn-secondary"
+                      [disabled]="testingIntegration === 'loyverse' || !editingSettings.loyverse_api_key"
+                      (click)="testConnection('loyverse')">
+                <span *ngIf="testingIntegration === 'loyverse'" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
+                <app-icon *ngIf="testingIntegration !== 'loyverse'" name="plug" />
+                {{ testingIntegration === 'loyverse' ? 'Testing…' : 'Test connection' }}
+              </button>
+              <span *ngIf="testResults['loyverse']"
+                    class="tw-text-xs tw-flex tw-items-center tw-gap-1"
+                    [class.tw-text-green-600]="testResults['loyverse']!.success"
+                    [class.tw-text-red-600]="!testResults['loyverse']!.success">
+                <app-icon [name]="testResults['loyverse']!.success ? 'check-circle' : 'x-circle'" iconOnly />
+                {{ testResults['loyverse']!.message }}
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- WooCommerce -->
+      <div class="tw-bg-white md:tw-rounded-card md:tw-shadow-card md:tw-p-6">
+        <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-4 sm:tw-gap-6">
+
+          <!-- Logo + description -->
+          <div class="tw-flex tw-items-start tw-gap-3 sm:tw-w-56 tw-shrink-0">
+            <div class="tw-rounded-lg tw-border tw-border-subtle tw-p-2 tw-bg-white tw-shrink-0" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;">
+              <img src="assets/img/integrations/woocommerce.svg" alt="WooCommerce" style="width:36px;height:auto;object-fit:contain;">
+            </div>
+            <div>
+              <p class="tw-text-sm tw-font-semibold tw-text-heading tw-mb-0.5">WooCommerce</p>
+              <p class="tw-text-xs tw-text-muted tw-mb-0">Sync orders and sales from your WooCommerce store.</p>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="tw-flex-1 tw-space-y-4">
+
+            <!-- Enable toggle -->
+            <div class="tw-flex tw-items-center tw-justify-between">
+              <div>
+                <p class="tw-text-sm tw-font-medium tw-text-body tw-mb-0">Enable WooCommerce integration</p>
+                <p class="tw-text-xs tw-text-muted tw-mb-0">Allow orders to be imported from your WooCommerce store.</p>
+              </div>
+              <label class="tw-relative tw-inline-flex tw-items-center tw-cursor-pointer">
+                <input type="checkbox"
+                       class="tw-sr-only tw-peer"
+                       [(ngModel)]="editingSettings.woocommerce_enabled"
+                       (ngModelChange)="dirtyFields.add('woocommerce_enabled')">
+                <div class="tw-w-11 tw-h-6 tw-bg-gray-200 tw-rounded-full tw-peer peer-checked:tw-bg-blue-600 peer-focus:tw-outline-none peer-focus:tw-ring-2 peer-focus:tw-ring-blue-300 tw-transition-colors
+                            after:tw-content-[''] after:tw-absolute after:tw-top-[2px] after:tw-left-[2px] after:tw-bg-white after:tw-rounded-full after:tw-h-5 after:tw-w-5 after:tw-transition-all peer-checked:after:tw-translate-x-full"></div>
+              </label>
+            </div>
+
+            <!-- Store URL + API keys (shown when enabled) -->
+            <ng-container *ngIf="editingSettings.woocommerce_enabled">
+
+              <!-- Store URL -->
+              <div>
+                <label class="tw-label">Store URL</label>
+                <div *ngIf="!isEditing('woocommerce_url')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                  <span class="tw-text-sm tw-text-body tw-break-all">{{ editingSettings.woocommerce_url || '—' }}</span>
+                  <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('woocommerce_url')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </div>
+                <div *ngIf="isEditing('woocommerce_url')" class="tw-flex tw-items-center tw-gap-1">
+                  <input type="text" class="tw-input tw-flex-1"
+                         [(ngModel)]="editingSettings.woocommerce_url"
+                         placeholder="https://yourstore.com">
+                  <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('woocommerce_url')" title="Confirm">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('woocommerce_url')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Consumer Key -->
+              <div>
+                <label class="tw-label">Consumer Key</label>
+                <div *ngIf="!isEditing('woocommerce_consumer_key')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                  <span class="tw-text-sm tw-text-body" style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                    {{ editingSettings.woocommerce_consumer_key ? '••••••••' : '—' }}
+                  </span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('woocommerce_consumer_key')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </div>
+                <div *ngIf="isEditing('woocommerce_consumer_key')" class="tw-flex tw-items-center tw-gap-1">
+                  <div class="tw-relative tw-flex-1">
+                    <input [type]="isVisible('woocommerce_consumer_key') ? 'text' : 'password'"
+                           class="tw-input tw-pr-10"
+                           [(ngModel)]="editingSettings.woocommerce_consumer_key"
+                           placeholder="ck_...">
+                    <button type="button"
+                            class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+                            (click)="toggleVisibility('woocommerce_consumer_key')"
+                            tabindex="-1">
+                      <app-icon [name]="isVisible('woocommerce_consumer_key') ? 'eye-off' : 'eye'" />
+                    </button>
+                  </div>
+                  <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('woocommerce_consumer_key')" title="Confirm">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('woocommerce_consumer_key')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Consumer Secret -->
+              <div>
+                <label class="tw-label">Consumer Secret</label>
+                <div *ngIf="!isEditing('woocommerce_consumer_secret')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                  <span class="tw-text-sm tw-text-body" style="font-family: 'Courier New', monospace; letter-spacing: 1px;">
+                    {{ editingSettings.woocommerce_consumer_secret ? '••••••••' : '—' }}
+                  </span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditing('woocommerce_consumer_secret')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </div>
+                <div *ngIf="isEditing('woocommerce_consumer_secret')" class="tw-flex tw-items-center tw-gap-1">
+                  <div class="tw-relative tw-flex-1">
+                    <input [type]="isVisible('woocommerce_consumer_secret') ? 'text' : 'password'"
+                           class="tw-input tw-pr-10"
+                           [(ngModel)]="editingSettings.woocommerce_consumer_secret"
+                           placeholder="cs_...">
+                    <button type="button"
+                            class="tw-absolute tw-inset-y-0 tw-right-0 tw-px-3 tw-flex tw-items-center tw-text-gray-400 hover:tw-text-gray-600"
+                            (click)="toggleVisibility('woocommerce_consumer_secret')"
+                            tabindex="-1">
+                      <app-icon [name]="isVisible('woocommerce_consumer_secret') ? 'eye-off' : 'eye'" />
+                    </button>
+                  </div>
+                  <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="stopEditing('woocommerce_consumer_secret')" title="Confirm">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelEditing('woocommerce_consumer_secret')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </div>
+
+            </ng-container>
+
+            <!-- Test connection -->
+            <div class="tw-flex tw-items-center tw-gap-3 tw-pt-1">
+              <button type="button"
+                      class="btn btn-sm btn-secondary"
+                      [disabled]="testingIntegration === 'woocommerce' || !editingSettings.woocommerce_url || !editingSettings.woocommerce_consumer_key || !editingSettings.woocommerce_consumer_secret"
+                      (click)="testConnection('woocommerce')">
+                <span *ngIf="testingIntegration === 'woocommerce'" class="spinner-border spinner-border-sm tw-mr-1" role="status"></span>
+                <app-icon *ngIf="testingIntegration !== 'woocommerce'" name="plug" />
+                {{ testingIntegration === 'woocommerce' ? 'Testing…' : 'Test connection' }}
+              </button>
+              <span *ngIf="testResults['woocommerce']"
+                    class="tw-text-xs tw-flex tw-items-center tw-gap-1"
+                    [class.tw-text-green-600]="testResults['woocommerce']!.success"
+                    [class.tw-text-red-600]="!testResults['woocommerce']!.success">
+                <app-icon [name]="testResults['woocommerce']!.success ? 'check-circle' : 'x-circle'" iconOnly />
+                {{ testResults['woocommerce']!.message }}
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="tw-flex-1"></div>
+
+<app-floating-action-bar>
+  <button type="button"
+          class="btn-primary fab-primary-btn"
+          (click)="save()"
+          [disabled]="saving || !hasDirtyFields()">
+    <app-icon name="save" /> {{ saving ? 'Saving…' : 'Save Settings' }}
+  </button>
+</app-floating-action-bar>
+
+</div>

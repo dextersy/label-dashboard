@@ -43,6 +43,7 @@ import { PressCampaignsComponent } from './pages/press-campaigns/press-campaigns
 import { PressCampaignPublicComponent } from './pages/press-campaign-public/press-campaign-public.component';
 import { LabelSetupComponent } from './pages/labels/label-setup/label-setup.component';
 import { LabelSubscriptionComponent } from './pages/labels/label-subscription/label-subscription.component';
+import { LabelIntegrationsComponent } from './pages/labels/label-integrations/label-integrations.component';
 import { PlanManagementComponent } from './pages/labels/plan-management/plan-management.component';
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
@@ -181,6 +182,7 @@ export const routes: Routes = [
       { path: 'tools/email-logs', component: AdminComponent, data: { tab: 'tools-email-logs' } },
       { path: 'tools/bulk-add-earnings', component: AdminComponent, data: { tab: 'tools-bulk-add-earnings' } },
       { path: 'users', component: AdminComponent, data: { tab: 'users' } },
+      { path: 'integrations', component: LabelIntegrationsComponent, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'subscription', component: LabelSubscriptionComponent },
       { path: 'plans', component: PlanManagementComponent, canActivate: [superadminGuard] }
     ]
