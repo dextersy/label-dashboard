@@ -31,6 +31,12 @@ interface BrandAttributes {
   about_us?: string;
   send_artist_balance_reminders?: boolean;
   is_active?: boolean;
+  loyverse_enabled?: boolean;
+  loyverse_api_key?: string;
+  woocommerce_enabled?: boolean;
+  woocommerce_url?: string;
+  woocommerce_consumer_key?: string;
+  woocommerce_consumer_secret?: string;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -65,6 +71,12 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public about_us?: string;
   public send_artist_balance_reminders?: boolean;
   public is_active?: boolean;
+  public loyverse_enabled?: boolean;
+  public loyverse_api_key?: string;
+  public woocommerce_enabled?: boolean;
+  public woocommerce_url?: string;
+  public woocommerce_consumer_key?: string;
+  public woocommerce_consumer_secret?: string;
 
   // Association properties
   public parentBrand?: Brand;
@@ -260,6 +272,32 @@ Brand.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    loyverse_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    loyverse_api_key: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    woocommerce_enabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    woocommerce_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    woocommerce_consumer_key: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    woocommerce_consumer_secret: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
   },
   {
