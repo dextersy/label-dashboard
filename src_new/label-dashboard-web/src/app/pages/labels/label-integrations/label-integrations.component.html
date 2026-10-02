@@ -141,7 +141,7 @@
             </div>
 
             <!-- Test connection -->
-            <div class="tw-flex tw-items-center tw-gap-3 tw-pt-1">
+            <div *ngIf="editingSettings.loyverse_enabled" class="tw-flex tw-items-center tw-gap-3 tw-pt-1">
               <button type="button"
                       class="btn btn-sm btn-secondary"
                       [disabled]="testingIntegration === 'loyverse' || !editingSettings.loyverse_api_key"
@@ -291,7 +291,7 @@
             </ng-container>
 
             <!-- Test connection -->
-            <div class="tw-flex tw-items-center tw-gap-3 tw-pt-1">
+            <div *ngIf="editingSettings.woocommerce_enabled" class="tw-flex tw-items-center tw-gap-3 tw-pt-1">
               <button type="button"
                       class="btn btn-sm btn-secondary"
                       [disabled]="testingIntegration === 'woocommerce' || !editingSettings.woocommerce_url || !editingSettings.woocommerce_consumer_key || !editingSettings.woocommerce_consumer_secret"
