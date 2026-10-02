@@ -825,6 +825,313 @@ export const getTaskDigest = async (req: Request, res: Response) => {
 };
 
 /**
+ * Process automated artist payouts (cross-brand)
+ *
+ * For every brand that has a Paymongo wallet configured:
+ *   - Computes each artist's payable balance using the same scoping rules as getArtistsDuePayment
+ *   - Skips the entire brand if the wallet balance is insufficient to cover all ready artists
+ *   - Sends a Paymongo money transfer for each ready artist and records a Payment row
+ *
+ * Artists with hold_payouts=true are skipped and listed in artists_skipped.
+ * Artists whose only payment method has no default flag are still paid (first method is used).
+ */
+export const processArtistPayouts = async (req: Request, res: Response) => {
+  try {
+    const dryRun = req.query.dry_run === 'true' || req.query.dry_run === '1';
+    const paymentService = new PaymentService();
+    const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+    const datePaid = new Date();
+    const description = 'Automated balance payout';
+
+    const brands = await Brand.findAll({
+      attributes: ['id', 'brand_name', 'logo_url', 'send_artist_balance_reminders', 'paymongo_wallet_id', 'payment_processing_fee_for_payouts'],
+    });
+
+    const brandResults = await Promise.all(brands.map(async (brand) => {
+      const baseResult = {
+        brand_id: brand.id,
+        brand_name: brand.brand_name,
+        logo_url: brand.logo_url ?? null,
+        send_artist_balance_reminders: brand.send_artist_balance_reminders ?? false,
+        total_paid: 0,
+        paid_count: 0,
+        artists_paid: [] as any[],
+        artists_skipped: [] as any[],
+      };
+
+      if (!brand.paymongo_wallet_id) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'No Paymongo wallet configured' };
+      }
+
+      // --- Compute per-brand artist balances (mirrors getArtistsDuePayment logic) ---
+      const sublabels = await Brand.findAll({
+        where: { parent_brand: brand.id },
+        attributes: ['id', 'brand_name'],
+      });
+      const brandIdScope = [brand.id, ...sublabels.map(s => s.id)];
+
+      const artists = await Artist.findAll({
+        where: { brand_id: { [Op.in]: brandIdScope } },
+        order: [['name', 'ASC']],
+        attributes: ['id', 'name', 'brand_id', 'payout_point', 'hold_payouts'],
+      });
+
+      if (artists.length === 0) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'No artists' };
+      }
+
+      const artistIds = artists.map(a => a.id);
+      const ownArtistIds = artists.filter(a => a.brand_id === brand.id).map(a => a.id);
+      const sublabelArtistIds = artists.filter(a => a.brand_id !== brand.id).map(a => a.id);
+
+      const allRoyaltyRows: any[] = [];
+      if (ownArtistIds.length > 0) {
+        const rows: any[] = await sequelize.query(
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           LEFT JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND (r.earning_id IS NULL OR e.recorded_by_brand_id IS NULL)
+           GROUP BY r.artist_id`,
+          { replacements: { artistIds: ownArtistIds }, type: 'SELECT' }
+        );
+        allRoyaltyRows.push(...rows);
+      }
+      if (sublabelArtistIds.length > 0) {
+        const rows: any[] = await sequelize.query(
+          `SELECT r.artist_id, COALESCE(SUM(r.amount), 0) AS total
+           FROM royalty r
+           JOIN earning e ON r.earning_id = e.id
+           WHERE r.artist_id IN (:artistIds)
+             AND e.recorded_by_brand_id = :parentBrandId
+           GROUP BY r.artist_id`,
+          { replacements: { artistIds: sublabelArtistIds, parentBrandId: brand.id }, type: 'SELECT' }
+        );
+        allRoyaltyRows.push(...rows);
+      }
+      const royaltiesByArtist: Record<number, number> = {};
+      allRoyaltyRows.forEach((row: any) => {
+        royaltiesByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+      });
+
+      const paymentRows: any[] = await sequelize.query(
+        `SELECT artist_id, COALESCE(SUM(amount), 0) AS total
+         FROM payment
+         WHERE artist_id IN (:artistIds)
+           AND paid_by_brand_id = :parentBrandId
+           AND status = 'succeeded'
+         GROUP BY artist_id`,
+        { replacements: { artistIds, parentBrandId: brand.id }, type: 'SELECT' }
+      );
+      const paymentsByArtist: Record<number, number> = {};
+      paymentRows.forEach((row: any) => {
+        paymentsByArtist[row.artist_id] = parseFloat(parseFloat(row.total).toFixed(2));
+      });
+
+      const pmRows: any[] = await sequelize.query(
+        `SELECT DISTINCT artist_id FROM payment_method WHERE artist_id IN (:artistIds)`,
+        { replacements: { artistIds }, type: 'SELECT' }
+      );
+      const hasPaymentMethodByArtist = new Set(pmRows.map((r: any) => r.artist_id));
+
+      const artistsWithBalance = artists.map(artist => {
+        const totalRoyalties = royaltiesByArtist[artist.id] ?? 0;
+        const totalPayments = paymentsByArtist[artist.id] ?? 0;
+        const balance = parseFloat((totalRoyalties - totalPayments).toFixed(2));
+        const hasPaymentMethod = hasPaymentMethodByArtist.has(artist.id);
+        return {
+          artist_id: artist.id,
+          artist_name: artist.name,
+          balance,
+          payout_point: artist.payout_point,
+          hold_payouts: artist.hold_payouts,
+          is_ready_for_payment: balance > artist.payout_point && hasPaymentMethod,
+        };
+      });
+
+      // Separate held artists (so they appear in the skipped list with a clear reason)
+      const heldArtists = artistsWithBalance.filter(a => a.is_ready_for_payment && a.hold_payouts);
+      const readyArtists = artistsWithBalance.filter(a => a.is_ready_for_payment && !a.hold_payouts);
+
+      const initialSkipped = heldArtists.map(a => ({
+        artist_id: a.artist_id,
+        artist_name: a.artist_name,
+        amount: a.balance,
+        reason: 'Payouts on hold',
+      }));
+
+      if (readyArtists.length === 0) {
+        return {
+          ...baseResult,
+          status: 'skipped' as const,
+          reason: 'No artists ready for payment',
+          artists_skipped: initialSkipped,
+        };
+      }
+
+      // --- Wallet balance check ---
+      const totalPayable = parseFloat(readyArtists.reduce((sum, a) => sum + a.balance, 0).toFixed(2));
+      const walletBalance = await paymentService.getWalletBalance(brand.paymongo_wallet_id);
+
+      if (walletBalance < totalPayable) {
+        return {
+          ...baseResult,
+          status: 'error' as const,
+          reason: `Insufficient wallet funds. Required: ₱${totalPayable.toFixed(2)}, Available: ₱${walletBalance.toFixed(2)}`,
+          artists_skipped: [
+            ...initialSkipped,
+            ...readyArtists.map(a => ({
+              artist_id: a.artist_id,
+              artist_name: a.artist_name,
+              amount: a.balance,
+              reason: 'Brand wallet has insufficient funds',
+            })),
+          ],
+        };
+      }
+
+      // --- Process payouts ---
+      const processingFee = (brand as any).payment_processing_fee_for_payouts || 0;
+      const artistsPaid: any[] = [];
+      const artistsSkipped: any[] = [...initialSkipped];
+
+      for (const artist of readyArtists) {
+        const paymentMethods = await PaymentMethod.findAll({
+          where: { artist_id: artist.artist_id },
+          order: [['is_default_for_artist', 'DESC'], ['id', 'ASC']],
+          limit: 1,
+        });
+
+        if (paymentMethods.length === 0) {
+          artistsSkipped.push({
+            artist_id: artist.artist_id,
+            artist_name: artist.artist_name,
+            amount: artist.balance,
+            reason: 'No payment method found',
+          });
+          continue;
+        }
+
+        const paymentMethod = paymentMethods[0];
+        const transferAmount = parseFloat((artist.balance - processingFee).toFixed(2));
+
+        if (transferAmount <= 0) {
+          artistsSkipped.push({
+            artist_id: artist.artist_id,
+            artist_name: artist.artist_name,
+            amount: artist.balance,
+            reason: 'Transfer amount after processing fee is zero or negative',
+          });
+          continue;
+        }
+
+        try {
+          if (dryRun) {
+            artistsPaid.push({
+              artist_id: artist.artist_id,
+              artist_name: artist.artist_name,
+              amount: artist.balance,
+              transfer_amount: transferAmount,
+              processing_fee: processingFee,
+              payment_id: null,
+              transfer_id: null,
+              reference_number: null,
+            });
+            continue;
+          }
+
+          const transferResult = await paymentService.sendMoneyTransfer(
+            brand.id,
+            paymentMethod.id,
+            transferAmount,
+            description,
+            false,
+            callbackUrl
+          );
+
+          if (!transferResult) {
+            artistsSkipped.push({
+              artist_id: artist.artist_id,
+              artist_name: artist.artist_name,
+              amount: artist.balance,
+              reason: 'Paymongo transfer initiation failed',
+            });
+            continue;
+          }
+
+          const payment = await Payment.create({
+            artist_id: artist.artist_id,
+            amount: artist.balance,
+            description,
+            date_paid: datePaid,
+            payment_method_id: paymentMethod.id,
+            reference_number: transferResult.referenceNumber,
+            payment_processing_fee: processingFee,
+            status: 'pending',
+            paymongo_transfer_id: transferResult.transferId,
+            paid_by_brand_id: brand.id,
+          });
+
+          artistsPaid.push({
+            artist_id: artist.artist_id,
+            artist_name: artist.artist_name,
+            amount: artist.balance,
+            transfer_amount: transferAmount,
+            processing_fee: processingFee,
+            payment_id: payment.id,
+            transfer_id: transferResult.transferId,
+            reference_number: transferResult.referenceNumber,
+          });
+        } catch (err: any) {
+          console.error(`Payout failed for artist ${artist.artist_id}:`, err.message);
+          artistsSkipped.push({
+            artist_id: artist.artist_id,
+            artist_name: artist.artist_name,
+            amount: artist.balance,
+            reason: err.message || 'Unexpected error during transfer',
+          });
+        }
+      }
+
+      return {
+        ...baseResult,
+        status: artistsPaid.length > 0 ? 'success' as const : 'skipped' as const,
+        reason: artistsPaid.length === 0 ? 'No payouts completed' : undefined,
+        total_paid: parseFloat(artistsPaid.reduce((sum, a) => sum + a.amount, 0).toFixed(2)),
+        paid_count: artistsPaid.length,
+        artists_paid: artistsPaid,
+        artists_skipped: artistsSkipped,
+      };
+    }));
+
+    // Drop brands that were trivially skipped (no wallet, no artists) to keep the response clean
+    const activeResults = brandResults.filter(b =>
+      b.status === 'error' || b.artists_paid.length > 0 || b.artists_skipped.length > 0
+    );
+
+    const summary = {
+      total_paid: parseFloat(brandResults.reduce((sum, b) => sum + b.total_paid, 0).toFixed(2)),
+      total_brands_processed: brandResults.filter(b => b.status === 'success').length,
+      total_brands_skipped: brandResults.filter(b => b.status === 'skipped').length,
+      total_brands_errored: brandResults.filter(b => b.status === 'error').length,
+      paid_count: brandResults.reduce((sum, b) => sum + b.paid_count, 0),
+    };
+
+    auditLogger.logDataAccess(req, 'process-artist-payouts', dryRun ? 'READ' : 'CREATE', summary.paid_count, {
+      totalBrands: brandResults.length,
+      totalPaid: summary.total_paid,
+      dryRun,
+    });
+
+    res.json({ dry_run: dryRun, brands: activeResults, summary });
+  } catch (error) {
+    console.error('Error processing artist payouts:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_PROCESS_ARTIST_PAYOUTS', { error: (error as any).message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
  * Create in-app notifications for tasks due today (cross-brand)
  *
  * Creates one in-app notification per user per release for tasks due today.
