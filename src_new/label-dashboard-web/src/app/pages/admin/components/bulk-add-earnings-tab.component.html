@@ -858,6 +858,8 @@
 
 <!-- Integration Floating Action Bar (Loyverse + WooCommerce share one FAB) -->
 <app-floating-action-bar *ngIf="currentView === 'import' && (importSource === 'loyverse' || importSource === 'woocommerce') && csvProcessingResult" variant="strip">
+
+  <!-- Desktop left: controls (hidden on mobile) -->
   <div floatingStart class="tw-hidden md:tw-flex md:tw-flex-wrap tw-items-end tw-gap-x-3 tw-gap-y-2">
     <div>
       <label for="wcDescDesktop" class="csv-fab-label">Description</label>
@@ -885,6 +887,78 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile: static summary + Edit button (hidden on desktop) -->
+  <div *ngIf="!csvMobileEditing" class="md:tw-hidden tw-flex tw-items-start tw-gap-3 tw-w-full">
+    <div class="tw-flex-1 tw-min-w-0">
+      <div class="tw-text-sm tw-font-medium tw-break-words">{{ csvDescription || '—' }} &middot; {{ csvEarningType || '—' }}</div>
+      <div class="tw-text-xs tw-text-muted tw-break-words">
+        <ng-container *ngIf="csvDetectedDateColumn">Date from data</ng-container>
+        <ng-container *ngIf="!csvDetectedDateColumn">{{ csvDateOverride || 'No date set' }}</ng-container>
+        &middot; Royalties {{ csvCalculateRoyalties ? 'on' : 'off' }}
+        <ng-container *ngIf="csvTotalUnmatched > 0">
+          &middot; <span class="tw-text-amber-600">{{ csvTotalUnmatched }} unmatched</span>
+        </ng-container>
+      </div>
+    </div>
+    <div class="tw-flex tw-flex-col tw-gap-1.5 tw-flex-shrink-0">
+      <button type="button" class="btn-secondary btn-sm" (click)="csvMobileEditing = true">
+        <app-icon name="edit" class="tw-mr-1" />Edit
+      </button>
+      <button type="button"
+              class="btn-primary btn-sm csv-import-btn"
+              (click)="saveCsvEarnings()"
+              [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType || (!csvDetectedDateColumn && !csvDateOverride)">
+        <app-icon name="save" class="tw-mr-1" />
+        <span>Import {{ csvTotalCount - csvTotalUnmatched }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile: editable inputs (hidden on desktop, shown when editing) -->
+  <ng-container *ngIf="csvMobileEditing">
+
+    <!-- Description + Type -->
+    <div class="md:tw-hidden tw-flex tw-gap-2 tw-w-full">
+      <div class="tw-flex-1 tw-min-w-0">
+        <label class="csv-fab-label">Description</label>
+        <input type="text" class="tw-input" style="height:38px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 WooCommerce Sales">
+      </div>
+      <div class="tw-flex-shrink-0">
+        <label class="csv-fab-label">Type</label>
+        <select class="form-select tw-input" style="height:38px;" [(ngModel)]="csvEarningType">
+          <option value="" disabled>Select type</option>
+          <option value="Sync">Sync</option>
+          <option value="Streaming">Streaming</option>
+          <option value="Downloads">Downloads</option>
+          <option value="Physical">Physical</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Date (only when no date column detected) -->
+    <div *ngIf="!csvDetectedDateColumn" class="md:tw-hidden tw-w-full">
+      <label class="csv-fab-label">Earning Date</label>
+      <input type="date" class="tw-input" style="height:38px;" [(ngModel)]="csvDateOverride">
+    </div>
+
+    <!-- Royalties toggle -->
+    <div class="md:tw-hidden csv-fab-toggle-group tw-w-full">
+      <label for="wcCalcRoyaltiesMobile" class="csv-fab-label">Calculate Royalties</label>
+      <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
+        <input class="form-check-input" type="checkbox" id="wcCalcRoyaltiesMobile" [(ngModel)]="csvCalculateRoyalties">
+        <label class="form-check-label tw-text-muted" for="wcCalcRoyaltiesMobile">Enabled</label>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <button type="button" class="md:tw-hidden btn-primary btn-sm tw-w-full" (click)="csvMobileEditing = false">
+      <app-icon name="check" class="tw-mr-1" />Done
+    </button>
+
+  </ng-container>
+
+  <!-- Desktop right: warning + Cancel + Import (hidden on mobile) -->
   <div class="tw-hidden md:tw-flex md:tw-flex-col tw-gap-2 tw-items-end tw-pr-20">
     <div *ngIf="csvTotalUnmatched > 0"
          class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2 tw-rounded tw-border tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-text-sm tw-w-full">
@@ -903,6 +977,7 @@
       </button>
     </div>
   </div>
+
 </app-floating-action-bar>
 
 </div><!-- /import view -->
