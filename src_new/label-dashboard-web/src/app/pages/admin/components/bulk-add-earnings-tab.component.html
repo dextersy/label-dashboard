@@ -22,17 +22,19 @@
     </button>
     <button type="button"
             class="sub-tab-btn"
-            [class.sub-tab-btn-active]="currentView === 'csv'"
-            (click)="switchToCsvView()"
-            [attr.aria-pressed]="currentView === 'csv'">
-      <app-icon name="file" />
-      <span>CSV Import</span>
+            [class.sub-tab-btn-active]="currentView === 'import'"
+            (click)="switchToImportView()"
+            [attr.aria-pressed]="currentView === 'import'">
+      <app-icon name="file-upload" />
+      <span>Import</span>
     </button>
   </div>
   <small class="tw-mt-2 tw-text-gray-400">
     <app-icon name="info" class="tw-mr-1" />
     <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
-    <span *ngIf="currentView === 'csv'">Bulk import earnings from CSV file</span>
+    <span *ngIf="currentView === 'import' && importSource === 'csv'">Bulk import earnings from CSV file</span>
+    <span *ngIf="currentView === 'import' && importSource === 'loyverse'">Fetch earnings from Loyverse POS</span>
+    <span *ngIf="currentView === 'import' && importSource === 'woocommerce'">Fetch earnings from WooCommerce orders</span>
   </small>
 </div>
 
@@ -402,8 +404,44 @@
 
 </app-floating-action-bar>
 
-<!-- CSV Import View -->
-<div *ngIf="currentView === 'csv'">
+<!-- Import View -->
+<div *ngIf="currentView === 'import'">
+
+  <!-- Import source sub-tabs -->
+  <div class="tw-flex tw-justify-center tw-mb-4">
+    <div class="tw-inline-flex tw-rounded-lg tw-border tw-border-gray-200 tw-bg-gray-50 tw-p-0.5 tw-gap-0.5" role="group">
+      <button type="button"
+              class="tw-px-4 tw-py-1.5 tw-rounded-md tw-text-sm tw-font-medium tw-transition-colors"
+              [class.tw-bg-white]="importSource === 'csv'"
+              [class.tw-shadow-sm]="importSource === 'csv'"
+              [class.tw-text-gray-900]="importSource === 'csv'"
+              [class.tw-text-gray-500]="importSource !== 'csv'"
+              (click)="setImportSource('csv')">
+        <app-icon name="file" class="tw-mr-1.5" />CSV
+      </button>
+      <button type="button"
+              class="tw-px-4 tw-py-1.5 tw-rounded-md tw-text-sm tw-font-medium tw-transition-colors"
+              [class.tw-bg-white]="importSource === 'loyverse'"
+              [class.tw-shadow-sm]="importSource === 'loyverse'"
+              [class.tw-text-gray-900]="importSource === 'loyverse'"
+              [class.tw-text-gray-500]="importSource !== 'loyverse'"
+              (click)="setImportSource('loyverse')">
+        <app-icon name="link" class="tw-mr-1.5" />Loyverse
+      </button>
+      <button type="button"
+              class="tw-px-4 tw-py-1.5 tw-rounded-md tw-text-sm tw-font-medium tw-transition-colors"
+              [class.tw-bg-white]="importSource === 'woocommerce'"
+              [class.tw-shadow-sm]="importSource === 'woocommerce'"
+              [class.tw-text-gray-900]="importSource === 'woocommerce'"
+              [class.tw-text-gray-500]="importSource !== 'woocommerce'"
+              (click)="setImportSource('woocommerce')">
+        <app-icon name="link" class="tw-mr-1.5" />WooCommerce
+      </button>
+    </div>
+  </div>
+
+<!-- CSV panel -->
+<div *ngIf="importSource === 'csv'">
   <div class="csv-view-body">
   <!-- CSV Upload Section -->
   <div *ngIf="!csvFile" class="csv-upload-area"
@@ -509,7 +547,7 @@
   </div><!-- /csv-view-body -->
 
 <!-- Floating Action Bar - CSV Import -->
-<app-floating-action-bar *ngIf="csvFile && csvProcessingResult" variant="strip">
+<app-floating-action-bar *ngIf="importSource === 'csv' && csvFile && csvProcessingResult" variant="strip">
 
   <!-- Desktop left: controls + warning banner as a wrapped second row (hidden on mobile) -->
   <div floatingStart class="tw-hidden md:tw-flex md:tw-flex-wrap tw-items-end tw-gap-x-3 tw-gap-y-2">
@@ -651,4 +689,247 @@
     <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
     <p class="tw-mt-2 tw-text-muted">Previewing CSV file...</p>
   </div>
-</div>
+</div><!-- /csv panel -->
+
+<!-- Loyverse panel -->
+<div *ngIf="importSource === 'loyverse'" class="csv-view-body">
+
+  <!-- Disabled notice -->
+  <div *ngIf="!brandSettings?.loyverse_enabled" class="tw-rounded-lg tw-border tw-border-amber-200 tw-bg-amber-50 tw-p-5 tw-text-center tw-mb-4">
+    <app-icon name="warning" [size]="32" class="tw-text-amber-500 tw-mb-2" iconOnly />
+    <p class="tw-font-medium tw-mb-1">Loyverse integration is not enabled</p>
+    <p class="tw-text-sm tw-text-muted tw-mb-3">Configure your Loyverse API key in Label Integrations settings before importing.</p>
+    <a routerLink="/admin/integrations" class="btn-secondary btn-sm">Go to Integrations</a>
+  </div>
+
+  <!-- Fetch controls (only when enabled) -->
+  <div *ngIf="brandSettings?.loyverse_enabled" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-card-pad tw-mb-4">
+    <h5 class="tw-mb-4">Fetch from Loyverse</h5>
+    <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-3 tw-mb-4">
+      <div>
+        <label class="tw-label">Start Date</label>
+        <input type="date" class="tw-input" [(ngModel)]="integrationStartDate">
+      </div>
+      <div>
+        <label class="tw-label">End Date</label>
+        <input type="date" class="tw-input" [(ngModel)]="integrationEndDate">
+      </div>
+      <div class="tw-flex tw-flex-col tw-justify-end">
+        <label class="tw-label">Consolidate by product</label>
+        <div class="form-check form-switch tw-mb-0">
+          <input type="checkbox" class="form-check-input" id="loyverseConsolidate" [(ngModel)]="integrationConsolidate">
+          <label class="form-check-label tw-text-muted" for="loyverseConsolidate">
+            {{ integrationConsolidate ? 'Yes — group by product name' : 'No — one row per line item' }}
+          </label>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn-primary"
+            (click)="fetchLoyversePreview()"
+            [disabled]="integrationLoading || !integrationStartDate || !integrationEndDate">
+      <span *ngIf="!integrationLoading"><app-icon name="download" class="tw-mr-2" />Fetch &amp; Preview</span>
+      <span *ngIf="integrationLoading">
+        <span class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>Fetching...
+      </span>
+    </button>
+  </div>
+
+  <!-- Preview result (reuse CSV result UI) -->
+  <ng-container *ngIf="csvProcessingResult">
+
+    <div class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-mb-2">
+      <span class="tw-font-medium tw-text-sm">Loyverse Preview</span>
+      <button type="button" class="csv-file-bar-btn csv-file-bar-btn--danger" (click)="clearIntegrationPreview()">
+        <app-icon name="x" class="tw-mr-1" />Clear
+      </button>
+    </div>
+
+    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Matched Rows</span>
+        <span class="csv-stat-value tw-text-[#2563eb]">{{ csvTotalCount - csvTotalUnmatched }}</span>
+      </div>
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Matched Amount</span>
+        <span class="csv-stat-value tw-text-[#16a34a]">{{ formatCurrency(csvTotalAmount) }}</span>
+      </div>
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Unmatched Rows</span>
+        <span class="csv-stat-value tw-text-[#ef4444]">{{ csvTotalUnmatched }}</span>
+        <button type="button" class="csv-stat-download-btn"
+                *ngIf="csvTotalUnmatched > 0"
+                (click)="downloadUnmatchedCsv()">
+          <app-icon name="download" class="tw-mr-1" />Download as CSV
+        </button>
+      </div>
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Total Rows</span>
+        <span class="csv-stat-value tw-text-body">{{ csvTotalCount }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="csvData.length === 0" class="tw-py-4 tw-text-center">
+      <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" iconOnly />
+      <h5 class="tw-text-muted">No matches found.</h5>
+      <p class="tw-text-muted">Ensure product names match existing release titles in the system.</p>
+    </div>
+    <app-paginated-table *ngIf="csvData.length > 0"
+      [data]="csvData"
+      [columns]="csvTableColumns"
+      [pagination]="csvPagination"
+      [loading]="integrationLoading"
+      [showSearch]="true"
+      [showSortableHeaders]="true"
+      [title]="'Matched Releases'"
+      (pageChange)="onCsvPageChange($event)">
+    </app-paginated-table>
+
+  </ng-container>
+</div><!-- /loyverse panel -->
+
+<!-- WooCommerce panel -->
+<div *ngIf="importSource === 'woocommerce'" class="csv-view-body">
+
+  <!-- Disabled notice -->
+  <div *ngIf="!brandSettings?.woocommerce_enabled" class="tw-rounded-lg tw-border tw-border-amber-200 tw-bg-amber-50 tw-p-5 tw-text-center tw-mb-4">
+    <app-icon name="warning" [size]="32" class="tw-text-amber-500 tw-mb-2" iconOnly />
+    <p class="tw-font-medium tw-mb-1">WooCommerce integration is not enabled</p>
+    <p class="tw-text-sm tw-text-muted tw-mb-3">Configure your WooCommerce credentials in Label Integrations settings before importing.</p>
+    <a routerLink="/admin/integrations" class="btn-secondary btn-sm">Go to Integrations</a>
+  </div>
+
+  <!-- Fetch controls -->
+  <div *ngIf="brandSettings?.woocommerce_enabled" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-card-pad tw-mb-4">
+    <h5 class="tw-mb-4">Fetch from WooCommerce</h5>
+    <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-3 tw-mb-4">
+      <div>
+        <label class="tw-label">Start Date</label>
+        <input type="date" class="tw-input" [(ngModel)]="integrationStartDate">
+      </div>
+      <div>
+        <label class="tw-label">End Date</label>
+        <input type="date" class="tw-input" [(ngModel)]="integrationEndDate">
+      </div>
+      <div class="tw-flex tw-flex-col tw-justify-end">
+        <label class="tw-label">Consolidate by product</label>
+        <div class="form-check form-switch tw-mb-0">
+          <input type="checkbox" class="form-check-input" id="wcConsolidate" [(ngModel)]="integrationConsolidate">
+          <label class="form-check-label tw-text-muted" for="wcConsolidate">
+            {{ integrationConsolidate ? 'Yes — group by product name' : 'No — one row per line item' }}
+          </label>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn-primary"
+            (click)="fetchWoocommercePreview()"
+            [disabled]="integrationLoading || !integrationStartDate || !integrationEndDate">
+      <span *ngIf="!integrationLoading"><app-icon name="download" class="tw-mr-2" />Fetch &amp; Preview</span>
+      <span *ngIf="integrationLoading">
+        <span class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>Fetching...
+      </span>
+    </button>
+  </div>
+
+  <!-- Preview result -->
+  <ng-container *ngIf="csvProcessingResult">
+
+    <div class="tw-flex tw-items-center tw-justify-between tw-gap-2 tw-mb-2">
+      <span class="tw-font-medium tw-text-sm">WooCommerce Preview</span>
+      <button type="button" class="csv-file-bar-btn csv-file-bar-btn--danger" (click)="clearIntegrationPreview()">
+        <app-icon name="x" class="tw-mr-1" />Clear
+      </button>
+    </div>
+
+    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Matched Rows</span>
+        <span class="csv-stat-value tw-text-[#2563eb]">{{ csvTotalCount - csvTotalUnmatched }}</span>
+      </div>
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Matched Amount</span>
+        <span class="csv-stat-value tw-text-[#16a34a]">{{ formatCurrency(csvTotalAmount) }}</span>
+      </div>
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Unmatched Rows</span>
+        <span class="csv-stat-value tw-text-[#ef4444]">{{ csvTotalUnmatched }}</span>
+        <button type="button" class="csv-stat-download-btn"
+                *ngIf="csvTotalUnmatched > 0"
+                (click)="downloadUnmatchedCsv()">
+          <app-icon name="download" class="tw-mr-1" />Download as CSV
+        </button>
+      </div>
+      <div class="csv-stat-card">
+        <span class="csv-stat-label">Total Rows</span>
+        <span class="csv-stat-value tw-text-body">{{ csvTotalCount }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="csvData.length === 0" class="tw-py-4 tw-text-center">
+      <app-icon name="warning" [size]="48" class="tw-text-warning tw-mb-3" iconOnly />
+      <h5 class="tw-text-muted">No matches found.</h5>
+      <p class="tw-text-muted">Ensure WooCommerce product names match existing release titles in the system.</p>
+    </div>
+    <app-paginated-table *ngIf="csvData.length > 0"
+      [data]="csvData"
+      [columns]="csvTableColumns"
+      [pagination]="csvPagination"
+      [loading]="integrationLoading"
+      [showSearch]="true"
+      [showSortableHeaders]="true"
+      [title]="'Matched Releases'"
+      (pageChange)="onCsvPageChange($event)">
+    </app-paginated-table>
+
+  </ng-container>
+</div><!-- /woocommerce panel -->
+
+<!-- Integration Floating Action Bar (Loyverse + WooCommerce share one FAB) -->
+<app-floating-action-bar *ngIf="currentView === 'import' && (importSource === 'loyverse' || importSource === 'woocommerce') && csvProcessingResult" variant="strip">
+  <div floatingStart class="tw-hidden md:tw-flex md:tw-flex-wrap tw-items-end tw-gap-x-3 tw-gap-y-2">
+    <div>
+      <label for="wcDescDesktop" class="csv-fab-label">Description</label>
+      <input type="text" class="tw-input" id="wcDescDesktop" [(ngModel)]="csvDescription" placeholder="e.g. Q1 WooCommerce Sales" style="min-width:180px;">
+    </div>
+    <div>
+      <label for="wcTypeDesktop" class="csv-fab-label">Type</label>
+      <select class="form-select tw-input" id="wcTypeDesktop" [(ngModel)]="csvEarningType" style="min-width:120px;">
+        <option value="" disabled>Select type</option>
+        <option value="Sync">Sync</option>
+        <option value="Streaming">Streaming</option>
+        <option value="Downloads">Downloads</option>
+        <option value="Physical">Physical</option>
+      </select>
+    </div>
+    <div *ngIf="!csvDetectedDateColumn">
+      <label for="wcDateDesktop" class="csv-fab-label">Earning Date</label>
+      <input type="date" class="tw-input" id="wcDateDesktop" [(ngModel)]="csvDateOverride" style="min-width:140px;">
+    </div>
+    <div class="csv-fab-toggle-group">
+      <label for="wcRoyaltiesDesktop" class="csv-fab-label">Calculate Royalties</label>
+      <div class="form-check form-switch tw-mb-0 csv-fab-toggle-input">
+        <input class="form-check-input" type="checkbox" id="wcRoyaltiesDesktop" [(ngModel)]="csvCalculateRoyalties">
+        <label class="form-check-label tw-text-muted" for="wcRoyaltiesDesktop">Enabled</label>
+      </div>
+    </div>
+  </div>
+  <div class="tw-hidden md:tw-flex md:tw-flex-col tw-gap-2 tw-items-end tw-pr-20">
+    <div *ngIf="csvTotalUnmatched > 0"
+         class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-2 tw-rounded tw-border tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-text-sm tw-w-full">
+      <app-icon name="warning" class="tw-flex-shrink-0" iconOnly />
+      <span><strong>{{ csvTotalUnmatched }}</strong> row{{ csvTotalUnmatched === 1 ? '' : 's' }} unmatched. Review before importing.</span>
+    </div>
+    <div class="tw-flex tw-gap-2 tw-items-center">
+      <button type="button" class="btn-secondary" (click)="clearIntegrationPreview()">
+        <app-icon name="x" class="tw-mr-2" />Cancel
+      </button>
+      <button type="button" class="btn-primary csv-import-btn"
+              (click)="saveCsvEarnings()"
+              [disabled]="loading || csvData.length === 0 || !csvDescription || !csvEarningType || (!csvDetectedDateColumn && !csvDateOverride)">
+        <app-icon name="save" class="tw-mr-2 tw-flex-shrink-0" />
+        <span class="tw-whitespace-nowrap">Import {{ csvTotalCount - csvTotalUnmatched }} Earnings</span>
+      </button>
+    </div>
+  </div>
+</app-floating-action-bar>
+
+</div><!-- /import view -->

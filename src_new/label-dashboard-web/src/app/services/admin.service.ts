@@ -997,6 +997,18 @@ export class AdminService {
     });
   }
 
+  previewLoyverseEarnings(params: { start_date: string; end_date: string; consolidate: boolean }): Observable<CsvProcessingResult> {
+    return this.http.post<CsvProcessingResult>(`${environment.apiUrl}/financial/earnings/preview-loyverse`, params, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  previewWoocommerceEarnings(params: { start_date: string; end_date: string; consolidate: boolean }): Observable<CsvProcessingResult> {
+    return this.http.post<CsvProcessingResult>(`${environment.apiUrl}/financial/earnings/preview-woocommerce`, params, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Wallet Balance
   getWalletBalance(): Observable<number> {
     return this.http.get<{balance: number}>(`${environment.apiUrl}/financial/wallet/balance`, {

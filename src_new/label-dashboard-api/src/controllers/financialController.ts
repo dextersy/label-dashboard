@@ -560,6 +560,308 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
 };
 
 
+// Shared helper: load all releases (own + child brands) for the admin's brand, filtered by locked artists
+const loadReleasesForAdmin = async (brandId: number) => {
+  const [ownReleases, childBrands, ownLockedIds] = await Promise.all([
+    Release.findAll({ where: { brand_id: brandId } }),
+    Brand.findAll({ where: { parent_brand: brandId } }),
+    getLockedArtistIds(brandId),
+  ]);
+
+  const childBrandById: Map<number, any> = new Map();
+  const childLockedIdsByBrand: Map<number, Set<number>> = new Map();
+  const allChildReleases: any[] = [];
+
+  for (const cb of childBrands) {
+    const cbId = (cb as any).id;
+    const [cbReleases, cbLockedIds] = await Promise.all([
+      Release.findAll({ where: { brand_id: cbId } }),
+      getLockedArtistIds(cbId),
+    ]);
+    childBrandById.set(cbId, cb);
+    childLockedIdsByBrand.set(cbId, cbLockedIds);
+    allChildReleases.push(...cbReleases);
+  }
+
+  const allReleases = [...ownReleases, ...allChildReleases];
+  const allReleaseIds = allReleases.map((r: any) => r.id);
+  const releaseArtistRows: any[] = allReleaseIds.length > 0
+    ? await ReleaseArtist.findAll({
+        where: { release_id: { [Op.in]: allReleaseIds } },
+        attributes: ['release_id', 'artist_id'],
+        raw: true,
+      })
+    : [];
+
+  const artistIdsByRelease: Map<number, number[]> = new Map();
+  for (const row of releaseArtistRows) {
+    if (!artistIdsByRelease.has(row.release_id)) artistIdsByRelease.set(row.release_id, []);
+    artistIdsByRelease.get(row.release_id)!.push(row.artist_id);
+  }
+
+  const releases = allReleases.filter((release: any) => {
+    const artistIds = artistIdsByRelease.get(release.id) || [];
+    if (artistIds.length === 0) return true;
+    const lockedIds = childBrandById.has(release.brand_id)
+      ? (childLockedIdsByBrand.get(release.brand_id) ?? new Set())
+      : ownLockedIds;
+    return artistIds.some((id) => !lockedIds.has(id));
+  });
+
+  return { releases, childBrandById };
+};
+
+// Extract a matchable title from a product name like "Artist - Title [Format]"
+const extractTitleFromProductName = (name: string): string => {
+  // Strip trailing bracket content: [Cassette], [CD], [12" vinyl, limited edition], etc.
+  let title = name.replace(/\s*\[[^\]]*\]\s*$/, '').trim();
+  // Strip leading "Artist - " prefix (everything up to and including the first " - ")
+  const dashIdx = title.indexOf(' - ');
+  if (dashIdx !== -1) {
+    title = title.substring(dashIdx + 3).trim();
+  }
+  return title;
+};
+
+// Find the best release match for a product name, trying progressively:
+// 1. Exact match on extracted title (strips "Artist - " and "[Format]")
+// 2. Exact match on raw name
+// 3. Fuzzy match on extracted title (≥80 score)
+const findMatchingReleaseForProduct = async (
+  releases: any[],
+  productName: string
+): Promise<{ release: any | null; score: number }> => {
+  const extractedTitle = extractTitleFromProductName(productName);
+
+  // 1. Exact on extracted title
+  if (extractedTitle && extractedTitle !== productName) {
+    const result = await findMatchingRelease(releases, '', extractedTitle);
+    if (result.release) return result;
+  }
+
+  // 2. Exact on raw name
+  const rawResult = await findMatchingRelease(releases, '', productName);
+  if (rawResult.release) return rawResult;
+
+  // 3. Fuzzy on extracted title
+  const titleToFuzz = extractedTitle || productName;
+  let bestRelease: any = null;
+  let bestScore = 0;
+  for (const release of releases) {
+    const score = fuzz.token_set_ratio(titleToFuzz.toLowerCase(), (release.title || '').toLowerCase());
+    if (score > bestScore && score >= 80) {
+      bestScore = score;
+      bestRelease = release;
+    }
+  }
+  return { release: bestRelease, score: bestScore };
+};
+
+// Shared helper: build CsvProcessingResult from a list of { name, amount, date } rows
+const buildPreviewResult = async (
+  rows: { name: string; amount: number; date: string }[],
+  releases: any[],
+  childBrandById: Map<number, any>
+) => {
+  const processedRows: ProcessedEarningRow[] = [];
+  let totalMatchedAmount = 0;
+  let unmatchedCount = 0;
+
+  for (const row of rows) {
+    const { release, score } = await findMatchingReleaseForProduct(releases, row.name);
+    const processedRow: ProcessedEarningRow = {
+      original_data: { name: row.name, amount: String(row.amount), date: row.date },
+      catalog_no: '',
+      release_title: row.name,
+      earning_amount: row.amount,
+      matched_release: null,
+      matched_brand: null,
+    };
+    if (release) {
+      processedRow.matched_release = {
+        id: release.id,
+        catalog_no: release.catalog_no || '',
+        title: release.title || '',
+      };
+      processedRow.fuzzy_match_score = score;
+      if (childBrandById.has(release.brand_id)) {
+        const cb = childBrandById.get(release.brand_id);
+        processedRow.matched_brand = { id: (cb as any).id, brand_name: (cb as any).brand_name };
+      }
+      totalMatchedAmount += row.amount;
+    } else {
+      unmatchedCount++;
+    }
+    processedRows.push(processedRow);
+  }
+
+  return {
+    message: 'Data processed successfully',
+    data: processedRows,
+    summary: {
+      total_rows: processedRows.length,
+      total_unmatched: unmatchedCount,
+      total_earning_amount: parseFloat(totalMatchedAmount.toFixed(2)),
+      column_mapping: { release_title: 'name', earning_amount: 'amount' },
+    },
+  };
+};
+
+export const previewLoyverseEarnings = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const brand = await Brand.findByPk(req.user.brand_id);
+    if (!brand || !(brand as any).loyverse_enabled || !(brand as any).loyverse_api_key) {
+      return res.status(400).json({ error: 'Loyverse integration is not enabled for this brand' });
+    }
+
+    const { start_date, end_date, consolidate = true } = req.body;
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const apiKey = (brand as any).loyverse_api_key as string;
+    const startIso = new Date(start_date).toISOString();
+    const endIso = new Date(end_date).toISOString();
+
+    // Fetch receipts from Loyverse (paginated)
+    const lineItems: { name: string; amount: number; date: string }[] = [];
+    let cursor: string | null = null;
+    let hasMore = true;
+
+    while (hasMore) {
+      let url = `https://api.loyverse.com/v1.0/receipts?created_at_min=${encodeURIComponent(startIso)}&created_at_max=${encodeURIComponent(endIso)}&limit=250`;
+      if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(502).json({ error: `Loyverse API error: ${response.status} ${errText}` });
+      }
+
+      const data: any = await response.json();
+      const receipts: any[] = data.receipts || [];
+
+      for (const receipt of receipts) {
+        for (const item of (receipt.line_items || [])) {
+          lineItems.push({
+            name: item.item_name || '',
+            amount: parseFloat(item.total_money) || 0,
+            date: receipt.created_at ? receipt.created_at.split('T')[0] : start_date,
+          });
+        }
+      }
+
+      cursor = data.cursor || null;
+      hasMore = !!cursor && receipts.length > 0;
+    }
+
+    // Consolidate if requested
+    let rows = lineItems;
+    if (consolidate) {
+      const map = new Map<string, number>();
+      for (const item of lineItems) {
+        map.set(item.name, (map.get(item.name) || 0) + item.amount);
+      }
+      rows = Array.from(map.entries()).map(([name, amount]) => ({ name, amount, date: end_date }));
+    }
+
+    const { releases, childBrandById } = await loadReleasesForAdmin(req.user.brand_id);
+    const result = await buildPreviewResult(rows, releases, childBrandById);
+    return res.json(result);
+
+  } catch (error) {
+    console.error('Preview Loyverse earnings error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const previewWoocommerceEarnings = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const brand = await Brand.findByPk(req.user.brand_id);
+    if (!brand || !(brand as any).woocommerce_enabled || !(brand as any).woocommerce_url || !(brand as any).woocommerce_consumer_key || !(brand as any).woocommerce_consumer_secret) {
+      return res.status(400).json({ error: 'WooCommerce integration is not enabled for this brand' });
+    }
+
+    const { start_date, end_date, consolidate = true } = req.body;
+    if (!start_date || !end_date) {
+      return res.status(400).json({ error: 'start_date and end_date are required' });
+    }
+
+    const wcUrl = ((brand as any).woocommerce_url as string).replace(/\/$/, '');
+    const consumerKey = (brand as any).woocommerce_consumer_key as string;
+    const consumerSecret = (brand as any).woocommerce_consumer_secret as string;
+    const startIso = new Date(start_date).toISOString();
+    const endIso = new Date(end_date).toISOString();
+    const authHeader = 'Basic ' + Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+
+    // Fetch completed orders from WooCommerce (paginated)
+    const lineItems: { name: string; amount: number; date: string }[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const url = `${wcUrl}/wp-json/wc/v3/orders?after=${encodeURIComponent(startIso)}&before=${encodeURIComponent(endIso)}&status=completed&per_page=100&page=${page}`;
+      const response = await fetch(url, {
+        headers: { 'Authorization': authHeader }
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        return res.status(502).json({ error: `WooCommerce API error: ${response.status} ${errText}` });
+      }
+
+      const orders: any[] = await response.json();
+      if (!Array.isArray(orders) || orders.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      for (const order of orders) {
+        const orderDate = order.date_completed ? order.date_completed.split('T')[0] : start_date;
+        for (const item of (order.line_items || [])) {
+          lineItems.push({
+            name: item.name || '',
+            amount: parseFloat(item.total) || 0,
+            date: orderDate,
+          });
+        }
+      }
+
+      hasMore = orders.length === 100;
+      page++;
+    }
+
+    // Consolidate if requested
+    let rows = lineItems;
+    if (consolidate) {
+      const map = new Map<string, number>();
+      for (const item of lineItems) {
+        map.set(item.name, (map.get(item.name) || 0) + item.amount);
+      }
+      rows = Array.from(map.entries()).map(([name, amount]) => ({ name, amount, date: end_date }));
+    }
+
+    const { releases, childBrandById } = await loadReleasesForAdmin(req.user.brand_id);
+    const result = await buildPreviewResult(rows, releases, childBrandById);
+    return res.json(result);
+
+  } catch (error) {
+    console.error('Preview WooCommerce earnings error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Helper function to process earning royalties with recuperable expense handling
 async function processEarningRoyalties(earning: any) {
   // Get the release to find the brand_id

@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { AdminService, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
+import { AdminService, BrandSettings, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
 import { ReleaseService, Release } from '../../../services/release.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
@@ -18,7 +19,7 @@ interface CsvEarningRow {
 
 @Component({
     selector: 'app-bulk-add-earnings-tab',
-    imports: [CommonModule, FormsModule, PaginatedTableComponent, FloatingActionBarComponent, IconComponent],
+    imports: [CommonModule, FormsModule, RouterLink, PaginatedTableComponent, FloatingActionBarComponent, IconComponent],
     templateUrl: './bulk-add-earnings-tab.component.html',
     styleUrl: './bulk-add-earnings-tab.component.scss'
 })
@@ -31,8 +32,12 @@ export class BulkAddEarningsTabComponent implements OnInit {
   searchTerms: string[] = [];
   showDropdown: boolean[] = [];
 
+  // Brand settings (for integration enabled checks)
+  brandSettings: BrandSettings | null = null;
+
   // View toggle
-  currentView: 'manual' | 'csv' = 'manual';
+  currentView: 'manual' | 'import' = 'manual';
+  importSource: 'csv' | 'loyverse' | 'woocommerce' = 'csv';
 
   // CSV Import properties
   csvFile: File | null = null;
@@ -51,6 +56,12 @@ export class BulkAddEarningsTabComponent implements OnInit {
   manualFormCollapsed: boolean = true;
   csvProcessingResult: CsvProcessingResult | null = null;
   showAddRowsDropdown: boolean = false;
+
+  // Integration import (Loyverse / WooCommerce)
+  integrationStartDate: string = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+  integrationEndDate: string = new Date().toISOString().split('T')[0];
+  integrationConsolidate: boolean = true;
+  integrationLoading: boolean = false;
   csvPagination: PaginationInfo = {
     current_page: 1,
     total_pages: 1,
@@ -122,6 +133,10 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBulkEarningsData();
+    this.adminService.getBrandSettings().subscribe({
+      next: (settings) => { this.brandSettings = settings; },
+      error: () => {}
+    });
   }
 
   private loadBulkEarningsData(): void {
@@ -289,8 +304,98 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.currentView = 'manual';
   }
 
+  switchToImportView(): void {
+    this.currentView = 'import';
+  }
+
   switchToCsvView(): void {
-    this.currentView = 'csv';
+    this.currentView = 'import';
+  }
+
+  setImportSource(source: 'csv' | 'loyverse' | 'woocommerce'): void {
+    if (this.importSource !== source) {
+      this.csvProcessingResult = null;
+      this.csvDataAll = [];
+      this.csvData = [];
+      this.csvFile = null;
+    }
+    this.importSource = source;
+  }
+
+  switchToLoyverseView(): void {
+    this.currentView = 'import';
+    this.setImportSource('loyverse');
+  }
+
+  switchToWoocommerceView(): void {
+    this.currentView = 'import';
+    this.setImportSource('woocommerce');
+  }
+
+  fetchLoyversePreview(): void {
+    this.integrationLoading = true;
+    this.csvProcessingResult = null;
+    this.adminService.previewLoyverseEarnings({
+      start_date: this.integrationStartDate,
+      end_date: this.integrationEndDate,
+      consolidate: this.integrationConsolidate
+    }).subscribe({
+      next: (result) => {
+        this.csvProcessingResult = result;
+        this.csvDataAll = result.data.filter(r => r.matched_release !== null);
+        this.csvDetectedDateColumn = this.integrationConsolidate ? '' : 'date';
+        this.csvDetectedLabelColumn = false;
+        this.updateCsvSummary();
+        this.updatePaginatedData();
+        this.integrationLoading = false;
+        const matched = result.summary.total_rows - result.summary.total_unmatched;
+        this.notificationService.showSuccess(`Loyverse: ${result.summary.total_rows} rows, ${matched} matched`);
+      },
+      error: (err) => {
+        this.integrationLoading = false;
+        this.notificationService.showError(err.error?.error || 'Error fetching Loyverse data');
+      }
+    });
+  }
+
+  fetchWoocommercePreview(): void {
+    this.integrationLoading = true;
+    this.csvProcessingResult = null;
+    this.adminService.previewWoocommerceEarnings({
+      start_date: this.integrationStartDate,
+      end_date: this.integrationEndDate,
+      consolidate: this.integrationConsolidate
+    }).subscribe({
+      next: (result) => {
+        this.csvProcessingResult = result;
+        this.csvDataAll = result.data.filter(r => r.matched_release !== null);
+        this.csvDetectedDateColumn = this.integrationConsolidate ? '' : 'date';
+        this.csvDetectedLabelColumn = false;
+        this.updateCsvSummary();
+        this.updatePaginatedData();
+        this.integrationLoading = false;
+        const matched = result.summary.total_rows - result.summary.total_unmatched;
+        this.notificationService.showSuccess(`WooCommerce: ${result.summary.total_rows} rows, ${matched} matched`);
+      },
+      error: (err) => {
+        this.integrationLoading = false;
+        this.notificationService.showError(err.error?.error || 'Error fetching WooCommerce data');
+      }
+    });
+  }
+
+  clearIntegrationPreview(): void {
+    this.csvProcessingResult = null;
+    this.csvDataAll = [];
+    this.csvData = [];
+    this.csvTotalAmount = 0;
+    this.csvTotalCount = 0;
+    this.csvTotalUnmatched = 0;
+    this.csvDetectedDateColumn = '';
+    this.csvDetectedLabelColumn = false;
+    this.csvPagination.current_page = 1;
+    this.csvPagination.total_pages = 1;
+    this.csvPagination.total_count = 0;
   }
 
   // CSV handling methods (placeholders for now)

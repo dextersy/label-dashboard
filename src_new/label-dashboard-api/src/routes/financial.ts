@@ -4,6 +4,8 @@ import {
   addEarning,
   bulkAddEarnings,
   previewCsvForEarnings,
+  previewLoyverseEarnings,
+  previewWoocommerceEarnings,
   getEarnings,
   getEarningById,
   getEarningsByArtist,
@@ -56,6 +58,8 @@ router.use(authenticateToken);
 router.post('/earnings', requireAdmin, addEarning);
 router.post('/earnings/bulk', requireAdmin, bulkAddEarnings);
 router.post('/earnings/preview-csv', requireAdmin, upload.single('csv_file'), previewCsvForEarnings);
+router.post('/earnings/preview-loyverse', requireAdmin, previewLoyverseEarnings);
+router.post('/earnings/preview-woocommerce', requireAdmin, previewWoocommerceEarnings);
 router.get('/earnings/csv', downloadEarningsCSV); // CSV route before :id route
 router.get('/earnings', getEarnings);
 router.get('/earnings/:id', getEarningById);
