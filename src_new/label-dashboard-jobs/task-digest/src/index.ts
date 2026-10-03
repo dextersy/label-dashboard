@@ -1,5 +1,5 @@
 import { Handler, ScheduledEvent } from 'aws-lambda';
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 import axios from 'axios';
 
 interface LambdaResponse {
@@ -37,7 +37,7 @@ interface TaskDigestResponse {
 }
 
 class TaskDigestService {
-  private transporter: nodemailer.Transporter;
+  private transporter: Transporter;
   private apiBaseUrl: string;
   private fromEmail: string;
   private authToken: string | null = null;

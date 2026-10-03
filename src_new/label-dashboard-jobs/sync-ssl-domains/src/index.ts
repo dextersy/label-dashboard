@@ -1,6 +1,6 @@
 import { Handler, ScheduledEvent } from 'aws-lambda';
 import axios, { AxiosInstance } from 'axios';
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 
 interface LambdaResponse {
   statusCode: number;
@@ -46,7 +46,7 @@ class SSLDomainSyncService {
   private sendErrorNotif: boolean;
   private adminEmail: string;
   private fromEmail: string;
-  private transporter: nodemailer.Transporter | null = null;
+  private transporter: Transporter | null = null;
 
   constructor() {
     // Validate required environment variables

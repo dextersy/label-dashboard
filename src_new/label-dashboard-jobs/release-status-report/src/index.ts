@@ -1,5 +1,5 @@
 import { Handler, ScheduledEvent } from 'aws-lambda';
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 
@@ -59,7 +59,7 @@ interface ReleaseValidation {
 }
 
 class ReleaseStatusReportService {
-  private transporter: nodemailer.Transporter;
+  private transporter: Transporter;
   private apiBaseUrl: string;
   private superadminEmail: string;
   private fromEmail: string;
