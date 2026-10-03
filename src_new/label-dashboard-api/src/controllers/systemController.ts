@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User, EventAddOnPayment } from '../models';
 import ReleaseTask from '../models/ReleaseTask';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
@@ -528,8 +528,21 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
 
         eventEarnings = eventSales - eventPlatformFees;
 
+        // Calculate add-on payments charged against this sublabel's balance
+        const eventIds = await Event.findAll({
+          where: { brand_id: sublabel.id },
+          attributes: ['id'],
+          raw: true
+        });
+        const eventIdList = eventIds.map((e: any) => e.id);
+        const totalAddOnBalancePayments = eventIdList.length > 0
+          ? await EventAddOnPayment.sum('amount', {
+              where: { event_id: { [Op.in]: eventIdList }, method: 'balance', status: 'succeeded' }
+            }) || 0
+          : 0;
+
         // Calculate balance
-        const balance = musicEarnings + eventEarnings - payments;
+        const balance = musicEarnings + eventEarnings - payments - totalAddOnBalancePayments;
 
         // Check if sublabel has payment methods configured
         // The sublabel needs payment methods so the parent brand knows where to send money
@@ -555,6 +568,7 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
           total_royalties: parseFloat(totalRoyalties.toFixed(2)),
           platform_fees: parseFloat((musicPlatformFees + eventPlatformFees).toFixed(2)),
           payments: parseFloat(payments.toFixed(2)),
+          add_on_balance_payments: parseFloat(totalAddOnBalancePayments.toFixed(2)),
           has_payment_method: paymentMethods.length > 0,
           is_ready_for_payment: isReadyForPayment,
           last_updated: sublabel.updatedAt
