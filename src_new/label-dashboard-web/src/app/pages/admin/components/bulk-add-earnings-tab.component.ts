@@ -6,6 +6,7 @@ import { forkJoin, of } from 'rxjs';
 import { AdminService, BrandSettings, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
 import { ReleaseService, Release } from '../../../services/release.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
@@ -132,7 +133,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private releaseService: ReleaseService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {
     this.initializeBulkEarnings();
   }
@@ -318,8 +320,17 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.currentView = 'import';
   }
 
-  setImportSource(source: 'csv' | 'loyverse' | 'woocommerce'): void {
-    if (this.importSource !== source) {
+  async setImportSource(source: 'csv' | 'loyverse' | 'woocommerce'): Promise<void> {
+    if (this.importSource !== source && this.csvProcessingResult) {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Discard preview data?',
+        message: 'Switching tabs will clear the current preview. Any unimported data will be lost.',
+        confirmText: 'Switch tab',
+        cancelText: 'Stay',
+        type: 'warning',
+        primaryAction: 'cancel',
+      });
+      if (!confirmed) return;
       this.csvProcessingResult = null;
       this.csvDataAll = [];
       this.csvData = [];

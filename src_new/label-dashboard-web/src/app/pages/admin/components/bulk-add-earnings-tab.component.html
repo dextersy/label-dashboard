@@ -1,41 +1,31 @@
 <!-- Page Header -->
 <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
   <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-    <h3 class="tw-mb-2">
-      <app-icon name="file-upload" class="tw-mr-2" />
-      Bulk Add Earnings
-    </h3>
-    <p class="tw-mb-0 tw-text-muted">Import earnings in bulk via CSV or add them manually for multiple artists.</p>
+    <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-3">
+      <h3 class="tw-mb-0">
+        <app-icon name="file-upload" class="tw-mr-2" />
+        Bulk Add Earnings
+      </h3>
+      <div class="sub-tab-toggle" role="group" aria-label="View toggle">
+        <button type="button"
+                class="sub-tab-btn"
+                [class.sub-tab-btn-active]="currentView === 'manual'"
+                (click)="switchToManualView()"
+                [attr.aria-pressed]="currentView === 'manual'">
+          <app-icon name="edit" />
+          <span>Manual Entry</span>
+        </button>
+        <button type="button"
+                class="sub-tab-btn"
+                [class.sub-tab-btn-active]="currentView === 'import'"
+                (click)="switchToImportView()"
+                [attr.aria-pressed]="currentView === 'import'">
+          <app-icon name="file-upload" />
+          <span>Import</span>
+        </button>
+      </div>
+    </div>
   </div>
-</div>
-
-<!-- View Toggle -->
-<div class="tw-flex tw-flex-col tw-items-center tw-mb-5">
-  <div class="sub-tab-toggle" role="group" aria-label="View toggle">
-    <button type="button"
-            class="sub-tab-btn"
-            [class.sub-tab-btn-active]="currentView === 'manual'"
-            (click)="switchToManualView()"
-            [attr.aria-pressed]="currentView === 'manual'">
-      <app-icon name="edit" />
-      <span>Manual Entry</span>
-    </button>
-    <button type="button"
-            class="sub-tab-btn"
-            [class.sub-tab-btn-active]="currentView === 'import'"
-            (click)="switchToImportView()"
-            [attr.aria-pressed]="currentView === 'import'">
-      <app-icon name="file-upload" />
-      <span>Import</span>
-    </button>
-  </div>
-  <small class="tw-mt-2 tw-text-gray-400">
-    <app-icon name="info" class="tw-mr-1" />
-    <span *ngIf="currentView === 'manual'">Add earnings individually with autocomplete</span>
-    <span *ngIf="currentView === 'import' && importSource === 'csv'">Bulk import earnings from CSV file</span>
-    <span *ngIf="currentView === 'import' && importSource === 'loyverse'">Fetch earnings from Loyverse POS</span>
-    <span *ngIf="currentView === 'import' && importSource === 'woocommerce'">Fetch earnings from WooCommerce orders</span>
-  </small>
 </div>
 
 <!-- Manual Entry View -->
@@ -407,42 +397,37 @@
 <!-- Import View -->
 <div *ngIf="currentView === 'import'">
 
-  <!-- Import source sub-tabs -->
-  <div class="tw-flex tw-justify-center tw-mb-4">
-    <div class="tw-inline-flex tw-rounded-lg tw-border tw-border-gray-200 tw-bg-gray-50 tw-p-0.5 tw-gap-0.5" role="group">
-      <button type="button"
-              class="tw-px-4 tw-py-1.5 tw-rounded-md tw-text-sm tw-font-medium tw-transition-colors"
-              [class.tw-bg-white]="importSource === 'csv'"
-              [class.tw-shadow-sm]="importSource === 'csv'"
-              [class.tw-text-gray-900]="importSource === 'csv'"
-              [class.tw-text-gray-500]="importSource !== 'csv'"
-              (click)="setImportSource('csv')">
-        <app-icon name="file" class="tw-mr-1.5" />CSV
-      </button>
-      <button type="button"
-              class="tw-px-4 tw-py-1.5 tw-rounded-md tw-text-sm tw-font-medium tw-transition-colors"
-              [class.tw-bg-white]="importSource === 'loyverse'"
-              [class.tw-shadow-sm]="importSource === 'loyverse'"
-              [class.tw-text-gray-900]="importSource === 'loyverse'"
-              [class.tw-text-gray-500]="importSource !== 'loyverse'"
-              (click)="setImportSource('loyverse')">
-        <app-icon name="link" class="tw-mr-1.5" />Loyverse
-      </button>
-      <button type="button"
-              class="tw-px-4 tw-py-1.5 tw-rounded-md tw-text-sm tw-font-medium tw-transition-colors"
-              [class.tw-bg-white]="importSource === 'woocommerce'"
-              [class.tw-shadow-sm]="importSource === 'woocommerce'"
-              [class.tw-text-gray-900]="importSource === 'woocommerce'"
-              [class.tw-text-gray-500]="importSource !== 'woocommerce'"
-              (click)="setImportSource('woocommerce')">
-        <app-icon name="link" class="tw-mr-1.5" />WooCommerce
-      </button>
+  <!-- Import card -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-mb-6">
+
+    <!-- Underline source tabs -->
+    <div class="import-tab-scroll-wrap">
+      <div class="import-tab-bar">
+        <button type="button" class="import-tab-btn" [class.import-tab-active]="importSource === 'csv'" (click)="setImportSource('csv')">
+          <app-icon name="file" class="tw-mr-1.5" />CSV
+        </button>
+        <button type="button" class="import-tab-btn" [class.import-tab-active]="importSource === 'loyverse'" (click)="setImportSource('loyverse')">
+          <app-icon name="link" class="tw-mr-1.5" />Loyverse
+        </button>
+        <button type="button" class="import-tab-btn" [class.import-tab-active]="importSource === 'woocommerce'" (click)="setImportSource('woocommerce')">
+          <app-icon name="link" class="tw-mr-1.5" />WooCommerce
+        </button>
+      </div>
     </div>
-  </div>
+
+    <!-- Card subtitle / helper text -->
+    <p class="import-card-subtitle">
+      <span *ngIf="importSource === 'csv'">Bulk import earnings from a CSV file</span>
+      <span *ngIf="importSource === 'loyverse'">Fetch earnings from Loyverse POS</span>
+      <span *ngIf="importSource === 'woocommerce'">Fetch earnings from WooCommerce orders</span>
+    </p>
+
+    <!-- Panel body -->
+    <div class="import-panel-body">
 
 <!-- CSV panel -->
 <div *ngIf="importSource === 'csv'">
-  <div class="csv-view-body">
+  <div>
   <!-- CSV Upload Section -->
   <div *ngIf="!csvFile" class="csv-upload-area"
        (dragover)="onDragOver($event)"
@@ -492,7 +477,7 @@
     </div>
 
     <!-- 2. Stats grid: 4 equal-width cards -->
-    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
+    <div class="tw-grid tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
 
       <div class="csv-stat-card">
         <span class="csv-stat-label">Matched Rows</span>
@@ -549,14 +534,15 @@
              id="csvDescriptionDesktop"
              [(ngModel)]="csvDescription"
              placeholder="e.g. Q1 Streaming"
-             style="min-width: 180px;">
+             style="min-width: 180px; height: 40px;">
     </div>
     <div>
-      <label for="csvEarningTypeDesktop" class="csv-fab-label">Type</label>
+      <label for="csvEarningTypeDesktop" class="csv-fab-label">Type <span class="tw-text-red-500">*</span></label>
       <select class="form-select tw-input"
               id="csvEarningTypeDesktop"
               [(ngModel)]="csvEarningType"
-              style="min-width: 120px;">
+              required
+              style="min-width: 120px; height: 40px;">
         <option value="" disabled>Select type</option>
         <option value="Sync">Sync</option>
         <option value="Streaming">Streaming</option>
@@ -570,7 +556,7 @@
       <input type="date" class="tw-input"
              id="csvDateOverrideDesktop"
              [(ngModel)]="csvDateOverride"
-             style="min-width: 140px;">
+             style="min-width: 140px; height: 40px;">
     </div>
     <div class="csv-fab-toggle-group">
       <label for="csvCalculateRoyaltiesDesktop" class="csv-fab-label">Calculate Royalties</label>
@@ -615,11 +601,11 @@
     <div class="md:tw-hidden tw-flex tw-gap-2 tw-w-full">
       <div class="tw-flex-1 tw-min-w-0">
         <label class="csv-fab-label">Description</label>
-        <input type="text" class="tw-input" style="height:38px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 Streaming">
+        <input type="text" class="tw-input" style="height:40px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 Streaming">
       </div>
       <div class="tw-flex-shrink-0">
-        <label class="csv-fab-label">Type</label>
-        <select class="form-select tw-input" style="height:38px;" [(ngModel)]="csvEarningType">
+        <label class="csv-fab-label">Type <span class="tw-text-red-500">*</span></label>
+        <select class="form-select tw-input" style="height:40px;" [(ngModel)]="csvEarningType" required>
           <option value="" disabled>Select type</option>
           <option value="Sync">Sync</option>
           <option value="Streaming">Streaming</option>
@@ -632,7 +618,7 @@
     <!-- Date (only when no date column detected) -->
     <div *ngIf="!csvDetectedDateColumn" class="md:tw-hidden tw-w-full">
       <label class="csv-fab-label">Earning Date</label>
-      <input type="date" class="tw-input" style="height:38px;" [(ngModel)]="csvDateOverride">
+      <input type="date" class="tw-input" style="height:40px;" [(ngModel)]="csvDateOverride">
     </div>
 
     <!-- Royalties toggle -->
@@ -683,7 +669,7 @@
 </div><!-- /csv panel -->
 
 <!-- Loyverse panel -->
-<div *ngIf="importSource === 'loyverse'" class="csv-view-body">
+<div *ngIf="importSource === 'loyverse'">
 
   <!-- Disabled notice -->
   <div *ngIf="!brandSettings?.loyverse_enabled" class="tw-rounded-lg tw-border tw-border-amber-200 tw-bg-amber-50 tw-p-5 tw-text-center tw-mb-4">
@@ -693,36 +679,27 @@
     <a routerLink="/admin/integrations" class="btn-secondary btn-sm">Go to Integrations</a>
   </div>
 
-  <!-- Fetch controls (only when enabled) -->
-  <div *ngIf="brandSettings?.loyverse_enabled" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-card-pad tw-mb-4">
-    <h5 class="tw-mb-4">Fetch from Loyverse</h5>
-    <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-3 tw-mb-4">
-      <div>
-        <label class="tw-label">Start Date</label>
-        <input type="date" class="tw-input" [(ngModel)]="integrationStartDate">
+  <!-- Fetch controls (only when enabled, hidden once results are loaded) -->
+  <div *ngIf="brandSettings?.loyverse_enabled && !csvProcessingResult" class="tw-mb-4">
+    <div class="fetch-controls-row">
+      <div class="fetch-dates">
+        <input type="date" class="tw-input fetch-date-input" [(ngModel)]="integrationStartDate" title="Start date">
+        <span class="fetch-date-sep">–</span>
+        <input type="date" class="tw-input fetch-date-input" [(ngModel)]="integrationEndDate" title="End date">
       </div>
-      <div>
-        <label class="tw-label">End Date</label>
-        <input type="date" class="tw-input" [(ngModel)]="integrationEndDate">
+      <div class="fetch-toggle-wrap form-check form-switch tw-mb-0">
+        <input type="checkbox" class="form-check-input" id="loyverseConsolidate" [(ngModel)]="integrationConsolidate">
+        <label class="form-check-label tw-text-muted tw-text-sm" for="loyverseConsolidate">Group by product</label>
       </div>
-      <div class="tw-flex tw-flex-col tw-justify-end">
-        <label class="tw-label">Consolidate by product</label>
-        <div class="form-check form-switch tw-mb-0">
-          <input type="checkbox" class="form-check-input" id="loyverseConsolidate" [(ngModel)]="integrationConsolidate">
-          <label class="form-check-label tw-text-muted" for="loyverseConsolidate">
-            {{ integrationConsolidate ? 'Yes — group by product name' : 'No — one row per line item' }}
-          </label>
-        </div>
-      </div>
+      <button type="button" class="btn-secondary btn-sm fetch-action-btn"
+              (click)="fetchLoyversePreview()"
+              [disabled]="integrationLoading || !integrationStartDate || !integrationEndDate">
+        <span *ngIf="!integrationLoading"><app-icon name="download" class="tw-mr-1.5" />Fetch</span>
+        <span *ngIf="integrationLoading">
+          <span class="spinner-border spinner-border-sm tw-mr-1.5" role="status" aria-hidden="true"></span>Fetching...
+        </span>
+      </button>
     </div>
-    <button type="button" class="btn-primary"
-            (click)="fetchLoyversePreview()"
-            [disabled]="integrationLoading || !integrationStartDate || !integrationEndDate">
-      <span *ngIf="!integrationLoading"><app-icon name="download" class="tw-mr-2" />Fetch &amp; Preview</span>
-      <span *ngIf="integrationLoading">
-        <span class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>Fetching...
-      </span>
-    </button>
   </div>
 
   <!-- Preview result (reuse CSV result UI) -->
@@ -735,7 +712,7 @@
       </button>
     </div>
 
-    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
+    <div class="tw-grid tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
       <div class="csv-stat-card">
         <span class="csv-stat-label">Matched Rows</span>
         <span class="csv-stat-value tw-text-[#2563eb]">{{ csvTotalCount - csvTotalUnmatched }}</span>
@@ -770,7 +747,7 @@
 </div><!-- /loyverse panel -->
 
 <!-- WooCommerce panel -->
-<div *ngIf="importSource === 'woocommerce'" class="csv-view-body">
+<div *ngIf="importSource === 'woocommerce'">
 
   <!-- Disabled notice -->
   <div *ngIf="!brandSettings?.woocommerce_enabled" class="tw-rounded-lg tw-border tw-border-amber-200 tw-bg-amber-50 tw-p-5 tw-text-center tw-mb-4">
@@ -780,36 +757,27 @@
     <a routerLink="/admin/integrations" class="btn-secondary btn-sm">Go to Integrations</a>
   </div>
 
-  <!-- Fetch controls -->
-  <div *ngIf="brandSettings?.woocommerce_enabled" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-card-pad tw-mb-4">
-    <h5 class="tw-mb-4">Fetch from WooCommerce</h5>
-    <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-3 tw-gap-3 tw-mb-4">
-      <div>
-        <label class="tw-label">Start Date</label>
-        <input type="date" class="tw-input" [(ngModel)]="integrationStartDate">
+  <!-- Fetch controls (hidden once results are loaded) -->
+  <div *ngIf="brandSettings?.woocommerce_enabled && !csvProcessingResult" class="tw-mb-4">
+    <div class="fetch-controls-row">
+      <div class="fetch-dates">
+        <input type="date" class="tw-input fetch-date-input" [(ngModel)]="integrationStartDate" title="Start date">
+        <span class="fetch-date-sep">–</span>
+        <input type="date" class="tw-input fetch-date-input" [(ngModel)]="integrationEndDate" title="End date">
       </div>
-      <div>
-        <label class="tw-label">End Date</label>
-        <input type="date" class="tw-input" [(ngModel)]="integrationEndDate">
+      <div class="fetch-toggle-wrap form-check form-switch tw-mb-0">
+        <input type="checkbox" class="form-check-input" id="wcConsolidate" [(ngModel)]="integrationConsolidate">
+        <label class="form-check-label tw-text-muted tw-text-sm" for="wcConsolidate">Group by product</label>
       </div>
-      <div class="tw-flex tw-flex-col tw-justify-end">
-        <label class="tw-label">Consolidate by product</label>
-        <div class="form-check form-switch tw-mb-0">
-          <input type="checkbox" class="form-check-input" id="wcConsolidate" [(ngModel)]="integrationConsolidate">
-          <label class="form-check-label tw-text-muted" for="wcConsolidate">
-            {{ integrationConsolidate ? 'Yes — group by product name' : 'No — one row per line item' }}
-          </label>
-        </div>
-      </div>
+      <button type="button" class="btn-secondary btn-sm fetch-action-btn"
+              (click)="fetchWoocommercePreview()"
+              [disabled]="integrationLoading || !integrationStartDate || !integrationEndDate">
+        <span *ngIf="!integrationLoading"><app-icon name="download" class="tw-mr-1.5" />Fetch</span>
+        <span *ngIf="integrationLoading">
+          <span class="spinner-border spinner-border-sm tw-mr-1.5" role="status" aria-hidden="true"></span>Fetching...
+        </span>
+      </button>
     </div>
-    <button type="button" class="btn-primary"
-            (click)="fetchWoocommercePreview()"
-            [disabled]="integrationLoading || !integrationStartDate || !integrationEndDate">
-      <span *ngIf="!integrationLoading"><app-icon name="download" class="tw-mr-2" />Fetch &amp; Preview</span>
-      <span *ngIf="integrationLoading">
-        <span class="spinner-border spinner-border-sm tw-mr-2" role="status" aria-hidden="true"></span>Fetching...
-      </span>
-    </button>
   </div>
 
   <!-- Preview result -->
@@ -822,7 +790,7 @@
       </button>
     </div>
 
-    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
+    <div class="tw-grid tw-grid-cols-4 tw-gap-2.5 tw-mb-3">
       <div class="csv-stat-card">
         <span class="csv-stat-label">Matched Rows</span>
         <span class="csv-stat-value tw-text-[#2563eb]">{{ csvTotalCount - csvTotalUnmatched }}</span>
@@ -863,11 +831,11 @@
   <div floatingStart class="tw-hidden md:tw-flex md:tw-flex-wrap tw-items-end tw-gap-x-3 tw-gap-y-2">
     <div>
       <label for="wcDescDesktop" class="csv-fab-label">Description</label>
-      <input type="text" class="tw-input" id="wcDescDesktop" [(ngModel)]="csvDescription" placeholder="e.g. Q1 WooCommerce Sales" style="min-width:180px;">
+      <input type="text" class="tw-input" id="wcDescDesktop" [(ngModel)]="csvDescription" placeholder="e.g. Q1 WooCommerce Sales" style="min-width:180px; height:40px;">
     </div>
     <div>
-      <label for="wcTypeDesktop" class="csv-fab-label">Type</label>
-      <select class="form-select tw-input" id="wcTypeDesktop" [(ngModel)]="csvEarningType" style="min-width:120px;">
+      <label for="wcTypeDesktop" class="csv-fab-label">Type <span class="tw-text-red-500">*</span></label>
+      <select class="form-select tw-input" id="wcTypeDesktop" [(ngModel)]="csvEarningType" required style="min-width:120px; height:40px;">
         <option value="" disabled>Select type</option>
         <option value="Sync">Sync</option>
         <option value="Streaming">Streaming</option>
@@ -877,7 +845,8 @@
     </div>
     <div *ngIf="!csvDetectedDateColumn">
       <label for="wcDateDesktop" class="csv-fab-label">Earning Date</label>
-      <input type="date" class="tw-input" id="wcDateDesktop" [(ngModel)]="csvDateOverride" style="min-width:140px;">
+      <input type="date" class="tw-input" id="wcDateDesktop" [(ngModel)]="csvDateOverride" style="min-width:140px; height:40px;">
+      <small class="csv-fab-note">Defaults to end of fetch range</small>
     </div>
     <div class="csv-fab-toggle-group">
       <label for="wcRoyaltiesDesktop" class="csv-fab-label">Calculate Royalties</label>
@@ -922,11 +891,11 @@
     <div class="md:tw-hidden tw-flex tw-gap-2 tw-w-full">
       <div class="tw-flex-1 tw-min-w-0">
         <label class="csv-fab-label">Description</label>
-        <input type="text" class="tw-input" style="height:38px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 WooCommerce Sales">
+        <input type="text" class="tw-input" style="height:40px;" [(ngModel)]="csvDescription" placeholder="e.g. Q1 WooCommerce Sales">
       </div>
       <div class="tw-flex-shrink-0">
-        <label class="csv-fab-label">Type</label>
-        <select class="form-select tw-input" style="height:38px;" [(ngModel)]="csvEarningType">
+        <label class="csv-fab-label">Type <span class="tw-text-red-500">*</span></label>
+        <select class="form-select tw-input" style="height:40px;" [(ngModel)]="csvEarningType" required>
           <option value="" disabled>Select type</option>
           <option value="Sync">Sync</option>
           <option value="Streaming">Streaming</option>
@@ -939,7 +908,8 @@
     <!-- Date (only when no date column detected) -->
     <div *ngIf="!csvDetectedDateColumn" class="md:tw-hidden tw-w-full">
       <label class="csv-fab-label">Earning Date</label>
-      <input type="date" class="tw-input" style="height:38px;" [(ngModel)]="csvDateOverride">
+      <input type="date" class="tw-input" style="height:40px;" [(ngModel)]="csvDateOverride">
+      <small class="csv-fab-note">Defaults to end of fetch range</small>
     </div>
 
     <!-- Royalties toggle -->
@@ -980,11 +950,15 @@
 
 </app-floating-action-bar>
 
+    </div><!-- /import-panel-body -->
+
+  </div><!-- /import card -->
+
 </div><!-- /import view -->
 
 <!-- Shared editable import table template (outside all *ngIf blocks so ViewChild always resolves it) -->
 <ng-template #editableImportTable>
-  <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-5">
+  <div class="tw-border tw-border-gray-200 tw-rounded-lg tw-overflow-hidden tw-mb-5">
     <!-- Table header -->
     <div class="tw-px-4 tw-pt-3 tw-pb-2 tw-flex tw-items-center tw-justify-between tw-border-b tw-border-gray-100">
       <div>
@@ -999,16 +973,16 @@
     </div>
     <!-- Table -->
     <div class="table-responsive">
-      <table class="table table-sm tw-mb-0">
+      <table class="table table-sm table-financial tw-mb-0">
         <thead class="table-light">
           <tr>
-            <th style="font-size:11px;white-space:nowrap;">Catalog No.</th>
-            <th *ngIf="csvDetectedLabelColumn" style="font-size:11px;">Label</th>
+            <th class="mobile-hide" style="font-size:11px;white-space:nowrap;">Catalog No.</th>
+            <th *ngIf="csvDetectedLabelColumn" class="mobile-hide" style="font-size:11px;">Label</th>
             <th style="font-size:11px;">Release Title</th>
-            <th *ngIf="csvDetectedDateColumn" style="font-size:11px;">Date</th>
-            <th style="font-size:11px;">Description</th>
-            <th style="font-size:11px;">Type</th>
-            <th style="font-size:11px;text-align:right;">Amount</th>
+            <th *ngIf="csvDetectedDateColumn" class="mobile-hide" style="font-size:11px;">Date</th>
+            <th class="mobile-hide" style="font-size:11px;">Description</th>
+            <th class="mobile-hide" style="font-size:11px;">Type</th>
+            <th class="mobile-number" style="font-size:11px;">Amount</th>
             <th style="width:64px;"></th>
           </tr>
         </thead>
@@ -1017,17 +991,21 @@
 
             <!-- Read mode -->
             <ng-container *ngIf="editingRow !== row">
-              <td style="font-family:monospace;font-size:12px;white-space:nowrap;">{{ row.matched_release?.catalog_no }}</td>
-              <td *ngIf="csvDetectedLabelColumn" style="font-size:13px;">{{ row.matched_brand?.brand_name }}</td>
-              <td style="font-size:13px;">{{ row.matched_release?.title }}</td>
-              <td *ngIf="csvDetectedDateColumn" style="font-size:13px;white-space:nowrap;">{{ row.original_data?.[csvDetectedDateColumn] }}</td>
-              <td style="font-size:13px;" [class.tw-text-muted]="row.row_description === undefined">
+              <td class="mobile-hide" style="font-family:monospace;font-size:12px;white-space:nowrap;">{{ row.matched_release?.catalog_no }}</td>
+              <td *ngIf="csvDetectedLabelColumn" class="mobile-hide" style="font-size:13px;">{{ row.matched_brand?.brand_name }}</td>
+              <td class="mobile-text" style="font-size:13px;">
+                <span class="tw-block sm:tw-hidden tw-text-muted" style="font-size:10px;font-family:monospace;">{{ row.matched_release?.catalog_no }}</span>
+                {{ row.matched_release?.title }}
+                <span class="tw-block sm:tw-hidden tw-text-muted tw-truncate" style="font-size:11px;">{{ getRowDescription(row) || '—' }}</span>
+              </td>
+              <td *ngIf="csvDetectedDateColumn" class="mobile-hide" style="font-size:13px;white-space:nowrap;">{{ row.original_data?.[csvDetectedDateColumn] }}</td>
+              <td class="mobile-hide" style="font-size:13px;" [class.tw-text-muted]="row.row_description === undefined">
                 {{ getRowDescription(row) || '—' }}
               </td>
-              <td style="font-size:13px;" [class.tw-text-muted]="row.row_type === undefined">
+              <td class="mobile-hide" style="font-size:13px;" [class.tw-text-muted]="row.row_type === undefined">
                 {{ getRowType(row) || '—' }}
               </td>
-              <td style="font-size:13px;text-align:right;white-space:nowrap;" [class.text-danger]="row.earning_amount < 0">
+              <td class="mobile-number" style="font-size:13px;" [class.text-danger]="row.earning_amount < 0">
                 {{ formatCurrency(row.earning_amount) }}
               </td>
               <td>
@@ -1041,69 +1019,85 @@
 
             <!-- Edit mode -->
             <ng-container *ngIf="editingRow === row">
-              <td [attr.colspan]="csvDetectedLabelColumn ? 3 : 2" style="min-width:220px;">
-                <div class="tw-relative">
-                  <div class="release-search-wrap">
-                    <app-icon name="search" class="release-search-icon" iconOnly />
-                    <input type="text"
-                           class="tw-input release-search-input"
-                           [value]="editDraft.release_search_term"
-                           (input)="onEditReleaseSearch($any($event.target).value)"
-                           (focus)="onEditReleaseFocus()"
-                           (blur)="onEditReleaseBlur()"
-                           placeholder="Search releases..."
-                           autocomplete="off">
-                  </div>
-                  <div *ngIf="editShowDropdown"
-                       class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
-                       style="z-index:1100;max-height:200px;overflow-y:auto;">
-                    <div *ngIf="editFilteredReleases.length > 0; else noEditResults">
-                      <div *ngFor="let rel of editFilteredReleases"
-                           class="tw-p-2 release-option"
-                           style="cursor:pointer;border-bottom:1px solid #eee;"
-                           (mousedown)="selectEditRelease(rel)">
-                        <strong>{{ rel.catalog_no }}</strong>: {{ rel.title }}
-                        <span *ngIf="rel.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ rel.brand!.brand_name }})</span>
+              <td colspan="9">
+                <div class="import-edit-row">
+
+                  <!-- Release search -->
+                  <div class="import-edit-field import-edit-release">
+                    <label class="import-edit-label tw-hidden sm:tw-block">Release</label>
+                    <div class="tw-relative">
+                      <div class="release-search-wrap">
+                        <app-icon name="search" class="release-search-icon" iconOnly />
+                        <input type="text"
+                               class="tw-input tw-input-sm release-search-input"
+                               [value]="editDraft.release_search_term"
+                               (input)="onEditReleaseSearch($any($event.target).value)"
+                               (focus)="onEditReleaseFocus()"
+                               (blur)="onEditReleaseBlur()"
+                               placeholder="Search releases..."
+                               autocomplete="off">
+                      </div>
+                      <div *ngIf="editShowDropdown"
+                           class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
+                           style="z-index:1100;max-height:200px;overflow-y:auto;">
+                        <div *ngIf="editFilteredReleases.length > 0; else noEditResults">
+                          <div *ngFor="let rel of editFilteredReleases"
+                               class="tw-p-2 release-option"
+                               style="cursor:pointer;border-bottom:1px solid #eee;"
+                               (mousedown)="selectEditRelease(rel)">
+                            <strong>{{ rel.catalog_no }}</strong>: {{ rel.title }}
+                            <span *ngIf="rel.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ rel.brand!.brand_name }})</span>
+                          </div>
+                        </div>
+                        <ng-template #noEditResults>
+                          <div class="tw-p-2 tw-text-muted">No releases found</div>
+                        </ng-template>
                       </div>
                     </div>
-                    <ng-template #noEditResults>
-                      <div class="tw-p-2 tw-text-muted">No releases found</div>
-                    </ng-template>
                   </div>
-                </div>
-              </td>
-              <td *ngIf="csvDetectedDateColumn" style="font-size:13px;white-space:nowrap;">{{ row.original_data?.[csvDetectedDateColumn] }}</td>
-              <td>
-                <input type="text" class="tw-input tw-input-sm" style="min-width:130px;"
-                       [(ngModel)]="editDraft.description"
-                       placeholder="Description"
-                       maxlength="45">
-              </td>
-              <td>
-                <select class="tw-input tw-input-sm" style="min-width:110px;" [(ngModel)]="editDraft.type">
-                  <option value="" disabled>Type</option>
-                  <option value="Sync">Sync</option>
-                  <option value="Streaming">Streaming</option>
-                  <option value="Downloads">Downloads</option>
-                  <option value="Physical">Physical</option>
-                </select>
-              </td>
-              <td>
-                <div class="tw-flex tw-items-center tw-justify-end tw-gap-1">
-                  <span class="tw-text-muted tw-text-sm">₱</span>
-                  <input type="number" class="tw-input tw-input-sm" style="min-width:90px;text-align:right;"
-                         [(ngModel)]="editDraft.earning_amount"
-                         step="0.01">
-                </div>
-              </td>
-              <td>
-                <div class="tw-flex tw-items-center tw-gap-1">
-                  <button type="button" class="btn-icon tw-text-green-600" title="Confirm" (click)="confirmEditRow()">
-                    <app-icon name="check" iconOnly />
-                  </button>
-                  <button type="button" class="btn-icon tw-text-red-500" title="Cancel" (click)="cancelEditRow()">
-                    <app-icon name="x" iconOnly />
-                  </button>
+
+                  <!-- Description -->
+                  <div class="import-edit-field">
+                    <label class="import-edit-label tw-hidden sm:tw-block">Description</label>
+                    <input type="text" class="tw-input tw-input-sm tw-w-full"
+                           [(ngModel)]="editDraft.description"
+                           placeholder="Description"
+                           maxlength="45">
+                  </div>
+
+                  <!-- Type + Amount (side by side on mobile too) -->
+                  <div class="import-edit-field import-edit-type-amount">
+                    <div>
+                      <label class="import-edit-label tw-hidden sm:tw-block">Type</label>
+                      <select class="tw-input tw-input-sm tw-w-full" [(ngModel)]="editDraft.type">
+                        <option value="" disabled>Type</option>
+                        <option value="Sync">Sync</option>
+                        <option value="Streaming">Streaming</option>
+                        <option value="Downloads">Downloads</option>
+                        <option value="Physical">Physical</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="import-edit-label tw-hidden sm:tw-block">Amount</label>
+                      <div class="tw-flex tw-items-center tw-gap-1">
+                        <span class="tw-text-muted tw-text-sm">₱</span>
+                        <input type="number" class="tw-input tw-input-sm" style="min-width:80px;text-align:right;"
+                               [(ngModel)]="editDraft.earning_amount"
+                               step="0.01">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="import-edit-field import-edit-actions">
+                    <button type="button" class="btn-icon tw-text-green-600" title="Confirm" (click)="confirmEditRow()">
+                      <app-icon name="check" iconOnly />
+                    </button>
+                    <button type="button" class="btn-icon tw-text-red-500" title="Cancel" (click)="cancelEditRow()">
+                      <app-icon name="x" iconOnly />
+                    </button>
+                  </div>
+
                 </div>
               </td>
             </ng-container>
