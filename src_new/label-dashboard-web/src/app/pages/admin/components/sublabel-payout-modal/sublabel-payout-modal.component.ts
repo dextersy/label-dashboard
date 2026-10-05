@@ -92,13 +92,13 @@ export class SublabelPayoutModalComponent implements OnInit, OnChanges {
       // Set amount to sublabel balance if available
       if (this.sublabel) {
         this.payoutData.amount = Math.round(this.sublabel.balance * 100) / 100;
-        this.payoutData.description = `Payout for ${this.sublabel.brand_name}`;
+        this.payoutData.description = `Payout for ${this.sublabel.brand_name}`.substring(0, 45);
       }
     }
 
     if (changes['sublabel'] && this.sublabel) {
       this.payoutData.amount = Math.round(this.sublabel.balance * 100) / 100;
-      this.payoutData.description = `Payout for ${this.sublabel.brand_name}`;
+      this.payoutData.description = `Payout for ${this.sublabel.brand_name}`.substring(0, 45);
     }
   }
 
