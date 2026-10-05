@@ -67,7 +67,9 @@
               class="tw-input"
               [(ngModel)]="payoutData.description"
               [disabled]="submitting"
-              placeholder="Payment description">
+              placeholder="Payment description"
+              maxlength="45">
+            <div class="tw-text-xs tw-text-right tw-mt-1" [class.tw-text-muted]="(payoutData.description?.length || 0) < 45" [class.tw-text-red-500]="(payoutData.description?.length || 0) >= 45">{{ payoutData.description?.length || 0 }}/45</div>
           </div>
 
           <!-- Date Paid -->
