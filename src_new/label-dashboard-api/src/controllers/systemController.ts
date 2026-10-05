@@ -395,21 +395,15 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
  * Used by automated payment jobs.
  *
  * Query parameters:
- * - page: Page number (default: 1)
- * - limit: Results per page (max: 100, default: 50)
  * - min_balance: Filter sublabels with balance >= this amount (default: 0)
  */
 export const getSublabelsDuePayment = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = Math.min(parseInt(req.query.limit as string) || 50, 100); // Max 100
-    const offset = (page - 1) * limit;
-
     // Optional filter for minimum balance
     const minBalance = parseFloat(req.query.min_balance as string) || 0;
 
     // Query ALL sublabels (brands that have a parent_brand)
-    const { count, rows: sublabels } = await Brand.findAndCountAll({
+    const sublabels = await Brand.findAll({
       where: {
         parent_brand: {
           [Op.not]: null
@@ -423,8 +417,6 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
           required: true
         }
       ],
-      limit,
-      offset,
       order: [['parent_brand', 'ASC'], ['brand_name', 'ASC']]
     });
 
@@ -585,17 +577,12 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
 
     // Log data access
     auditLogger.logDataAccess(req, 'sublabels-due-payment', 'READ', filteredSublabels.length, {
-      page,
-      limit,
       minBalance,
-      totalSublabels: count
+      totalSublabels: sublabels.length
     });
 
     res.json({
-      total: count,
-      page,
-      limit,
-      totalPages: Math.ceil(count / limit),
+      total: filteredSublabels.length,
       results: filteredSublabels,
       filters: {
         min_balance: minBalance
