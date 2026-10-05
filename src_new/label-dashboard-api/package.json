@@ -25,6 +25,7 @@
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "@types/archiver": "^7.0.0",
     "@types/node": "^24.1.0",
     "@types/pdfkit": "^0.17.3",

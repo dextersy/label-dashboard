@@ -9,7 +9,7 @@ async function getChildBrandIds(brandId: number): Promise<number[]> {
 }
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
-import { extractDSPFeatures, extractMoodScores } from '../utils/audioFeatures';
+import { extractDSPFeatures, extractMoodScores, enqueueAudioExtraction } from '../utils/audioFeatures';
 import { generateSongSummaryBackground } from '../utils/songAI';
 import { Readable } from 'stream';
 
@@ -836,10 +836,13 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       audio_file_mp3_size: mp3FileSize
     });
 
-    // Run DSP + mood extraction in background after response is sent
+    // Run DSP + mood extraction in background after response is sent.
+    // Serialised via enqueueAudioExtraction to prevent concurrent TF.js jobs
+    // from blocking the event loop when multiple masters are uploaded at once.
     const audioBuffer = req.file!.buffer;
     const songId = song.id;
-    (async () => {
+    enqueueAudioExtraction(async () => {
+      console.log(`[audioFeatures] Starting extraction for song ${songId}`);
       try {
         const dsp = await extractDSPFeatures(audioBuffer);
         const dspUpdate: any = {};
@@ -869,7 +872,8 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
 
       // Regenerate AI summary after all audio features (including mood) are saved
       generateSongSummaryBackground(songId);
-    })();
+      console.log(`[audioFeatures] Extraction complete for song ${songId}`);
+    });
   } catch (error) {
     console.error('Upload audio error:', error);
     res.status(500).json({ error: 'Internal server error' });

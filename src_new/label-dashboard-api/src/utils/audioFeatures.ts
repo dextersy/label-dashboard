@@ -168,6 +168,7 @@ export async function extractDSPFeatures(audioBuffer: Buffer): Promise<Omit<Audi
  *   5. Average patch outputs → probability 0-1 per mood
  */
 export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores> {
+  require('@tensorflow/tfjs-node');
   const tf = require('@tensorflow/tfjs');
   const { EssentiaModel } = require('essentia.js');
   const { wasmModule } = await getEssentia();
@@ -248,6 +249,17 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
   }
 
   return scores;
+}
+
+// ── Serial queue ──────────────────────────────────────────────────────────────
+// TF.js CPU ops are synchronous-heavy and block the event loop. Run at most one
+// full audio-feature job at a time to prevent the server from hanging when
+// multiple masters are uploaded in quick succession.
+
+let _extractionQueue: Promise<void> = Promise.resolve();
+
+export function enqueueAudioExtraction(job: () => Promise<void>): void {
+  _extractionQueue = _extractionQueue.then(() => job().catch(() => { /* errors are logged inside */ }));
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
