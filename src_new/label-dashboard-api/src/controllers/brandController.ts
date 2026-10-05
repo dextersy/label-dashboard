@@ -1637,6 +1637,12 @@ const createSublabelAsync = async (
 
     console.log(`[Async] Created domain: ${finalDomainName} with status: ${domainStatus}`);
 
+    // SECURITY: Clear CSRF/CORS origins cache if the new domain is immediately Connected
+    if (domainStatus === 'Connected') {
+      await clearOriginsCache();
+      console.log(`[Async][Security] CSRF/CORS cache cleared after creating connected domain: ${finalDomainName}`);
+    }
+
     // Create admin user for the new brand (copy current user's info)
     const newUser = await User.create({
       username: currentUser.username,
