@@ -670,7 +670,7 @@ export const getReleaseStatus = async (req: Request, res: Response) => {
 
       const songs = (r.songs || []).map((song: any) => ({
         id: song.id,
-        track_number: song.release_song?.track_number ?? null,
+        track_number: song.ReleaseSong?.track_number ?? null,
         title: song.title,
         isrc: song.isrc || null,
         has_lyrics: !!(song.lyrics && song.lyrics.trim()),

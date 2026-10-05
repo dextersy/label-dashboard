@@ -1513,6 +1513,7 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
         {
           model: Song,
           as: 'songs',
+          through: { attributes: ['track_number'] },
           include: [
             {
               model: SongAuthor,
@@ -1604,7 +1605,10 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
           physical_royalty_percentage: artist.ReleaseArtist?.physical_royalty_percentage || 0,
           physical_royalty_type: artist.ReleaseArtist?.physical_royalty_type || 'Revenue'
         })) || [],
-        songs: release.songs || []
+        songs: (release.songs || []).map((song: any) => ({
+          ...song.toJSON(),
+          track_number: song.ReleaseSong?.track_number ?? song.release_song?.track_number ?? null
+        }))
       };
     }));
 
