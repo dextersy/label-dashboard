@@ -168,7 +168,7 @@ export async function extractDSPFeatures(audioBuffer: Buffer): Promise<Omit<Audi
  *   5. Average patch outputs → probability 0-1 per mood
  */
 export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores> {
-  require('@tensorflow/tfjs-node');
+  try { require('@tensorflow/tfjs-node'); } catch { /* native backend unavailable, fall back to pure JS */ }
   const tf = require('@tensorflow/tfjs');
   const { EssentiaModel } = require('essentia.js');
   const { wasmModule } = await getEssentia();

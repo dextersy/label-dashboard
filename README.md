@@ -92,6 +92,8 @@ npm install
 npm run dev                # Start development server with nodemon
 ```
 
+> **Note:** The API includes `@tensorflow/tfjs-node` as an optional dependency for faster audio feature extraction (mood detection). It requires a C++ build toolchain. If the build fails on your machine (common on Windows), the app will still work — it just falls back to a slower pure-JS backend for mood analysis. To install the build tools on Windows, run `npm install -g windows-build-tools` in an elevated terminal.
+
 #### Frontend
 
 ```bash
