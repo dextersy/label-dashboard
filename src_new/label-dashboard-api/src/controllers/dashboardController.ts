@@ -683,12 +683,14 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
       total: totalOngoingFundraisers
     };
 
-    // Get upcoming published events (nearest 3 with future date)
+    // Get upcoming published events (nearest 3 — include events on today's date until end of day)
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
     const upcomingEventsRaw = await Event.findAll({
       where: {
         ...brandFilter,
         status: 'published',
-        date_and_time: { [Op.gt]: now }
+        date_and_time: { [Op.gte]: startOfToday }
       },
       order: [['date_and_time', 'ASC']],
       limit: 3,
