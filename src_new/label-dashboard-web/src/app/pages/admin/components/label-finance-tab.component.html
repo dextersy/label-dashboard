@@ -57,9 +57,9 @@
 
   <!-- Payout Accounts and Payment History Section: 1/3 + 2/3 at lg -->
   <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-3 tw-gap-6 lg:tw-gap-4">
-    <!-- Payout Accounts -->
-    <div>
-      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-h-full">
+    <!-- Payout Accounts + Payout Settings (stacked in 1/3 column) -->
+    <div class="tw-flex tw-flex-col tw-gap-6">
+      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden">
         <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
           <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payout accounts</h3>
         </div>
@@ -103,6 +103,63 @@
           </div>
           <button class="btn-ghost-dashed tw-mt-3" (click)="openAddPaymentMethodModal()">
             <app-icon name="plus" class="tw-mr-1.5" />Add payout account
+          </button>
+        </div>
+      </div>
+
+      <!-- Payout Schedule Settings (sublabels only) -->
+      <div *ngIf="isSublabel" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden">
+        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Payout Schedule</h3>
+        </div>
+        <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+          <!-- Processing fee notice -->
+          <div class="tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-p-3 tw-mb-5">
+            <p class="tw-text-xs tw-text-amber-800 tw-mb-0">
+              <strong>Note:</strong> A ₱10 processing fee will be charged for every payout. Set a minimum threshold to avoid excessive fees for small balances.
+            </p>
+          </div>
+
+          <!-- Schedule dropdown -->
+          <div class="tw-mb-5">
+            <label class="tw-label">Automatic Payout Schedule</label>
+            <select class="tw-input tw-w-full"
+                    [(ngModel)]="payoutSettings.payout_schedule"
+                    (ngModelChange)="onPayoutSettingsChanged()">
+              <option [ngValue]="null">-- Select a schedule --</option>
+              <option value="1st_and_16th">Every 1st and 16th of the month</option>
+              <option value="1st_of_month">Every 1st of the month</option>
+              <option value="every_friday">Every Friday</option>
+            </select>
+          </div>
+
+          <!-- Pay out on event close -->
+          <div class="tw-mb-5 tw-flex tw-items-start tw-gap-3">
+            <div class="form-check form-switch tw-mb-0 tw-mt-0.5">
+              <input type="checkbox" class="form-check-input" id="payoutOnEventClose"
+                     [(ngModel)]="payoutSettings.payout_on_event_close"
+                     (change)="onPayoutSettingsChanged()">
+            </div>
+            <div>
+              <label for="payoutOnEventClose" class="tw-text-sm tw-font-medium tw-text-body tw-cursor-pointer tw-mb-0">Pay out when ticket sales close</label>
+              <p class="tw-text-xs tw-text-muted tw-mt-0.5 tw-mb-0">Automatically trigger a payout when an event's ticket sales period ends.</p>
+            </div>
+          </div>
+
+          <!-- Minimum threshold -->
+          <div>
+            <label class="tw-label">Minimum Payout Threshold (PHP)</label>
+            <p class="tw-text-xs tw-text-muted tw-mb-2">Leave empty for no minimum.</p>
+            <input type="number" class="tw-input tw-w-full"
+                   [ngModel]="payoutSettings.payout_threshold"
+                   (ngModelChange)="payoutSettings.payout_threshold = $event; onPayoutSettingsChanged()"
+                   placeholder="e.g. 500" min="0" step="1">
+          </div>
+
+          <button class="btn-primary tw-mt-5 tw-w-full"
+                  (click)="savePayoutSettings()"
+                  [disabled]="payoutSettingsSaving || !payoutSettingsDirty">
+            <app-icon name="save" /> {{ payoutSettingsSaving ? 'Saving…' : 'Save Payout Settings' }}
           </button>
         </div>
       </div>

@@ -99,6 +99,7 @@ export class LabelsDashboardComponent implements OnInit {
   pendingReleases: { release: DiscographyRelease; daysUntil: number | null; tasks: ReleaseTask[] }[] = [];
   liveReleasesData: DiscographyRelease[] = [];
   hasPayoutAccount: boolean | null = null;
+  hasPayoutSchedule: boolean | null = null;
 
   constructor(
     private http: HttpClient,
@@ -137,6 +138,9 @@ export class LabelsDashboardComponent implements OnInit {
   }
 
   private loadPayoutAccountStatus(): void {
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = user.brand_id;
+
     this.adminService.getLabelPaymentMethods().subscribe({
       next: (response) => {
         const methods = (response as any)?.paymentMethods || response || [];
@@ -146,6 +150,17 @@ export class LabelsDashboardComponent implements OnInit {
         this.hasPayoutAccount = null;
       }
     });
+
+    if (brandId) {
+      this.adminService.getLabelPayoutSettings(brandId).subscribe({
+        next: (settings) => {
+          this.hasPayoutSchedule = !!settings.payout_schedule;
+        },
+        error: () => {
+          this.hasPayoutSchedule = null;
+        }
+      });
+    }
   }
 
   private loadPendingReleases(): void {

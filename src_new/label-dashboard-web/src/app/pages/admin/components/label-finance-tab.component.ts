@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../components/shared/date-range-filter/date-range-filter.component';
 import { LabelFinanceService, LabelFinanceDashboard, LabelFinanceBreakdown, LabelPaymentMethod, LabelPayment, LabelPaymentsResponse } from '../../../services/label-finance.service';
-import { AdminService } from '../../../services/admin.service';
+import { AdminService, LabelPayoutSettings } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
@@ -64,6 +64,11 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
          : this.fundraiserColumns;
   }
 
+  isSublabel = false;
+  payoutSettings: LabelPayoutSettings = { payout_schedule: null, payout_on_event_close: false, payout_threshold: null };
+  payoutSettingsDirty = false;
+  payoutSettingsSaving = false;
+
   paymentMethods: LabelPaymentMethod[] = [];
   paymentMethodsLoading = true;
   payments: LabelPayment[] = [];
@@ -117,6 +122,7 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
           this.loadDashboard();
           this.loadPaymentMethods();
           this.loadPayments();
+          this.loadBrandInfo();
         }
       })
     );
@@ -124,6 +130,58 @@ export class LabelFinanceTabComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  private loadBrandInfo(): void {
+    this.subscriptions.add(
+      this.adminService.getBrandSettings().subscribe({
+        next: (settings) => {
+          this.isSublabel = !!(settings as any).parent_brand;
+          if (this.isSublabel) {
+            this.loadPayoutSettings();
+          }
+        },
+        error: () => {}
+      })
+    );
+  }
+
+  loadPayoutSettings(): void {
+    if (!this.brandId) return;
+    this.subscriptions.add(
+      this.adminService.getLabelPayoutSettings(this.brandId).subscribe({
+        next: (settings) => {
+          this.payoutSettings = { ...settings };
+          this.payoutSettingsDirty = false;
+        },
+        error: () => {
+          this.notificationService.showError('Error loading payout settings');
+        }
+      })
+    );
+  }
+
+  onPayoutSettingsChanged(): void {
+    this.payoutSettingsDirty = true;
+  }
+
+  savePayoutSettings(): void {
+    if (!this.brandId) return;
+    this.payoutSettingsSaving = true;
+    this.subscriptions.add(
+      this.adminService.updateLabelPayoutSettings(this.brandId, this.payoutSettings).subscribe({
+        next: () => {
+          this.payoutSettingsDirty = false;
+          this.payoutSettingsSaving = false;
+          this.notificationService.showSuccess('Payout settings saved successfully');
+        },
+        error: (err) => {
+          const message = err?.error?.error || 'Error saving payout settings';
+          this.notificationService.showError(message);
+          this.payoutSettingsSaving = false;
+        }
+      })
+    );
   }
 
   loadSupportedBanks(): void {

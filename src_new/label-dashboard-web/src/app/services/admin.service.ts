@@ -15,6 +15,7 @@ export interface BrandSettings {
   release_submission_url?: string;
   paymongo_wallet_id?: string;
   payment_processing_fee_for_payouts?: number;
+  parent_brand?: number | null;
   music_transaction_fixed_fee?: number;
   music_revenue_percentage_fee?: number;
   music_fee_revenue_type?: 'net' | 'gross';
@@ -84,6 +85,12 @@ export interface User {
   last_logged_in?: string;
   is_admin: boolean;
   has_pending_invite?: boolean;
+}
+
+export interface LabelPayoutSettings {
+  payout_schedule: '1st_and_16th' | '1st_of_month' | 'every_friday' | null;
+  payout_on_event_close: boolean;
+  payout_threshold: number | null;
 }
 
 export interface AudienceUserRecord {
@@ -1202,6 +1209,19 @@ export class AdminService {
       queryParams += `&sortBy=${encodeURIComponent(sortBy)}&sortDirection=${encodeURIComponent(sortDirection)}`;
     }
     return this.http.get<{data: AudienceUserRecord[], pagination: any}>(`${environment.apiUrl}/users/audience?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Label Payout Settings
+  getLabelPayoutSettings(brandId: number): Observable<LabelPayoutSettings> {
+    return this.http.get<LabelPayoutSettings>(`${environment.apiUrl}/brands/${brandId}/payout-settings`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateLabelPayoutSettings(brandId: number, settings: LabelPayoutSettings): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/brands/${brandId}/payout-settings`, settings, {
       headers: this.getAuthHeaders()
     });
   }
