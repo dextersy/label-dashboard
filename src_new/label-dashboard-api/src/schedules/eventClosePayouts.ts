@@ -23,7 +23,7 @@ interface PendingPayout {
 const pendingPayouts = new Map<number, PendingPayout>();
 
 async function notifyAdminsInsufficientBalance(
-  sublabelId: number,
+  parentBrandId: number,
   sublabelName: string,
   eventId: number,
   balance: number,
@@ -31,10 +31,10 @@ async function notifyAdminsInsufficientBalance(
 ): Promise<void> {
   try {
     const admins = await User.findAll({
-      where: { brand_id: sublabelId, is_admin: true },
-      attributes: ['email']
+      where: { brand_id: parentBrandId, is_admin: true },
+      attributes: ['email_address']
     });
-    const emails = admins.map((u: any) => u.email).filter(Boolean);
+    const emails = admins.map((u: any) => u.email_address).filter(Boolean);
     if (emails.length === 0) return;
 
     const balanceFormatted = balance.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -163,7 +163,7 @@ async function triggerEventClosePayout(eventId: number, brandId: number): Promis
     if (balance <= 0) {
       const reason = `Balance is ₱${balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })} — nothing to pay out.`;
       console.log(`[eventClosePayouts] Sublabel ${sublabel.id} has no positive balance (${balance}) — skipping.`);
-      await notifyAdminsInsufficientBalance(sublabel.id, sublabel.brand_name, eventId, balance, reason);
+      await notifyAdminsInsufficientBalance(parentBrand.id, sublabel.brand_name, eventId, balance, reason);
       return;
     }
 
@@ -171,7 +171,7 @@ async function triggerEventClosePayout(eventId: number, brandId: number): Promis
     if (threshold > 0 && balance < threshold) {
       const reason = `Balance ₱${balance.toLocaleString('en-PH', { minimumFractionDigits: 2 })} is below the configured minimum threshold of ₱${threshold.toLocaleString('en-PH', { minimumFractionDigits: 2 })}.`;
       console.log(`[eventClosePayouts] Sublabel ${sublabel.id} balance ${balance} below threshold ${threshold} — skipping.`);
-      await notifyAdminsInsufficientBalance(sublabel.id, sublabel.brand_name, eventId, balance, reason);
+      await notifyAdminsInsufficientBalance(parentBrand.id, sublabel.brand_name, eventId, balance, reason);
       return;
     }
 

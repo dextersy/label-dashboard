@@ -553,9 +553,9 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
         if (includeAdminEmails) {
           const admins = await User.findAll({
             where: { brand_id: sublabel.id, is_admin: true },
-            attributes: ['email']
+            attributes: ['email_address']
           });
-          adminEmails = admins.map((u: any) => u.email).filter(Boolean);
+          adminEmails = admins.map((u: any) => u.email_address).filter(Boolean);
         }
 
         return {
