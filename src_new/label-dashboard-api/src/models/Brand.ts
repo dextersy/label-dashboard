@@ -318,7 +318,7 @@ Brand.init(
     payout_threshold: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-      defaultValue: null,
+      defaultValue: 1000,
       get() {
         const value = this.getDataValue('payout_threshold');
         return value !== null && value !== undefined ? parseFloat(String(value)) : null;
