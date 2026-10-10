@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag } from '../models';
+import { scheduleEventClosePayout, cancelEventClosePayout } from '../schedules/eventClosePayouts';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -571,6 +572,17 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Schedule event-close payout if brand has payout_on_event_close enabled
+    try {
+      const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
+      if (brand?.payout_on_event_close) {
+        const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+        scheduleEventClosePayout(event.id, event.brand_id, closeTime);
+      }
+    } catch (scheduleErr) {
+      console.error('Failed to schedule event-close payout:', scheduleErr);
+    }
+
     res.status(201).json({
       message: 'Event created successfully',
       event
@@ -916,6 +928,23 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
         { model: EventTag, as: 'tags', through: { attributes: [] } }
       ]
     });
+
+    // Update event-close payout schedule if brand has payout_on_event_close enabled
+    try {
+      const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
+      if (brand?.payout_on_event_close) {
+        if (event.close_time || event.date_and_time) {
+          const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+          scheduleEventClosePayout(event.id, event.brand_id, closeTime);
+        } else {
+          cancelEventClosePayout(event.id);
+        }
+      } else {
+        cancelEventClosePayout(event.id);
+      }
+    } catch (scheduleErr) {
+      console.error('Failed to update event-close payout schedule:', scheduleErr);
+    }
 
     res.json({
       message: 'Event updated successfully',

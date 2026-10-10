@@ -19,6 +19,7 @@ import {
   requireJsonContentType
 } from './middleware/csrf';
 import { prewarmAudioModels } from './utils/audioFeatures';
+import { rehydrateEventCloseSchedules, startPeriodicRehydration } from './schedules/eventClosePayouts';
 
 dotenv.config();
 
@@ -92,6 +93,14 @@ const startServer = async () => {
     prewarmAudioModels().catch(err =>
       console.warn('⚠ Audio model pre-warm failed (non-fatal):', err?.message ?? err)
     );
+
+    // Rehydrate event-close payout schedules from database, then keep re-checking
+    // every 24h so events beyond the ~24-day setTimeout limit get scheduled
+    // without requiring a server restart.
+    rehydrateEventCloseSchedules().catch(err =>
+      console.warn('⚠ Event-close payout rehydration failed (non-fatal):', err?.message ?? err)
+    );
+    startPeriodicRehydration();
 
     // PERFORMANCE: Start background refresh to keep cache warm (prevents cache misses)
     startBackgroundRefresh();

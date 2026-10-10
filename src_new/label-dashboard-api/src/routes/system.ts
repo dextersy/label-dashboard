@@ -14,6 +14,7 @@ import {
   getTaskDigest,
   createTaskDigestNotifications,
   processArtistPayouts,
+  processLabelAutoPayouts,
 } from '../controllers/systemController';
 import {
   getSSLDomains,
@@ -60,6 +61,7 @@ router.get('/release-status', getReleaseStatus);
 router.get('/task-digest', getTaskDigest);
 router.post('/task-digest/create-notifications', createTaskDigestNotifications);
 router.post('/process-artist-payouts', processArtistPayouts);
+router.post('/process-label-autopayouts', processLabelAutoPayouts);
 
 // SSL domain management endpoints
 router.get('/ssl-domains', getSSLDomains);

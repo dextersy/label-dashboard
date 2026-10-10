@@ -104,6 +104,7 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       catalog_prefix: brand.catalog_prefix || 'REL',
       paymongo_wallet_id: brand.paymongo_wallet_id,
       payment_processing_fee_for_payouts: brand.payment_processing_fee_for_payouts || 0,
+      parent_brand: brand.parent_brand ?? null,
       artist_custom_fields: brand.artist_custom_fields || [],
       about_us: brand.about_us || null,
       loyverse_enabled: brand.loyverse_enabled || false,

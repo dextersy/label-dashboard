@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { LabelPaymentMethod, LabelPayment, Brand } from '../models';
 import { PaymentService } from '../utils/paymentService';
 
+const VALID_PAYOUT_SCHEDULES = ['1st_and_16th', '1st_of_month', 'every_friday'];
+
 interface AuthRequest extends Request {
   user?: any;
 }
@@ -534,6 +536,110 @@ export const updateLabelPaymentStatus = async (req: AuthRequest, res: Response) 
     res.json({ payment });
   } catch (error) {
     console.error('Update label payment status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getLabelPayoutSettings = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { brandId } = req.params;
+    const targetBrandId = parseInt(brandId as string, 10);
+
+    if (!targetBrandId || isNaN(targetBrandId)) {
+      return res.status(400).json({ error: 'Valid brand ID is required' });
+    }
+
+    // Allow access if the user owns this brand or if it's their sublabel
+    if (targetBrandId !== req.user.brand_id) {
+      const targetBrand = await Brand.findOne({
+        where: { id: targetBrandId, parent_brand: req.user.brand_id }
+      });
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Brand not found or not accessible' });
+      }
+    }
+
+    const brand = await Brand.findByPk(targetBrandId, {
+      attributes: ['id', 'payout_schedule', 'payout_on_event_close', 'payout_threshold']
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    res.json({
+      payout_schedule: brand.payout_schedule ?? null,
+      payout_on_event_close: brand.payout_on_event_close ?? false,
+      payout_threshold: brand.payout_threshold ?? null,
+    });
+  } catch (error) {
+    console.error('Get label payout settings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateLabelPayoutSettings = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { brandId } = req.params;
+    const targetBrandId = parseInt(brandId as string, 10);
+
+    if (!targetBrandId || isNaN(targetBrandId)) {
+      return res.status(400).json({ error: 'Valid brand ID is required' });
+    }
+
+    // Allow access if the user owns this brand or if it's their sublabel
+    if (targetBrandId !== req.user.brand_id) {
+      const targetBrand = await Brand.findOne({
+        where: { id: targetBrandId, parent_brand: req.user.brand_id }
+      });
+      if (!targetBrand) {
+        return res.status(404).json({ error: 'Brand not found or not accessible' });
+      }
+    }
+
+    const { payout_schedule, payout_on_event_close, payout_threshold } = req.body;
+
+    // Validate payout_schedule
+    if (payout_schedule !== undefined && payout_schedule !== null && !VALID_PAYOUT_SCHEDULES.includes(payout_schedule)) {
+      return res.status(400).json({ error: `payout_schedule must be one of: ${VALID_PAYOUT_SCHEDULES.join(', ')} or null` });
+    }
+
+    // Validate payout_threshold
+    if (payout_threshold !== undefined && payout_threshold !== null) {
+      const threshold = parseFloat(payout_threshold);
+      if (isNaN(threshold) || threshold < 0) {
+        return res.status(400).json({ error: 'payout_threshold must be a non-negative number or null' });
+      }
+    }
+
+    const brand = await Brand.findByPk(targetBrandId);
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    const updateData: any = {};
+    if (payout_schedule !== undefined) updateData.payout_schedule = payout_schedule;
+    if (payout_on_event_close !== undefined) updateData.payout_on_event_close = !!payout_on_event_close;
+    if (payout_threshold !== undefined) updateData.payout_threshold = payout_threshold !== null ? parseFloat(payout_threshold) : null;
+
+    await brand.update(updateData);
+
+    res.json({
+      message: 'Payout settings updated successfully',
+      payout_schedule: brand.payout_schedule ?? null,
+      payout_on_event_close: brand.payout_on_event_close ?? false,
+      payout_threshold: brand.payout_threshold ?? null,
+    });
+  } catch (error) {
+    console.error('Update label payout settings error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

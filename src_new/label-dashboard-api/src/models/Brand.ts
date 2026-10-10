@@ -37,6 +37,9 @@ interface BrandAttributes {
   woocommerce_url?: string;
   woocommerce_consumer_key?: string;
   woocommerce_consumer_secret?: string;
+  payout_schedule?: '1st_and_16th' | '1st_of_month' | 'every_friday' | null;
+  payout_on_event_close?: boolean;
+  payout_threshold?: number | null;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -77,6 +80,9 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public woocommerce_url?: string;
   public woocommerce_consumer_key?: string;
   public woocommerce_consumer_secret?: string;
+  public payout_schedule?: '1st_and_16th' | '1st_of_month' | 'every_friday' | null;
+  public payout_on_event_close?: boolean;
+  public payout_threshold?: number | null;
 
   // Association properties
   public parentBrand?: Brand;
@@ -298,6 +304,28 @@ Brand.init(
     woocommerce_consumer_secret: {
       type: DataTypes.STRING(255),
       allowNull: true,
+    },
+    payout_schedule: {
+      type: DataTypes.ENUM('1st_and_16th', '1st_of_month', 'every_friday'),
+      allowNull: true,
+      defaultValue: null,
+    },
+    payout_on_event_close: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    payout_threshold: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: null,
+      get() {
+        const value = this.getDataValue('payout_threshold');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
+      },
+      set(value: any) {
+        this.setDataValue('payout_threshold', value !== null && value !== undefined ? parseFloat(value) : null);
+      }
     },
   },
   {

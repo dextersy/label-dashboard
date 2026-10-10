@@ -1,7 +1,7 @@
 import express from 'express';
 import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getServerIp, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles, deactivateBrand } from '../controllers/brandController';
 import { testLoyverseConnection, testWoocommerceConnection } from '../controllers/integrationController';
-import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, deleteLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus } from '../controllers/labelPaymentController';
+import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, deleteLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus, getLabelPayoutSettings, updateLabelPayoutSettings } from '../controllers/labelPaymentController';
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
 import { getSupportedBanks } from '../controllers/paymentController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
@@ -50,6 +50,10 @@ router.put('/:brandId/fee-settings', authenticateToken, requireSuperAdmin, updat
 // Feature toggle routes
 router.get('/:brandId/feature-toggles', authenticateToken, requireAdmin, getFeatureToggles);
 router.put('/:brandId/feature-toggles', authenticateToken, requireAdmin, updateFeatureToggles);
+
+// Payout settings routes
+router.get('/:brandId/payout-settings', authenticateToken, requireAdmin, getLabelPayoutSettings);
+router.put('/:brandId/payout-settings', authenticateToken, requireAdmin, updateLabelPayoutSettings);
 
 // Label payment methods routes
 router.post('/:brandId/payment-methods', authenticateToken, requireAdmin, addLabelPaymentMethod);

@@ -401,6 +401,7 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
   try {
     // Optional filter for minimum balance
     const minBalance = parseFloat(req.query.min_balance as string) || 0;
+    const includeAdminEmails = req.query.include_admin_emails === 'true';
 
     // Query ALL sublabels (brands that have a parent_brand)
     const sublabels = await Brand.findAll({
@@ -547,6 +548,16 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
         // 2. sublabel has at least one payment method configured (so parent knows where to send money)
         const isReadyForPayment = balance > 0 && paymentMethods.length > 0;
 
+        // Fetch admin emails if requested
+        let adminEmails: string[] = [];
+        if (includeAdminEmails) {
+          const admins = await User.findAll({
+            where: { brand_id: sublabel.id, is_admin: true },
+            attributes: ['email']
+          });
+          adminEmails = admins.map((u: any) => u.email).filter(Boolean);
+        }
+
         return {
           sublabel_id: sublabel.id,
           sublabel_name: sublabel.brand_name,
@@ -563,6 +574,10 @@ export const getSublabelsDuePayment = async (req: Request, res: Response) => {
           add_on_balance_payments: parseFloat(totalAddOnBalancePayments.toFixed(2)),
           has_payment_method: paymentMethods.length > 0,
           is_ready_for_payment: isReadyForPayment,
+          payout_schedule: sublabel.payout_schedule ?? null,
+          payout_on_event_close: sublabel.payout_on_event_close ?? false,
+          payout_threshold: sublabel.payout_threshold ?? null,
+          admin_emails: adminEmails,
           last_updated: sublabel.updatedAt
         };
       })
@@ -1228,6 +1243,230 @@ export const createTaskDigestNotifications = async (req: Request, res: Response)
   } catch (error) {
     console.error('Error creating task digest notifications:', error);
     auditLogger.logSystemAccess(req, 'ERROR_TASK_DIGEST_NOTIFICATIONS', { error: (error as any).message });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Process automated label (sublabel) payouts
+ *
+ * Runs all sublabels whose payout_schedule qualifies for today's date.
+ * Called by the label-autopayout Lambda on a daily schedule.
+ */
+export const processLabelAutoPayouts = async (req: Request, res: Response) => {
+  try {
+    const paymentService = new PaymentService();
+    const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+
+    const nowUtc = new Date();
+
+    // Day-of-month and day-of-week checks use UTC.
+    // The EventBridge cron must be set to fire at a UTC time that maps to the
+    // desired local business day (e.g. 2am UTC = 10am PHT, same calendar day).
+    // Do not hardcode a timezone offset here — the server stores all datetimes
+    // in UTC and the cron schedule is the single source of "when".
+    const dayOfMonth = nowUtc.getUTCDate();
+    const dayOfWeek = nowUtc.getUTCDay(); // 0=Sun, 5=Fri
+
+    console.log(`[processLabelAutoPayouts] now=${nowUtc.toISOString()} | dayOfMonth=${dayOfMonth} dayOfWeek=${dayOfWeek} (UTC)`);
+
+    // Determine which schedules qualify today
+    const qualifyingSchedules: string[] = [];
+    if (dayOfMonth === 1) {
+      qualifyingSchedules.push('1st_of_month');
+      qualifyingSchedules.push('1st_and_16th');
+    }
+    if (dayOfMonth === 16) {
+      qualifyingSchedules.push('1st_and_16th');
+    }
+    if (dayOfWeek === 5) {
+      qualifyingSchedules.push('every_friday');
+    }
+
+    if (qualifyingSchedules.length === 0) {
+      return res.json({
+        brands: [],
+        summary: { total_paid: 0, brands_processed: 0, brands_skipped: 0, brands_errored: 0 }
+      });
+    }
+
+    // Find sublabels with a qualifying schedule
+    const sublabels = await Brand.findAll({
+      where: {
+        parent_brand: { [Op.not]: null },
+        payout_schedule: { [Op.in]: qualifyingSchedules }
+      },
+      include: [
+        {
+          model: Brand,
+          as: 'parentBrand',
+          required: true
+        }
+      ]
+    });
+
+    const brandResults = await Promise.all(sublabels.map(async (sublabel) => {
+      const parentBrand = sublabel.parentBrand!;
+
+      const baseResult = {
+        brand_id: parentBrand.id,
+        sublabel_id: sublabel.id,
+        sublabel_name: sublabel.brand_name,
+        parent_brand_name: parentBrand.brand_name,
+        amount: 0,
+        transfer_amount: 0,
+        processing_fee: 0,
+        payment_id: null as number | null,
+        transfer_id: null as string | null,
+        reference_number: null as string | null,
+      };
+
+      // Check parent brand has Paymongo wallet
+      if (!parentBrand.paymongo_wallet_id) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'Parent brand has no Paymongo wallet' };
+      }
+
+      // Calculate sublabel balance (mirrors getSublabelsDuePayment logic)
+      let musicEarnings = 0;
+      let eventEarnings = 0;
+
+      const payments = await LabelPayment.sum('amount', {
+        where: { brand_id: sublabel.id, status: 'succeeded' }
+      }) || 0;
+
+      const releaseIds = await Release.findAll({
+        where: { brand_id: sublabel.id },
+        attributes: ['id'],
+        raw: true
+      });
+      const releaseIdList = releaseIds.map((r: any) => r.id);
+
+      if (releaseIdList.length > 0) {
+        const totalEarnings = await Earning.sum('amount', { where: { release_id: { [Op.in]: releaseIdList } } }) || 0;
+        const totalRoyalties = await Royalty.sum('amount', { where: { release_id: { [Op.in]: releaseIdList } } }) || 0;
+        const totalPlatformFees = await Earning.sum('platform_fee', { where: { release_id: { [Op.in]: releaseIdList } } }) || 0;
+        musicEarnings = totalEarnings - totalRoyalties - totalPlatformFees;
+      }
+
+      const eventSalesQuery = await Ticket.findAll({
+        attributes: [[literal('SUM(price_per_ticket * number_of_entries)'), 'total_sales']],
+        include: [{ model: Event, as: 'event', where: { brand_id: sublabel.id }, attributes: [] }],
+        where: { status: ['Payment Confirmed', 'Ticket sent.'], platform_fee: { [Op.not]: null } },
+        raw: true
+      });
+      const eventFeesQuery = await Ticket.findAll({
+        attributes: [[literal('SUM(platform_fee)'), 'total_platform_fee']],
+        include: [{ model: Event, as: 'event', where: { brand_id: sublabel.id }, attributes: [] }],
+        where: { status: ['Payment Confirmed', 'Ticket sent.', 'Refunded'], platform_fee: { [Op.not]: null } },
+        raw: true
+      });
+
+      const eventSales = parseFloat((eventSalesQuery[0] as any)?.total_sales) || 0;
+      const eventPlatformFees = parseFloat((eventFeesQuery[0] as any)?.total_platform_fee) || 0;
+      eventEarnings = eventSales - eventPlatformFees;
+
+      const eventIds = await Event.findAll({ where: { brand_id: sublabel.id }, attributes: ['id'], raw: true });
+      const eventIdList = eventIds.map((e: any) => e.id);
+      const totalAddOnBalancePayments = eventIdList.length > 0
+        ? await EventAddOnPayment.sum('amount', { where: { event_id: { [Op.in]: eventIdList }, method: 'balance', status: 'succeeded' } }) || 0
+        : 0;
+
+      const balance = parseFloat((musicEarnings + eventEarnings - payments - totalAddOnBalancePayments).toFixed(2));
+
+      // Check threshold
+      const threshold = sublabel.payout_threshold ?? 0;
+      if (balance <= 0) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'No positive balance', amount: balance };
+      }
+      if (threshold > 0 && balance < threshold) {
+        return { ...baseResult, status: 'skipped' as const, reason: `Balance ₱${balance} below threshold ₱${threshold}`, amount: balance };
+      }
+
+      // Check payment method
+      const paymentMethod = await LabelPaymentMethod.findOne({
+        where: { brand_id: sublabel.id, is_default_for_brand: true }
+      }) || await LabelPaymentMethod.findOne({ where: { brand_id: sublabel.id } });
+
+      if (!paymentMethod) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'No payment method configured', amount: balance };
+      }
+
+      // Guard against concurrent pending payments
+      const existingPending = await LabelPayment.findOne({
+        where: { brand_id: sublabel.id, status: 'pending' }
+      });
+      if (existingPending) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'Pending payment already in progress', amount: balance };
+      }
+
+      const processingFee = parentBrand.payment_processing_fee_for_payouts || 0;
+      const transferAmount = parseFloat((balance - processingFee).toFixed(2));
+
+      if (transferAmount <= 0) {
+        return { ...baseResult, status: 'skipped' as const, reason: 'Transfer amount after fee is non-positive', amount: balance };
+      }
+
+      try {
+        const description = `Automated payout - ${sublabel.brand_name}`;
+        const transferResult = await paymentService.sendMoneyTransfer(
+          parentBrand.id,
+          paymentMethod.id,
+          transferAmount,
+          description,
+          true,
+          callbackUrl
+        );
+
+        if (!transferResult) {
+          return { ...baseResult, status: 'error' as const, reason: 'Transfer failed', amount: balance };
+        }
+
+        const payment = await LabelPayment.create({
+          brand_id: sublabel.id,
+          amount: balance,
+          description,
+          date_paid: nowUtc,
+          reference_number: transferResult.referenceNumber,
+          payment_processing_fee: processingFee,
+          status: 'pending',
+          paymongo_transfer_id: transferResult.transferId,
+          payment_method_id: paymentMethod.id
+        });
+
+        // Notification is sent by the Paymongo webhook (updateLabelPaymentStatus)
+        // when the transfer actually settles — do not send here.
+
+        return {
+          ...baseResult,
+          status: 'success' as const,
+          amount: balance,
+          transfer_amount: transferAmount,
+          processing_fee: processingFee,
+          payment_id: payment.id,
+          transfer_id: transferResult.transferId,
+          reference_number: transferResult.referenceNumber,
+        };
+      } catch (err: any) {
+        console.error(`Auto payout error for sublabel ${sublabel.id}:`, err);
+        return { ...baseResult, status: 'error' as const, reason: err.message || 'Unknown error', amount: balance };
+      }
+    }));
+
+    const summary = {
+      total_paid: brandResults.filter(r => r.status === 'success').reduce((sum, r) => sum + r.amount, 0),
+      brands_processed: brandResults.filter(r => r.status === 'success').length,
+      brands_skipped: brandResults.filter(r => r.status === 'skipped').length,
+      brands_errored: brandResults.filter(r => r.status === 'error').length,
+    };
+
+    auditLogger.logSystemAccess(req, 'PROCESS_LABEL_AUTO_PAYOUTS', {
+      requestBody: { qualifying_schedules: qualifyingSchedules, ...summary }
+    });
+
+    res.json({ brands: brandResults, summary });
+  } catch (error) {
+    console.error('Error processing label auto payouts:', error);
+    auditLogger.logSystemAccess(req, 'ERROR_LABEL_AUTO_PAYOUTS', { error: (error as any).message });
     res.status(500).json({ error: 'Internal server error' });
   }
 };
