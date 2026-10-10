@@ -307,7 +307,13 @@ class LabelAutopayoutService {
     await this.authenticate();
 
     const result = await this.processPayouts(dryRun);
-    await this.sendSuperadminEmail(result);
+
+    // Only send the report if at least one scheduled sublabel had a positive balance.
+    // Skips caused by no wallet/payment method still count — only pure zero-balance days are silent.
+    const hasPayableLabels = result.brands.some(b => b.amount > 0);
+    if (hasPayableLabels) {
+      await this.sendSuperadminEmail(result);
+    }
 
     console.log('Label auto-payout process completed.');
 
