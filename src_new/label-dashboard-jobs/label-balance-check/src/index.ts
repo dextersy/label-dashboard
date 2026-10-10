@@ -22,6 +22,10 @@ interface SublabelBalance {
   payments: number;
   has_payment_method: boolean;
   is_ready_for_payment: boolean;
+  payout_schedule: string | null;
+  payout_on_event_close: boolean;
+  payout_threshold: number | null;
+  admin_emails: string[];
   last_updated: string;
 }
 
@@ -205,7 +209,7 @@ class LabelBalanceCheckService {
       while (hasMorePages) {
         // System API filters sublabels that are ready for payment
         // min_balance=0 means we get all sublabels that meet the payment readiness criteria
-        const endpoint = `/api/system/sublabels-due-payment?page=${currentPage}&limit=100&min_balance=0`;
+        const endpoint = `/api/system/sublabels-due-payment?page=${currentPage}&limit=100&min_balance=0&include_admin_emails=true`;
         const response = await this.apiRequest<SystemApiResponse>(endpoint);
 
         allSublabels = allSublabels.concat(response.results);
@@ -514,6 +518,78 @@ class LabelBalanceCheckService {
   }
 
   /**
+   * Send a targeted email to sublabel admins who are missing payout setup
+   */
+  private async sendSetupReminderEmail(sublabel: SublabelBalance): Promise<void> {
+    if (!sublabel.admin_emails || sublabel.admin_emails.length === 0) return;
+
+    const missingItems: string[] = [];
+    if (!sublabel.has_payment_method) missingItems.push('Add a payout bank account or e-wallet');
+    if (!sublabel.payout_schedule) missingItems.push('Set a payout schedule (e.g. every 1st of the month)');
+
+    if (missingItems.length === 0) return;
+
+    const missingListHtml = missingItems.map(item => `<li style="margin-bottom: 6px;">${item}</li>`).join('');
+    const balanceFormatted = sublabel.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="padding: 32px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 8px 8px 0 0; text-align: center;">
+              <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: 700;">Action Required: Set Up Your Payout Settings</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 16px 0; color: #374151; font-size: 15px;">
+                You currently have <strong style="color: #059669;">₱${balanceFormatted}</strong> in your balance for <strong>${sublabel.sublabel_name}</strong>.
+              </p>
+              <p style="margin: 0 0 12px 0; color: #374151; font-size: 15px;">
+                To get your payouts, make sure to complete the following:
+              </p>
+              <ul style="margin: 0 0 24px 0; padding-left: 20px; color: #374151; font-size: 14px;">
+                ${missingListHtml}
+              </ul>
+              <p style="margin: 0; color: #6b7280; font-size: 13px;">
+                You can update these settings in your dashboard under Label Setup → Payout Settings.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px 32px; background-color: #f9fafb; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; color: #9ca3af; font-size: 12px; text-align: center;">
+                This is an automated reminder. Report generated on ${new Date().toLocaleString('en-US')}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    await this.transporter.sendMail({
+      from: `System Notifications <${this.fromEmail}>`,
+      to: sublabel.admin_emails.join(', '),
+      subject: `Action required: Set up payouts for ${sublabel.sublabel_name} — ₱${balanceFormatted} available`,
+      html,
+    });
+
+    console.log(`Setup reminder sent to ${sublabel.admin_emails.join(', ')} for sublabel "${sublabel.sublabel_name}"`);
+  }
+
+  /**
    * Main process to check balances and send email
    */
   async checkAndNotify(): Promise<{ sublabelCount: number; totalAmount: number }> {
@@ -526,14 +602,34 @@ class LabelBalanceCheckService {
       // Fetch sublabel balances
       const summary = await this.fetchSublabelsReadyForPayment();
 
-      // Send email summary
-      await this.sendEmailSummary(summary);
+      // Filter out zero-balance sublabels from the summary email
+      const summaryForEmail: SublabelBalanceSummary = {
+        ...summary,
+        sublabels: summary.sublabels.filter(s => s.balance > 0),
+        total_amount: summary.sublabels.filter(s => s.balance > 0).reduce((sum, s) => sum + s.balance, 0),
+      };
+
+      // Send email summary (only sublabels with positive balance)
+      await this.sendEmailSummary(summaryForEmail);
+
+      // Send targeted setup reminder emails to sublabels missing payment method or payout schedule
+      const needsSetup = summary.sublabels.filter(
+        s => s.balance > 0 && (!s.has_payment_method || !s.payout_schedule)
+      );
+
+      for (const sublabel of needsSetup) {
+        try {
+          await this.sendSetupReminderEmail(sublabel);
+        } catch (emailErr: any) {
+          console.error(`Failed to send setup reminder for "${sublabel.sublabel_name}":`, emailErr.message);
+        }
+      }
 
       console.log('Sublabel balance check completed successfully');
 
       return {
-        sublabelCount: summary.sublabels.length,
-        totalAmount: summary.total_amount,
+        sublabelCount: summaryForEmail.sublabels.length,
+        totalAmount: summaryForEmail.total_amount,
       };
     } catch (error: any) {
       console.error('Sublabel balance check process failed:', error.message);
