@@ -85,10 +85,10 @@ async function notifyAdminsInsufficientBalance(
 </body>
 </html>`;
 
-    await sendEmail(emails, subject, html, sublabelId);
-    console.log(`[eventClosePayouts] Insufficient-balance email sent to ${emails.join(', ')} for sublabel ${sublabelId}`);
+    await sendEmail(emails, subject, html, parentBrandId);
+    console.log(`[eventClosePayouts] Insufficient-balance email sent to ${emails.join(', ')} for sublabel ${sublabelName}`);
   } catch (err) {
-    console.error(`[eventClosePayouts] Failed to send insufficient-balance email for sublabel ${sublabelId}:`, err);
+    console.error(`[eventClosePayouts] Failed to send insufficient-balance email for sublabel ${sublabelName}:`, err);
   }
 }
 
