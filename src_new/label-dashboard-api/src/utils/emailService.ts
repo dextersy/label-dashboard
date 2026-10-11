@@ -831,6 +831,48 @@ export const sendPaymentFailedAdminNotification = async (
   }
 };
 
+export const sendPaymentSucceededAdminNotification = async (
+  brandId: number,
+  recipientName: string,
+  payment: {
+    amount: number;
+    description?: string;
+    reference_number?: string;
+  }
+): Promise<boolean> => {
+  try {
+    const recipients = await getBrandAdministrators(brandId);
+
+    if (recipients.length === 0) {
+      console.log('No administrators found for brand, skipping payment succeeded notification');
+      return false;
+    }
+
+    const brand = await Brand.findByPk(brandId);
+    const brandName = brand?.brand_name || 'Your Label';
+
+    const subject = `Payment to ${recipientName} was successful`;
+    const body = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h3>Payment Successful</h3>
+        <p>A payment transfer to <strong>${recipientName}</strong> has been successfully processed.</p>
+        <p><strong>Details:</strong></p>
+        <ul>
+          <li>Amount: ₱${payment.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</li>
+          ${payment.description ? `<li>Description: ${payment.description}</li>` : ''}
+          ${payment.reference_number ? `<li>Reference: ${payment.reference_number}</li>` : ''}
+        </ul>
+        <p style="color: #666; font-size: 12px;">This is an automated message from ${brandName}.</p>
+      </div>
+    `;
+
+    return await sendEmail(recipients, subject, body, brandId);
+  } catch (error) {
+    console.error('Error sending payment succeeded admin notification:', error);
+    return false;
+  }
+};
+
 // Send sublabel payment notification email to sublabel admins
 export const sendSublabelPaymentNotification = async (
   sublabelBrandId: number,

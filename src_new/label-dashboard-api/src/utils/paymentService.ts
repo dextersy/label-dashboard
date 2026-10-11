@@ -11,7 +11,7 @@ import ArtistAccess from '../models/ArtistAccess';
 import Payment from '../models/Payment';
 import LabelPayment from '../models/LabelPayment';
 import { sendTicketEmail } from './ticketEmailService';
-import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification, sendAddOnPaymentNotification } from './emailService';
+import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification, sendPaymentSucceededAdminNotification, sendAddOnPaymentNotification } from './emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamUserIds, getBrandAdminUserIds } from './notificationService';
 import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
 
@@ -424,6 +424,7 @@ export class PaymentService {
       if (status === 'succeeded') {
         const parentBrand = sublabelBrand.parentBrand;
         if (parentBrand) {
+          // Notify sublabel admins that they received a payment
           await sendSublabelPaymentNotification(
             sublabelBrand.id,
             sublabelBrand.brand_name,
@@ -438,6 +439,14 @@ export class PaymentService {
             },
             { name: parentBrand.brand_name, brand_color: parentBrand.brand_color, logo_url: parentBrand.logo_url, id: parentBrand.id }
           );
+          // Notify parent brand admins that the transfer succeeded
+          await sendPaymentSucceededAdminNotification(
+            parentBrand.id,
+            sublabelBrand.brand_name,
+            { amount: parseFloat(labelPayment.amount), description: labelPayment.description, reference_number: labelPayment.reference_number }
+          );
+          const parentAdminIds = await getBrandAdminUserIds(parentBrand.id);
+          await createNotificationsForUsers(parentAdminIds, parentBrand.id, 'payment_succeeded', `Payment to ${sublabelBrand.brand_name} was successful`, `Amount: ${labelPayment.amount}`);
         }
         // In-app notifications for sublabel admins
         const sublabelAdminIds = await getBrandAdminUserIds(sublabelBrand.id);
