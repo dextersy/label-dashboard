@@ -855,7 +855,7 @@ export const processArtistPayouts = async (req: Request, res: Response) => {
   try {
     const dryRun = req.query.dry_run === 'true' || req.query.dry_run === '1';
     const paymentService = new PaymentService();
-    const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+    const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
     const datePaid = new Date();
     const description = 'Automated balance payout';
 
@@ -1256,7 +1256,7 @@ export const createTaskDigestNotifications = async (req: Request, res: Response)
 export const processLabelAutoPayouts = async (req: Request, res: Response) => {
   try {
     const paymentService = new PaymentService();
-    const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+    const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
 
     const nowUtc = new Date();
 
