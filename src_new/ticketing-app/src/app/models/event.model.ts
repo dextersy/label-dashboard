@@ -13,6 +13,7 @@ export interface Event {
   verification_pin?: string;
   verification_link?: string;
   buy_shortlink?: string;
+  url_slug?: string;
   rsvp_link?: string;
   // Venue details
   google_place_id?: string;
@@ -84,6 +85,8 @@ export interface EventFormData {
   ticketing_enabled?: boolean;
   external_ticket_link?: string;
   tags?: number[]; // array of tag IDs
+  // URL slug for shortlink generation
+  slug?: string;
   // Google Places venue fields
   google_place_id?: string;
   venue_address?: string;

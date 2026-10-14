@@ -53,6 +53,14 @@ export class EventsService {
     return this.http.post<{ verification_pin: string }>(`${this.base}/${id}/refresh-pin`, {});
   }
 
+  getPaymentConfig(): Observable<{ min_card: number | null; min_dob: number | null }> {
+    return this.http.get<{ min_card: number | null; min_dob: number | null }>(`${this.base}/payment-config`);
+  }
+
+  getShortlinkDomain(): Observable<{ shortlink_domain: string | null }> {
+    return this.http.get<{ shortlink_domain: string | null }>(`${this.base}/shortlink-domain`);
+  }
+
   getTicketSummary(params?: any): Observable<any> {
     let httpParams = new HttpParams();
     if (params) {

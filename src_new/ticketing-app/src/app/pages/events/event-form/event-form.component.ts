@@ -536,6 +536,39 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                 </div>
               </div>
 
+              <!-- URL Slug -->
+            <div class="bg-white border border-gray-200 p-6">
+              <div class="mb-3">
+                <h2 class="text-xs font-black text-gray-900 uppercase tracking-widest">Buy Link URL</h2>
+                <p class="text-xs font-mono text-gray-400 mt-0.5">The short link people use to buy tickets. Only letters and numbers.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">URL Slug</label>
+                <div class="flex items-stretch border transition-colors" [class]="slugLocked ? 'border-gray-200 bg-gray-50' : 'border-gray-300 focus-within:border-yellow-400'">
+                  @if (shortlinkDomain()) {
+                    <span class="flex items-center px-3 bg-gray-50 border-r border-gray-200 text-xs font-mono text-gray-400 whitespace-nowrap select-none">{{ shortlinkDomain() }}/</span>
+                  } @else {
+                    <span class="flex items-center px-3 bg-gray-50 border-r border-gray-200 text-xs font-mono text-gray-400 whitespace-nowrap select-none">…/</span>
+                  }
+                  <input type="text" formControlName="url_slug"
+                    placeholder="YourEventSlug"
+                    maxlength="30"
+                    class="flex-1 min-w-0 px-3 py-2.5 text-sm font-mono placeholder-gray-300 focus:outline-none"
+                    [class]="slugLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-900'">
+                  @if (slugLocked) {
+                    <span class="flex items-center px-3 bg-gray-50 border-l border-gray-200 text-xs font-mono text-gray-400 whitespace-nowrap select-none">link created</span>
+                  } @else {
+                    <span class="flex items-center px-3 bg-gray-50 border-l border-gray-300 text-xs font-mono text-gray-400 whitespace-nowrap select-none tabular-nums">{{ (form.get('url_slug')?.value?.length ?? 0) }}/30</span>
+                  }
+                </div>
+                @if (slugLocked) {
+                  <p class="mt-1 text-xs font-mono text-gray-400">The short link for this event has already been created and cannot be changed.</p>
+                } @else if (form.get('url_slug')?.errors?.['pattern'] && form.get('url_slug')?.dirty) {
+                  <p class="mt-1 text-xs font-mono text-red-500">Only letters and numbers are allowed.</p>
+                }
+              </div>
+            </div>
+
             } <!-- end @if ticketing_enabled -->
 
           </div>
@@ -764,6 +797,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
   hasExternalLink = false;
   pendingPublish = false;
+  shortlinkDomain = signal<string | null>(null);
+  paymentConfig = signal<{ min_card: number | null; min_dob: number | null } | null>(null);
+  slugManuallyEdited = false;
+  slugLocked = false; // true when a shortlink already exists — slug cannot be changed
 
   // Close time
   closeAtShowTime = true;
@@ -811,6 +848,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
       venue: [''],
       description: [''],
       rsvp_link: [''],
+      url_slug: ['', [Validators.maxLength(30), Validators.pattern(/^[A-Za-z0-9]*$/)]],
       event_type: [''],
       listed_on_ticketing: [true],
       ticketing_enabled: [false],
@@ -836,10 +874,49 @@ export class EventFormComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Load shortlink domain for URL slug preview
+    this.eventsService.getShortlinkDomain().subscribe({
+      next: (config) => this.shortlinkDomain.set(config.shortlink_domain),
+      error: () => {}
+    });
+
+    // Load payment method minimums
+    this.eventsService.getPaymentConfig().subscribe({
+      next: (config) => this.paymentConfig.set(config),
+      error: () => {}
+    });
+
     // Load available tags
     this.eventsService.getTags().subscribe({
       next: (tags) => this.availableTags.set(tags),
       error: () => {}
+    });
+
+    // Auto-populate slug from title when user hasn't manually edited it
+    this.form.get('title')!.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((title: string) => {
+      if (!this.slugManuallyEdited && title) {
+        const autoSlug = title.replace(/[^A-Za-z0-9]/g, '').slice(0, 30);
+        this.form.get('url_slug')!.setValue(autoSlug, { emitEvent: false });
+      }
+    });
+
+    // Sanitize slug as the user types; only lock manual-edit mode when slug is non-empty
+    this.form.get('url_slug')!.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value: string) => {
+      const cleaned = (value || '').replace(/[^A-Za-z0-9]/g, '');
+      if (cleaned !== value) {
+        this.form.get('url_slug')!.setValue(cleaned, { emitEvent: false });
+      }
+      // If user cleared the field, revert to auto-generation from title
+      if (!cleaned) {
+        this.slugManuallyEdited = false;
+        const currentTitle = this.form.get('title')?.value as string || '';
+        if (currentTitle) {
+          const autoSlug = currentTitle.replace(/[^A-Za-z0-9]/g, '').slice(0, 30);
+          this.form.get('url_slug')!.setValue(autoSlug, { emitEvent: false });
+        }
+      } else {
+        this.slugManuallyEdited = true;
+      }
     });
 
     // Venue search debounce
@@ -904,6 +981,25 @@ export class EventFormComponent implements OnInit, OnDestroy {
           if (event.poster_url) this.posterPreview.set(event.poster_url);
           if (event.verification_pin) this.verificationPin.set(event.verification_pin);
           if (event.tags) this.selectedTagIds.set(event.tags.map(t => t.id));
+          // Load slug from stored url_slug; fall back to extracting from buy_shortlink for legacy events
+          if (event.url_slug) {
+            this.form.get('url_slug')!.setValue(event.url_slug, { emitEvent: false });
+            this.slugManuallyEdited = true;
+          } else if (event.buy_shortlink) {
+            try {
+              const urlPath = new URL(event.buy_shortlink).pathname;
+              const match = urlPath.match(/^\/Buy(.+)$/) || urlPath.match(/^\/([A-Za-z0-9]+)$/);
+              if (match) {
+                this.form.get('url_slug')!.setValue(match[1], { emitEvent: false });
+                this.slugManuallyEdited = true;
+              }
+            } catch (_e) { /* ignore invalid URL */ }
+          }
+          // Lock the slug field if a shortlink already exists — it can't be changed
+          if (event.buy_shortlink) {
+            this.slugLocked = true;
+            this.form.get('url_slug')!.disable();
+          }
         }
       });
       // Load existing ticket types
@@ -1168,6 +1264,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
     if (this.posterFile()) data.poster = this.posterFile();
 
+    // Include URL slug
+    const slugValue = (this.form.get('url_slug')?.value as string || '').trim();
+    if (slugValue) data.slug = slugValue;
+
     const action = this.isEdit()
       ? this.eventsService.updateEvent(this.eventId()!, data)
       : this.eventsService.createEvent(data);
@@ -1184,8 +1284,16 @@ export class EventFormComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.error.set(err.error?.error || 'Failed to save event.');
+        if (err.error?.error === 'SLUG_IN_USE') {
+          // Enable ticketing so the URL slug section is visible, then switch to that tab
+          this.form.get('ticketing_enabled')!.setValue(true);
+          this.activeTab.set('tickets');
+          this.error.set('This URL slug is already in use. Please choose a different one.');
+        } else {
+          this.error.set(err.error?.error || 'Failed to save event.');
+        }
         this.loading.set(false);
+        document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
   }
