@@ -498,6 +498,16 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                     </label>
                   }
                 </div>
+                @if ((paymentConfig()?.min_card && form.get('supports_card')?.value) || (paymentConfig()?.min_dob && (form.get('supports_ubp')?.value || form.get('supports_dob')?.value))) {
+                  <div class="text-xs font-mono text-gray-400 space-y-0.5">
+                    @if (paymentConfig()?.min_card && form.get('supports_card')?.value) {
+                      <p>Credit card payments are available for transactions of P{{ paymentConfig()!.min_card!.toLocaleString('en-PH', { maximumFractionDigits: 0 }) }} and above.</p>
+                    }
+                    @if (paymentConfig()?.min_dob && (form.get('supports_ubp')?.value || form.get('supports_dob')?.value)) {
+                      <p>UnionBank &amp; Direct Online Banking are available for transactions of P{{ paymentConfig()!.min_dob!.toLocaleString('en-PH', { maximumFractionDigits: 0 }) }} and above.</p>
+                    }
+                  </div>
+                }
               </div>
 
               <!-- Purchase Settings -->
