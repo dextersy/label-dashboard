@@ -762,8 +762,9 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Check slug availability in DB before updating
-    if (slug && slug.trim() && slug.trim() !== event.url_slug) {
+    // Check slug availability in DB before updating.
+    // Always check (even when slug is unchanged) to catch pre-existing duplicates in the DB.
+    if (slug && slug.trim()) {
       if (await isSlugInUseInDb(slug.trim(), req.user.brand_id, event.id)) {
         return res.status(409).json({ error: 'SLUG_IN_USE', message: 'SLUG_IN_USE' });
       }
