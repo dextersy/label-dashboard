@@ -28,6 +28,7 @@ import {
   publishEvent,
   unpublishEvent,
   getPaymentConfig,
+  getShortlinkDomain,
   getEventPreview,
   updateEventMemberDiscount,
   cancelEvent
@@ -101,6 +102,7 @@ router.post('/', requireAdmin, upload.single('poster'), createEvent);
 
 // Payment config (must be before /:id routes)
 router.get('/payment-config', getPaymentConfig);
+router.get('/shortlink-domain', getShortlinkDomain);
 
 // Event management operations (specific routes first)
 router.post('/set-selected', setSelectedEvent);

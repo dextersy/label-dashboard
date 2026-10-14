@@ -46,9 +46,27 @@ const generateEventSlug = (title: string): string => {
   return title.replace(/[^A-Z0-9]/gi, '');
 };
 
-// Helper function to create Short.io link
-const createShortLink = async (originalUrl: string, path: string): Promise<string> => {
-  console.log('createShortLink called with:', { originalUrl, path });
+// Check if a URL slug is already in use within the brand (DB-level check, no Short.io call).
+// Matches against stored url_slug values and existing buy_shortlink URLs.
+const isSlugInUseInDb = async (slug: string, brandId: number, excludeEventId?: number): Promise<boolean> => {
+  const conditions: any = {
+    brand_id: brandId,
+    [Op.or]: [
+      { url_slug: slug },
+      { buy_shortlink: { [Op.like]: `%/${slug}` } },
+    ],
+  };
+  if (excludeEventId !== undefined) {
+    conditions.id = { [Op.ne]: excludeEventId };
+  }
+  const existing = await Event.findOne({ where: conditions });
+  return !!existing;
+};
+
+// Helper function to create Short.io link.
+// When strict=true, a 409 conflict throws an error instead of auto-appending numbers.
+const createShortLink = async (originalUrl: string, path: string, strict = false): Promise<string> => {
+  console.log('createShortLink called with:', { originalUrl, path, strict });
   
   const shortIoDomain = process.env.SHORT_IO_DOMAIN;
   const shortIoKey = process.env.SHORT_IO_KEY;
@@ -64,11 +82,11 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
     return originalUrl;
   }
 
-  const maxAttempts = 10; // Prevent infinite loops
+  const maxAttempts = strict ? 1 : 10; // In strict mode, only try once
   let finalPath = path;
   let counter = 1;
 
-  // Try to create the shortlink, handling 409 conflicts by appending numbers
+  // Try to create the shortlink, handling 409 conflicts by appending numbers (unless strict)
   while (counter <= maxAttempts) {
     try {
       console.log(`Attempting to create shortlink with path: "${finalPath}"`);
@@ -101,6 +119,9 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
 
       // Check if it's a 409 conflict error (path already exists)
       if (response.status === 409) {
+        if (strict) {
+          throw new Error('SLUG_IN_USE');
+        }
         console.log(`Path "${finalPath}" already exists (409 conflict), trying with number suffix`);
         finalPath = `${path}${counter}`;
         counter++;
@@ -113,6 +134,9 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
       throw new Error(`Short.io API error: ${response.status} - ${errorText}`);
 
     } catch (error: any) {
+      // Re-throw slug-in-use errors — they must propagate to the caller
+      if (error.message === 'SLUG_IN_USE') throw error;
+
       // If it's not a 409 conflict or we've reached max attempts, give up
       if (counter >= maxAttempts || !error.message?.includes('409')) {
         console.error('Failed to create short link, using fallback:', error);
@@ -132,19 +156,19 @@ const createShortLink = async (originalUrl: string, path: string): Promise<strin
 
 
 // Helper function to generate verification link
-const generateVerificationLink = async (eventId: number, slug: string, brandId: number): Promise<string> => {
+const generateVerificationLink = async (eventId: number, slug: string, brandId: number, strict = false): Promise<string> => {
   const frontendUrl = await getBrandFrontendUrl(brandId);
   const originalUrl = `${frontendUrl}/public/tickets/verify/${eventId}`;
   const path = `Verify${slug}`;
-  return await createShortLink(originalUrl, path);
+  return await createShortLink(originalUrl, path, strict);
 };
 
 // Helper function to generate buy link
-const generateBuyLink = async (eventId: number, slug: string, brandId: number): Promise<string> => {
+const generateBuyLink = async (eventId: number, slug: string, brandId: number, strict = false): Promise<string> => {
   const frontendUrl = await getBrandFrontendUrl(brandId);
   const originalUrl = `${frontendUrl}/public/tickets/buy/${eventId}`;
-  const path = `Buy${slug}`;
-  return await createShortLink(originalUrl, path);
+  const path = slug;
+  return await createShortLink(originalUrl, path, strict);
 };
 
 // Helper function to process base64 images in HTML and upload to S3
@@ -438,6 +462,13 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Check slug availability in DB before creating the event
+    if (slug && slug.trim()) {
+      if (await isSlugInUseInDb(slug.trim(), req.user.brand_id)) {
+        return res.status(409).json({ error: 'SLUG_IN_USE', message: 'SLUG_IN_USE' });
+      }
+    }
+
     // Generate verification PIN and slug
     const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title);
     const generatedPIN = verification_pin || generateVerificationPIN();
@@ -484,22 +515,24 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       walk_in_supports_gcash: parseBool(walk_in_supports_gcash, false),
       walk_in_supports_card: parseBool(walk_in_supports_card, false),
       walk_in_max_count: walk_in_max_count !== undefined ? parseInt(walk_in_max_count) : 0,
+      url_slug: slug ? slug.trim() : null,
     });
 
-    // Only generate shortlinks if event is being published    
+    // Only generate shortlinks if event is being published
     if (event.status === 'published') {
+      const strictMode = !!event.url_slug;
       try {
-        const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(event.title);
+        const eventSlug = event.url_slug || generateEventSlug(event.title);
         let finalVerificationLink = verification_link;
         let finalBuyLink = buy_shortlink;
         
         // Generate shortlinks if not provided for published events
         if (!verification_link || verification_link.trim() === '') {
-          finalVerificationLink = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
+          finalVerificationLink = await generateVerificationLink(event.id, eventSlug, req.user.brand_id, strictMode);
         }
         
         if (event.ticketing_enabled && (!buy_shortlink || buy_shortlink.trim() === '')) {
-          finalBuyLink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
+          finalBuyLink = await generateBuyLink(event.id, eventSlug, req.user.brand_id, strictMode);
         }
 
         // Update event with generated shortlinks
@@ -510,9 +543,14 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
         
         // Refresh event to get updated values
         await event.reload();
-      } catch (error) {
+      } catch (error: any) {
         console.error('URL generation error:', error);
-        // Event was created but URL generation failed - still return success but log error
+        if (error.message === 'SLUG_IN_USE') {
+          // Clean up the event that was created before the slug conflict was detected
+          await event.destroy();
+          return res.status(409).json({ error: 'SLUG_IN_USE', message: error.message });
+        }
+        // Event was created but URL generation failed for other reasons - still return success but log error
         console.warn('Event created but shortlink generation failed:', error.message);
       }
     }
@@ -724,6 +762,13 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Check slug availability in DB before updating
+    if (slug && slug.trim() && slug.trim() !== event.url_slug) {
+      if (await isSlugInUseInDb(slug.trim(), req.user.brand_id, event.id)) {
+        return res.status(409).json({ error: 'SLUG_IN_USE', message: 'SLUG_IN_USE' });
+      }
+    }
+
     // Handle URL generation if new URLs are being set
     let updatedVerificationLink = verification_link || event.verification_link;
     let updatedBuyLink = buy_shortlink || event.buy_shortlink;
@@ -733,27 +778,28 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ? parseBool(ticketing_enabled, true)
       : event.ticketing_enabled;
 
-    // Only regenerate URLs for published events
+    // Only generate shortlinks for published events that are missing them
     const isPublished = (status !== undefined ? status : event.status) === 'published';
-    const needsUrlRegeneration = isPublished && (slug || (title && title !== event.title)) && (!verification_link || !buy_shortlink);
-    // Also generate buy link if ticketing is being turned on for a published event with no buy link
-    const ticketingTurnedOn = isPublished && newTicketingEnabled && !event.ticketing_enabled && !event.buy_shortlink;
+    const effectiveSlug = (slug && slug.trim()) || event.url_slug || generateEventSlug(title || event.title);
+    const strictMode = !!(slug && slug.trim()) || !!event.url_slug;
+    const needsVerificationLink = isPublished && !event.verification_link && !verification_link;
+    const needsBuyLink = isPublished && newTicketingEnabled && !event.buy_shortlink && !buy_shortlink;
 
-    if (needsUrlRegeneration || ticketingTurnedOn) {
+    if (needsVerificationLink || needsBuyLink) {
       try {
-        const newSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(title || event.title);
-
-        if (!verification_link) {
-          updatedVerificationLink = await generateVerificationLink(event.id, newSlug, req.user.brand_id);
+        if (needsVerificationLink) {
+          updatedVerificationLink = await generateVerificationLink(event.id, effectiveSlug, req.user.brand_id, strictMode);
         }
-        // Only generate buy link if ticketing is enabled and there is no existing/provided buy link
-        if (newTicketingEnabled && !buy_shortlink && !event.buy_shortlink) {
-          updatedBuyLink = await generateBuyLink(event.id, newSlug, req.user.brand_id);
+        if (needsBuyLink) {
+          updatedBuyLink = await generateBuyLink(event.id, effectiveSlug, req.user.brand_id, strictMode);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('URL generation error during update:', error);
+        if (error.message === 'SLUG_IN_USE') {
+          return res.status(409).json({ error: 'SLUG_IN_USE', message: error.message });
+        }
         console.warn('URL generation failed but continuing with event update:', error.message);
-        // Don't fail the entire update if shortlink generation fails
+        // Don't fail the entire update if shortlink generation fails for other reasons
       }
     }
 
@@ -798,7 +844,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       walk_in_supports_cash: walk_in_supports_cash !== undefined ? walk_in_supports_cash : event.walk_in_supports_cash,
       walk_in_supports_gcash: walk_in_supports_gcash !== undefined ? walk_in_supports_gcash : event.walk_in_supports_gcash,
       walk_in_supports_card: walk_in_supports_card !== undefined ? walk_in_supports_card : event.walk_in_supports_card,
-      walk_in_max_count: walk_in_max_count !== undefined ? walk_in_max_count : event.walk_in_max_count
+      walk_in_max_count: walk_in_max_count !== undefined ? walk_in_max_count : event.walk_in_max_count,
+      url_slug: slug !== undefined ? (slug ? slug.trim() : null) : event.url_slug,
     });
 
     // Update tags if provided (supports both `tags` JSON array and `tags[]` FormData array)
@@ -3059,21 +3106,22 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
 
     // Generate shortlinks when publishing if they don't exist
     let updatedFields: any = { status: 'published' };
-    
-    if (!event.verification_link || !event.buy_shortlink) {
-      // Use provided slug or generate from title
-      const eventSlug = (slug && slug.trim()) ? slug.trim() : generateEventSlug(event.title);
+
+    if (!event.verification_link || (event.ticketing_enabled && !event.buy_shortlink)) {
+      // Use stored url_slug, then provided slug from request, then auto-generate from title
+      const eventSlug = event.url_slug || (slug && slug.trim()) || generateEventSlug(event.title);
+      const strictMode = !!(event.url_slug || (slug && slug.trim()));
       console.log('Publishing event with slug:', eventSlug);
-      
+
       if (!event.verification_link) {
         console.log('Generating verification link...');
-        updatedFields.verification_link = await generateVerificationLink(event.id, eventSlug, req.user.brand_id);
+        updatedFields.verification_link = await generateVerificationLink(event.id, eventSlug, req.user.brand_id, strictMode);
         console.log('Generated verification link:', updatedFields.verification_link);
       }
-      
+
       if (event.ticketing_enabled && !event.buy_shortlink) {
         console.log('Generating buy link...');
-        updatedFields.buy_shortlink = await generateBuyLink(event.id, eventSlug, req.user.brand_id);
+        updatedFields.buy_shortlink = await generateBuyLink(event.id, eventSlug, req.user.brand_id, strictMode);
         console.log('Generated buy link:', updatedFields.buy_shortlink);
       }
     }
@@ -3096,8 +3144,11 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
       message: 'Event published successfully',
       event: eventWithTickets
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Publish event error:', error);
+    if (error.message === 'SLUG_IN_USE') {
+      return res.status(409).json({ error: 'SLUG_IN_USE', message: error.message });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -3171,6 +3222,11 @@ export const getPaymentConfig = async (req: AuthRequest, res: Response) => {
   const minCard = process.env.MIN_AMOUNT_CARD ? parseFloat(process.env.MIN_AMOUNT_CARD) : null;
   const minDob  = process.env.MIN_AMOUNT_DOB  ? parseFloat(process.env.MIN_AMOUNT_DOB)  : null;
   res.json({ min_card: minCard, min_dob: minDob });
+};
+
+export const getShortlinkDomain = async (req: AuthRequest, res: Response) => {
+  const shortlinkDomain = process.env.SHORT_IO_DOMAIN || null;
+  res.json({ shortlink_domain: shortlinkDomain });
 };
 
 // Helper: determine if countdown should be shown

@@ -46,6 +46,7 @@ interface EventAttributes {
   walk_in_max_count: number;
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
+  url_slug?: string;
 }
 
 interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
@@ -95,6 +96,7 @@ class Event extends Model<EventAttributes, EventCreationAttributes> implements E
   public walk_in_max_count!: number;
   public member_discount_type?: 'fixed' | 'percent' | null;
   public member_discount_amount?: number | null;
+  public url_slug?: string;
 
   // Association properties
   public brand?: any;
@@ -321,6 +323,10 @@ Event.init(
         const value = this.getDataValue('member_discount_amount');
         return value !== null && value !== undefined ? parseFloat(String(value)) : null;
       },
+    },
+    url_slug: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
     },
   },
   {

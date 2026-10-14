@@ -148,6 +148,7 @@ export interface Event {
   rsvp_link?: string;
   ticket_price: number;
   buy_shortlink?: string;
+  url_slug?: string;
   close_time?: string;
   verification_pin: string;
   verification_link: string;
@@ -1210,6 +1211,13 @@ export class EventService {
   getPaymentConfig(): Observable<{ min_card: number | null; min_dob: number | null }> {
     return this.http.get<{ min_card: number | null; min_dob: number | null }>(
       `${environment.apiUrl}/events/payment-config`,
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  getShortlinkDomain(): Observable<{ shortlink_domain: string | null }> {
+    return this.http.get<{ shortlink_domain: string | null }>(
+      `${environment.apiUrl}/events/shortlink-domain`,
       { headers: this.getAuthHeaders() }
     );
   }

@@ -142,6 +142,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   originalTicketTypes: TicketType[] = [];
   originalWalkInTypes: any[] = [];
   slugManuallyEdited = false;
+  slugLocked = false; // true when a shortlink already exists — slug cannot be changed
   
   // Inline editing state (Details section, published events)
   editingFields: Set<string> = new Set();
@@ -167,6 +168,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   Math = Math;
 
   paymentConfig: { min_card: number | null; min_dob: number | null } | null = null;
+  shortlinkDomain: string | null = null;
   
   // Quill editor config
   quillConfig = {
@@ -210,6 +212,13 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     this.subscriptions.add(
       this.eventService.getPaymentConfig().subscribe(config => {
         this.paymentConfig = config;
+      })
+    );
+
+    // Load shortlink domain for URL slug preview
+    this.subscriptions.add(
+      this.eventService.getShortlinkDomain().subscribe(config => {
+        this.shortlinkDomain = config.shortlink_domain;
       })
     );
 
@@ -487,7 +496,13 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         },
         error: (error) => {
           console.error('Error saving event:', error);
-          this.notificationService.showError('Failed to save event');
+          if (error?.message === 'SLUG_IN_USE') {
+            this.notificationService.showError('This URL slug is already in use. Please choose a different one.');
+            this.setActiveSection('details');
+            this.focusFieldAfterSwitch(() => (document.getElementById('urlSlug') as HTMLElement)?.focus());
+          } else {
+            this.notificationService.showError('Failed to save event');
+          }
           this.saving = false;
           // Refresh event data to restore form to last saved state
           if (!this.isNewEvent && this.eventId) {
@@ -583,7 +598,13 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         },
         error: (error) => {
           console.error('Error publishing event:', error);
-          this.notificationService.showError('Failed to publish event');
+          if (error?.message === 'SLUG_IN_USE') {
+            this.notificationService.showError('This URL slug is already in use. Please choose a different one.');
+            this.setActiveSection('details');
+            this.focusFieldAfterSwitch(() => (document.getElementById('urlSlug') as HTMLElement)?.focus());
+          } else {
+            this.notificationService.showError('Failed to publish event');
+          }
           this.saving = false;
         }
       })
@@ -666,14 +687,22 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize first letter, lowercase rest
         .join(''); // Join without spaces
       
-      this.eventData.slug = pascalCase;
+      this.eventData.slug = pascalCase.slice(0, 30);
       this.slugManuallyEdited = false; // Reset flag when auto-generating
     }
   }
 
   onSlugChange(): void {
-    // Mark slug as manually edited when user types in the field
-    this.slugManuallyEdited = true;
+    if (this.slugLocked) return;
+    // Strip non-alphanumeric characters and enforce limit
+    this.eventData.slug = (this.eventData.slug || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 30);
+    // If user cleared the field, revert to auto-generation from title
+    if (!this.eventData.slug) {
+      this.slugManuallyEdited = false;
+      this.generateSlug();
+    } else {
+      this.slugManuallyEdited = true;
+    }
   }
 
   onTitleChange(): void {
@@ -1338,7 +1367,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       venue: event.venue || '',
       description: event.description || '',
       rsvp_link: event.rsvp_link || '',
-      slug: event.slug || '',
+      slug: event.url_slug || '',
       poster_url: event.poster_url || '',
       google_place_id: event.google_place_id || '',
       venue_address: event.venue_address || '',
@@ -1406,8 +1435,13 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       this.posterPreview = event.poster_url;
     }
 
-    // Auto-generate slug for draft events if not set
-    if (this.isEventDraft() && !this.eventData.slug && this.eventData.title) {
+    // Lock the slug field if a shortlink already exists — it can't be changed
+    this.slugLocked = !!event.buy_shortlink;
+
+    // If a slug was stored, mark it as manually set so it won't be overwritten by title changes
+    if (this.eventData.slug) {
+      this.slugManuallyEdited = true;
+    } else if (!this.slugLocked && this.isEventDraft() && this.eventData.title) {
       this.generateSlug();
     }
 
