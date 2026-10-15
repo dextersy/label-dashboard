@@ -19,6 +19,10 @@ interface MenuItem {
   icon?: string;
   title: string;
   adminOnly: boolean;
+  /** If true, visible to event-access collaborators (non-admins) */
+  eventAccessVisible?: boolean;
+  /** If true, visible only to event collaborators with manager role (or admins) */
+  managerVisible?: boolean;
   children?: MenuItem[];
 }
 
@@ -43,6 +47,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   iconColor: string = '#a9afbb';
   activeColor: string = '#ffffff';
   isAdmin: boolean = false;
+  hasEventAccess: boolean = false;
+  hasManagerAccess: boolean = false;
   currentRoute: string = '';
   isOpen: boolean = false;
   isCollapsed: boolean = false; // Start expanded on desktop
@@ -137,13 +143,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
           icon: 'ticket',
           title: 'Events',
           adminOnly: true,
+          eventAccessVisible: true,
           children: [
-            { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true },
-            { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true },
-            { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true },
-            { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true },
-            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true },
-            { route: '/campaigns/events/add-ons', title: 'Add-ons', adminOnly: true }
+            { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true, managerVisible: true },
+            { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true, eventAccessVisible: true },
+            { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true, eventAccessVisible: true },
+            { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true, eventAccessVisible: true },
+            { route: '/campaigns/events/add-ons', title: 'Manage Add-ons', adminOnly: true, managerVisible: true },
+            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true, managerVisible: true },
+            { route: '/campaigns/events/access', title: 'Team Members', adminOnly: true }
           ]
         },
         {
@@ -252,13 +260,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [
             {
               id: 'campaigns-dashboard',
-              items: [campaignsDashboardItem]
+              items: this.isAdmin ? [campaignsDashboardItem] : []
             },
             {
               id: 'campaigns-top-level',
               items: campaignsSection.items
                 .filter(item => {
                   if (item.route === '/campaigns/sync-licensing' && !this.featureMusicWorkspace) return false;
+                  // Non-admins only see items flagged as eventAccessVisible or managerVisible (if they're a manager)
+                  if (!this.isAdmin && !item.eventAccessVisible && !(item.managerVisible && this.hasManagerAccess)) return false;
                   return true;
                 })
                 .map(item => {
@@ -395,7 +405,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.authSubscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+        this.hasEventAccess = user ? this.authService.hasEventAccess() : false;
+        this.hasManagerAccess = user ? this.authService.getAccessibleEventIds().some(id => this.authService.getEventRole(id) === 'manager') : false;
         this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
+        this.updateVisibleSections();
       })
     );
 
@@ -699,12 +712,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   shouldShowMenuItem(item: any): boolean {
-    return !item.adminOnly || this.isAdmin;
+    if (!item.adminOnly) return true;
+    if (this.isAdmin) return true;
+    // Non-admin event collaborators can see items flagged as eventAccessVisible
+    if (item.eventAccessVisible && this.hasEventAccess) return true;
+    // Managers can see items flagged as managerVisible
+    if (item.managerVisible && this.hasManagerAccess) return true;
+    return false;
   }
 
   shouldShowSection(section: MenuSection): boolean {
-    // Don't show admin-only sections for non-admin users
-    if (section.adminOnly && !this.isAdmin) {
+    // Don't show admin-only sections for non-admin users unless they have event access
+    if (section.adminOnly && !this.isAdmin && !this.hasEventAccess) {
       return false;
     }
 
@@ -712,7 +731,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (section.showArtistIndicator) {
       return true;
     }
-    
+
     // Show if section has any visible menu items
     return section.items.some(item => this.shouldShowMenuItem(item));
   }
@@ -770,11 +789,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.workspaceService.setWorkspace(workspace);
     this.closeWorkspaceSwitchModal();
     this.sidebarService.closeOnMobileNavigation();
-    switch (workspace) {
-      case 'music':     this.router.navigate(['/dashboard']); break;
-      case 'campaigns': this.router.navigate(['/campaigns/dashboard']); break;
-      case 'labels':    this.router.navigate([this.featureMusicWorkspace ? '/labels/dashboard' : '/labels/earnings']); break;
-      case 'admin':     this.router.navigate(['/admin/users']); break;
-    }
+    this.router.navigate([this.workspaceService.getWorkspaceLandingUrl(workspace)]);
   }
 }

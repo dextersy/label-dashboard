@@ -13,6 +13,7 @@ export interface User {
   is_superadmin: boolean;
   brand_id: number;
   onboarding_completed: boolean;
+  event_access?: Array<{ event_id: number; role: 'viewer' | 'manager' }>;
 }
 
 export interface LoginResponse {
@@ -167,6 +168,21 @@ export class AuthService {
   isSuperadmin(): boolean {
     const user = this.currentUserValue;
     return user ? user.is_superadmin : false;
+  }
+
+  hasEventAccess(): boolean {
+    const user = this.currentUserValue;
+    return !!(user?.event_access?.length);
+  }
+
+  getEventRole(eventId: number): 'viewer' | 'manager' | null {
+    const user = this.currentUserValue;
+    return user?.event_access?.find(a => a.event_id === eventId)?.role ?? null;
+  }
+
+  getAccessibleEventIds(): number[] {
+    const user = this.currentUserValue;
+    return user?.event_access?.map(a => a.event_id) ?? [];
   }
 
   // Refresh user data from backend and update local state

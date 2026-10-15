@@ -69,6 +69,10 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/invite/setup-profile`, setupData);
   }
 
+  setupEventInviteProfile(data: { event_invite_hash: string; first_name: string; last_name: string; username?: string; password: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/event-access/setup-profile`, data);
+  }
+
   // Admin invite handling
   processAdminInvite(inviteToken: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/invite/admin/process`, { invite_hash: inviteToken });

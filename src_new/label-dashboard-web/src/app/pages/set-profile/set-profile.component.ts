@@ -60,6 +60,7 @@ export class SetProfileComponent implements OnInit, OnDestroy {
   // Invite handling
   inviteHash: string = '';
   artistAccessId: number | null = null;
+  eventInviteHash: string = '';
 
   // Profile completion mode (when user has password but no username)
   isProfileCompletionMode: boolean = false;
@@ -86,7 +87,8 @@ export class SetProfileComponent implements OnInit, OnDestroy {
     let hasInviteHash = false;
     this.route.queryParams.subscribe(params => {
       this.inviteHash = params['hash'];
-      hasInviteHash = !!this.inviteHash;
+      this.eventInviteHash = params['event_invite_hash'] || '';
+      hasInviteHash = !!this.inviteHash || !!this.eventInviteHash;
     });
 
     // Check if user is already fully authenticated (has full auth token, not just temp)
@@ -124,10 +126,19 @@ export class SetProfileComponent implements OnInit, OnDestroy {
         this.authService.clearTempAuthData();
       }
 
-      if (!this.inviteHash) {
+      if (!this.inviteHash && !this.eventInviteHash) {
         this.showMessage('Invalid or expired invitation link', 'error');
         return;
       }
+
+      if (!this.inviteHash && this.eventInviteHash) {
+        // Event invite path: no artist invite data to load, show a blank account creation form
+        this.profile = { id: 0, username: '', email_address: '', first_name: '', last_name: '', is_admin: false, brand_id: 0 };
+        this.setupUsernameValidation();
+        this.loadBrandSettings();
+        return;
+      }
+
       this.loadInviteData();
       this.setupUsernameValidation();
       this.loadBrandSettings();
@@ -275,8 +286,39 @@ export class SetProfileComponent implements OnInit, OnDestroy {
           }
         }
       });
+    } else if (this.eventInviteHash) {
+      // Event invite flow — update the pre-created user and accept the invite in one call
+      this.apiService.setupEventInviteProfile({
+        event_invite_hash: this.eventInviteHash,
+        first_name: this.profile.first_name,
+        last_name: this.profile.last_name,
+        username: this.canChangeUsername ? this.profile.username : undefined,
+        password: this.password,
+      }).subscribe({
+        next: (response) => {
+          if (response.token) {
+            localStorage.setItem('auth_token', response.token);
+            this.authService.updateUserData(response.user);
+            this.router.navigate(['/campaigns/events/tickets']);
+          }
+        },
+        error: (error) => {
+          this.saving = false;
+          if (error.status === 400) {
+            if (error.error.errors) {
+              this.errors = error.error.errors;
+            } else if (error.error.details && Array.isArray(error.error.details)) {
+              this.errors.password = error.error.details.join('. ');
+            } else {
+              this.showMessage(error.error?.error || 'Error setting up profile', 'error');
+            }
+          } else {
+            this.showMessage(error.error?.error || 'Error setting up profile', 'error');
+          }
+        }
+      });
     } else {
-      // Original invite flow - call setupUserProfile API
+      // Artist invite flow - call setupUserProfile API
       const setupData = {
         id: this.profile.id,
         username: this.canChangeUsername ? this.profile.username : undefined,
@@ -291,13 +333,9 @@ export class SetProfileComponent implements OnInit, OnDestroy {
 
       this.apiService.setupUserProfile(setupData).subscribe({
         next: (response) => {
-          // Store auth token and redirect to dashboard
           if (response.token) {
-            // Store token and update auth service state
             localStorage.setItem('auth_token', response.token);
             this.authService.updateUserData(response.user);
-
-            // Navigate to dashboard - auth guard should now pass
             this.router.navigate(['/dashboard']).catch((error) => {
               console.error('Navigation error:', error);
               this.saving = false;
@@ -311,7 +349,6 @@ export class SetProfileComponent implements OnInit, OnDestroy {
             if (error.error.errors) {
               this.errors = error.error.errors;
             } else if (error.error.details && Array.isArray(error.error.details)) {
-              // Handle detailed validation errors from backend
               this.errors.password = error.error.details.join('. ');
             } else {
               this.showMessage(error.error?.error || error.error?.message || 'Error setting up profile', 'error');

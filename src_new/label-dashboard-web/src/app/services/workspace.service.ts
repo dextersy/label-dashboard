@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { BrandService } from './brand.service';
+import { AuthService } from './auth.service';
 
 export type WorkspaceType = 'music' | 'campaigns' | 'labels' | 'admin';
 
@@ -26,7 +27,7 @@ export class WorkspaceService {
   private currentWorkspaceSubject = new BehaviorSubject<WorkspaceType>(this.loadWorkspaceFromStorage());
   public currentWorkspace$ = this.currentWorkspaceSubject.asObservable();
 
-  constructor(private brandService: BrandService) {}
+  constructor(private brandService: BrandService, private authService: AuthService) {}
 
   get currentWorkspace(): WorkspaceType {
     return this.currentWorkspaceSubject.value;
@@ -66,6 +67,9 @@ export class WorkspaceService {
         workspaces.push('campaigns');
       }
       workspaces.push('labels');
+    } else if (this.authService.hasEventAccess()) {
+      // Non-admin users with event access get the campaigns workspace (events only)
+      workspaces.push('campaigns');
     }
 
     return workspaces;
@@ -78,7 +82,7 @@ export class WorkspaceService {
   getWorkspaceLandingUrl(workspace: WorkspaceType): string {
     switch (workspace) {
       case 'music': return '/dashboard';
-      case 'campaigns': return '/campaigns/dashboard';
+      case 'campaigns': return this.authService.isAdmin() ? '/campaigns/dashboard' : '/campaigns/events/tickets';
       case 'labels': {
         const settings = this.brandService.getCurrentBrandSettings();
         return settings?.feature_music_workspace !== false ? '/labels/dashboard' : '/labels/earnings';
@@ -100,6 +104,12 @@ export class WorkspaceService {
     if (stored && this.isValidWorkspace(stored)) {
       return stored as WorkspaceType;
     }
+
+    // Default to campaigns for event-only collaborators (no stored preference yet)
+    if (this.authService.hasEventAccess() && !this.authService.isAdmin()) {
+      return 'campaigns';
+    }
+
     return 'music'; // Default workspace
   }
 

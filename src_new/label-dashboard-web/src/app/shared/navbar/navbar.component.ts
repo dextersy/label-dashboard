@@ -174,7 +174,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.router.navigate(['/dashboard']);
         break;
       case 'campaigns':
-        this.router.navigate(['/campaigns/dashboard']);
+        this.router.navigate([this.workspaceService.getWorkspaceLandingUrl('campaigns')]);
         break;
       case 'labels':
         const labelsSettings = this.brandService.getCurrentBrandSettings();

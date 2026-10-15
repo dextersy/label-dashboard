@@ -68,6 +68,9 @@ export class BreadcrumbService {
     '/campaigns/events/referrals': { label: 'Referrals', parent: '/campaigns/events' },
     '/campaigns/events/email': { label: 'Send Email', parent: '/campaigns/events' },
     '/campaigns/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/campaigns/events' },
+    '/campaigns/events/access': { label: 'Team Members', parent: '/campaigns/events' },
+    '/campaigns/events/listing': { label: 'Listing', parent: '/campaigns/events' },
+    '/campaigns/events/add-ons': { label: 'Manage Add-ons', parent: '/campaigns/events' },
 
     // Fundraisers (under campaigns)
     '/campaigns/fundraisers': { label: 'Fundraisers', parent: '/campaigns', icon: 'heart' },
@@ -107,6 +110,16 @@ export class BreadcrumbService {
         this.breadcrumbsSubject.next(breadcrumbs);
       }
     });
+
+    // Generate breadcrumbs for the current route on service init (handles page refresh/direct navigation).
+    // Deferred by one tick to ensure router.url is stable when the service is first injected
+    // mid-navigation (e.g. during initial route activation).
+    setTimeout(() => {
+      const breadcrumbs = this.createBreadcrumbs();
+      if (breadcrumbs.length > 0) {
+        this.breadcrumbsSubject.next(breadcrumbs);
+      }
+    }, 0);
   }
 
   private createBreadcrumbs(): BreadcrumbItem[] {

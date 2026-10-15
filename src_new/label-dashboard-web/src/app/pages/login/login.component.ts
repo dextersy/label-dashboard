@@ -229,10 +229,23 @@ export class LoginComponent implements OnInit {
   }
 
   private getDefaultPageForWorkspace(isAdmin: boolean = false): string {
-    // If the stored workspace requires admin access but the user isn't admin, reset to music
-    const adminOnlyWorkspaces: WorkspaceType[] = ['campaigns', 'labels', 'admin'];
-    if (!isAdmin && adminOnlyWorkspaces.includes(this.workspaceService.currentWorkspace)) {
+    // Non-admin users with event access are allowed in the campaigns workspace
+    const hasEventAccess = this.authService.hasEventAccess();
+
+    // If the stored workspace requires admin access but the user isn't admin (and has no event access), reset to music
+    const strictlyAdminWorkspaces: WorkspaceType[] = ['labels', 'admin'];
+    const campaignsRequiresAdmin = !hasEventAccess;
+    const blockedFromCampaigns = !isAdmin && campaignsRequiresAdmin && this.workspaceService.currentWorkspace === 'campaigns';
+    if (!isAdmin && (strictlyAdminWorkspaces.includes(this.workspaceService.currentWorkspace) || blockedFromCampaigns)) {
       this.workspaceService.setWorkspace('music');
+    }
+
+    // If event-only user (no music workspace needed), default them to campaigns
+    if (!isAdmin && hasEventAccess) {
+      const settings = this.brandService.getCurrentBrandSettings();
+      if (settings?.feature_music_workspace === false || this.workspaceService.currentWorkspace === 'campaigns') {
+        return '/campaigns/events/tickets';
+      }
     }
 
     const settings = this.brandService.getCurrentBrandSettings();
