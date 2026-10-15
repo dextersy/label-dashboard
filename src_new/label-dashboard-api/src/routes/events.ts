@@ -64,7 +64,7 @@ import {
   proxyWristbandDesign,
   upload as wristbandUpload,
 } from '../controllers/wristbandOrderController';
-import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
+import { authenticateToken, requireAdmin, requireSuperAdmin, requireEventAccess } from '../middleware/auth';
 
 const router = Router();
 
@@ -109,52 +109,52 @@ router.post('/set-selected', setSelectedEvent);
 
 // Ticket operations (specific routes before /:id)
 router.get('/tickets', getTickets);
-router.post('/tickets', requireAdmin, addTicket);
-router.post('/tickets/mark-paid', requireAdmin, markTicketPaid);
-router.post('/tickets/cancel', requireAdmin, cancelTicket);
-router.post('/tickets/refund', requireAdmin, refundTicket);
-router.post('/tickets/resend', requireAdmin, resendTicket);
-router.post('/tickets/cancel-all-unpaid', requireAdmin, cancelAllUnpaidTickets);
-router.post('/tickets/verify-payments', requireAdmin, verifyAllPayments);
+router.post('/tickets', addTicket);
+router.post('/tickets/mark-paid', markTicketPaid);
+router.post('/tickets/cancel', cancelTicket);
+router.post('/tickets/refund', refundTicket);
+router.post('/tickets/resend', resendTicket);
+router.post('/tickets/cancel-all-unpaid', cancelAllUnpaidTickets);
+router.post('/tickets/verify-payments', verifyAllPayments);
 
-// Referrer operations (specific routes before /:id)
+// Referrer operations
 router.get('/referrers', getEventReferrers);
-router.post('/referrers', requireAdmin, createEventReferrer);
-router.put('/referrers/:id', requireAdmin, updateEventReferrer);
-router.delete('/referrers/:id', requireAdmin, deleteEventReferrer);
+router.post('/referrers', createEventReferrer);
+router.put('/referrers/:id', updateEventReferrer);
+router.delete('/referrers/:id', deleteEventReferrer);
 
-// Ticket type operations (specific routes before /:id)
+// Ticket type operations (managers can manage ticket types)
 router.get('/ticket-types', getTicketTypes);
 router.get('/ticket-types/available', getAvailableTicketTypes);
-router.post('/ticket-types', requireAdmin, createTicketType);
-router.put('/ticket-types/:id', requireAdmin, updateTicketType);
-router.delete('/ticket-types/:id', requireAdmin, deleteTicketType);
+router.post('/ticket-types', createTicketType);
+router.put('/ticket-types/:id', updateTicketType);
+router.delete('/ticket-types/:id', deleteTicketType);
 
-// Walk-in type operations (specific routes before /:id)
+// Walk-in type operations
 router.get('/walk-in-types', getWalkInTypes);
-router.post('/walk-in-types', requireAdmin, createWalkInType);
-router.put('/walk-in-types/:id', requireAdmin, updateWalkInType);
-router.delete('/walk-in-types/:id', requireAdmin, deleteWalkInType);
+router.post('/walk-in-types', createWalkInType);
+router.put('/walk-in-types/:id', updateWalkInType);
+router.delete('/walk-in-types/:id', deleteWalkInType);
 router.get('/walk-in-transactions', getWalkInTransactions);
 
-// Email operations (specific routes before /:id)
+// Email operations
 router.get('/ticket-holders-count', getEventTicketHoldersCount);
 router.get('/ticket-summary', getEventTicketSummary);
 router.get('/tickets/csv', exportEventTicketsCsv);
 router.get('/tickets/pending/csv', exportEventPendingTicketsCsv);
-router.post('/send-email', requireAdmin, sendEventEmail);
-router.post('/send-test-email', requireAdmin, sendTestEventEmail);
+router.post('/send-email', sendEventEmail);
+router.post('/send-test-email', sendTestEventEmail);
 
 // Event CRUD operations with :id (these must come last)
 router.get('/:id/preview', requireAdmin, getEventPreview);
 router.get('/:id', getEvent);
-router.put('/:id', requireAdmin, upload.single('poster'), updateEvent);
+router.put('/:id', requireEventAccess('manager'), upload.single('poster'), updateEvent);
 router.put('/:id/member-discount', requireSuperAdmin, updateEventMemberDiscount);
-router.post('/:id/refresh-pin', requireAdmin, refreshVerificationPIN);
+router.post('/:id/refresh-pin', requireEventAccess('manager'), refreshVerificationPIN);
 
 // Event status operations
-router.post('/:id/publish', requireAdmin, publishEvent);
-router.post('/:id/unpublish', requireAdmin, unpublishEvent);
-router.post('/:id/cancel', requireAdmin, cancelEvent);
+router.post('/:id/publish', requireEventAccess('manager'), publishEvent);
+router.post('/:id/unpublish', requireEventAccess('manager'), unpublishEvent);
+router.post('/:id/cancel', requireEventAccess('manager'), cancelEvent);
 
 export default router;

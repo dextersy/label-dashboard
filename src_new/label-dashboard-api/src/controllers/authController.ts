@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import axios from 'axios';
-import { User, Brand, Domain, LoginAttempt, Plan, BrandPlan } from '../models';
+import { User, Brand, Domain, LoginAttempt, Plan, BrandPlan, EventAccess } from '../models';
 import { sendEmail, sendLoginNotification, sendAdminFailedLoginAlert } from '../utils/emailService';
 import { createNotification, createNotificationsForUsers, getBrandAdminUserIds } from '../utils/notificationService';
 import { getBrandIdFromDomain, getBrandFrontendUrl } from '../utils/brandUtils';
@@ -11,6 +11,15 @@ import { generateSecureToken } from '../utils/tokenUtils';
 import fs from 'fs';
 import path from 'path';
 import { Op } from 'sequelize';
+
+async function getEventAccessForUser(userId: number): Promise<Array<{ event_id: number; role: 'viewer' | 'manager' }>> {
+  const rows = await EventAccess.findAll({
+    where: { user_id: userId, status: 'Accepted' },
+    attributes: ['event_id', 'role'],
+  });
+  return rows.map(row => ({ event_id: row.event_id, role: row.role }));
+}
+
 
 // ─── One-time OAuth exchange code store ──────────────────────────────────────
 // Tokens are never placed in redirect URLs (logs, browser history, Referer leakage).
@@ -196,6 +205,8 @@ export const login = async (req: Request, res: Response) => {
     const adminEmail = process.env.ADMIN_EMAIL;
     const isSuperadmin = adminEmail && user.email_address === adminEmail;
 
+    const eventAccess = user.is_admin ? [] : await getEventAccessForUser(user.id);
+
     res.json({
       message: 'Login successful',
       token,
@@ -208,7 +219,8 @@ export const login = async (req: Request, res: Response) => {
         is_admin: user.is_admin,
         is_superadmin: isSuperadmin,
         brand_id: user.brand_id,
-        onboarding_completed: user.onboarding_completed || false
+        onboarding_completed: user.onboarding_completed || false,
+        event_access: eventAccess,
       }
     });
 
@@ -226,11 +238,13 @@ export const logout = async (req: Request, res: Response) => {
 export const checkAuth = async (req: any, res: Response) => {
   try {
     const user = req.user;
-    
+
     // Check if user is superadmin based on admin email env variable
     const adminEmail = process.env.ADMIN_EMAIL;
     const isSuperadmin = adminEmail && user.email_address === adminEmail;
-    
+
+    const eventAccess = user.is_admin ? [] : await getEventAccessForUser(user.id);
+
     res.json({
       user: {
         id: user.id,
@@ -241,7 +255,8 @@ export const checkAuth = async (req: any, res: Response) => {
         is_admin: user.is_admin,
         is_superadmin: isSuperadmin,
         brand_id: user.brand_id,
-        onboarding_completed: user.onboarding_completed || false
+        onboarding_completed: user.onboarding_completed || false,
+        event_access: eventAccess,
       }
     });
   } catch (error) {

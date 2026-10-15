@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Event, WalkInType, WalkInTransaction, WalkInTransactionItem, User } from '../models';
+import { Event, WalkInType, WalkInTransaction, WalkInTransactionItem, User, EventAccess } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -87,6 +87,11 @@ export const createWalkInType = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({ where: { event_id: eventIdNum, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
+      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    }
+
     const walkInType = await WalkInType.create({
       event_id: eventIdNum,
       name,
@@ -115,6 +120,11 @@ export const updateWalkInType = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Walk-in type not found' });
     }
 
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({ where: { event_id: walkInType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
+      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    }
+
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (price !== undefined) updateData.price = parseFloat(price);
@@ -140,6 +150,11 @@ export const deleteWalkInType = async (req: AuthRequest, res: Response) => {
 
     if (!walkInType || (walkInType as any).event.brand_id !== req.user.brand_id) {
       return res.status(404).json({ error: 'Walk-in type not found' });
+    }
+
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({ where: { event_id: walkInType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
+      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     // Check if there are any transactions using this type

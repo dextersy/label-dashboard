@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { TicketType, Event } from '../models';
+import { TicketType, Event, EventAccess } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -60,10 +60,6 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
 
 export const createTicketType = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false, special_instructions = null, special_instructions_for_scanner = null } = req.body;
 
     if (!event_id || !name || price === undefined) {
@@ -76,6 +72,11 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
 
     if (isNaN(eventIdNum) || eventIdNum <= 0) {
       return res.status(400).json({ error: 'Invalid event ID' });
+    }
+
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({ where: { event_id: eventIdNum, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
+      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     const priceNum = parseFloat(price);
@@ -160,10 +161,6 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
 
 export const updateTicketType = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { id } = req.params;
     const { name, price, max_tickets, start_date, end_date, disabled, special_instructions, special_instructions_for_scanner } = req.body;
 
@@ -239,6 +236,11 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
 
     if (!ticketType) {
       return res.status(404).json({ error: 'Ticket type not found' });
+    }
+
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({ where: { event_id: ticketType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
+      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     // Check if updated name conflicts with other ticket types for this event
@@ -373,10 +375,6 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
 
 export const deleteTicketType = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { id } = req.params;
     const ticketTypeId = parseInt(id as string, 10);
 
@@ -396,6 +394,11 @@ export const deleteTicketType = async (req: AuthRequest, res: Response) => {
 
     if (!ticketType) {
       return res.status(404).json({ error: 'Ticket type not found' });
+    }
+
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({ where: { event_id: ticketType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
+      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     // Check if this is the last ticket type for the event

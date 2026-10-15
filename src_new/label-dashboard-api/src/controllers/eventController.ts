@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag, EventAccess } from '../models';
 import { scheduleEventClosePayout, cancelEventClosePayout } from '../schedules/eventClosePayouts';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
@@ -27,6 +27,80 @@ interface AuthRequest extends Request {
 }
 
 const paymentService = new PaymentService();
+
+// ─── Shared helpers ──────────────────────────────────────────────────────────
+
+/** Parse a numeric ID string/number. Returns NaN if invalid. */
+const parseId = (value: any): number => parseInt(value as string, 10);
+
+/**
+ * Look up an event by ID scoped to the user's brand.
+ * Returns the event or null. Pass `include` for eager loads.
+ */
+const findEventForBrand = async (eventId: number, brandId: number, include?: any[]): Promise<any | null> => {
+  return Event.findOne({ where: { id: eventId, brand_id: brandId }, ...(include ? { include } : {}) });
+};
+
+/**
+ * For non-admin users, verify they have manager-level EventAccess for the given event.
+ * Returns a 403 response object if denied, or null if allowed.
+ */
+const requireManagerAccess = async (req: AuthRequest, res: Response, eventId: number): Promise<boolean> => {
+  if (req.user.is_admin) return true;
+  const access = await EventAccess.findOne({
+    where: { event_id: eventId, user_id: req.user.id, status: 'Accepted', role: 'manager' },
+  });
+  if (!access) {
+    res.status(403).json({ error: 'Manager access required for this operation' });
+    return false;
+  }
+  return true;
+};
+
+/**
+ * Parse a field that may arrive as a JSON string (FormData) or already be parsed.
+ * Returns the parsed value, or calls res.status(400) and returns null on failure.
+ */
+const parseJsonField = (value: any, fieldName: string, res: Response): any | null => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    res.status(400).json({ error: `Invalid ${fieldName} format` });
+    return null;
+  }
+};
+
+/**
+ * Normalise the ticket_id / ticket_ids body fields into a number[].
+ * Returns the array, or calls res.status(400) and returns null on validation failure.
+ */
+const parseTicketIds = (body: any, res: Response): number[] | null => {
+  const { ticket_id, ticket_ids } = body;
+  if (ticket_ids) {
+    if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
+      res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
+      return null;
+    }
+    const ids = ticket_ids.filter((id: any) => Number.isInteger(id) && id > 0);
+    if (ids.length !== ticket_ids.length) {
+      res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
+      return null;
+    }
+    return ids;
+  }
+  if (ticket_id) {
+    if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
+      res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
+      return null;
+    }
+    return [ticket_id];
+  }
+  res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
+  return null;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Parse boolean from JSON body (boolean) or FormData body ('0'/'1'/'true'/'false')
 const parseBool = (val: any, defaultVal: boolean): boolean => {
@@ -259,8 +333,23 @@ const processImagesInHtml = async (htmlContent: string, eventId: number): Promis
 
 export const getEvents = async (req: AuthRequest, res: Response) => {
   try {
+    let whereClause: any = { brand_id: req.user.brand_id };
+
+    // Non-admin users with event access can only see their specific events
+    if (!req.user.is_admin) {
+      const accessRows = await EventAccess.findAll({
+        where: { user_id: req.user.id, status: 'Accepted' },
+        attributes: ['event_id'],
+      });
+      const accessibleIds = accessRows.map((r: any) => r.event_id);
+      if (accessibleIds.length === 0) {
+        return res.json({ events: [] });
+      }
+      whereClause = { id: accessibleIds };
+    }
+
     const events = await Event.findAll({
-      where: { brand_id: req.user.brand_id },
+      where: whereClause,
       include: [
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
@@ -280,18 +369,25 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
 
 export const getEvent = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
-    
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    let eventWhereClause: any = { id: eventId, brand_id: req.user.brand_id };
+
+    // Non-admin: allow access if the user has an EventAccess record for this event
+    if (!req.user.is_admin) {
+      const access = await EventAccess.findOne({
+        where: { event_id: eventId, user_id: req.user.id, status: 'Accepted' },
+      });
+      if (!access) {
+        return res.status(403).json({ error: 'No access to this event' });
+      }
+      // Don't filter by brand_id for collaborators — they may be from another brand
+      eventWhereClause = { id: eventId };
     }
 
     const event = await Event.findOne({
-      where: {
-        id: eventId,
-        brand_id: req.user.brand_id
-      },
+      where: eventWhereClause,
       include: [
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
@@ -389,18 +485,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       walkInTypes
     } = req.body;
 
-    // Parse ticketTypes if it's a string (from FormData)
-    let parsedTicketTypes = ticketTypes;
-    if (typeof ticketTypes === 'string') {
-      try {
-        parsedTicketTypes = JSON.parse(ticketTypes);
-      } catch (error) {
-        console.error('Failed to parse ticketTypes JSON:', error);
-        return res.status(400).json({
-          error: 'Invalid ticketTypes format'
-        });
-      }
-    }
+    const parsedTicketTypes = parseJsonField(ticketTypes, 'ticketTypes', res);
+    if (ticketTypes !== undefined && parsedTicketTypes === null) return;
 
     // Parse ticketing_enabled early so we can skip ticket-related validation when disabled
     const isTicketingEnabled = parseBool(ticketing_enabled, true);
@@ -595,10 +681,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
     }
 
     // Create walk-in types if provided
-    let parsedWalkInTypesCreate = walkInTypes;
-    if (typeof walkInTypes === 'string') {
-      try { parsedWalkInTypesCreate = JSON.parse(walkInTypes); } catch { parsedWalkInTypesCreate = []; }
-    }
+    const parsedWalkInTypesCreate = parseJsonField(walkInTypes, 'walkInTypes', res) ?? [];
     if (parsedWalkInTypesCreate && Array.isArray(parsedWalkInTypesCreate)) {
       for (const wt of parsedWalkInTypesCreate) {
         await WalkInType.create({
@@ -633,16 +716,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
 
 export const updateEvent = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
-    
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
     
     const {
       title,
@@ -691,38 +766,14 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       tags
     } = req.body;
 
-    // Parse ticketTypes if it's a JSON string (from FormData)
-    let parsedTicketTypes = ticketTypes;
-    if (typeof ticketTypes === 'string') {
-      try {
-        parsedTicketTypes = JSON.parse(ticketTypes);
-      } catch (error) {
-        console.error('Failed to parse ticketTypes JSON:', error);
-        return res.status(400).json({ error: 'Invalid ticketTypes format' });
-      }
-    }
+    const parsedTicketTypes = parseJsonField(ticketTypes, 'ticketTypes', res);
+    if (ticketTypes !== undefined && parsedTicketTypes === null) return;
 
-    // Parse walkInTypes if it's a JSON string (from FormData)
-    let parsedWalkInTypes = walkInTypes;
-    if (typeof walkInTypes === 'string') {
-      try {
-        parsedWalkInTypes = JSON.parse(walkInTypes);
-      } catch (error) {
-        console.error('Failed to parse walkInTypes JSON:', error);
-        return res.status(400).json({ error: 'Invalid walkInTypes format' });
-      }
-    }
+    const parsedWalkInTypes = parseJsonField(walkInTypes, 'walkInTypes', res);
+    if (walkInTypes !== undefined && parsedWalkInTypes === null) return;
 
-    const event = await Event.findOne({
-      where: { 
-        id: eventId,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventId, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Handle poster upload if provided
     let finalPosterUrl = poster_url || event.poster_url;
@@ -1012,20 +1063,11 @@ export const setSelectedEvent = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    const eventIdNum = parseId(event_id);
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    res.json({ 
+    res.json({
       message: 'Selected event updated',
       selected_event_id: event_id,
       event: {
@@ -1042,10 +1084,6 @@ export const setSelectedEvent = async (req: AuthRequest, res: Response) => {
 
 export const addTicket = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     // Check if request body contains an array of tickets or a single ticket
     const isArrayRequest = Array.isArray(req.body) || Array.isArray(req.body.tickets);
     const ticketsData = isArrayRequest 
@@ -1082,6 +1120,14 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
           ? `Ticket ${i + 1}: Contact number is required` 
           : 'Contact number is required';
         return res.status(400).json({ error: errorMsg });
+      }
+    }
+
+    // Non-admins must have manager access to every event referenced in the request
+    if (!req.user.is_admin) {
+      const uniqueEventIds = [...new Set(ticketsData.map((t: any) => parseId(t.event_id)).filter((id: number) => !isNaN(id)))];
+      for (const eid of uniqueEventIds) {
+        if (!await requireManagerAccess(req, res, eid)) return;
       }
     }
 
@@ -1344,18 +1390,8 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
 
     const where: any = {};
     if (event_id) {
-      // Verify user has access to this event
-      const event = await Event.findOne({
-        where: { 
-          id: eventIdNum,
-          brand_id: req.user.brand_id 
-        }
-      });
-
-      if (!event) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
-
+      const event = await findEventForBrand(eventIdNum!, req.user.brand_id);
+      if (!event) return res.status(404).json({ error: 'Event not found' });
       where.event_id = eventIdNum;
     }
 
@@ -1439,27 +1475,11 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
 
 export const refreshVerificationPIN = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
-    
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
-
-    const event = await Event.findOne({
-      where: { 
-        id: eventId,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventId, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Generate new verification PIN
     const newPIN = generateVerificationPIN();
@@ -1480,32 +1500,8 @@ export const refreshVerificationPIN = async (req: AuthRequest, res: Response) =>
 
 export const markTicketPaid = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { ticket_id, ticket_ids } = req.body;
-
-    // Handle both single ticket_id and array of ticket_ids
-    let ticketIds: number[];
-    if (ticket_ids) {
-      // Array format (bulk operations)
-      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
-        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
-      }
-      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
-      if (ticketIds.length !== ticket_ids.length) {
-        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
-      }
-    } else if (ticket_id) {
-      // Single ticket format (backward compatibility)
-      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
-        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
-      }
-      ticketIds = [ticket_id];
-    } else {
-      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
-    }
+    const ticketIds = parseTicketIds(req.body, res);
+    if (!ticketIds) return;
 
     // Find tickets that belong to user's brand and can be marked as paid (New status)
     const tickets = await Ticket.findAll({
@@ -1525,6 +1521,12 @@ export const markTicketPaid = async (req: AuthRequest, res: Response) => {
 
     if (tickets.length === 0) {
       return res.status(404).json({ error: 'No eligible tickets found for marking as paid (only New status tickets can be marked as paid)' });
+    }
+
+    if (!req.user.is_admin) {
+      for (const eid of [...new Set(tickets.map((t: any) => t.event_id))]) {
+        if (!await requireManagerAccess(req, res, eid)) return;
+      }
     }
 
     // Update all tickets to 'Payment Confirmed' status and set platform fee
@@ -1613,23 +1615,13 @@ export const upload = multer({
 export const getEventReferrers = async (req: AuthRequest, res: Response) => {
   try {
     const { event_id } = req.query;
-    const eventIdNum = event_id ? parseInt(event_id as string, 10) : undefined;
-
-    if (!event_id || isNaN(eventIdNum!) || eventIdNum! <= 0) {
+    const eventIdNum = event_id ? parseId(event_id) : NaN;
+    if (!event_id || isNaN(eventIdNum) || eventIdNum <= 0) {
       return res.status(400).json({ error: 'Valid event ID is required' });
     }
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get referrers for this event with sales data
     const referrers = await EventReferrer.findAll({
@@ -1675,31 +1667,19 @@ export const getEventReferrers = async (req: AuthRequest, res: Response) => {
 
 export const createEventReferrer = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { event_id, name, referral_code, slug } = req.body;
 
     if (!event_id || !name || !referral_code || !slug) {
-      return res.status(400).json({ 
-        error: 'Event ID, name, referral code, and slug are required' 
+      return res.status(400).json({
+        error: 'Event ID, name, referral code, and slug are required'
       });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    const eventIdNum = parseId(event_id);
+    if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Check for duplicate referral codes
     const existingReferrer = await EventReferrer.findOne({
@@ -1768,16 +1748,8 @@ export const createEventReferrer = async (req: AuthRequest, res: Response) => {
 
 export const updateEventReferrer = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { id } = req.params;
-    const referrerId = parseInt(id as string, 10);
-
-    if (isNaN(referrerId)) {
-      return res.status(400).json({ error: 'Invalid referrer ID' });
-    }
+    const referrerId = parseId(req.params.id);
+    if (isNaN(referrerId)) return res.status(400).json({ error: 'Invalid referrer ID' });
 
     const { name, referral_code } = req.body;
 
@@ -1800,6 +1772,8 @@ export const updateEventReferrer = async (req: AuthRequest, res: Response) => {
     if (!referrer) {
       return res.status(404).json({ error: 'Referrer not found' });
     }
+
+    if (!await requireManagerAccess(req, res, referrer.event_id)) return;
 
     // Check for duplicate referral codes (excluding current referrer)
     const existingReferrer = await EventReferrer.findOne({
@@ -1836,16 +1810,8 @@ export const updateEventReferrer = async (req: AuthRequest, res: Response) => {
 
 export const deleteEventReferrer = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { id } = req.params;
-    const referrerId = parseInt(id as string, 10);
-
-    if (isNaN(referrerId)) {
-      return res.status(400).json({ error: 'Invalid referrer ID' });
-    }
+    const referrerId = parseId(req.params.id);
+    if (isNaN(referrerId)) return res.status(400).json({ error: 'Invalid referrer ID' });
 
     // Find the referrer and verify access
     const referrer = await EventReferrer.findOne({
@@ -1860,6 +1826,8 @@ export const deleteEventReferrer = async (req: AuthRequest, res: Response) => {
     if (!referrer) {
       return res.status(404).json({ error: 'Referrer not found' });
     }
+
+    if (!await requireManagerAccess(req, res, referrer.event_id)) return;
 
     // Check if there are any tickets associated with this referrer
     const ticketCount = await Ticket.count({
@@ -1886,32 +1854,8 @@ export const deleteEventReferrer = async (req: AuthRequest, res: Response) => {
 
 export const cancelTicket = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { ticket_id, ticket_ids } = req.body;
-
-    // Handle both single ticket_id and array of ticket_ids
-    let ticketIds: number[];
-    if (ticket_ids) {
-      // Array format (bulk operations)
-      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
-        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
-      }
-      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
-      if (ticketIds.length !== ticket_ids.length) {
-        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
-      }
-    } else if (ticket_id) {
-      // Single ticket format (backward compatibility)
-      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
-        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
-      }
-      ticketIds = [ticket_id];
-    } else {
-      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
-    }
+    const ticketIds = parseTicketIds(req.body, res);
+    if (!ticketIds) return;
 
     // Find tickets that belong to user's brand and are not already canceled
     const tickets = await Ticket.findAll({
@@ -1931,6 +1875,12 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
 
     if (tickets.length === 0) {
       return res.status(404).json({ error: 'No eligible tickets found for cancellation (tickets may already be canceled or not found)' });
+    }
+
+    if (!req.user.is_admin) {
+      for (const eid of [...new Set(tickets.map((t: any) => t.event_id))]) {
+        if (!await requireManagerAccess(req, res, eid)) return;
+      }
     }
 
     // Update all tickets to 'Canceled' status
@@ -2016,32 +1966,9 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
 
 export const refundTicket = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { ticket_id, ticket_ids, reason } = req.body;
-
-    // Handle both single ticket_id and array of ticket_ids
-    let ticketIds: number[];
-    if (ticket_ids) {
-      // Array format (bulk operations)
-      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
-        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
-      }
-      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
-      if (ticketIds.length !== ticket_ids.length) {
-        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
-      }
-    } else if (ticket_id) {
-      // Single ticket format (backward compatibility)
-      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
-        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
-      }
-      ticketIds = [ticket_id];
-    } else {
-      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
-    }
+    const { reason } = req.body;
+    const ticketIds = parseTicketIds(req.body, res);
+    if (!ticketIds) return;
 
     // Find tickets that belong to user's brand and are eligible for refund
     const tickets = await Ticket.findAll({
@@ -2064,6 +1991,12 @@ export const refundTicket = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         error: 'No eligible tickets found for refund (tickets must be paid, not sent, and not claimed)'
       });
+    }
+
+    if (!req.user.is_admin) {
+      for (const eid of [...new Set(tickets.map((t: any) => t.event_id))]) {
+        if (!await requireManagerAccess(req, res, eid)) return;
+      }
     }
 
     // Process refunds through Paymongo
@@ -2120,32 +2053,8 @@ export const refundTicket = async (req: AuthRequest, res: Response) => {
 
 export const resendTicket = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { ticket_id, ticket_ids } = req.body;
-
-    // Handle both single ticket_id and array of ticket_ids
-    let ticketIds: number[];
-    if (ticket_ids) {
-      // Array format (bulk operations)
-      if (!Array.isArray(ticket_ids) || ticket_ids.length === 0) {
-        return res.status(400).json({ error: 'Ticket IDs must be a non-empty array' });
-      }
-      ticketIds = ticket_ids.filter(id => Number.isInteger(id) && id > 0);
-      if (ticketIds.length !== ticket_ids.length) {
-        return res.status(400).json({ error: 'All ticket IDs must be valid positive integers' });
-      }
-    } else if (ticket_id) {
-      // Single ticket format (backward compatibility)
-      if (!Number.isInteger(ticket_id) || ticket_id <= 0) {
-        return res.status(400).json({ error: 'Ticket ID must be a valid positive integer' });
-      }
-      ticketIds = [ticket_id];
-    } else {
-      return res.status(400).json({ error: 'Either ticket_id or ticket_ids is required' });
-    }
+    const ticketIds = parseTicketIds(req.body, res);
+    if (!ticketIds) return;
 
     // Find tickets that belong to user's brand and can be resent (Payment Confirmed or Ticket sent status)
     const tickets = await Ticket.findAll({
@@ -2170,6 +2079,12 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
 
     if (tickets.length === 0) {
       return res.status(404).json({ error: 'No eligible tickets found for resending (only Payment Confirmed and Ticket sent tickets can be resent)' });
+    }
+
+    if (!req.user.is_admin) {
+      for (const eid of [...new Set(tickets.map((t: any) => t.event_id))]) {
+        if (!await requireManagerAccess(req, res, eid)) return;
+      }
     }
 
     let successCount = 0;
@@ -2253,34 +2168,19 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
 
 export const cancelAllUnpaidTickets = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { event_id } = req.body;
 
     if (!event_id) {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    const eventIdNum = parseId(event_id);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventIdNum) || eventIdNum <= 0) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      },
-      include: [{ model: Brand, as: 'brand' }]
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id, [{ model: Brand, as: 'brand' }]);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Find all unpaid tickets for this event
     const unpaidTickets = await Ticket.findAll({
@@ -2321,33 +2221,19 @@ export const cancelAllUnpaidTickets = async (req: AuthRequest, res: Response) =>
 
 export const verifyAllPayments = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { event_id } = req.body;
 
     if (!event_id) {
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    const eventIdNum = parseId(event_id);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventIdNum) || eventIdNum <= 0) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Find all tickets with payment links (similar to PHP logic)
     const ticketsToVerify = await Ticket.findAll({
@@ -2573,10 +2459,6 @@ const sendEventEmailShared = async (
 
 export const sendEventEmail = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { event_id, subject, message, include_banner = true } = req.body;
 
     if (!event_id || !subject || !message) {
@@ -2593,29 +2475,18 @@ export const sendEventEmail = async (req: AuthRequest, res: Response) => {
     }
 
     if (message.length > 10 * 1024 * 1024) { // 10MB limit for message content
-      return res.status(400).json({ 
-        error: 'Message content too large (maximum 10MB)' 
+      return res.status(400).json({
+        error: 'Message content too large (maximum 10MB)'
       });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    const eventIdNum = parseId(event_id);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventIdNum) || eventIdNum <= 0) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      },
-      include: [{ model: Brand, as: 'brand' }]
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id, [{ model: Brand, as: 'brand' }]);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get all confirmed ticket holders (Payment Confirmed or Ticket sent)
     const tickets = await Ticket.findAll({
@@ -2663,10 +2534,6 @@ export const sendEventEmail = async (req: AuthRequest, res: Response) => {
 
 export const sendTestEventEmail = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
     const { event_id, subject, message, emails, include_banner = true } = req.body;
 
     if (!event_id || !subject || !message || !emails) {
@@ -2704,29 +2571,18 @@ export const sendTestEventEmail = async (req: AuthRequest, res: Response) => {
     }
 
     if (emails.length > 10) { // Limit test emails to 10 recipients
-      return res.status(400).json({ 
-        error: 'Too many test recipients (maximum 10 allowed)' 
+      return res.status(400).json({
+        error: 'Too many test recipients (maximum 10 allowed)'
       });
     }
 
-    const eventIdNum = parseInt(event_id, 10);
+    const eventIdNum = parseId(event_id);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventIdNum) || eventIdNum <= 0) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      },
-      include: [{ model: Brand, as: 'brand' }]
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id, [{ model: Brand, as: 'brand' }]);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Use shared email sending function
     const { successCount, failedCount } = await sendEventEmailShared(
@@ -2760,23 +2616,11 @@ export const getEventTicketHoldersCount = async (req: AuthRequest, res: Response
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    const eventIdNum = parseInt(event_id as string, 10);
+    const eventIdNum = parseId(event_id);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventIdNum) || eventIdNum <= 0) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
-
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get confirmed ticket holders count
     const tickets = await Ticket.findAll({
@@ -2809,23 +2653,11 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    const eventIdNum = parseInt(event_id as string, 10);
+    const eventIdNum = parseId(event_id);
+    if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventIdNum) || eventIdNum <= 0) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
-
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get ALL tickets for this event to calculate summary statistics
     const allTickets = await Ticket.findAll({
@@ -2931,23 +2763,11 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
 
 export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => {
   try {
-    const eventIdNum = parseInt(req.query.event_id as string, 10);
-    
-    if (isNaN(eventIdNum)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const eventIdNum = parseId(req.query.event_id);
+    if (isNaN(eventIdNum)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    // Verify event exists and belongs to user's brand
-    const event = await Event.findOne({
-      where: {
-        id: eventIdNum,
-        brand_id: req.user.brand_id
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get ALL confirmed tickets for this event (no pagination, no filters)
     const tickets = await Ticket.findAll({
@@ -3004,23 +2824,11 @@ export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => 
 
 export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Response) => {
   try {
-    const eventIdNum = parseInt(req.query.event_id as string, 10);
-    
-    if (isNaN(eventIdNum)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const eventIdNum = parseId(req.query.event_id);
+    if (isNaN(eventIdNum)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    // Verify event exists and belongs to user's brand
-    const event = await Event.findOne({
-      where: {
-        id: eventIdNum,
-        brand_id: req.user.brand_id
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get ALL pending tickets for this event (no pagination, no filters)
     const tickets = await Ticket.findAll({
@@ -3078,28 +2886,14 @@ export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Respon
 
 export const publishEvent = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { id } = req.params;
     const { slug } = req.body;
-    const eventId = parseInt(id as string, 10);
-    
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await Event.findOne({
-      where: { 
-        id: eventId,
-        brand_id: req.user.brand_id 
-      }
-    });
+    const event = await findEventForBrand(eventId, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    if (!await requireManagerAccess(req, res, eventId)) return;
 
     if (event.status === 'published') {
       return res.status(400).json({ error: 'Event is already published' });
@@ -3156,27 +2950,13 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
 
 export const unpublishEvent = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
-    
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const event = await findEventForBrand(eventId, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const event = await Event.findOne({
-      where: { 
-        id: eventId,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    if (!await requireManagerAccess(req, res, eventId)) return;
 
     if (event.status === 'draft') {
       return res.status(400).json({ error: 'Event is already a draft' });
@@ -3252,30 +3032,13 @@ const shouldShowCountdown = (event: any): boolean => {
 // Admin-only preview of an event in the public ticket-buy shape (no status filter)
 export const getEventPreview = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
-
-    const event = await Event.findOne({
-      where: {
-        id: eventId,
-        brand_id: req.user.brand_id
-      },
-      include: [
-        {
-          model: Brand,
-          as: 'brand',
-          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
-        }
-      ]
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const event = await findEventForBrand(eventId, req.user.brand_id, [
+      { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] }
+    ]);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get enabled ticket types with availability info
     const ticketTypes = await TicketType.findAll({
@@ -3391,12 +3154,8 @@ export const getEventPreview = async (req: AuthRequest, res: Response) => {
 
 export const updateEventMemberDiscount = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
-
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
     const { member_discount_type, member_discount_amount } = req.body;
 
@@ -3441,29 +3200,15 @@ export const updateEventMemberDiscount = async (req: AuthRequest, res: Response)
 
 export const cancelEvent = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user.is_admin) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const { id } = req.params;
-    const eventId = parseInt(id as string, 10);
-
-    if (isNaN(eventId)) {
-      return res.status(400).json({ error: 'Invalid event ID' });
-    }
+    const eventId = parseId(req.params.id);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
     const { refund_tickets = false, notify_ticket_holders = false, custom_message } = req.body;
 
-    const event = await Event.findOne({
-      where: {
-        id: eventId,
-        brand_id: req.user.brand_id
-      }
-    });
+    const event = await findEventForBrand(eventId, req.user.brand_id);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    if (!await requireManagerAccess(req, res, eventId)) return;
 
     if (event.status === 'canceled') {
       return res.status(400).json({ error: 'Event is already canceled' });
