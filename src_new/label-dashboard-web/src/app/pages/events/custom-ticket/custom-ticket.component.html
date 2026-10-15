@@ -651,10 +651,10 @@
       </app-floating-action-bar>
     </div>
 
-    <!-- Non-Admin Access Denied -->
-    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="!isAdmin && !loading">
+    <!-- Non-Manager Access Denied -->
+    <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="!isManager && !loading">
       <app-icon name="lock" class="tw-mr-2" />
-      <strong>Access Denied:</strong> You don't have permission to create custom tickets. Only administrators can create custom tickets.
+      <strong>Access Denied:</strong> You don't have permission to create custom tickets. Manager access is required.
     </div>
   </div>
 

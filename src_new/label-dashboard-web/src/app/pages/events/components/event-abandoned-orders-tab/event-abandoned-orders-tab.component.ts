@@ -72,59 +72,67 @@ export class EventAbandonedOrdersTabComponent implements OnInit, OnChanges, OnDe
         handler: () => this.onDownloadCSV(),
         disabled: () => this.loading,
       },
-      {
-        icon: 'check',
-        label: 'Verify Payments',
-        handler: () => this.onVerifyPayments(),
-        disabled: () => this.loading || this.isEventPast(),
-      },
-      {
-        icon: 'bullhorn',
-        label: 'Send Reminders',
-        handler: () => this.onSendPaymentReminders(),
-        disabled: () => this.loading || this.isEventPast(),
-      },
-      {
-        icon: 'x',
-        label: 'Cancel All Unpaid',
-        handler: () => this.onCancelAllUnpaid(),
-        disabled: () => this.loading || this.isEventPast(),
-      },
     ];
     if (this.isAdmin) {
-      actions.unshift({
-        icon: 'plus',
-        label: 'Custom Ticket',
-        handler: () => this.onCreateCustomTicket(),
-        disabled: () => this.loading || !this.canCreateCustomTickets(),
-        title: () => this.getCustomTicketButtonTooltip(),
-      });
+      actions.push(
+        {
+          icon: 'check',
+          label: 'Verify Payments',
+          handler: () => this.onVerifyPayments(),
+          disabled: () => this.loading || this.isEventPast(),
+        },
+        {
+          icon: 'bullhorn',
+          label: 'Send Reminders',
+          handler: () => this.onSendPaymentReminders(),
+          disabled: () => this.loading || this.isEventPast(),
+        },
+        {
+          icon: 'x',
+          label: 'Cancel All Unpaid',
+          handler: () => this.onCancelAllUnpaid(),
+          disabled: () => this.loading || this.isEventPast(),
+        },
+        {
+          icon: 'plus',
+          label: 'Custom Ticket',
+          handler: () => this.onCreateCustomTicket(),
+          disabled: () => this.loading || !this.canCreateCustomTickets(),
+          title: () => this.getCustomTicketButtonTooltip(),
+        }
+      );
     }
     return actions;
   }
 
-  orderActions: TableAction[] = [
-    {
-      icon: 'paper-plane',
-      label: 'Send Ticket',
-      hidden: (item) => item.status !== 'Payment Confirmed' || this.isEventPast(),
-      handler: (item) => this.onSendTicket(item.id)
-    },
-    {
-      icon: 'check',
-      label: 'Mark Paid',
-      type: 'primary',
-      hidden: (item) => item.status !== 'New' || this.isEventPast(),
-      handler: (item) => this.onMarkAsPaid(item.id)
-    },
-    {
-      icon: 'ban',
-      label: 'Cancel',
-      type: 'danger',
-      hidden: (item) => item.status !== 'New' || this.isEventPast(),
-      handler: (item) => this.onCancelOrder(item.id)
+  get orderActions(): TableAction[] {
+    const actions: TableAction[] = [];
+    if (this.isAdmin) {
+      actions.push(
+        {
+          icon: 'paper-plane',
+          label: 'Send Ticket',
+          hidden: (item) => item.status !== 'Payment Confirmed' || this.isEventPast(),
+          handler: (item) => this.onSendTicket(item.id)
+        },
+        {
+          icon: 'check',
+          label: 'Mark Paid',
+          type: 'primary',
+          hidden: (item) => item.status !== 'New' || this.isEventPast(),
+          handler: (item) => this.onMarkAsPaid(item.id)
+        },
+        {
+          icon: 'ban',
+          label: 'Cancel',
+          type: 'danger',
+          hidden: (item) => item.status !== 'New' || this.isEventPast(),
+          handler: (item) => this.onCancelOrder(item.id)
+        }
+      );
     }
-  ];
+    return actions;
+  }
 
   private subscriptions = new Subscription();
   selectedOrders: AbandonedOrder[] = [];

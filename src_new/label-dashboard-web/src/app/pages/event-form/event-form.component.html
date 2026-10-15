@@ -9,7 +9,7 @@
           [events]="availableEvents"
           [selectedEvent]="event"
           [loading]="loading"
-          [isAdmin]="isAdmin"
+          [isAdmin]="isManager"
           (eventSelected)="onEventSelection($event)">
         </app-event-selection>
       </div>
@@ -379,7 +379,7 @@
             <ng-container *ngIf="eventData.ticketing_enabled">
               <app-ticket-types
                 [(ticketTypes)]="ticketTypes"
-                [isAdmin]="isAdmin"
+                [isAdmin]="isManager"
                 (ticketTypesChange)="onTicketTypesChanged()">
               </app-ticket-types>
 
@@ -543,7 +543,7 @@
           <div class="form-section" *ngIf="activeSection === 'walk-in'">
             <app-event-walk-in-settings
               [eventData]="eventData"
-              [isAdmin]="isAdmin"
+              [isAdmin]="isManager"
               [(walkInTypes)]="walkInTypes">
             </app-event-walk-in-settings>
             <div class="tw-mt-4 tw-text-right">
@@ -620,7 +620,7 @@
 
           <!-- Listing Section -->
           <div class="form-section" [hidden]="activeSection !== 'listing'">
-            <app-event-listing-tab [selectedEvent]="event" [isAdmin]="isAdmin" (eventUpdated)="event = $event"></app-event-listing-tab>
+            <app-event-listing-tab [selectedEvent]="event" [isAdmin]="isManager" (eventUpdated)="event = $event"></app-event-listing-tab>
             <div class="tw-mt-4 tw-text-right" *ngIf="!isEventDraft()">
               <button type="button" class="btn-ghost" (click)="goToNextTab()">
                 Next: Scanner <app-icon name="arrow-right" class="tw-ml-1" />

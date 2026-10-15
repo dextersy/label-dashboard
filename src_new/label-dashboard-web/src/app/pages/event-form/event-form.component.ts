@@ -82,6 +82,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   saving = false;
   isNewEvent = false;
   isAdmin = false;
+  get isManager(): boolean {
+    if (this.isAdmin) return true;
+    const eventId = this.event?.id;
+    if (!eventId) return false;
+    return this.authService.getEventRole(eventId) === 'manager';
+  }
   pinRefreshed = false;
   showScannerQRModal = false;
   scannerQRDataUrl: string | null = null;

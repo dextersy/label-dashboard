@@ -1,6 +1,12 @@
 <div class="event-email-tab">
 
-  <div *ngIf="selectedEvent" class="email-layout">
+  <div *ngIf="selectedEvent && !isAdmin" class="tw-py-5 tw-text-center">
+    <app-icon name="lock" class="fa-4x tw-mb-3 tw-text-muted" iconOnly />
+    <h5 class="tw-text-muted">Access Restricted</h5>
+    <p class="tw-text-muted">You do not have permission to send emails.</p>
+  </div>
+
+  <div *ngIf="selectedEvent && isAdmin" class="email-layout">
 
     <!-- Left column -->
     <div class="email-layout__main">
@@ -137,7 +143,7 @@
 </div>
 
 <!-- Floating Action Bar -->
-<app-floating-action-bar *ngIf="selectedEvent" variant="strip">
+<app-floating-action-bar *ngIf="selectedEvent && isAdmin" variant="strip">
   <span floatingStart class="tw-text-muted">
     <small><app-icon name="clock" class="tw-mr-1" />Emails will be sent one by one to preserve deliverability</small>
   </span>

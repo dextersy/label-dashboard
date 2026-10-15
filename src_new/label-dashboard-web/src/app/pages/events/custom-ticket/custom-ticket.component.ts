@@ -48,6 +48,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
   selectedEvent: Event | null = null;
   ticketTypes: any[] = [];
   isAdmin = false;
+  isManager = false;
   loading = false;
   submitting = false;
   returnRoute = '/campaigns/events/abandoned'; // Default to pending orders
@@ -87,10 +88,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
-        if (!this.isAdmin) {
-          this.router.navigate(['/campaigns/events']);
-          return;
-        }
+        this.updateManagerAccess();
       })
     );
 
@@ -98,6 +96,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.eventService.selectedEvent$.subscribe(event => {
         if (event) {
+          this.updateManagerAccess(event.id);
           // Always reload fresh data to ensure we have latest event information
           this.loadEventById(event.id);
         } else {
@@ -124,6 +123,18 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+  }
+
+  private updateManagerAccess(eventId?: number): void {
+    const eid = eventId ?? this.selectedEvent?.id;
+    if (this.isAdmin) {
+      this.isManager = true;
+    } else if (eid) {
+      this.isManager = this.authService.getEventRole(eid) === 'manager';
+    }
+    if (!this.isManager && eid) {
+      this.router.navigate(['/campaigns/events']);
+    }
   }
 
   private loadEventById(eventId: number): void {
@@ -283,7 +294,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Failed to create custom ticket:', error);
-          this.notificationService.showError('Failed to create custom ticket');
+          this.notificationService.showError(error?.message || 'Failed to create custom ticket');
           this.submitting = false;
         }
       })
@@ -371,7 +382,7 @@ export class CustomTicketComponent implements OnInit, OnDestroy {
   }
 
   canCreateCustomTickets(): boolean {
-    return this.isAdmin && !this.isEventPast(); // Admins can create custom tickets unless event is past
+    return this.isManager && !this.isEventPast();
   }
 
   private updateBreadcrumbs(): void {
