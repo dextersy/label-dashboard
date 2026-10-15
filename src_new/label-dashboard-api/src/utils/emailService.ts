@@ -269,6 +269,9 @@ export const sendBrandedEmail = async (
         ? `Your wristband order is confirmed! 🎉 — ${templateData.EVENT_TITLE}`
         : `Update on your wristband order — ${templateData.EVENT_TITLE}`;
       break;
+    case 'event_invite_email':
+      subject = `You've been invited to manage ${templateData.event_title} as a ${templateData.role_label}`;
+      break;
     case 'addon_payment_receipt':
       subject = `We've got your payment for ${templateData.EVENT_TITLE} add-ons!`;
       break;

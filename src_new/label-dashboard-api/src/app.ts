@@ -169,6 +169,7 @@ const startServer = async () => {
       { name: 'deliveryAddresses', path: './routes/deliveryAddresses' },
       { name: 'subscription', path: './routes/subscription' },
       { name: 'releaseTaskTemplates', path: './routes/releaseTaskTemplates' },
+      { name: 'eventAccess', path: './routes/eventAccess' },
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -227,6 +228,7 @@ const startServer = async () => {
     const deliveryAddressRoutes = routes.deliveryAddresses;
     const subscriptionRoutes = routes.subscription;
     const releaseTaskTemplateRoutes = routes.releaseTaskTemplates;
+    const eventAccessRoutes = routes.eventAccess;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -250,6 +252,7 @@ const startServer = async () => {
     app.use('/api/delivery-addresses', deliveryAddressRoutes);
     app.use('/api/subscription', subscriptionRoutes);
     app.use('/api/release-task-templates', releaseTaskTemplateRoutes);
+    app.use('/api/event-access', eventAccessRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);

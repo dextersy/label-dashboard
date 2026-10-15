@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, AudienceUser } from '../models';
+import { User, AudienceUser, EventAccess } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -75,6 +75,29 @@ export const authenticateAudienceToken = async (req: AuthRequest, res: Response,
   } catch (error) {
     return res.status(403).json({ error: 'Invalid token' });
   }
+};
+
+export const requireEventAccess = (minRole: 'viewer' | 'manager') => {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+
+    // Admins always have full access
+    if (req.user.is_admin) return next();
+
+    const eventId = parseInt(req.params.id as string, 10);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const access = await EventAccess.findOne({
+      where: { event_id: eventId, user_id: req.user.id, status: 'Accepted' },
+    });
+
+    if (!access) return res.status(403).json({ error: 'No access to this event' });
+    if (minRole === 'manager' && access.role !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
+    }
+
+    next();
+  };
 };
 
 export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {

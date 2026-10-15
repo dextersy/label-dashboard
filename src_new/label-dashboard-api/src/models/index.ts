@@ -59,6 +59,7 @@ import ReleaseTaskTemplateItem from './ReleaseTaskTemplateItem';
 import BrandHiddenTemplate from './BrandHiddenTemplate';
 import AudiencePointTransaction from './AudiencePointTransaction';
 import AudienceEmailPreference from './AudienceEmailPreference';
+import EventAccess from './EventAccess';
 
 // Define relationships
 // Brand relationships
@@ -256,6 +257,12 @@ ArtistDocument.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 ArtistAccess.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 ArtistAccess.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+// EventAccess relationships
+EventAccess.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+EventAccess.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+Event.hasMany(EventAccess, { foreignKey: 'event_id', as: 'collaborators' });
+User.hasMany(EventAccess, { foreignKey: 'user_id', as: 'eventAccess' });
+
 // Domain relationships
 Domain.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 
@@ -440,6 +447,7 @@ export {
   BrandHiddenTemplate,
   AudiencePointTransaction,
   AudienceEmailPreference,
+  EventAccess,
 };
 
 // Initialize database connection
