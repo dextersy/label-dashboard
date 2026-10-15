@@ -48,8 +48,10 @@ import { PlanManagementComponent } from './pages/labels/plan-management/plan-man
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
+import { campaignsAccessGuard } from './guards/campaigns-access.guard';
 import { EventAddOnsComponent } from './pages/events/event-add-ons/event-add-ons.component';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
+import { EventInviteComponent } from './pages/event-invite/event-invite.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -60,6 +62,7 @@ export const routes: Routes = [
   { path: 'google-callback', component: GoogleCallbackComponent }, // Google OAuth callback landing page
   { path: 'invite', component: InviteComponent }, // No auth guard - standalone
   { path: 'invite/accept', component: InviteComponent }, // Legacy route - alias for /invite
+  { path: 'event-invite', component: EventInviteComponent }, // No auth guard - standalone event invite flow
   { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone
   { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
   
@@ -131,7 +134,7 @@ export const routes: Routes = [
   // Campaigns workspace (Events + Fundraisers)
   {
     path: 'campaigns',
-    canActivate: [adminGuard],
+    canActivate: [campaignsAccessGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: EventsDashboardComponent },
@@ -146,6 +149,7 @@ export const routes: Routes = [
       { path: 'events/walk-in', redirectTo: 'events/tickets', pathMatch: 'full' },
       { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
       { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
+      { path: 'events/access', component: EventsComponent, data: { tab: 'access' }, canActivate: [adminGuard] },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
       { path: 'events/add-ons', component: EventAddOnsComponent },
       { path: 'events/wristband-order-review', component: WristbandOrderReviewComponent, canActivate: [adminGuard] },
@@ -167,6 +171,7 @@ export const routes: Routes = [
   { path: 'events/referrals', redirectTo: 'campaigns/events/referrals', pathMatch: 'full' },
   { path: 'events/email', redirectTo: 'campaigns/events/email', pathMatch: 'full' },
   { path: 'events/listing', redirectTo: 'campaigns/events/listing', pathMatch: 'full' },
+  { path: 'events/access', redirectTo: 'campaigns/events/access', pathMatch: 'full' },
   { path: 'events/custom-ticket', redirectTo: 'campaigns/events/custom-ticket', pathMatch: 'full' },
 
   {

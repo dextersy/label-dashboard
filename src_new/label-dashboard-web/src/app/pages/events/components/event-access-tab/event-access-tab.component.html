@@ -1,0 +1,95 @@
+<div class="event-access-tab">
+
+  <app-paginated-table
+    title="Team Members"
+    [data]="collaborators"
+    [pagination]="null"
+    [loading]="loading"
+    [columns]="tableColumns"
+    [showSearch]="false"
+    [showSortableHeaders]="true"
+    [showActionsColumn]="true"
+    [actions]="tableActions">
+
+    <ng-template #mobileRowTemplate let-c let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
+      <div class="member-card">
+        <div class="member-card__header">
+          <div class="member-card__avatar" [style.background-color]="getAvatarColor(c.name)">
+            {{ getInitials(c.name) }}
+          </div>
+          <div class="member-card__info">
+            <div class="member-card__name">{{ c.name }}</div>
+            <div class="member-card__email">{{ c.email }}</div>
+          </div>
+          <span [class]="getStatusClass(c.status)">{{ c.status }}</span>
+          <button *ngIf="visibleActions.length > 0"
+                  class="member-card__menu kebab-btn"
+                  type="button"
+                  (click)="toggleKebab($event)"
+                  [class.active]="isKebabOpen">
+            <app-icon name="more-vertical" iconOnly />
+          </button>
+        </div>
+        <div class="member-card__footer">
+          <app-icon name="calendar" /> Invited {{ formatDate(c.createdAt) }}
+        </div>
+      </div>
+    </ng-template>
+
+  </app-paginated-table>
+
+  <!-- Invite form -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mt-4 md:tw-max-w-lg">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Invite a Team Member</h3>
+    </div>
+    <div class="tw-px-card-pad tw-pb-card-pad">
+      <div class="tw-mb-3">
+        <label class="tw-label">Email Address</label>
+        <input
+          type="email"
+          class="tw-input"
+          [(ngModel)]="inviteEmail"
+          placeholder="Enter team member's email address"
+          [disabled]="sendingInvite" />
+      </div>
+      <div class="tw-mb-3">
+        <label class="tw-label">Role</label>
+        <div class="sub-tab-toggle" role="group" aria-label="Role">
+          <button type="button"
+                  class="sub-tab-btn"
+                  [class.sub-tab-btn-active]="inviteRole === 'viewer'"
+                  (click)="inviteRole = 'viewer'"
+                  [disabled]="sendingInvite"
+                  [attr.aria-pressed]="inviteRole === 'viewer'">
+            <app-icon name="eye" />
+            <span>Viewer</span>
+          </button>
+          <button type="button"
+                  class="sub-tab-btn"
+                  [class.sub-tab-btn-active]="inviteRole === 'manager'"
+                  (click)="inviteRole = 'manager'"
+                  [disabled]="sendingInvite"
+                  [attr.aria-pressed]="inviteRole === 'manager'">
+            <app-icon name="edit" />
+            <span>Manager</span>
+          </button>
+        </div>
+        <p class="tw-text-xs tw-text-gray-500 tw-mt-1 tw-mb-0">
+          <ng-container *ngIf="inviteRole === 'viewer'">Can view tickets and attendee data only</ng-container>
+          <ng-container *ngIf="inviteRole === 'manager'">Can view and edit everything except team management</ng-container>
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn-sm btn-primary"
+        (click)="sendInvite()"
+        [disabled]="sendingInvite || !inviteEmail.trim()">
+        <div class="loading-spinner" *ngIf="sendingInvite"></div>
+        <app-icon name="paper-plane" *ngIf="!sendingInvite" />
+        {{ sendingInvite ? 'Sending...' : 'Send Invite' }}
+      </button>
+    </div>
+  </div>
+
+</div>

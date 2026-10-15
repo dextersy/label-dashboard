@@ -14,11 +14,12 @@ import { EventAbandonedOrdersTabComponent } from './components/event-abandoned-o
 import { EventReferralsTabComponent } from './components/event-referrals-tab/event-referrals-tab.component';
 import { EventEmailTabComponent } from './components/event-email-tab/event-email-tab.component';
 import { EventListingTabComponent } from './components/event-listing-tab/event-listing-tab.component';
+import { EventAccessTabComponent } from './components/event-access-tab/event-access-tab.component';
 import { EventSelectionComponent } from './components/event-selection/event-selection.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 
-export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email' | 'listing';
+export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email' | 'listing' | 'access';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -40,6 +41,7 @@ export type EventSelection = Event;
         EventReferralsTabComponent,
         EventEmailTabComponent,
         EventListingTabComponent,
+        EventAccessTabComponent,
         EventSelectionComponent,
         BreadcrumbComponent
 , IconComponent],
@@ -50,6 +52,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   selectedEvent: EventSelection | null = null;
   activeTab: EventsTabType = 'tickets';
   isAdmin = false;
+  isManager = false; // true for admins OR event collaborators with manager role
   loading = false;
   retryCount = 0;
   maxRetries = 3;
@@ -66,8 +69,9 @@ export class EventsComponent implements OnInit, OnDestroy {
     { id: 'tickets' as EventsTabType, label: 'Tickets & Walk-Ins', icon: 'ticket' },
     { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'cart' },
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'user-plus' },
-    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope', adminOnly: true },
-    { id: 'listing' as EventsTabType, label: 'Listing', icon: 'globe', adminOnly: true }
+    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope' },
+    { id: 'listing' as EventsTabType, label: 'Listing', icon: 'globe' },
+    { id: 'access' as EventsTabType, label: 'Team Members', icon: 'users', adminOnly: true }
   ];
 
   constructor(
@@ -81,6 +85,20 @@ export class EventsComponent implements OnInit, OnDestroy {
   /**
    * Check if event is in the past (has already occurred)
    */
+  private updateIsManager(): void {
+    if (this.isAdmin) {
+      this.isManager = true;
+      console.log('[updateIsManager] isAdmin=true → isManager=true');
+      return;
+    }
+    const user = this.authService.currentUserValue;
+    const eventId = this.selectedEvent?.id ?? null;
+    const role = eventId ? this.authService.getEventRole(eventId) : null;
+    this.isManager = role === 'manager';
+    console.log('[updateIsManager] isAdmin=false eventId=%s role=%s isManager=%s event_access=%j',
+      eventId, role, this.isManager, user?.event_access);
+  }
+
   isEventPast(event: EventSelection | null): boolean {
     if (!event) return false;
     const eventDate = new Date(event.date_and_time);
@@ -89,10 +107,15 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Refresh auth data once on page load so event roles reflect any admin changes
+    // made since the user's last login (e.g. role downgrade from manager to viewer).
+    this.authService.refreshUserData().subscribe({ error: () => {} });
+
     // Subscribe to auth state
     this.subscriptions.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
+        this.updateIsManager();
       })
     );
 
@@ -101,6 +124,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.selectedEvent$.subscribe(event => {
         if (event && event !== this.selectedEvent) {
           this.selectedEvent = event;
+          this.updateIsManager();
         }
       })
     );
@@ -149,6 +173,7 @@ export class EventsComponent implements OnInit, OnDestroy {
           if (eventToSelect) {
             this.selectedEvent = eventToSelect;
             this.eventService.setSelectedEvent(eventToSelect);
+            this.updateIsManager();
           }
           
           this.loading = false;
@@ -233,6 +258,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   onEventSelection(event: EventSelection): void {
     this.selectedEvent = event;
     this.eventService.setSelectedEvent(event);
+    this.updateIsManager();
     // Auto-refresh data when event selection changes
     this.refreshCurrentTabData();
   }

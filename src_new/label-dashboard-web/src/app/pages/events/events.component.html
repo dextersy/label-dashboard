@@ -10,7 +10,7 @@
             [events]="availableEvents"
             [selectedEvent]="selectedEvent"
             [loading]="loading"
-            [isAdmin]="isAdmin"
+            [isAdmin]="isManager"
             (eventSelected)="onEventSelection($event)">
           </app-event-selection>
         </div>
@@ -31,7 +31,7 @@
         <div *ngIf="activeTab === 'tickets'">
           <app-event-tickets-tab
             [selectedEvent]="selectedEvent"
-            [isAdmin]="isAdmin"
+            [isAdmin]="isManager"
             (alertMessage)="onAlertMessage($event)">
           </app-event-tickets-tab>
         </div>
@@ -40,7 +40,7 @@
         <div *ngIf="activeTab === 'abandoned'">
           <app-event-abandoned-orders-tab
             [selectedEvent]="selectedEvent"
-            [isAdmin]="isAdmin"
+            [isAdmin]="isManager"
             (alertMessage)="onAlertMessage($event)">
           </app-event-abandoned-orders-tab>
         </div>
@@ -49,7 +49,7 @@
         <div *ngIf="activeTab === 'referrals'">
           <app-event-referrals-tab
             [selectedEvent]="selectedEvent"
-            [isAdmin]="isAdmin"
+            [isAdmin]="isManager"
             (alertMessage)="onAlertMessage($event)">
           </app-event-referrals-tab>
         </div>
@@ -58,7 +58,7 @@
         <div *ngIf="activeTab === 'email'">
           <app-event-email-tab
             [selectedEvent]="selectedEvent"
-            [isAdmin]="isAdmin"
+            [isAdmin]="isManager"
             (alertMessage)="onAlertMessage($event)">
           </app-event-email-tab>
         </div>
@@ -67,12 +67,17 @@
         <div *ngIf="activeTab === 'listing'">
           <app-event-listing-tab
             [selectedEvent]="selectedEvent"
-            [isAdmin]="isAdmin"
+            [isAdmin]="isManager"
             (alertMessage)="onAlertMessage($event)"
             (eventUpdated)="onEventUpdated($event)">
           </app-event-listing-tab>
         </div>
-        
+
+        <!-- Access Tab (admin only) -->
+        <div *ngIf="activeTab === 'access' && isAdmin">
+          <app-event-access-tab [selectedEvent]="selectedEvent"></app-event-access-tab>
+        </div>
+
       </div>
     </div>
     
