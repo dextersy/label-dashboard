@@ -185,6 +185,7 @@ export interface Event {
   // Member discount
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
+  user_role?: 'owner' | 'manager' | 'viewer';
 }
 
 export interface EventTag {

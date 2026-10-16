@@ -1,0 +1,57 @@
+<div class="tw-min-h-screen tw-bg-gray-50 tw-flex tw-items-center tw-justify-center tw-px-4 tw-py-12">
+  <div class="tw-w-full tw-max-w-sm">
+
+    <!-- Brand header -->
+    <div class="tw-flex tw-flex-col tw-items-center tw-mb-8">
+      <div
+        class="tw-w-20 tw-h-20 tw-rounded-2xl tw-flex tw-items-center tw-justify-center tw-mb-4 tw-overflow-hidden tw-shadow-md"
+        [style.background-color]="brandColor">
+        <img [src]="brandLogo" [alt]="brandName" class="tw-max-w-full tw-max-h-full tw-object-contain tw-p-2">
+      </div>
+      <h1 class="tw-text-xl tw-font-bold tw-text-gray-900">{{ ownerBrandName || brandName }}</h1>
+    </div>
+
+    <div class="tw-bg-white tw-rounded-2xl tw-shadow-lg tw-p-8 tw-text-center">
+
+      <!-- Loading -->
+      <div *ngIf="state === 'loading'" class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+        <svg class="tw-animate-spin tw-h-10 tw-w-10 tw-text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="tw-opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="tw-opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <p class="tw-text-sm tw-text-gray-500">Processing your invitation&hellip;</p>
+      </div>
+
+      <!-- Success -->
+      <div *ngIf="state === 'success'" class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+        <div class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-green-100 tw-flex tw-items-center tw-justify-center">
+          <app-icon name="check" class="tw-text-xl tw-text-green-600" />
+        </div>
+        <div>
+          <h2 class="tw-text-base tw-font-semibold tw-text-gray-900 tw-mb-1">Invitation Accepted!</h2>
+          <p class="tw-text-sm tw-text-gray-600">
+            You now have <strong>{{ role }}</strong> access to <strong>{{ eventTitle }}</strong>.
+          </p>
+          <p class="tw-text-xs tw-text-gray-400 tw-mt-2">Redirecting you to the event&hellip;</p>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="state === 'error'" class="tw-flex tw-flex-col tw-items-center tw-gap-4">
+        <div class="tw-w-14 tw-h-14 tw-rounded-full tw-bg-red-100 tw-flex tw-items-center tw-justify-center">
+          <app-icon name="warning" class="tw-text-xl tw-text-red-600" />
+        </div>
+        <div>
+          <h2 class="tw-text-base tw-font-semibold tw-text-gray-900 tw-mb-1">Invitation Error</h2>
+          <p class="tw-text-sm tw-text-gray-600">{{ errorMessage }}</p>
+        </div>
+        <a routerLink="/login"
+          class="tw-w-full tw-py-2.5 tw-px-4 tw-rounded-lg tw-text-white tw-font-semibold tw-text-sm tw-flex tw-items-center tw-justify-center"
+          [style.background-color]="brandColor">
+          Go to Login
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>

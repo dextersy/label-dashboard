@@ -1,9 +1,11 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { debounceTime, distinctUntilChanged, Subject, switchMap, of } from 'rxjs';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { PaginatedTableComponent, TableAction, TableColumn } from '../../../../components/shared/paginated-table/paginated-table.component';
+import { InPageNavComponent, InPageNavTab } from '../../../../components/shared/in-page-nav/in-page-nav.component';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { Event } from '../../../../services/event.service';
 import { environment } from '../../../../../environments/environment';
@@ -21,29 +23,101 @@ interface Collaborator {
   email: string;
 }
 
+interface BrandCollab {
+  event_id: number;
+  brand_id: number;
+  role: 'viewer' | 'manager';
+  status: 'Pending' | 'Accepted';
+  createdAt: string;
+  brand?: { id: number; brand_name: string; logo_url?: string; brand_color?: string } | null;
+  // flattened for table display
+  name: string;
+}
+
+interface BrandSearchResult {
+  id: number;
+  brand_name: string;
+  logo_url?: string;
+}
+
 @Component({
   selector: 'app-event-access-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent, InPageNavComponent],
   templateUrl: './event-access-tab.component.html',
   styleUrl: './event-access-tab.component.scss',
 })
 export class EventAccessTabComponent implements OnChanges {
   @Input() selectedEvent!: Event;
+  @Input() isAdmin: boolean = false;
 
+  // ── In-page nav ────────────────────────────────────────────────────────────
+  activeSubTab = 'collaborators';
+
+  readonly subTabs: InPageNavTab[] = [
+    { id: 'collaborators', label: 'Collaborators', icon: 'layers' },
+    { id: 'team-members', label: 'Team Members', icon: 'users' },
+  ];
+
+  get isOwner(): boolean {
+    return !this.selectedEvent?.user_role || this.selectedEvent.user_role === 'owner';
+  }
+
+  onSubTabChange(id: string): void {
+    this.activeSubTab = id;
+  }
+
+  // ── User collaborators ──────────────────────────────────────────────────────
   collaborators: Collaborator[] = [];
   loading = false;
   sendingInvite = false;
   inviteEmail = '';
   inviteRole: 'viewer' | 'manager' = 'viewer';
 
+  // ── Brand collaborators ─────────────────────────────────────────────────────
+  brandCollaborators: BrandCollab[] = [];
+  brandCollabLoading = false;
+  brandSearchQuery = '';
+  brandSearchResults: BrandSearchResult[] = [];
+  brandSearchLoading = false;
+  selectedBrand: BrandSearchResult | null = null;
+  brandInviteRole: 'viewer' | 'manager' = 'viewer';
+  sendingBrandInvite = false;
+  showBrandDropdown = false;
+  private brandSearch$ = new Subject<string>();
+
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private confirmationService: ConfirmationService) {}
+  constructor(private http: HttpClient, private confirmationService: ConfirmationService) {
+    this.brandSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => {
+        if (!q || q.length < 2 || !this.selectedEvent) {
+          this.brandSearchResults = [];
+          this.showBrandDropdown = false;
+          return of({ brands: [] });
+        }
+        this.brandSearchLoading = true;
+        return this.http.get<{ brands: BrandSearchResult[] }>(
+          `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/search-brands?q=${encodeURIComponent(q)}`,
+          { headers: this.getHeaders() }
+        );
+      })
+    ).subscribe({
+      next: (res) => {
+        this.brandSearchResults = res.brands;
+        this.showBrandDropdown = res.brands.length > 0;
+        this.brandSearchLoading = false;
+      },
+      error: () => { this.brandSearchLoading = false; },
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['selectedEvent'] && this.selectedEvent) {
       this.loadCollaborators();
+      this.loadBrandCollaborators();
     }
   }
 
@@ -51,6 +125,8 @@ export class EventAccessTabComponent implements OnChanges {
     const token = localStorage.getItem('auth_token') || '';
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
+
+  // ── User collaborators ──────────────────────────────────────────────────────
 
   loadCollaborators(): void {
     this.loading = true;
@@ -90,6 +166,88 @@ export class EventAccessTabComponent implements OnChanges {
     });
   }
 
+  removeCollaborator(c: Collaborator): void {
+    this.confirmationService.confirm({
+      title: 'Remove team member',
+      message: `Remove access for ${c.invite_email}?`,
+      confirmText: 'Remove',
+      type: 'danger',
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.http.delete<any>(
+        `${this.apiUrl}/event-access/${this.selectedEvent.id}/collaborators`,
+        { headers: this.getHeaders(), body: { user_id: c.user_id } }
+      ).subscribe({ next: () => this.loadCollaborators() });
+    });
+  }
+
+  // ── Brand collaborators ─────────────────────────────────────────────────────
+
+  loadBrandCollaborators(): void {
+    this.brandCollabLoading = true;
+    this.http.get<{ brandCollaborators: BrandCollab[] }>(
+      `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators`,
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: (res) => {
+        this.brandCollaborators = res.brandCollaborators.map(c => ({
+          ...c,
+          name: c.brand?.brand_name || `Brand #${c.brand_id}`,
+        }));
+        this.brandCollabLoading = false;
+      },
+      error: () => { this.brandCollabLoading = false; },
+    });
+  }
+
+  onBrandSearchInput(): void {
+    this.selectedBrand = null;
+    this.brandSearch$.next(this.brandSearchQuery);
+  }
+
+  selectBrand(brand: BrandSearchResult): void {
+    this.selectedBrand = brand;
+    this.brandSearchQuery = brand.brand_name;
+    this.showBrandDropdown = false;
+    this.brandSearchResults = [];
+  }
+
+  sendBrandInvite(): void {
+    if (!this.selectedBrand) return;
+    this.sendingBrandInvite = true;
+    this.http.post<any>(
+      `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators`,
+      { brand_id: this.selectedBrand.id, role: this.brandInviteRole },
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: () => {
+        this.selectedBrand = null;
+        this.brandSearchQuery = '';
+        this.brandInviteRole = 'viewer';
+        this.sendingBrandInvite = false;
+        this.loadBrandCollaborators();
+      },
+      error: () => { this.sendingBrandInvite = false; },
+    });
+  }
+
+  removeBrandCollaborator(c: BrandCollab): void {
+    this.confirmationService.confirm({
+      title: 'Remove brand collaborator',
+      message: `Remove ${c.name} from this event?`,
+      confirmText: 'Remove',
+      type: 'danger',
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.http.delete<any>(
+        `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators`,
+        { headers: this.getHeaders(), body: { brand_id: c.brand_id } }
+      ).subscribe({ next: () => this.loadBrandCollaborators() });
+    });
+  }
+
+  // ── Shared helpers ──────────────────────────────────────────────────────────
+
   formatDate(date: string): string {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -119,6 +277,8 @@ export class EventAccessTabComponent implements OnChanges {
     if (status === 'Invited' || status === 'Pending') return 'status-badge status-warning';
     return 'status-badge status-secondary';
   }
+
+  // ── Table configs ───────────────────────────────────────────────────────────
 
   get tableColumns(): TableColumn[] {
     return [
@@ -170,18 +330,4 @@ export class EventAccessTabComponent implements OnChanges {
     ];
   }
 
-  removeCollaborator(c: Collaborator): void {
-    this.confirmationService.confirm({
-      title: 'Remove team member',
-      message: `Remove access for ${c.invite_email}?`,
-      confirmText: 'Remove',
-      type: 'danger',
-    }).then(confirmed => {
-      if (!confirmed) return;
-      this.http.delete<any>(
-        `${this.apiUrl}/event-access/${this.selectedEvent.id}/collaborators`,
-        { headers: this.getHeaders(), body: { user_id: c.user_id } }
-      ).subscribe({ next: () => this.loadCollaborators() });
-    });
-  }
 }

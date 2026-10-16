@@ -48,6 +48,67 @@
   }
 }
 
+.brand-collab-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
+  padding: 14px 16px;
+
+  &__logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f3f4f6;
+  }
+
+  &__remove {
+    background: none;
+    border: none;
+    color: #d1d5db;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 6px;
+    flex-shrink: 0;
+    line-height: 1;
+    align-self: flex-start;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: #ef4444;
+      background: #fef2f2;
+    }
+  }
+
+  &--skeleton {
+    pointer-events: none;
+  }
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  @extend .skeleton-box;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .member-card {
   background: #fff;
   border-radius: 12px;

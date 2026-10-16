@@ -52,6 +52,7 @@ import { campaignsAccessGuard } from './guards/campaigns-access.guard';
 import { EventAddOnsComponent } from './pages/events/event-add-ons/event-add-ons.component';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
+import { EventBrandCollabInviteComponent } from './pages/event-brand-collab-invite/event-brand-collab-invite.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -63,6 +64,7 @@ export const routes: Routes = [
   { path: 'invite', component: InviteComponent }, // No auth guard - standalone
   { path: 'invite/accept', component: InviteComponent }, // Legacy route - alias for /invite
   { path: 'event-invite', component: EventInviteComponent }, // No auth guard - standalone event invite flow
+  { path: 'event-brand-collab-invite', component: EventBrandCollabInviteComponent }, // No auth guard - standalone brand collab invite flow
   { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone
   { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
   
@@ -149,7 +151,7 @@ export const routes: Routes = [
       { path: 'events/walk-in', redirectTo: 'events/tickets', pathMatch: 'full' },
       { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
       { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
-      { path: 'events/access', component: EventsComponent, data: { tab: 'access' }, canActivate: [adminGuard] },
+      { path: 'events/access', component: EventsComponent, data: { tab: 'access' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
       { path: 'events/add-ons', component: EventAddOnsComponent },
       { path: 'events/wristband-order-review', component: WristbandOrderReviewComponent, canActivate: [adminGuard] },
