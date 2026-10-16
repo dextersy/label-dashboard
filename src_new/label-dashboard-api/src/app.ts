@@ -170,6 +170,7 @@ const startServer = async () => {
       { name: 'subscription', path: './routes/subscription' },
       { name: 'releaseTaskTemplates', path: './routes/releaseTaskTemplates' },
       { name: 'eventAccess', path: './routes/eventAccess' },
+      { name: 'eventBrandCollab', path: './routes/eventBrandCollab' },
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -229,6 +230,7 @@ const startServer = async () => {
     const subscriptionRoutes = routes.subscription;
     const releaseTaskTemplateRoutes = routes.releaseTaskTemplates;
     const eventAccessRoutes = routes.eventAccess;
+    const eventBrandCollabRoutes = routes.eventBrandCollab;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -253,6 +255,7 @@ const startServer = async () => {
     app.use('/api/subscription', subscriptionRoutes);
     app.use('/api/release-task-templates', releaseTaskTemplateRoutes);
     app.use('/api/event-access', eventAccessRoutes);
+    app.use('/api/event-brand-collab', eventBrandCollabRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);
