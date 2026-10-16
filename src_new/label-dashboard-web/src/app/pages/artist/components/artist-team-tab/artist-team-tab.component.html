@@ -56,10 +56,10 @@
 
   <!-- Invite New Member Section -->
   <div *ngIf="!isReadOnly" class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 invite-section tw-mt-4 md:tw-max-w-lg">
-    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+    <div class="sm:tw-px-card-pad tw-pt-4 sm:tw-pt-card-pad tw-pb-3 sm:tw-pb-4">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Invite Team Member</h3>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
+    <div class="sm:tw-px-card-pad tw-pb-card-pad">
       <form (ngSubmit)="sendInvite()" #inviteForm="ngForm">
         <div class="tw-flex tw-flex-wrap md:tw-flex-nowrap tw-items-end tw-gap-2">
           <div class="tw-w-full md:tw-flex-1">

@@ -40,10 +40,10 @@
 
   <!-- Invite form -->
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 tw-mt-4 md:tw-max-w-lg">
-    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+    <div class="sm:tw-px-card-pad tw-pt-4 sm:tw-pt-card-pad tw-pb-3 sm:tw-pb-4">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Invite a Team Member</h3>
     </div>
-    <div class="tw-px-card-pad tw-pb-card-pad">
+    <div class="sm:tw-px-card-pad tw-pb-card-pad">
       <div class="tw-mb-3">
         <label class="tw-label">Email Address</label>
         <input
@@ -55,9 +55,9 @@
       </div>
       <div class="tw-mb-3">
         <label class="tw-label">Role</label>
-        <div class="sub-tab-toggle" role="group" aria-label="Role">
+        <div class="sub-tab-toggle tw-w-full" role="group" aria-label="Role">
           <button type="button"
-                  class="sub-tab-btn"
+                  class="sub-tab-btn tw-flex-1"
                   [class.sub-tab-btn-active]="inviteRole === 'viewer'"
                   (click)="inviteRole = 'viewer'"
                   [disabled]="sendingInvite"
@@ -66,7 +66,7 @@
             <span>Viewer</span>
           </button>
           <button type="button"
-                  class="sub-tab-btn"
+                  class="sub-tab-btn tw-flex-1"
                   [class.sub-tab-btn-active]="inviteRole === 'manager'"
                   (click)="inviteRole = 'manager'"
                   [disabled]="sendingInvite"
@@ -82,7 +82,7 @@
       </div>
       <button
         type="button"
-        class="btn-sm btn-primary"
+        class="btn-sm btn-primary tw-w-full sm:tw-w-auto"
         (click)="sendInvite()"
         [disabled]="sendingInvite || !inviteEmail.trim()">
         <div class="loading-spinner" *ngIf="sendingInvite"></div>
