@@ -45,7 +45,7 @@
       <div class="tw-absolute tw-bottom-0 tw-inset-x-0 tw-p-6 tw-z-10"
         style="background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)">
         <div *ngIf="event.brand?.name" class="tw-text-white/50 tw-text-xs tw-font-medium tw-uppercase tw-tracking-widest tw-mb-1">
-          {{ event.brand?.name }}
+          {{ event.brand?.name }}{{ event.co_organizers && event.co_organizers.length > 0 ? ' · ' + formatCoOrganizers(event.co_organizers) : '' }}
         </div>
         <p class="tw-text-white tw-font-bold tw-text-lg tw-leading-tight tw-mb-2">{{ event.title }}</p>
         <p class="tw-text-white/70 tw-text-sm tw-mb-0.5">
@@ -87,7 +87,7 @@
           <h1 class="tw-text-4xl tw-font-black tw-text-gray-900 tw-leading-tight tw-tracking-tight tw-mb-1 tw-text-center">{{ event.title }}</h1>
 
           <!-- By brand -->
-          <p *ngIf="event.brand?.name" class="tw-text-sm tw-italic tw-text-gray-500 tw-mb-0 tw-text-center">by {{ event.brand?.name }}</p>
+          <p *ngIf="event.brand?.name" class="tw-text-sm tw-italic tw-text-gray-500 tw-mb-0 tw-text-center">by {{ event.brand?.name }}{{ event.co_organizers && event.co_organizers.length > 0 ? ', ' + formatCoOrganizers(event.co_organizers) : '' }}</p>
 
           <!-- Unified date / venue info bar -->
           <div class="tw-mt-5 tw-rounded-xl tw-bg-white tw-flex tw-flex-col sm:tw-flex-row tw-divide-y sm:tw-divide-y-0 sm:tw-divide-x tw-divide-gray-100" style="border: 0.5px solid #e5e7eb;">

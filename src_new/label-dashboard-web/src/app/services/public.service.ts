@@ -62,6 +62,7 @@ export interface PublicEvent {
   }>;
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
+  co_organizers?: { id: number; name: string; logo_url?: string | null }[];
 }
 
 export interface TicketPurchaseRequest {

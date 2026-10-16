@@ -175,6 +175,15 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   selectedEvent: AppEvent | null = null;
   loadingEvents = false;
   isAdmin = false;
+  get isViewer(): boolean {
+    return (this.selectedEvent as any)?.user_role === 'viewer';
+  }
+  get isManager(): boolean {
+    if (this.isViewer) return false;
+    if (this.isAdmin) return true;
+    const role = (this.selectedEvent as any)?.user_role;
+    return role === 'manager' || role === 'owner';
+  }
 
   // Orders
   eventId: number | null = null;

@@ -52,7 +52,15 @@ export class EventsComponent implements OnInit, OnDestroy {
   selectedEvent: EventSelection | null = null;
   activeTab: EventsTabType = 'tickets';
   isAdmin = false;
-  isManager = false; // true for admins OR event collaborators with manager role
+  get isViewer(): boolean {
+    return this.selectedEvent?.user_role === 'viewer';
+  }
+  get isManager(): boolean {
+    if (this.isViewer) return false;
+    if (this.isAdmin) return true;
+    const eventId = this.selectedEvent?.id ?? null;
+    return eventId ? this.authService.getEventRole(eventId) === 'manager' : false;
+  }
   loading = false;
   retryCount = 0;
   maxRetries = 3;
@@ -71,7 +79,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'user-plus' },
     { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope' },
     { id: 'listing' as EventsTabType, label: 'Listing', icon: 'globe' },
-    { id: 'access' as EventsTabType, label: 'Team Members', icon: 'users', adminOnly: true }
+    { id: 'access' as EventsTabType, label: 'Collaborators', icon: 'users', adminOnly: false }
   ];
 
   constructor(
@@ -81,23 +89,6 @@ export class EventsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router
   ) {}
-
-  /**
-   * Check if event is in the past (has already occurred)
-   */
-  private updateIsManager(): void {
-    if (this.isAdmin) {
-      this.isManager = true;
-      console.log('[updateIsManager] isAdmin=true → isManager=true');
-      return;
-    }
-    const user = this.authService.currentUserValue;
-    const eventId = this.selectedEvent?.id ?? null;
-    const role = eventId ? this.authService.getEventRole(eventId) : null;
-    this.isManager = role === 'manager';
-    console.log('[updateIsManager] isAdmin=false eventId=%s role=%s isManager=%s event_access=%j',
-      eventId, role, this.isManager, user?.event_access);
-  }
 
   isEventPast(event: EventSelection | null): boolean {
     if (!event) return false;
@@ -115,7 +106,6 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
-        this.updateIsManager();
       })
     );
 
@@ -124,7 +114,6 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.selectedEvent$.subscribe(event => {
         if (event && event !== this.selectedEvent) {
           this.selectedEvent = event;
-          this.updateIsManager();
         }
       })
     );
@@ -173,7 +162,6 @@ export class EventsComponent implements OnInit, OnDestroy {
           if (eventToSelect) {
             this.selectedEvent = eventToSelect;
             this.eventService.setSelectedEvent(eventToSelect);
-            this.updateIsManager();
           }
           
           this.loading = false;
@@ -258,7 +246,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   onEventSelection(event: EventSelection): void {
     this.selectedEvent = event;
     this.eventService.setSelectedEvent(event);
-    this.updateIsManager();
     // Auto-refresh data when event selection changes
     this.refreshCurrentTabData();
   }
@@ -316,7 +303,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   shouldShowTab(tab: any): boolean {
-    return !tab.adminOnly || this.isAdmin;
+    return !tab.adminOnly || this.isManager;
   }
 
   // Simplified event handlers - tabs now handle their own logic

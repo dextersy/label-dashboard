@@ -82,7 +82,11 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   saving = false;
   isNewEvent = false;
   isAdmin = false;
+  get isViewer(): boolean {
+    return this.event?.user_role === 'viewer';
+  }
   get isManager(): boolean {
+    if (this.isViewer) return false;
     if (this.isAdmin) return true;
     const eventId = this.event?.id;
     if (!eventId) return false;

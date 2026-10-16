@@ -68,7 +68,7 @@ export class BreadcrumbService {
     '/campaigns/events/referrals': { label: 'Referrals', parent: '/campaigns/events' },
     '/campaigns/events/email': { label: 'Send Email', parent: '/campaigns/events' },
     '/campaigns/events/custom-ticket': { label: 'Create Custom Ticket', parent: '/campaigns/events' },
-    '/campaigns/events/access': { label: 'Team Members', parent: '/campaigns/events' },
+    '/campaigns/events/access': { label: 'Collaborators', parent: '/campaigns/events' },
     '/campaigns/events/listing': { label: 'Listing', parent: '/campaigns/events' },
     '/campaigns/events/add-ons': { label: 'Manage Add-ons', parent: '/campaigns/events' },
 

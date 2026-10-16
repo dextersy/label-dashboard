@@ -19,10 +19,8 @@ interface MenuItem {
   icon?: string;
   title: string;
   adminOnly: boolean;
-  /** If true, visible to event-access collaborators (non-admins) */
+  /** If true, visible to any event-access collaborator (non-admin viewer or manager) */
   eventAccessVisible?: boolean;
-  /** If true, visible only to event collaborators with manager role (or admins) */
-  managerVisible?: boolean;
   children?: MenuItem[];
 }
 
@@ -48,7 +46,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   activeColor: string = '#ffffff';
   isAdmin: boolean = false;
   hasEventAccess: boolean = false;
-  hasManagerAccess: boolean = false;
   currentRoute: string = '';
   isOpen: boolean = false;
   isCollapsed: boolean = false; // Start expanded on desktop
@@ -145,13 +142,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           eventAccessVisible: true,
           children: [
-            { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true, managerVisible: true },
+            { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true, eventAccessVisible: true },
             { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true, eventAccessVisible: true },
             { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true, eventAccessVisible: true },
             { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/add-ons', title: 'Manage Add-ons', adminOnly: true, managerVisible: true },
-            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true, managerVisible: true },
-            { route: '/campaigns/events/access', title: 'Team Members', adminOnly: true }
+            { route: '/campaigns/events/add-ons', title: 'Manage Add-ons', adminOnly: true, eventAccessVisible: true },
+            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true, eventAccessVisible: true },
+            { route: '/campaigns/events/access', title: 'Collaborators', adminOnly: true, eventAccessVisible: true }
           ]
         },
         {
@@ -267,8 +264,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
               items: campaignsSection.items
                 .filter(item => {
                   if (item.route === '/campaigns/sync-licensing' && !this.featureMusicWorkspace) return false;
-                  // Non-admins only see items flagged as eventAccessVisible or managerVisible (if they're a manager)
-                  if (!this.isAdmin && !item.eventAccessVisible && !(item.managerVisible && this.hasManagerAccess)) return false;
+                  // Non-admins only see items flagged as eventAccessVisible
+                  if (!this.isAdmin && !item.eventAccessVisible) return false;
                   return true;
                 })
                 .map(item => {
@@ -378,7 +375,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private sidebarService: SidebarService,
     private authService: AuthService,
     private artistStateService: ArtistStateService,
-    private workspaceService: WorkspaceService
+    private workspaceService: WorkspaceService,
   ) {}
 
   ngOnInit(): void {
@@ -406,7 +403,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.authService.currentUser.subscribe(user => {
         this.isAdmin = user ? user.is_admin : false;
         this.hasEventAccess = user ? this.authService.hasEventAccess() : false;
-        this.hasManagerAccess = user ? this.authService.getAccessibleEventIds().some(id => this.authService.getEventRole(id) === 'manager') : false;
         this.availableWorkspaceInfos = this.workspaceService.getAvailableWorkspaceInfos(this.isAdmin);
         this.updateVisibleSections();
       })
@@ -714,10 +710,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   shouldShowMenuItem(item: any): boolean {
     if (!item.adminOnly) return true;
     if (this.isAdmin) return true;
-    // Non-admin event collaborators can see items flagged as eventAccessVisible
+    // Non-admin event collaborators (any role) can see items flagged as eventAccessVisible
     if (item.eventAccessVisible && this.hasEventAccess) return true;
-    // Managers can see items flagged as managerVisible
-    if (item.managerVisible && this.hasManagerAccess) return true;
     return false;
   }
 

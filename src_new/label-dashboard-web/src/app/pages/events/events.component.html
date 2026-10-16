@@ -10,7 +10,7 @@
             [events]="availableEvents"
             [selectedEvent]="selectedEvent"
             [loading]="loading"
-            [isAdmin]="isManager"
+            [isAdmin]="isAdmin"
             (eventSelected)="onEventSelection($event)">
           </app-event-selection>
         </div>
@@ -73,9 +73,9 @@
           </app-event-listing-tab>
         </div>
 
-        <!-- Access Tab (admin only) -->
-        <div *ngIf="activeTab === 'access' && isAdmin">
-          <app-event-access-tab [selectedEvent]="selectedEvent"></app-event-access-tab>
+        <!-- Access Tab -->
+        <div *ngIf="activeTab === 'access'">
+          <app-event-access-tab [selectedEvent]="selectedEvent" [isAdmin]="isAdmin"></app-event-access-tab>
         </div>
 
       </div>

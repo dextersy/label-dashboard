@@ -19,8 +19,14 @@
     </div>
   </div>
 
+  <div *ngIf="selectedEvent && !isManager" class="tw-py-5 tw-text-center">
+    <app-icon name="lock" class="fa-4x tw-mb-3 tw-text-muted" iconOnly />
+    <h5 class="tw-text-muted">Access Restricted</h5>
+    <p class="tw-text-muted">You do not have permission to manage add-ons.</p>
+  </div>
+
   <app-in-page-nav
-    *ngIf="selectedEvent"
+    *ngIf="selectedEvent && isManager"
     [tabs]="tabs"
     [activeTab]="activeTab"
     (tabChange)="onTabChange($event)"

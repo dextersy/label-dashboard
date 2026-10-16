@@ -122,22 +122,23 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   ];
 
   get headerActions(): HeaderAction[] {
-    if (!this.isAdmin) return [];
-    return [
-      {
+    const actions: HeaderAction[] = [];
+    if (this.isAdmin) {
+      actions.push({
         icon: 'plus',
         label: 'Custom Ticket',
         handler: () => this.onCreateCustomTicket(),
         disabled: () => this.loading || !this.canCreateCustomTickets(),
         title: () => this.getCustomTicketButtonTooltip(),
-      },
-      {
-        icon: 'download',
-        label: 'Download CSV',
-        handler: () => this.onDownloadCSV(),
-        disabled: () => this.loading,
-      },
-    ];
+      });
+    }
+    actions.push({
+      icon: 'download',
+      label: 'Download CSV',
+      handler: () => this.onDownloadCSV(),
+      disabled: () => this.loading,
+    });
+    return actions;
   }
 
   ticketActions: TableAction[] = [
