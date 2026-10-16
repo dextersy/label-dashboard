@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { TicketType, Event, EventAccess } from '../models';
+import { TicketType, Event } from '../models';
+import { resolveEventRole, findEventForUser } from '../utils/eventAccess';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -19,17 +20,8 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const role = await resolveEventRole(req, eventIdNum);
+    if (!role) return res.status(403).json({ error: 'Access denied for this event' });
 
     const ticketTypes = await TicketType.findAll({
       where: { event_id: eventIdNum },
@@ -42,7 +34,7 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
       const soldCount = await ticketType.getSoldCount();
       const pendingCount = await ticketType.getPendingCount();
       const remainingTickets = await ticketType.getRemainingTickets();
-      
+
       processedTicketTypes.push({
         ...ticketType.toJSON(),
         sold_tickets: soldCount,
@@ -63,8 +55,8 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
     const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false, special_instructions = null, special_instructions_for_scanner = null } = req.body;
 
     if (!event_id || !name || price === undefined) {
-      return res.status(400).json({ 
-        error: 'Event ID, name, and price are required' 
+      return res.status(400).json({
+        error: 'Event ID, name, and price are required'
       });
     }
 
@@ -74,9 +66,9 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({ where: { event_id: eventIdNum, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
-      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    const role = await resolveEventRole(req, eventIdNum);
+    if (role !== 'owner' && role !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     const priceNum = parseFloat(price);
@@ -111,18 +103,6 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'End date must be after start date' });
     }
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { 
-        id: eventIdNum,
-        brand_id: req.user.brand_id 
-      }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
     // Check if ticket type name already exists for this event
     const existingTicketType = await TicketType.findOne({
       where: {
@@ -132,8 +112,8 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
     });
 
     if (existingTicketType) {
-      return res.status(400).json({ 
-        error: 'A ticket type with this name already exists for this event' 
+      return res.status(400).json({
+        error: 'A ticket type with this name already exists for this event'
       });
     }
 
@@ -224,23 +204,13 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'End date must be after start date' });
     }
 
-    // Find ticket type and verify access through event
-    const ticketType = await TicketType.findOne({
-      where: { id: ticketTypeId },
-      include: [{
-        model: Event,
-        as: 'event',
-        where: { brand_id: req.user.brand_id }
-      }]
-    });
+    // Find ticket type
+    const ticketType = await TicketType.findByPk(ticketTypeId);
+    if (!ticketType) return res.status(404).json({ error: 'Ticket type not found' });
 
-    if (!ticketType) {
-      return res.status(404).json({ error: 'Ticket type not found' });
-    }
-
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({ where: { event_id: ticketType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
-      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    const role = await resolveEventRole(req, ticketType.event_id);
+    if (role !== 'owner' && role !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     // Check if updated name conflicts with other ticket types for this event
@@ -253,8 +223,8 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
     });
 
     if (existingTicketType) {
-      return res.status(400).json({ 
-        error: 'A ticket type with this name already exists for this event' 
+      return res.status(400).json({
+        error: 'A ticket type with this name already exists for this event'
       });
     }
 
@@ -264,29 +234,12 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
       price: priceNum
     };
 
-    if (maxTicketsNum !== undefined) {
-      updateData.max_tickets = maxTicketsNum;
-    }
-
-    if (startDate !== undefined) {
-      updateData.start_date = startDate;
-    }
-
-    if (endDate !== undefined) {
-      updateData.end_date = endDate;
-    }
-
-    if (disabled !== undefined) {
-      updateData.disabled = disabled;
-    }
-
-    if (special_instructions !== undefined) {
-      updateData.special_instructions = special_instructions ? special_instructions.trim() : null;
-    }
-
-    if (special_instructions_for_scanner !== undefined) {
-      updateData.special_instructions_for_scanner = special_instructions_for_scanner ? special_instructions_for_scanner.trim() : null;
-    }
+    if (maxTicketsNum !== undefined) updateData.max_tickets = maxTicketsNum;
+    if (startDate !== undefined) updateData.start_date = startDate;
+    if (endDate !== undefined) updateData.end_date = endDate;
+    if (disabled !== undefined) updateData.disabled = disabled;
+    if (special_instructions !== undefined) updateData.special_instructions = special_instructions ? special_instructions.trim() : null;
+    if (special_instructions_for_scanner !== undefined) updateData.special_instructions_for_scanner = special_instructions_for_scanner ? special_instructions_for_scanner.trim() : null;
 
     await ticketType.update(updateData);
 
@@ -316,7 +269,7 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
 
     // Get all ticket types for the event (exclude disabled ones for public view)
     const ticketTypes = await TicketType.findAll({
-      where: { 
+      where: {
         event_id: eventIdNum,
         disabled: false
       },
@@ -336,13 +289,9 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
       const isAvailable = ticketType.isAvailable();
       const isSoldOut = await ticketType.isSoldOut();
       const remainingTickets = await ticketType.getRemainingTickets();
-
-      // Get the actual sold count using the same logic as isSoldOut()
       const soldCount = await ticketType.getSoldCount();
 
       if (includeCustom) {
-        // For custom tickets: include all ticket types regardless of date restrictions
-        // but still provide availability info for display
         availableTicketTypes.push({
           ...ticketType.toJSON(),
           is_available: isAvailable,
@@ -351,11 +300,7 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
           sold_count: soldCount
         });
       } else {
-        // For public buy page, only include available and not sold out tickets
-        if (!isAvailable || isSoldOut) {
-          continue;
-        }
-
+        if (!isAvailable || isSoldOut) continue;
         availableTicketTypes.push({
           ...ticketType.toJSON(),
           is_available: isAvailable,
@@ -382,23 +327,12 @@ export const deleteTicketType = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid ticket type ID' });
     }
 
-    // Find ticket type and verify access through event
-    const ticketType = await TicketType.findOne({
-      where: { id: ticketTypeId },
-      include: [{
-        model: Event,
-        as: 'event',
-        where: { brand_id: req.user.brand_id }
-      }]
-    });
+    const ticketType = await TicketType.findByPk(ticketTypeId);
+    if (!ticketType) return res.status(404).json({ error: 'Ticket type not found' });
 
-    if (!ticketType) {
-      return res.status(404).json({ error: 'Ticket type not found' });
-    }
-
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({ where: { event_id: ticketType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
-      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    const role = await resolveEventRole(req, ticketType.event_id);
+    if (role !== 'owner' && role !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     // Check if this is the last ticket type for the event
@@ -407,8 +341,8 @@ export const deleteTicketType = async (req: AuthRequest, res: Response) => {
     });
 
     if (ticketTypesCount <= 1) {
-      return res.status(400).json({ 
-        error: 'Cannot delete the last ticket type. Events must have at least one ticket type.' 
+      return res.status(400).json({
+        error: 'Cannot delete the last ticket type. Events must have at least one ticket type.'
       });
     }
 
@@ -419,16 +353,14 @@ export const deleteTicketType = async (req: AuthRequest, res: Response) => {
     });
 
     if (ticketsCount > 0) {
-      return res.status(400).json({ 
-        error: 'Cannot delete ticket type as there are tickets associated with it' 
+      return res.status(400).json({
+        error: 'Cannot delete ticket type as there are tickets associated with it'
       });
     }
 
     await ticketType.destroy();
 
-    res.json({
-      message: 'Ticket type deleted successfully'
-    });
+    res.json({ message: 'Ticket type deleted successfully' });
   } catch (error) {
     console.error('Delete ticket type error:', error);
     res.status(500).json({ error: 'Internal server error' });

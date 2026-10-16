@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag, EventAccess } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag, EventAccess, EventBrandCollaboration } from '../models';
+import { resolveEventRole as resolveEventRoleUtil, findEventForUser as findEventForUserUtil } from '../utils/eventAccess';
 import { scheduleEventClosePayout, cancelEventClosePayout } from '../schedules/eventClosePayouts';
 import { PaymentService } from '../utils/paymentService';
 import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sendPaymentConfirmationEmail, generateUniqueTicketCode, deleteTicketQRCode } from '../utils/ticketEmailService';
@@ -41,20 +42,29 @@ const findEventForBrand = async (eventId: number, brandId: number, include?: any
   return Event.findOne({ where: { id: eventId, brand_id: brandId }, ...(include ? { include } : {}) });
 };
 
+const resolveEventRole = resolveEventRoleUtil;
+const findEventForUser = findEventForUserUtil;
+
 /**
- * For non-admin users, verify they have manager-level EventAccess for the given event.
- * Returns a 403 response object if denied, or null if allowed.
+ * Verify the user has at least viewer-level access to the event.
+ * Returns true if allowed, false and sends 403 if denied.
+ */
+const requireEventViewAccess = async (req: AuthRequest, res: Response, eventId: number): Promise<boolean> => {
+  const role = await resolveEventRole(req, eventId);
+  if (role) return true;
+  res.status(403).json({ error: 'Access denied for this event' });
+  return false;
+};
+
+/**
+ * Verify the user has manager-level (or owner) access to the event.
+ * Returns true if allowed, false and sends 403 if denied.
  */
 const requireManagerAccess = async (req: AuthRequest, res: Response, eventId: number): Promise<boolean> => {
-  if (req.user.is_admin) return true;
-  const access = await EventAccess.findOne({
-    where: { event_id: eventId, user_id: req.user.id, status: 'Accepted', role: 'manager' },
-  });
-  if (!access) {
-    res.status(403).json({ error: 'Manager access required for this operation' });
-    return false;
-  }
-  return true;
+  const role = await resolveEventRole(req, eventId);
+  if (role === 'owner' || role === 'manager') return true;
+  res.status(403).json({ error: 'Manager access required for this operation' });
+  return false;
 };
 
 /**
@@ -334,18 +344,35 @@ const processImagesInHtml = async (htmlContent: string, eventId: number): Promis
 export const getEvents = async (req: AuthRequest, res: Response) => {
   try {
     let whereClause: any = { brand_id: req.user.brand_id };
+    // Maps event_id → effective role for non-admin collaborators
+    const roleMap = new Map<number, 'viewer' | 'manager'>();
 
-    // Non-admin users with event access can only see their specific events
+    // Always check for brand-level collaborations (admins can also be collabs on other brands' events)
+    const brandAccessRows = await EventBrandCollaboration.findAll({
+      where: { brand_id: req.user.brand_id, status: 'Accepted' },
+      attributes: ['event_id', 'role'],
+    });
+    for (const r of brandAccessRows) roleMap.set((r as any).event_id, (r as any).role);
+
     if (!req.user.is_admin) {
-      const accessRows = await EventAccess.findAll({
+      // User-level access
+      const userAccessRows = await EventAccess.findAll({
         where: { user_id: req.user.id, status: 'Accepted' },
-        attributes: ['event_id'],
+        attributes: ['event_id', 'role'],
       });
-      const accessibleIds = accessRows.map((r: any) => r.event_id);
+
+      // User-level access takes precedence over brand-level
+      for (const r of userAccessRows) roleMap.set((r as any).event_id, (r as any).role);
+
+      const accessibleIds = [...roleMap.keys()];
       if (accessibleIds.length === 0) {
         return res.json({ events: [] });
       }
       whereClause = { id: accessibleIds };
+    } else if (brandAccessRows.length > 0) {
+      // Admin: include own brand's events plus any collab events from other brands
+      const collabIds = brandAccessRows.map((r: any) => r.event_id);
+      whereClause = { [Op.or]: [{ brand_id: req.user.brand_id }, { id: collabIds }] };
     }
 
     const events = await Event.findAll({
@@ -360,7 +387,17 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
       order: [['date_and_time', 'DESC']]
     });
 
-    res.json({ events });
+    const eventsWithRole = events.map((e: any) => {
+      const eventJson = e.toJSON();
+      if (req.user.is_admin && e.brand_id === req.user.brand_id) {
+        eventJson.user_role = 'owner';
+      } else {
+        eventJson.user_role = roleMap.get(e.id) ?? 'viewer';
+      }
+      return eventJson;
+    });
+
+    res.json({ events: eventsWithRole });
   } catch (error) {
     console.error('Get events error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -372,19 +409,9 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
     const eventId = parseId(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    let eventWhereClause: any = { id: eventId, brand_id: req.user.brand_id };
-
-    // Non-admin: allow access if the user has an EventAccess record for this event
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({
-        where: { event_id: eventId, user_id: req.user.id, status: 'Accepted' },
-      });
-      if (!access) {
-        return res.status(403).json({ error: 'No access to this event' });
-      }
-      // Don't filter by brand_id for collaborators — they may be from another brand
-      eventWhereClause = { id: eventId };
-    }
+    const effectiveRole = await resolveEventRole(req, eventId);
+    if (!effectiveRole) return res.status(403).json({ error: 'No access to this event' });
+    const eventWhereClause: any = { id: eventId };
 
     const event = await Event.findOne({
       where: eventWhereClause,
@@ -408,7 +435,7 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
         const soldCount = await ticketType.getSoldCount();
         const pendingCount = await ticketType.getPendingCount();
         const remainingTickets = await ticketType.getRemainingTickets();
-        
+
         processedTicketTypes.push({
           ...ticketType.toJSON(),
           sold_tickets: soldCount,
@@ -418,10 +445,10 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Return event with processed ticket types
     const eventResponse = {
       ...event.toJSON(),
-      ticketTypes: processedTicketTypes
+      ticketTypes: processedTicketTypes,
+      user_role: effectiveRole,
     };
 
     res.json({ event: eventResponse });
@@ -772,7 +799,11 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     const parsedWalkInTypes = parseJsonField(walkInTypes, 'walkInTypes', res);
     if (walkInTypes !== undefined && parsedWalkInTypes === null) return;
 
-    const event = await findEventForBrand(eventId, req.user.brand_id);
+    const updateRole = await resolveEventRole(req, eventId);
+    if (updateRole !== 'owner' && updateRole !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
+    }
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Handle poster upload if provided
@@ -1064,7 +1095,7 @@ export const setSelectedEvent = async (req: AuthRequest, res: Response) => {
     }
 
     const eventIdNum = parseId(event_id);
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     res.json({
@@ -1390,9 +1421,24 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
 
     const where: any = {};
     if (event_id) {
-      const event = await findEventForBrand(eventIdNum!, req.user.brand_id);
+      const event = await findEventForUser(req, eventIdNum!);
       if (!event) return res.status(404).json({ error: 'Event not found' });
       where.event_id = eventIdNum;
+    } else {
+      // No specific event requested — restrict to events accessible by this brand
+      // (owned events + accepted brand-level collabs) to prevent cross-brand data leaks.
+      const ownedEventIds = (await Event.findAll({
+        where: { brand_id: req.user.brand_id },
+        attributes: ['id'],
+      })).map((e: any) => e.id);
+
+      const collabEventIds = (await EventBrandCollaboration.findAll({
+        where: { brand_id: req.user.brand_id, status: 'Accepted' },
+        attributes: ['event_id'],
+      })).map((c: any) => c.event_id);
+
+      const accessibleIds = [...new Set([...ownedEventIds, ...collabEventIds])];
+      where.event_id = { [Op.in]: accessibleIds };
     }
 
     // Apply status filter for specific tabs
@@ -1438,11 +1484,7 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
     const { count, rows: tickets } = await Ticket.findAndCountAll({
       where,
       include: [
-        { 
-          model: Event, 
-          as: 'event',
-          where: { brand_id: req.user.brand_id }
-        },
+        { model: Event, as: 'event' },
         { model: EventReferrer, as: 'referrer' },
         { model: TicketType, as: 'ticketType' }
       ],
@@ -1478,7 +1520,7 @@ export const refreshVerificationPIN = async (req: AuthRequest, res: Response) =>
     const eventId = parseId(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventId, req.user.brand_id);
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Generate new verification PIN
@@ -1620,7 +1662,7 @@ export const getEventReferrers = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Valid event ID is required' });
     }
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get referrers for this event with sales data
@@ -1678,7 +1720,7 @@ export const createEventReferrer = async (req: AuthRequest, res: Response) => {
     const eventIdNum = parseId(event_id);
     if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Check for duplicate referral codes
@@ -2056,21 +2098,20 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
     const ticketIds = parseTicketIds(req.body, res);
     if (!ticketIds) return;
 
-    // Find tickets that belong to user's brand and can be resent (Payment Confirmed or Ticket sent status)
+    // Find tickets that can be resent (Payment Confirmed or Ticket sent status)
     const tickets = await Ticket.findAll({
-      where: { 
+      where: {
         id: ticketIds,
         status: ['Payment Confirmed', 'Ticket sent.']
       },
       include: [
-        { 
-          model: Event, 
+        {
+          model: Event,
           as: 'event',
-          where: { brand_id: req.user.brand_id },
           include: [{ model: Brand, as: 'brand' }]
         },
-        { 
-          model: TicketType, 
+        {
+          model: TicketType,
           as: 'ticketType',
           attributes: ['id', 'name', 'price']
         }
@@ -2081,10 +2122,8 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'No eligible tickets found for resending (only Payment Confirmed and Ticket sent tickets can be resent)' });
     }
 
-    if (!req.user.is_admin) {
-      for (const eid of [...new Set(tickets.map((t: any) => t.event_id))]) {
-        if (!await requireManagerAccess(req, res, eid)) return;
-      }
+    for (const eid of [...new Set(tickets.map((t: any) => t.event_id))]) {
+      if (!await requireManagerAccess(req, res, eid)) return;
     }
 
     let successCount = 0;
@@ -2179,7 +2218,7 @@ export const cancelAllUnpaidTickets = async (req: AuthRequest, res: Response) =>
 
     if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id, [{ model: Brand, as: 'brand' }]);
+    const event = await findEventForUser(req, eventIdNum, [{ model: Brand, as: 'brand' }]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Find all unpaid tickets for this event
@@ -2232,7 +2271,7 @@ export const verifyAllPayments = async (req: AuthRequest, res: Response) => {
 
     if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Find all tickets with payment links (similar to PHP logic)
@@ -2485,7 +2524,7 @@ export const sendEventEmail = async (req: AuthRequest, res: Response) => {
 
     if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id, [{ model: Brand, as: 'brand' }]);
+    const event = await findEventForUser(req, eventIdNum, [{ model: Brand, as: 'brand' }]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get all confirmed ticket holders (Payment Confirmed or Ticket sent)
@@ -2581,7 +2620,7 @@ export const sendTestEventEmail = async (req: AuthRequest, res: Response) => {
 
     if (!await requireManagerAccess(req, res, eventIdNum)) return;
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id, [{ model: Brand, as: 'brand' }]);
+    const event = await findEventForUser(req, eventIdNum, [{ model: Brand, as: 'brand' }]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Use shared email sending function
@@ -2619,7 +2658,7 @@ export const getEventTicketHoldersCount = async (req: AuthRequest, res: Response
     const eventIdNum = parseId(event_id);
     if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get confirmed ticket holders count
@@ -2656,7 +2695,7 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
     const eventIdNum = parseId(event_id);
     if (isNaN(eventIdNum) || eventIdNum <= 0) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get ALL tickets for this event to calculate summary statistics
@@ -2766,7 +2805,7 @@ export const exportEventTicketsCsv = async (req: AuthRequest, res: Response) => 
     const eventIdNum = parseId(req.query.event_id);
     if (isNaN(eventIdNum)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get ALL confirmed tickets for this event (no pagination, no filters)
@@ -2827,7 +2866,7 @@ export const exportEventPendingTicketsCsv = async (req: AuthRequest, res: Respon
     const eventIdNum = parseId(req.query.event_id);
     if (isNaN(eventIdNum)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventIdNum, req.user.brand_id);
+    const event = await findEventForUser(req, eventIdNum);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Get ALL pending tickets for this event (no pagination, no filters)
@@ -2890,7 +2929,7 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
     const eventId = parseId(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventId, req.user.brand_id);
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (!await requireManagerAccess(req, res, eventId)) return;
@@ -2953,7 +2992,7 @@ export const unpublishEvent = async (req: AuthRequest, res: Response) => {
     const eventId = parseId(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventId, req.user.brand_id);
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (!await requireManagerAccess(req, res, eventId)) return;
@@ -3035,7 +3074,7 @@ export const getEventPreview = async (req: AuthRequest, res: Response) => {
     const eventId = parseId(req.params.id);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const event = await findEventForBrand(eventId, req.user.brand_id, [
+    const event = await findEventForUser(req, eventId, [
       { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] }
     ]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -3205,7 +3244,7 @@ export const cancelEvent = async (req: AuthRequest, res: Response) => {
 
     const { refund_tickets = false, notify_ticket_holders = false, custom_message } = req.body;
 
-    const event = await findEventForBrand(eventId, req.user.brand_id);
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (!await requireManagerAccess(req, res, eventId)) return;
