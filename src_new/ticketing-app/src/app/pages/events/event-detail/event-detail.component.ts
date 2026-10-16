@@ -67,21 +67,23 @@ import { EventReferrer } from '../../../models/event-referrer.model';
             <!-- Actions -->
             <div class="flex flex-wrap items-center gap-2">
               @if (event()?.status !== 'canceled') {
-                <a [routerLink]="['/app/events', routeEventId(), 'edit']"
-                   class="px-3 py-1.5 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
-                  Edit Event
-                </a>
-                <button (click)="togglePublish()"
-                   class="px-3 py-1.5 border text-xs font-mono uppercase tracking-wider transition-colors"
-                   [class]="event()?.status === 'published'
-                     ? 'border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 hover:border-yellow-400/60'
-                     : 'border-green-400/30 text-green-400/70 hover:text-green-400 hover:border-green-400/60'">
-                  {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
-                </button>
-                <button (click)="openCancelModal()"
-                   class="px-3 py-1.5 border border-red-300/50 text-red-400/70 hover:text-red-500 hover:border-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
-                  Cancel Event
-                </button>
+                @if (isManager()) {
+                  <a [routerLink]="['/app/events', routeEventId(), 'edit']"
+                     class="px-3 py-1.5 border border-gray-300 text-gray-500 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
+                    Edit Event
+                  </a>
+                  <button (click)="togglePublish()"
+                     class="px-3 py-1.5 border text-xs font-mono uppercase tracking-wider transition-colors"
+                     [class]="event()?.status === 'published'
+                       ? 'border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 hover:border-yellow-400/60'
+                       : 'border-green-400/30 text-green-400/70 hover:text-green-400 hover:border-green-400/60'">
+                    {{ event()?.status === 'published' ? 'Unpublish' : 'Publish' }}
+                  </button>
+                  <button (click)="openCancelModal()"
+                     class="px-3 py-1.5 border border-red-300/50 text-red-400/70 hover:text-red-500 hover:border-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                    Cancel Event
+                  </button>
+                }
               }
               @if (event()?.status === 'canceled') {
                 <span class="px-3 py-1.5 border border-red-300 text-red-600 bg-red-50 text-xs font-mono uppercase tracking-wider">
@@ -221,10 +223,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
             <div class="border border-gray-200 bg-white p-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Ticket Types</h3>
-                <button (click)="openTicketTypeModal()"
-                  class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
-                  + Add Type
-                </button>
+                @if (isManager()) {
+                  <button (click)="openTicketTypeModal()"
+                    class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                    + Add Type
+                  </button>
+                }
               </div>
               @if (ticketTypes().length === 0) {
                 <p class="text-xs font-mono text-gray-400 py-4 text-center">No ticket types yet.</p>
@@ -259,10 +263,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                             </span>
                           </td>
                           <td class="px-4 py-2.5">
-                            <div class="flex items-center justify-end gap-3">
-                              <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
-                              <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
-                            </div>
+                            @if (isManager()) {
+                              <div class="flex items-center justify-end gap-3">
+                                <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                                <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                              </div>
+                            }
                           </td>
                         </tr>
                       }
@@ -278,10 +284,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
             <div class="border border-gray-200 bg-white p-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Walk-In Types</h3>
-                <button (click)="openWalkInTypeModal()"
-                  class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
-                  + Add Type
-                </button>
+                @if (isManager()) {
+                  <button (click)="openWalkInTypeModal()"
+                    class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                    + Add Type
+                  </button>
+                }
               </div>
               @if (walkInTypes().length === 0) {
                 <p class="text-xs font-mono text-gray-400 py-4 text-center">No walk-in types yet.</p>
@@ -307,10 +315,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                           <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ wt.sold_count || 0 }}</td>
                           <td class="px-4 py-2.5 text-sm font-mono text-gray-500">{{ wt.remaining_slots == null ? '∞' : wt.remaining_slots }}</td>
                           <td class="px-4 py-2.5">
-                            <div class="flex items-center justify-end gap-3">
-                              <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
-                              <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
-                            </div>
+                            @if (isManager()) {
+                              <div class="flex items-center justify-end gap-3">
+                                <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                                <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                              </div>
+                            }
                           </td>
                         </tr>
                       }
@@ -393,10 +403,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                 class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                 placeholder="Search by name...">
               <div class="flex items-center gap-2">
-                <button (click)="openCreateTicketModal()"
-                  class="px-3 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
-                  + Create Ticket
-                </button>
+                @if (isManager()) {
+                  <button (click)="openCreateTicketModal()"
+                    class="px-3 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                    + Create Ticket
+                  </button>
+                }
                 <a [href]="ticketsService.exportCsvUrl({ event_id: routeEventId() })"
                    class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
                   Export CSV
@@ -455,14 +467,16 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                             </span>
                           </td>
                           <td class="px-4 py-3.5">
-                            <div class="flex items-center justify-end gap-3">
-                              <button (click)="resendTicket(ticket)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Resend</button>
-                              @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
-                                <button (click)="openTransferModal(ticket)" class="text-xs font-mono text-blue-500 hover:text-blue-600 uppercase tracking-wider">Transfer</button>
-                                <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
-                                <button (click)="confirmAction('refund', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Refund</button>
-                              }
-                            </div>
+                            @if (isManager()) {
+                              <div class="flex items-center justify-end gap-3">
+                                <button (click)="resendTicket(ticket)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Resend</button>
+                                @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
+                                  <button (click)="openTransferModal(ticket)" class="text-xs font-mono text-blue-500 hover:text-blue-600 uppercase tracking-wider">Transfer</button>
+                                  <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
+                                  <button (click)="confirmAction('refund', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Refund</button>
+                                }
+                              </div>
+                            }
                           </td>
                         </tr>
                       }
@@ -500,14 +514,16 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                      class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
                     CSV
                   </a>
-                  <button (click)="verifyPayments()"
-                    class="px-3 py-2 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
-                    Verify Payments
-                  </button>
-                  <button (click)="cancelAllUnpaid()"
-                    class="px-3 py-2 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
-                    Cancel All Unpaid
-                  </button>
+                  @if (isManager()) {
+                    <button (click)="verifyPayments()"
+                      class="px-3 py-2 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                      Verify Payments
+                    </button>
+                    <button (click)="cancelAllUnpaid()"
+                      class="px-3 py-2 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                      Cancel All Unpaid
+                    </button>
+                  }
                 </div>
               </div>
               <div class="border border-gray-200 overflow-hidden bg-white">
@@ -547,10 +563,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                             </td>
                             <td class="px-6 py-3.5 text-xs font-mono text-gray-400">{{ ticket.order_timestamp | date:'short' }}</td>
                             <td class="px-6 py-3.5">
-                              <div class="flex items-center justify-end gap-3">
-                                <button (click)="markPaid(ticket)" class="text-xs font-mono text-green-400 hover:text-green-300 uppercase tracking-wider">Mark Paid</button>
-                                <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Cancel</button>
-                              </div>
+                              @if (isManager()) {
+                                <div class="flex items-center justify-end gap-3">
+                                  <button (click)="markPaid(ticket)" class="text-xs font-mono text-green-400 hover:text-green-300 uppercase tracking-wider">Mark Paid</button>
+                                  <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Cancel</button>
+                                </div>
+                              }
                             </td>
                           </tr>
                         }
@@ -634,10 +652,12 @@ import { EventReferrer } from '../../../models/event-referrer.model';
           }
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Referrers</h2>
-            <button (click)="openReferrerModal()"
-              class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
-              + Add Referrer
-            </button>
+            @if (isManager()) {
+              <button (click)="openReferrerModal()"
+                class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                + Add Referrer
+              </button>
+            }
           </div>
 
           <div class="border border-gray-200 overflow-hidden bg-white">
@@ -676,7 +696,9 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                               <button (click)="copyLink(ref.referral_shortlink)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Copy</button>
                               <button (click)="downloadQrCode(ref.referral_shortlink, ref.name)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">QR</button>
                             }
-                            <button (click)="deleteReferrer(ref)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                            @if (isManager()) {
+                              <button (click)="deleteReferrer(ref)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                            }
                           </div>
                         </td>
                       </tr>
@@ -692,6 +714,11 @@ import { EventReferrer } from '../../../models/event-referrer.model';
       <!-- ====== EMAIL TAB ====== -->
       @if (activeTab() === 'email') {
         <div class="max-w-3xl">
+          @if (!isManager()) {
+            <div class="px-4 py-3 border border-amber-200 bg-amber-50 text-amber-700 text-xs font-mono mb-4">
+              You have viewer access. Sending emails to ticket holders is restricted to managers.
+            </div>
+          }
           <div class="border border-gray-200 bg-white p-6 space-y-5">
             <div class="flex items-center justify-between">
               <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest">Email Ticket Holders</h2>
@@ -722,22 +749,24 @@ import { EventReferrer } from '../../../models/event-referrer.model';
               <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ emailError() }}</div>
             }
 
-            <div class="flex items-end gap-3 pt-4 border-t border-gray-200">
-              <div class="flex-1">
-                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Test Email</label>
-                <input type="email" [(ngModel)]="testEmailAddress"
-                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
-                  placeholder="you@example.com">
+            @if (isManager()) {
+              <div class="flex items-end gap-3 pt-4 border-t border-gray-200">
+                <div class="flex-1">
+                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Test Email</label>
+                  <input type="email" [(ngModel)]="testEmailAddress"
+                    class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                    placeholder="you@example.com">
+                </div>
+                <button (click)="sendTestEmail()" [disabled]="emailSending()"
+                  class="px-4 py-2.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider disabled:opacity-50 transition-colors">
+                  {{ emailSending() ? 'Sending...' : 'Send Test' }}
+                </button>
+                <button (click)="sendEmail()" [disabled]="emailSending()"
+                  class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
+                  {{ emailSending() ? 'Sending...' : 'Send to All' }}
+                </button>
               </div>
-              <button (click)="sendTestEmail()" [disabled]="emailSending()"
-                class="px-4 py-2.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider disabled:opacity-50 transition-colors">
-                {{ emailSending() ? 'Sending...' : 'Send Test' }}
-              </button>
-              <button (click)="sendEmail()" [disabled]="emailSending()"
-                class="px-5 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-colors">
-                {{ emailSending() ? 'Sending...' : 'Send to All' }}
-              </button>
-            </div>
+            }
           </div>
         </div>
       }
@@ -809,13 +838,15 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                 </button>
               }
             </div>
-            <div class="pt-4 border-t border-gray-100">
-              <button (click)="refreshPin()" [disabled]="pinRefreshing()"
-                class="px-4 py-2 border border-red-200 text-red-500 hover:text-red-700 hover:border-red-400 text-xs font-mono uppercase tracking-wider disabled:opacity-50 transition-colors">
-                {{ pinRefreshing() ? 'Regenerating...' : 'Regenerate PIN' }}
-              </button>
-              <p class="mt-2 text-xs font-mono text-gray-400">Warning: regenerating will invalidate any currently active scanner sessions.</p>
-            </div>
+            @if (isManager()) {
+              <div class="pt-4 border-t border-gray-100">
+                <button (click)="refreshPin()" [disabled]="pinRefreshing()"
+                  class="px-4 py-2 border border-red-200 text-red-500 hover:text-red-700 hover:border-red-400 text-xs font-mono uppercase tracking-wider disabled:opacity-50 transition-colors">
+                  {{ pinRefreshing() ? 'Regenerating...' : 'Regenerate PIN' }}
+                </button>
+                <p class="mt-2 text-xs font-mono text-gray-400">Warning: regenerating will invalidate any currently active scanner sessions.</p>
+              </div>
+            }
           </div>
 
           <!-- QR code for scanner link -->
@@ -1271,6 +1302,11 @@ export class EventDetailComponent implements OnInit {
     if (tabId === 'sales') {
       this.loadWalkInTransactions();
     }
+  }
+
+  isManager(): boolean {
+    const role = this.event()?.user_role;
+    return role === 'owner' || role === 'manager';
   }
 
   isTicketingDisabled(): boolean {

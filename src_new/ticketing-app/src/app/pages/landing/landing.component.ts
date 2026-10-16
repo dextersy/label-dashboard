@@ -29,6 +29,7 @@ interface PublicEvent {
   ticketing_enabled?: boolean;
   external_ticket_link?: string | null;
   like_count?: number;
+  co_organizer_names?: string[];
 }
 
 @Component({
@@ -213,7 +214,9 @@ interface PublicEvent {
                   <div class="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between w-full gap-4 p-5 sm:p-6">
                     <div class="min-w-0">
                       @if (event.brand_name) {
-                        <p class="text-[10px] font-mono text-yellow-400/80 uppercase tracking-wider mb-1 truncate">{{ event.brand_name }}</p>
+                        <p class="text-[10px] font-mono text-yellow-400/80 uppercase tracking-wider mb-1 truncate">
+                          {{ event.brand_name }}{{ event.co_organizer_names && event.co_organizer_names.length > 0 ? ' · ' + formatCoOrganizers(event.co_organizer_names) : '' }}
+                        </p>
                       }
                       <p class="text-2xl font-black text-white group-hover:text-yellow-400 transition-colors uppercase leading-tight mb-1">{{ event.title }}</p>
                       <div class="flex items-stretch gap-2 mt-1 mb-0.5">
@@ -296,12 +299,16 @@ interface PublicEvent {
                 <!-- Info -->
                 <div class="p-4 flex flex-col flex-1">
                   @if (event.brand_name) {
-                    @if (event.brand_id) {
-                      <a [routerLink]="['/organizers', event.brand_id]"
-                        class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate hover:text-yellow-400/70 transition-colors inline-block">{{ event.brand_name }}</a>
-                    } @else {
-                      <p class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate">{{ event.brand_name }}</p>
-                    }
+                    <p class="font-mono text-white/35 text-xs mb-1.5 uppercase tracking-wider truncate">
+                      @if (event.brand_id) {
+                        <a [routerLink]="['/organizers', event.brand_id]" class="hover:text-yellow-400/70 transition-colors">{{ event.brand_name }}</a>
+                      } @else {
+                        {{ event.brand_name }}
+                      }
+                      @if (event.co_organizer_names && event.co_organizer_names.length > 0) {
+                        <span class="text-white/20"> · </span>{{ formatCoOrganizers(event.co_organizer_names) }}
+                      }
+                    </p>
                   }
                   <a [routerLink]="['/events', event.id]">
                     <h3 class="font-black text-white text-base leading-snug line-clamp-2 mb-3 uppercase hover:text-yellow-400 transition-colors">{{ event.title }}</h3>
@@ -637,6 +644,13 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   scrollToShows(): void {
     document.getElementById('shows')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  formatCoOrganizers(names: string[]): string {
+    if (names.length === 0) return '';
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `${names[0]} and ${names[1]}`;
+    return names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
   }
 
   openShare(event: MouseEvent, ev: PublicEvent): void {
