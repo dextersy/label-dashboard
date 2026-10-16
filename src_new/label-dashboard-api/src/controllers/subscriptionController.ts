@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import crypto from 'crypto';
 import { Op, fn, col, literal } from 'sequelize';
 import { sequelize } from '../config/database';
 import Plan from '../models/Plan';
@@ -8,10 +7,10 @@ import User from '../models/User';
 import Artist from '../models/Artist';
 import { ReleaseArtist, Release, PressCampaign, SyncLicensingPitch } from '../models';
 import {
-  createPayMongoCustomer,
-  syncPlanToPayMongo,
-  createPayMongoSubscription,
-  cancelPayMongoSubscription,
+  syncPlanToPayPal,
+  createPayPalSubscription,
+  cancelPayPalSubscription,
+  verifyPayPalWebhook,
   resolveEffectiveLimits,
   getEffectiveLimitsForBrand,
   getStorageUsedBytesForBrand,
@@ -43,7 +42,7 @@ export const getPlans = async (req: Request, res: Response): Promise<void> => {
         ],
       },
       order: [['sort_order', 'ASC']],
-      attributes: { exclude: ['paymongo_plan_id_monthly', 'paymongo_plan_id_annual'] },
+      attributes: { exclude: ['paypal_plan_id_monthly', 'paypal_plan_id_annual'] },
     });
 
     res.json({
@@ -146,13 +145,12 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
 
 // ---------------------------------------------------------------------------
 // POST /api/subscription/checkout
-// Initiates upgrade/switch to a paid plan. Returns a PayMongo checkout URL.
-// For the Free plan, switches immediately without PayMongo.
+// Initiates upgrade/switch to a paid plan. Returns a PayPal approval URL.
+// For the Free plan, switches immediately without PayPal.
 // ---------------------------------------------------------------------------
 export const initiateCheckout = async (req: Request, res: Response): Promise<void> => {
   try {
     const brandId = (req as any).user?.brand_id;
-    const userId = (req as any).user?.id;
     const { plan_id, billing_cycle } = req.body as {
       plan_id: number;
       billing_cycle: 'monthly' | 'annual';
@@ -171,7 +169,7 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Free plan: switch immediately, no PayMongo involved
+    // Free plan: switch immediately, no PayPal involved
     if (plan.price_monthly === 0 && plan.price_annual === 0) {
       const [freeBrandPlan] = await BrandPlan.findOrCreate({
         where: { brand_id: brandId },
@@ -181,8 +179,7 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
           started_at: new Date(),
           ends_at: null,
           status: 'active',
-          paymongo_customer_id: null,
-          paymongo_subscription_id: null,
+          paypal_subscription_id: null,
         } as any,
       });
       await freeBrandPlan.update({
@@ -191,44 +188,25 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
         started_at: new Date(),
         ends_at: null,
         status: 'active',
-        paymongo_customer_id: null,
-        paymongo_subscription_id: null,
+        paypal_subscription_id: null,
       });
       res.json({ immediate: true });
       return;
     }
 
-    // Paid plan: need PayMongo subscription
-    const user = await User.findByPk(userId);
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
+    // Paid plan: create PayPal subscription
+    // Ensure PayPal billing plan exists for this billing cycle
+    const paypalPlanId = await syncPlanToPayPal(plan, billing_cycle);
 
-    // Resolve or create PayMongo customer
-    let existingBrandPlan = await BrandPlan.findOne({ where: { brand_id: brandId } });
-    let customerId = existingBrandPlan?.paymongo_customer_id ?? null;
-
-    if (!customerId) {
-      customerId = await createPayMongoCustomer({
-        email: (user as any).email_address,
-        firstName: (user as any).first_name ?? '',
-        lastName: (user as any).last_name ?? '',
-        phone: (user as any).phone ?? undefined,
-      });
-    }
-
-    // Ensure PayMongo plan exists for this billing cycle
-    const paymongoplanId = await syncPlanToPayMongo(plan, billing_cycle);
-
-    // Build return URL
+    // Build return and cancel URLs
     const frontendUrl = await getBrandFrontendUrl(brandId);
-    const returnUrl = `${frontendUrl}/admin/subscription`;
+    const returnUrl = `${frontendUrl}/admin/subscription?checkout=success`;
+    const cancelUrl = `${frontendUrl}/admin/subscription?checkout=cancelled`;
 
-    const { subscriptionId, checkoutUrl } = await createPayMongoSubscription({
-      customerId,
-      planId: paymongoplanId,
+    const { subscriptionId, approvalUrl } = await createPayPalSubscription({
+      planId: paypalPlanId,
       returnUrl,
+      cancelUrl,
     });
 
     // Store the pending subscription record (status: incomplete until webhook confirms)
@@ -240,8 +218,7 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
         started_at: new Date(),
         ends_at: null,
         status: 'incomplete',
-        paymongo_customer_id: customerId,
-        paymongo_subscription_id: subscriptionId,
+        paypal_subscription_id: subscriptionId,
       } as any,
     });
     await paidBrandPlan.update({
@@ -250,11 +227,10 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
       started_at: new Date(),
       ends_at: null,
       status: 'incomplete',
-      paymongo_customer_id: customerId,
-      paymongo_subscription_id: subscriptionId,
+      paypal_subscription_id: subscriptionId,
     });
 
-    res.json({ checkout_url: checkoutUrl });
+    res.json({ checkout_url: approvalUrl });
   } catch (error: any) {
     console.error('initiateCheckout error:', error);
     res.status(500).json({ error: 'Failed to initiate subscription checkout' });
@@ -279,14 +255,14 @@ export const cancelSubscription = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Call PayMongo to cancel. If this throws, the subscription is still active —
+    // Call PayPal to cancel. If this throws, the subscription is still active —
     // DB is untouched and the brand is not affected.
-    if (brandPlan.paymongo_subscription_id) {
-      await cancelPayMongoSubscription(brandPlan.paymongo_subscription_id);
+    if (brandPlan.paypal_subscription_id) {
+      await cancelPayPalSubscription(brandPlan.paypal_subscription_id);
     }
 
-    // Do not eagerly downgrade the DB here. The subscription.updated webhook that
-    // PayMongo fires after cancellation is the single source of truth — it will
+    // Do not eagerly downgrade the DB here. The BILLING.SUBSCRIPTION.CANCELLED webhook
+    // that PayPal fires after cancellation is the single source of truth — it will
     // downgrade the brand to Free atomically via the webhook handler.
 
     res.json({ success: true });
@@ -298,7 +274,7 @@ export const cancelSubscription = async (req: Request, res: Response): Promise<v
 
 // ---------------------------------------------------------------------------
 // POST /api/subscription/dev-override  (development only)
-// Directly sets the brand's plan without PayMongo — for local testing only.
+// Directly sets the brand's plan without PayPal — for local testing only.
 // ---------------------------------------------------------------------------
 export const devOverridePlan = async (req: Request, res: Response): Promise<void> => {
   if (process.env.NODE_ENV !== 'development') {
@@ -329,8 +305,7 @@ export const devOverridePlan = async (req: Request, res: Response): Promise<void
         started_at: new Date(),
         ends_at: null,
         status: 'active',
-        paymongo_customer_id: null,
-        paymongo_subscription_id: null,
+        paypal_subscription_id: null,
       } as any,
     });
     await devBrandPlan.update({
@@ -339,8 +314,7 @@ export const devOverridePlan = async (req: Request, res: Response): Promise<void
       started_at: new Date(),
       ends_at: null,
       status: 'active',
-      paymongo_customer_id: null,
-      paymongo_subscription_id: null,
+      paypal_subscription_id: null,
     });
 
     res.json({ success: true, plan: plan.name, billing_cycle });
@@ -350,8 +324,8 @@ export const devOverridePlan = async (req: Request, res: Response): Promise<void
   }
 };
 
-// Fields that may be set by the superadmin UI. PayMongo plan IDs are intentionally
-// excluded — they are managed internally by syncPlanToPayMongo and must never be
+// Fields that may be set by the superadmin UI. PayPal plan IDs are intentionally
+// excluded — they are managed internally by syncPlanToPayPal and must never be
 // overwritten via the API.
 const PLAN_EDITABLE_FIELDS = [
   'name',
@@ -400,13 +374,13 @@ function pickEditableFields(body: any): Partial<Record<typeof PLAN_EDITABLE_FIEL
 // ---------------------------------------------------------------------------
 // GET /api/subscription/admin/plans  (superadmin only)
 // Returns ALL plans (public and non-public, active and inactive) for management.
-// PayMongo plan IDs are excluded from the response.
+// PayPal plan IDs are excluded from the response.
 // ---------------------------------------------------------------------------
 export const getAdminPlans = async (req: Request, res: Response): Promise<void> => {
   try {
     const plans = await Plan.findAll({
       order: [['sort_order', 'ASC'], ['id', 'ASC']],
-      attributes: { exclude: ['paymongo_plan_id_monthly', 'paymongo_plan_id_annual'] },
+      attributes: { exclude: ['paypal_plan_id_monthly', 'paypal_plan_id_annual'] },
     });
     res.json({ plans });
   } catch (error: any) {
@@ -451,69 +425,51 @@ export const updatePlan = async (req: Request, res: Response): Promise<void> => 
 
 // ---------------------------------------------------------------------------
 // POST /api/subscription/webhook
-// Public endpoint — PayMongo subscription lifecycle webhook.
+// Public endpoint — PayPal subscription lifecycle webhook.
 // ---------------------------------------------------------------------------
 export const handleSubscriptionWebhook = async (req: Request, res: Response): Promise<void> => {
-  // Verify PayMongo signature
-  const signature = req.headers['paymongo-signature'] as string | undefined;
-  const webhookSecret = process.env.PAYMONGO_WEBHOOK_SECRET;
+  // Verify PayPal webhook signature via their API
+  const authAlgo = req.headers['paypal-auth-algo'] as string | undefined;
+  const certUrl = req.headers['paypal-cert-url'] as string | undefined;
+  const transmissionId = req.headers['paypal-transmission-id'] as string | undefined;
+  const transmissionSig = req.headers['paypal-transmission-sig'] as string | undefined;
+  const transmissionTime = req.headers['paypal-transmission-time'] as string | undefined;
 
-  if (webhookSecret) {
-    const tMatch = signature?.match(/t=([^,]+)/);
-    const teMatch = signature?.match(/te=([^,]+)/);
-    const liMatch = signature?.match(/li=([^,]+)/);
-    const timestamp = tMatch?.[1];
-    const receivedSig = teMatch?.[1] ?? liMatch?.[1];
-
-    // Reject if the header is missing or unparseable — don't silently skip verification
-    if (!timestamp || !receivedSig) {
-      res.status(400).json({ error: 'Missing or malformed signature header' });
-      return;
-    }
-
-    const rawBody = (req as any).rawBody;
-    if (!rawBody) {
-      console.error('Webhook signature verification failed: rawBody is missing. Ensure the webhook route has the raw body capture middleware applied.');
-      res.status(400).json({ error: 'Invalid signature' });
-      return;
-    }
-
-    const expectedSig = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(`${timestamp}.${rawBody}`)
-      .digest('hex');
-
-    if (expectedSig !== receivedSig) {
-      res.status(400).json({ error: 'Invalid signature' });
+  if (authAlgo && certUrl && transmissionId && transmissionSig && transmissionTime) {
+    const isValid = await verifyPayPalWebhook({
+      authAlgo,
+      certUrl,
+      transmissionId,
+      transmissionSig,
+      transmissionTime,
+      webhookEvent: req.body,
+    });
+    if (!isValid) {
+      res.status(400).json({ error: 'Invalid webhook signature' });
       return;
     }
   }
 
   try {
+    const eventType: string = req.body?.event_type ?? '';
+    const resource = req.body?.resource;
 
-    const event = req.body?.data?.attributes;
-    const eventType: string = event?.type ?? '';
-    const resourceData = event?.data;
-
-    if (!resourceData) {
+    if (!resource) {
       res.sendStatus(200);
       return;
     }
 
-    const attrs = resourceData.attributes;
-
-    // Invoice paid → activate subscription.
-    // Guard: only move forward from incomplete/past_due — ignore if already active
-    // (protects against duplicate or out-of-order delivery).
-    if (eventType === 'subscription.invoice.paid') {
-      const subscriptionId: string = attrs?.subscription_id;
+    // BILLING.SUBSCRIPTION.ACTIVATED → mark active
+    // Guard: only move forward from incomplete/past_due — ignore if already active.
+    if (eventType === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+      const subscriptionId: string = resource.id;
       if (subscriptionId) {
         await sequelize.transaction(async (t) => {
           await BrandPlan.update(
             { status: 'active' },
             {
               where: {
-                paymongo_subscription_id: subscriptionId,
+                paypal_subscription_id: subscriptionId,
                 status: { [Op.in]: ['incomplete', 'past_due', 'unpaid'] },
               },
               transaction: t,
@@ -523,17 +479,36 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
       }
     }
 
-    // Invoice payment failed → mark past_due.
-    // Guard: only move forward from active/incomplete.
-    if (eventType === 'subscription.invoice.payment_failed') {
-      const subscriptionId: string = attrs?.subscription_id;
+    // PAYMENT.SALE.COMPLETED → payment received, ensure subscription is active.
+    // billing_agreement_id is the subscription ID on sale events.
+    if (eventType === 'PAYMENT.SALE.COMPLETED') {
+      const subscriptionId: string = resource.billing_agreement_id;
+      if (subscriptionId) {
+        await sequelize.transaction(async (t) => {
+          await BrandPlan.update(
+            { status: 'active' },
+            {
+              where: {
+                paypal_subscription_id: subscriptionId,
+                status: { [Op.in]: ['incomplete', 'past_due', 'unpaid'] },
+              },
+              transaction: t,
+            }
+          );
+        });
+      }
+    }
+
+    // BILLING.SUBSCRIPTION.PAYMENT.FAILED → mark past_due
+    if (eventType === 'BILLING.SUBSCRIPTION.PAYMENT.FAILED') {
+      const subscriptionId: string = resource.id;
       if (subscriptionId) {
         await sequelize.transaction(async (t) => {
           await BrandPlan.update(
             { status: 'past_due' },
             {
               where: {
-                paymongo_subscription_id: subscriptionId,
+                paypal_subscription_id: subscriptionId,
                 status: { [Op.in]: ['active', 'incomplete'] },
               },
               transaction: t,
@@ -543,67 +518,69 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
       }
     }
 
-    // Subscription updated (catches cancellations and unpaid).
-    // Guard: don't overwrite a terminal state (cancelled) with an earlier state.
-    if (eventType === 'subscription.updated' || eventType === 'subscription.unpaid') {
-      const subscriptionId: string = resourceData.id;
-      const newStatus: string = attrs?.status;
+    // BILLING.SUBSCRIPTION.SUSPENDED → treat as past_due
+    if (eventType === 'BILLING.SUBSCRIPTION.SUSPENDED') {
+      const subscriptionId: string = resource.id;
+      if (subscriptionId) {
+        await sequelize.transaction(async (t) => {
+          await BrandPlan.update(
+            { status: 'past_due' },
+            {
+              where: {
+                paypal_subscription_id: subscriptionId,
+                status: { [Op.ne]: 'cancelled' },
+              },
+              transaction: t,
+            }
+          );
+        });
+      }
+    }
 
-      if (subscriptionId && newStatus) {
-        const statusMap: Record<string, BrandPlan['status']> = {
-          active: 'active',
-          incomplete: 'incomplete',
-          incomplete_cancelled: 'cancelled',
-          past_due: 'past_due',
-          unpaid: 'unpaid',
-          cancelled: 'cancelled',
-        };
-        const mappedStatus = statusMap[newStatus];
-        if (mappedStatus) {
-          await sequelize.transaction(async (t) => {
-            // Don't regress out of a terminal state
+    // BILLING.SUBSCRIPTION.CANCELLED → downgrade to Free
+    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
+      const subscriptionId: string = resource.id;
+      if (subscriptionId) {
+        await sequelize.transaction(async (t) => {
+          // Don't regress out of a terminal state
+          await BrandPlan.update(
+            { status: 'cancelled' },
+            {
+              where: {
+                paypal_subscription_id: subscriptionId,
+                status: { [Op.ne]: 'cancelled' },
+              },
+              transaction: t,
+            }
+          );
+
+          // Downgrade to Free plan within the same transaction
+          const freePlan = await Plan.findOne({
+            where: { is_default_free: true, is_active: true },
+            transaction: t,
+          });
+          if (freePlan) {
             await BrandPlan.update(
-              { status: mappedStatus },
               {
-                where: {
-                  paymongo_subscription_id: subscriptionId,
-                  status: { [Op.ne]: 'cancelled' },
-                },
+                plan_id: freePlan.id,
+                billing_cycle: 'monthly',
+                status: 'active',
+                paypal_subscription_id: null,
+              },
+              {
+                where: { paypal_subscription_id: subscriptionId },
                 transaction: t,
               }
             );
-
-            // If cancelled or unpaid, downgrade to Free within the same transaction
-            if (mappedStatus === 'cancelled' || mappedStatus === 'unpaid') {
-              const freePlan = await Plan.findOne({
-                where: { is_default_free: true, is_active: true },
-                transaction: t,
-              });
-              if (freePlan) {
-                await BrandPlan.update(
-                  {
-                    plan_id: freePlan.id,
-                    billing_cycle: 'monthly',
-                    status: 'active',
-                    paymongo_subscription_id: null,
-                  },
-                  {
-                    where: { paymongo_subscription_id: subscriptionId },
-                    transaction: t,
-                  }
-                );
-              }
-            }
-          });
-        }
+          }
+        });
       }
     }
 
     res.sendStatus(200);
   } catch (error: any) {
     console.error('handleSubscriptionWebhook error:', error);
-    // Return 500 so PayMongo retries on genuine infrastructure/DB failures.
-    // Signature rejections (400) are handled before the try block and are not retried.
+    // Return 500 so PayPal retries on genuine infrastructure/DB failures.
     res.sendStatus(500);
   }
 };

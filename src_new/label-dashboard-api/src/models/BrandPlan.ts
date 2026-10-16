@@ -18,10 +18,9 @@ interface BrandPlanAttributes {
   override_limit_storage_gb?: number | null;
   override_limit_admin_users?: number | null;
 
-  // PayMongo subscription tracking
+  // PayPal subscription tracking
   status: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled';
-  paymongo_customer_id?: string | null;
-  paymongo_subscription_id?: string | null;
+  paypal_subscription_id?: string | null;
 }
 
 interface BrandPlanCreationAttributes extends Optional<BrandPlanAttributes, 'id'> {}
@@ -42,8 +41,7 @@ class BrandPlan extends Model<BrandPlanAttributes, BrandPlanCreationAttributes> 
   public override_limit_admin_users?: number | null;
 
   public status!: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled';
-  public paymongo_customer_id?: string | null;
-  public paymongo_subscription_id?: string | null;
+  public paypal_subscription_id?: string | null;
 
   // Association properties
   public plan?: Plan;
@@ -124,11 +122,7 @@ BrandPlan.init(
       allowNull: false,
       defaultValue: 'active',
     },
-    paymongo_customer_id: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-    },
-    paymongo_subscription_id: {
+    paypal_subscription_id: {
       type: DataTypes.STRING(100),
       allowNull: true,
     },
