@@ -278,6 +278,9 @@ export const sendBrandedEmail = async (
     case 'addon_payment_receipt':
       subject = `We've got your payment for ${templateData.EVENT_TITLE} add-ons!`;
       break;
+    case 'subscription_activated_email':
+      subject = `Your ${templateData.PLAN_NAME} subscription is now active`;
+      break;
     default:
       subject = 'Notification';
   }
@@ -1546,4 +1549,47 @@ export const sendEmailWithInlineImages = async (
   await logEmailAttempt(recipients, subject, htmlBody, failedCount === 0, brandId);
 
   return { successCount, failedCount };
+};
+
+export const sendSubscriptionActivatedEmail = async (
+  brandId: number,
+  planName: string,
+  billingCycle: 'monthly' | 'annual',
+  price: number,
+): Promise<boolean> => {
+  try {
+    const brand = await Brand.findByPk(brandId, {
+      include: [{ model: Brand, as: 'parentBrand' }],
+    });
+    if (!brand) return false;
+
+    // Use parent brand's identity for the email if available, otherwise own brand
+    const senderBrand: Brand = (brand as any).parentBrand ?? brand;
+
+    const adminEmails = await getBrandAdministrators(brandId);
+    if (!adminEmails.length) return false;
+
+    const dashboardUrl = await getBrandFrontendUrl(brandId);
+    const priceLabel = billingCycle === 'monthly'
+      ? `₱${price.toLocaleString()}/month`
+      : `₱${price.toLocaleString()}/year`;
+
+    const brandLogoHtml = senderBrand.logo_url
+      ? `<img src="${escapeHtml(senderBrand.logo_url)}" alt="${escapeHtml(senderBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+      : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(senderBrand.brand_name)}</div>`;
+
+    // Send with senderBrand's id so nodemailer uses its name as the From display name
+    return await sendBrandedEmail(adminEmails, 'subscription_activated_email', {
+      BRAND_NAME: escapeHtml(senderBrand.brand_name),
+      BRAND_LOGO_HTML: brandLogoHtml,
+      BRAND_COLOR: senderBrand.brand_color || '#333333',
+      PLAN_NAME: escapeHtml(planName),
+      BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
+      AMOUNT: escapeHtml(priceLabel),
+      DASHBOARD_URL: dashboardUrl,
+    }, senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionActivatedEmail error:', error);
+    return false;
+  }
 };

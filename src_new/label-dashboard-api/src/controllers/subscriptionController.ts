@@ -16,6 +16,7 @@ import {
   getStorageUsedBytesForBrand,
 } from '../services/subscriptionService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
+import { sendSubscriptionActivatedEmail } from '../utils/emailService';
 
 // ---------------------------------------------------------------------------
 // GET /api/subscription/plans
@@ -435,19 +436,22 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
   const transmissionSig = req.headers['paypal-transmission-sig'] as string | undefined;
   const transmissionTime = req.headers['paypal-transmission-time'] as string | undefined;
 
-  if (authAlgo && certUrl && transmissionId && transmissionSig && transmissionTime) {
-    const isValid = await verifyPayPalWebhook({
-      authAlgo,
-      certUrl,
-      transmissionId,
-      transmissionSig,
-      transmissionTime,
-      webhookEvent: req.body,
-    });
-    if (!isValid) {
-      res.status(400).json({ error: 'Invalid webhook signature' });
-      return;
-    }
+  if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
+    res.status(400).json({ error: 'Missing PayPal webhook signature headers' });
+    return;
+  }
+
+  const isValid = await verifyPayPalWebhook({
+    authAlgo,
+    certUrl,
+    transmissionId,
+    transmissionSig,
+    transmissionTime,
+    webhookEvent: req.body,
+  });
+  if (!isValid) {
+    res.status(400).json({ error: 'Invalid webhook signature' });
+    return;
   }
 
   try {
@@ -464,8 +468,9 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
     if (eventType === 'BILLING.SUBSCRIPTION.ACTIVATED') {
       const subscriptionId: string = resource.id;
       if (subscriptionId) {
+        let activatedBrandPlan: BrandPlan | null = null;
         await sequelize.transaction(async (t) => {
-          await BrandPlan.update(
+          const [count] = await BrandPlan.update(
             { status: 'active' },
             {
               where: {
@@ -475,7 +480,26 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
               transaction: t,
             }
           );
+          if (count > 0) {
+            activatedBrandPlan = await BrandPlan.findOne({
+              where: { paypal_subscription_id: subscriptionId },
+              include: [{ model: Plan, as: 'plan' }],
+              transaction: t,
+            });
+          }
         });
+        if (activatedBrandPlan) {
+          const bp = activatedBrandPlan as BrandPlan & { plan?: Plan };
+          const price = bp.billing_cycle === 'monthly'
+            ? (bp.plan?.price_monthly ?? 0)
+            : (bp.plan?.price_annual ?? 0);
+          sendSubscriptionActivatedEmail(
+            bp.brand_id,
+            bp.plan?.name ?? 'Paid',
+            bp.billing_cycle as 'monthly' | 'annual',
+            price,
+          ).catch((err) => console.error('sendSubscriptionActivatedEmail error:', err));
+        }
       }
     }
 
@@ -542,19 +566,6 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
       const subscriptionId: string = resource.id;
       if (subscriptionId) {
         await sequelize.transaction(async (t) => {
-          // Don't regress out of a terminal state
-          await BrandPlan.update(
-            { status: 'cancelled' },
-            {
-              where: {
-                paypal_subscription_id: subscriptionId,
-                status: { [Op.ne]: 'cancelled' },
-              },
-              transaction: t,
-            }
-          );
-
-          // Downgrade to Free plan within the same transaction
           const freePlan = await Plan.findOne({
             where: { is_default_free: true, is_active: true },
             transaction: t,
