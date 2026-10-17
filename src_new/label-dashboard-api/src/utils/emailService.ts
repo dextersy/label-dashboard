@@ -281,6 +281,12 @@ export const sendBrandedEmail = async (
     case 'subscription_activated_email':
       subject = `Your ${templateData.PLAN_NAME} subscription is now active`;
       break;
+    case 'subscription_past_due_email':
+      subject = `Action required: payment failed for your ${templateData.PLAN_NAME} subscription`;
+      break;
+    case 'subscription_downgraded_email':
+      subject = `Your ${templateData.PLAN_NAME} subscription has ended`;
+      break;
     default:
       subject = 'Notification';
   }
@@ -1590,6 +1596,71 @@ export const sendSubscriptionActivatedEmail = async (
     }, senderBrand.id);
   } catch (error) {
     console.error('sendSubscriptionActivatedEmail error:', error);
+    return false;
+  }
+};
+
+// Helper shared by past-due and downgraded emails to build sender brand context
+const buildSubscriptionEmailContext = async (brandId: number) => {
+  const brand = await Brand.findByPk(brandId, {
+    include: [{ model: Brand, as: 'parentBrand' }],
+  });
+  if (!brand) return null;
+
+  const senderBrand: Brand = (brand as any).parentBrand ?? brand;
+  const adminEmails = await getBrandAdministrators(brandId);
+  if (!adminEmails.length) return null;
+
+  const dashboardUrl = await getBrandFrontendUrl(brandId);
+  const brandLogoHtml = senderBrand.logo_url
+    ? `<img src="${escapeHtml(senderBrand.logo_url)}" alt="${escapeHtml(senderBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+    : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(senderBrand.brand_name)}</div>`;
+
+  return { senderBrand, adminEmails, dashboardUrl, brandLogoHtml };
+};
+
+export const sendSubscriptionPastDueEmail = async (
+  brandId: number,
+  planName: string,
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_past_due_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      PLAN_NAME: escapeHtml(planName),
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionPastDueEmail error:', error);
+    return false;
+  }
+};
+
+export const sendSubscriptionDowngradedEmail = async (
+  brandId: number,
+  planName: string,
+  reason: 'suspended' | 'cancelled',
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    const reasonLabel = reason === 'suspended' ? 'suspended due to failed payments' : 'cancelled';
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_downgraded_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      PLAN_NAME: escapeHtml(planName),
+      REASON: reasonLabel,
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionDowngradedEmail error:', error);
     return false;
   }
 };

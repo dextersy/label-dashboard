@@ -16,7 +16,7 @@ import {
   getStorageUsedBytesForBrand,
 } from '../services/subscriptionService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
-import { sendSubscriptionActivatedEmail } from '../utils/emailService';
+import { sendSubscriptionActivatedEmail, sendSubscriptionPastDueEmail, sendSubscriptionDowngradedEmail } from '../utils/emailService';
 
 // ---------------------------------------------------------------------------
 // GET /api/subscription/plans
@@ -527,8 +527,9 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
     if (eventType === 'BILLING.SUBSCRIPTION.PAYMENT.FAILED') {
       const subscriptionId: string = resource.id;
       if (subscriptionId) {
+        let affectedBrandPlan: BrandPlan & { plan?: Plan } | null = null;
         await sequelize.transaction(async (t) => {
-          await BrandPlan.update(
+          const [count] = await BrandPlan.update(
             { status: 'past_due' },
             {
               where: {
@@ -538,33 +539,35 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
               transaction: t,
             }
           );
+          if (count > 0) {
+            affectedBrandPlan = await BrandPlan.findOne({
+              where: { paypal_subscription_id: subscriptionId },
+              include: [{ model: Plan, as: 'plan' }],
+              transaction: t,
+            }) as BrandPlan & { plan?: Plan } | null;
+          }
         });
+        if (affectedBrandPlan) {
+          sendSubscriptionPastDueEmail(
+            affectedBrandPlan.brand_id,
+            affectedBrandPlan.plan?.name ?? 'Paid',
+          ).catch((err) => console.error('sendSubscriptionPastDueEmail error:', err));
+        }
       }
     }
 
-    // BILLING.SUBSCRIPTION.SUSPENDED → treat as past_due
+    // BILLING.SUBSCRIPTION.SUSPENDED → downgrade to Free.
+    // PayPal may skip CANCELLED after SUSPENDED on some plan configs, so treat
+    // SUSPENDED as terminal and downgrade immediately rather than staying past_due.
     if (eventType === 'BILLING.SUBSCRIPTION.SUSPENDED') {
       const subscriptionId: string = resource.id;
       if (subscriptionId) {
-        await sequelize.transaction(async (t) => {
-          await BrandPlan.update(
-            { status: 'past_due' },
-            {
-              where: {
-                paypal_subscription_id: subscriptionId,
-                status: { [Op.ne]: 'cancelled' },
-              },
-              transaction: t,
-            }
-          );
-        });
-      }
-    }
-
-    // BILLING.SUBSCRIPTION.CANCELLED → downgrade to Free
-    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
-      const subscriptionId: string = resource.id;
-      if (subscriptionId) {
+        let affectedBrandPlan: BrandPlan & { plan?: Plan } | null = null;
+        // Fetch before updating so we still have the plan name
+        affectedBrandPlan = await BrandPlan.findOne({
+          where: { paypal_subscription_id: subscriptionId },
+          include: [{ model: Plan, as: 'plan' }],
+        }) as BrandPlan & { plan?: Plan } | null;
         await sequelize.transaction(async (t) => {
           const freePlan = await Plan.findOne({
             where: { is_default_free: true, is_active: true },
@@ -585,6 +588,53 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
             );
           }
         });
+        if (affectedBrandPlan) {
+          sendSubscriptionDowngradedEmail(
+            affectedBrandPlan.brand_id,
+            affectedBrandPlan.plan?.name ?? 'Paid',
+            'suspended',
+          ).catch((err) => console.error('sendSubscriptionDowngradedEmail error:', err));
+        }
+      }
+    }
+
+    // BILLING.SUBSCRIPTION.CANCELLED → downgrade to Free
+    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED') {
+      const subscriptionId: string = resource.id;
+      if (subscriptionId) {
+        let affectedBrandPlan: BrandPlan & { plan?: Plan } | null = null;
+        // Fetch before updating so we still have the plan name
+        affectedBrandPlan = await BrandPlan.findOne({
+          where: { paypal_subscription_id: subscriptionId },
+          include: [{ model: Plan, as: 'plan' }],
+        }) as BrandPlan & { plan?: Plan } | null;
+        await sequelize.transaction(async (t) => {
+          const freePlan = await Plan.findOne({
+            where: { is_default_free: true, is_active: true },
+            transaction: t,
+          });
+          if (freePlan) {
+            await BrandPlan.update(
+              {
+                plan_id: freePlan.id,
+                billing_cycle: 'monthly',
+                status: 'active',
+                paypal_subscription_id: null,
+              },
+              {
+                where: { paypal_subscription_id: subscriptionId },
+                transaction: t,
+              }
+            );
+          }
+        });
+        if (affectedBrandPlan) {
+          sendSubscriptionDowngradedEmail(
+            affectedBrandPlan.brand_id,
+            affectedBrandPlan.plan?.name ?? 'Paid',
+            'cancelled',
+          ).catch((err) => console.error('sendSubscriptionDowngradedEmail error:', err));
+        }
       }
     }
 
