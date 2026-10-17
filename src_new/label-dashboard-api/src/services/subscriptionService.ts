@@ -6,90 +6,119 @@ import BrandPlan from '../models/BrandPlan';
 import Brand from '../models/Brand';
 import User from '../models/User';
 
-const PAYMONGO_BASE_URL = 'https://api.paymongo.com/v1';
-const PAYMONGO_TIMEOUT_MS = 15_000;
+// ---------------------------------------------------------------------------
+// PayPal OAuth2 token cache
+// ---------------------------------------------------------------------------
 
-function paymongoClient() {
-  const key = process.env.PAYMONGO_SECRET_KEY;
-  if (!key) throw new Error('PAYMONGO_SECRET_KEY is not configured');
+let _cachedToken: { token: string; expiresAt: number } | null = null;
+
+function paypalBaseUrl(): string {
+  return process.env.PAYPAL_MODE === 'live'
+    ? 'https://api-m.paypal.com'
+    : 'https://api-m.sandbox.paypal.com';
+}
+
+async function getPayPalAccessToken(): Promise<string> {
+  if (_cachedToken && Date.now() < _cachedToken.expiresAt - 60_000) {
+    return _cachedToken.token;
+  }
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error('PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET are not configured');
+  }
+
+  const response = await axios.post(
+    `${paypalBaseUrl()}/v1/oauth2/token`,
+    'grant_type=client_credentials',
+    {
+      timeout: 15_000,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      },
+    }
+  );
+
+  const { access_token, expires_in } = response.data;
+  _cachedToken = {
+    token: access_token,
+    expiresAt: Date.now() + (expires_in as number) * 1000,
+  };
+  return access_token;
+}
+
+async function paypalClient() {
+  const token = await getPayPalAccessToken();
   return axios.create({
-    baseURL: PAYMONGO_BASE_URL,
-    timeout: PAYMONGO_TIMEOUT_MS,
+    baseURL: paypalBaseUrl(),
+    timeout: 15_000,
     headers: {
-      Authorization: `Basic ${Buffer.from(`${key}:`).toString('base64')}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
   });
 }
 
 // ---------------------------------------------------------------------------
-// PayMongo Customer
+// PayPal Billing Plan (reusable billing template)
 // ---------------------------------------------------------------------------
 
-export async function createPayMongoCustomer(params: {
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-}): Promise<string> {
-  try {
-    const response = await paymongoClient().post('/customers', {
-      data: {
-        attributes: {
-          email: params.email,
-          first_name: params.firstName || undefined,
-          last_name: params.lastName || undefined,
-          phone: params.phone || undefined,
-          default_device: 'email',
-        },
-      },
-    });
-    return response.data.data.id as string;
-  } catch (err: any) {
-    const paymongoErrors = err?.response?.data?.errors;
-    console.error('PayMongo createCustomer failed:', JSON.stringify(paymongoErrors, null, 2));
-    throw err;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// PayMongo Plan (reusable billing template)
-// ---------------------------------------------------------------------------
-
-async function createPayMongoPlan(params: {
+async function createPayPalBillingPlan(params: {
   name: string;
-  amountCentavos: number;
-  interval: 'month' | 'year';
+  amount: number;
+  interval: 'MONTH' | 'YEAR';
   intervalCount: number;
 }): Promise<string> {
-  const response = await paymongoClient().post('/plans', {
-    data: {
-      attributes: {
-        name: params.name,
-        amount: params.amountCentavos,
-        currency: 'PHP',
-        interval: params.interval,
-        interval_count: params.intervalCount,
+  const productId = process.env.PAYPAL_PRODUCT_ID;
+  if (!productId) throw new Error('PAYPAL_PRODUCT_ID is not configured');
+
+  const currency = process.env.PAYPAL_CURRENCY || 'PHP';
+  const client = await paypalClient();
+
+  const response = await client.post('/v1/billing/plans', {
+    product_id: productId,
+    name: params.name,
+    status: 'ACTIVE',
+    billing_cycles: [
+      {
+        frequency: {
+          interval_unit: params.interval,
+          interval_count: params.intervalCount,
+        },
+        tenure_type: 'REGULAR',
+        sequence: 1,
+        total_cycles: 0, // 0 = never expires (ongoing subscription)
+        pricing_scheme: {
+          fixed_price: {
+            value: params.amount.toFixed(2),
+            currency_code: currency,
+          },
+        },
       },
+    ],
+    payment_preferences: {
+      auto_bill_outstanding: true,
+      setup_fee_failure_action: 'CONTINUE',
+      payment_failure_threshold: 3,
     },
   });
-  return response.data.data.id as string;
+
+  return response.data.id as string;
 }
 
 /**
- * Ensures the PayMongo plan exists for the given billing cycle.
+ * Ensures the PayPal billing plan exists for the given billing cycle.
  * Creates it on first use and persists the ID back to the plan row.
  *
  * Uses SELECT FOR UPDATE to prevent concurrent checkouts for the same plan from
- * creating duplicate PayMongo plan objects (orphaned billing templates).
+ * creating duplicate PayPal billing plan objects.
  */
-export async function syncPlanToPayMongo(
+export async function syncPlanToPayPal(
   plan: Plan,
   billingCycle: 'monthly' | 'annual'
 ): Promise<string> {
   // Phase 1: read under lock — short transaction, no external calls.
-  // Returns the existing PayMongo plan ID if already created, or the plan
-  // data needed to create one.
   const existing = await sequelize.transaction(async (t: Transaction) => {
     const lockedPlan = await Plan.findByPk(plan.id, {
       lock: t.LOCK.UPDATE,
@@ -99,34 +128,34 @@ export async function syncPlanToPayMongo(
 
     const existingId =
       billingCycle === 'monthly'
-        ? lockedPlan.paymongo_plan_id_monthly
-        : lockedPlan.paymongo_plan_id_annual;
+        ? lockedPlan.paypal_plan_id_monthly
+        : lockedPlan.paypal_plan_id_annual;
 
     if (existingId) return { done: true as const, id: existingId };
 
     return {
       done: false as const,
       name: lockedPlan.name,
-      amountCentavos:
+      amount:
         billingCycle === 'monthly'
-          ? Math.round(lockedPlan.price_monthly * 100)
-          : Math.round(lockedPlan.price_annual * 100),
+          ? lockedPlan.price_monthly
+          : lockedPlan.price_annual,
     };
   });
 
   if (existing.done) return existing.id;
 
-  // Phase 2: call PayMongo outside any transaction — lock is released.
+  // Phase 2: call PayPal outside any transaction — lock is released.
   const label = billingCycle === 'monthly' ? 'Monthly' : 'Annual';
-  const paymongoId = await createPayMongoPlan({
+  const paypalPlanId = await createPayPalBillingPlan({
     name: `${existing.name} (${label})`,
-    amountCentavos: existing.amountCentavos,
-    interval: billingCycle === 'monthly' ? 'month' : 'year',
+    amount: existing.amount,
+    interval: billingCycle === 'monthly' ? 'MONTH' : 'YEAR',
     intervalCount: 1,
   });
 
   // Phase 3: write the new ID back under a fresh lock. Re-check first in case a
-  // concurrent caller already wrote it while we were waiting on PayMongo.
+  // concurrent caller already wrote it while we were waiting on PayPal.
   return sequelize.transaction(async (t: Transaction) => {
     const lockedPlan = await Plan.findByPk(plan.id, {
       lock: t.LOCK.UPDATE,
@@ -136,53 +165,98 @@ export async function syncPlanToPayMongo(
 
     const raceId =
       billingCycle === 'monthly'
-        ? lockedPlan.paymongo_plan_id_monthly
-        : lockedPlan.paymongo_plan_id_annual;
+        ? lockedPlan.paypal_plan_id_monthly
+        : lockedPlan.paypal_plan_id_annual;
 
     if (raceId) {
-      // Another caller beat us — use their ID (paymongoId is an orphan but harmless)
+      // Another caller beat us — use their ID (paypalPlanId is an orphan but harmless)
       return raceId;
     }
 
     if (billingCycle === 'monthly') {
-      lockedPlan.paymongo_plan_id_monthly = paymongoId;
+      lockedPlan.paypal_plan_id_monthly = paypalPlanId;
     } else {
-      lockedPlan.paymongo_plan_id_annual = paymongoId;
+      lockedPlan.paypal_plan_id_annual = paypalPlanId;
     }
     await lockedPlan.save({ transaction: t });
-    return paymongoId;
+    return paypalPlanId;
   });
 }
 
 // ---------------------------------------------------------------------------
-// PayMongo Subscription
+// PayPal Subscription
 // ---------------------------------------------------------------------------
 
-export async function createPayMongoSubscription(params: {
-  customerId: string;
+export async function createPayPalSubscription(params: {
   planId: string;
   returnUrl: string;
-}): Promise<{ subscriptionId: string; checkoutUrl: string }> {
-  const response = await paymongoClient().post('/subscriptions', {
-    data: {
-      attributes: {
-        customer_id: params.customerId,
-        plan_id: params.planId,
-        return_url: params.returnUrl,
-      },
+  cancelUrl: string;
+}): Promise<{ subscriptionId: string; approvalUrl: string }> {
+  const client = await paypalClient();
+  const response = await client.post('/v1/billing/subscriptions', {
+    plan_id: params.planId,
+    application_context: {
+      shipping_preference: 'NO_SHIPPING',
+      user_action: 'SUBSCRIBE_NOW',
+      landing_page: 'BILLING',
+      return_url: params.returnUrl,
+      cancel_url: params.cancelUrl,
     },
   });
-  const attrs = response.data.data.attributes;
+
+  const subscription = response.data;
+  const approvalLink = (subscription.links as any[]).find((l: any) => l.rel === 'approve');
+  if (!approvalLink) {
+    throw new Error('PayPal subscription approval URL not found in response');
+  }
+
   return {
-    subscriptionId: response.data.data.id as string,
-    checkoutUrl: attrs.latest_invoice?.attributes?.hosted_url as string,
+    subscriptionId: subscription.id as string,
+    approvalUrl: approvalLink.href as string,
   };
 }
 
-export async function cancelPayMongoSubscription(subscriptionId: string): Promise<void> {
-  await paymongoClient().post(`/subscriptions/${subscriptionId}/cancel`, {
-    data: { attributes: { cancellation_reason: 'other' } },
+export async function cancelPayPalSubscription(subscriptionId: string): Promise<void> {
+  const client = await paypalClient();
+  await client.post(`/v1/billing/subscriptions/${subscriptionId}/cancel`, {
+    reason: 'Cancelled by user',
   });
+}
+
+// ---------------------------------------------------------------------------
+// PayPal Webhook Signature Verification
+// ---------------------------------------------------------------------------
+
+export async function verifyPayPalWebhook(params: {
+  authAlgo: string;
+  certUrl: string;
+  transmissionId: string;
+  transmissionSig: string;
+  transmissionTime: string;
+  webhookEvent: any;
+}): Promise<boolean> {
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+  if (!webhookId) {
+    console.error('PAYPAL_WEBHOOK_ID not set — cannot verify webhook signature');
+    return false;
+  }
+
+  try {
+    const client = await paypalClient();
+    const response = await client.post('/v1/notifications/verify-webhook-signature', {
+      auth_algo: params.authAlgo,
+      cert_url: params.certUrl,
+      transmission_id: params.transmissionId,
+      transmission_sig: params.transmissionSig,
+      transmission_time: params.transmissionTime,
+      webhook_id: webhookId,
+      webhook_event: params.webhookEvent,
+    });
+    return response.data.verification_status === 'SUCCESS';
+  } catch (err) {
+    console.error('PayPal webhook verification request failed:', err);
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------

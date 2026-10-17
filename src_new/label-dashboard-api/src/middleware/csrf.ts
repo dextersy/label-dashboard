@@ -200,6 +200,7 @@ const extractOrigin = (url: string): string | null => {
 const CSRF_EXEMPT_PATHS = [
   '/api/public/webhook/payment', // PayMongo payment webhook (signature verified)
   '/api/public/webhook/',         // Generic webhook prefix (must verify signatures)
+  '/api/subscription/webhook',    // PayPal subscription webhook (signature verified)
   '/api/system/',                 // System API (JWT authenticated, system user required)
 ];
 

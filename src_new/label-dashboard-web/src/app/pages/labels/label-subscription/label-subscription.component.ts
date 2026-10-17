@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -15,7 +15,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
   templateUrl: './label-subscription.component.html',
   styleUrls: ['./label-subscription.component.scss'],
 })
-export class LabelSubscriptionComponent implements OnInit {
+export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   @ViewChild('plansSection') plansSection!: ElementRef<HTMLElement>;
   loading = true;
   actionLoading = false;
@@ -30,8 +30,12 @@ export class LabelSubscriptionComponent implements OnInit {
   usageStorageBytes = 0;
   billingCycle: 'monthly' | 'annual' = 'monthly';
 
-  // Show a banner if returning from a PayMongo checkout
+  // Show a banner if returning from a PayPal checkout
   returnStatus: 'success' | 'pending' | null = null;
+  private pollTimer: ReturnType<typeof setTimeout> | null = null;
+  private pollAttempts = 0;
+  private readonly POLL_MAX = 10;
+  private readonly POLL_INTERVAL_MS = 3000;
 
   readonly isDev = !environment.production;
 
@@ -53,11 +57,15 @@ export class LabelSubscriptionComponent implements OnInit {
 
   ngOnInit(): void {
     const qp = this.route.snapshot.queryParamMap;
-    if (qp.has('subscription')) {
-      // PayMongo redirects back — webhook may not have fired yet
+    if (qp.get('checkout') === 'success') {
+      // PayPal redirects back — webhook may not have fired yet, poll until active
       this.returnStatus = 'pending';
     }
     this.loadPlans();
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollTimer) clearTimeout(this.pollTimer);
   }
 
   loadPlans(): void {
@@ -79,9 +87,14 @@ export class LabelSubscriptionComponent implements OnInit {
         if (this.currentSubscription) {
           this.billingCycle = this.currentSubscription.billing_cycle;
         }
-        // If we just returned from checkout and subscription is now active, clear the pending banner
-        if (this.returnStatus === 'pending' && this.currentSubscription?.status === 'active') {
-          this.returnStatus = 'success';
+        // If we just returned from checkout, poll until the webhook marks it active
+        if (this.returnStatus === 'pending') {
+          if (this.currentSubscription?.status === 'active') {
+            this.returnStatus = 'success';
+          } else if (this.pollAttempts < this.POLL_MAX) {
+            this.pollAttempts++;
+            this.pollTimer = setTimeout(() => this.loadPlans(), this.POLL_INTERVAL_MS);
+          }
         }
         this.loading = false;
       },
@@ -218,14 +231,16 @@ export class LabelSubscriptionComponent implements OnInit {
     if (!this.currentSubscription) return plan.price_monthly > 0;
     const currentPlan = this.plans.find((p) => p.id === this.currentSubscription!.plan_id);
     if (!currentPlan) return false;
-    return plan.sort_order > currentPlan.sort_order;
+    if (plan.sort_order !== currentPlan.sort_order) return plan.sort_order > currentPlan.sort_order;
+    return plan.price_monthly > currentPlan.price_monthly;
   }
 
   isDowngrade(plan: Plan): boolean {
     if (!this.currentSubscription) return false;
     const currentPlan = this.plans.find((p) => p.id === this.currentSubscription!.plan_id);
     if (!currentPlan) return false;
-    return plan.sort_order < currentPlan.sort_order;
+    if (plan.sort_order !== currentPlan.sort_order) return plan.sort_order < currentPlan.sort_order;
+    return plan.price_monthly < currentPlan.price_monthly;
   }
 
   displayPrice(plan: Plan): number {
@@ -302,6 +317,8 @@ export class LabelSubscriptionComponent implements OnInit {
     const confirmed = await this.confirmationService.confirm({
       title: this.isDowngrade(plan) ? 'Switch plan' : 'Upgrade plan',
       message: `Switch to the ${plan.name} plan (${priceLabel})?`,
+      note: plan.price_monthly > 0 ? 'You will be redirected to PayPal to complete payment. A PayPal account is required to set up recurring billing.' : undefined,
+      noteIcon: plan.price_monthly > 0 ? 'paypal' : undefined,
       confirmText: 'Confirm',
       cancelText: 'Cancel',
       type: this.isDowngrade(plan) ? 'warning' : 'info',
@@ -317,7 +334,7 @@ export class LabelSubscriptionComponent implements OnInit {
           this.loadPlans();
           this.actionLoading = false;
         } else if (result.checkout_url) {
-          // Redirect to PayMongo hosted checkout for first payment
+          // Redirect to PayPal hosted checkout for first payment
           window.location.href = result.checkout_url;
         }
       },

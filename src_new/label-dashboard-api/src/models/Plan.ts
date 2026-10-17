@@ -42,9 +42,9 @@ interface PlanAttributes {
   is_default_free: boolean;
   sort_order: number;
 
-  // PayMongo plan IDs (created lazily on first subscription for that billing cycle)
-  paymongo_plan_id_monthly?: string | null;
-  paymongo_plan_id_annual?: string | null;
+  // PayPal billing plan IDs (created lazily on first subscription for that billing cycle)
+  paypal_plan_id_monthly?: string | null;
+  paypal_plan_id_annual?: string | null;
 }
 
 interface PlanCreationAttributes extends Optional<PlanAttributes, 'id' | 'sort_order'> {}
@@ -86,8 +86,8 @@ class Plan extends Model<PlanAttributes, PlanCreationAttributes> implements Plan
   public is_public!: boolean;
   public is_default_free!: boolean;
   public sort_order!: number;
-  public paymongo_plan_id_monthly?: string | null;
-  public paymongo_plan_id_annual?: string | null;
+  public paypal_plan_id_monthly?: string | null;
+  public paypal_plan_id_annual?: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -291,11 +291,11 @@ Plan.init(
       allowNull: false,
       defaultValue: 0,
     },
-    paymongo_plan_id_monthly: {
+    paypal_plan_id_monthly: {
       type: DataTypes.STRING(100),
       allowNull: true,
     },
-    paymongo_plan_id_annual: {
+    paypal_plan_id_annual: {
       type: DataTypes.STRING(100),
       allowNull: true,
     },

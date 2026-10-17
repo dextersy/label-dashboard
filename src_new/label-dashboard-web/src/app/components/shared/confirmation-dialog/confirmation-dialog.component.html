@@ -36,6 +36,16 @@
       <!-- Body -->
       <div class="modal-body cd-modal-body">
         <p id="confirmation-dialog-message" class="cd-primary-text">{{ data?.message }}</p>
+        <div *ngIf="data?.note" class="tw-flex tw-items-center tw-gap-2 tw-mt-3 tw-px-3 tw-py-2 tw-rounded tw-border tw-border-blue-200 tw-bg-blue-50 tw-text-blue-700 tw-text-sm">
+          <ng-container [ngSwitch]="data?.noteIcon">
+            <svg *ngSwitchCase="'paypal'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw-flex-shrink-0 tw-w-10 tw-h-5" aria-label="PayPal">
+              <path fill="#003087" d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
+              <path fill="#0070E0" d="M20.307 5.126a6.33 6.33 0 0 0-.198-.048 7.46 7.46 0 0 0-.363-.067 9.15 9.15 0 0 0-1.455-.106H12.6a.932.932 0 0 0-.922.788L10.26 13.95l-.03.193a1.05 1.05 0 0 1 1.05-.9h2.19c4.298 0 7.664-1.747 8.647-6.797.029-.149.053-.294.077-.437a5.122 5.122 0 0 0-.887-.883z"/>
+            </svg>
+            <app-icon *ngSwitchDefault name="info" class="tw-flex-shrink-0" />
+          </ng-container>
+          <span>{{ data?.note }}</span>
+        </div>
         <div *ngIf="data?.warning" class="tw-flex tw-items-start tw-gap-2 tw-mt-3 tw-px-3 tw-py-2 tw-rounded tw-border tw-border-amber-300 tw-bg-amber-50 tw-text-warning tw-text-sm">
           <app-icon name="warning" class="tw-flex-shrink-0 tw-mt-px" />
           <span>{{ data?.warning }}</span>

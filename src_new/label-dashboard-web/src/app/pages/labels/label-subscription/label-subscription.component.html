@@ -21,13 +21,6 @@
             </a>
           }
         </div>
-        <p class="tw-mt-3 tw-mb-0 tw-text-sm tw-text-[var(--color-muted)] tw-bg-[var(--color-surface-subtle)] tw-rounded tw-px-3 tw-py-2">
-          Online subscriptions are coming soon.
-          <a href="mailto:support@melt-records.com" class="tw-text-[var(--brand-color)] tw-font-medium tw-inline-flex tw-items-center tw-gap-0.5">
-            Contact us <app-icon name="arrow-right" class="tw-text-xs" />
-          </a>
-          to upgrade your plan.
-        </p>
       </div>
     </div>
 
@@ -39,7 +32,7 @@
     }
     @if (returnStatus === 'pending') {
       <div class="alert alert-warning tw-mb-6">
-        Payment received — your plan will activate shortly. Refresh this page in a moment.
+        Payment received — activating your plan&hellip;
       </div>
     }
 
@@ -376,8 +369,10 @@
                       Switch to {{ plan.name }}
                     </button>
                   } @else {
-                    <button class="btn btn-primary tw-w-full" disabled title="Online subscriptions coming soon">
-                      Coming Soon
+                    <button class="btn btn-primary tw-w-full"
+                            (click)="selectPlan(plan)"
+                            [disabled]="actionLoading">
+                      {{ isDowngrade(plan) ? 'Switch to ' + plan.name : 'Upgrade to ' + plan.name }}
                     </button>
                   }
                 </div>
@@ -411,8 +406,8 @@
 
       <!-- Footer note -->
       <p class="tw-text-xs tw-text-[var(--color-muted)] tw-text-center tw-mt-8 tw-px-6 sm:tw-px-0">
-        Subscriptions are billed via PayMongo. Accepted: Visa, Mastercard, Maya.
-        Processing fees still apply for payment gateway charges.
+        Subscriptions are billed via PayPal. A PayPal account is required for recurring billing.
+        Processing fees may apply.
       </p>
 
     }
