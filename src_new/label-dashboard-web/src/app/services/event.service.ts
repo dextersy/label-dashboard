@@ -185,6 +185,7 @@ export interface Event {
   // Member discount
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
+  user_role?: 'owner' | 'manager' | 'viewer';
 }
 
 export interface EventTag {
@@ -244,6 +245,12 @@ export class EventService {
   private dataRefreshSubject = new BehaviorSubject<void>(undefined);
   public dataRefresh$ = this.dataRefreshSubject.asObservable();
   private readonly SELECTED_EVENT_KEY = 'melt_selected_event';
+
+  // Shared events list cache — populated by EventsComponent, consumed by all event pages
+  private availableEventsSubject = new BehaviorSubject<Event[]>([]);
+  public availableEvents$ = this.availableEventsSubject.asObservable();
+  private eventsLoadingSubject = new BehaviorSubject<boolean>(false);
+  public eventsLoading$ = this.eventsLoadingSubject.asObservable();
 
   constructor(private http: HttpClient) {
     // Load previously selected event from localStorage on service init
@@ -314,6 +321,37 @@ export class EventService {
       map(response => response.events),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Update the shared available events cache. Call this after any getEvents() load.
+   */
+  setAvailableEvents(events: Event[]): void {
+    this.availableEventsSubject.next(events);
+  }
+
+  /**
+   * Synchronous read of the current cached events list.
+   */
+  getAvailableEvents(): Event[] {
+    return this.availableEventsSubject.value;
+  }
+
+  /**
+   * Lazy-load the events list into the shared cache.
+   * No-op if a load is already in progress or the cache is already populated.
+   * Use this from pages that may load before EventsComponent has populated the cache.
+   */
+  loadEvents(): void {
+    if (this.eventsLoadingSubject.value || this.availableEventsSubject.value.length > 0) return;
+    this.eventsLoadingSubject.next(true);
+    this.getEvents().subscribe({
+      next: (events) => {
+        this.availableEventsSubject.next(events);
+        this.eventsLoadingSubject.next(false);
+      },
+      error: () => this.eventsLoadingSubject.next(false),
+    });
   }
 
   /**

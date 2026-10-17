@@ -272,6 +272,9 @@ export const sendBrandedEmail = async (
     case 'event_invite_email':
       subject = `You've been invited to manage ${templateData.event_title} as a ${templateData.role_label}`;
       break;
+    case 'event_brand_collab_invite_email':
+      subject = `${templateData.inviting_brand_name} invited your brand to collaborate on ${templateData.event_title}`;
+      break;
     case 'addon_payment_receipt':
       subject = `We've got your payment for ${templateData.EVENT_TITLE} add-ons!`;
       break;

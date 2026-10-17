@@ -1,26 +1,19 @@
-<app-breadcrumb></app-breadcrumb>
+<div>
 
-<div class="container-fluid">
-
-  <!-- Event selector -->
-  <div class="page-header tw-mb-3" *ngIf="availableEvents.length > 0">
-    <app-event-selection
-      [events]="availableEvents"
-      [selectedEvent]="selectedEvent"
-      [loading]="loadingEvents"
-      [isAdmin]="isAdmin"
-      (eventSelected)="onEventSelection($event)"
-    ></app-event-selection>
-  </div>
-
-  <div *ngIf="!selectedEvent && !loadingEvents" class="card mb-4">
+  <div *ngIf="!selectedEvent" class="card mb-4">
     <div class="card-body text-center py-5 text-muted small">
-      Select an event above to manage its add-ons.
+      No event selected. Select an event from the Events page.
     </div>
   </div>
 
+  <div *ngIf="selectedEvent && !isManager" class="tw-py-5 tw-text-center">
+    <app-icon name="lock" class="fa-4x tw-mb-3 tw-text-muted" iconOnly />
+    <h5 class="tw-text-muted">Access Restricted</h5>
+    <p class="tw-text-muted">You do not have permission to manage add-ons.</p>
+  </div>
+
   <app-in-page-nav
-    *ngIf="selectedEvent"
+    *ngIf="selectedEvent && isManager"
     [tabs]="tabs"
     [activeTab]="activeTab"
     (tabChange)="onTabChange($event)"

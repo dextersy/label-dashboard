@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
 import { WristbandOrder, WristbandOrderItem, WristbandColor, EventWristbandSettings, Event } from '../models';
+import { findEventForUser, resolveEventRole } from '../utils/eventAccess';
 import { uploadToS3, deleteFromS3, getS3ObjectStream } from '../utils/s3Service';
 import { sendEmail, sendWristbandOrderStatusEmail } from '../utils/emailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -24,9 +25,6 @@ export const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 102
 
 // ─── Shared helpers ────────────────────────────────────────────────────────
 
-async function resolveEvent(eventId: number, brandId: number): Promise<InstanceType<typeof Event> | null> {
-  return Event.findOne({ where: { id: eventId, brand_id: brandId } });
-}
 
 async function validateItems(
   items: { wristband_color_id: number; quantity: number }[]
@@ -125,7 +123,7 @@ export const getWristbandSettings = async (req: AuthRequest, res: Response) => {
     const eventId = parseInt(req.query.event_id as string);
     if (!eventId) return res.status(400).json({ error: 'event_id is required' });
 
-    const event = await resolveEvent(eventId, req.user.brand_id);
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const settings = await EventWristbandSettings.findOne({ where: { event_id: eventId } });
@@ -141,7 +139,7 @@ export const upsertWristbandSettings = async (req: AuthRequest, res: Response) =
     const eventId = parseInt(req.query.event_id as string);
     if (!eventId) return res.status(400).json({ error: 'event_id is required' });
 
-    const event = await resolveEvent(eventId, req.user.brand_id);
+    const event = await findEventForUser(req, eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const { delivery_name, delivery_street, delivery_city, delivery_country, delivery_zip, delivery_phone } = req.body;
@@ -170,7 +168,9 @@ export const getWristbandOrders = async (req: AuthRequest, res: Response) => {
     const eventId = parseInt(req.query.event_id as string);
     if (!eventId) return res.status(400).json({ error: 'event_id is required' });
 
-    const event = await resolveEvent(eventId, req.user.brand_id);
+    const role = await resolveEventRole(req, eventId);
+    if (role !== 'owner' && role !== 'manager') return res.status(403).json({ error: 'Manager access required' });
+    const event = await Event.findByPk(eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const orders = await WristbandOrder.findAll({
@@ -197,7 +197,9 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
     const eventId = parseInt(req.query.event_id as string);
     if (!eventId) return res.status(400).json({ error: 'event_id is required' });
 
-    const event = await resolveEvent(eventId, req.user.brand_id);
+    const role = await resolveEventRole(req, eventId);
+    if (role !== 'owner' && role !== 'manager') return res.status(403).json({ error: 'Manager access required' });
+    const event = await Event.findByPk(eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (new Date((event as any).date_and_time) < new Date()) {
@@ -276,10 +278,11 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
     const orderId = parseInt(String(req.params.id));
     const order = await WristbandOrder.findOne({
       where: { id: orderId },
-      include: [{ model: Event, as: 'event', attributes: ['brand_id'] }],
+      include: [{ model: Event, as: 'event', attributes: ['id', 'brand_id'] }],
     }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.event?.brand_id !== req.user.brand_id) return res.status(403).json({ error: 'Forbidden' });
+    const updateRole = await resolveEventRole(req, order.event?.id);
+    if (updateRole !== 'owner' && updateRole !== 'manager') return res.status(403).json({ error: 'Manager access required' });
 
     if (order.status !== 'draft' && order.status !== 'rejected') {
       return res.status(400).json({ error: 'Only draft or rejected orders can be edited' });
@@ -469,10 +472,11 @@ export const deleteWristbandOrder = async (req: AuthRequest, res: Response) => {
     const orderId = parseInt(String(req.params.id));
     const order = await WristbandOrder.findOne({
       where: { id: orderId },
-      include: [{ model: Event, as: 'event', attributes: ['brand_id'] }],
+      include: [{ model: Event, as: 'event', attributes: ['id', 'brand_id'] }],
     }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
-    if (order.event?.brand_id !== req.user.brand_id) return res.status(403).json({ error: 'Forbidden' });
+    const deleteRole = await resolveEventRole(req, order.event?.id);
+    if (deleteRole !== 'owner' && deleteRole !== 'manager') return res.status(403).json({ error: 'Manager access required' });
 
     if (order.status !== 'draft') {
       return res.status(400).json({ error: 'Only draft orders can be deleted' });

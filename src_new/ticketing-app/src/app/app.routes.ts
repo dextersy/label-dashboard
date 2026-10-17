@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { audienceAuthGuard } from './guards/audience-auth.guard';
+import { eventManagerGuard } from './guards/event-manager.guard';
 
 export const routes: Routes = [
   {
@@ -63,7 +64,7 @@ export const routes: Routes = [
           { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
           { path: 'events', loadComponent: () => import('./pages/events/events-list/events-list.component').then(m => m.EventsListComponent) },
           { path: 'events/new', loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
-          { path: 'events/:id/edit', loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
+          { path: 'events/:id/edit', canActivate: [eventManagerGuard], loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
           { path: 'events/:id', loadComponent: () => import('./pages/events/event-detail/event-detail.component').then(m => m.EventDetailComponent) },
           { path: 'payouts', loadComponent: () => import('./pages/payouts/payouts.component').then(m => m.PayoutsComponent) },
           { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) },
@@ -125,6 +126,10 @@ export const routes: Routes = [
     path: 'my-shows/:eventId',
     canActivate: [audienceAuthGuard],
     loadComponent: () => import('./pages/audience/show-detail/show-detail.component').then(m => m.ShowDetailComponent)
+  },
+  {
+    path: 'event-brand-collab-invite',
+    loadComponent: () => import('./pages/events/event-collab-invite/event-collab-invite.component').then(m => m.EventCollabInviteComponent)
   },
   { path: '**', redirectTo: '/' }
 ];

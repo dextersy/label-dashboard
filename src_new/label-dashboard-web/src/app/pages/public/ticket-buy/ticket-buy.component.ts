@@ -416,6 +416,13 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return '₱' + this.formatPrice(price);
   }
 
+  formatCoOrganizers(brands: { name: string }[]): string {
+    if (brands.length === 0) return '';
+    if (brands.length === 1) return brands[0].name;
+    if (brands.length === 2) return `${brands[0].name} and ${brands[1].name}`;
+    return brands.slice(0, -1).map(b => b.name).join(', ') + ', and ' + brands[brands.length - 1].name;
+  }
+
   formatEventDate(dateString?: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);

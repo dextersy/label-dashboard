@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, AudienceUser, EventAccess } from '../models';
+import { User, AudienceUser, EventAccess, EventBrandCollaboration } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -87,12 +87,25 @@ export const requireEventAccess = (minRole: 'viewer' | 'manager') => {
     const eventId = parseInt(req.params.id as string, 10);
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
-    const access = await EventAccess.findOne({
+    // Check user-level access first
+    const userAccess = await EventAccess.findOne({
       where: { event_id: eventId, user_id: req.user.id, status: 'Accepted' },
     });
 
-    if (!access) return res.status(403).json({ error: 'No access to this event' });
-    if (minRole === 'manager' && access.role !== 'manager') {
+    if (userAccess) {
+      if (minRole === 'manager' && userAccess.role !== 'manager') {
+        return res.status(403).json({ error: 'Manager access required for this operation' });
+      }
+      return next();
+    }
+
+    // Fall back to brand-level access
+    const brandAccess = await EventBrandCollaboration.findOne({
+      where: { event_id: eventId, brand_id: req.user.brand_id, status: 'Accepted' },
+    });
+
+    if (!brandAccess) return res.status(403).json({ error: 'No access to this event' });
+    if (minRole === 'manager' && brandAccess.role !== 'manager') {
       return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 

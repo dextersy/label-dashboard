@@ -49,9 +49,9 @@ import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 import { campaignsAccessGuard } from './guards/campaigns-access.guard';
-import { EventAddOnsComponent } from './pages/events/event-add-ons/event-add-ons.component';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
+import { EventBrandCollabInviteComponent } from './pages/event-brand-collab-invite/event-brand-collab-invite.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -63,6 +63,7 @@ export const routes: Routes = [
   { path: 'invite', component: InviteComponent }, // No auth guard - standalone
   { path: 'invite/accept', component: InviteComponent }, // Legacy route - alias for /invite
   { path: 'event-invite', component: EventInviteComponent }, // No auth guard - standalone event invite flow
+  { path: 'event-brand-collab-invite', component: EventBrandCollabInviteComponent }, // No auth guard - standalone brand collab invite flow
   { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone
   { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
   
@@ -142,16 +143,16 @@ export const routes: Routes = [
       { path: 'events', redirectTo: 'events/details', pathMatch: 'full' },
       { path: 'events/dashboard', redirectTo: '/campaigns/dashboard', pathMatch: 'full' }, // Legacy redirect
       { path: 'events/new', component: EventFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
-      { path: 'events/details', component: EventFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
+      { path: 'events/details', component: EventsComponent, data: { tab: 'details' }, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'events/abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'events/referrals', component: EventsComponent, data: { tab: 'referrals' } },
       { path: 'events/walk-in', redirectTo: 'events/tickets', pathMatch: 'full' },
       { path: 'events/email', component: EventsComponent, data: { tab: 'email' } },
       { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
-      { path: 'events/access', component: EventsComponent, data: { tab: 'access' }, canActivate: [adminGuard] },
+      { path: 'events/access', component: EventsComponent, data: { tab: 'access' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
-      { path: 'events/add-ons', component: EventAddOnsComponent },
+      { path: 'events/add-ons', component: EventsComponent, data: { tab: 'add-ons' } },
       { path: 'events/wristband-order-review', component: WristbandOrderReviewComponent, canActivate: [adminGuard] },
       // Fundraisers
       { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },

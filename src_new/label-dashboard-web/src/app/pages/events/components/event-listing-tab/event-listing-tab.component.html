@@ -6,7 +6,8 @@
     <div class="form-check form-switch tw-mb-1">
       <input class="form-check-input" type="checkbox" role="switch"
              id="listedOnTicketing"
-             [(ngModel)]="listedOnTicketing">
+             [(ngModel)]="listedOnTicketing"
+             [disabled]="!isAdmin">
       <label class="form-check-label" for="listedOnTicketing">
         List on YourScene.live
       </label>
@@ -27,7 +28,8 @@
     <div class="form-check form-switch tw-mb-1">
       <input class="form-check-input" type="checkbox" role="switch"
              id="showAttendeeCount"
-             [(ngModel)]="showAttendeeCount">
+             [(ngModel)]="showAttendeeCount"
+             [disabled]="!isAdmin">
       <label class="form-check-label" for="showAttendeeCount">
         Show number of attendees
       </label>
@@ -43,7 +45,7 @@
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
       <div>
         <label for="eventType" class="tw-label">Event Type</label>
-        <select id="eventType" [(ngModel)]="eventType" class="tw-input">
+        <select id="eventType" [(ngModel)]="eventType" class="tw-input" [disabled]="!isAdmin">
           <option *ngFor="let opt of eventTypeOptions" [value]="opt.value">{{ opt.label }}</option>
         </select>
       </div>
@@ -56,7 +58,8 @@
         <button
           *ngFor="let tag of availableTags"
           type="button"
-          (click)="toggleTag(tag.id)"
+          (click)="isAdmin && toggleTag(tag.id)"
+          [disabled]="!isAdmin"
           class="tw-px-3 tw-py-1 tw-text-xs tw-font-medium tw-rounded-badge tw-border tw-transition-colors"
           [class.tw-text-white]="isTagSelected(tag.id)"
           [class.tw-border-transparent]="isTagSelected(tag.id)"
@@ -75,11 +78,12 @@
           [(ngModel)]="newTagInput"
           placeholder="Add custom tag..."
           class="tw-input tw-flex-1"
+          [disabled]="!isAdmin"
           (keyup.enter)="addCustomTag()">
         <button
           type="button"
           (click)="addCustomTag()"
-          [disabled]="!newTagInput.trim()"
+          [disabled]="!newTagInput.trim() || !isAdmin"
           class="btn-primary btn-sm">
           <app-icon name="plus" /> Add
         </button>

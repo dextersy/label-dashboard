@@ -12,6 +12,7 @@ export interface EventSales {
   tickets_sold: number;
   total_tickets: number;
   total_checked_in: number;
+  is_collab?: boolean;
 }
 
 Chart.register(...registerables);

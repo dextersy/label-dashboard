@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, signal, computed, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -50,6 +50,7 @@ interface PublicEventView {
   user_liked?: boolean;
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
+  co_organizers?: { id: number; name: string; logo_url?: string | null }[];
 }
 
 @Component({
@@ -119,8 +120,13 @@ interface PublicEventView {
               <!-- Info -->
               <div class="flex-1 min-w-0 py-2">
                 @if (event()!.brand) {
-                  <a [routerLink]="['/organizers', event()!.brand!.id]"
-                    class="text-xs font-mono text-yellow-400/70 uppercase tracking-[0.2em] mb-3 hover:text-yellow-400 transition-colors inline-block">{{ event()!.brand!.name }}</a>
+                  <p class="text-xs font-mono text-yellow-400/70 uppercase tracking-[0.2em] mb-3">
+                    <a [routerLink]="['/organizers', event()!.brand!.id]" class="hover:text-yellow-400 transition-colors">{{ event()!.brand!.name }}</a>
+                    @if (event()!.co_organizers && event()!.co_organizers!.length > 0) {
+                      <span class="text-white/30"> · </span>
+                      {{ formatCoOrganizers(event()!.co_organizers!) }}
+                    }
+                  </p>
                 }
                 <div class="flex items-start justify-between gap-4 mb-5">
                   <h1 class="text-3xl sm:text-4xl font-black text-white uppercase leading-tight">{{ event()!.title }}</h1>
@@ -364,17 +370,28 @@ interface PublicEventView {
 
               <!-- Organizer card -->
               @if (event()!.brand) {
-                <a [routerLink]="['/organizers', event()!.brand!.id]"
-                  class="block border border-white/10 hover:border-yellow-400/40 transition-colors p-4 group">
-                  <p class="text-xs font-mono text-white/30 uppercase tracking-widest mb-2">Organizer</p>
-                  @if (event()!.brand!.logo_url) {
-                    <div class="inline-flex items-center justify-center p-2 mb-2" [style.background-color]="event()!.brand!.color || '#000000'">
-                      <img [src]="event()!.brand!.logo_url" [alt]="event()!.brand!.name" class="h-6 object-contain">
-                    </div>
-                  } @else {
-                    <p class="text-white font-bold text-sm group-hover:text-yellow-400 transition-colors">{{ event()!.brand!.name }}</p>
-                  }
-                </a>
+                <div class="border border-white/10 p-4">
+                  <p class="text-xs font-mono text-white/30 uppercase tracking-widest mb-3">{{ allOrganizers().length > 1 ? 'Organizers' : 'Organizer' }}</p>
+                  <div class="flex items-center">
+                    @for (org of allOrganizers(); track org.id; let i = $index) {
+                      <div class="relative group/avatar" [style.z-index]="allOrganizers().length - i" [style.margin-left]="i === 0 ? '0' : '-10px'">
+                        <a [routerLink]="['/organizers', org.id]"
+                          class="block w-10 h-10 rounded-full border-2 border-black overflow-hidden flex-shrink-0 transition-transform duration-150 hover:scale-110 hover:z-50 relative"
+                          [style.background-color]="org.color || '#18181b'">
+                          @if (org.logo_url) {
+                            <img [src]="org.logo_url" [alt]="org.name" class="w-full h-full object-cover">
+                          } @else {
+                            <span class="w-full h-full flex items-center justify-center text-white font-black text-sm uppercase select-none">{{ org.name.charAt(0) }}</span>
+                          }
+                        </a>
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white text-black text-[10px] font-bold uppercase tracking-wide whitespace-nowrap pointer-events-none opacity-0 group-hover/avatar:opacity-100 transition-opacity z-50">
+                          {{ org.name }}
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
               }
             </div>
 
@@ -419,6 +436,14 @@ export class EventViewComponent implements OnInit, OnDestroy {
   error = signal(false);
   event = signal<PublicEventView | null>(null);
   shareModalOpen = signal(false);
+
+  allOrganizers = computed(() => {
+    const ev = this.event();
+    if (!ev?.brand) return [];
+    const owner = { id: ev.brand.id, name: ev.brand.name, logo_url: ev.brand.logo_url ?? null, color: ev.brand.color ?? null };
+    const collabs = (ev.co_organizers || []).map(c => ({ id: c.id, name: c.name, logo_url: c.logo_url ?? null, color: null }));
+    return [owner, ...collabs];
+  });
   showAuthModal = signal(false);
   liked = signal(false);
   likeCount = signal(0);
@@ -520,6 +545,13 @@ export class EventViewComponent implements OnInit, OnDestroy {
         this.likeCount.set(res.like_count);
       }
     });
+  }
+
+  formatCoOrganizers(brands: { name: string }[]): string {
+    if (brands.length === 0) return '';
+    if (brands.length === 1) return brands[0].name;
+    if (brands.length === 2) return `${brands[0].name} and ${brands[1].name}`;
+    return brands.slice(0, -1).map(b => b.name).join(', ') + ', and ' + brands[brands.length - 1].name;
   }
 
   formatDescription(text: string): string {

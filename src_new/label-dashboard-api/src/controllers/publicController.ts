@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow, EventBrandCollaboration } from '../models';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
@@ -270,7 +270,14 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         like_count: likeCount,
         user_liked: userLiked,
         member_discount_type: event.member_discount_type || null,
-        member_discount_amount: event.member_discount_amount ?? null
+        member_discount_amount: event.member_discount_amount ?? null,
+        co_organizers: await (async () => {
+          const collabs = await EventBrandCollaboration.findAll({
+            where: { event_id: eventId, status: 'Accepted' },
+            include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'logo_url'] }],
+          });
+          return collabs.map((c: any) => c.brand).filter(Boolean).map((b: any) => ({ id: b.id, name: b.brand_name, logo_url: b.logo_url || null }));
+        })(),
       }
     });
   } catch (error) {
@@ -1946,6 +1953,21 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
       }
     }
 
+    // Batch-fetch accepted brand collaborators for all events
+    const collabsByEvent: Record<number, string[]> = {};
+    if (eventIds.length > 0) {
+      const collabRows = await EventBrandCollaboration.findAll({
+        where: { event_id: { [Op.in]: eventIds }, status: 'Accepted' },
+        include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name'] }],
+      });
+      for (const row of collabRows) {
+        const brand = (row as any).brand;
+        if (!brand) continue;
+        if (!collabsByEvent[row.event_id]) collabsByEvent[row.event_id] = [];
+        collabsByEvent[row.event_id].push(brand.brand_name);
+      }
+    }
+
     const result = events.map(event => {
       const priceDisplay = getEventDisplayPriceSync(event);
       const brand = (event as any).brand;
@@ -1968,6 +1990,7 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
         like_count: likeCounts[event.id] || 0,
         brand_name: brand?.brand_name || null,
         brand_id: brand?.id || null,
+        co_organizer_names: collabsByEvent[event.id] || [],
       };
     });
 
@@ -3687,9 +3710,19 @@ export const getOrganizerProfile = async (req: Request, res: Response) => {
 
     const followerCount = await AudienceFollow.count({ where: { brand_id: brandId } });
 
+    // Include events this brand owns AND events it collaborates on
+    const collabRows = await EventBrandCollaboration.findAll({
+      where: { brand_id: brandId, status: 'Accepted' },
+      attributes: ['event_id'],
+    });
+    const collabEventIds = collabRows.map((c: any) => c.event_id);
+
     const upcomingEvents = await Event.findAll({
       where: {
-        brand_id: brandId,
+        [Op.or]: [
+          { brand_id: brandId },
+          ...(collabEventIds.length > 0 ? [{ id: { [Op.in]: collabEventIds } }] : []),
+        ],
         status: 'published',
         listed_on_ticketing: true,
         date_and_time: { [Op.gte]: new Date() },

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { EventAddOnPayment, Event, User, WristbandOrder, WristbandOrderItem, WristbandColor } from '../models';
+import { resolveEventRole } from '../utils/eventAccess';
 import { getBrandReceivableBalance } from '../utils/labelBalanceUtils';
 import { PaymentService } from '../utils/paymentService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -83,7 +84,9 @@ export const getAddOnPayments = async (req: AuthRequest, res: Response) => {
     const eventId = parseInt(req.query.event_id as string);
     if (!eventId) return res.status(400).json({ error: 'event_id is required' });
 
-    const event = await Event.findOne({ where: { id: eventId, brand_id: req.user.brand_id } });
+    const getRole = await resolveEventRole(req, eventId);
+    if (!getRole) return res.status(403).json({ error: 'Access denied for this event' });
+    const event = await Event.findOne({ where: { id: eventId } });
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const payments = await EventAddOnPayment.findAll({
@@ -118,7 +121,9 @@ export const createAddOnPayment = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'amount must be a positive number' });
     }
 
-    const event = await Event.findOne({ where: { id: event_id, brand_id: req.user.brand_id } });
+    const createRole = await resolveEventRole(req, event_id);
+    if (createRole !== 'owner' && createRole !== 'manager') return res.status(403).json({ error: 'Manager access required' });
+    const event = await Event.findOne({ where: { id: event_id } });
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (method === 'balance') {
@@ -159,7 +164,9 @@ export const initiateAddOnPayment = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'amount must be a positive number' });
     }
 
-    const event = await Event.findOne({ where: { id: event_id, brand_id: req.user.brand_id } });
+    const initiateRole = await resolveEventRole(req, event_id);
+    if (initiateRole !== 'owner' && initiateRole !== 'manager') return res.status(403).json({ error: 'Manager access required' });
+    const event = await Event.findOne({ where: { id: event_id } });
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const frontendUrl = await getBrandFrontendUrl(req.user.brand_id);

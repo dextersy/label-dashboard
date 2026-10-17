@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Event, WalkInType, WalkInTransaction, WalkInTransactionItem, User, EventAccess } from '../models';
+import { resolveEventRole } from '../utils/eventAccess';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -19,14 +20,8 @@ export const getWalkInTypes = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { id: eventIdNum, brand_id: req.user.brand_id }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const role = await resolveEventRole(req, eventIdNum);
+    if (!role) return res.status(403).json({ error: 'Access denied for this event' });
 
     const walkInTypes = await WalkInType.findAll({
       where: { event_id: eventIdNum },
@@ -78,18 +73,9 @@ export const createWalkInType = async (req: AuthRequest, res: Response) => {
 
     const eventIdNum = parseInt(event_id as string, 10);
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { id: eventIdNum, brand_id: req.user.brand_id }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({ where: { event_id: eventIdNum, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
-      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    const createRole = await resolveEventRole(req, eventIdNum);
+    if (createRole !== 'owner' && createRole !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     const walkInType = await WalkInType.create({
@@ -116,13 +102,11 @@ export const updateWalkInType = async (req: AuthRequest, res: Response) => {
       include: [{ model: Event, as: 'event' }]
     });
 
-    if (!walkInType || (walkInType as any).event.brand_id !== req.user.brand_id) {
-      return res.status(404).json({ error: 'Walk-in type not found' });
-    }
+    if (!walkInType) return res.status(404).json({ error: 'Walk-in type not found' });
 
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({ where: { event_id: walkInType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
-      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    const updateRole = await resolveEventRole(req, walkInType.event_id);
+    if (updateRole !== 'owner' && updateRole !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     const updateData: any = {};
@@ -148,13 +132,11 @@ export const deleteWalkInType = async (req: AuthRequest, res: Response) => {
       include: [{ model: Event, as: 'event' }]
     });
 
-    if (!walkInType || (walkInType as any).event.brand_id !== req.user.brand_id) {
-      return res.status(404).json({ error: 'Walk-in type not found' });
-    }
+    if (!walkInType) return res.status(404).json({ error: 'Walk-in type not found' });
 
-    if (!req.user.is_admin) {
-      const access = await EventAccess.findOne({ where: { event_id: walkInType.event_id, user_id: req.user.id, status: 'Accepted', role: 'manager' } });
-      if (!access) return res.status(403).json({ error: 'Manager access required for this operation' });
+    const deleteRole = await resolveEventRole(req, walkInType.event_id);
+    if (deleteRole !== 'owner' && deleteRole !== 'manager') {
+      return res.status(403).json({ error: 'Manager access required for this operation' });
     }
 
     // Check if there are any transactions using this type
@@ -188,14 +170,8 @@ export const getWalkInTransactions = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    // Verify user has access to this event
-    const event = await Event.findOne({
-      where: { id: eventIdNum, brand_id: req.user.brand_id }
-    });
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const txRole = await resolveEventRole(req, eventIdNum);
+    if (!txRole) return res.status(403).json({ error: 'Access denied for this event' });
 
     const page = Math.max(1, parseInt(pageParam as string, 10) || 1);
     const perPage = Math.max(1, Math.min(100, parseInt(perPageParam as string, 10) || 15));

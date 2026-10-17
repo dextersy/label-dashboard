@@ -60,6 +60,7 @@ import BrandHiddenTemplate from './BrandHiddenTemplate';
 import AudiencePointTransaction from './AudiencePointTransaction';
 import AudienceEmailPreference from './AudienceEmailPreference';
 import EventAccess from './EventAccess';
+import EventBrandCollaboration from './EventBrandCollaboration';
 
 // Define relationships
 // Brand relationships
@@ -263,6 +264,12 @@ EventAccess.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 Event.hasMany(EventAccess, { foreignKey: 'event_id', as: 'collaborators' });
 User.hasMany(EventAccess, { foreignKey: 'user_id', as: 'eventAccess' });
 
+// EventBrandCollaboration relationships
+EventBrandCollaboration.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+EventBrandCollaboration.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Event.hasMany(EventBrandCollaboration, { foreignKey: 'event_id', as: 'brandCollaborators' });
+Brand.hasMany(EventBrandCollaboration, { foreignKey: 'brand_id', as: 'eventCollaborations' });
+
 // Domain relationships
 Domain.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 
@@ -448,6 +455,7 @@ export {
   AudiencePointTransaction,
   AudienceEmailPreference,
   EventAccess,
+  EventBrandCollaboration,
 };
 
 // Initialize database connection

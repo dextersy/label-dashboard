@@ -8,6 +8,7 @@ type TimeFilter = 'all' | 'year' | 'month';
 interface ChartBar {
   name: string;
   value: number;
+  is_collab?: boolean;
 }
 
 @Component({
@@ -46,11 +47,11 @@ export class AnalyticsPanelComponent {
   }
 
   get ticketSalesBars(): ChartBar[] {
-    return this.filteredEventSales.map(e => ({ name: e.name || 'Untitled', value: e.total_sales || 0 }));
+    return this.filteredEventSales.map(e => ({ name: e.name || 'Untitled', value: e.total_sales || 0, is_collab: e.is_collab }));
   }
 
   get ticketsSoldBars(): ChartBar[] {
-    return this.filteredEventSales.map(e => ({ name: e.name || 'Untitled', value: e.tickets_sold || 0 }));
+    return this.filteredEventSales.map(e => ({ name: e.name || 'Untitled', value: e.tickets_sold || 0, is_collab: e.is_collab }));
   }
 
   get donationsBars(): ChartBar[] {

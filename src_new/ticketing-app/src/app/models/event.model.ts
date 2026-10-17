@@ -49,6 +49,8 @@ export interface Event {
   tags?: EventTag[];
   created_at?: string;
   updated_at?: string;
+  // Access control — populated by the API for the current user's session
+  user_role?: 'owner' | 'manager' | 'viewer';
 }
 
 export interface EventTag {
