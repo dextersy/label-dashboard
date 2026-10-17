@@ -57,6 +57,11 @@
                       [style.color]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.6)' : '#6b7280'">
                   Today's event
                 </span>
+                <span *ngIf="dashboardData.upcomingEvents[0].user_role && dashboardData.upcomingEvents[0].user_role !== 'owner'"
+                      class="tw-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-px-2 tw-py-0.5 tw-rounded-full"
+                      style="background: rgba(234,179,8,0.2); color: #ca8a04; border: 1px solid rgba(234,179,8,0.4);">
+                  <app-icon name="users" class="tw-text-[9px]" />Collab
+                </span>
               </div>
               <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug tw-w-full"
                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
@@ -173,12 +178,21 @@
             <div class="tw-flex-1 tw-min-w-0 tw-w-full tw-text-center sm:tw-text-left">
 
               <!-- Countdown pill/badge -->
-              <span class="tw-inline-flex tw-items-center tw-gap-1.5 tw-mb-3 tw-px-2.5 tw-py-1 tw-rounded-full tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-widest"
-                    [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'"
-                    [style.color]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.9)' : '#6b7280'"
-                    [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(0,0,0,0.1)'">
-                Next event &nbsp;·&nbsp; {{ getDaysAwayLabel(dashboardData.upcomingEvents[0].date_and_time) }}
-              </span>
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-3">
+                <span class="tw-inline-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1 tw-rounded-full tw-text-[11px] tw-font-bold tw-uppercase tw-tracking-widest"
+                      [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'"
+                      [style.color]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.9)' : '#6b7280'"
+                      [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(0,0,0,0.1)'">
+                  Next event &nbsp;·&nbsp; {{ getDaysAwayLabel(dashboardData.upcomingEvents[0].date_and_time) }}
+                </span>
+                <span *ngIf="dashboardData.upcomingEvents[0].user_role && dashboardData.upcomingEvents[0].user_role !== 'owner'"
+                      class="tw-inline-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-px-2 tw-py-0.5 tw-rounded-full"
+                      [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(234,179,8,0.2)' : 'rgba(234,179,8,0.12)'"
+                      [style.color]="dashboardData.upcomingEvents[0].poster_url ? '#fde68a' : '#ca8a04'"
+                      [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(234,179,8,0.35)' : '1px solid rgba(234,179,8,0.4)'">
+                  <app-icon name="users" class="tw-text-[9px]" />Collab
+                </span>
+              </div>
 
               <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug tw-w-full"
                   [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
@@ -371,6 +385,12 @@
         <!-- type badge top-right -->
         <span class="tw-absolute tw-top-2.5 tw-right-2.5 tw-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-white tw-px-2 tw-py-0.5 tw-rounded-full" style="background: rgba(99,102,241,0.75);">
           <app-icon name="calendar" class="tw-text-[9px]" />Event
+        </span>
+        <!-- collab badge top-left -->
+        <span *ngIf="event.user_role && event.user_role !== 'owner'"
+              class="tw-absolute tw-top-2.5 tw-left-2.5 tw-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-white tw-px-2 tw-py-0.5 tw-rounded-full"
+              style="background: rgba(234,179,8,0.75);">
+          <app-icon name="users" class="tw-text-[9px]" />Collab
         </span>
         <!-- content bottom -->
         <div class="tw-absolute tw-bottom-0 tw-left-0 tw-right-0 tw-px-3.5 tw-pb-3 tw-text-white">

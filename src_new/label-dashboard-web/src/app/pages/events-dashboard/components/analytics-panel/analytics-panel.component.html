@@ -128,8 +128,12 @@
       <div *ngFor="let bar of bars"
            [style.color]="isTopBar(bar.value, getMax(bars)) ? '#374151' : '#9ca3af'"
            [style.font-weight]="isTopBar(bar.value, getMax(bars)) ? '500' : '400'"
-           style="flex: 1; font-size: 10px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">
-        {{ bar.name }}
+           style="flex: 1; font-size: 10px; text-align: center; overflow: hidden; min-width: 0;">
+        <span style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ bar.name }}</span>
+        <span *ngIf="bar.is_collab"
+              style="display: inline-block; margin-top: 2px; font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #ca8a04; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.35); border-radius: 3px; padding: 0 4px; line-height: 14px;">
+          Collab
+        </span>
       </div>
     </div>
 

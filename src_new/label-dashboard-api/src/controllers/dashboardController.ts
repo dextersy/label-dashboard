@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer } from '../models';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer, EventBrandCollaboration } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -458,9 +458,14 @@ async function getBalanceSummaryData(req: AuthRequest) {
   );
 }
 
-async function getEventSalesData(req: AuthRequest) {
+async function getEventSalesData(req: AuthRequest, extraEventIds: number[] = []) {
+  const { Op } = require('sequelize');
+  const extraIdSet = new Set(extraEventIds);
+  const whereClause = extraEventIds.length > 0
+    ? { [Op.or]: [{ brand_id: req.user.brand_id }, { id: extraEventIds }] }
+    : { brand_id: req.user.brand_id };
   const events = await Event.findAll({
-    where: { brand_id: req.user.brand_id },
+    where: whereClause,
     order: [['id', 'DESC']],
     limit: 5
   });
@@ -509,7 +514,8 @@ async function getEventSalesData(req: AuthRequest) {
         total_sales: isNaN(totalSales) ? 0 : totalSales,
         tickets_sold: isNaN(ticketsSold) ? 0 : ticketsSold,
         total_tickets: isNaN(totalTickets) ? 0 : totalTickets,
-        total_checked_in: isNaN(totalCheckedIn) ? 0 : totalCheckedIn
+        total_checked_in: isNaN(totalCheckedIn) ? 0 : totalCheckedIn,
+        is_collab: extraIdSet.has(event.id)
       };
     })
   );
@@ -561,16 +567,33 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
     const brandFilter = { brand_id: req.user.brand_id };
     const { Op } = require('sequelize');
 
+    // Fetch accepted collab event IDs and roles for this brand
+    const collabRecords = await EventBrandCollaboration.findAll({
+      where: { brand_id: req.user.brand_id, status: 'Accepted' },
+      attributes: ['event_id', 'role']
+    });
+    const collabRoleMap = new Map<number, string>(
+      collabRecords.map((c: any) => [c.event_id as number, c.role as string])
+    );
+    const collabEventIds = Array.from(collabRoleMap.keys());
+
     // Get active events count (published events that haven't ended yet).
     // If close_time is set, use that; otherwise fall back to date_and_time.
+    // Includes both owned events and accepted collab events.
     const now = new Date();
+    const activeTimeFilter = {
+      status: 'published',
+      [Op.or]: [
+        { close_time: { [Op.gt]: now } },
+        { close_time: null, date_and_time: { [Op.gt]: now } }
+      ]
+    };
     const activeEventsCount = await Event.count({
       where: {
-        ...brandFilter,
-        status: 'published',
+        ...activeTimeFilter,
         [Op.or]: [
-          { close_time: { [Op.gt]: now } },
-          { close_time: null, date_and_time: { [Op.gt]: now } }
+          { brand_id: req.user.brand_id },
+          ...(collabEventIds.length > 0 ? [{ id: collabEventIds }] : [])
         ]
       }
     });
@@ -591,20 +614,18 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
 
     const allEventIds = allEvents.map(e => e.id);
 
-    // Get active event IDs (published and not yet ended) for quick stats
-    const activeEventIds = allEvents.length > 0
-      ? (await Event.findAll({
-          where: {
-            ...brandFilter,
-            status: 'published',
-            [Op.or]: [
-              { close_time: { [Op.gt]: now } },
-              { close_time: null, date_and_time: { [Op.gt]: now } }
-            ]
-          },
-          attributes: ['id']
-        })).map(e => e.id)
-      : [];
+    // Get active event IDs (published and not yet ended) for quick stats.
+    // Includes collab events so activeEventsSales reflects all events the brand manages.
+    const activeEventIds = (await Event.findAll({
+      where: {
+        ...activeTimeFilter,
+        [Op.or]: [
+          { brand_id: req.user.brand_id },
+          ...(collabEventIds.length > 0 ? [{ id: collabEventIds }] : [])
+        ]
+      },
+      attributes: ['id']
+    })).map(e => e.id);
 
     // Get total confirmed ticket sales for active events (all time)
     let activeEventsSales = 0;
@@ -684,22 +705,28 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
     };
 
     // Get upcoming published events (nearest 3 — include events on today's date until end of day)
+    // Includes both owned events and accepted collab events, sorted by date.
     const startOfToday = new Date(now);
     startOfToday.setHours(0, 0, 0, 0);
+    const upcomingEventsWhere: any = {
+      status: 'published',
+      date_and_time: { [Op.gte]: startOfToday },
+      [Op.or]: [
+        { brand_id: req.user.brand_id },
+        ...(collabEventIds.length > 0 ? [{ id: collabEventIds }] : [])
+      ]
+    };
     const upcomingEventsRaw = await Event.findAll({
-      where: {
-        ...brandFilter,
-        status: 'published',
-        date_and_time: { [Op.gte]: startOfToday }
-      },
+      where: upcomingEventsWhere,
       order: [['date_and_time', 'ASC']],
       limit: 3,
-      attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url', 'status']
+      attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url', 'status', 'brand_id']
     });
 
     const paidStatuses = ['Payment Confirmed', 'Ticket sent.'];
     const upcomingEvents = await Promise.all(
       upcomingEventsRaw.map(async (e) => {
+        const isCollab = (e as any).brand_id !== req.user.brand_id;
         const tickets = await Ticket.findAll({
           where: { event_id: e.id, status: paidStatuses },
           attributes: ['number_of_entries', 'price_per_ticket', 'payment_processing_fee', 'platform_fee']
@@ -716,14 +743,15 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
           venue: e.venue,
           poster_url: e.poster_url || null,
           tickets_sold: ticketsSold,
-          net_earnings: netEarnings
+          net_earnings: netEarnings,
+          user_role: isCollab ? (collabRoleMap.get(e.id) || 'viewer') : 'owner'
         };
       })
     );
 
     // Get event sales and fundraiser donations data (reuse existing functions)
     const [eventSales, fundraiserDonations] = await Promise.all([
-      getEventSalesData(req),
+      getEventSalesData(req, collabEventIds),
       getFundraiserDonationsData(req)
     ]);
 

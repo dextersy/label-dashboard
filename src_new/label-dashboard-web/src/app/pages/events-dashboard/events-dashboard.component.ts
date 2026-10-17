@@ -58,6 +58,7 @@ export interface UpcomingEvent {
   poster_url: string | null;
   tickets_sold: number;
   net_earnings: number;
+  user_role?: 'owner' | 'manager' | 'viewer';
 }
 
 interface CampaignsDashboardData {
