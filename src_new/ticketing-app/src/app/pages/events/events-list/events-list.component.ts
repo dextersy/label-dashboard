@@ -63,6 +63,10 @@ import { Event } from '../../../models/event.model';
 
       }
 
+      @if (leaveError()) {
+        <p class="text-xs font-mono text-red-500 mt-4">{{ leaveError() }}</p>
+      }
+
       <!-- Event row template -->
       <ng-template #eventRow let-event>
         <div class="flex items-center gap-4 p-4 sm:p-5 hover:bg-zinc-50 transition-colors group">
@@ -119,9 +123,6 @@ import { Event } from '../../../models/event.model';
               </button>
             }
             @if (event.user_role !== 'owner') {
-              @if (leaveError() && pendingLeaveEventId() === null) {
-                <span class="text-xs font-mono text-red-500">{{ leaveError() }}</span>
-              }
               @if (pendingLeaveEventId() === event.id) {
                 <span class="text-xs font-mono text-gray-500 uppercase tracking-wider">Sure?</span>
                 <button (click)="leaveEvent(event)"
@@ -182,6 +183,7 @@ export class EventsListComponent implements OnInit {
   }
 
   confirmLeave(event: Event): void {
+    this.leaveError.set(null);
     this.pendingLeaveEventId.set(event.id);
   }
 
