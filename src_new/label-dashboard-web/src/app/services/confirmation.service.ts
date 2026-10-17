@@ -4,6 +4,8 @@ import { BehaviorSubject } from 'rxjs';
 export interface ConfirmationDialogData {
   title: string;
   message: string;
+  note?: string;
+  noteIcon?: 'paypal' | 'info';
   warning?: string;
   confirmText?: string;
   cancelText?: string;
