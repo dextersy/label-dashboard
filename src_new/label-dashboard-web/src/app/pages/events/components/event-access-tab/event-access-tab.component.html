@@ -1,9 +1,13 @@
 <div class="event-access-tab">
 
-  <div *ngIf="!isOwner" class="tw-py-5 tw-text-center">
-    <app-icon name="lock" class="fa-4x tw-mb-3 tw-text-muted" iconOnly />
-    <h5 class="tw-text-muted">Access Restricted</h5>
-    <p class="tw-text-muted">You do not have permission to manage collaborators.</p>
+  <div *ngIf="!isOwner" class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-py-16 tw-text-center">
+    <app-icon name="users" class="tw-text-gray-300 tw-mb-4" [size]="32" />
+    <p class="tw-text-xl tw-font-semibold tw-text-gray-500 tw-mb-1">You're a collaborator</p>
+    <p class="tw-text-base tw-text-gray-400 tw-mb-4">You are collaborating on this event as a <strong>{{ selectedEvent?.user_role | titlecase }}</strong>.<br>You can leave at any time to remove your brand's access.</p>
+    <button type="button" class="btn-sm btn-danger" (click)="leaveCollaboration()">
+      <app-icon name="log-out" />
+      Leave Event
+    </button>
   </div>
 
   <app-in-page-nav *ngIf="isOwner"

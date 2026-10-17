@@ -122,7 +122,7 @@ export const inviteBrandCollaborator = async (req: AuthRequest, res: Response) =
   }
 };
 
-// ─── Revoke a brand collaborator (owner-only) ────────────────────────────────
+// ─── Revoke a brand collaborator (owner-only, or self-removal by collaborator) ─
 
 export const revokeBrandCollaborator = async (req: AuthRequest, res: Response) => {
   try {
@@ -133,8 +133,23 @@ export const revokeBrandCollaborator = async (req: AuthRequest, res: Response) =
     if (!brand_id_raw) return res.status(400).json({ error: 'brand_id is required' });
     if (isNaN(brand_id)) return res.status(400).json({ error: 'Invalid brand_id' });
 
-    const event = await Event.findOne({ where: { id: eventId, brand_id: req.user.brand_id } });
+    const event = await Event.findByPk(eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const isSelfRemoval = req.user.brand_id === brand_id;
+    const isOwner = event.brand_id === req.user.brand_id;
+
+    if (!isSelfRemoval && !isOwner) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    if (isSelfRemoval && !req.user.is_admin) {
+      return res.status(403).json({ error: 'Only brand admins can leave a collaboration' });
+    }
+
+    if (isSelfRemoval && event.brand_id === brand_id) {
+      return res.status(400).json({ error: 'Event owner cannot remove themselves as collaborator' });
+    }
 
     const collab = await EventBrandCollaboration.findOne({ where: { event_id: eventId, brand_id } });
     if (!collab) return res.status(404).json({ error: 'Brand collaborator not found' });

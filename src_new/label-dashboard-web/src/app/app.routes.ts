@@ -49,7 +49,6 @@ import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 import { campaignsAccessGuard } from './guards/campaigns-access.guard';
-import { EventAddOnsComponent } from './pages/events/event-add-ons/event-add-ons.component';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
 import { EventBrandCollabInviteComponent } from './pages/event-brand-collab-invite/event-brand-collab-invite.component';
@@ -144,7 +143,7 @@ export const routes: Routes = [
       { path: 'events', redirectTo: 'events/details', pathMatch: 'full' },
       { path: 'events/dashboard', redirectTo: '/campaigns/dashboard', pathMatch: 'full' }, // Legacy redirect
       { path: 'events/new', component: EventFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
-      { path: 'events/details', component: EventFormComponent, canDeactivate: [canDeactivateUnsavedChanges] },
+      { path: 'events/details', component: EventsComponent, data: { tab: 'details' }, canDeactivate: [canDeactivateUnsavedChanges] },
       { path: 'events/tickets', component: EventsComponent, data: { tab: 'tickets' } },
       { path: 'events/abandoned', component: EventsComponent, data: { tab: 'abandoned' } },
       { path: 'events/referrals', component: EventsComponent, data: { tab: 'referrals' } },
@@ -153,7 +152,7 @@ export const routes: Routes = [
       { path: 'events/listing', component: EventsComponent, data: { tab: 'listing' } },
       { path: 'events/access', component: EventsComponent, data: { tab: 'access' } },
       { path: 'events/custom-ticket', component: CustomTicketComponent },
-      { path: 'events/add-ons', component: EventAddOnsComponent },
+      { path: 'events/add-ons', component: EventsComponent, data: { tab: 'add-ons' } },
       { path: 'events/wristband-order-review', component: WristbandOrderReviewComponent, canActivate: [adminGuard] },
       // Fundraisers
       { path: 'fundraisers', redirectTo: 'fundraisers/details', pathMatch: 'full' },

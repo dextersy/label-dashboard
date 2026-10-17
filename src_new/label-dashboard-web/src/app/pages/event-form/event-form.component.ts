@@ -10,7 +10,6 @@ import { NotificationService } from '../../services/notification.service';
 import { ConfirmationService } from '../../services/confirmation.service';
 import { EventPublishedService } from '../../services/event-published.service';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
-import { EventSelectionComponent } from '../events/components/event-selection/event-selection.component';
 import { VenueAutocompleteComponent, VenueSelection } from '../events/components/venue-autocomplete/venue-autocomplete.component';
 import { TicketTypesComponent } from '../events/components/ticket-types/ticket-types.component';
 import { QuillModule } from 'ngx-quill';
@@ -58,7 +57,6 @@ export type EventFormSection = 'details' | 'ticketing' | 'scanner' | 'walk-in' |
     CommonModule,
     FormsModule,
     BreadcrumbComponent,
-    EventSelectionComponent,
     VenueAutocompleteComponent,
     TicketTypesComponent,
     QuillModule,
@@ -98,7 +96,6 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   scannerQRCaption: string = '';
   activeSection: EventFormSection = 'details';
   draftExpanded = false;
-  availableEvents: Event[] = [];
   
   // Form data
   eventData: any = {
@@ -240,8 +237,6 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       // New event mode
       this.initializeNewEvent();
     } else {
-      // Edit mode - get event from EventService
-      this.loadAvailableEvents();
       this.subscriptions.add(
         this.eventService.selectedEvent$.subscribe(event => {
           if (event) {
@@ -253,10 +248,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
             if (isEventSwitch) {
               this.loadEvent();
             }
-          } else if (this.availableEvents.length > 0) {
-            // Auto-select first event if none selected
-            const firstEvent = this.availableEvents[0];
-            this.eventService.setSelectedEvent(firstEvent);
+          } else {
+            // Auto-select first event from shared cache if nothing is selected
+            const available = this.eventService.getAvailableEvents();
+            if (available.length > 0) {
+              this.eventService.setSelectedEvent(available[0]);
+            }
           }
         })
       );
@@ -280,33 +277,6 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-  }
-
-  private loadAvailableEvents(): void {
-    this.subscriptions.add(
-      this.eventService.getEvents().subscribe({
-        next: (events) => {
-          this.availableEvents = events;
-          if (events.length === 0) {
-            this.router.navigate(['/campaigns/events/new']);
-            return;
-          }
-          // Check if there's a selected event from EventService
-          const selectedEvent = this.eventService.getSelectedEvent();
-          if (!selectedEvent && events.length > 0) {
-            this.eventService.setSelectedEvent(events[0]);
-          }
-        },
-        error: (error) => {
-          console.error('Error loading events:', error);
-          this.notificationService.showError('Failed to load events');
-        }
-      })
-    );
-  }
-
-  onEventSelection(event: Event): void {
-    this.eventService.setSelectedEvent(event);
   }
 
   private loadEvent(): void {
@@ -928,9 +898,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           if (this.event) {
             (this.event as any).status = 'canceled';
           }
-          const listed = this.availableEvents.find(e => e.id === this.eventId);
+          const listed = this.eventService.getAvailableEvents().find(e => e.id === this.eventId);
           if (listed) {
             (listed as any).status = 'canceled';
+            this.eventService.setAvailableEvents(this.eventService.getAvailableEvents());
           }
           if (result.failed_count > 0) {
             this.notificationService.showWarning(

@@ -14,6 +14,11 @@
             (eventSelected)="onEventSelection($event)">
           </app-event-selection>
         </div>
+        <span *ngIf="selectedEvent && selectedEvent.user_role && selectedEvent.user_role !== 'owner'"
+              class="tw-text-xs tw-text-gray-400 tw-self-center">
+          <app-icon name="users" class="tw-mr-1" />
+          Collaborator ({{ selectedEvent.user_role | titlecase }}) &middot; <a href="javascript:void(0)" class="tw-text-gray-400 hover:tw-text-danger tw-underline" (click)="leaveCollaboration()">Leave</a>
+        </span>
       </div>
     </div>
 
@@ -76,6 +81,16 @@
         <!-- Access Tab -->
         <div *ngIf="activeTab === 'access'">
           <app-event-access-tab [selectedEvent]="selectedEvent" [isAdmin]="isAdmin"></app-event-access-tab>
+        </div>
+
+        <!-- Manage Event (Details) Tab -->
+        <div *ngIf="activeTab === 'details'">
+          <app-event-form></app-event-form>
+        </div>
+
+        <!-- Add-ons Tab -->
+        <div *ngIf="activeTab === 'add-ons'">
+          <app-event-add-ons></app-event-add-ons>
         </div>
 
       </div>

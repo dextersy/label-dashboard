@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { ConfirmationService } from '../../services/confirmation.service';
 import { EventService, Event } from '../../services/event.service';
 import { environment } from '../../../environments/environment';
 
@@ -16,10 +18,13 @@ import { EventEmailTabComponent } from './components/event-email-tab/event-email
 import { EventListingTabComponent } from './components/event-listing-tab/event-listing-tab.component';
 import { EventAccessTabComponent } from './components/event-access-tab/event-access-tab.component';
 import { EventSelectionComponent } from './components/event-selection/event-selection.component';
+import { EventFormComponent } from '../event-form/event-form.component';
+import { EventAddOnsComponent } from './event-add-ons/event-add-ons.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
+import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 
-export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email' | 'listing' | 'access';
+export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email' | 'listing' | 'access' | 'details' | 'add-ons';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -43,12 +48,16 @@ export type EventSelection = Event;
         EventListingTabComponent,
         EventAccessTabComponent,
         EventSelectionComponent,
-        BreadcrumbComponent
-, IconComponent],
+        EventFormComponent,
+        EventAddOnsComponent,
+        BreadcrumbComponent,
+        IconComponent],
     templateUrl: './events.component.html',
     styleUrl: './events.component.scss'
 })
-export class EventsComponent implements OnInit, OnDestroy {
+export class EventsComponent implements OnInit, OnDestroy, HasUnsavedChanges {
+  @ViewChild(EventFormComponent) private eventFormRef?: EventFormComponent;
+
   selectedEvent: EventSelection | null = null;
   activeTab: EventsTabType = 'tickets';
   isAdmin = false;
@@ -79,13 +88,17 @@ export class EventsComponent implements OnInit, OnDestroy {
     { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'user-plus' },
     { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope' },
     { id: 'listing' as EventsTabType, label: 'Listing', icon: 'globe' },
-    { id: 'access' as EventsTabType, label: 'Collaborators', icon: 'users', adminOnly: false }
+    { id: 'access' as EventsTabType, label: 'Collaborators', icon: 'users', adminOnly: false },
+    { id: 'details' as EventsTabType, label: 'Manage Event', icon: 'settings' },
+    { id: 'add-ons' as EventsTabType, label: 'Add-ons', icon: 'package' },
   ];
 
   constructor(
     private authService: AuthService,
     private notificationService: NotificationService,
+    private confirmationService: ConfirmationService,
     private eventService: EventService,
+    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -143,7 +156,8 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.eventService.getEvents().subscribe({
         next: (events) => {
           this.availableEvents = events;
-          
+          this.eventService.setAvailableEvents(events);
+
           // Check if we have a previously selected event from localStorage
           const currentSelected = this.eventService.getSelectedEvent();
           let eventToSelect: Event | null = null;
@@ -318,6 +332,36 @@ export class EventsComponent implements OnInit, OnDestroy {
     if (this.selectedEvent && this.selectedEvent.id === updatedEvent.id) {
       this.selectedEvent = updatedEvent;
     }
+  }
+
+  leaveCollaboration(): void {
+    if (!this.selectedEvent) return;
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    if (!brandId) return;
+
+    this.confirmationService.confirm({
+      title: 'Leave event',
+      message: `Remove your brand's access to "${this.selectedEvent.title}"? This cannot be undone.`,
+      confirmText: 'Leave Event',
+      type: 'danger',
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.http.delete<any>(
+        `${environment.apiUrl}/event-brand-collab/${this.selectedEvent!.id}/brand-collaborators`,
+        { body: { brand_id: brandId } }
+      ).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('You have left the event.');
+          this.loadAvailableEvents();
+        },
+        error: () => this.notificationService.showError('Failed to leave event.'),
+      });
+    });
+  }
+
+  isFormDirty(): boolean {
+    return this.eventFormRef?.isFormDirty() ?? false;
   }
 
   onAlertMessage(message: { type: string; text: string }): void {

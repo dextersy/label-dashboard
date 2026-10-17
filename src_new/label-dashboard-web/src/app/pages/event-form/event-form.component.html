@@ -1,20 +1,4 @@
 <div class="event-form-page">
-  <app-breadcrumb></app-breadcrumb>
-
-  <!-- Page Header with Event Selector (Edit mode) -->
-  <div class="page-header tw-mb-3" *ngIf="!isNewEvent">
-    <div class="tw-flex tw-items-start tw-flex-wrap tw-gap-3">
-      <div class="event-selector-main" *ngIf="availableEvents.length > 0">
-        <app-event-selection
-          [events]="availableEvents"
-          [selectedEvent]="event"
-          [loading]="loading"
-          [isAdmin]="isManager"
-          (eventSelected)="onEventSelection($event)">
-        </app-event-selection>
-      </div>
-    </div>
-  </div>
 
   <!-- New Event Header (New mode) -->
   <div class="new-event-header" *ngIf="isNewEvent">

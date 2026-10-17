@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EventsService } from '../../../services/events.service';
+import { AuthService } from '../../../services/auth.service';
 import { Event } from '../../../models/event.model';
 
 @Component({
@@ -117,6 +118,27 @@ import { Event } from '../../../models/event.model';
                 {{ event.status === 'published' ? 'Unpublish' : 'Publish' }}
               </button>
             }
+            @if (event.user_role !== 'owner') {
+              @if (leaveError() && pendingLeaveEventId() === null) {
+                <span class="text-xs font-mono text-red-500">{{ leaveError() }}</span>
+              }
+              @if (pendingLeaveEventId() === event.id) {
+                <span class="text-xs font-mono text-gray-500 uppercase tracking-wider">Sure?</span>
+                <button (click)="leaveEvent(event)"
+                   class="text-xs font-mono text-red-600 hover:text-red-700 uppercase tracking-wider transition-colors font-bold">
+                  Yes, Leave
+                </button>
+                <button (click)="cancelLeave()"
+                   class="text-xs font-mono text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors">
+                  Cancel
+                </button>
+              } @else {
+                <button (click)="confirmLeave(event)"
+                   class="text-xs font-mono text-red-400 hover:text-red-600 uppercase tracking-wider transition-colors">
+                  Leave
+                </button>
+              }
+            }
           </div>
         </div>
       </ng-template>
@@ -126,11 +148,13 @@ import { Event } from '../../../models/event.model';
 export class EventsListComponent implements OnInit {
   events = signal<Event[]>([]);
   loading = signal(true);
+  pendingLeaveEventId = signal<number | null>(null);
+  leaveError = signal<string | null>(null);
 
   ownEvents = () => this.events().filter(e => e.user_role === 'owner');
-  collabEvents = () => this.events().filter(e => e.user_role !== 'owner');
+  collabEvents = () => this.events().filter(e => e.user_role === 'manager' || e.user_role === 'viewer');
 
-  constructor(private eventsService: EventsService) {}
+  constructor(private eventsService: EventsService, private authService: AuthService) {}
 
   ngOnInit(): void {
     this.load();
@@ -155,6 +179,25 @@ export class EventsListComponent implements OnInit {
       case 'canceled': return 'border-red-300 text-red-700 bg-red-50';
       default: return 'border-gray-300 text-gray-500 bg-gray-50';
     }
+  }
+
+  confirmLeave(event: Event): void {
+    this.pendingLeaveEventId.set(event.id);
+  }
+
+  cancelLeave(): void {
+    this.pendingLeaveEventId.set(null);
+  }
+
+  leaveEvent(event: Event): void {
+    const brandId = this.authService.getCurrentUser()?.brand_id;
+    if (!brandId) return;
+    this.pendingLeaveEventId.set(null);
+    this.leaveError.set(null);
+    this.eventsService.leaveCollaboration(event.id, brandId).subscribe({
+      next: () => this.load(),
+      error: (err) => this.leaveError.set(err?.error?.error || 'Failed to leave event.'),
+    });
   }
 
   togglePublish(event: Event): void {

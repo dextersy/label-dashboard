@@ -9,7 +9,6 @@ import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { EventService, WristbandColor, WristbandOrder, Event as AppEvent, SavedDeliveryAddress, EventAddOnPayment } from '../../../services/event.service';
-import { EventSelectionComponent } from '../components/event-selection/event-selection.component';
 import { AuthService } from '../../../services/auth.service';
 import { LabelFinanceService } from '../../../services/label-finance.service';
 
@@ -26,7 +25,7 @@ interface DesignPos {
 
 @Component({
   selector: 'app-event-add-ons',
-  imports: [CommonModule, FormsModule, BreadcrumbComponent, InPageNavComponent, IconComponent, EventSelectionComponent],
+  imports: [CommonModule, FormsModule, BreadcrumbComponent, InPageNavComponent, IconComponent],
   templateUrl: './event-add-ons.component.html',
   styleUrl: './event-add-ons.component.scss',
   animations: [
@@ -171,9 +170,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   editingFromAddressBook = false;
 
   // Event selection
-  availableEvents: AppEvent[] = [];
   selectedEvent: AppEvent | null = null;
-  loadingEvents = false;
   isAdmin = false;
   get isViewer(): boolean {
     return (this.selectedEvent as any)?.user_role === 'viewer';
@@ -266,22 +263,33 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Load available events for the selector
-    this.loadingEvents = true;
+    // React to selected event changes from the shared service
     this.subscriptions.add(
-      this.eventService.getEvents().subscribe({
-        next: (events) => {
-          this.availableEvents = events;
-          this.loadingEvents = false;
-          // Restore previously selected event
-          const stored = this.eventService.getSelectedEvent();
-          if (stored && events.find(e => e.id === stored.id)) {
-            this.onEventSelection(stored);
-          } else if (events.length === 1) {
-            this.onEventSelection(events[0]);
-          }
-        },
-        error: () => { this.loadingEvents = false; }
+      this.eventService.selectedEvent$.subscribe(event => {
+        if (!event || event.id === this.eventId) return;
+        this.selectedEvent = event;
+        this.eventId = event.id;
+        // Reset order state when event changes
+        this.orders = [];
+        this.formOpen = false;
+        this.editingOrderId = null;
+        this.deliveryName = '';
+        this.deliveryStreet = '';
+        this.deliveryCity = '';
+        this.deliveryCountry = '';
+        this.deliveryZip = '';
+        this.deliveryPhone = '';
+        this.addressSaved = false;
+        this.editingDeliveryAddress = false;
+        this.selectedSavedAddressId = null;
+        this.saveToBook = false;
+        this.savedToBook = false;
+        this.editingAddressId = null;
+        this.addonPayments = [];
+        this.addonTotalPaid = 0;
+        this.loadSettings();
+        this.loadOrders();
+        this.loadPayments();
       })
     );
 
@@ -312,33 +320,6 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
         }
       })
     );
-  }
-
-  onEventSelection(event: AppEvent): void {
-    this.selectedEvent = event;
-    this.eventId = event.id;
-    this.eventService.setSelectedEvent(event);
-    // Reset order state when event changes
-    this.orders = [];
-    this.formOpen = false;
-    this.editingOrderId = null;
-    this.deliveryName = '';
-    this.deliveryStreet = '';
-    this.deliveryCity = '';
-    this.deliveryCountry = '';
-    this.deliveryZip = '';
-    this.deliveryPhone = '';
-    this.addressSaved = false;
-    this.editingDeliveryAddress = false;
-    this.selectedSavedAddressId = null;
-    this.saveToBook = false;
-    this.savedToBook = false;
-    this.editingAddressId = null;
-    this.addonPayments = [];
-    this.addonTotalPaid = 0;
-    this.loadSettings();
-    this.loadOrders();
-    this.loadPayments();
   }
 
   ngOnDestroy(): void {

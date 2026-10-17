@@ -7,7 +7,8 @@ import { IconComponent } from '../../../../components/shared/icon/icon.component
 import { PaginatedTableComponent, TableAction, TableColumn } from '../../../../components/shared/paginated-table/paginated-table.component';
 import { InPageNavComponent, InPageNavTab } from '../../../../components/shared/in-page-nav/in-page-nav.component';
 import { ConfirmationService } from '../../../../services/confirmation.service';
-import { Event } from '../../../../services/event.service';
+import { NotificationService } from '../../../../services/notification.service';
+import { EventService, Event } from '../../../../services/event.service';
 import { environment } from '../../../../../environments/environment';
 
 interface Collaborator {
@@ -88,7 +89,12 @@ export class EventAccessTabComponent implements OnChanges {
 
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private confirmationService: ConfirmationService) {
+  constructor(
+    private http: HttpClient,
+    private confirmationService: ConfirmationService,
+    private notificationService: NotificationService,
+    private eventService: EventService,
+  ) {
     this.brandSearch$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -228,6 +234,38 @@ export class EventAccessTabComponent implements OnChanges {
         this.loadBrandCollaborators();
       },
       error: () => { this.sendingBrandInvite = false; },
+    });
+  }
+
+  leaveCollaboration(): void {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    const brandId = currentUser.brand_id;
+    if (!brandId) return;
+
+    this.confirmationService.confirm({
+      title: 'Leave event',
+      message: `Remove your brand's access to "${this.selectedEvent.title}"? This cannot be undone.`,
+      confirmText: 'Leave Event',
+      type: 'danger',
+    }).then(confirmed => {
+      if (!confirmed) return;
+      this.http.delete<any>(
+        `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators`,
+        { headers: this.getHeaders(), body: { brand_id: brandId } }
+      ).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('You have left the event.');
+          this.eventService.getEvents().subscribe({
+            next: (events) => {
+              this.eventService.setAvailableEvents(events);
+              const first = events[0] ?? null;
+              this.eventService.setSelectedEvent(first);
+            },
+            error: () => {},
+          });
+        },
+        error: () => this.notificationService.showError('Failed to leave event.'),
+      });
     });
   }
 

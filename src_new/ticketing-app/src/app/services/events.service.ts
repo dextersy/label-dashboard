@@ -8,6 +8,7 @@ import { Event, EventFormData, EventTag } from '../models/event.model';
 @Injectable({ providedIn: 'root' })
 export class EventsService {
   private readonly base = `${environment.apiUrl}/events`;
+  private readonly collabBase = `${environment.apiUrl}/event-brand-collab`;
 
   constructor(private http: HttpClient) {}
 
@@ -105,6 +106,10 @@ export class EventsService {
 
   sendTestEmail(data: { event_id: number; subject: string; body: string; test_email: string }): Observable<any> {
     return this.http.post(`${this.base}/send-test-email`, data);
+  }
+
+  leaveCollaboration(eventId: number, brandId: number): Observable<any> {
+    return this.http.delete(`${this.collabBase}/${eventId}/brand-collaborators`, { body: { brand_id: brandId } });
   }
 
   private toFormData(data: EventFormData): FormData {
