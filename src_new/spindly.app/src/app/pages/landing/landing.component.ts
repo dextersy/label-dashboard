@@ -56,7 +56,7 @@ export class LandingComponent implements OnInit {
   }
 
   formatLimit(value: number | null, unit = ''): string {
-    if (value === null) return 'Unlimited';
+    if (value === null) return unit ? `Unlimited ${unit}` : 'Unlimited';
     return unit ? `${value} ${unit}` : `${value}`;
   }
 

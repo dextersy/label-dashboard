@@ -440,13 +440,13 @@
                   <span class="text-dark/65">{{ formatLimit(plan.limit_admin_users) }} admin user{{ plan.limit_admin_users === 1 ? '' : 's' }}</span>
                 </div>
               }
-              @if (plan.feature_press_campaigns && plan.limit_press_campaigns_per_month !== null) {
+              @if (plan.feature_press_campaigns) {
                 <div class="flex items-center gap-2 text-sm">
                   <span class="text-primary shrink-0">✦</span>
                   <span class="text-dark/65">{{ formatLimit(plan.limit_press_campaigns_per_month) }} press campaigns / mo</span>
                 </div>
               }
-              @if (plan.feature_sync_licensing && plan.limit_sync_pitches_per_month !== null) {
+              @if (plan.feature_sync_licensing) {
                 <div class="flex items-center gap-2 text-sm">
                   <span class="text-primary shrink-0">✦</span>
                   <span class="text-dark/65">{{ formatLimit(plan.limit_sync_pitches_per_month) }} sync pitches / mo</span>
