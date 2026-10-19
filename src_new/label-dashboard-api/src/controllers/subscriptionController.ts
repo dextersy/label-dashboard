@@ -18,7 +18,7 @@ import {
   getPayPalSubscriptionNextBillingTime,
 } from '../services/subscriptionService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
-import { sendSubscriptionActivatedEmail, sendSubscriptionPastDueEmail, sendSubscriptionDowngradedEmail, sendSubscriptionDowngradeScheduledEmail, sendSubscriptionCancelledEmail } from '../utils/emailService';
+import { sendSubscriptionActivatedEmail, sendSubscriptionRenewalEmail, sendSubscriptionPastDueEmail, sendSubscriptionDowngradedEmail, sendSubscriptionDowngradeScheduledEmail, sendSubscriptionCancelledEmail } from '../utils/emailService';
 
 // ---------------------------------------------------------------------------
 // GET /api/subscription/plans/public
@@ -898,6 +898,8 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
           console.error('PAYMENT.SALE.COMPLETED: failed to fetch next_billing_time:', err);
         }
 
+        let activatedBrandPlanFromSale: BrandPlan | null = null;
+        let renewedBrandPlan: BrandPlan | null = null;
         await sequelize.transaction(async (t) => {
           const bp = await BrandPlan.findOne({
             where: { paypal_subscription_id: subscriptionId },
@@ -922,11 +924,46 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
               },
               { transaction: t }
             );
+            activatedBrandPlanFromSale = await BrandPlan.findOne({
+              where: { paypal_subscription_id: subscriptionId },
+              include: [{ model: Plan, as: 'plan' }],
+              transaction: t,
+            });
           } else if (bp.status === 'active' && nextBillingTime) {
             // Renewal — keep plan unchanged, just refresh ends_at.
             await bp.update({ ends_at: nextBillingTime }, { transaction: t });
+            renewedBrandPlan = await BrandPlan.findOne({
+              where: { paypal_subscription_id: subscriptionId },
+              include: [{ model: Plan, as: 'plan' }],
+              transaction: t,
+            });
           }
         });
+        if (activatedBrandPlanFromSale) {
+          const bp = activatedBrandPlanFromSale as BrandPlan & { plan?: Plan };
+          const price = bp.billing_cycle === 'monthly'
+            ? (bp.plan?.price_monthly ?? 0)
+            : (bp.plan?.price_annual ?? 0);
+          sendSubscriptionActivatedEmail(
+            bp.brand_id,
+            bp.plan?.name ?? 'Paid',
+            bp.billing_cycle as 'monthly' | 'annual',
+            price,
+          ).catch((err) => console.error('sendSubscriptionActivatedEmail error:', err));
+        }
+        if (renewedBrandPlan) {
+          const bp = renewedBrandPlan as BrandPlan & { plan?: Plan };
+          const price = bp.billing_cycle === 'monthly'
+            ? (bp.plan?.price_monthly ?? 0)
+            : (bp.plan?.price_annual ?? 0);
+          sendSubscriptionRenewalEmail(
+            bp.brand_id,
+            bp.plan?.name ?? 'Paid',
+            bp.billing_cycle as 'monthly' | 'annual',
+            price,
+            bp.ends_at ? new Date(bp.ends_at) : null,
+          ).catch((err) => console.error('sendSubscriptionRenewalEmail error:', err));
+        }
       }
     }
 
