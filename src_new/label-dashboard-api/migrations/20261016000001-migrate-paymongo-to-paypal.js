@@ -34,17 +34,19 @@ module.exports = {
       allowNull: true,
     });
 
-    // Reverse brand_plan index
+    // Remove the paypal index before renaming
     try {
       await queryInterface.removeIndex('brand_plan', 'brand_plan_paypal_subscription_id');
     } catch (_) {}
-    await queryInterface.addIndex('brand_plan', ['paymongo_subscription_id'], {
-      name: 'brand_plan_paymongo_subscription_id',
-    });
 
-    // Rename columns back
+    // Rename columns back first (column must exist before adding index)
     await queryInterface.renameColumn('brand_plan', 'paypal_subscription_id', 'paymongo_subscription_id');
     await queryInterface.renameColumn('plan', 'paypal_plan_id_monthly', 'paymongo_plan_id_monthly');
     await queryInterface.renameColumn('plan', 'paypal_plan_id_annual', 'paymongo_plan_id_annual');
+
+    // Now add index on the restored column name
+    await queryInterface.addIndex('brand_plan', ['paymongo_subscription_id'], {
+      name: 'brand_plan_paymongo_subscription_id',
+    });
   },
 };
