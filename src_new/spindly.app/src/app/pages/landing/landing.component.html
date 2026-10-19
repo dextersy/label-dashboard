@@ -362,7 +362,7 @@
           [class.text-dark]="billingCycle === 'annual'"
           [class.text-dark/30]="billingCycle !== 'annual'">
           annual
-          <span class="text-xs bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">−20%</span>
+          <span class="text-xs bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded">2 months free</span>
         </button>
       </div>
     </div>
@@ -454,27 +454,6 @@
               }
             </div>
 
-            <!-- Feature badges -->
-            <div class="flex flex-wrap gap-1.5 mb-6">
-              @if (plan.feature_music_releases) {
-                <span class="text-xs bg-gray-50 text-dark/50 px-2 py-1 rounded-md">releases</span>
-              }
-              @if (plan.feature_events) {
-                <span class="text-xs bg-gray-50 text-dark/50 px-2 py-1 rounded-md">events</span>
-              }
-              @if (plan.feature_press_campaigns) {
-                <span class="text-xs bg-gray-50 text-dark/50 px-2 py-1 rounded-md">press</span>
-              }
-              @if (plan.feature_sync_licensing) {
-                <span class="text-xs bg-gray-50 text-dark/50 px-2 py-1 rounded-md">sync</span>
-              }
-              @if (plan.feature_fundraisers) {
-                <span class="text-xs bg-gray-50 text-dark/50 px-2 py-1 rounded-md">fundraisers</span>
-              }
-              @if (plan.feature_sublabels) {
-                <span class="text-xs bg-gray-50 text-dark/50 px-2 py-1 rounded-md">sub-labels</span>
-              }
-            </div>
 
           </div>
         }
