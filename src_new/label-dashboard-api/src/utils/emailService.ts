@@ -290,6 +290,9 @@ export const sendBrandedEmail = async (
     case 'subscription_downgrade_scheduled_email':
       subject = `Your plan change to ${templateData.NEW_PLAN_NAME} is scheduled`;
       break;
+    case 'subscription_plan_activated_email':
+      subject = `Your plan has changed to ${templateData.NEW_PLAN_NAME}`;
+      break;
     case 'subscription_cancelled_email':
       subject = `Your ${templateData.PLAN_NAME} subscription has been cancelled`;
       break;
