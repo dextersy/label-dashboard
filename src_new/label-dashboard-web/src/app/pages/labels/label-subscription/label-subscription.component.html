@@ -68,6 +68,14 @@
                   Billed {{ currentSubscription.billing_cycle }}
                   &bull;
                   Active since {{ currentSubscription.started_at | date:'mediumDate' }}
+                  @if (isCurrentPlanPaid && effectiveEndsAt) {
+                    &bull;
+                    @if (currentSubscription.pending_plan_id) {
+                      Cancels {{ effectiveEndsAt | date:'mediumDate' }}
+                    } @else {
+                      Renews {{ effectiveEndsAt | date:'mediumDate' }}
+                    }
+                  }
                 </p>
               </div>
 
@@ -263,7 +271,7 @@
       <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 xl:tw-grid-cols-4 tw-gap-5">
         @for (plan of plans; track plan.id) {
           @if (plan.is_public) {
-            <div class="card tw-flex tw-flex-col tw-relative tw-overflow-hidden"
+            <div class="card tw-flex tw-flex-col tw-relative tw-overflow-hidden tw-h-full"
                  [class.tw-ring-2]="isCurrentPlan(plan)"
                  [style.--tw-ring-color]="isCurrentPlan(plan) ? 'var(--brand-color)' : 'transparent'">
 
@@ -272,7 +280,7 @@
                 <div class="tw-absolute tw-top-0 tw-left-0 tw-right-0 tw-h-1" style="background: var(--brand-color)"></div>
               }
 
-              <div class="card-body tw-flex tw-flex-col tw-gap-4 tw-pt-6">
+              <div class="card-body tw-flex tw-flex-col tw-gap-4 tw-pt-6 tw-flex-1">
 
                 <!-- Plan name + current badge -->
                 <div>
@@ -280,8 +288,14 @@
                     <h2 class="tw-font-heading tw-text-base tw-font-semibold tw-text-[var(--color-heading)] tw-mb-0">
                       {{ plan.name }}
                     </h2>
-                    @if (isCurrentPlan(plan)) {
+                    @if (isCurrentPlan(plan) && currentSubscription?.pending_plan_id && effectiveEndsAtLabel) {
+                      <span class="status-badge status-warning tw-text-xs">Until {{ effectiveEndsAtLabel }}</span>
+                    } @else if (isCurrentPlan(plan)) {
                       <span class="status-badge status-info tw-text-xs">Current</span>
+                    } @else if (isPaymentPendingPlan(plan)) {
+                      <span class="status-badge status-warning tw-text-xs">Payment pending</span>
+                    } @else if (isScheduledPlan(plan) && effectiveEndsAtLabel) {
+                      <span class="status-badge status-secondary tw-text-xs">Scheduled</span>
                     }
                   </div>
                   <!-- Price -->
@@ -360,19 +374,35 @@
 
                 <!-- CTA -->
                 <div class="tw-mt-auto tw-pt-2">
-                  @if (isCurrentPlan(plan)) {
-                    <button class="btn btn-secondary tw-w-full" disabled>Current plan</button>
-                  } @else if (plan.price_monthly === 0) {
-                    <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)]"
+                  @if (isPaymentPendingPlan(plan)) {
+                    <button class="btn btn-primary tw-w-full"
                             (click)="selectPlan(plan)"
                             [disabled]="actionLoading">
-                      Switch to {{ plan.name }}
+                      Complete payment
+                    </button>
+                  } @else if (isScheduledPlan(plan)) {
+                    <button class="btn btn-secondary tw-w-full" disabled>
+                      Starts {{ effectiveEndsAtLabel }}
+                    </button>
+                  } @else if (isCurrentPlan(plan) && hasPendingChange) {
+                    <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)] tw-py-3 tw-px-6 tw-text-[15px] tw-text-warning"
+                            (click)="cancelPendingChange()"
+                            [disabled]="actionLoading">
+                      Cancel pending change
+                    </button>
+                  } @else if (isCurrentPlan(plan)) {
+                    <button class="btn btn-secondary tw-w-full" disabled>Current plan</button>
+                  } @else if (plan.price_monthly === 0) {
+                    <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)] tw-py-3 tw-px-6 tw-text-[15px]"
+                            (click)="isCurrentPlanPaid ? cancelSubscription() : selectPlan(plan)"
+                            [disabled]="actionLoading">
+                      {{ isCurrentPlanPaid ? 'Cancel Subscription' : 'Switch to ' + plan.name }}
                     </button>
                   } @else {
                     <button class="btn btn-primary tw-w-full"
                             (click)="selectPlan(plan)"
                             [disabled]="actionLoading">
-                      {{ isDowngrade(plan) ? 'Switch to ' + plan.name : 'Upgrade to ' + plan.name }}
+                      {{ isUpgrade(plan) ? 'Upgrade to ' + plan.name : 'Switch to ' + plan.name }}
                     </button>
                   }
                 </div>

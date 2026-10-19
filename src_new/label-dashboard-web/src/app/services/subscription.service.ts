@@ -58,6 +58,8 @@ export interface CurrentSubscription {
   status: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled';
   started_at: string;
   ends_at: string | null;
+  pending_plan_id: number | null;
+  pending_billing_cycle: 'monthly' | 'annual' | null;
   effective_limits: EffectiveLimits;
 }
 
@@ -92,8 +94,8 @@ export class SubscriptionService {
     return this.http.get<UsageResponse>(`${this.apiUrl}/usage`);
   }
 
-  initiateCheckout(planId: number, billingCycle: 'monthly' | 'annual'): Observable<{ checkout_url?: string; immediate?: boolean }> {
-    return this.http.post<{ checkout_url?: string; immediate?: boolean }>(`${this.apiUrl}/checkout`, {
+  initiateCheckout(planId: number, billingCycle: 'monthly' | 'annual'): Observable<{ checkout_url?: string; immediate?: boolean; downgrade_scheduled?: boolean; effective_at?: string | null }> {
+    return this.http.post<{ checkout_url?: string; immediate?: boolean; downgrade_scheduled?: boolean; effective_at?: string | null }>(`${this.apiUrl}/checkout`, {
       plan_id: planId,
       billing_cycle: billingCycle,
     });
@@ -101,6 +103,10 @@ export class SubscriptionService {
 
   cancelSubscription(): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(`${this.apiUrl}/cancel`, {});
+  }
+
+  cancelPendingChange(): Observable<{ checkout_url: string }> {
+    return this.http.post<{ checkout_url: string }>(`${this.apiUrl}/cancel-pending-change`, {});
   }
 
   devOverridePlan(planId: number, billingCycle: 'monthly' | 'annual'): Observable<{ success: boolean }> {

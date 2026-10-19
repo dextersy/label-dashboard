@@ -1,9 +1,22 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
+export interface ConfirmationDialogDetail {
+  label: string;
+  value: string;
+  /** Render row label in muted grey (e.g. a sub-item or credit line) */
+  muted?: boolean;
+  /** Render value in bold (e.g. a total line) */
+  bold?: boolean;
+  /** Render a top border above this row (e.g. a separator before the total) */
+  separator?: boolean;
+}
+
 export interface ConfirmationDialogData {
   title: string;
   message: string;
+  /** Structured breakdown table shown between the message and the note */
+  details?: ConfirmationDialogDetail[];
   note?: string;
   noteIcon?: 'paypal' | 'info';
   warning?: string;

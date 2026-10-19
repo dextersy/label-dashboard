@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits } from '../../../services/subscription.service';
 import { NotificationService } from '../../../services/notification.service';
-import { ConfirmationService, ConfirmationDialogData } from '../../../services/confirmation.service';
+import { ConfirmationService, ConfirmationDialogData, ConfirmationDialogDetail } from '../../../services/confirmation.service';
 import { environment } from '../../../../environments/environment';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
@@ -83,9 +83,10 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
         this.usagePressCampaignsThisMonth = usage.usage.press_campaigns_this_month;
         this.usageSyncPitchesThisMonth = usage.usage.sync_pitches_this_month;
         this.usageStorageBytes = usage.usage.storage_used_bytes ?? 0;
-        // Pre-select billing cycle to match current subscription
-        if (this.currentSubscription) {
-          this.billingCycle = this.currentSubscription.billing_cycle;
+        // Pre-select billing cycle on first load only — don't reset it during polling
+        // (user may have switched the toggle while waiting for the webhook).
+        if (this.currentSubscription && this.pollAttempts === 0) {
+          this.billingCycle = (this.currentSubscription.pending_billing_cycle as 'monthly' | 'annual') ?? this.currentSubscription.billing_cycle;
         }
         // If we just returned from checkout, poll until the webhook marks it active
         if (this.returnStatus === 'pending') {
@@ -212,6 +213,20 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     return Math.round((1 - paidPlan.price_annual / monthlyEquivalent) * 100);
   }
 
+  /** Returns the effective period end date — real ends_at or estimated from started_at + billing cycle. */
+  get effectiveEndsAt(): Date | null {
+    if (!this.currentSubscription) return null;
+    if (this.currentSubscription.ends_at) return new Date(this.currentSubscription.ends_at);
+    if (!this.currentSubscription.started_at) return null;
+    const d = new Date(this.currentSubscription.started_at);
+    if (this.currentSubscription.billing_cycle === 'annual') {
+      d.setFullYear(d.getFullYear() + 1);
+    } else {
+      d.setMonth(d.getMonth() + 1);
+    }
+    return d;
+  }
+
   get currentPlanName(): string {
     if (!this.currentSubscription) return '';
     return this.plans.find((p) => p.id === this.currentSubscription!.plan_id)?.name ?? '';
@@ -224,23 +239,60 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   }
 
   isCurrentPlan(plan: Plan): boolean {
-    return this.currentSubscription?.plan_id === plan.id;
+    return this.currentSubscription?.plan_id === plan.id &&
+      this.currentSubscription?.billing_cycle === this.billingCycle;
+  }
+
+  isPendingPlan(plan: Plan): boolean {
+    return !!this.currentSubscription?.pending_plan_id &&
+      this.currentSubscription.pending_plan_id === plan.id &&
+      this.currentSubscription.pending_billing_cycle === this.billingCycle;
+  }
+
+  /** True when the pending plan is awaiting PayPal payment (not a scheduled future switch). */
+  isPaymentPendingPlan(plan: Plan): boolean {
+    return this.isPendingPlan(plan) && this.currentSubscription?.status === 'incomplete';
+  }
+
+  /** True when the pending plan is a scheduled future switch (downgrade/cancel scheduled). */
+  isScheduledPlan(plan: Plan): boolean {
+    return this.isPendingPlan(plan) && this.currentSubscription?.status !== 'incomplete';
+  }
+
+  get effectiveEndsAtLabel(): string | null {
+    const d = this.effectiveEndsAt;
+    if (!d) return null;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  private cyclePrice(plan: Plan, cycle: 'monthly' | 'annual'): number {
+    return cycle === 'annual' ? plan.price_annual : plan.price_monthly;
   }
 
   isUpgrade(plan: Plan): boolean {
     if (!this.currentSubscription) return plan.price_monthly > 0;
     const currentPlan = this.plans.find((p) => p.id === this.currentSubscription!.plan_id);
     if (!currentPlan) return false;
-    if (plan.sort_order !== currentPlan.sort_order) return plan.sort_order > currentPlan.sort_order;
-    return plan.price_monthly > currentPlan.price_monthly;
+    if (plan.id === currentPlan.id && this.billingCycle === this.currentSubscription.billing_cycle) return false;
+    // Same plan billing cycle flip
+    if (plan.id === currentPlan.id) return this.currentSubscription.billing_cycle === 'monthly' && this.billingCycle === 'annual';
+    // Compare total payment amounts
+    const currentPrice = this.cyclePrice(currentPlan, this.currentSubscription.billing_cycle);
+    const newPrice = this.cyclePrice(plan, this.billingCycle);
+    return newPrice > currentPrice;
   }
 
   isDowngrade(plan: Plan): boolean {
     if (!this.currentSubscription) return false;
     const currentPlan = this.plans.find((p) => p.id === this.currentSubscription!.plan_id);
     if (!currentPlan) return false;
-    if (plan.sort_order !== currentPlan.sort_order) return plan.sort_order < currentPlan.sort_order;
-    return plan.price_monthly < currentPlan.price_monthly;
+    if (plan.id === currentPlan.id && this.billingCycle === this.currentSubscription.billing_cycle) return false;
+    // Same plan billing cycle flip
+    if (plan.id === currentPlan.id) return this.currentSubscription.billing_cycle === 'annual' && this.billingCycle === 'monthly';
+    // Compare total payment amounts
+    const currentPrice = this.cyclePrice(currentPlan, this.currentSubscription.billing_cycle);
+    const newPrice = this.cyclePrice(plan, this.billingCycle);
+    return newPrice < currentPrice;
   }
 
   displayPrice(plan: Plan): number {
@@ -307,21 +359,103 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     return map[status] ?? status;
   }
 
+  private formatCurrency(amount: number): string {
+    return `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
+  private buildUpgradeDetails(newPlan: Plan): ConfirmationDialogDetail[] {
+    const currentPlan = this.plans.find(p => p.id === this.currentSubscription?.plan_id);
+    const currentPrice = this.currentSubscription?.billing_cycle === 'monthly'
+      ? (currentPlan?.price_monthly ?? 0)
+      : (currentPlan?.price_annual ?? 0);
+    const newPrice = this.billingCycle === 'monthly' ? newPlan.price_monthly : newPlan.price_annual;
+    const cycleLabel = this.billingCycle === 'monthly' ? '/mo' : '/yr';
+
+    const startedAt = this.currentSubscription?.started_at ? new Date(this.currentSubscription.started_at) : null;
+    const endsAt = this.effectiveEndsAt;
+
+    if (!endsAt || !startedAt || currentPrice === 0) {
+      return [
+        { label: `${newPlan.name} plan`, value: `${this.formatCurrency(newPrice)}${cycleLabel}` },
+        { label: 'Charged today', value: this.formatCurrency(newPrice), bold: true, separator: true },
+      ];
+    }
+
+    const now = Date.now();
+    const totalMs = endsAt.getTime() - startedAt.getTime();
+    const remainingMs = Math.max(0, endsAt.getTime() - now);
+    const fraction = totalMs > 0 ? remainingMs / totalMs : 0;
+
+    const credit = parseFloat((fraction * currentPrice).toFixed(2));
+    const total = parseFloat(Math.max(0, newPrice - credit).toFixed(2));
+
+    const totalDays = Math.round(totalMs / (1000 * 60 * 60 * 24));
+    const remainingDays = Math.round(remainingMs / (1000 * 60 * 60 * 24));
+
+    return [
+      { label: `${newPlan.name} plan`, value: this.formatCurrency(newPrice) },
+      { label: `Credit from current plan (${remainingDays} of ${totalDays} days unused)`, value: `−${this.formatCurrency(credit)}`, muted: true },
+      { label: 'Charged today', value: this.formatCurrency(total), bold: true, separator: true },
+      { label: `Recurring charge`, value: `${this.formatCurrency(newPrice)}${cycleLabel}`, muted: true },
+    ];
+  }
+
+  private buildDowngradeDetails(newPlan: Plan): ConfirmationDialogDetail[] {
+    const endsAt = this.effectiveEndsAt;
+    const dateLabel = endsAt
+      ? endsAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : 'end of billing period';
+    const newPrice = this.billingCycle === 'monthly' ? newPlan.price_monthly : newPlan.price_annual;
+    const cycleLabel = this.billingCycle === 'monthly' ? '/mo' : '/yr';
+
+    return [
+      { label: 'Charged today', value: 'Nothing' },
+      { label: 'Current plan active until', value: dateLabel, muted: true },
+      { label: 'Recurring charge from ' + dateLabel, value: newPrice === 0 ? 'Free' : `${this.formatCurrency(newPrice)}${cycleLabel}`, bold: true, separator: true },
+    ];
+  }
+
   async selectPlan(plan: Plan): Promise<void> {
     if (this.isCurrentPlan(plan)) return;
 
-    const priceLabel = plan.price_monthly === 0
-      ? 'free'
-      : `₱${this.displayPrice(plan).toLocaleString()}/${this.billingCycle === 'monthly' ? 'mo' : 'yr'}`;
+    const isDowngrade = this.isDowngrade(plan);
+    const hasCurrentPaidSub = this.isCurrentPlanPaid && !!this.currentSubscription &&
+      ['active', 'past_due', 'incomplete'].includes(this.currentSubscription.status);
+
+    let details: ConfirmationDialogDetail[] | undefined;
+    let message: string;
+    let note: string | undefined;
+    let warning: string | undefined;
+
+    if (isDowngrade) {
+      message = `Switch to the ${plan.name} plan?`;
+      if (hasCurrentPaidSub) {
+        details = this.buildDowngradeDetails(plan);
+        note = 'You will be redirected to PayPal to authorize future billing. Your current plan stays active until the end of your billing period — no charge today.';
+      }
+    } else {
+      // Upgrade or new subscription
+      if (plan.price_monthly === 0) {
+        message = `Switch to the ${plan.name} plan?`;
+      } else {
+        message = `Upgrade to the ${plan.name} plan?`;
+        details = this.buildUpgradeDetails(plan);
+        note = hasCurrentPaidSub
+          ? 'You will be redirected to PayPal to complete payment. The prorated amount above will be charged as a one-time setup fee.'
+          : 'You will be redirected to PayPal to complete payment. A PayPal account is required to set up recurring billing.';
+      }
+    }
 
     const confirmed = await this.confirmationService.confirm({
-      title: this.isDowngrade(plan) ? 'Switch plan' : 'Upgrade plan',
-      message: `Switch to the ${plan.name} plan (${priceLabel})?`,
-      note: plan.price_monthly > 0 ? 'You will be redirected to PayPal to complete payment. A PayPal account is required to set up recurring billing.' : undefined,
+      title: isDowngrade ? 'Downgrade plan' : (plan.price_monthly === 0 ? 'Switch plan' : 'Upgrade plan'),
+      message,
+      details,
+      note,
       noteIcon: plan.price_monthly > 0 ? 'paypal' : undefined,
-      confirmText: 'Confirm',
+      warning,
+      confirmText: plan.price_monthly > 0 ? 'Proceed to Payment' : 'Confirm',
       cancelText: 'Cancel',
-      type: this.isDowngrade(plan) ? 'warning' : 'info',
+      type: isDowngrade ? 'warning' : 'info',
     } as ConfirmationDialogData);
 
     if (!confirmed) return;
@@ -329,13 +463,17 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     this.actionLoading = true;
     this.subscriptionService.initiateCheckout(plan.id, this.billingCycle).subscribe({
       next: (result) => {
-        if (result.immediate) {
+        if (result.checkout_url) {
+          // Redirect to PayPal — for upgrades (payment now) and downgrades (authorize future billing)
+          window.location.href = result.checkout_url;
+        } else if (result.immediate) {
           this.notificationService.showSuccess(`Switched to ${plan.name} plan`);
           this.loadPlans();
           this.actionLoading = false;
-        } else if (result.checkout_url) {
-          // Redirect to PayPal hosted checkout for first payment
-          window.location.href = result.checkout_url;
+        } else if (result.downgrade_scheduled) {
+          this.notificationService.showSuccess(`Downgrade scheduled — your ${plan.name} plan will start at the end of your current billing period`);
+          this.loadPlans();
+          this.actionLoading = false;
         }
       },
       error: () => {
@@ -364,13 +502,64 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     this.plansSection.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  get hasPendingChange(): boolean {
+    return !!this.currentSubscription?.pending_plan_id;
+  }
+
+  get pendingChangePlanName(): string {
+    if (!this.currentSubscription?.pending_plan_id) return '';
+    const pending = this.plans.find((p) => p.id === this.currentSubscription!.pending_plan_id);
+    return pending?.name ?? '';
+  }
+
+  async cancelPendingChange(): Promise<void> {
+    const pendingName = this.pendingChangePlanName;
+    const dateLabel = this.effectiveEndsAtLabel;
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Cancel pending plan change',
+      message: pendingName
+        ? `This will cancel the scheduled change to ${pendingName}. Your current plan will continue after ${dateLabel ?? 'the billing period ends'}.`
+        : `This will cancel the scheduled plan change. Your current plan will continue.`,
+      confirmText: 'Yes, cancel change',
+      cancelText: 'Keep change',
+      type: 'warning',
+      primaryAction: 'cancel',
+    } as ConfirmationDialogData);
+
+    if (!confirmed) return;
+
+    this.actionLoading = true;
+    this.subscriptionService.cancelPendingChange().subscribe({
+      next: (res) => {
+        this.actionLoading = false;
+        if (res.checkout_url) {
+          window.location.href = res.checkout_url;
+        }
+      },
+      error: () => {
+        this.notificationService.showError('Failed to cancel pending plan change');
+        this.actionLoading = false;
+      },
+    });
+  }
+
   async cancelSubscription(): Promise<void> {
+    const endsAt = this.effectiveEndsAt;
+    const dateLabel = endsAt
+      ? endsAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      : null;
+
     const confirmed = await this.confirmationService.confirm({
       title: 'Cancel subscription',
-      message: 'You will be downgraded to the Free plan immediately.',
+      message: dateLabel
+        ? `Your plan will remain active until ${dateLabel}, then switch to Free.`
+        : 'You will be downgraded to the Free plan.',
+      warning: 'No refund is issued for unused time.',
       confirmText: 'Yes, cancel',
       cancelText: 'Keep subscription',
       type: 'danger',
+      primaryAction: 'cancel',
     } as ConfirmationDialogData);
 
     if (!confirmed) return;

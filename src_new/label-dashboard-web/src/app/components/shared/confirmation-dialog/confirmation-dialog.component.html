@@ -36,6 +36,19 @@
       <!-- Body -->
       <div class="modal-body cd-modal-body">
         <p id="confirmation-dialog-message" class="cd-primary-text">{{ data?.message }}</p>
+
+        <!-- Charge breakdown / details table -->
+        <div *ngIf="data?.details?.length" class="tw-mt-3 tw-rounded tw-border tw-border-gray-200 tw-overflow-hidden tw-text-sm">
+          <div *ngFor="let row of data?.details"
+               class="tw-flex tw-justify-between tw-items-baseline tw-px-3 tw-py-1.5"
+               [class.tw-border-t]="row.separator"
+               [class.tw-border-gray-200]="row.separator"
+               [class.tw-bg-gray-50]="row.separator">
+            <span [class.tw-text-gray-400]="row.muted" [class.tw-text-gray-700]="!row.muted">{{ row.label }}</span>
+            <span [class.tw-font-semibold]="row.bold" [class.tw-text-gray-900]="row.bold" [class.tw-text-gray-500]="!row.bold">{{ row.value }}</span>
+          </div>
+        </div>
+
         <div *ngIf="data?.note" class="tw-flex tw-items-center tw-gap-2 tw-mt-3 tw-px-3 tw-py-2 tw-rounded tw-border tw-border-blue-200 tw-bg-blue-50 tw-text-blue-700 tw-text-sm">
           <ng-container [ngSwitch]="data?.noteIcon">
             <svg *ngSwitchCase="'paypal'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw-flex-shrink-0 tw-w-10 tw-h-5" aria-label="PayPal">
