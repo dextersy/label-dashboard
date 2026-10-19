@@ -30,9 +30,14 @@
         Your subscription is now active.
       </div>
     }
-    @if (returnStatus === 'pending') {
+    @if (returnStatus === 'pending' && !pollTimedOut) {
       <div class="alert alert-warning tw-mb-6">
-        Payment received — activating your plan&hellip;
+        Activating your plan&hellip;
+      </div>
+    }
+    @if (pollTimedOut) {
+      <div class="alert alert-warning tw-mb-6">
+        This is taking longer than expected. Please refresh the page or contact support if your plan hasn't updated.
       </div>
     }
 

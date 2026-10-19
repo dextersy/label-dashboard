@@ -32,6 +32,7 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
 
   // Show a banner if returning from a PayPal checkout
   returnStatus: 'success' | 'pending' | null = null;
+  pollTimedOut = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private pollAttempts = 0;
   private readonly POLL_MAX = 10;
@@ -95,6 +96,8 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
           } else if (this.pollAttempts < this.POLL_MAX) {
             this.pollAttempts++;
             this.pollTimer = setTimeout(() => this.loadPlans(), this.POLL_INTERVAL_MS);
+          } else {
+            this.pollTimedOut = true;
           }
         }
         this.loading = false;
