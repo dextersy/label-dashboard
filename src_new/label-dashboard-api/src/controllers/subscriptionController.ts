@@ -291,7 +291,7 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
         await currentBrandPlan!.update({ paypal_subscription_id: null });
       }
 
-        // Ensure PayPal billing plan exists for the new (lower) plan
+      // Ensure PayPal billing plan exists for the new (lower) plan
       const paypalPlanId = await syncPlanToPayPal(plan, billing_cycle);
 
       // Create the future subscription — no charge today, starts at endsAt
@@ -395,6 +395,7 @@ export const initiateCheckout = async (req: Request, res: Response): Promise<voi
       // ends_at intentionally NOT cleared — if the user abandons the PayPal flow,
       // the CANCELLED webhook reverts to this record and the brand retains access
       // for the period they already paid for. Webhooks update ends_at on completion.
+      pre_checkout_status: paidBrandPlan.status,
       status: 'incomplete',
       paypal_subscription_id: subscriptionId,
       pending_plan_id: plan.id,
@@ -1020,12 +1021,15 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
         if (affectedBrandPlan.status === 'incomplete') {
           // Case 2: User abandoned the PayPal checkout flow (cancelled from PayPal UI).
           // Revert the pending checkout — keep plan_id as-is (it was never changed),
-          // clear the pending intent fields, and restore status to active.
+          // clear the pending intent fields, and restore the status that existed before
+          // the checkout attempt (e.g. past_due should not be promoted to active).
+          const restoredStatus = affectedBrandPlan.pre_checkout_status ?? 'active';
           await affectedBrandPlan.update({
             paypal_subscription_id: null,
             pending_plan_id: null,
             pending_billing_cycle: null,
-            status: 'active',
+            pre_checkout_status: null,
+            status: restoredStatus,
           });
         } else {
           // Case 3: PayPal-initiated cancel (payment failure, external termination, etc.)
