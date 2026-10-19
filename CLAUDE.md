@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Environment Notes
+
+- **GitHub CLI**: `gh` is installed at `C:\Program Files\Github CLI\gh.exe`. If `gh` is not found in PATH, use the full path: `"/c/Program Files/Github CLI/gh.exe"`
+
 ## Project Overview
 
 This is the Melt Records Artist Dashboard - a multi-brand label management system that allows music labels to provide transparent financial reporting to their artists. The project consists of four main components:
