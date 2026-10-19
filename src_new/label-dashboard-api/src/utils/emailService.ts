@@ -287,6 +287,12 @@ export const sendBrandedEmail = async (
     case 'subscription_downgraded_email':
       subject = `Your ${templateData.PLAN_NAME} subscription has ended`;
       break;
+    case 'subscription_downgrade_scheduled_email':
+      subject = `Your plan change to ${templateData.NEW_PLAN_NAME} is scheduled`;
+      break;
+    case 'subscription_cancelled_email':
+      subject = `Your ${templateData.PLAN_NAME} subscription has been cancelled`;
+      break;
     default:
       subject = 'Notification';
   }
@@ -1661,6 +1667,64 @@ export const sendSubscriptionDowngradedEmail = async (
     }, ctx.senderBrand.id);
   } catch (error) {
     console.error('sendSubscriptionDowngradedEmail error:', error);
+    return false;
+  }
+};
+
+export const sendSubscriptionDowngradeScheduledEmail = async (
+  brandId: number,
+  currentPlanName: string,
+  newPlanName: string,
+  effectiveDate: Date,
+  newAmount: number,
+  billingCycle: 'monthly' | 'annual',
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    const effectiveDateLabel = effectiveDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const newAmountLabel = newAmount === 0
+      ? 'Free'
+      : `₱${newAmount.toLocaleString()}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_downgrade_scheduled_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      CURRENT_PLAN_NAME: escapeHtml(currentPlanName),
+      NEW_PLAN_NAME: escapeHtml(newPlanName),
+      EFFECTIVE_DATE: effectiveDateLabel,
+      NEW_AMOUNT: escapeHtml(newAmountLabel),
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionDowngradeScheduledEmail error:', error);
+    return false;
+  }
+};
+
+export const sendSubscriptionCancelledEmail = async (
+  brandId: number,
+  planName: string,
+  effectiveDate: Date,
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    const effectiveDateLabel = effectiveDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_cancelled_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      PLAN_NAME: escapeHtml(planName),
+      EFFECTIVE_DATE: effectiveDateLabel,
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionCancelledEmail error:', error);
     return false;
   }
 };

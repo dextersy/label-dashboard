@@ -21,6 +21,11 @@ interface BrandPlanAttributes {
   // PayPal subscription tracking
   status: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled';
   paypal_subscription_id?: string | null;
+
+  // Pending downgrade — set when a user requests a downgrade, cleared when activated
+  pending_plan_id?: number | null;
+  pending_billing_cycle?: 'monthly' | 'annual' | null;
+  pending_paypal_subscription_id?: string | null;
 }
 
 interface BrandPlanCreationAttributes extends Optional<BrandPlanAttributes, 'id'> {}
@@ -42,6 +47,10 @@ class BrandPlan extends Model<BrandPlanAttributes, BrandPlanCreationAttributes> 
 
   public status!: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled';
   public paypal_subscription_id?: string | null;
+
+  public pending_plan_id?: number | null;
+  public pending_billing_cycle?: 'monthly' | 'annual' | null;
+  public pending_paypal_subscription_id?: string | null;
 
   // Association properties
   public plan?: Plan;
@@ -123,6 +132,22 @@ BrandPlan.init(
       defaultValue: 'active',
     },
     paypal_subscription_id: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    pending_plan_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'plan',
+        key: 'id',
+      },
+    },
+    pending_billing_cycle: {
+      type: DataTypes.ENUM('monthly', 'annual'),
+      allowNull: true,
+    },
+    pending_paypal_subscription_id: {
       type: DataTypes.STRING(100),
       allowNull: true,
     },

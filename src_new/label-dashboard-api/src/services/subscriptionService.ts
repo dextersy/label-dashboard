@@ -191,9 +191,15 @@ export async function createPayPalSubscription(params: {
   planId: string;
   returnUrl: string;
   cancelUrl: string;
+  /** One-time setup fee charged at subscription creation (e.g. proration on upgrade). */
+  setupFee?: number;
+  /** ISO 8601 datetime — delay the first billing cycle start (used for scheduled downgrades). */
+  startTime?: Date;
 }): Promise<{ subscriptionId: string; approvalUrl: string }> {
+  const currency = process.env.PAYPAL_CURRENCY || 'PHP';
   const client = await paypalClient();
-  const response = await client.post('/v1/billing/subscriptions', {
+
+  const body: any = {
     plan_id: params.planId,
     application_context: {
       shipping_preference: 'NO_SHIPPING',
@@ -202,7 +208,24 @@ export async function createPayPalSubscription(params: {
       return_url: params.returnUrl,
       cancel_url: params.cancelUrl,
     },
-  });
+  };
+
+  if (params.startTime) {
+    body.start_time = params.startTime.toISOString();
+  }
+
+  if (params.setupFee !== undefined && params.setupFee > 0) {
+    body.plan = {
+      payment_preferences: {
+        setup_fee: {
+          value: params.setupFee.toFixed(2),
+          currency_code: currency,
+        },
+      },
+    };
+  }
+
+  const response = await client.post('/v1/billing/subscriptions', body);
 
   const subscription = response.data;
   const approvalLink = (subscription.links as any[]).find((l: any) => l.rel === 'approve');
@@ -216,11 +239,62 @@ export async function createPayPalSubscription(params: {
   };
 }
 
+/**
+ * Fetches a PayPal subscription and returns the next billing time (ISO string) or null.
+ * Used after ACTIVATED to persist ends_at on the BrandPlan record.
+ */
+export async function getPayPalSubscriptionNextBillingTime(subscriptionId: string): Promise<Date | null> {
+  const client = await paypalClient();
+  const response = await client.get(`/v1/billing/subscriptions/${subscriptionId}`);
+  const nextBillingTime: string | undefined = response.data?.billing_info?.next_billing_time;
+  return nextBillingTime ? new Date(nextBillingTime) : null;
+}
+
+/**
+ * Calculates the prorated setup fee when upgrading a subscription mid-cycle.
+ * Returns the amount the customer owes for the remainder of the current period
+ * at the new price, minus what they've already "pre-paid" at the old price.
+ *
+ * Formula: (daysRemaining / totalDays) * (newPrice - oldPrice)
+ * Clamped to 0 — never returns a negative value (that case is blocked upstream).
+ */
+export function calculateProration(params: {
+  startedAt: Date;
+  endsAt: Date;
+  oldPrice: number;
+  newPrice: number;
+}): number {
+  const now = Date.now();
+  const start = params.startedAt.getTime();
+  const end = params.endsAt.getTime();
+  const totalMs = end - start;
+  const remainingMs = end - now;
+
+  if (totalMs <= 0 || remainingMs <= 0) {
+    // Period already over or invalid — charge full new price
+    return params.newPrice;
+  }
+
+  const fraction = remainingMs / totalMs;
+  const credit = fraction * params.oldPrice;
+  const proration = params.newPrice - credit;
+  return Math.max(0, parseFloat(proration.toFixed(2)));
+}
+
 export async function cancelPayPalSubscription(subscriptionId: string): Promise<void> {
   const client = await paypalClient();
-  await client.post(`/v1/billing/subscriptions/${subscriptionId}/cancel`, {
-    reason: 'Cancelled by user',
-  });
+  try {
+    await client.post(`/v1/billing/subscriptions/${subscriptionId}/cancel`, {
+      reason: 'Cancelled by user',
+    });
+  } catch (err: any) {
+    // 404 means the subscription no longer exists on PayPal's side — already cancelled, nothing to do.
+    if (err?.response?.status === 404) {
+      console.warn(`cancelPayPalSubscription: subscription ${subscriptionId} not found on PayPal (already cancelled)`);
+      return;
+    }
+    throw err;
+  }
 }
 
 // ---------------------------------------------------------------------------

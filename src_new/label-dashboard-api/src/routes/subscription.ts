@@ -1,9 +1,11 @@
 import express from 'express';
 import {
+  getPublicPlans,
   getPlans,
   getUsage,
   initiateCheckout,
   cancelSubscription,
+  cancelPendingChange,
   devOverridePlan,
   handleSubscriptionWebhook,
   getAdminPlans,
@@ -14,8 +16,9 @@ import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middlewar
 
 const router = express.Router();
 
-// Public — PayMongo webhook (no auth, signature-verified inside controller)
+// Public — no auth required
 router.post('/webhook', handleSubscriptionWebhook);
+router.get('/plans/public', getPublicPlans);
 
 // Protected
 router.get('/plans', authenticateToken, getPlans);
@@ -23,6 +26,7 @@ router.get('/usage', authenticateToken, getUsage);
 router.post('/dev-override', authenticateToken, requireAdmin, devOverridePlan);
 router.post('/checkout', authenticateToken, requireAdmin, initiateCheckout);
 router.post('/cancel', authenticateToken, requireAdmin, cancelSubscription);
+router.post('/cancel-pending-change', authenticateToken, requireAdmin, cancelPendingChange);
 
 // Superadmin plan management
 router.get('/admin/plans', authenticateToken, requireSuperAdmin, getAdminPlans);

@@ -1,0 +1,30 @@
+{
+  "name": "subscription-downgrade-activator-lambda",
+  "version": "1.0.0",
+  "description": "AWS Lambda function to activate scheduled subscription downgrades after the current billing period ends",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test:local": "npm run build && node dist/local-test.js",
+    "package": "npm run build && bestzip subscription-downgrade-activator.zip dist node_modules package.json",
+    "deploy": "npm run package && aws lambda update-function-code --function-name subscription-downgrade-activator --zip-file fileb://subscription-downgrade-activator.zip"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "subscription",
+    "downgrade"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.5"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.140",
+    "@types/node": "^22.0.0",
+    "bestzip": "^2.2.1",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.5.3"
+  }
+}
