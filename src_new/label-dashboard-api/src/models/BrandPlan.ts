@@ -26,6 +26,10 @@ interface BrandPlanAttributes {
   pending_plan_id?: number | null;
   pending_billing_cycle?: 'monthly' | 'annual' | null;
   pending_paypal_subscription_id?: string | null;
+
+  // Snapshot of status before it was set to 'incomplete' for a checkout attempt.
+  // Used to restore the correct status if the user abandons the PayPal flow.
+  pre_checkout_status?: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled' | null;
 }
 
 interface BrandPlanCreationAttributes extends Optional<BrandPlanAttributes, 'id'> {}
@@ -51,6 +55,7 @@ class BrandPlan extends Model<BrandPlanAttributes, BrandPlanCreationAttributes> 
   public pending_plan_id?: number | null;
   public pending_billing_cycle?: 'monthly' | 'annual' | null;
   public pending_paypal_subscription_id?: string | null;
+  public pre_checkout_status?: 'active' | 'incomplete' | 'past_due' | 'unpaid' | 'cancelled' | null;
 
   // Association properties
   public plan?: Plan;
@@ -149,6 +154,10 @@ BrandPlan.init(
     },
     pending_paypal_subscription_id: {
       type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    pre_checkout_status: {
+      type: DataTypes.ENUM('active', 'incomplete', 'past_due', 'unpaid', 'cancelled'),
       allowNull: true,
     },
   },
