@@ -1505,17 +1505,32 @@ export const processPendingDowngrades = async (req: Request, res: Response): Pro
         const previousPlanName = brandPlan.plan?.name ?? 'Paid';
         const newBillingCycle = brandPlan.pending_billing_cycle ?? 'monthly';
 
-        await brandPlan.update({
-          plan_id: newPlan.id,
-          billing_cycle: newBillingCycle,
-          started_at: now,
-          ends_at: null,
-          status: 'active',
-          paypal_subscription_id: brandPlan.pending_paypal_subscription_id ?? null,
-          pending_plan_id: null,
-          pending_billing_cycle: null,
-          pending_paypal_subscription_id: null,
-        } as any);
+        // Use a conditional update as a concurrency guard — if a concurrent Lambda run
+        // already processed this row, pending_plan_id will be null and rowsAffected = 0.
+        const [rowsAffected] = await BrandPlan.update(
+          {
+            plan_id: newPlan.id,
+            billing_cycle: newBillingCycle,
+            started_at: now,
+            ends_at: null,
+            status: 'active',
+            paypal_subscription_id: brandPlan.pending_paypal_subscription_id ?? null,
+            pending_plan_id: null,
+            pending_billing_cycle: null,
+            pending_paypal_subscription_id: null,
+          } as any,
+          {
+            where: {
+              id: brandPlan.id,
+              pending_plan_id: newPlan.id,
+            },
+          },
+        );
+        if (rowsAffected === 0) {
+          console.log(`processPendingDowngrades: brand ${brandPlan.brand_id} already processed by concurrent run, skipping`);
+          results.push({ brand_id: brandPlan.brand_id, status: 'success' });
+          continue;
+        }
 
         sendSubscriptionPlanActivatedEmail(
           brandPlan.brand_id,

@@ -434,12 +434,13 @@ export const cancelSubscription = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Cancel pending downgrade subscription first (clear DB before calling PayPal
-    // so the CANCELLED webhook is a no-op if it fires before we update).
+    // Cancel pending downgrade subscription first. Cancel on PayPal before clearing
+    // DB — the CANCELLED webhook checks pending_paypal_subscription_id === subscriptionId
+    // and will no-op once we clear it in the line below.
     if (brandPlan.pending_paypal_subscription_id) {
       const pendingSubId = brandPlan.pending_paypal_subscription_id;
-      await brandPlan.update({ pending_paypal_subscription_id: null, pending_plan_id: null, pending_billing_cycle: null });
       await cancelPayPalSubscription(pendingSubId);
+      await brandPlan.update({ pending_paypal_subscription_id: null, pending_plan_id: null, pending_billing_cycle: null });
       console.log(`cancelSubscription: cancelled pending PayPal sub ${pendingSubId} for brand ${brandId}`);
     }
 
@@ -534,15 +535,16 @@ export const cancelPendingChange = async (req: Request, res: Response): Promise<
     }
 
     // If there is an existing pending PayPal subscription, cancel it first.
-    // Clear the DB field before calling PayPal so the CANCELLED webhook is a no-op.
+    // Cancel on PayPal before clearing DB — the CANCELLED webhook checks
+    // pending_paypal_subscription_id === subscriptionId and will no-op once we clear it below.
     if (brandPlan.pending_paypal_subscription_id) {
       const oldPendingSubId = brandPlan.pending_paypal_subscription_id;
+      await cancelPayPalSubscription(oldPendingSubId);
       await brandPlan.update({
         pending_paypal_subscription_id: null,
         pending_plan_id: null,
         pending_billing_cycle: null,
       });
-      await cancelPayPalSubscription(oldPendingSubId);
     }
 
     // Create a new subscription for the current plan starting at ends_at.
@@ -738,6 +740,18 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
 
   if (!authAlgo || !certUrl || !transmissionId || !transmissionSig || !transmissionTime) {
     res.status(400).json({ error: 'Missing PayPal webhook signature headers' });
+    return;
+  }
+
+  const VALID_PAYPAL_CERT_PREFIXES = [
+    'https://api.paypal.com',
+    'https://api.sandbox.paypal.com',
+    'https://api-m.paypal.com',
+    'https://api-m.sandbox.paypal.com',
+  ];
+  if (!VALID_PAYPAL_CERT_PREFIXES.some(prefix => certUrl.startsWith(prefix))) {
+    console.warn('handleSubscriptionWebhook: invalid certUrl, rejecting:', certUrl);
+    res.status(400).json({ error: 'Invalid webhook cert URL' });
     return;
   }
 
