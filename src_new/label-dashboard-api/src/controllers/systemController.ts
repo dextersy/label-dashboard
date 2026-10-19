@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User, EventAddOnPayment } from '../models';
 import ReleaseTask from '../models/ReleaseTask';
+import BrandPlan from '../models/BrandPlan';
+import Plan from '../models/Plan';
+import { sendSubscriptionPlanActivatedEmail } from '../utils/emailService';
 import { auditLogger } from '../utils/auditLogger';
 import { PaymentService } from '../utils/paymentService';
 import { createNotificationsForUsers } from '../utils/notificationService';
@@ -1471,4 +1474,75 @@ export const processLabelAutoPayouts = async (req: Request, res: Response) => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// POST /api/system/process-pending-downgrades
+// Called daily by the subscription-downgrade-activator Lambda.
+// Activates any scheduled downgrades where ends_at has passed.
+// ---------------------------------------------------------------------------
+export const processPendingDowngrades = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const now = new Date();
+
+    // Find all brand plans with an expired period and a pending downgrade
+    const due = await BrandPlan.findAll({
+      where: {
+        pending_plan_id: { [Op.ne]: null },
+        ends_at: { [Op.lt]: now },
+      },
+      include: [{ model: Plan, as: 'plan' }],
+    }) as (BrandPlan & { plan?: Plan })[];
+
+    const results: { brand_id: number; status: 'success' | 'error'; error?: string }[] = [];
+
+    for (const brandPlan of due) {
+      try {
+        const newPlan = await Plan.findByPk(brandPlan.pending_plan_id!);
+        if (!newPlan) {
+          results.push({ brand_id: brandPlan.brand_id, status: 'error', error: 'Pending plan not found' });
+          continue;
+        }
+
+        const previousPlanName = brandPlan.plan?.name ?? 'Paid';
+        const newBillingCycle = brandPlan.pending_billing_cycle ?? 'monthly';
+
+        await brandPlan.update({
+          plan_id: newPlan.id,
+          billing_cycle: newBillingCycle,
+          started_at: now,
+          ends_at: null,
+          status: 'active',
+          paypal_subscription_id: brandPlan.pending_paypal_subscription_id ?? null,
+          pending_plan_id: null,
+          pending_billing_cycle: null,
+          pending_paypal_subscription_id: null,
+        } as any);
+
+        sendSubscriptionPlanActivatedEmail(
+          brandPlan.brand_id,
+          previousPlanName,
+          newPlan.name,
+        ).catch((err) => console.error('sendSubscriptionPlanActivatedEmail error:', err));
+
+        results.push({ brand_id: brandPlan.brand_id, status: 'success' });
+      } catch (err: any) {
+        console.error(`processPendingDowngrades: error for brand ${brandPlan.brand_id}:`, err);
+        results.push({ brand_id: brandPlan.brand_id, status: 'error', error: err.message });
+      }
+    }
+
+    auditLogger.logSystemAccess(req, 'PROCESS_PENDING_DOWNGRADES', {
+      requestBody: { processed: results.length, results }
+    });
+
+    res.json({
+      processed: results.length,
+      succeeded: results.filter(r => r.status === 'success').length,
+      failed: results.filter(r => r.status === 'error').length,
+      results,
+    });
+  } catch (error: any) {
+    console.error('processPendingDowngrades error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 

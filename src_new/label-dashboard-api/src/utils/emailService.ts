@@ -1704,6 +1704,29 @@ export const sendSubscriptionDowngradeScheduledEmail = async (
   }
 };
 
+export const sendSubscriptionPlanActivatedEmail = async (
+  brandId: number,
+  previousPlanName: string,
+  newPlanName: string,
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_plan_activated_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      PREVIOUS_PLAN_NAME: escapeHtml(previousPlanName),
+      NEW_PLAN_NAME: escapeHtml(newPlanName),
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionPlanActivatedEmail error:', error);
+    return false;
+  }
+};
+
 export const sendSubscriptionCancelledEmail = async (
   brandId: number,
   planName: string,
