@@ -316,6 +316,27 @@ export const inviteRateLimit = rateLimit({
   }
 });
 
+// Rate limiting for public webhook endpoints (PayPal, etc.)
+export const webhookRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // 60 requests per minute per IP — generous for legitimate retry storms
+  message: {
+    error: 'Too Many Requests',
+    message: 'Too many webhook requests.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    notifySuperadmin(req, 'Webhook Rate Limit').catch(err =>
+      console.error('Failed to notify admin:', err)
+    );
+    createRateLimitErrorHandler({
+      error: 'Too Many Requests',
+      message: 'Too many webhook requests.',
+    })(req, res);
+  }
+});
+
 // Global fallback rate limiter for all endpoints
 export const globalRateLimit = rateLimit({
   windowMs: parseInt(process.env.GLOBAL_RATE_WINDOW_MS || '60000'), // 1 minute

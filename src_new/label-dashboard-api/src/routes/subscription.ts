@@ -13,11 +13,12 @@ import {
   updatePlan,
 } from '../controllers/subscriptionController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
+import { webhookRateLimit } from '../middleware/rateLimiting';
 
 const router = express.Router();
 
 // Public — no auth required
-router.post('/webhook', handleSubscriptionWebhook);
+router.post('/webhook', webhookRateLimit, handleSubscriptionWebhook);
 router.get('/plans/public', getPublicPlans);
 
 // Protected

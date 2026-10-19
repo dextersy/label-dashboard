@@ -743,14 +743,22 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
     return;
   }
 
-  const VALID_PAYPAL_CERT_PREFIXES = [
-    'https://api.paypal.com',
-    'https://api.sandbox.paypal.com',
-    'https://api-m.paypal.com',
-    'https://api-m.sandbox.paypal.com',
+  const VALID_PAYPAL_CERT_HOSTNAMES = [
+    'api.paypal.com',
+    'api.sandbox.paypal.com',
+    'api-m.paypal.com',
+    'api-m.sandbox.paypal.com',
   ];
-  if (!VALID_PAYPAL_CERT_PREFIXES.some(prefix => certUrl.startsWith(prefix))) {
-    console.warn('handleSubscriptionWebhook: invalid certUrl, rejecting:', certUrl);
+  let certUrlHostname: string;
+  try {
+    certUrlHostname = new URL(certUrl).hostname;
+  } catch {
+    console.warn('handleSubscriptionWebhook: unparseable certUrl, rejecting:', certUrl);
+    res.status(400).json({ error: 'Invalid webhook cert URL' });
+    return;
+  }
+  if (!VALID_PAYPAL_CERT_HOSTNAMES.includes(certUrlHostname)) {
+    console.warn('handleSubscriptionWebhook: invalid certUrl hostname, rejecting:', certUrlHostname);
     res.status(400).json({ error: 'Invalid webhook cert URL' });
     return;
   }
