@@ -893,7 +893,7 @@ export const organizerSignup = async (req: Request, res: Response) => {
         billing_cycle: 'monthly',
         status: 'active',
         started_at: new Date(),
-        paymongo_subscription_id: null,
+        paypal_subscription_id: null,
       });
     }
 
@@ -1208,7 +1208,7 @@ export const organizerGoogleCallback = async (req: Request, res: Response) => {
         billing_cycle: 'monthly',
         status: 'active',
         started_at: new Date(),
-        paymongo_subscription_id: null,
+        paypal_subscription_id: null,
       });
     }
 

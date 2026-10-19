@@ -1669,7 +1669,7 @@ const createSublabelAsync = async (
         billing_cycle: 'monthly',
         status: 'active',
         started_at: new Date(),
-        paymongo_subscription_id: null,
+        paypal_subscription_id: null,
       });
       console.log(`[Async] Assigned free plan (ID: ${freePlan.id}) to new sublabel brand ID: ${newBrand.id}`);
     } else {
