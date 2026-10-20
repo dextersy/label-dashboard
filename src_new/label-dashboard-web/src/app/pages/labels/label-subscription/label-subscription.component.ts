@@ -61,6 +61,8 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
+  downloadingInvoiceId: number | null = null;
+
   readonly invoiceColumns: TableColumn[] = [
     {
       key: 'createdAt', label: 'Date',
@@ -82,6 +84,14 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
       key: 'status', label: 'Status', renderHtml: true,
       formatter: (item) => `<span class="status-badge ${this.invoiceStatusClass(item.status)}">${this.invoiceStatusLabel(item.status)}</span>`,
       mobileGroup: 'summary',
+    },
+  ];
+
+  readonly invoiceActions = [
+    {
+      label: 'Download PDF',
+      icon: 'download',
+      handler: (item: any) => this.downloadInvoice(item),
     },
   ];
 
@@ -685,6 +695,25 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
       error: () => {
         this.notificationService.showError('Failed to load invoices');
         this.invoicesLoading = false;
+      },
+    });
+  }
+
+  downloadInvoice(invoice: SubscriptionInvoice): void {
+    this.downloadingInvoiceId = invoice.id;
+    this.subscriptionService.downloadInvoicePdf(invoice.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${invoice.invoice_number ?? invoice.id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.downloadingInvoiceId = null;
+      },
+      error: () => {
+        this.notificationService.showError('Failed to download invoice PDF');
+        this.downloadingInvoiceId = null;
       },
     });
   }

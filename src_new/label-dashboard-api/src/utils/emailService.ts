@@ -5,6 +5,7 @@ import EmailAttempt from '../models/EmailAttempt';
 import User from '../models/User';
 import Brand from '../models/Brand';
 import { getBrandFrontendUrl } from './brandUtils';
+import { buildInvoicePdfBuffer } from '../controllers/subscriptionController';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -215,7 +216,8 @@ export const sendBrandedEmail = async (
   recipients: string | string[],
   templateName: string,
   templateData: Record<string, any>,
-  brandId: number
+  brandId: number,
+  attachments?: Array<{ filename: string; content: Buffer; contentType: string }>,
 ): Promise<boolean> => {
 
   // Load the email template
@@ -323,12 +325,15 @@ export const sendBrandedEmail = async (
     // Send to each recipient individually
     for (const email of recipientList) {
       try {
-        const mailOptions = {
+        const mailOptions: Record<string, any> = {
           from: `${quotedFromName} <${fromEmail}>`,
           to: email,
           subject,
           html: htmlBody,
         };
+        if (attachments && attachments.length > 0) {
+          mailOptions['attachments'] = attachments;
+        }
 
         const result = await transporter.sendMail(mailOptions);
         console.log('Branded email sent successfully:', result.messageId);
@@ -1577,6 +1582,7 @@ export const sendSubscriptionActivatedEmail = async (
   planName: string,
   billingCycle: 'monthly' | 'annual',
   price: number,
+  invoiceId?: number,
 ): Promise<boolean> => {
   try {
     const ctx = await buildSubscriptionEmailContext(brandId);
@@ -1586,6 +1592,14 @@ export const sendSubscriptionActivatedEmail = async (
       ? `₱${price.toLocaleString()}/month`
       : `₱${price.toLocaleString()}/year`;
 
+    let attachments: Array<{ filename: string; content: Buffer; contentType: string }> | undefined;
+    if (invoiceId) {
+      const pdfBuffer = await buildInvoicePdfBuffer(invoiceId, brandId);
+      if (pdfBuffer) {
+        attachments = [{ filename: `invoice-${invoiceId}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }];
+      }
+    }
+
     return await sendBrandedEmail(ctx.adminEmails, 'subscription_activated_email', {
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
@@ -1594,7 +1608,7 @@ export const sendSubscriptionActivatedEmail = async (
       BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
       AMOUNT: escapeHtml(priceLabel),
       DASHBOARD_URL: ctx.dashboardUrl,
-    }, ctx.senderBrand.id);
+    }, ctx.senderBrand.id, attachments);
   } catch (error) {
     console.error('sendSubscriptionActivatedEmail error:', error);
     return false;
@@ -1607,6 +1621,7 @@ export const sendSubscriptionRenewalEmail = async (
   billingCycle: 'monthly' | 'annual',
   price: number,
   nextRenewalDate: Date | null,
+  invoiceId?: number,
 ): Promise<boolean> => {
   try {
     const ctx = await buildSubscriptionEmailContext(brandId);
@@ -1619,6 +1634,14 @@ export const sendSubscriptionRenewalEmail = async (
       ? nextRenewalDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : 'N/A';
 
+    let attachments: Array<{ filename: string; content: Buffer; contentType: string }> | undefined;
+    if (invoiceId) {
+      const pdfBuffer = await buildInvoicePdfBuffer(invoiceId, brandId);
+      if (pdfBuffer) {
+        attachments = [{ filename: `invoice-${invoiceId}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }];
+      }
+    }
+
     return await sendBrandedEmail(ctx.adminEmails, 'subscription_renewal_email', {
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
@@ -1628,7 +1651,7 @@ export const sendSubscriptionRenewalEmail = async (
       AMOUNT: escapeHtml(priceLabel),
       NEXT_RENEWAL_DATE: escapeHtml(nextRenewalLabel),
       DASHBOARD_URL: ctx.dashboardUrl,
-    }, ctx.senderBrand.id);
+    }, ctx.senderBrand.id, attachments);
   } catch (error) {
     console.error('sendSubscriptionRenewalEmail error:', error);
     return false;

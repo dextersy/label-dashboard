@@ -174,6 +174,10 @@ export class SubscriptionService {
     return this.http.get<InvoicesResponse>(`${this.apiUrl}/invoices`, { params: { page: String(page) } });
   }
 
+  downloadInvoicePdf(invoiceId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/invoices/${invoiceId}/pdf`, { responseType: 'blob' });
+  }
+
   getPayments(page = 1): Observable<PaymentsResponse> {
     return this.http.get<PaymentsResponse>(`${this.apiUrl}/payments`, { params: { page: String(page) } });
   }

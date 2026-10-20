@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { Op, fn, col, literal } from 'sequelize';
 import { sequelize } from '../config/database';
+import PDFDocument from 'pdfkit';
+import https from 'https';
+import http from 'http';
 import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
+import Brand from '../models/Brand';
 import SubscriptionInvoice, { BillingReason } from '../models/SubscriptionInvoice';
 import SubscriptionPayment from '../models/SubscriptionPayment';
 import User from '../models/User';
@@ -755,6 +759,419 @@ export const getInvoices = async (req: Request, res: Response): Promise<void> =>
 };
 
 // ---------------------------------------------------------------------------
+// GET /api/subscription/invoices/:id/pdf
+// Downloads a subscription invoice as a PDF for the authenticated brand.
+// ---------------------------------------------------------------------------
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
+async function fetchImageBuffer(url: string): Promise<Buffer | null> {
+  return new Promise((resolve) => {
+    try {
+      const protocol = url.startsWith('https') ? https : http;
+      protocol.get(url, (imgRes) => {
+        const chunks: Buffer[] = [];
+        imgRes.on('data', (chunk: Buffer) => chunks.push(chunk));
+        imgRes.on('end', () => resolve(Buffer.concat(chunks)));
+        imgRes.on('error', () => resolve(null));
+      }).on('error', () => resolve(null));
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/** Interpolate two hex colours for the gradient accent band. */
+function lerpHex(from: string, to: string, t: number): string {
+  const f = (hex: string) => [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
+  const [r1, g1, b1] = f(from);
+  const [r2, g2, b2] = f(to);
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+/** Draw a simulated left→right gradient rect using thin vertical slices. */
+function drawGradientRect(
+  doc: InstanceType<typeof PDFDocument>,
+  x: number, y: number, w: number, h: number,
+  colorFrom: string, colorTo: string,
+  steps = 60,
+): void {
+  const sliceW = w / steps;
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1);
+    doc.rect(x + i * sliceW, y, sliceW + 0.5, h)
+      .fill(lerpHex(colorFrom, colorTo, t));
+  }
+}
+
+/** Format a currency amount. Uses thousands separators; avoids non-ASCII symbols. */
+function formatMoney(amount: number, currency: string): string {
+  // Intl formats with the currency code — ASCII-safe for PDFKit built-in fonts
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      currencyDisplay: 'code',   // e.g. "PHP 1,290.03" — all ASCII
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency} ${Number(amount).toFixed(2)}`;
+  }
+}
+
+/** Short date: Oct 20, 2026 */
+function fmtShort(d: Date | string | null | undefined): string {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+/** Draw a small filled circle (replaces Unicode bullet which breaks built-in fonts). */
+function drawDot(doc: InstanceType<typeof PDFDocument>, cx: number, cy: number, r: number, color: string): void {
+  doc.save().circle(cx, cy, r).fill(color).restore();
+}
+
+/** Draw a horizontal hairline. */
+function hairline(doc: InstanceType<typeof PDFDocument>, x: number, y: number, w: number, color = '#E7E4F0'): void {
+  doc.save().strokeColor(color).lineWidth(0.75).moveTo(x, y).lineTo(x + w, y).stroke().restore();
+}
+
+// ── Shared PDF buffer builder (used by download endpoint + email attachments) ─
+
+export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number): Promise<Buffer | null> {
+  try {
+    // ── Fetch invoice + plan ─────────────────────────────────────────────────
+    const invoice = await SubscriptionInvoice.findOne({
+      where: { id: invoiceId, brand_id: brandId },
+      include: [{ model: Plan, as: 'plan', attributes: ['id', 'name'] }],
+    });
+    if (!invoice) return null;
+
+    // ── Most recent succeeded payment ────────────────────────────────────────
+    const payment = await SubscriptionPayment.findOne({
+      where: { invoice_id: invoiceId, status: 'succeeded' },
+      order: [['processed_at', 'DESC']],
+    });
+
+    // ── Issuer brand (walk to parent) ────────────────────────────────────────
+    const currentBrand = await Brand.findByPk(brandId, { attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'parent_brand'] });
+    let issuerBrand = currentBrand;
+    if (currentBrand?.parent_brand) {
+      const parentBrand = await Brand.findByPk(currentBrand.parent_brand, { attributes: ['id', 'brand_name', 'logo_url', 'brand_color'] });
+      if (parentBrand) issuerBrand = parentBrand;
+    }
+    const issuerName    = issuerBrand?.brand_name ?? 'Platform';
+    const issuerLogoUrl = issuerBrand?.logo_url ?? null;
+    const rawBrandColor = issuerBrand?.brand_color ?? null;
+    const ACCENT        = rawBrandColor
+      ? (rawBrandColor.startsWith('#') ? rawBrandColor : `#${rawBrandColor}`)
+      : '#2D2D2D';
+
+    // ── Admin user for "Billed to" ────────────────────────────────────────────
+    const adminUser = await User.findOne({
+      where: { brand_id: brandId, is_admin: true },
+      order: [['id', 'ASC']],
+      attributes: ['first_name', 'last_name', 'email_address'],
+    });
+    const billedToName  = adminUser
+      ? [adminUser.first_name, adminUser.last_name].filter(Boolean).join(' ') || issuerName
+      : issuerName;
+    const billedToEmail = (adminUser as any)?.email_address ?? null;
+
+    // ── Env config ────────────────────────────────────────────────────────────
+    const issuerAddress = process.env.INVOICE_ISSUER_ADDRESS ?? null;
+    const issuerTin     = process.env.INVOICE_ISSUER_TIN     ?? null;
+    const supportEmail  = process.env.INVOICE_SUPPORT_EMAIL  ?? (process.env.FROM_EMAIL ?? null);
+
+    // ── Logo ─────────────────────────────────────────────────────────────────
+    let logoBuffer: Buffer | null = null;
+    if (issuerLogoUrl) logoBuffer = await fetchImageBuffer(issuerLogoUrl);
+
+    // ── Amounts ───────────────────────────────────────────────────────────────
+    const totalAmount = Number(invoice.amount);
+    const taxRate     = 0;
+    const subtotal    = taxRate > 0 ? totalAmount / (1 + taxRate) : totalAmount;
+    const taxAmount   = totalAmount - subtotal;
+    const currency    = invoice.currency;
+
+    // ── Labels ────────────────────────────────────────────────────────────────
+    const billingReasonLabel: Record<string, string> = {
+      subscription_create: 'New subscription',
+      subscription_cycle:  `${invoice.billing_cycle === 'annual' ? 'Annual' : 'Monthly'} subscription renewal`,
+      subscription_update: 'Plan change',
+    };
+    const lineItemSubtitle = billingReasonLabel[invoice.billing_reason] ?? invoice.billing_reason;
+    const planName         = (invoice as any).plan?.name ?? 'Subscription';
+    const isPaid           = invoice.status === 'paid';
+    const isVoid           = invoice.status === 'void';
+
+    const paymentMethodDisplay = payment
+      ? payment.payment_method.charAt(0).toUpperCase() + payment.payment_method.slice(1)
+      : '-';
+    const transactionRef = payment?.paypal_transaction_id ?? '-';
+    const paidOnDate     = payment?.processed_at ?? invoice.paid_at ?? null;
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // BUILD PDF
+    // ══════════════════════════════════════════════════════════════════════════
+    return await new Promise<Buffer>((resolve, reject) => {
+      const doc    = new PDFDocument({ size: 'A4', margin: 0, autoFirstPage: true });
+      const chunks: Buffer[] = [];
+      doc.on('data',  (chunk: Buffer) => chunks.push(chunk));
+      doc.on('end',   () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (err: Error) => reject(err));
+
+      const PW = doc.page.width;
+      const PH = doc.page.height;
+      const ML = 48;
+      const CW = PW - ML * 2;
+      const INK   = '#1D1A2B';
+      const MUTED = '#6B6780';
+      const TINT  = '#F5F5F7';
+      const ACCENT_LIGHT = lerpHex(ACCENT, '#FFFFFF', 0.35);
+
+      // 1. Accent band
+      drawGradientRect(doc, 0, 0, PW, 6, ACCENT, ACCENT_LIGHT);
+      let curY = 6;
+
+      // 2. Header row
+      curY += 28;
+      const headerRowY = curY;
+      const logoSize   = 52;
+      if (logoBuffer) {
+        const lx = ML, ly = headerRowY, r = 8;
+        // Draw background in brand color first so light/white logos are always visible
+        doc.roundedRect(lx, ly, logoSize, logoSize, r).fill(ACCENT);
+        doc.save()
+          .moveTo(lx + r, ly).lineTo(lx + logoSize - r, ly)
+          .quadraticCurveTo(lx + logoSize, ly, lx + logoSize, ly + r)
+          .lineTo(lx + logoSize, ly + logoSize - r)
+          .quadraticCurveTo(lx + logoSize, ly + logoSize, lx + logoSize - r, ly + logoSize)
+          .lineTo(lx + r, ly + logoSize)
+          .quadraticCurveTo(lx, ly + logoSize, lx, ly + logoSize - r)
+          .lineTo(lx, ly + r)
+          .quadraticCurveTo(lx, ly, lx + r, ly)
+          .closePath().clip()
+          .image(logoBuffer, lx, ly, { fit: [logoSize, logoSize], align: 'center', valign: 'center' })
+          .restore();
+      }
+      const nameX    = logoBuffer ? ML + logoSize + 10 : ML;
+      const nameMaxW = CW * 0.5;
+      doc.font('Helvetica-Bold').fontSize(13).fillColor(INK)
+        .text(issuerName, nameX, headerRowY + 2, { width: nameMaxW, lineBreak: false });
+      if (supportEmail) {
+        doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+          .text(supportEmail, nameX, headerRowY + 19, { width: nameMaxW, lineBreak: false });
+      }
+
+      const rightColW = CW * 0.45;
+      const rightColX = PW - ML - rightColW;
+      doc.font('Helvetica').fontSize(34).fillColor(INK)
+        .text('Invoice', rightColX, headerRowY - 4, { width: rightColW, align: 'right', lineBreak: false });
+      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+        .text(invoice.invoice_number ?? String(invoiceId), rightColX, headerRowY + 34, { width: rightColW, align: 'right', lineBreak: false });
+
+      // Status pill
+      const pillY     = headerRowY + 52;
+      const pillLabel = isPaid ? 'Paid' : isVoid ? 'Void' : 'Unpaid';
+      const pillBg    = isPaid ? '#E4F5EC' : isVoid ? '#F3F4F6' : '#FEF3C7';
+      const pillFg    = isPaid ? '#17744B' : isVoid ? '#6B7280' : '#92400E';
+      const dotR      = 3, dotGap = 5;
+      doc.font('Helvetica-Bold').fontSize(10);
+      const pillLabelW = doc.widthOfString(pillLabel);
+      const pillPadX = 10, pillPadY = 4;
+      const pillInnerW = dotR * 2 + dotGap + pillLabelW;
+      const pillW = pillInnerW + pillPadX * 2;
+      const pillH = 10 + pillPadY * 2;
+      const pillX = PW - ML - pillW;
+      doc.roundedRect(pillX, pillY, pillW, pillH, pillH / 2).fill(pillBg);
+      drawDot(doc, pillX + pillPadX + dotR, pillY + pillH / 2, dotR, pillFg);
+      doc.font('Helvetica-Bold').fontSize(10).fillColor(pillFg)
+        .text(pillLabel, pillX + pillPadX + dotR * 2 + dotGap, pillY + pillPadY, { width: pillLabelW, lineBreak: false });
+
+      curY = Math.max(headerRowY + logoSize, pillY + pillH) + 24;
+
+      // 3. Info row
+      hairline(doc, ML, curY, CW);
+      curY += 14;
+      const colW3 = CW / 3, labelFs = 9, valueFs = 11;
+      const infoCol = (x: number, label: string, lines: (string | null)[]): number => {
+        doc.font('Helvetica').fontSize(labelFs).fillColor(MUTED)
+          .text(label, x, curY, { width: colW3 - 6, lineBreak: false });
+        let yy = curY + 16;
+        for (const line of lines) {
+          if (!line) continue;
+          doc.font('Helvetica').fontSize(valueFs).fillColor(INK).text(line, x, yy, { width: colW3 - 6 });
+          yy = doc.y + 2;
+        }
+        return yy;
+      };
+      const periodText = `${fmtShort(invoice.period_start)} to ${invoice.period_end ? fmtShort(invoice.period_end) : 'Ongoing'}`;
+      const renewsText = invoice.billing_cycle === 'annual' ? 'Renews annually' : 'Renews monthly';
+      const colBottoms = [
+        infoCol(ML,             'From',           [issuerName, issuerAddress, issuerTin ? `TIN: ${issuerTin}` : null]),
+        infoCol(ML + colW3,     'Billed to',      [billedToName, billedToEmail]),
+        infoCol(ML + colW3 * 2, 'Billing period', [periodText, renewsText]),
+      ];
+      curY = Math.max(...colBottoms) + 14;
+      hairline(doc, ML, curY, CW);
+      curY += 12;
+
+      // 4. Dates line
+      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+        .text('Issued  ', ML, curY, { continued: true, lineBreak: false });
+      doc.font('Helvetica-Bold').fillColor(INK)
+        .text(fmtShort(invoice.createdAt), { continued: isPaid, lineBreak: false });
+      if (isPaid && paidOnDate) {
+        doc.font('Helvetica').fillColor(MUTED).text('      Paid  ', { continued: true, lineBreak: false });
+        doc.font('Helvetica-Bold').fillColor(INK).text(fmtShort(paidOnDate), { lineBreak: false });
+      }
+      curY += 22;
+
+      // 5. Line items table
+      hairline(doc, ML, curY, CW);
+      curY += 2;
+      const tableHdrH = 28;
+      doc.roundedRect(ML, curY, CW, tableHdrH, 4).fill(TINT);
+      const tblPad    = 10;
+      const amtRight  = ML + CW - tblPad;
+      const amtW      = 96;
+      const unitRight = amtRight - amtW - 14;
+      const unitW     = 100;
+      const qtyRight  = unitRight - unitW - 14;
+      const qtyW      = 36;
+      const colDesc   = ML + tblPad;
+      const descW     = qtyRight - qtyW - colDesc - 8;
+      const tblHdrY   = curY + (tableHdrH - 10) / 2;
+      doc.font('Helvetica').fontSize(10).fillColor(MUTED);
+      doc.text('Description', colDesc,           tblHdrY, { width: descW,  lineBreak: false });
+      doc.text('Qty',         qtyRight - qtyW,   tblHdrY, { width: qtyW,   align: 'right', lineBreak: false });
+      doc.text('Unit price',  unitRight - unitW, tblHdrY, { width: unitW,  align: 'right', lineBreak: false });
+      doc.text('Amount',      amtRight - amtW,   tblHdrY, { width: amtW,   align: 'right', lineBreak: false });
+      curY += tableHdrH + 8;
+
+      const rowStartY = curY;
+      const amtStr    = formatMoney(subtotal, currency);
+      doc.font('Helvetica-Bold').fontSize(12).fillColor(INK)
+        .text(`${planName} plan`, colDesc, rowStartY, { width: descW, lineBreak: false });
+      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+        .text(lineItemSubtitle, colDesc, rowStartY + 16, { width: descW, lineBreak: false });
+      doc.font('Helvetica').fontSize(12).fillColor(INK)
+        .text('1',    qtyRight - qtyW,   rowStartY, { width: qtyW,  align: 'right', lineBreak: false });
+      doc.text(amtStr, unitRight - unitW, rowStartY, { width: unitW, align: 'right', lineBreak: false });
+      doc.text(amtStr, amtRight - amtW,   rowStartY, { width: amtW,  align: 'right', lineBreak: false });
+      curY = rowStartY + 36;
+      hairline(doc, ML, curY, CW);
+      curY += 14;
+
+      // 6. Totals block
+      const totW      = 320;
+      const totX      = PW - ML - totW;
+      const totLabelW = 110;
+      const totValW   = totW - totLabelW;
+      const totRow    = (label: string, value: string, labelColor = MUTED, valueColor = INK, fs = 11): void => {
+        doc.font('Helvetica').fontSize(fs).fillColor(labelColor)
+          .text(label, totX, curY, { width: totLabelW, lineBreak: false });
+        doc.font('Helvetica').fontSize(fs).fillColor(valueColor)
+          .text(value, totX + totLabelW, curY, { width: totValW, align: 'right', lineBreak: false });
+        curY += fs + 8;
+      };
+      totRow('Subtotal', formatMoney(subtotal, currency));
+      totRow(`VAT (${(taxRate * 100).toFixed(0)}%)`, formatMoney(taxAmount, currency));
+      curY += 4;
+      doc.save().strokeColor(ACCENT).lineWidth(2)
+        .moveTo(totX, curY).lineTo(PW - ML, curY).stroke().restore();
+      curY += 12;
+      doc.font('Helvetica-Bold').fontSize(13).fillColor(INK)
+        .text('Total', totX, curY + 6, { width: totLabelW, lineBreak: false });
+      doc.font('Helvetica-Bold').fontSize(22).fillColor(INK)
+        .text(formatMoney(totalAmount, currency), totX + totLabelW, curY, { width: totValW, align: 'right', lineBreak: false });
+      curY += 34;
+      const amountLineColor = isPaid ? '#17744B' : '#92400E';
+      const amountLineLabel = isPaid ? 'Amount paid' : 'Amount due';
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(amountLineColor)
+        .text(`${amountLineLabel}  ${formatMoney(totalAmount, currency)}`, totX, curY, { width: totW, align: 'right', lineBreak: false });
+      curY += 28;
+
+      // 7. Payment box
+      if (payment) {
+        const boxH = 64, boxPad = 16;
+        doc.roundedRect(ML, curY, CW, boxH, 6).fill(TINT);
+        const payColW = CW / 3;
+        const payY    = curY + boxPad;
+        const payCell = (x: number, label: string, value: string): void => {
+          doc.font('Helvetica').fontSize(9).fillColor(MUTED)
+            .text(label, x, payY, { width: payColW - 8, lineBreak: false });
+          doc.font('Helvetica').fontSize(11).fillColor(INK)
+            .text(value, x, payY + 14, { width: payColW - 8, lineBreak: false });
+        };
+        payCell(ML + boxPad,               'Payment method', paymentMethodDisplay);
+        payCell(ML + boxPad + payColW,     'Paid on',        isPaid && paidOnDate ? fmtShort(paidOnDate) : '-');
+        payCell(ML + boxPad + payColW * 2, 'Reference',      transactionRef);
+        curY += boxH + 20;
+      } else {
+        curY += 8;
+      }
+
+      // 8. Footer
+      const footerY = Math.max(curY, PH - 60);
+      hairline(doc, ML, footerY, CW);
+      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+        .text('Thank you for your business.', ML, footerY + 10, { width: CW * 0.6, lineBreak: false });
+      if (supportEmail) {
+        doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+          .text(`Questions? ${supportEmail}`, ML + CW * 0.4, footerY + 10, { width: CW * 0.6, align: 'right', lineBreak: false });
+      }
+
+      doc.end();
+    });
+  } catch (err) {
+    console.error('buildInvoicePdfBuffer error:', err);
+    return null;
+  }
+}
+
+// ── Controller ───────────────────────────────────────────────────────────────
+
+export const downloadInvoicePdf = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId   = (req as any).user?.brand_id as number;
+    const invoiceId = parseInt(req.params.id as string, 10);
+
+    // Verify the invoice belongs to this brand before serving it
+    const exists = await SubscriptionInvoice.findOne({ where: { id: invoiceId, brand_id: brandId }, attributes: ['id', 'invoice_number'] });
+    if (!exists) {
+      res.status(404).json({ error: 'Invoice not found' });
+      return;
+    }
+
+    const pdfBuffer = await buildInvoicePdfBuffer(invoiceId, brandId);
+    if (!pdfBuffer) {
+      res.status(500).json({ error: 'Failed to generate invoice PDF' });
+      return;
+    }
+
+    const sanitizedNum = (exists.invoice_number ?? String(invoiceId)).replace(/[^A-Z0-9\-]/gi, '');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${sanitizedNum}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length.toString());
+    res.send(pdfBuffer);
+  } catch (error: any) {
+    console.error('downloadInvoicePdf error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate invoice PDF' });
+    }
+  }
+};
+
+// ---------------------------------------------------------------------------
 // GET /api/subscription/payments
 // Returns paginated subscription payments for the authenticated brand.
 // ---------------------------------------------------------------------------
@@ -814,10 +1231,10 @@ async function recordSuccessfulPayment(
   paypalSubscriptionId: string,
   paypalTransactionId: string,
   paidAt: Date,
-): Promise<void> {
+): Promise<number | null> {
   // Idempotency: skip if this PayPal transaction was already recorded.
   const existing = await SubscriptionPayment.findOne({ where: { paypal_transaction_id: paypalTransactionId } });
-  if (existing) return;
+  if (existing) return existing.invoice_id;
 
   const invoiceNumber = await generateInvoiceNumber(brandId);
   const invoice = await SubscriptionInvoice.create({
@@ -846,6 +1263,8 @@ async function recordSuccessfulPayment(
     paypal_subscription_id: paypalSubscriptionId,
     processed_at: paidAt,
   });
+
+  return invoice.id;
 }
 
 // ---------------------------------------------------------------------------
@@ -1123,15 +1542,10 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
           const price = bp.billing_cycle === 'monthly'
             ? (bp.plan?.price_monthly ?? 0)
             : (bp.plan?.price_annual ?? 0);
-          sendSubscriptionActivatedEmail(
-            bp.brand_id,
-            bp.plan?.name ?? 'Paid',
-            bp.billing_cycle as 'monthly' | 'annual',
-            price,
-          ).catch((err) => console.error('sendSubscriptionActivatedEmail error:', err));
-          // Record invoice + payment for first activation
+          // Record invoice + payment first so we have the ID for the email attachment
+          let activationInvoiceId: number | null | undefined;
           if (resource.id && resource.amount?.total) {
-            recordSuccessfulPayment(
+            activationInvoiceId = await recordSuccessfulPayment(
               bp.brand_id,
               bp.plan_id,
               bp.billing_cycle as 'monthly' | 'annual',
@@ -1143,26 +1557,26 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
               subscriptionId,
               resource.id,
               new Date(resource.create_time ?? Date.now()),
-            ).catch((err) => console.error('recordSuccessfulPayment (activation) error:', err));
+            ).catch((err) => { console.error('recordSuccessfulPayment (activation) error:', err); return null; });
           }
+          sendSubscriptionActivatedEmail(
+            bp.brand_id,
+            bp.plan?.name ?? 'Paid',
+            bp.billing_cycle as 'monthly' | 'annual',
+            price,
+            activationInvoiceId ?? undefined,
+          ).catch((err) => console.error('sendSubscriptionActivatedEmail error:', err));
         }
         if (renewedBrandPlan) {
           const bp = renewedBrandPlan as BrandPlan & { plan?: Plan };
           const price = bp.billing_cycle === 'monthly'
             ? (bp.plan?.price_monthly ?? 0)
             : (bp.plan?.price_annual ?? 0);
-          sendSubscriptionRenewalEmail(
-            bp.brand_id,
-            bp.plan?.name ?? 'Paid',
-            bp.billing_cycle as 'monthly' | 'annual',
-            price,
-            bp.ends_at ? new Date(bp.ends_at) : null,
-          ).catch((err) => console.error('sendSubscriptionRenewalEmail error:', err));
-          // Record invoice + payment for renewal
+          // Record invoice + payment first so we have the ID for the email attachment
+          let renewalInvoiceId: number | null | undefined;
           if (resource.id && resource.amount?.total) {
-            // period_start is the previous ends_at before this renewal refreshed it
             const periodStart = new Date(resource.create_time ?? Date.now());
-            recordSuccessfulPayment(
+            renewalInvoiceId = await recordSuccessfulPayment(
               bp.brand_id,
               bp.plan_id,
               bp.billing_cycle as 'monthly' | 'annual',
@@ -1174,8 +1588,16 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
               subscriptionId,
               resource.id,
               new Date(resource.create_time ?? Date.now()),
-            ).catch((err) => console.error('recordSuccessfulPayment (renewal) error:', err));
+            ).catch((err) => { console.error('recordSuccessfulPayment (renewal) error:', err); return null; });
           }
+          sendSubscriptionRenewalEmail(
+            bp.brand_id,
+            bp.plan?.name ?? 'Paid',
+            bp.billing_cycle as 'monthly' | 'annual',
+            price,
+            bp.ends_at ? new Date(bp.ends_at) : null,
+            renewalInvoiceId ?? undefined,
+          ).catch((err) => console.error('sendSubscriptionRenewalEmail error:', err));
         }
       }
     }

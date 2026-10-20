@@ -4,6 +4,7 @@ import {
   getPlans,
   getUsage,
   getInvoices,
+  downloadInvoicePdf,
   getPayments,
   initiateCheckout,
   cancelSubscription,
@@ -27,6 +28,7 @@ router.get('/plans/public', getPublicPlans);
 router.get('/plans', authenticateToken, getPlans);
 router.get('/usage', authenticateToken, getUsage);
 router.get('/invoices', authenticateToken, getInvoices);
+router.get('/invoices/:id/pdf', authenticateToken, downloadInvoicePdf);
 router.get('/payments', authenticateToken, getPayments);
 router.post('/dev-override', authenticateToken, requireAdmin, devOverridePlan);
 router.post('/checkout', authenticateToken, requireAdmin, initiateCheckout);
