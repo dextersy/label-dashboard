@@ -40,6 +40,9 @@ interface BrandAttributes {
   payout_schedule?: '1st_and_16th' | '1st_of_month' | 'every_friday' | null;
   payout_on_event_close?: boolean;
   payout_threshold?: number | null;
+  billing_company_name?: string | null;
+  billing_address?: string | null;
+  billing_tin?: string | null;
 }
 
 interface BrandCreationAttributes extends Optional<BrandAttributes, 'id' | 'brand_color'> {}
@@ -83,6 +86,9 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public payout_schedule?: '1st_and_16th' | '1st_of_month' | 'every_friday' | null;
   public payout_on_event_close?: boolean;
   public payout_threshold?: number | null;
+  public billing_company_name?: string | null;
+  public billing_address?: string | null;
+  public billing_tin?: string | null;
 
   // Association properties
   public parentBrand?: Brand;
@@ -326,6 +332,18 @@ Brand.init(
       set(value: any) {
         this.setDataValue('payout_threshold', value !== null && value !== undefined ? parseFloat(value) : null);
       }
+    },
+    billing_company_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    billing_address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    billing_tin: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
   },
   {
