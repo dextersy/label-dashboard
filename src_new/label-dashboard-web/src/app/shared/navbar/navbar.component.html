@@ -69,13 +69,13 @@
             </span>
           </div>
           <a *ngIf="isAdmin" class="user-dropdown-item" (click)="selectWorkspace('admin'); closeUserDropdown()" style="cursor: pointer;">
-            <app-icon name="settings" /> Administration
+            <app-icon name="settings" iconOnly /> Administration
           </a>
           <a class="user-dropdown-item" routerLink="/profile" (click)="closeUserDropdown()">
-            <app-icon name="user" class="fa-solid" /> Edit profile
+            <app-icon name="user" iconOnly class="fa-solid" /> Edit profile
           </a>
           <a class="user-dropdown-item" (click)="logout(); closeUserDropdown()" style="cursor: pointer;">
-            <app-icon name="logout" class="fa-solid" /> Log out
+            <app-icon name="logout" iconOnly class="fa-solid" /> Log out
           </a>
         </div>
       </div>
