@@ -1,3 +1,21 @@
+.billing-page {
+  padding: 0 20px 20px;
+  min-height: calc(100vh - 80px);
+
+  .container-fluid {
+    padding: 0;
+    margin: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .billing-page { padding: 15px; }
+}
+
+@media (max-width: 576px) {
+  .billing-page { padding: 10px; }
+}
+
 .sub-tab-toggle {
   display: inline-flex;
   align-items: center;

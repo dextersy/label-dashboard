@@ -43,6 +43,60 @@ export interface AdminPlan extends Plan {
 
 export type PlanInput = Partial<Omit<AdminPlan, 'id'>>;
 
+export type InvoiceStatus = 'open' | 'paid' | 'void' | 'uncollectible';
+export type BillingReason = 'subscription_create' | 'subscription_cycle' | 'subscription_update';
+export type PaymentStatus = 'pending' | 'succeeded' | 'failed';
+
+export interface SubscriptionInvoice {
+  id: number;
+  brand_id: number;
+  plan_id: number;
+  plan?: { id: number; name: string };
+  billing_cycle: 'monthly' | 'annual';
+  invoice_number: string;
+  amount: number;
+  currency: string;
+  status: InvoiceStatus;
+  billing_reason: BillingReason;
+  period_start: string;
+  period_end: string | null;
+  paypal_subscription_id: string | null;
+  paid_at: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubscriptionPayment {
+  id: number;
+  brand_id: number;
+  invoice_id: number;
+  invoice?: SubscriptionInvoice;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_method: string;
+  paypal_transaction_id: string | null;
+  paypal_subscription_id: string | null;
+  failure_reason: string | null;
+  processed_at: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvoicesResponse {
+  invoices: SubscriptionInvoice[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface PaymentsResponse {
+  payments: SubscriptionPayment[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 export interface EffectiveLimits {
   limit_artists: number | null;
   limit_releases_per_artist: number | null;
@@ -114,6 +168,14 @@ export class SubscriptionService {
       plan_id: planId,
       billing_cycle: billingCycle,
     });
+  }
+
+  getInvoices(page = 1): Observable<InvoicesResponse> {
+    return this.http.get<InvoicesResponse>(`${this.apiUrl}/invoices`, { params: { page: String(page) } });
+  }
+
+  getPayments(page = 1): Observable<PaymentsResponse> {
+    return this.http.get<PaymentsResponse>(`${this.apiUrl}/payments`, { params: { page: String(page) } });
   }
 
   getAdminPlans(): Observable<{ plans: AdminPlan[] }> {

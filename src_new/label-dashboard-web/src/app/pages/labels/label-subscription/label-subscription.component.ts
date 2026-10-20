@@ -2,16 +2,18 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits } from '../../../services/subscription.service';
+import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits, SubscriptionInvoice, SubscriptionPayment } from '../../../services/subscription.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService, ConfirmationDialogData, ConfirmationDialogDetail } from '../../../services/confirmation.service';
 import { environment } from '../../../../environments/environment';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
+import { PaginatedTableComponent, PaginationInfo, TableColumn } from '../../../components/shared/paginated-table/paginated-table.component';
 
 @Component({
   selector: 'app-label-subscription',
-  imports: [CommonModule, BreadcrumbComponent, IconComponent, RouterLink],
+  imports: [CommonModule, BreadcrumbComponent, IconComponent, RouterLink, InPageNavComponent, PaginatedTableComponent],
   templateUrl: './label-subscription.component.html',
   styleUrls: ['./label-subscription.component.scss'],
 })
@@ -29,6 +31,113 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   usageSyncPitchesThisMonth = 0;
   usageStorageBytes = 0;
   billingCycle: 'monthly' | 'annual' = 'monthly';
+
+  // In-page nav
+  activeSection: 'subscription' | 'invoices' | 'payments' = 'subscription';
+  readonly navTabs: InPageNavTab[] = [
+    { id: 'subscription', label: 'Subscription', icon: 'layers' },
+    { id: 'invoices', label: 'Invoices', icon: 'receipt' },
+    { id: 'payments', label: 'Payments', icon: 'credit-card' },
+  ];
+
+  // Invoices tab
+  invoices: SubscriptionInvoice[] = [];
+  invoicesLoading = false;
+  invoicesLoaded = false;
+  invoicesPage = 1;
+  invoicesTotalPages = 1;
+  invoicesTotal = 0;
+
+  // Payments tab
+  payments: SubscriptionPayment[] = [];
+  paymentsLoading = false;
+  paymentsLoaded = false;
+  paymentsPage = 1;
+  paymentsTotalPages = 1;
+  paymentsTotal = 0;
+
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return '—';
+    return new Date(value).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  readonly invoiceColumns: TableColumn[] = [
+    {
+      key: 'createdAt', label: 'Date',
+      formatter: (item) => this.formatDate(item.createdAt),
+      mobileGroup: 'summary', mobileGroupMain: true,
+    },
+    {
+      key: 'invoice_number', label: 'Invoice #', renderHtml: true,
+      formatter: (item) => `<span class="tw-bg-gray-100 tw-text-gray-600 tw-rounded tw-px-2 tw-py-0.5 tw-text-xs tw-font-medium">${item.invoice_number}</span>`,
+      mobileGroup: 'summary',
+    },
+    { key: 'plan', label: 'Plan', formatter: (item) => item.plan?.name ?? '—' },
+    { key: 'billing_reason', label: 'Type', formatter: (item) => this.billingReasonLabel(item.billing_reason) },
+    {
+      key: 'amount', label: 'Amount', align: 'right',
+      formatter: (item) => `${item.currency} ${Number(item.amount).toFixed(2)}`,
+    },
+    {
+      key: 'status', label: 'Status', renderHtml: true,
+      formatter: (item) => `<span class="status-badge ${this.invoiceStatusClass(item.status)}">${this.invoiceStatusLabel(item.status)}</span>`,
+      mobileGroup: 'summary',
+    },
+  ];
+
+  readonly paymentColumns: TableColumn[] = [
+    {
+      key: 'processed_at', label: 'Date',
+      formatter: (item) => this.formatDate(item.processed_at ?? item.createdAt),
+      mobileGroup: 'summary', mobileGroupMain: true,
+    },
+    {
+      key: 'paypal_transaction_id', label: 'Transaction ID', renderHtml: true,
+      formatter: (item) => item.paypal_transaction_id
+        ? `<span class="tw-bg-gray-100 tw-text-gray-600 tw-rounded tw-px-2 tw-py-0.5 tw-text-xs tw-font-medium">${item.paypal_transaction_id}</span>`
+        : '—',
+      mobileGroup: 'summary',
+    },
+    {
+      key: 'invoice', label: 'Invoice #', renderHtml: true,
+      formatter: (item) => item.invoice?.invoice_number
+        ? `<span class="tw-bg-gray-100 tw-text-gray-600 tw-rounded tw-px-2 tw-py-0.5 tw-text-xs tw-font-medium">${item.invoice.invoice_number}</span>`
+        : '—',
+    },
+    { key: 'plan', label: 'Plan', formatter: (item) => item.invoice?.plan?.name ?? '—' },
+    { key: 'payment_method', label: 'Method', formatter: (item) => item.payment_method.charAt(0).toUpperCase() + item.payment_method.slice(1) },
+    {
+      key: 'amount', label: 'Amount', align: 'right',
+      formatter: (item) => `${item.currency} ${Number(item.amount).toFixed(2)}`,
+    },
+    {
+      key: 'status', label: 'Status', renderHtml: true,
+      formatter: (item) => `<span class="status-badge ${this.paymentStatusClass(item.status)}">${this.paymentStatusLabel(item.status)}</span>`,
+      mobileGroup: 'summary',
+    },
+  ];
+
+  get invoicesPagination(): PaginationInfo {
+    return {
+      current_page: this.invoicesPage,
+      total_pages: this.invoicesTotalPages,
+      total_count: this.invoicesTotal,
+      per_page: 20,
+      has_next: this.invoicesPage < this.invoicesTotalPages,
+      has_prev: this.invoicesPage > 1,
+    };
+  }
+
+  get paymentsPagination(): PaginationInfo {
+    return {
+      current_page: this.paymentsPage,
+      total_pages: this.paymentsTotalPages,
+      total_count: this.paymentsTotal,
+      per_page: 20,
+      has_next: this.paymentsPage < this.paymentsTotalPages,
+      has_prev: this.paymentsPage > 1,
+    };
+  }
 
   // Show a banner if returning from a PayPal checkout
   returnStatus: 'success' | 'pending' | null = null;
@@ -554,6 +663,95 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
         this.actionLoading = false;
       },
     });
+  }
+
+  onNavTabChange(id: string): void {
+    this.activeSection = id as 'subscription' | 'invoices' | 'payments';
+    if (id === 'invoices' && !this.invoicesLoaded) this.loadInvoices();
+    if (id === 'payments' && !this.paymentsLoaded) this.loadPayments();
+  }
+
+  loadInvoices(page = 1): void {
+    this.invoicesLoading = true;
+    this.subscriptionService.getInvoices(page).subscribe({
+      next: (res) => {
+        this.invoices = res.invoices;
+        this.invoicesPage = res.page;
+        this.invoicesTotalPages = res.totalPages;
+        this.invoicesTotal = res.total;
+        this.invoicesLoaded = true;
+        this.invoicesLoading = false;
+      },
+      error: () => {
+        this.notificationService.showError('Failed to load invoices');
+        this.invoicesLoading = false;
+      },
+    });
+  }
+
+  loadPayments(page = 1): void {
+    this.paymentsLoading = true;
+    this.subscriptionService.getPayments(page).subscribe({
+      next: (res) => {
+        this.payments = res.payments;
+        this.paymentsPage = res.page;
+        this.paymentsTotalPages = res.totalPages;
+        this.paymentsTotal = res.total;
+        this.paymentsLoaded = true;
+        this.paymentsLoading = false;
+      },
+      error: () => {
+        this.notificationService.showError('Failed to load payments');
+        this.paymentsLoading = false;
+      },
+    });
+  }
+
+  invoiceStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      paid: 'status-success',
+      open: 'status-warning',
+      uncollectible: 'status-danger',
+      void: 'status-secondary',
+    };
+    return map[status] ?? 'status-secondary';
+  }
+
+  invoiceStatusLabel(status: string): string {
+    const map: Record<string, string> = {
+      paid: 'Paid',
+      open: 'Unpaid',
+      uncollectible: 'Uncollectible',
+      void: 'Void',
+    };
+    return map[status] ?? status;
+  }
+
+  paymentStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      succeeded: 'status-success',
+      pending: 'status-warning',
+      failed: 'status-danger',
+    };
+    return map[status] ?? 'status-secondary';
+  }
+
+  paymentStatusLabel(status: string): string {
+    const map: Record<string, string> = {
+      succeeded: 'Succeeded',
+      pending: 'Pending',
+      failed: 'Failed',
+    };
+    return map[status] ?? status;
+  }
+
+  billingReasonLabel(reason: string): string {
+    const map: Record<string, string> = {
+      subscription_create: 'New subscription',
+      subscription_cycle: 'Renewal',
+      subscription_update: 'Plan change',
+    };
+    return map[reason] ?? reason;
   }
 
   async cancelSubscription(): Promise<void> {

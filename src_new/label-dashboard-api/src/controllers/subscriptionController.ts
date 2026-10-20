@@ -3,6 +3,8 @@ import { Op, fn, col, literal } from 'sequelize';
 import { sequelize } from '../config/database';
 import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
+import SubscriptionInvoice, { BillingReason } from '../models/SubscriptionInvoice';
+import SubscriptionPayment from '../models/SubscriptionPayment';
 import User from '../models/User';
 import Artist from '../models/Artist';
 import { ReleaseArtist, Release, PressCampaign, SyncLicensingPitch } from '../models';
@@ -727,6 +729,169 @@ export const updatePlan = async (req: Request, res: Response): Promise<void> => 
 };
 
 // ---------------------------------------------------------------------------
+// GET /api/subscription/invoices
+// Returns paginated subscription invoices for the authenticated brand.
+// ---------------------------------------------------------------------------
+export const getInvoices = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId: number = (req as any).user?.brand_id;
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await SubscriptionInvoice.findAndCountAll({
+      where: { brand_id: brandId },
+      include: [{ model: Plan, as: 'plan', attributes: ['id', 'name'] }],
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+
+    res.json({ invoices: rows, total: count, page, totalPages: Math.ceil(count / limit) });
+  } catch (error: any) {
+    console.error('getInvoices error:', error);
+    res.status(500).json({ error: 'Failed to load invoices' });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// GET /api/subscription/payments
+// Returns paginated subscription payments for the authenticated brand.
+// ---------------------------------------------------------------------------
+export const getPayments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId: number = (req as any).user?.brand_id;
+    const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await SubscriptionPayment.findAndCountAll({
+      where: { brand_id: brandId },
+      include: [
+        {
+          model: SubscriptionInvoice,
+          as: 'invoice',
+          attributes: ['id', 'invoice_number', 'period_start', 'period_end', 'billing_reason'],
+          include: [{ model: Plan, as: 'plan', attributes: ['id', 'name'] }],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+    });
+
+    res.json({ payments: rows, total: count, page, totalPages: Math.ceil(count / limit) });
+  } catch (error: any) {
+    console.error('getPayments error:', error);
+    res.status(500).json({ error: 'Failed to load payments' });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Internal helper — generate a sequential invoice number for a brand.
+// Format: INV-{brandId}-{YYYY}-{zero-padded seq}
+// ---------------------------------------------------------------------------
+async function generateInvoiceNumber(brandId: number): Promise<string> {
+  const year = new Date().getFullYear();
+  const count = await SubscriptionInvoice.count({ where: { brand_id: brandId } });
+  const seq = String(count + 1).padStart(4, '0');
+  return `INV-${brandId}-${year}-${seq}`;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helper — record an invoice + successful payment from a PayPal sale.
+// Idempotent: skips if a payment with the same paypal_transaction_id exists.
+// ---------------------------------------------------------------------------
+async function recordSuccessfulPayment(
+  brandId: number,
+  planId: number,
+  billingCycle: 'monthly' | 'annual',
+  amount: number,
+  currency: string,
+  billingReason: BillingReason,
+  periodStart: Date,
+  periodEnd: Date | null,
+  paypalSubscriptionId: string,
+  paypalTransactionId: string,
+  paidAt: Date,
+): Promise<void> {
+  // Idempotency: skip if this PayPal transaction was already recorded.
+  const existing = await SubscriptionPayment.findOne({ where: { paypal_transaction_id: paypalTransactionId } });
+  if (existing) return;
+
+  const invoiceNumber = await generateInvoiceNumber(brandId);
+  const invoice = await SubscriptionInvoice.create({
+    brand_id: brandId,
+    plan_id: planId,
+    billing_cycle: billingCycle,
+    invoice_number: invoiceNumber,
+    amount,
+    currency,
+    status: 'paid',
+    billing_reason: billingReason,
+    period_start: periodStart,
+    period_end: periodEnd,
+    paypal_subscription_id: paypalSubscriptionId,
+    paid_at: paidAt,
+  });
+
+  await SubscriptionPayment.create({
+    brand_id: brandId,
+    invoice_id: invoice.id,
+    amount,
+    currency,
+    status: 'succeeded',
+    payment_method: 'paypal',
+    paypal_transaction_id: paypalTransactionId,
+    paypal_subscription_id: paypalSubscriptionId,
+    processed_at: paidAt,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Internal helper — record an invoice + failed payment from a PayPal failure.
+// Idempotent: skips if a payment with same subscription+processed_at exists.
+// ---------------------------------------------------------------------------
+async function recordFailedPayment(
+  brandId: number,
+  planId: number,
+  billingCycle: 'monthly' | 'annual',
+  amount: number,
+  currency: string,
+  paypalSubscriptionId: string,
+  failedAt: Date,
+): Promise<void> {
+  const invoiceNumber = await generateInvoiceNumber(brandId);
+  const invoice = await SubscriptionInvoice.create({
+    brand_id: brandId,
+    plan_id: planId,
+    billing_cycle: billingCycle,
+    invoice_number: invoiceNumber,
+    amount,
+    currency,
+    status: 'open',
+    billing_reason: 'subscription_cycle',
+    period_start: failedAt,
+    period_end: null,
+    paypal_subscription_id: paypalSubscriptionId,
+    paid_at: null,
+  });
+
+  await SubscriptionPayment.create({
+    brand_id: brandId,
+    invoice_id: invoice.id,
+    amount,
+    currency,
+    status: 'failed',
+    payment_method: 'paypal',
+    paypal_transaction_id: null,
+    paypal_subscription_id: paypalSubscriptionId,
+    failure_reason: 'Payment declined by PayPal',
+    processed_at: failedAt,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/subscription/webhook
 // Public endpoint — PayPal subscription lifecycle webhook.
 // ---------------------------------------------------------------------------
@@ -964,6 +1129,22 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
             bp.billing_cycle as 'monthly' | 'annual',
             price,
           ).catch((err) => console.error('sendSubscriptionActivatedEmail error:', err));
+          // Record invoice + payment for first activation
+          if (resource.id && resource.amount?.total) {
+            recordSuccessfulPayment(
+              bp.brand_id,
+              bp.plan_id,
+              bp.billing_cycle as 'monthly' | 'annual',
+              parseFloat(resource.amount.total),
+              resource.amount.currency ?? 'PHP',
+              'subscription_create',
+              bp.started_at ? new Date(bp.started_at) : new Date(),
+              bp.ends_at ? new Date(bp.ends_at) : null,
+              subscriptionId,
+              resource.id,
+              new Date(resource.create_time ?? Date.now()),
+            ).catch((err) => console.error('recordSuccessfulPayment (activation) error:', err));
+          }
         }
         if (renewedBrandPlan) {
           const bp = renewedBrandPlan as BrandPlan & { plan?: Plan };
@@ -977,6 +1158,24 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
             price,
             bp.ends_at ? new Date(bp.ends_at) : null,
           ).catch((err) => console.error('sendSubscriptionRenewalEmail error:', err));
+          // Record invoice + payment for renewal
+          if (resource.id && resource.amount?.total) {
+            // period_start is the previous ends_at before this renewal refreshed it
+            const periodStart = new Date(resource.create_time ?? Date.now());
+            recordSuccessfulPayment(
+              bp.brand_id,
+              bp.plan_id,
+              bp.billing_cycle as 'monthly' | 'annual',
+              parseFloat(resource.amount.total),
+              resource.amount.currency ?? 'PHP',
+              'subscription_cycle',
+              periodStart,
+              bp.ends_at ? new Date(bp.ends_at) : null,
+              subscriptionId,
+              resource.id,
+              new Date(resource.create_time ?? Date.now()),
+            ).catch((err) => console.error('recordSuccessfulPayment (renewal) error:', err));
+          }
         }
       }
     }
@@ -1010,6 +1209,20 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
             affectedBrandPlan.brand_id,
             affectedBrandPlan.plan?.name ?? 'Paid',
           ).catch((err) => console.error('sendSubscriptionPastDueEmail error:', err));
+          // Record an open invoice + failed payment
+          const bp = affectedBrandPlan;
+          const price = bp.billing_cycle === 'monthly'
+            ? (bp.plan?.price_monthly ?? 0)
+            : (bp.plan?.price_annual ?? 0);
+          recordFailedPayment(
+            bp.brand_id,
+            bp.plan_id,
+            bp.billing_cycle as 'monthly' | 'annual',
+            price,
+            'PHP',
+            subscriptionId,
+            new Date(),
+          ).catch((err) => console.error('recordFailedPayment error:', err));
         }
       }
     }

@@ -205,7 +205,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 { route: '/labels/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
               ]
             },
-            { route: '/admin/subscription', title: 'Subscription', adminOnly: true },
+            { route: '/admin/subscription', title: 'Billing', adminOnly: true },
             { route: '/admin/integrations', title: 'Integrations', adminOnly: true },
             { route: '/admin/users', title: 'Users', adminOnly: true },
             {

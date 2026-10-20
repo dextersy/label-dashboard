@@ -3,6 +3,8 @@ import {
   getPublicPlans,
   getPlans,
   getUsage,
+  getInvoices,
+  getPayments,
   initiateCheckout,
   cancelSubscription,
   cancelPendingChange,
@@ -24,6 +26,8 @@ router.get('/plans/public', getPublicPlans);
 // Protected
 router.get('/plans', authenticateToken, getPlans);
 router.get('/usage', authenticateToken, getUsage);
+router.get('/invoices', authenticateToken, getInvoices);
+router.get('/payments', authenticateToken, getPayments);
 router.post('/dev-override', authenticateToken, requireAdmin, devOverridePlan);
 router.post('/checkout', authenticateToken, requireAdmin, initiateCheckout);
 router.post('/cancel', authenticateToken, requireAdmin, cancelSubscription);
