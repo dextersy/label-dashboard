@@ -76,7 +76,7 @@
                   @if (isCurrentPlanPaid && effectiveEndsAt) {
                     &bull;
                     @if (hasTruePendingChange) {
-                      Cancels {{ effectiveEndsAt | date:'mediumDate' }}
+                      Switches to <strong>{{ pendingChangePlanName }}</strong> on {{ effectiveEndsAt | date:'mediumDate' }}
                     } @else {
                       Renews {{ effectiveEndsAt | date:'mediumDate' }}
                     }
