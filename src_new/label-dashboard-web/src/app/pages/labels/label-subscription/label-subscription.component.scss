@@ -16,6 +16,145 @@
   .billing-page { padding: 10px; }
 }
 
+// ── Invoice / Payment mobile rows ──────────────────────────────────────────
+
+.inv-mobile-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.inv-mobile-header-main {
+  flex: 1;
+}
+
+.inv-mobile-header-amount {
+  flex-shrink: 0;
+}
+
+.inv-mobile-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 10px 10px;
+  gap: 10px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.inv-mobile-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.inv-mobile-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 3px;
+}
+
+.inv-id-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #e9ecef;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #495057;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-type-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.inv-mobile-plan {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inv-mobile-date {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.inv-mobile-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.inv-mobile-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+.inv-status-badge {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+}
+
+.inv-download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  app-icon {
+    font-size: 13px;
+  }
+}
+
+// ── Tab toggle ─────────────────────────────────────────────────────────────
+
 .sub-tab-toggle {
   display: inline-flex;
   align-items: center;

@@ -122,6 +122,12 @@ export interface PlansResponse {
   currentSubscription: CurrentSubscription | null;
 }
 
+export interface BillingDetails {
+  billing_company_name: string | null;
+  billing_address: string | null;
+  billing_tin: string | null;
+}
+
 export interface UsageResponse {
   limits: EffectiveLimits | null;
   usage: {
@@ -180,6 +186,14 @@ export class SubscriptionService {
 
   getPayments(page = 1): Observable<PaymentsResponse> {
     return this.http.get<PaymentsResponse>(`${this.apiUrl}/payments`, { params: { page: String(page) } });
+  }
+
+  getBillingDetails(): Observable<BillingDetails> {
+    return this.http.get<BillingDetails>(`${this.apiUrl}/billing-details`);
+  }
+
+  updateBillingDetails(data: Partial<BillingDetails>): Observable<BillingDetails> {
+    return this.http.put<BillingDetails>(`${this.apiUrl}/billing-details`, data);
   }
 
   getAdminPlans(): Observable<{ plans: AdminPlan[] }> {

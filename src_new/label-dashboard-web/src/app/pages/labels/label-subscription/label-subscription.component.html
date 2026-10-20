@@ -465,6 +465,35 @@
           [showSortableHeaders]="true"
           [showSearch]="false"
           (pageChange)="loadInvoices($event)">
+
+          <ng-template #mobileHeaderTemplate>
+            <div class="inv-mobile-header">
+              <div class="inv-mobile-header-main">Invoice</div>
+              <div class="inv-mobile-header-amount">Amount</div>
+            </div>
+          </ng-template>
+
+          <ng-template #mobileRowTemplate let-item>
+            <div class="inv-mobile-row">
+              <div class="inv-mobile-body">
+                <div class="inv-mobile-top">
+                  <span class="inv-id-chip">{{ item.invoice_number }}</span>
+                  <span class="inv-type-chip">{{ billingReasonLabel(item.billing_reason) }}</span>
+                </div>
+                <div class="inv-mobile-plan">{{ item.plan?.name ?? '—' }}</div>
+                <div class="inv-mobile-date">{{ item.createdAt | date:'MMM d, yyyy' }}</div>
+              </div>
+              <div class="inv-mobile-right">
+                <div class="inv-mobile-amount">{{ item.currency }} {{ item.amount | number:'1.2-2' }}</div>
+                <span class="status-badge {{ invoiceStatusClass(item.status) }} inv-status-badge">{{ invoiceStatusLabel(item.status) }}</span>
+                <button class="inv-download-btn" (click)="downloadInvoice(item)" title="Download PDF"
+                  [disabled]="downloadingInvoiceId === item.id">
+                  <app-icon [name]="downloadingInvoiceId === item.id ? 'loader' : 'download'" />
+                </button>
+              </div>
+            </div>
+          </ng-template>
+
         </app-paginated-table>
       </div>
 
@@ -479,7 +508,117 @@
           [showSortableHeaders]="true"
           [showSearch]="false"
           (pageChange)="loadPayments($event)">
+
+          <ng-template #mobileHeaderTemplate>
+            <div class="inv-mobile-header">
+              <div class="inv-mobile-header-main">Payment</div>
+              <div class="inv-mobile-header-amount">Amount</div>
+            </div>
+          </ng-template>
+
+          <ng-template #mobileRowTemplate let-item>
+            <div class="inv-mobile-row">
+              <div class="inv-mobile-body">
+                <div class="inv-mobile-top">
+                  <span *ngIf="item.paypal_transaction_id" class="inv-id-chip">{{ item.paypal_transaction_id }}</span>
+                  <span class="inv-type-chip">{{ item.payment_method | titlecase }}</span>
+                </div>
+                <div class="inv-mobile-plan">{{ item.invoice?.plan?.name ?? '—' }}</div>
+                <div class="inv-mobile-date">{{ (item.processed_at ?? item.createdAt) | date:'MMM d, yyyy' }}</div>
+              </div>
+              <div class="inv-mobile-right">
+                <div class="inv-mobile-amount">{{ item.currency }} {{ item.amount | number:'1.2-2' }}</div>
+                <span class="status-badge {{ paymentStatusClass(item.status) }} inv-status-badge">{{ paymentStatusLabel(item.status) }}</span>
+              </div>
+            </div>
+          </ng-template>
+
         </app-paginated-table>
+      </div>
+
+      <!-- ── Billing Details tab ───────────────────────────────────────── -->
+      <div *ngIf="activeSection === 'billing-details'">
+
+        @if (billingDetailsLoading) {
+          <div class="tw-flex tw-justify-center tw-py-20">
+            <div class="spinner-border text-secondary" role="status" aria-label="Loading"></div>
+          </div>
+        }
+
+        @if (!billingDetailsLoading && billingDetails) {
+          <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-p-6">
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-1">Billing Details</h3>
+            <p class="tw-text-xs tw-text-muted tw-mb-5">This information will appear on your invoice PDFs.</p>
+
+            <div class="tw-space-y-5 tw-max-w-md">
+
+              <!-- Company Name -->
+              <div>
+                <label class="tw-label">Company / Legal Name <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+                <div *ngIf="!isBillingEditing('billing_company_name')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                  <span class="tw-text-sm tw-text-body">{{ editingBillingValues.billing_company_name || '—' }}</span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startBillingEditing('billing_company_name')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </div>
+                <div *ngIf="isBillingEditing('billing_company_name')" class="tw-flex tw-items-center tw-gap-1">
+                  <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editingBillingValues.billing_company_name" placeholder="e.g. Acme Records Ltd.">
+                  <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="saveBillingField('billing_company_name')" title="Save" [disabled]="billingDetailsSaving">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelBillingEditing('billing_company_name')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Billing Address -->
+              <div>
+                <label class="tw-label">Billing Address <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+                <div *ngIf="!isBillingEditing('billing_address')" class="tw-flex tw-items-start tw-gap-1 tw-min-h-[32px]">
+                  <span class="tw-text-sm tw-text-body tw-whitespace-pre-line">{{ editingBillingValues.billing_address || '—' }}</span>
+                  <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startBillingEditing('billing_address')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </div>
+                <div *ngIf="isBillingEditing('billing_address')" class="tw-flex tw-flex-col tw-gap-1">
+                  <textarea class="tw-input" [(ngModel)]="editingBillingValues.billing_address" rows="3"
+                    placeholder="Street, City, Province / State, ZIP, Country"></textarea>
+                  <div class="tw-flex tw-justify-end tw-gap-1">
+                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="saveBillingField('billing_address')" title="Save" [disabled]="billingDetailsSaving">
+                      <app-icon name="check" iconOnly />
+                    </button>
+                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelBillingEditing('billing_address')" title="Cancel">
+                      <app-icon name="x" iconOnly />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TIN -->
+              <div>
+                <label class="tw-label">TIN / Tax ID <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+                <div *ngIf="!isBillingEditing('billing_tin')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
+                  <span class="tw-text-sm tw-text-body">{{ editingBillingValues.billing_tin || '—' }}</span>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startBillingEditing('billing_tin')" title="Edit">
+                    <app-icon name="edit" iconOnly />
+                  </button>
+                </div>
+                <div *ngIf="isBillingEditing('billing_tin')" class="tw-flex tw-items-center tw-gap-1">
+                  <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editingBillingValues.billing_tin" placeholder="e.g. 123-456-789-000">
+                  <button type="button" class="tw-shrink-0 tw-text-green-500 hover:tw-text-green-700 tw-p-1" (click)="saveBillingField('billing_tin')" title="Save" [disabled]="billingDetailsSaving">
+                    <app-icon name="check" iconOnly />
+                  </button>
+                  <button type="button" class="tw-shrink-0 tw-text-red-400 hover:tw-text-red-600 tw-p-1" (click)="cancelBillingEditing('billing_tin')" title="Cancel">
+                    <app-icon name="x" iconOnly />
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        }
+
       </div>
 
     </app-in-page-nav>

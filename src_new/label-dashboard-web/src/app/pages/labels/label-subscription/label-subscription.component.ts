@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits, SubscriptionInvoice, SubscriptionPayment } from '../../../services/subscription.service';
+import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits, SubscriptionInvoice, SubscriptionPayment, BillingDetails } from '../../../services/subscription.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService, ConfirmationDialogData, ConfirmationDialogDetail } from '../../../services/confirmation.service';
 import { environment } from '../../../../environments/environment';
@@ -13,7 +14,7 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn } from '../../../c
 
 @Component({
   selector: 'app-label-subscription',
-  imports: [CommonModule, BreadcrumbComponent, IconComponent, RouterLink, InPageNavComponent, PaginatedTableComponent],
+  imports: [CommonModule, FormsModule, BreadcrumbComponent, IconComponent, RouterLink, InPageNavComponent, PaginatedTableComponent],
   templateUrl: './label-subscription.component.html',
   styleUrls: ['./label-subscription.component.scss'],
 })
@@ -33,12 +34,21 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   billingCycle: 'monthly' | 'annual' = 'monthly';
 
   // In-page nav
-  activeSection: 'subscription' | 'invoices' | 'payments' = 'subscription';
+  activeSection: 'subscription' | 'invoices' | 'payments' | 'billing-details' = 'subscription';
   readonly navTabs: InPageNavTab[] = [
     { id: 'subscription', label: 'Subscription', icon: 'layers' },
     { id: 'invoices', label: 'Invoices', icon: 'receipt' },
     { id: 'payments', label: 'Payments', icon: 'credit-card' },
+    { id: 'billing-details', label: 'Billing Details', icon: 'receipt' },
   ];
+
+  // Billing details tab
+  billingDetails: BillingDetails | null = null;
+  billingDetailsLoading = false;
+  billingDetailsSaving = false;
+  editingBillingFields: Set<string> = new Set();
+  editingBillingValues: Partial<BillingDetails> = {};
+  private billingFieldOriginals: Map<string, string | null> = new Map();
 
   // Invoices tab
   invoices: SubscriptionInvoice[] = [];
@@ -676,9 +686,58 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   }
 
   onNavTabChange(id: string): void {
-    this.activeSection = id as 'subscription' | 'invoices' | 'payments';
+    this.activeSection = id as 'subscription' | 'invoices' | 'payments' | 'billing-details';
     if (id === 'invoices' && !this.invoicesLoaded) this.loadInvoices();
     if (id === 'payments' && !this.paymentsLoaded) this.loadPayments();
+    if (id === 'billing-details' && !this.billingDetails) this.loadBillingDetails();
+  }
+
+  loadBillingDetails(): void {
+    this.billingDetailsLoading = true;
+    this.subscriptionService.getBillingDetails().subscribe({
+      next: (details) => {
+        this.billingDetails = details;
+        this.editingBillingValues = { ...details };
+        this.billingDetailsLoading = false;
+      },
+      error: () => {
+        this.notificationService.showError('Failed to load billing details');
+        this.billingDetailsLoading = false;
+      },
+    });
+  }
+
+  isBillingEditing(field: string): boolean {
+    return this.editingBillingFields.has(field);
+  }
+
+  startBillingEditing(field: string): void {
+    this.billingFieldOriginals.set(field, (this.editingBillingValues as any)[field] ?? null);
+    this.editingBillingFields.add(field);
+  }
+
+  cancelBillingEditing(field: string): void {
+    const original = this.billingFieldOriginals.get(field) ?? null;
+    (this.editingBillingValues as any)[field] = original;
+    this.editingBillingFields.delete(field);
+  }
+
+  saveBillingField(field: string): void {
+    this.editingBillingFields.delete(field);
+    const value = (this.editingBillingValues as any)[field] ?? null;
+    this.billingDetailsSaving = true;
+    this.subscriptionService.updateBillingDetails({ [field]: value }).subscribe({
+      next: (updated) => {
+        this.billingDetails = updated;
+        this.editingBillingValues = { ...updated };
+        this.billingDetailsSaving = false;
+        this.notificationService.showSuccess('Billing details updated');
+      },
+      error: () => {
+        this.notificationService.showError('Failed to update billing details');
+        this.billingDetailsSaving = false;
+      },
+    });
   }
 
   loadInvoices(page = 1): void {
