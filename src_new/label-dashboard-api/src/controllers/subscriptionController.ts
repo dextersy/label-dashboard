@@ -18,7 +18,7 @@ import {
   getPayPalSubscriptionNextBillingTime,
 } from '../services/subscriptionService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
-import { sendSubscriptionActivatedEmail, sendSubscriptionRenewalEmail, sendSubscriptionPastDueEmail, sendSubscriptionDowngradedEmail, sendSubscriptionDowngradeScheduledEmail, sendSubscriptionCancelledEmail } from '../utils/emailService';
+import { sendSubscriptionActivatedEmail, sendSubscriptionRenewalEmail, sendSubscriptionRestoredEmail, sendSubscriptionPastDueEmail, sendSubscriptionDowngradedEmail, sendSubscriptionDowngradeScheduledEmail, sendSubscriptionCancelledEmail } from '../utils/emailService';
 
 // ---------------------------------------------------------------------------
 // GET /api/subscription/plans/public
@@ -803,19 +803,33 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
           // The Lambda activates it at ends_at.
           const pdp = pendingDowngradePlan as BrandPlan & { plan?: Plan };
           if (pdp.ends_at && pdp.pending_plan_id) {
-            Plan.findByPk(pdp.pending_plan_id).then((newPlan) => {
-              const newPrice = newPlan
-                ? (pdp.pending_billing_cycle === 'annual' ? newPlan.price_annual : newPlan.price_monthly)
-                : 0;
-              return sendSubscriptionDowngradeScheduledEmail(
+            const isRestore = pdp.pending_plan_id === pdp.plan_id && pdp.pending_billing_cycle === pdp.billing_cycle;
+            if (isRestore) {
+              const restorePrice = pdp.billing_cycle === 'annual'
+                ? (pdp.plan?.price_annual ?? 0)
+                : (pdp.plan?.price_monthly ?? 0);
+              sendSubscriptionRestoredEmail(
                 pdp.brand_id,
                 pdp.plan?.name ?? 'Current Plan',
-                newPlan?.name ?? 'New Plan',
+                (pdp.billing_cycle ?? 'monthly') as 'monthly' | 'annual',
+                restorePrice,
                 new Date(pdp.ends_at!),
-                newPrice,
-                (pdp.pending_billing_cycle ?? 'monthly') as 'monthly' | 'annual',
-              );
-            }).catch((err) => console.error('sendSubscriptionDowngradeScheduledEmail error:', err));
+              ).catch((err) => console.error('sendSubscriptionRestoredEmail error:', err));
+            } else {
+              Plan.findByPk(pdp.pending_plan_id).then((newPlan) => {
+                const newPrice = newPlan
+                  ? (pdp.pending_billing_cycle === 'annual' ? newPlan.price_annual : newPlan.price_monthly)
+                  : 0;
+                return sendSubscriptionDowngradeScheduledEmail(
+                  pdp.brand_id,
+                  pdp.plan?.name ?? 'Current Plan',
+                  newPlan?.name ?? 'New Plan',
+                  new Date(pdp.ends_at!),
+                  newPrice,
+                  (pdp.pending_billing_cycle ?? 'monthly') as 'monthly' | 'annual',
+                );
+              }).catch((err) => console.error('sendSubscriptionDowngradeScheduledEmail error:', err));
+            }
           }
           res.sendStatus(200);
           return;

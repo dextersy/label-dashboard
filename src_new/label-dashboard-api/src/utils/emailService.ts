@@ -299,6 +299,9 @@ export const sendBrandedEmail = async (
     case 'subscription_renewal_email':
       subject = `Your ${templateData.PLAN_NAME} subscription has been renewed`;
       break;
+    case 'subscription_restored_email':
+      subject = `Your ${templateData.PLAN_NAME} subscription has been restored`;
+      break;
     default:
       subject = 'Notification';
   }
@@ -1576,36 +1579,22 @@ export const sendSubscriptionActivatedEmail = async (
   price: number,
 ): Promise<boolean> => {
   try {
-    const brand = await Brand.findByPk(brandId, {
-      include: [{ model: Brand, as: 'parentBrand' }],
-    });
-    if (!brand) return false;
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
 
-    // Use parent brand's identity for the email if available, otherwise own brand
-    const senderBrand: Brand = (brand as any).parentBrand ?? brand;
-
-    const adminEmails = await getBrandAdministrators(brandId);
-    if (!adminEmails.length) return false;
-
-    const dashboardUrl = await getBrandFrontendUrl(brandId);
     const priceLabel = billingCycle === 'monthly'
       ? `₱${price.toLocaleString()}/month`
       : `₱${price.toLocaleString()}/year`;
 
-    const brandLogoHtml = senderBrand.logo_url
-      ? `<img src="${escapeHtml(senderBrand.logo_url)}" alt="${escapeHtml(senderBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
-      : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(senderBrand.brand_name)}</div>`;
-
-    // Send with senderBrand's id so nodemailer uses its name as the From display name
-    return await sendBrandedEmail(adminEmails, 'subscription_activated_email', {
-      BRAND_NAME: escapeHtml(senderBrand.brand_name),
-      BRAND_LOGO_HTML: brandLogoHtml,
-      BRAND_COLOR: senderBrand.brand_color || '#333333',
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_activated_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
       PLAN_NAME: escapeHtml(planName),
       BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
       AMOUNT: escapeHtml(priceLabel),
-      DASHBOARD_URL: dashboardUrl,
-    }, senderBrand.id);
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
   } catch (error) {
     console.error('sendSubscriptionActivatedEmail error:', error);
     return false;
@@ -1620,16 +1609,9 @@ export const sendSubscriptionRenewalEmail = async (
   nextRenewalDate: Date | null,
 ): Promise<boolean> => {
   try {
-    const brand = await Brand.findByPk(brandId, {
-      include: [{ model: Brand, as: 'parentBrand' }],
-    });
-    if (!brand) return false;
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
 
-    const senderBrand: Brand = (brand as any).parentBrand ?? brand;
-    const adminEmails = await getBrandAdministrators(brandId);
-    if (!adminEmails.length) return false;
-
-    const dashboardUrl = await getBrandFrontendUrl(brandId);
     const priceLabel = billingCycle === 'monthly'
       ? `₱${price.toLocaleString()}/month`
       : `₱${price.toLocaleString()}/year`;
@@ -1637,20 +1619,16 @@ export const sendSubscriptionRenewalEmail = async (
       ? nextRenewalDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : 'N/A';
 
-    const brandLogoHtml = senderBrand.logo_url
-      ? `<img src="${escapeHtml(senderBrand.logo_url)}" alt="${escapeHtml(senderBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
-      : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(senderBrand.brand_name)}</div>`;
-
-    return await sendBrandedEmail(adminEmails, 'subscription_renewal_email', {
-      BRAND_NAME: escapeHtml(senderBrand.brand_name),
-      BRAND_LOGO_HTML: brandLogoHtml,
-      BRAND_COLOR: senderBrand.brand_color || '#333333',
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_renewal_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
       PLAN_NAME: escapeHtml(planName),
       BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
       AMOUNT: escapeHtml(priceLabel),
       NEXT_RENEWAL_DATE: escapeHtml(nextRenewalLabel),
-      DASHBOARD_URL: dashboardUrl,
-    }, senderBrand.id);
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
   } catch (error) {
     console.error('sendSubscriptionRenewalEmail error:', error);
     return false;
@@ -1674,6 +1652,38 @@ const buildSubscriptionEmailContext = async (brandId: number) => {
     : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(senderBrand.brand_name)}</div>`;
 
   return { senderBrand, adminEmails, dashboardUrl, brandLogoHtml };
+};
+
+export const sendSubscriptionRestoredEmail = async (
+  brandId: number,
+  planName: string,
+  billingCycle: 'monthly' | 'annual',
+  price: number,
+  effectiveDate: Date,
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    const priceLabel = billingCycle === 'monthly'
+      ? `₱${price.toLocaleString()}/month`
+      : `₱${price.toLocaleString()}/year`;
+    const effectiveDateLabel = effectiveDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_restored_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      PLAN_NAME: escapeHtml(planName),
+      BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
+      AMOUNT: escapeHtml(priceLabel),
+      EFFECTIVE_DATE: escapeHtml(effectiveDateLabel),
+      DASHBOARD_URL: ctx.dashboardUrl,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionRestoredEmail error:', error);
+    return false;
+  }
 };
 
 export const sendSubscriptionPastDueEmail = async (

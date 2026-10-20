@@ -247,9 +247,9 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   }
 
   isPendingPlan(plan: Plan): boolean {
-    return !!this.currentSubscription?.pending_plan_id &&
-      this.currentSubscription.pending_plan_id === plan.id &&
-      this.currentSubscription.pending_billing_cycle === this.billingCycle;
+    if (!this.hasTruePendingChange) return false;
+    return this.currentSubscription!.pending_plan_id === plan.id &&
+      this.currentSubscription!.pending_billing_cycle === this.billingCycle;
   }
 
   /** True when the pending plan is awaiting PayPal payment (not a scheduled future switch). */
@@ -505,8 +505,15 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     this.plansSection.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /** True only when the pending plan/cycle differs from the current plan/cycle. */
+  get hasTruePendingChange(): boolean {
+    const sub = this.currentSubscription;
+    if (!sub?.pending_plan_id) return false;
+    return sub.pending_plan_id !== sub.plan_id || sub.pending_billing_cycle !== sub.billing_cycle;
+  }
+
   get hasPendingChange(): boolean {
-    return !!this.currentSubscription?.pending_plan_id;
+    return this.hasTruePendingChange;
   }
 
   get pendingChangePlanName(): string {
@@ -520,11 +527,13 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     const dateLabel = this.effectiveEndsAtLabel;
 
     const confirmed = await this.confirmationService.confirm({
-      title: 'Cancel pending plan change',
+      title: 'Restore current plan',
       message: pendingName
         ? `This will cancel the scheduled change to ${pendingName}. Your current plan will continue after ${dateLabel ?? 'the billing period ends'}.`
         : `This will cancel the scheduled plan change. Your current plan will continue.`,
-      confirmText: 'Yes, cancel change',
+      note: 'You will be redirected to PayPal to re-authorize billing for your current plan. No charge will be made today.',
+      noteIcon: 'paypal',
+      confirmText: 'Restore plan',
       cancelText: 'Keep change',
       type: 'warning',
       primaryAction: 'cancel',

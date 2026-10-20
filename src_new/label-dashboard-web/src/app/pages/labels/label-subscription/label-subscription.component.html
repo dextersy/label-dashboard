@@ -75,7 +75,7 @@
                   Active since {{ currentSubscription.started_at | date:'mediumDate' }}
                   @if (isCurrentPlanPaid && effectiveEndsAt) {
                     &bull;
-                    @if (currentSubscription.pending_plan_id) {
+                    @if (hasTruePendingChange) {
                       Cancels {{ effectiveEndsAt | date:'mediumDate' }}
                     } @else {
                       Renews {{ effectiveEndsAt | date:'mediumDate' }}
@@ -293,7 +293,7 @@
                     <h2 class="tw-font-heading tw-text-base tw-font-semibold tw-text-[var(--color-heading)] tw-mb-0">
                       {{ plan.name }}
                     </h2>
-                    @if (isCurrentPlan(plan) && currentSubscription?.pending_plan_id && effectiveEndsAtLabel) {
+                    @if (isCurrentPlan(plan) && hasTruePendingChange && effectiveEndsAtLabel) {
                       <span class="status-badge status-warning tw-text-xs">Until {{ effectiveEndsAtLabel }}</span>
                     } @else if (isCurrentPlan(plan)) {
                       <span class="status-badge status-info tw-text-xs">Current</span>
@@ -386,14 +386,16 @@
                       Complete payment
                     </button>
                   } @else if (isScheduledPlan(plan)) {
-                    <button class="btn btn-secondary tw-w-full" disabled>
-                      Starts {{ effectiveEndsAtLabel }}
-                    </button>
-                  } @else if (isCurrentPlan(plan) && hasPendingChange) {
                     <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)] tw-py-3 tw-px-6 tw-text-[15px] tw-text-warning"
                             (click)="cancelPendingChange()"
                             [disabled]="actionLoading">
-                      Cancel pending change
+                      Cancel
+                    </button>
+                  } @else if (isCurrentPlan(plan) && hasPendingChange) {
+                    <button class="btn btn-ghost tw-w-full tw-border tw-border-[var(--color-border-subtle)] tw-py-3 tw-px-6 tw-text-[15px]"
+                            (click)="cancelPendingChange()"
+                            [disabled]="actionLoading">
+                      Restore
                     </button>
                   } @else if (isCurrentPlan(plan)) {
                     <button class="btn btn-secondary tw-w-full" disabled>Current plan</button>
