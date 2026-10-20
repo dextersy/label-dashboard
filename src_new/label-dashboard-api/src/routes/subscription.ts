@@ -14,6 +14,8 @@ import {
   getAdminPlans,
   createPlan,
   updatePlan,
+  getBillingDetails,
+  updateBillingDetails,
 } from '../controllers/subscriptionController';
 import { authenticateToken, requireAdmin, requireSuperAdmin } from '../middleware/auth';
 import { webhookRateLimit } from '../middleware/rateLimiting';
@@ -34,6 +36,10 @@ router.post('/dev-override', authenticateToken, requireAdmin, devOverridePlan);
 router.post('/checkout', authenticateToken, requireAdmin, initiateCheckout);
 router.post('/cancel', authenticateToken, requireAdmin, cancelSubscription);
 router.post('/cancel-pending-change', authenticateToken, requireAdmin, cancelPendingChange);
+
+// Billing details
+router.get('/billing-details', authenticateToken, requireAdmin, getBillingDetails);
+router.put('/billing-details', authenticateToken, requireAdmin, updateBillingDetails);
 
 // Superadmin plan management
 router.get('/admin/plans', authenticateToken, requireSuperAdmin, getAdminPlans);

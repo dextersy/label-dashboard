@@ -861,13 +861,14 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
     });
 
     // ── Issuer brand (walk to parent) ────────────────────────────────────────
-    const currentBrand = await Brand.findByPk(brandId, { attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'parent_brand'] });
+    const currentBrand = await Brand.findByPk(brandId, { attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'parent_brand', 'billing_company_name', 'billing_address', 'billing_tin'] });
     let issuerBrand = currentBrand;
     if (currentBrand?.parent_brand) {
-      const parentBrand = await Brand.findByPk(currentBrand.parent_brand, { attributes: ['id', 'brand_name', 'logo_url', 'brand_color'] });
+      const parentBrand = await Brand.findByPk(currentBrand.parent_brand, { attributes: ['id', 'brand_name', 'logo_url', 'brand_color', 'billing_company_name', 'billing_address', 'billing_tin'] });
       if (parentBrand) issuerBrand = parentBrand;
     }
-    const issuerName    = issuerBrand?.brand_name ?? 'Platform';
+    const issuerOfficialName = (issuerBrand as any)?.billing_company_name ?? null;
+    const issuerName    = issuerOfficialName ?? issuerBrand?.brand_name ?? 'Platform';
     const issuerLogoUrl = issuerBrand?.logo_url ?? null;
     const rawBrandColor = issuerBrand?.brand_color ?? null;
     const ACCENT        = rawBrandColor
@@ -885,9 +886,9 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       : issuerName;
     const billedToEmail = (adminUser as any)?.email_address ?? null;
 
-    // ── Env config ────────────────────────────────────────────────────────────
-    const issuerAddress = process.env.INVOICE_ISSUER_ADDRESS ?? null;
-    const issuerTin     = process.env.INVOICE_ISSUER_TIN     ?? null;
+    // ── Env config (fallbacks if issuer brand has no billing details) ─────────
+    const issuerAddress = (issuerBrand as any)?.billing_address ?? process.env.INVOICE_ISSUER_ADDRESS ?? null;
+    const issuerTin     = (issuerBrand as any)?.billing_tin     ?? process.env.INVOICE_ISSUER_TIN     ?? null;
     const supportEmail  = process.env.INVOICE_SUPPORT_EMAIL  ?? (process.env.FROM_EMAIL ?? null);
 
     // ── Logo ─────────────────────────────────────────────────────────────────
@@ -964,36 +965,39 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       }
       const nameX    = logoBuffer ? ML + logoSize + 10 : ML;
       const nameMaxW = CW * 0.5;
-      doc.font('Helvetica-Bold').fontSize(13).fillColor(INK)
-        .text(issuerName, nameX, headerRowY + 2, { width: nameMaxW, lineBreak: false });
+      const nameFs   = 11, emailFs = 9, lineGap = 5;
+      const textBlockH = supportEmail ? nameFs + lineGap + emailFs : nameFs;
+      const nameY    = headerRowY + Math.round((logoSize - textBlockH) / 2);
+      doc.font('Helvetica-Bold').fontSize(nameFs).fillColor(INK)
+        .text(issuerName, nameX, nameY, { width: nameMaxW, lineBreak: false });
       if (supportEmail) {
-        doc.font('Helvetica').fontSize(10).fillColor(MUTED)
-          .text(supportEmail, nameX, headerRowY + 19, { width: nameMaxW, lineBreak: false });
+        doc.font('Helvetica').fontSize(emailFs).fillColor(MUTED)
+          .text(supportEmail, nameX, nameY + nameFs + lineGap, { width: nameMaxW, lineBreak: false });
       }
 
       const rightColW = CW * 0.45;
       const rightColX = PW - ML - rightColW;
-      doc.font('Helvetica').fontSize(34).fillColor(INK)
+      doc.font('Helvetica').fontSize(28).fillColor(INK)
         .text('Invoice', rightColX, headerRowY - 4, { width: rightColW, align: 'right', lineBreak: false });
-      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
-        .text(invoice.invoice_number ?? String(invoiceId), rightColX, headerRowY + 34, { width: rightColW, align: 'right', lineBreak: false });
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED)
+        .text(invoice.invoice_number ?? String(invoiceId), rightColX, headerRowY + 28, { width: rightColW, align: 'right', lineBreak: false });
 
       // Status pill
-      const pillY     = headerRowY + 52;
+      const pillY     = headerRowY + 44;
       const pillLabel = isPaid ? 'Paid' : isVoid ? 'Void' : 'Unpaid';
       const pillBg    = isPaid ? '#E4F5EC' : isVoid ? '#F3F4F6' : '#FEF3C7';
       const pillFg    = isPaid ? '#17744B' : isVoid ? '#6B7280' : '#92400E';
       const dotR      = 3, dotGap = 5;
-      doc.font('Helvetica-Bold').fontSize(10);
+      doc.font('Helvetica-Bold').fontSize(9);
       const pillLabelW = doc.widthOfString(pillLabel);
-      const pillPadX = 10, pillPadY = 4;
+      const pillPadX = 9, pillPadY = 4;
       const pillInnerW = dotR * 2 + dotGap + pillLabelW;
       const pillW = pillInnerW + pillPadX * 2;
-      const pillH = 10 + pillPadY * 2;
+      const pillH = 9 + pillPadY * 2;
       const pillX = PW - ML - pillW;
       doc.roundedRect(pillX, pillY, pillW, pillH, pillH / 2).fill(pillBg);
       drawDot(doc, pillX + pillPadX + dotR, pillY + pillH / 2, dotR, pillFg);
-      doc.font('Helvetica-Bold').fontSize(10).fillColor(pillFg)
+      doc.font('Helvetica-Bold').fontSize(9).fillColor(pillFg)
         .text(pillLabel, pillX + pillPadX + dotR * 2 + dotGap, pillY + pillPadY, { width: pillLabelW, lineBreak: false });
 
       curY = Math.max(headerRowY + logoSize, pillY + pillH) + 24;
@@ -1001,7 +1005,7 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       // 3. Info row
       hairline(doc, ML, curY, CW);
       curY += 14;
-      const colW3 = CW / 3, labelFs = 9, valueFs = 11;
+      const colW3 = CW / 3, labelFs = 8, valueFs = 10;
       const infoCol = (x: number, label: string, lines: (string | null)[]): number => {
         doc.font('Helvetica').fontSize(labelFs).fillColor(MUTED)
           .text(label, x, curY, { width: colW3 - 6, lineBreak: false });
@@ -1015,9 +1019,13 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       };
       const periodText = `${fmtShort(invoice.period_start)} to ${invoice.period_end ? fmtShort(invoice.period_end) : 'Ongoing'}`;
       const renewsText = invoice.billing_cycle === 'annual' ? 'Renews annually' : 'Renews monthly';
+      const billedToCompany  = currentBrand?.billing_company_name ?? null;
+      const billedToAddress  = currentBrand?.billing_address ?? null;
+      const billedToBrandTin = currentBrand?.billing_tin ?? null;
+
       const colBottoms = [
         infoCol(ML,             'From',           [issuerName, issuerAddress, issuerTin ? `TIN: ${issuerTin}` : null]),
-        infoCol(ML + colW3,     'Billed to',      [billedToName, billedToEmail]),
+        infoCol(ML + colW3,     'Billed to',      [billedToCompany ?? billedToName, billedToCompany ? billedToName : null, billedToEmail, billedToAddress, billedToBrandTin ? `TIN: ${billedToBrandTin}` : null]),
         infoCol(ML + colW3 * 2, 'Billing period', [periodText, renewsText]),
       ];
       curY = Math.max(...colBottoms) + 14;
@@ -1025,7 +1033,7 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       curY += 12;
 
       // 4. Dates line
-      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED)
         .text('Issued  ', ML, curY, { continued: true, lineBreak: false });
       doc.font('Helvetica-Bold').fillColor(INK)
         .text(fmtShort(invoice.createdAt), { continued: isPaid, lineBreak: false });
@@ -1050,7 +1058,7 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       const colDesc   = ML + tblPad;
       const descW     = qtyRight - qtyW - colDesc - 8;
       const tblHdrY   = curY + (tableHdrH - 10) / 2;
-      doc.font('Helvetica').fontSize(10).fillColor(MUTED);
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED);
       doc.text('Description', colDesc,           tblHdrY, { width: descW,  lineBreak: false });
       doc.text('Qty',         qtyRight - qtyW,   tblHdrY, { width: qtyW,   align: 'right', lineBreak: false });
       doc.text('Unit price',  unitRight - unitW, tblHdrY, { width: unitW,  align: 'right', lineBreak: false });
@@ -1059,11 +1067,11 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
 
       const rowStartY = curY;
       const amtStr    = formatMoney(subtotal, currency);
-      doc.font('Helvetica-Bold').fontSize(12).fillColor(INK)
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(INK)
         .text(`${planName} plan`, colDesc, rowStartY, { width: descW, lineBreak: false });
-      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
-        .text(lineItemSubtitle, colDesc, rowStartY + 16, { width: descW, lineBreak: false });
-      doc.font('Helvetica').fontSize(12).fillColor(INK)
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED)
+        .text(lineItemSubtitle, colDesc, rowStartY + 15, { width: descW, lineBreak: false });
+      doc.font('Helvetica').fontSize(11).fillColor(INK)
         .text('1',    qtyRight - qtyW,   rowStartY, { width: qtyW,  align: 'right', lineBreak: false });
       doc.text(amtStr, unitRight - unitW, rowStartY, { width: unitW, align: 'right', lineBreak: false });
       doc.text(amtStr, amtRight - amtW,   rowStartY, { width: amtW,  align: 'right', lineBreak: false });
@@ -1076,7 +1084,7 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       const totX      = PW - ML - totW;
       const totLabelW = 110;
       const totValW   = totW - totLabelW;
-      const totRow    = (label: string, value: string, labelColor = MUTED, valueColor = INK, fs = 11): void => {
+      const totRow    = (label: string, value: string, labelColor = MUTED, valueColor = INK, fs = 10): void => {
         doc.font('Helvetica').fontSize(fs).fillColor(labelColor)
           .text(label, totX, curY, { width: totLabelW, lineBreak: false });
         doc.font('Helvetica').fontSize(fs).fillColor(valueColor)
@@ -1089,14 +1097,14 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       doc.save().strokeColor(ACCENT).lineWidth(2)
         .moveTo(totX, curY).lineTo(PW - ML, curY).stroke().restore();
       curY += 12;
-      doc.font('Helvetica-Bold').fontSize(13).fillColor(INK)
-        .text('Total', totX, curY + 6, { width: totLabelW, lineBreak: false });
-      doc.font('Helvetica-Bold').fontSize(22).fillColor(INK)
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(INK)
+        .text('Total', totX, curY + 4, { width: totLabelW, lineBreak: false });
+      doc.font('Helvetica-Bold').fontSize(18).fillColor(INK)
         .text(formatMoney(totalAmount, currency), totX + totLabelW, curY, { width: totValW, align: 'right', lineBreak: false });
-      curY += 34;
+      curY += 28;
       const amountLineColor = isPaid ? '#17744B' : '#92400E';
       const amountLineLabel = isPaid ? 'Amount paid' : 'Amount due';
-      doc.font('Helvetica-Bold').fontSize(11).fillColor(amountLineColor)
+      doc.font('Helvetica-Bold').fontSize(10).fillColor(amountLineColor)
         .text(`${amountLineLabel}  ${formatMoney(totalAmount, currency)}`, totX, curY, { width: totW, align: 'right', lineBreak: false });
       curY += 28;
 
@@ -1107,10 +1115,10 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
         const payColW = CW / 3;
         const payY    = curY + boxPad;
         const payCell = (x: number, label: string, value: string): void => {
-          doc.font('Helvetica').fontSize(9).fillColor(MUTED)
+          doc.font('Helvetica').fontSize(8).fillColor(MUTED)
             .text(label, x, payY, { width: payColW - 8, lineBreak: false });
-          doc.font('Helvetica').fontSize(11).fillColor(INK)
-            .text(value, x, payY + 14, { width: payColW - 8, lineBreak: false });
+          doc.font('Helvetica').fontSize(10).fillColor(INK)
+            .text(value, x, payY + 13, { width: payColW - 8, lineBreak: false });
         };
         payCell(ML + boxPad,               'Payment method', paymentMethodDisplay);
         payCell(ML + boxPad + payColW,     'Paid on',        isPaid && paidOnDate ? fmtShort(paidOnDate) : '-');
@@ -1123,10 +1131,10 @@ export async function buildInvoicePdfBuffer(invoiceId: number, brandId: number):
       // 8. Footer
       const footerY = Math.max(curY, PH - 60);
       hairline(doc, ML, footerY, CW);
-      doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+      doc.font('Helvetica').fontSize(9).fillColor(MUTED)
         .text('Thank you for your business.', ML, footerY + 10, { width: CW * 0.6, lineBreak: false });
       if (supportEmail) {
-        doc.font('Helvetica').fontSize(10).fillColor(MUTED)
+        doc.font('Helvetica').fontSize(9).fillColor(MUTED)
           .text(`Questions? ${supportEmail}`, ML + CW * 0.4, footerY + 10, { width: CW * 0.6, align: 'right', lineBreak: false });
       }
 
@@ -1779,5 +1787,55 @@ export const handleSubscriptionWebhook = async (req: Request, res: Response): Pr
     console.error('handleSubscriptionWebhook error:', error);
     // Return 500 so PayPal retries on genuine infrastructure/DB failures.
     res.sendStatus(500);
+  }
+};
+
+// ── Billing details ───────────────────────────────────────────────────────────
+
+export const getBillingDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId = (req as any).user?.brand_id;
+    if (!brandId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    const brand = await Brand.findByPk(brandId, {
+      attributes: ['billing_company_name', 'billing_address', 'billing_tin'],
+    });
+    if (!brand) { res.status(404).json({ error: 'Brand not found' }); return; }
+
+    res.json({
+      billing_company_name: brand.billing_company_name ?? null,
+      billing_address: brand.billing_address ?? null,
+      billing_tin: brand.billing_tin ?? null,
+    });
+  } catch (error) {
+    console.error('getBillingDetails error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateBillingDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const brandId = (req as any).user?.brand_id;
+    if (!brandId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    const { billing_company_name, billing_address, billing_tin } = req.body;
+
+    const brand = await Brand.findByPk(brandId);
+    if (!brand) { res.status(404).json({ error: 'Brand not found' }); return; }
+
+    await brand.update({
+      billing_company_name: billing_company_name !== undefined ? (billing_company_name || null) : brand.billing_company_name,
+      billing_address: billing_address !== undefined ? (billing_address || null) : brand.billing_address,
+      billing_tin: billing_tin !== undefined ? (billing_tin || null) : brand.billing_tin,
+    });
+
+    res.json({
+      billing_company_name: brand.billing_company_name ?? null,
+      billing_address: brand.billing_address ?? null,
+      billing_tin: brand.billing_tin ?? null,
+    });
+  } catch (error) {
+    console.error('updateBillingDetails error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
