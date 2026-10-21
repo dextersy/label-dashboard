@@ -33,6 +33,7 @@
             <div class="brand-card__name">{{ brand.brand_name }}</div>
             <div class="brand-card__status-row">
               <span [class]="getStatusBadgeClass(brand.status)">{{ brand.status || 'Unknown' }}</span>
+              <span class="status-badge status-secondary tw-ml-1">{{ brand.plan_name || 'No Plan' }}</span>
             </div>
           </div>
           <button *ngIf="visibleActions.length > 0"
@@ -182,6 +183,144 @@
   [brandName]="selectedSublabelForPayments?.brand_name || ''"
   (close)="closePaymentsModal()">
 </app-sublabel-payments-modal>
+
+<!-- Assign Plan Modal -->
+<div class="modal fade" [class.show]="showAssignPlanModal" [style.display]="showAssignPlanModal ? 'block' : 'none'" tabindex="-1" role="dialog" *ngIf="showAssignPlanModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header tw-items-start">
+        <div>
+          <h5 class="modal-title tw-mb-0">Assign Plan</h5>
+          <p class="tw-text-sm tw-text-muted tw-mb-0 tw-mt-0.5">{{ selectedSublabelForPlan?.brand_name }}</p>
+        </div>
+        <button type="button" class="btn-close tw-mt-1" (click)="closeAssignPlanModal()"></button>
+      </div>
+
+      <div class="modal-body tw-flex tw-flex-col tw-gap-4 tw-pb-2">
+
+        <!-- Info: assigning a paid plan — no payment collected -->
+        <div *ngIf="selectedPlanIsPaid()"
+             class="tw-flex tw-items-start tw-gap-2 tw-bg-blue-50 tw-border tw-border-blue-200 tw-rounded-lg tw-px-3 tw-py-2.5 tw-text-sm tw-text-blue-800">
+          <app-icon name="info" class="tw-shrink-0 tw-mt-0.5 tw-text-blue-400" />
+          <span>No payment will be collected. The plan activates immediately without recurring billing — the sublabel won't be charged unless they set up their own PayPal subscription.</span>
+        </div>
+
+        <!-- Warning: sublabel has active paid plan -->
+        <div *ngIf="selectedSublabelHasActivePaidPlan"
+             class="tw-flex tw-items-start tw-gap-2 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-3 tw-py-2.5 tw-text-sm tw-text-amber-800">
+          <app-icon name="alert-triangle" class="tw-shrink-0 tw-mt-0.5 tw-text-amber-500" />
+          <span>
+            This sublabel currently has an active paid plan
+            <strong>{{ selectedSublabelForPlan?.plan_name }}</strong>.
+            Reassigning will override it directly — no refund or proration is applied.
+          </span>
+        </div>
+
+        <!-- Controls row: billing toggle + search -->
+        <div class="tw-flex tw-flex-col sm:tw-flex-row tw-gap-3 tw-items-start sm:tw-items-center tw-justify-between">
+
+          <!-- Billing cycle toggle -->
+          <div class="sub-tab-toggle" role="group" aria-label="Billing cycle">
+            <button type="button" class="sub-tab-btn"
+                    [class.sub-tab-btn-active]="assignBillingCycle === 'monthly'"
+                    (click)="assignBillingCycle = 'monthly'">
+              Monthly
+            </button>
+            <button type="button" class="sub-tab-btn"
+                    [class.sub-tab-btn-active]="assignBillingCycle === 'annual'"
+                    (click)="assignBillingCycle = 'annual'">
+              Annual
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div class="tw-relative tw-w-full sm:tw-w-56">
+            <app-icon name="search" class="tw-absolute tw-left-3 tw-top-1/2 -tw-translate-y-1/2 tw-text-muted tw-pointer-events-none" />
+            <input type="text" class="form-control tw-pl-9 tw-py-1.5 tw-text-sm"
+                   placeholder="Search plans..."
+                   [(ngModel)]="planSearchQuery" />
+          </div>
+        </div>
+
+        <!-- Plan cards grid -->
+        <div class="tw-overflow-y-auto tw-max-h-[52vh] tw-pr-1">
+          <div *ngIf="availablePlans.length === 0" class="tw-flex tw-justify-center tw-py-10">
+            <div class="spinner-border text-secondary spinner-border-sm" role="status"></div>
+          </div>
+
+          <div *ngIf="availablePlans.length > 0 && filteredPlans.length === 0"
+               class="tw-text-center tw-text-muted tw-py-8 tw-text-sm">
+            No plans match "{{ planSearchQuery }}"
+          </div>
+
+          <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-3" *ngIf="filteredPlans.length > 0">
+            <div *ngFor="let plan of filteredPlans"
+                 class="assign-plan-card"
+                 [class.assign-plan-card--selected]="assignPlanId === plan.id"
+                 [class.assign-plan-card--current]="selectedSublabelForPlan?.plan_id === plan.id"
+                 (click)="assignPlanId = plan.id">
+
+              <!-- Top row: name + badges -->
+              <div class="tw-flex tw-items-start tw-justify-between tw-gap-2 tw-mb-2">
+                <span class="tw-font-semibold tw-text-sm tw-text-[var(--color-heading)] tw-leading-snug">{{ plan.name }}</span>
+                <div class="tw-flex tw-gap-1 tw-shrink-0">
+                  <span *ngIf="!plan.is_public"
+                        class="status-badge status-secondary tw-text-[10px]">Hidden</span>
+                  <span *ngIf="selectedSublabelForPlan?.plan_id === plan.id"
+                        class="status-badge status-info tw-text-[10px]">Current</span>
+                </div>
+              </div>
+
+              <!-- Price -->
+              <div class="tw-mb-3">
+                <span *ngIf="plan.price_monthly === 0" class="tw-text-xl tw-font-bold tw-text-[var(--color-heading)]">Free</span>
+                <ng-container *ngIf="plan.price_monthly > 0">
+                  <span class="tw-text-xl tw-font-bold tw-text-[var(--color-heading)]">
+                    ₱{{ (assignBillingCycle === 'monthly' ? plan.price_monthly : plan.price_annual) | number }}
+                  </span>
+                  <span class="tw-text-xs tw-text-muted tw-ml-1">
+                    /{{ assignBillingCycle === 'monthly' ? 'mo' : 'yr' }}
+                  </span>
+                </ng-container>
+              </div>
+
+              <!-- Key limits -->
+              <div class="tw-flex tw-flex-col tw-gap-0.5 tw-text-xs tw-text-muted">
+                <div class="tw-flex tw-justify-between">
+                  <span>Artists</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_artists) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between">
+                  <span>Releases / artist</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">{{ limitLabel(plan.limit_releases_per_artist) }}</span>
+                </div>
+                <div class="tw-flex tw-justify-between">
+                  <span>Storage</span>
+                  <span class="tw-font-medium tw-text-[var(--color-body)]">
+                    {{ plan.limit_storage_gb === null ? '∞' : plan.limit_storage_gb + ' GB' }}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAssignPlanModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="!assignPlanId || assignPlanSubmitting" (click)="onAssignPlanSubmit()">
+          <app-icon *ngIf="assignPlanSubmitting" name="spinner" class="tw-mr-1" />
+          {{ assignPlanSubmitting ? 'Saving...' : 'Assign Plan' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="showAssignPlanModal" (click)="closeAssignPlanModal()"></div>
 
 <!-- Add Earning Modal (parent recording for sublabel) -->
 <app-sublabel-add-earning-modal

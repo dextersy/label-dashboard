@@ -20,6 +20,7 @@ import { SublabelAddEarningModalComponent } from '../components/sublabel-add-ear
 import { FeeSettings } from '../../../services/admin.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { ConfirmationService } from '../../../services/confirmation.service';
+import { SubscriptionService, AdminPlan } from '../../../services/subscription.service';
 
 @Component({
     selector: 'app-labels-sublabels',
@@ -49,6 +50,34 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   selectedSublabelForPayments: ChildBrand | null = null;
   showAddEarningModal: boolean = false;
   selectedSublabelForEarning: ChildBrand | null = null;
+  showAssignPlanModal: boolean = false;
+  selectedSublabelForPlan: ChildBrand | null = null;
+  availablePlans: AdminPlan[] = [];
+  assignPlanId: number | null = null;
+  assignBillingCycle: 'monthly' | 'annual' = 'monthly';
+  assignPlanSubmitting: boolean = false;
+  planSearchQuery: string = '';
+
+  selectedPlanIsPaid(): boolean {
+    if (!this.assignPlanId) return false;
+    const plan = this.availablePlans.find(p => p.id === this.assignPlanId);
+    return !!plan && plan.price_monthly > 0;
+  }
+
+  /** True when the sublabel being assigned already has an active paid plan. */
+  get selectedSublabelHasActivePaidPlan(): boolean {
+    return !!this.selectedSublabelForPlan?.has_active_paypal_subscription;
+  }
+
+  get filteredPlans(): AdminPlan[] {
+    const q = this.planSearchQuery.trim().toLowerCase();
+    if (!q) return this.availablePlans;
+    return this.availablePlans.filter(p => p.name.toLowerCase().includes(q));
+  }
+
+  limitLabel(value: number | null): string {
+    return value === null ? '∞' : value.toLocaleString();
+  }
   sublabelCreationState: SublabelCreationState = { inProgress: false, pendingName: '', pollCount: 0, maxPollCount: 60 };
   domainVerificationState: DomainVerificationState = { inProgress: false, pendingDomain: '', pollCount: 0, maxPollCount: 60 };
   private subscriptions: Subscription[] = [];
@@ -102,6 +131,18 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
           case 'No domains': return '<span class="status-badge status-secondary">No domains</span>';
           default:           return '<span class="status-badge status-secondary">Unknown</span>';
         }
+      }
+    },
+    {
+      key: 'plan_name',
+      label: 'Plan',
+      type: 'text',
+      sortable: true,
+      align: 'center',
+      renderHtml: true,
+      formatter: (item: ChildBrand) => {
+        const name = item.plan_name || 'No Plan';
+        return `<span class="status-badge status-secondary">${name}</span>`;
       }
     },
     {
@@ -199,6 +240,11 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       handler: (item) => this.openFeatureTogglesModal(item)
     },
     {
+      icon: 'tag',
+      label: 'Assign Plan',
+      handler: (item) => this.openAssignPlanModal(item)
+    },
+    {
       icon: 'currency',
       label: 'Pay Out',
       handler: (item) => this.openPayoutModal(item)
@@ -232,7 +278,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private sanitizer: DomSanitizer,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private subscriptionService: SubscriptionService
   ) {}
 
   ngOnInit(): void {
@@ -781,6 +828,69 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       this.earningsBreakdownType = 'platform_fees';
       this.showEarningsBreakdownModal = true;
     }
+  }
+
+  // Assign Plan Modal handlers
+  openAssignPlanModal(childBrand: ChildBrand): void {
+    this.selectedSublabelForPlan = childBrand;
+    this.assignPlanId = childBrand.plan_id ?? null;
+    this.assignBillingCycle = 'monthly';
+    this.showAssignPlanModal = true;
+    if (this.availablePlans.length === 0) {
+      this.subscriptionService.getAdminPlans().subscribe({
+        next: ({ plans }) => { this.availablePlans = plans; },
+        error: () => this.notificationService.showError('Failed to load plans')
+      });
+    }
+  }
+
+  closeAssignPlanModal(): void {
+    this.showAssignPlanModal = false;
+    this.selectedSublabelForPlan = null;
+    this.assignPlanId = null;
+    this.assignPlanSubmitting = false;
+    this.planSearchQuery = '';
+  }
+
+  async onAssignPlanSubmit(): Promise<void> {
+    if (!this.selectedSublabelForPlan || !this.assignPlanId) return;
+    const parentBrandId = this.authService.currentUserValue?.brand_id;
+    if (!parentBrandId) return;
+
+    if (this.selectedSublabelHasActivePaidPlan) {
+      const newPlan = this.availablePlans.find(p => p.id === this.assignPlanId);
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Override existing paid plan',
+        message: `${this.selectedSublabelForPlan.brand_name} currently has an active paid plan (${this.selectedSublabelForPlan.plan_name}). Assigning a new plan will cancel their existing PayPal subscription immediately — they will not be refunded for unused time.`,
+        warning: 'This action cannot be undone. The sublabel\'s PayPal billing will stop at once.',
+        confirmText: `Assign ${newPlan?.name ?? 'plan'}`,
+        cancelText: 'Cancel',
+        type: 'warning',
+      });
+      if (!confirmed) return;
+    }
+
+    this.assignPlanSubmitting = true;
+    this.subscriptionService.assignSublabelPlan(parentBrandId, this.selectedSublabelForPlan.brand_id, this.assignPlanId, this.assignBillingCycle).subscribe({
+      next: (result) => {
+        const suffix = result.paypal_cancelled ? ' (PayPal subscription cancelled)' : '';
+        this.notificationService.showSuccess(`Plan "${result.plan_name}" assigned to ${this.selectedSublabelForPlan!.brand_name}${suffix}`);
+        // Update the local data so the table reflects immediately
+        const brand = this.childBrands.find(b => b.brand_id === this.selectedSublabelForPlan!.brand_id);
+        if (brand) {
+          brand.plan_id = result.plan_id;
+          brand.plan_name = result.plan_name;
+          brand.has_active_paypal_subscription = false;
+        }
+        this.applySorting();
+        this.closeAssignPlanModal();
+      },
+      error: (error) => {
+        const msg = error.error?.error || 'Failed to assign plan';
+        this.notificationService.showError(msg);
+        this.assignPlanSubmitting = false;
+      }
+    });
   }
 
   getAmountClass(amount: number | undefined): string {

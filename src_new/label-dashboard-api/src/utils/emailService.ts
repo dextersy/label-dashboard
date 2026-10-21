@@ -298,6 +298,9 @@ export const sendBrandedEmail = async (
     case 'subscription_cancelled_email':
       subject = `Your ${templateData.PLAN_NAME} subscription for ${templateData.OWN_BRAND_NAME} has been cancelled`;
       break;
+    case 'subscription_plan_assigned_email':
+      subject = `Your plan for ${templateData.OWN_BRAND_NAME} has been updated to ${templateData.NEW_PLAN_NAME}`;
+      break;
     case 'subscription_renewal_email':
       subject = `Your ${templateData.PLAN_NAME} for ${templateData.OWN_BRAND_NAME} has been renewed`;
       break;
@@ -1814,6 +1817,36 @@ export const sendSubscriptionPlanActivatedEmail = async (
     }, ctx.senderBrand.id);
   } catch (error) {
     console.error('sendSubscriptionPlanActivatedEmail error:', error);
+    return false;
+  }
+};
+
+export const sendSubscriptionPlanAssignedEmail = async (
+  brandId: number,
+  previousPlanName: string,
+  newPlanName: string,
+  paypalCancelled: boolean = false,
+): Promise<boolean> => {
+  try {
+    const ctx = await buildSubscriptionEmailContext(brandId);
+    if (!ctx) return false;
+
+    const paypalNote = paypalCancelled
+      ? `<div style="font-size: 14px; color: #333333; background-color: #fff8e1; border-left: 3px solid #f59e0b; padding: 12px 16px; line-height: 1.6; margin-top: 12px;">Your previous PayPal subscription has been cancelled and no further charges will be made.</div>`
+      : '';
+
+    return await sendBrandedEmail(ctx.adminEmails, 'subscription_plan_assigned_email', {
+      BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
+      BRAND_LOGO_HTML: ctx.brandLogoHtml,
+      BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
+      PREVIOUS_PLAN_NAME: escapeHtml(previousPlanName),
+      NEW_PLAN_NAME: escapeHtml(newPlanName),
+      DASHBOARD_URL: ctx.dashboardUrl,
+      PAYPAL_CANCELLED_NOTE: paypalNote,
+    }, ctx.senderBrand.id);
+  } catch (error) {
+    console.error('sendSubscriptionPlanAssignedEmail error:', error);
     return false;
   }
 };

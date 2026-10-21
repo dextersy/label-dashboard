@@ -13,6 +13,8 @@ import { promisify } from 'util';
 import { createSubdomainARecord, deleteSubdomainARecord } from '../utils/dnsService';
 import { addDomainToSSL, removeDomainFromSSL, triggerLegoRun, shouldAutoAddToSSL, logSSLOperation, isMeltRecordsSubdomain } from '../utils/sslManagementService';
 import { clearOriginsCache } from '../middleware/csrf';
+import { cancelPayPalSubscription } from '../services/subscriptionService';
+import { sendSubscriptionPlanAssignedEmail } from '../utils/emailService';
 
 export const getBrandByDomain = async (req: Request, res: Response) => {
   try {
@@ -1157,6 +1159,7 @@ interface ChildBrandData {
   total_royalties: number;
   artist_payments: number;
   payments: number;
+  add_on_payments: number;
   platform_fees: number;
   music_platform_fees: number;
   event_platform_fees: number;
@@ -1168,6 +1171,9 @@ interface ChildBrandData {
     status: string;
     brand_id: number;
   }>;
+  plan_id: number | null;
+  plan_name: string | null;
+  has_active_paypal_subscription: boolean;
 }
 
 export const getChildBrands = async (req: Request, res: Response) => {
@@ -1186,6 +1192,22 @@ export const getChildBrands = async (req: Request, res: Response) => {
     }
 
     const childBrandIds = childBrands.map(b => b.id);
+
+    // Fetch current plan for each child brand
+    const brandPlans = await BrandPlan.findAll({
+      where: { brand_id: { [Op.in]: childBrandIds } },
+      include: [{ model: Plan, as: 'plan', attributes: ['id', 'name'] }],
+      attributes: ['brand_id', 'plan_id', 'billing_cycle', 'status', 'paypal_subscription_id']
+    }) as any[];
+    const planByBrand = new Map<number, { plan_id: number; plan_name: string; billing_cycle: string; has_active_paypal_subscription: boolean }>();
+    for (const bp of brandPlans) {
+      planByBrand.set(bp.brand_id, {
+        plan_id: bp.plan_id,
+        plan_name: bp.plan?.name ?? 'Unknown',
+        billing_cycle: bp.billing_cycle,
+        has_active_paypal_subscription: !!bp.paypal_subscription_id,
+      });
+    }
 
     // Normalize date filters once for all queries
     let startDateFilter: Date | undefined, endDateFilter: Date | undefined;
@@ -1496,7 +1518,10 @@ export const getChildBrands = async (req: Request, res: Response) => {
         fundraiser_platform_fees: fundraiserPlatformFees,
         balance: balance,
         status: calculateSublabelStatus(domainData),
-        domains: domainData
+        domains: domainData,
+        plan_id: planByBrand.get(bId)?.plan_id ?? null,
+        plan_name: planByBrand.get(bId)?.plan_name ?? null,
+        has_active_paypal_subscription: planByBrand.get(bId)?.has_active_paypal_subscription ?? false,
       };
     });
 
@@ -1504,6 +1529,89 @@ export const getChildBrands = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error fetching child brands:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// PUT /api/brands/:brandId/sublabels/:sublabelId/plan
+// Allows a parent brand admin to assign/override a plan for a sublabel brand.
+// ---------------------------------------------------------------------------
+export const assignSublabelPlan = async (req: Request, res: Response) => {
+  try {
+    const parentBrandId = parseInt(req.params.brandId as string, 10);
+    const sublabelId = parseInt(req.params.sublabelId as string, 10);
+    const { plan_id, billing_cycle } = req.body as { plan_id: number; billing_cycle: 'monthly' | 'annual' };
+
+    if (!plan_id || !billing_cycle) {
+      res.status(400).json({ error: 'plan_id and billing_cycle are required' });
+      return;
+    }
+
+    // Verify the sublabel belongs to the parent brand
+    const sublabel = await Brand.findOne({ where: { id: sublabelId, parent_brand: parentBrandId, is_active: true } });
+    if (!sublabel) {
+      res.status(404).json({ error: 'Sublabel not found or does not belong to this brand' });
+      return;
+    }
+
+    const plan = await Plan.findOne({ where: { id: plan_id, is_active: true } });
+    if (!plan) {
+      res.status(404).json({ error: 'Plan not found' });
+      return;
+    }
+
+    // Fetch existing BrandPlan (with plan name) before upserting, so we can
+    // record the previous plan name in the notification email.
+    const existingBrandPlan = await BrandPlan.findOne({
+      where: { brand_id: sublabelId },
+      include: [{ model: Plan, as: 'plan' }],
+    }) as (BrandPlan & { plan?: Plan }) | null;
+
+    const previousPlanName: string = (existingBrandPlan as any)?.plan?.name ?? 'None';
+
+    // Cancel any live PayPal subscriptions before overriding the plan
+    let wasPaypalCancelled = false;
+    if (existingBrandPlan?.pending_paypal_subscription_id) {
+      await cancelPayPalSubscription(existingBrandPlan.pending_paypal_subscription_id);
+      wasPaypalCancelled = true;
+    }
+    if (existingBrandPlan?.paypal_subscription_id) {
+      await cancelPayPalSubscription(existingBrandPlan.paypal_subscription_id);
+      wasPaypalCancelled = true;
+    }
+
+    if (existingBrandPlan) {
+      await existingBrandPlan.update({
+        plan_id: plan.id,
+        billing_cycle,
+        started_at: new Date(),
+        ends_at: null,
+        status: 'active',
+        paypal_subscription_id: null,
+        pending_plan_id: null,
+        pending_billing_cycle: null,
+        pending_paypal_subscription_id: null,
+      });
+    } else {
+      await BrandPlan.create({
+        brand_id: sublabelId,
+        plan_id: plan.id,
+        billing_cycle,
+        started_at: new Date(),
+        ends_at: null,
+        status: 'active',
+        paypal_subscription_id: null,
+      } as any);
+    }
+
+    // Notify the sublabel's admins of the plan change
+    sendSubscriptionPlanAssignedEmail(sublabelId, previousPlanName, plan.name, wasPaypalCancelled)
+      .catch((err) => console.error('assignSublabelPlan: sendSubscriptionPlanAssignedEmail error:', err));
+
+    res.json({ success: true, plan_id: plan.id, plan_name: plan.name, billing_cycle, paypal_cancelled: wasPaypalCancelled });
+  } catch (error) {
+    console.error('Error assigning sublabel plan:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

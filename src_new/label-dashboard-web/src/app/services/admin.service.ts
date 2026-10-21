@@ -159,6 +159,9 @@ export interface ChildBrand {
   feature_music_workspace?: boolean;
   feature_campaigns_workspace?: boolean;
   feature_sublabels?: boolean;
+  plan_id?: number | null;
+  plan_name?: string | null;
+  has_active_paypal_subscription?: boolean;
 }
 
 export interface CreateSublabelResponse {

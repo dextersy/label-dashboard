@@ -1,5 +1,5 @@
 import express from 'express';
-import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getServerIp, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles, deactivateBrand } from '../controllers/brandController';
+import { getBrandByDomain, getBrandSettings, updateBrandSettings, uploadLogo, uploadFavicon, getServerIp, getDomains, addDomain, deleteDomain, verifyDomain, setPrimaryDomain, getChildBrands, createSublabel, assignSublabelPlan, getFeeSettings, updateFeeSettings, getFeatureToggles, updateFeatureToggles, deactivateBrand } from '../controllers/brandController';
 import { testLoyverseConnection, testWoocommerceConnection } from '../controllers/integrationController';
 import { addLabelPaymentMethod, getLabelPaymentMethods, updateLabelPaymentMethod, setDefaultLabelPaymentMethod, deleteLabelPaymentMethod, addLabelPayment, getLabelPayments, getLabelPaymentById, updateLabelPaymentStatus, getLabelPayoutSettings, updateLabelPayoutSettings } from '../controllers/labelPaymentController';
 import { getLabelFinanceDashboard, getLabelFinanceBreakdown } from '../controllers/labelFinanceController';
@@ -41,6 +41,7 @@ router.put('/:brandId/domains/:domainName/primary', authenticateToken, requireAd
 // Child brands (sublabel) routes
 router.get('/:brandId/sublabels', authenticateToken, requireAdmin, getChildBrands);
 router.post('/:brandId/sublabels', authenticateToken, requireSuperAdmin, createSublabel);
+router.put('/:brandId/sublabels/:sublabelId/plan', authenticateToken, requireAdmin, assignSublabelPlan);
 router.post('/:brandId/deactivate', authenticateToken, requireSuperAdmin, deactivateBrand);
 
 // Fee settings routes

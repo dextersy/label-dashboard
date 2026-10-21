@@ -268,6 +268,84 @@
 
 }
 
+// ── Assign Plan modal — plan selection cards ─────────────────────────────
+
+.assign-plan-card {
+  position: relative;
+  border: 1.5px solid var(--color-border-subtle, #e5e7eb);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  background: #fff;
+  user-select: none;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--brand-color, #3b82f6) 40%, #e5e7eb);
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 3%, #fff);
+  }
+
+  &--selected {
+    border-color: var(--brand-color, #3b82f6);
+    background: color-mix(in srgb, var(--brand-color, #3b82f6) 5%, #fff);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #3b82f6) 18%, transparent);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--brand-color, #3b82f6);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 8L6.5 11L12.5 5' stroke='white' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-size: 14px;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+}
+
+// Reuse billing cycle toggle from subscription page
+.sub-tab-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #f1f3f5;
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.sub-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #6c757d;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  white-space: nowrap;
+
+  &:hover:not(.sub-tab-btn-active) {
+    background: rgba(0, 0, 0, 0.05);
+    color: #343a40;
+  }
+
+  &.sub-tab-btn-active {
+    background: #fff;
+    color: var(--brand-color, #3b82f6);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  }
+}
+
 // Responsive adjustments
 @media (max-width: 768px) {
   .child-brands-tab {

@@ -207,4 +207,11 @@ export class SubscriptionService {
   updateAdminPlan(id: number, data: PlanInput): Observable<{ plan: AdminPlan }> {
     return this.http.put<{ plan: AdminPlan }>(`${this.apiUrl}/admin/plans/${id}`, data);
   }
+
+  assignSublabelPlan(parentBrandId: number, sublabelId: number, planId: number, billingCycle: 'monthly' | 'annual'): Observable<{ success: boolean; plan_id: number; plan_name: string; billing_cycle: string; paypal_cancelled: boolean }> {
+    return this.http.put<{ success: boolean; plan_id: number; plan_name: string; billing_cycle: string; paypal_cancelled: boolean }>(
+      `${environment.apiUrl}/brands/${parentBrandId}/sublabels/${sublabelId}/plan`,
+      { plan_id: planId, billing_cycle: billingCycle }
+    );
+  }
 }
