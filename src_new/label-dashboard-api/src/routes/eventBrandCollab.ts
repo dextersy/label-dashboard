@@ -3,6 +3,8 @@ import {
   listBrandCollaborators,
   inviteBrandCollaborator,
   revokeBrandCollaborator,
+  resendBrandCollabInvite,
+  updateBrandCollabRole,
   getBrandCollabInviteInfo,
   acceptBrandCollabInvite,
   searchBrands,
@@ -27,7 +29,9 @@ router.post('/accept', acceptBrandCollabInvite);
 // Owner-only: manage brand collaborators for an event
 router.get('/:id/brand-collaborators', requireAdmin, listBrandCollaborators);
 router.post('/:id/brand-collaborators', requireAdmin, inviteBrandCollaborator);
+router.patch('/:id/brand-collaborators', requireAdmin, updateBrandCollabRole);
 router.delete('/:id/brand-collaborators', requireAdmin, revokeBrandCollaborator);
+router.post('/:id/brand-collaborators/resend', requireAdmin, resendBrandCollabInvite);
 
 // Search brands for invite dropdown (admin only)
 router.get('/:id/search-brands', requireAdmin, searchBrands);

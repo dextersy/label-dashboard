@@ -281,6 +281,79 @@ export const setupEventInviteProfile = async (req: Request, res: Response) => {
   }
 };
 
+export const resendCollaboratorInvite = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id as string, 10);
+    const { user_id } = req.body;
+
+    if (!user_id) return res.status(400).json({ error: 'user_id is required' });
+
+    const event = await Event.findOne({ where: { id: eventId, brand_id: req.user.brand_id } });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const access = await EventAccess.findOne({
+      where: { event_id: eventId, user_id },
+      include: [{ model: User, as: 'user' }],
+    });
+    if (!access) return res.status(404).json({ error: 'Collaborator not found' });
+    if (access.status === 'Accepted') return res.status(400).json({ error: 'Invite already accepted' });
+
+    const inviteHash = crypto.randomBytes(32).toString('hex');
+    await access.update({ invite_hash: inviteHash, status: 'Invited' });
+
+    const brand = await Brand.findByPk(req.user.brand_id);
+    const roleLabel = access.role === 'manager' ? 'Manager' : 'Viewer';
+    const frontendUrl = await getBrandFrontendUrl(req.user.brand_id);
+    const inviteUrl = `${frontendUrl}/event-invite?hash=${inviteHash}`;
+
+    await sendBrandedEmail([access.invite_email], 'event_invite_email', {
+      event_title: event.title,
+      role_label: roleLabel,
+      url: inviteUrl,
+      brand_color: brand?.brand_color || '#1595e7',
+      logo: brand?.logo_url || '',
+      brand_name: brand?.brand_name || '',
+    }, req.user.brand_id);
+
+    createNotification(
+      user_id,
+      req.user.brand_id,
+      'event_invite',
+      `You've been invited to ${event.title}`,
+      `You have been invited as a ${roleLabel}. Click to accept.`,
+      `/event-invite?hash=${inviteHash}`
+    ).catch(() => {});
+
+    res.json({ message: 'Invite resent successfully' });
+  } catch (error) {
+    console.error('resendCollaboratorInvite error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateCollaboratorRole = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id as string, 10);
+    const { user_id, role } = req.body;
+
+    if (!user_id || !role) return res.status(400).json({ error: 'user_id and role are required' });
+    if (role !== 'viewer' && role !== 'manager') return res.status(400).json({ error: 'Role must be viewer or manager' });
+
+    const event = await Event.findOne({ where: { id: eventId, brand_id: req.user.brand_id } });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const access = await EventAccess.findOne({ where: { event_id: eventId, user_id } });
+    if (!access) return res.status(404).json({ error: 'Collaborator not found' });
+
+    await access.update({ role });
+
+    res.json({ message: 'Role updated successfully' });
+  } catch (error) {
+    console.error('updateCollaboratorRole error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getInviteInfo = async (req: Request, res: Response) => {
   try {
     const hash = req.query.hash as string;

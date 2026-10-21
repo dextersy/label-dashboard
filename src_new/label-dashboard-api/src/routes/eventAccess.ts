@@ -3,6 +3,8 @@ import {
   listCollaborators,
   inviteCollaborator,
   revokeCollaborator,
+  resendCollaboratorInvite,
+  updateCollaboratorRole,
   acceptEventInvite,
   setupEventInviteProfile,
   getInviteInfo,
@@ -20,6 +22,8 @@ router.post('/setup-profile', inviteRateLimit, setupEventInviteProfile);
 // Authenticated: collaborator management (admin only)
 router.get('/:id/collaborators', authenticateToken, requireAdmin, listCollaborators);
 router.post('/:id/collaborators', authenticateToken, requireAdmin, inviteCollaborator);
+router.patch('/:id/collaborators', authenticateToken, requireAdmin, updateCollaboratorRole);
 router.delete('/:id/collaborators', authenticateToken, requireAdmin, revokeCollaborator);
+router.post('/:id/collaborators/resend', authenticateToken, requireAdmin, resendCollaboratorInvite);
 
 export default router;

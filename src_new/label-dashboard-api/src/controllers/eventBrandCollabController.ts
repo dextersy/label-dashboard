@@ -277,6 +277,102 @@ export const searchBrands = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// ─── Resend brand collab invite (owner-only, Pending only) ───────────────────
+
+export const resendBrandCollabInvite = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id as string, 10);
+    const { brand_id: brand_id_raw } = req.body;
+    const brand_id = parseInt(brand_id_raw as string, 10);
+
+    if (!brand_id_raw) return res.status(400).json({ error: 'brand_id is required' });
+    if (isNaN(brand_id)) return res.status(400).json({ error: 'Invalid brand_id' });
+
+    const event = await Event.findOne({ where: { id: eventId, brand_id: req.user.brand_id } });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const collab = await EventBrandCollaboration.findOne({ where: { event_id: eventId, brand_id } });
+    if (!collab) return res.status(404).json({ error: 'Brand collaborator not found' });
+    if (collab.status === 'Accepted') return res.status(400).json({ error: 'Invite already accepted' });
+
+    const inviteHash = crypto.randomBytes(32).toString('hex');
+    await collab.update({ invite_hash: inviteHash, status: 'Pending' });
+
+    const targetBrand = await Brand.findByPk(brand_id);
+    const ownerBrand = await Brand.findByPk(req.user.brand_id);
+    const roleLabel = collab.role === 'manager' ? 'Manager' : 'Viewer';
+
+    const adminUsers = await User.findAll({
+      where: { brand_id, is_admin: true },
+      attributes: ['id', 'email_address'],
+    });
+
+    if (adminUsers.length > 0) {
+      const ticketingParentId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+      const isTicketingBrand = ticketingParentId > 0 && (targetBrand as any).parent_brand === ticketingParentId;
+      const frontendUrl = isTicketingBrand
+        ? (process.env.TICKETING_FRONTEND_URL || '').replace(/\/$/, '')
+        : await getBrandFrontendUrl(brand_id);
+      const inviteUrl = `${frontendUrl}/event-brand-collab-invite?hash=${inviteHash}`;
+
+      const adminEmails = adminUsers.map((u: any) => u.email_address).filter(Boolean);
+      if (adminEmails.length > 0) {
+        await sendBrandedEmail(adminEmails, 'event_brand_collab_invite_email', {
+          event_title: event.title,
+          role_label: roleLabel,
+          inviting_brand_name: ownerBrand?.brand_name || '',
+          url: inviteUrl,
+          brand_color: ownerBrand?.brand_color || '#1595e7',
+          logo: ownerBrand?.logo_url || '',
+          brand_name: ownerBrand?.brand_name || '',
+        }, req.user.brand_id);
+      }
+
+      const adminIds = adminUsers.map((u: any) => u.id as number);
+      createNotificationsForUsers(
+        adminIds,
+        brand_id,
+        'event_brand_collab_invite',
+        `${ownerBrand?.brand_name || 'A brand'} invited you to collaborate on ${event.title}`,
+        `You've been invited as a ${roleLabel}. Click to accept.`,
+        `/event-brand-collab-invite?hash=${inviteHash}`
+      ).catch(() => {});
+    }
+
+    res.json({ message: 'Brand invite resent successfully' });
+  } catch (error) {
+    console.error('resendBrandCollabInvite error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ─── Update brand collaborator role (owner-only) ──────────────────────────────
+
+export const updateBrandCollabRole = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id as string, 10);
+    const { brand_id: brand_id_raw, role } = req.body;
+    const brand_id = parseInt(brand_id_raw as string, 10);
+
+    if (!brand_id_raw || !role) return res.status(400).json({ error: 'brand_id and role are required' });
+    if (isNaN(brand_id)) return res.status(400).json({ error: 'Invalid brand_id' });
+    if (role !== 'viewer' && role !== 'manager') return res.status(400).json({ error: 'Role must be viewer or manager' });
+
+    const event = await Event.findOne({ where: { id: eventId, brand_id: req.user.brand_id } });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const collab = await EventBrandCollaboration.findOne({ where: { event_id: eventId, brand_id } });
+    if (!collab) return res.status(404).json({ error: 'Brand collaborator not found' });
+
+    await collab.update({ role });
+
+    res.json({ message: 'Role updated successfully' });
+  } catch (error) {
+    console.error('updateBrandCollabRole error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // ─── Get accepted brand collaborators for an event (public) ──────────────────
 // Used by the ticket buy page to display all collaborating brands.
 

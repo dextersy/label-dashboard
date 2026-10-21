@@ -74,6 +74,7 @@ export class EventAccessTabComponent implements OnChanges {
   sendingInvite = false;
   inviteEmail = '';
   inviteRole: 'viewer' | 'manager' = 'viewer';
+  resendingInviteUserId: number | null = null;
 
   // ── Brand collaborators ─────────────────────────────────────────────────────
   brandCollaborators: BrandCollab[] = [];
@@ -85,6 +86,8 @@ export class EventAccessTabComponent implements OnChanges {
   brandInviteRole: 'viewer' | 'manager' = 'viewer';
   sendingBrandInvite = false;
   showBrandDropdown = false;
+  resendingBrandInviteId: number | null = null;
+  editingBrandRoleId: number | null = null;
   private brandSearch$ = new Subject<string>();
 
   private apiUrl = environment.apiUrl;
@@ -172,6 +175,35 @@ export class EventAccessTabComponent implements OnChanges {
     });
   }
 
+  resendCollaboratorInvite(c: Collaborator): void {
+    this.resendingInviteUserId = c.user_id;
+    this.http.post<any>(
+      `${this.apiUrl}/event-access/${this.selectedEvent.id}/collaborators/resend`,
+      { user_id: c.user_id },
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: () => {
+        this.resendingInviteUserId = null;
+        this.notificationService.showSuccess('Invite resent successfully.');
+      },
+      error: () => { this.resendingInviteUserId = null; },
+    });
+  }
+
+  updateCollaboratorRole(c: Collaborator, role: 'viewer' | 'manager'): void {
+    this.http.patch<any>(
+      `${this.apiUrl}/event-access/${this.selectedEvent.id}/collaborators`,
+      { user_id: c.user_id, role },
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Role updated.');
+        this.loadCollaborators();
+      },
+      error: () => {},
+    });
+  }
+
   removeCollaborator(c: Collaborator): void {
     this.confirmationService.confirm({
       title: 'Remove team member',
@@ -234,6 +266,36 @@ export class EventAccessTabComponent implements OnChanges {
         this.loadBrandCollaborators();
       },
       error: () => { this.sendingBrandInvite = false; },
+    });
+  }
+
+  resendBrandInvite(c: BrandCollab): void {
+    this.resendingBrandInviteId = c.brand_id;
+    this.http.post<any>(
+      `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators/resend`,
+      { brand_id: c.brand_id },
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: () => {
+        this.resendingBrandInviteId = null;
+        this.notificationService.showSuccess('Invite resent successfully.');
+      },
+      error: () => { this.resendingBrandInviteId = null; },
+    });
+  }
+
+  updateBrandCollabRole(c: BrandCollab, role: 'viewer' | 'manager'): void {
+    this.http.patch<any>(
+      `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators`,
+      { brand_id: c.brand_id, role },
+      { headers: this.getHeaders() }
+    ).subscribe({
+      next: () => {
+        this.editingBrandRoleId = null;
+        this.notificationService.showSuccess('Role updated.');
+        this.loadBrandCollaborators();
+      },
+      error: () => {},
     });
   }
 
@@ -360,11 +422,29 @@ export class EventAccessTabComponent implements OnChanges {
   get tableActions(): TableAction[] {
     return [
       {
+        icon: 'refresh',
+        label: 'Resend Invite',
+        handler: (c: Collaborator) => this.resendCollaboratorInvite(c),
+        hidden: (c: Collaborator) => c.status === 'Accepted',
+      },
+      {
+        icon: 'eye',
+        label: 'Set as Viewer',
+        handler: (c: Collaborator) => this.updateCollaboratorRole(c, 'viewer'),
+        hidden: (c: Collaborator) => c.role === 'viewer',
+      },
+      {
+        icon: 'edit',
+        label: 'Set as Manager',
+        handler: (c: Collaborator) => this.updateCollaboratorRole(c, 'manager'),
+        hidden: (c: Collaborator) => c.role === 'manager',
+      },
+      {
         icon: 'trash',
         label: 'Remove',
         type: 'danger',
         handler: (c: Collaborator) => this.removeCollaborator(c),
-      }
+      },
     ];
   }
 

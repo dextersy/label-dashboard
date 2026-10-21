@@ -63,13 +63,38 @@
               </div>
             </div>
 
-            <!-- Remove button -->
-            <button type="button"
-                    class="brand-collab-card__remove"
-                    title="Remove"
-                    (click)="removeBrandCollaborator(c)">
-              <app-icon name="trash" iconOnly />
-            </button>
+            <!-- Actions -->
+            <div class="tw-flex tw-flex-col tw-gap-1 tw-items-end tw-flex-shrink-0">
+              <!-- Resend (Pending only) -->
+              <button *ngIf="c.status !== 'Accepted'"
+                      type="button"
+                      class="btn-xs btn-secondary"
+                      title="Resend invite"
+                      [disabled]="resendingBrandInviteId === c.brand_id"
+                      (click)="resendBrandInvite(c)">
+                <div class="loading-spinner" *ngIf="resendingBrandInviteId === c.brand_id"></div>
+                <app-icon name="refresh" *ngIf="resendingBrandInviteId !== c.brand_id" iconOnly />
+                <span>Resend</span>
+              </button>
+              <!-- Role toggle -->
+              <div *ngIf="editingBrandRoleId === c.brand_id" class="tw-flex tw-gap-1">
+                <button type="button" class="btn-xs" [class.btn-primary]="c.role === 'viewer'" [class.btn-secondary]="c.role !== 'viewer'"
+                        (click)="updateBrandCollabRole(c, 'viewer')">Viewer</button>
+                <button type="button" class="btn-xs" [class.btn-primary]="c.role === 'manager'" [class.btn-secondary]="c.role !== 'manager'"
+                        (click)="updateBrandCollabRole(c, 'manager')">Manager</button>
+                <button type="button" class="btn-xs btn-ghost" (click)="editingBrandRoleId = null">
+                  <app-icon name="x" iconOnly />
+                </button>
+              </div>
+              <div *ngIf="editingBrandRoleId !== c.brand_id" class="tw-flex tw-gap-1">
+                <button type="button" class="btn-xs btn-ghost" title="Change role" (click)="editingBrandRoleId = c.brand_id">
+                  <app-icon name="edit" iconOnly />
+                </button>
+                <button type="button" class="btn-xs btn-ghost tw-text-red-500" title="Remove" (click)="removeBrandCollaborator(c)">
+                  <app-icon name="trash" iconOnly />
+                </button>
+              </div>
+            </div>
 
           </div>
         </div>
