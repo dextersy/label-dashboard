@@ -281,28 +281,28 @@ export const sendBrandedEmail = async (
       subject = `We've got your payment for ${templateData.EVENT_TITLE} add-ons!`;
       break;
     case 'subscription_activated_email':
-      subject = `Your ${templateData.PLAN_NAME} subscription is now active`;
+      subject = `Your ${templateData.PLAN_NAME} for ${templateData.OWN_BRAND_NAME} is now active`;
       break;
     case 'subscription_past_due_email':
-      subject = `Action required: payment failed for your ${templateData.PLAN_NAME} subscription`;
+      subject = `Action required: payment failed for your ${templateData.PLAN_NAME} subscription for ${templateData.OWN_BRAND_NAME}`;
       break;
     case 'subscription_downgraded_email':
-      subject = `Your ${templateData.PLAN_NAME} subscription has ended`;
+      subject = `Your ${templateData.PLAN_NAME} subscription for ${templateData.OWN_BRAND_NAME} has ended`;
       break;
     case 'subscription_downgrade_scheduled_email':
-      subject = `Your plan change to ${templateData.NEW_PLAN_NAME} is scheduled`;
+      subject = `Your plan change to ${templateData.NEW_PLAN_NAME} for ${templateData.OWN_BRAND_NAME} is scheduled`;
       break;
     case 'subscription_plan_activated_email':
-      subject = `Your plan has changed to ${templateData.NEW_PLAN_NAME}`;
+      subject = `Your plan for ${templateData.OWN_BRAND_NAME} has changed to ${templateData.NEW_PLAN_NAME}`;
       break;
     case 'subscription_cancelled_email':
-      subject = `Your ${templateData.PLAN_NAME} subscription has been cancelled`;
+      subject = `Your ${templateData.PLAN_NAME} subscription for ${templateData.OWN_BRAND_NAME} has been cancelled`;
       break;
     case 'subscription_renewal_email':
-      subject = `Your ${templateData.PLAN_NAME} subscription has been renewed`;
+      subject = `Your ${templateData.PLAN_NAME} for ${templateData.OWN_BRAND_NAME} has been renewed`;
       break;
     case 'subscription_restored_email':
-      subject = `Your ${templateData.PLAN_NAME} subscription has been restored`;
+      subject = `Your ${templateData.PLAN_NAME} subscription for ${templateData.OWN_BRAND_NAME} has been restored`;
       break;
     default:
       subject = 'Notification';
@@ -1604,6 +1604,7 @@ export const sendSubscriptionActivatedEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PLAN_NAME: escapeHtml(planName),
       BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
       AMOUNT: escapeHtml(priceLabel),
@@ -1646,6 +1647,7 @@ export const sendSubscriptionRenewalEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PLAN_NAME: escapeHtml(planName),
       BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
       AMOUNT: escapeHtml(priceLabel),
@@ -1674,7 +1676,7 @@ const buildSubscriptionEmailContext = async (brandId: number) => {
     ? `<img src="${escapeHtml(senderBrand.logo_url)}" alt="${escapeHtml(senderBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
     : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(senderBrand.brand_name)}</div>`;
 
-  return { senderBrand, adminEmails, dashboardUrl, brandLogoHtml };
+  return { senderBrand, ownBrand: brand, adminEmails, dashboardUrl, brandLogoHtml };
 };
 
 export const sendSubscriptionRestoredEmail = async (
@@ -1697,6 +1699,7 @@ export const sendSubscriptionRestoredEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PLAN_NAME: escapeHtml(planName),
       BILLING_CYCLE: billingCycle === 'monthly' ? 'Monthly' : 'Annual',
       AMOUNT: escapeHtml(priceLabel),
@@ -1721,6 +1724,7 @@ export const sendSubscriptionPastDueEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PLAN_NAME: escapeHtml(planName),
       DASHBOARD_URL: ctx.dashboardUrl,
     }, ctx.senderBrand.id);
@@ -1745,6 +1749,7 @@ export const sendSubscriptionDowngradedEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PLAN_NAME: escapeHtml(planName),
       REASON: reasonLabel,
       DASHBOARD_URL: ctx.dashboardUrl,
@@ -1776,6 +1781,7 @@ export const sendSubscriptionDowngradeScheduledEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       CURRENT_PLAN_NAME: escapeHtml(currentPlanName),
       NEW_PLAN_NAME: escapeHtml(newPlanName),
       EFFECTIVE_DATE: effectiveDateLabel,
@@ -1801,6 +1807,7 @@ export const sendSubscriptionPlanActivatedEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PREVIOUS_PLAN_NAME: escapeHtml(previousPlanName),
       NEW_PLAN_NAME: escapeHtml(newPlanName),
       DASHBOARD_URL: ctx.dashboardUrl,
@@ -1826,6 +1833,7 @@ export const sendSubscriptionCancelledEmail = async (
       BRAND_NAME: escapeHtml(ctx.senderBrand.brand_name),
       BRAND_LOGO_HTML: ctx.brandLogoHtml,
       BRAND_COLOR: ctx.senderBrand.brand_color || '#333333',
+      OWN_BRAND_NAME: escapeHtml(ctx.ownBrand.brand_name),
       PLAN_NAME: escapeHtml(planName),
       EFFECTIVE_DATE: effectiveDateLabel,
       DASHBOARD_URL: ctx.dashboardUrl,
