@@ -1128,6 +1128,7 @@ async function getOrCreateEmailPreference(audienceUserId: number): Promise<Audie
       event_recommendations: true,
       organizer_updates: true,
       points_rewards: true,
+      connection_emails: true,
     },
   });
   return pref;
@@ -1142,6 +1143,7 @@ export const audienceGetEmailPreferences = async (req: Request, res: Response) =
       event_recommendations: pref.event_recommendations,
       organizer_updates: pref.organizer_updates,
       points_rewards: pref.points_rewards,
+      connection_emails: pref.connection_emails,
     });
   } catch (error) {
     console.error('audienceGetEmailPreferences error:', error);
@@ -1152,7 +1154,7 @@ export const audienceGetEmailPreferences = async (req: Request, res: Response) =
 export const audienceUpdateEmailPreferences = async (req: Request, res: Response) => {
   try {
     const user = (req as any).audienceUser as AudienceUser;
-    const { marketing_promos, event_recommendations, organizer_updates, points_rewards } = req.body;
+    const { marketing_promos, event_recommendations, organizer_updates, points_rewards, connection_emails } = req.body;
 
     const pref = await getOrCreateEmailPreference(user.id);
 
@@ -1161,6 +1163,7 @@ export const audienceUpdateEmailPreferences = async (req: Request, res: Response
       event_recommendations: event_recommendations !== undefined ? !!event_recommendations : pref.event_recommendations,
       organizer_updates: organizer_updates !== undefined ? !!organizer_updates : pref.organizer_updates,
       points_rewards: points_rewards !== undefined ? !!points_rewards : pref.points_rewards,
+      connection_emails: connection_emails !== undefined ? !!connection_emails : pref.connection_emails,
     });
 
     return res.json({
@@ -1168,6 +1171,7 @@ export const audienceUpdateEmailPreferences = async (req: Request, res: Response
       event_recommendations: pref.event_recommendations,
       organizer_updates: pref.organizer_updates,
       points_rewards: pref.points_rewards,
+      connection_emails: pref.connection_emails,
     });
   } catch (error) {
     console.error('audienceUpdateEmailPreferences error:', error);

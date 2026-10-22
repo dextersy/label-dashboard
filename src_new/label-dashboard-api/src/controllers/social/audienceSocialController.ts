@@ -1,10 +1,81 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
+import nodemailer from 'nodemailer';
 import AudienceConnection, { ConnectionStatus } from '../../models/AudienceConnection';
 import AudienceNotification from '../../models/AudienceNotification';
 import AudienceUser from '../../models/AudienceUser';
+import { AudienceEmailPreference } from '../../models';
 import Ticket from '../../models/Ticket';
 import { awardPoints } from '../../utils/audiencePoints';
+
+// ─── Email helpers ────────────────────────────────────────────────────────────
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+});
+
+function getAudienceFrontendUrl(): string {
+  return process.env.TICKETING_FRONTEND_URL || process.env.FRONTEND_URL || 'http://localhost:4201';
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+async function sendConnectionEmail(
+  recipientId: number,
+  actorName: string,
+  type: 'request' | 'accepted',
+): Promise<void> {
+  const recipient = await AudienceUser.findByPk(recipientId, {
+    attributes: ['id', 'email_address', 'first_name'],
+  });
+  if (!recipient) return;
+
+  const [pref] = await AudienceEmailPreference.findOrCreate({
+    where: { audience_user_id: recipientId },
+    defaults: { audience_user_id: recipientId, marketing_promos: true, event_recommendations: true, organizer_updates: true, points_rewards: true, connection_emails: true },
+  });
+  if (!pref.connection_emails) return;
+
+  const safeActorName = escapeHtml(actorName);
+  const safeFirstName = escapeHtml(recipient.first_name || 'there');
+  const platformName = process.env.PLATFORM_NAME || 'Your Scene';
+  const logoUrl = `${process.env.AUDIENCE_APP_URL || ''}/assets/logo-dark-bg.png`;
+  const connectionsUrl = `${getAudienceFrontendUrl()}/my-connections`;
+  const prefsUrl = `${getAudienceFrontendUrl()}/my-email-preferences`;
+
+  const templatePath = path.join(__dirname, '../../assets/templates/audience_connection_email.html');
+  let html = fs.readFileSync(templatePath, 'utf-8');
+
+  const subject = type === 'request'
+    ? `${safeActorName} wants to connect with you on ${platformName}`
+    : `${safeActorName} accepted your connection request`;
+
+  html = html
+    .replace(/%PLATFORM_NAME%/g, platformName)
+    .replace(/%LOGO_URL%/g, logoUrl)
+    .replace(/%FIRST_NAME%/g, safeFirstName)
+    .replace(/%HEADLINE%/g, type === 'request' ? `${safeActorName} wants to connect` : `You're now connected with ${safeActorName}!`)
+    .replace(/%BODY_TEXT%/g, type === 'request' ? 'Head to your connections page to accept or decline the request.' : 'You can now see each other at upcoming shows.')
+    .replace(/%CTA_LABEL%/g, type === 'request' ? 'View Request' : 'View Connections')
+    .replace(/%CONNECTIONS_URL%/g, connectionsUrl)
+    .replace(/%NOTIFICATIONS_URL%/g, prefsUrl);
+
+  const fromName = platformName;
+  const fromEmail = process.env.FROM_EMAIL;
+  await transporter.sendMail({ from: `${fromName} <${fromEmail}>`, to: recipient.email_address, subject, html });
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -113,6 +184,8 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
       actor_id: me.id,
     });
 
+    sendConnectionEmail(user_id, senderName, 'request').catch(() => {});
+
     return res.json({ connection_id: connection.id, status: 'pending' });
   } catch (error) {
     console.error('sendConnectionRequest error:', error);
@@ -156,6 +229,8 @@ export const acceptConnectionRequest = async (req: Request, res: Response) => {
       link: '/my-connections',
       actor_id: me.id,
     });
+
+    sendConnectionEmail(connection.requester_id, accepterName, 'accepted').catch(() => {});
 
     // Award first-connection points (idempotent — once per user lifetime)
     awardPoints(me.id, 'first_connection' as any, 5, me.id, 'first_connection').catch(() => {});
