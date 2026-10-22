@@ -10,6 +10,8 @@ import { Op } from 'sequelize';
 import { AudienceUser, AudienceEmailPreference, Event, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
 import { getCardLevel, awardRetroactiveTicketPoints, awardReferralPoints, isProfileComplete, awardProfileCompletePoints } from '../utils/audiencePoints';
+import { createAcceptedConnection } from './social/audienceSocialController';
+import AudienceNotification from '../models/AudienceNotification';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { uploadToS3, deleteFromS3, getS3PublicUrl } from '../utils/s3Service';
 import { extension as mimeExtension } from 'mime-types';
@@ -794,12 +796,26 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
       console.error('Failed to award retroactive ticket points on email verify:', err)
     );
 
-    // Award referral points to referrer if applicable (fire-and-forget)
+    // Award referral points and auto-connect with referrer (fire-and-forget)
     if (user.referred_by_user_id) {
       const referredByUserId = user.referred_by_user_id;
       awardReferralPoints(referredByUserId, user.id).catch(err =>
         console.error('Failed to award referral points:', err)
       );
+      createAcceptedConnection(referredByUserId, user.id).catch(err =>
+        console.error('Failed to auto-connect with referrer:', err)
+      );
+      // Notify referrer that their invite was accepted
+      const newUserName = user.first_name
+        ? `${user.first_name}${user.last_name ? ' ' + user.last_name.charAt(0) + '.' : ''}`
+        : 'Someone you invited';
+      AudienceNotification.create({
+        audience_user_id: referredByUserId,
+        type: 'invite_joined',
+        title: `${newUserName} joined via your invite — you're now connected`,
+        link: '/my-connections',
+        actor_id: user.id,
+      }).catch(err => console.error('Failed to create invite_joined notification:', err));
     }
 
     // Send welcome email — includes the complete-your-profile CTA block for new users (fire-and-forget)

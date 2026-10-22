@@ -38,7 +38,24 @@ import {
   trackEventShare
 } from '../controllers/publicController';
 import { audienceInviteFriend } from '../controllers/audienceAuthController';
-import { publicRateLimit, createPaymentRateLimit } from '../middleware/rateLimiting';
+import {
+  sendConnectionRequest,
+  acceptConnectionRequest,
+  declineConnectionRequest,
+  removeConnection,
+  blockUser,
+  getMyConnections,
+  getPendingRequests,
+  discoverAtEvent,
+  getAudienceUserProfile,
+} from '../controllers/social/audienceSocialController';
+import {
+  getAudienceNotifications,
+  getAudienceNotificationUnreadCount,
+  markAudienceNotificationRead,
+  markAllAudienceNotificationsRead,
+} from '../controllers/social/audienceNotificationController';
+import { publicRateLimit, createPaymentRateLimit, connectionActionRateLimit } from '../middleware/rateLimiting';
 import { authenticateAudienceToken } from '../middleware/auth';
 import { upload } from '../controllers/artistController';
 
@@ -104,5 +121,24 @@ router.post('/audience/events/:eventId/like', authenticateAudienceToken, toggleE
 router.post('/audience/events/:eventId/share', authenticateAudienceToken, trackEventShare);
 router.post('/audience/organizers/:brandId/follow', authenticateAudienceToken, toggleOrganizerFollow);
 router.post('/audience/invite', authenticateAudienceToken, audienceInviteFriend);
+
+// Audience social — connections
+router.get('/audience/social/connections', authenticateAudienceToken, getMyConnections);
+router.get('/audience/social/connections/pending', authenticateAudienceToken, getPendingRequests);
+router.post('/audience/social/connections/request', authenticateAudienceToken, connectionActionRateLimit, sendConnectionRequest);
+router.post('/audience/social/connections/:id/accept', authenticateAudienceToken, connectionActionRateLimit, acceptConnectionRequest);
+router.post('/audience/social/connections/:id/decline', authenticateAudienceToken, connectionActionRateLimit, declineConnectionRequest);
+router.delete('/audience/social/connections/:id', authenticateAudienceToken, connectionActionRateLimit, removeConnection);
+router.post('/audience/social/connections/:id/block', authenticateAudienceToken, connectionActionRateLimit, blockUser);
+
+// Audience social — discovery & profiles
+router.get('/audience/social/discover/event/:eventId', authenticateAudienceToken, discoverAtEvent);
+router.get('/audience/social/users/:id', authenticateAudienceToken, getAudienceUserProfile);
+
+// Audience notifications
+router.get('/audience/notifications', authenticateAudienceToken, getAudienceNotifications);
+router.get('/audience/notifications/unread-count', authenticateAudienceToken, getAudienceNotificationUnreadCount);
+router.patch('/audience/notifications/:id/read', authenticateAudienceToken, markAudienceNotificationRead);
+router.post('/audience/notifications/read-all', authenticateAudienceToken, markAllAudienceNotificationsRead);
 
 export default router;
