@@ -123,6 +123,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/audience/notifications/notifications.component').then(m => m.AudienceNotificationsComponent)
   },
   {
+    path: 'my-email-preferences',
+    canActivate: [audienceAuthGuard],
+    loadComponent: () => import('./pages/audience/email-preferences/email-preferences.component').then(m => m.EmailPreferencesComponent)
+  },
+  {
+    path: 'my-connections',
+    canActivate: [audienceAuthGuard],
+    loadComponent: () => import('./pages/audience/connections/connections.component').then(m => m.ConnectionsComponent)
+  },
+  {
     path: 'my-shows/:eventId',
     canActivate: [audienceAuthGuard],
     loadComponent: () => import('./pages/audience/show-detail/show-detail.component').then(m => m.ShowDetailComponent)
