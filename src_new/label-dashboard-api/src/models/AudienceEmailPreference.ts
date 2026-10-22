@@ -8,6 +8,7 @@ export interface AudienceEmailPreferenceAttributes {
   event_recommendations: boolean;
   organizer_updates: boolean;
   points_rewards: boolean;
+  connection_emails: boolean;
 }
 
 interface AudienceEmailPreferenceCreationAttributes
@@ -23,6 +24,7 @@ class AudienceEmailPreference
   public event_recommendations!: boolean;
   public organizer_updates!: boolean;
   public points_rewards!: boolean;
+  public connection_emails!: boolean;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -56,6 +58,11 @@ AudienceEmailPreference.init(
       defaultValue: true,
     },
     points_rewards: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    connection_emails: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
