@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-export type PointTransactionType = 'ticket_purchase' | 'event_share' | 'referral' | 'profile_complete';
+export type PointTransactionType = 'ticket_purchase' | 'event_share' | 'referral' | 'profile_complete' | 'first_connection';
 
 interface AudiencePointTransactionAttributes {
   id: number;

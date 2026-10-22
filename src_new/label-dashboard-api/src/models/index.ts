@@ -61,6 +61,8 @@ import AudiencePointTransaction from './AudiencePointTransaction';
 import AudienceEmailPreference from './AudienceEmailPreference';
 import EventAccess from './EventAccess';
 import EventBrandCollaboration from './EventBrandCollaboration';
+import AudienceConnection from './AudienceConnection';
+import AudienceNotification from './AudienceNotification';
 
 // Define relationships
 // Brand relationships
@@ -212,6 +214,17 @@ AudienceUser.hasMany(AudiencePointTransaction, { foreignKey: 'audience_user_id',
 AudiencePointTransaction.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
 AudienceUser.hasOne(AudienceEmailPreference, { foreignKey: 'audience_user_id', as: 'emailPreference' });
 AudienceEmailPreference.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
+
+// AudienceConnection relationships
+AudienceConnection.belongsTo(AudienceUser, { foreignKey: 'requester_id', as: 'requester' });
+AudienceConnection.belongsTo(AudienceUser, { foreignKey: 'addressee_id', as: 'addressee' });
+AudienceUser.hasMany(AudienceConnection, { foreignKey: 'requester_id', as: 'sentConnections' });
+AudienceUser.hasMany(AudienceConnection, { foreignKey: 'addressee_id', as: 'receivedConnections' });
+
+// AudienceNotification relationships
+AudienceNotification.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
+AudienceNotification.belongsTo(AudienceUser, { foreignKey: 'actor_id', as: 'actor' });
+AudienceUser.hasMany(AudienceNotification, { foreignKey: 'audience_user_id', as: 'audienceNotifications' });
 
 // AudienceFollow relationships
 AudienceFollow.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
@@ -456,6 +469,8 @@ export {
   AudienceEmailPreference,
   EventAccess,
   EventBrandCollaboration,
+  AudienceConnection,
+  AudienceNotification,
 };
 
 // Initialize database connection
