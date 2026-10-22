@@ -69,7 +69,8 @@ async function consumeAudienceExchangeCode(
  */
 export const claimTicketsByEmailInternal = async (
   audienceUserId: number,
-  email: string
+  email: string,
+  trigger: string = 'unknown'
 ): Promise<number> => {
   const [affectedCount] = await Ticket.update(
     { audience_user_id: audienceUserId },
@@ -81,6 +82,7 @@ export const claimTicketsByEmailInternal = async (
       },
     }
   );
+  console.log(`[claimTickets] trigger=${trigger} audienceUserId=${audienceUserId} email=${email} claimed=${affectedCount}`);
   return affectedCount;
 };
 
@@ -364,7 +366,7 @@ export const audienceLogin = async (req: Request, res: Response) => {
 
     // Only claim tickets for verified accounts
     const claimed_tickets_count = user.email_verified
-      ? await claimTicketsByEmailInternal(user.id, user.email_address)
+      ? await claimTicketsByEmailInternal(user.id, user.email_address, 'login')
       : 0;
 
     // Award retroactive points for any newly claimed (or previously uncredited) tickets
@@ -530,7 +532,7 @@ async function findOrCreateAudienceUserAndIssueCode(
       email_verification_expires_at: null as any,
     });
   }
-  await claimTicketsByEmailInternal(user.id, user.email_address);
+  await claimTicketsByEmailInternal(user.id, user.email_address, 'oauth');
   return createAudienceExchangeCode(user.id);
 }
 
@@ -789,7 +791,7 @@ export const audienceVerifyEmail = async (req: Request, res: Response) => {
     });
 
     // Now that the email is confirmed, claim any tickets purchased with this address
-    const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address);
+    const claimed_tickets_count = await claimTicketsByEmailInternal(user.id, user.email_address, 'email-verification');
 
     // Award retroactive ticket points (fire-and-forget)
     awardRetroactiveTicketPoints(user.id).catch(err =>

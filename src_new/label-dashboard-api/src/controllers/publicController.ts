@@ -694,7 +694,7 @@ export const buyTicket = async (req: Request, res: Response) => {
       const ticket = await Ticket.create({
         event_id: eventIdNum,
         name,
-        email_address,
+        email_address: email_address.toLowerCase(),
         contact_number,
         number_of_entries,
         ticket_code: ticketCode,
@@ -807,7 +807,7 @@ export const buyTicket = async (req: Request, res: Response) => {
     const ticket = await Ticket.create({
       event_id: eventIdNum,
       name,
-      email_address,
+      email_address: email_address.toLowerCase(),
       contact_number,
       number_of_entries,
       ticket_code: ticketCode,
