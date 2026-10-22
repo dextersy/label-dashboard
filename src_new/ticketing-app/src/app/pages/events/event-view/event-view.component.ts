@@ -7,6 +7,10 @@ import { environment } from '../../../../environments/environment';
 import { ShareModalComponent } from '../../../components/share-modal/share-modal.component';
 import { AudienceAuthService } from '../../../services/audience-auth.service';
 import { AudienceAuthModalComponent } from '../../../components/audience-auth-modal/audience-auth-modal.component';
+import { AudienceSocialService } from '../../../services/audience-social.service';
+import { ConnectButtonComponent } from '../../../components/connect-button/connect-button.component';
+import { AudienceAttendee, ConnectionMeta } from '../../../models/audience-connection';
+import { AudienceHeaderComponent } from '../../../components/audience-header/audience-header.component';
 
 interface PublicEventView {
   id: number;
@@ -57,7 +61,7 @@ interface PublicEventView {
   selector: 'app-event-view',
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, RouterLink, DatePipe, ShareModalComponent, AudienceAuthModalComponent],
+  imports: [CommonModule, RouterLink, DatePipe, ShareModalComponent, AudienceAuthModalComponent, ConnectButtonComponent, AudienceHeaderComponent],
   styles: [`
     .prose-event h2 { font-size: 1rem; font-weight: 700; color: rgba(255,255,255,0.9); margin: 0.75rem 0 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .prose-event h3 { font-size: 0.875rem; font-weight: 700; color: rgba(255,255,255,0.8); margin: 0.5rem 0 0.25rem; }
@@ -73,14 +77,7 @@ interface PublicEventView {
   `],
   template: `
     <!-- Nav -->
-    <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
-        <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
-        <div class="flex items-center gap-4">
-          <a href="/#shows" class="text-xs font-mono text-white/40 hover:text-white uppercase tracking-wider transition-colors">← All Shows</a>
-        </div>
-      </div>
-    </header>
+    <app-audience-header></app-audience-header>
 
     <main class="bg-black min-h-screen pt-12">
       @if (loading()) {
@@ -266,6 +263,41 @@ interface PublicEventView {
                 </div>
 
               </div>
+
+              <!-- Who's going avatar stack (logged-in only) -->
+              @if (isAudienceLoggedIn() && attendees().length > 0) {
+                <div class="mt-4 flex items-center gap-3">
+                  <!-- Overlapping avatars (max 5) -->
+                  <button type="button" (click)="attendeesModalOpen.set(true)"
+                    class="flex items-center hover:opacity-80 transition-opacity">
+                    @for (item of attendees().slice(0, 5); track item.user.id; let i = $index) {
+                      <div class="w-8 h-8 rounded-full border-2 border-black overflow-hidden flex-shrink-0 flex items-center justify-center"
+                        [style.margin-left]="i === 0 ? '0' : '-8px'"
+                        [style.z-index]="5 - i"
+                        [style.position]="'relative'">
+                        @if (item.user.profile_photo_url) {
+                          <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name" class="w-full h-full object-cover">
+                        } @else {
+                          <div class="w-full h-full bg-white flex items-center justify-center">
+                            <span class="text-black text-[10px] font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                    @if (attendees().length > 5) {
+                      <div class="w-8 h-8 rounded-full border-2 border-black bg-white/10 flex items-center justify-center flex-shrink-0 relative"
+                        style="margin-left: -8px; z-index: 0">
+                        <span class="text-white text-[9px] font-black">+{{ attendees().length - 5 }}</span>
+                      </div>
+                    }
+                  </button>
+                  <button type="button" (click)="attendeesModalOpen.set(true)"
+                    class="text-xs font-mono text-white/40 hover:text-white/70 transition-colors">
+                    See who's going →
+                  </button>
+                </div>
+              }
+
             </div>
           </div>
         </section>
@@ -412,6 +444,51 @@ interface PublicEventView {
       </div>
     </footer>
 
+    <!-- Who's going modal -->
+    @if (attendeesModalOpen()) {
+      <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" (click)="attendeesModalOpen.set(false)">
+        <div class="absolute inset-0 bg-black/70"></div>
+        <div class="relative w-full max-w-sm bg-black border border-white/20 shadow-2xl max-h-[80vh] flex flex-col"
+          (click)="$event.stopPropagation()">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+            <p class="text-xs font-mono text-white/40 uppercase tracking-widest">Who's going</p>
+            <button type="button" (click)="attendeesModalOpen.set(false)" class="text-white/30 hover:text-white transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="overflow-y-auto flex-1">
+            @for (item of attendees(); track item.user.id) {
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-white/5">
+                @if (item.user.profile_photo_url) {
+                  <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name"
+                    class="w-9 h-9 object-cover border border-white/20 flex-shrink-0">
+                } @else {
+                  <div class="w-9 h-9 bg-white flex items-center justify-center border border-white/20 flex-shrink-0">
+                    <span class="text-black text-xs font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
+                  </div>
+                }
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-black text-white uppercase truncate leading-tight">
+                    {{ item.user.first_name }} {{ item.user.last_name_initial }}
+                  </p>
+                  @if (item.user.city) {
+                    <p class="text-[10px] font-mono text-white/30 truncate">{{ item.user.city }}</p>
+                  }
+                </div>
+                <app-connect-button
+                  [userId]="item.user.id"
+                  [connectionMeta]="item.connection"
+                  (connectionChanged)="onAttendeeConnectionChanged(item, $event)">
+                </app-connect-button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Share modal -->
     @if (shareModalOpen() && event()) {
       <app-share-modal
@@ -436,6 +513,8 @@ export class EventViewComponent implements OnInit, OnDestroy {
   error = signal(false);
   event = signal<PublicEventView | null>(null);
   shareModalOpen = signal(false);
+  attendeesModalOpen = signal(false);
+  attendees = signal<AudienceAttendee[]>([]);
 
   allOrganizers = computed(() => {
     const ev = this.event();
@@ -462,6 +541,7 @@ export class EventViewComponent implements OnInit, OnDestroy {
     private titleService: Title,
     private metaService: Meta,
     private audienceAuth: AudienceAuthService,
+    private audienceSocial: AudienceSocialService,
     private router: Router
   ) {}
 
@@ -493,6 +573,13 @@ export class EventViewComponent implements OnInit, OnDestroy {
         if (pendingLike && this.audienceAuth.isLoggedIn()) {
           this.toggleLike();
           this.router.navigate([], { queryParams: {}, replaceUrl: true });
+        }
+
+        if (this.audienceAuth.isLoggedIn()) {
+          this.audienceSocial.discoverAtEvent(res.event.id).subscribe({
+            next: (r) => this.attendees.set(r.attendees),
+            error: () => {},
+          });
         }
       },
       error: () => {
@@ -545,6 +632,12 @@ export class EventViewComponent implements OnInit, OnDestroy {
         this.likeCount.set(res.like_count);
       }
     });
+  }
+
+  onAttendeeConnectionChanged(item: AudienceAttendee, meta: ConnectionMeta | null): void {
+    this.attendees.update((list) =>
+      list.map((a) => a.user.id === item.user.id ? { ...a, connection: meta } : a)
+    );
   }
 
   formatCoOrganizers(brands: { name: string }[]): string {

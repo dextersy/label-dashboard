@@ -260,9 +260,19 @@ interface FollowedOrganizer {
         </div>
 
         <div class="mt-4">
-          <a routerLink="/my-notifications" class="text-xs font-mono text-white/30 hover:text-white/60 transition-colors underline underline-offset-2">
-            Manage email notifications
-          </a>
+          <div class="flex items-center gap-4 mt-1">
+            <a routerLink="/my-notifications" class="text-xs font-mono text-white/30 hover:text-white/60 transition-colors underline underline-offset-2">
+              Notifications
+            </a>
+            <span class="text-white/10">·</span>
+            <a routerLink="/my-connections" class="text-xs font-mono text-white/30 hover:text-white/60 transition-colors underline underline-offset-2">
+              Connections
+            </a>
+            <span class="text-white/10">·</span>
+            <a routerLink="/my-email-preferences" class="text-xs font-mono text-white/30 hover:text-white/60 transition-colors underline underline-offset-2">
+              Email preferences
+            </a>
+          </div>
         </div>
 
         <!-- Your Scene Card -->

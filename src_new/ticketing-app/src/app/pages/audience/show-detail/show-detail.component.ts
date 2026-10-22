@@ -2,12 +2,15 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AudienceAuthService } from '../../../services/audience-auth.service';
+import { AudienceSocialService } from '../../../services/audience-social.service';
 import { AudienceHeaderComponent } from '../../../components/audience-header/audience-header.component';
+import { ConnectButtonComponent } from '../../../components/connect-button/connect-button.component';
+import { AudienceAttendee } from '../../../models/audience-connection';
 
 @Component({
   selector: 'app-show-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, AudienceHeaderComponent],
+  imports: [CommonModule, RouterLink, AudienceHeaderComponent, ConnectButtonComponent],
   template: `
     <div class="min-h-screen bg-black text-white">
 
@@ -42,6 +45,40 @@ import { AudienceHeaderComponent } from '../../../components/audience-header/aud
             <p>{{ event()?.venue }}</p>
           </div>
         </div>
+
+        <!-- Who's going -->
+        @if (attendees().length > 0) {
+          <div class="mb-10">
+            <p class="text-xs font-mono text-yellow-400 uppercase tracking-[0.25em] mb-4">— who's going —</p>
+            <div class="space-y-2">
+              @for (item of attendees(); track item.user.id) {
+                <div class="flex items-center gap-4 border border-white/10 px-4 py-3">
+                  @if (item.user.profile_photo_url) {
+                    <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name"
+                      class="w-9 h-9 object-cover border border-white/20 flex-shrink-0">
+                  } @else {
+                    <div class="w-9 h-9 bg-white flex items-center justify-center border border-white/20 flex-shrink-0">
+                      <span class="text-black text-xs font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
+                    </div>
+                  }
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-black text-white uppercase truncate">
+                      {{ item.user.first_name }} {{ item.user.last_name_initial }}
+                    </p>
+                    <p class="text-xs font-mono text-white/30 truncate">
+                      {{ item.user.city ? item.user.city + ' · ' : '' }}{{ item.user.membership_tier }}
+                    </p>
+                  </div>
+                  <app-connect-button
+                    [userId]="item.user.id"
+                    [connectionMeta]="item.connection"
+                    (connectionChanged)="onAttendeeConnectionChanged(item, $event)">
+                  </app-connect-button>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
         <!-- Tickets -->
         <div>
@@ -115,10 +152,13 @@ export class ShowDetailComponent implements OnInit {
   error = signal(false);
   event = signal<any>(null);
   tickets = signal<any[]>([]);
+  attendees = signal<AudienceAttendee[]>([]);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private audienceAuthService: AudienceAuthService
+    private audienceAuthService: AudienceAuthService,
+    private audienceSocialService: AudienceSocialService,
   ) {}
 
   ngOnInit(): void {
@@ -141,12 +181,23 @@ export class ShowDetailComponent implements OnInit {
           this.error.set(true);
         }
         this.loading.set(false);
+
+        this.audienceSocialService.discoverAtEvent(eventId).subscribe({
+          next: (res) => this.attendees.set(res.attendees),
+          error: () => {},
+        });
       },
       error: () => {
         this.loading.set(false);
         this.error.set(true);
       }
     });
+  }
+
+  onAttendeeConnectionChanged(item: AudienceAttendee, meta: import('../../../models/audience-connection').ConnectionMeta | null): void {
+    this.attendees.update((list) =>
+      list.map((a) => a.user.id === item.user.id ? { ...a, connection: meta } : a)
+    );
   }
 
   formatDate(dateStr?: string): string {
