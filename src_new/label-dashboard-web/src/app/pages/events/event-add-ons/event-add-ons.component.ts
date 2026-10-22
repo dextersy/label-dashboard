@@ -67,7 +67,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     ];
     if (this.hasPlacedOrConfirmedOrders) {
       const hasPendingBalance = !this.loadingPayments && this.addonRemainingBalance > 0;
-      base.push({ id: 'payment', label: 'Payment', icon: 'credit-card', status: this.loadingPayments ? null : hasPendingBalance ? 'warning' : 'completed' });
+      base.push({ id: 'payment', label: 'Billing & Payments', icon: 'credit-card', status: this.loadingPayments ? null : hasPendingBalance ? 'warning' : 'completed' });
     }
     return base;
   }
@@ -201,6 +201,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   labelBalance: number | null = null;
   loadingLabelBalance = false;
   pendingPaymongoSuccess = false;
+  downloadingInvoice = false;
 
 
   // Mobile layout
@@ -449,6 +450,23 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
   paymentMethodLabel(method: string): string {
     return method === 'balance' ? 'Label Balance' : 'Paymongo';
+  }
+
+  downloadInvoice(): void {
+    if (!this.eventId || this.downloadingInvoice) return;
+    this.downloadingInvoice = true;
+    this.eventService.downloadAddOnInvoicePdf(this.eventId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-event-${this.eventId}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.downloadingInvoice = false;
+      },
+      error: () => { this.downloadingInvoice = false; }
+    });
   }
 
   get hasPlacedOrConfirmedOrders(): boolean {

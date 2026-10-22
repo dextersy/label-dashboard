@@ -1331,6 +1331,13 @@ export class EventService {
     ).pipe(catchError(this.handleError));
   }
 
+  downloadAddOnInvoicePdf(eventId: number): Observable<Blob> {
+    return this.http.get(
+      `${environment.apiUrl}/events/addon-payments/invoice/${eventId}/pdf`,
+      { headers: this.getAuthHeaders(), responseType: 'blob' }
+    );
+  }
+
   private handleError(error: any): Observable<never> {
     console.error('Event service error:', error);
     

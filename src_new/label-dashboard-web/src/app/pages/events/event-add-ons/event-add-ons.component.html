@@ -632,10 +632,16 @@
             <ng-container *ngIf="addonRemainingBalance > 0">
               <div class="payment-stat-label tw-text-red-500">Balance Due</div>
               <div class="payment-stat-value tw-text-red-600">₱{{ addonRemainingBalance | number:'1.2-2' }}</div>
-              <button type="button" class="btn-primary btn-sm tw-mt-1" (click)="openPaymentModal()" [disabled]="!hasDeliveryAddress">
-                <app-icon name="credit-card" />
-                Make a Payment
-              </button>
+              <div class="tw-flex tw-gap-2 tw-mt-1 tw-flex-wrap">
+                <button type="button" class="btn-primary btn-sm" (click)="openPaymentModal()" [disabled]="!hasDeliveryAddress">
+                  <app-icon name="credit-card" />
+                  Make a Payment
+                </button>
+                <button type="button" class="btn-secondary btn-sm" (click)="downloadInvoice()" [disabled]="downloadingInvoice">
+                  <app-icon [name]="downloadingInvoice ? 'loader' : 'download'" iconOnly />
+                  {{ downloadingInvoice ? 'Downloading…' : 'Download Invoice' }}
+                </button>
+              </div>
             </ng-container>
             <ng-container *ngIf="addonRemainingBalance === 0">
               <div class="tw-flex tw-items-center tw-gap-2 tw-text-green-700">
@@ -644,6 +650,10 @@
                 </span>
                 <span class="tw-text-sm tw-font-semibold">Paid in Full</span>
               </div>
+              <button type="button" class="btn-secondary btn-sm tw-mt-1" (click)="downloadInvoice()" [disabled]="downloadingInvoice" title="Download Invoice PDF">
+                <app-icon [name]="downloadingInvoice ? 'loader' : 'download'" iconOnly />
+                {{ downloadingInvoice ? 'Downloading…' : 'Download Invoice' }}
+              </button>
             </ng-container>
           </div>
 

@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import { Op, fn, col, literal } from 'sequelize';
 import { sequelize } from '../config/database';
 import PDFDocument from 'pdfkit';
-import https from 'https';
-import http from 'http';
+import { fetchImageBuffer, lerpHex, drawGradientRect, formatMoney, fmtShort, drawDot, hairline } from '../utils/pdfUtils';
 import Plan from '../models/Plan';
 import BrandPlan from '../models/BrandPlan';
 import Brand from '../models/Brand';
@@ -762,86 +761,6 @@ export const getInvoices = async (req: Request, res: Response): Promise<void> =>
 // GET /api/subscription/invoices/:id/pdf
 // Downloads a subscription invoice as a PDF for the authenticated brand.
 // ---------------------------------------------------------------------------
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-async function fetchImageBuffer(url: string): Promise<Buffer | null> {
-  return new Promise((resolve) => {
-    try {
-      const protocol = url.startsWith('https') ? https : http;
-      protocol.get(url, (imgRes) => {
-        const chunks: Buffer[] = [];
-        imgRes.on('data', (chunk: Buffer) => chunks.push(chunk));
-        imgRes.on('end', () => resolve(Buffer.concat(chunks)));
-        imgRes.on('error', () => resolve(null));
-      }).on('error', () => resolve(null));
-    } catch {
-      resolve(null);
-    }
-  });
-}
-
-/** Interpolate two hex colours for the gradient accent band. */
-function lerpHex(from: string, to: string, t: number): string {
-  const f = (hex: string) => [
-    parseInt(hex.slice(1, 3), 16),
-    parseInt(hex.slice(3, 5), 16),
-    parseInt(hex.slice(5, 7), 16),
-  ];
-  const [r1, g1, b1] = f(from);
-  const [r2, g2, b2] = f(to);
-  const r = Math.round(r1 + (r2 - r1) * t);
-  const g = Math.round(g1 + (g2 - g1) * t);
-  const b = Math.round(b1 + (b2 - b1) * t);
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-}
-
-/** Draw a simulated left→right gradient rect using thin vertical slices. */
-function drawGradientRect(
-  doc: InstanceType<typeof PDFDocument>,
-  x: number, y: number, w: number, h: number,
-  colorFrom: string, colorTo: string,
-  steps = 60,
-): void {
-  const sliceW = w / steps;
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1);
-    doc.rect(x + i * sliceW, y, sliceW + 0.5, h)
-      .fill(lerpHex(colorFrom, colorTo, t));
-  }
-}
-
-/** Format a currency amount. Uses thousands separators; avoids non-ASCII symbols. */
-function formatMoney(amount: number, currency: string): string {
-  // Intl formats with the currency code — ASCII-safe for PDFKit built-in fonts
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      currencyDisplay: 'code',   // e.g. "PHP 1,290.03" — all ASCII
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch {
-    return `${currency} ${Number(amount).toFixed(2)}`;
-  }
-}
-
-/** Short date: Oct 20, 2026 */
-function fmtShort(d: Date | string | null | undefined): string {
-  if (!d) return '-';
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-/** Draw a small filled circle (replaces Unicode bullet which breaks built-in fonts). */
-function drawDot(doc: InstanceType<typeof PDFDocument>, cx: number, cy: number, r: number, color: string): void {
-  doc.save().circle(cx, cy, r).fill(color).restore();
-}
-
-/** Draw a horizontal hairline. */
-function hairline(doc: InstanceType<typeof PDFDocument>, x: number, y: number, w: number, color = '#E7E4F0'): void {
-  doc.save().strokeColor(color).lineWidth(0.75).moveTo(x, y).lineTo(x + w, y).stroke().restore();
-}
 
 // ── Shared PDF buffer builder (used by download endpoint + email attachments) ─
 

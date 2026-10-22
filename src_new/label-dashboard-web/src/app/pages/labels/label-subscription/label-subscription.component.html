@@ -455,6 +455,10 @@
 
       <!-- ── Invoices tab ──────────────────────────────────────────────── -->
       <div *ngIf="activeSection === 'invoices'">
+        <p class="tw-text-xs tw-text-[var(--color-muted)] tw-mb-3">
+          Billing information shown on invoices (company name, address, TIN) can be updated in the
+          <button type="button" class="tw-underline tw-font-medium hover:tw-text-[var(--color-text)]" (click)="onNavTabChange('billing-details')">Billing Details</button> tab.
+        </p>
         <app-paginated-table
           title="Invoices"
           [data]="invoices"
