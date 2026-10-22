@@ -101,9 +101,11 @@ export class EmailPreferencesComponent implements OnInit {
     event_recommendations: true,
     organizer_updates: true,
     points_rewards: true,
+    connection_emails: true,
   });
 
   readonly categories: PrefCategory[] = [
+    { key: 'connection_emails', label: 'Connections', description: 'Emails when someone sends you a connection request or accepts yours.' },
     { key: 'marketing_promos', label: 'Promotions & Offers', description: 'Targeted deals, discounts, and early-bird ticket offers.' },
     { key: 'event_recommendations', label: 'Event Recommendations', description: "Events we think you'll like based on your profile." },
     { key: 'organizer_updates', label: 'Organizer Updates', description: 'News and announcements from organizers you follow.' },

@@ -33,6 +33,7 @@ export interface AudienceEmailPreferences {
   event_recommendations: boolean;
   organizer_updates: boolean;
   points_rewards: boolean;
+  connection_emails: boolean;
 }
 
 export interface AudienceAuthResponse {
