@@ -6,9 +6,17 @@ import nodemailer from 'nodemailer';
 import AudienceConnection, { ConnectionStatus } from '../../models/AudienceConnection';
 import AudienceNotification from '../../models/AudienceNotification';
 import AudienceUser from '../../models/AudienceUser';
-import { AudienceEmailPreference } from '../../models';
+import { AudienceEmailPreference, AudiencePushNotifPreference } from '../../models';
 import Ticket from '../../models/Ticket';
 import { awardPoints } from '../../utils/audiencePoints';
+
+// ─── Push preference helper ───────────────────────────────────────────────────
+
+async function notifAllowed(userId: number, flag: 'connection_requests' | 'new_events' | 'points_rewards'): Promise<boolean> {
+  const pref = await AudiencePushNotifPreference.findOne({ where: { audience_user_id: userId } });
+  if (!pref) return true; // default: allowed if no row yet
+  return pref[flag];
+}
 
 // ─── Email helpers ────────────────────────────────────────────────────────────
 
@@ -172,13 +180,15 @@ export async function createPendingConnectionRequest(
     ? `${sender.first_name}${sender.last_name ? ' ' + sender.last_name.charAt(0) + '.' : ''}`
     : 'Someone';
 
-  await AudienceNotification.create({
-    audience_user_id: target.id,
-    type: 'connection_request',
-    title: `${senderName} wants to connect`,
-    link: '/my-connections',
-    actor_id: sender.id,
-  });
+  if (await notifAllowed(target.id, 'connection_requests')) {
+    await AudienceNotification.create({
+      audience_user_id: target.id,
+      type: 'connection_request',
+      title: `${senderName} wants to connect`,
+      link: '/my-connections',
+      actor_id: sender.id,
+    });
+  }
 
   sendConnectionEmail(target.id, senderName, 'request').catch(() => {});
 
@@ -239,13 +249,15 @@ export const acceptConnectionRequest = async (req: Request, res: Response) => {
       ? `${me.first_name}${me.last_name ? ' ' + me.last_name.charAt(0) + '.' : ''}`
       : 'Someone';
 
-    await AudienceNotification.create({
-      audience_user_id: connection.requester_id,
-      type: 'connection_accepted',
-      title: `${accepterName} accepted your connection request`,
-      link: '/my-connections',
-      actor_id: me.id,
-    });
+    if (await notifAllowed(connection.requester_id, 'connection_requests')) {
+      await AudienceNotification.create({
+        audience_user_id: connection.requester_id,
+        type: 'connection_accepted',
+        title: `${accepterName} accepted your connection request`,
+        link: '/my-connections',
+        actor_id: me.id,
+      });
+    }
 
     sendConnectionEmail(connection.requester_id, accepterName, 'accepted').catch(() => {});
 
