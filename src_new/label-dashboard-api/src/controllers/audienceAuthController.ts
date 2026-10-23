@@ -10,7 +10,7 @@ import { Op } from 'sequelize';
 import { AudienceUser, AudienceEmailPreference, Event, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
 import { getCardLevel, awardRetroactiveTicketPoints, awardReferralPoints, isProfileComplete, awardProfileCompletePoints } from '../utils/audiencePoints';
-import { createAcceptedConnection } from './social/audienceSocialController';
+import { createAcceptedConnection, createPendingConnectionRequest } from './social/audienceSocialController';
 import AudienceNotification from '../models/AudienceNotification';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { uploadToS3, deleteFromS3, getS3PublicUrl } from '../utils/s3Service';
@@ -1083,13 +1083,25 @@ export const audienceInviteFriend = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'A valid email address is required.' });
     }
 
-    const referralLink = `${process.env.AUDIENCE_APP_URL}/login?ref=${sender.referral_code}&email=${encodeURIComponent(email.trim())}`;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (normalizedEmail === sender.email_address.toLowerCase()) {
+      return res.status(400).json({ error: 'You cannot invite yourself.' });
+    }
+
+    // If the email belongs to an existing user, send a connection request instead
+    const existingUser = await AudienceUser.findOne({ where: { email_address: normalizedEmail } });
+    if (existingUser) {
+      return createPendingConnectionRequest(sender, existingUser, res);
+    }
+
+    const referralLink = `${process.env.AUDIENCE_APP_URL}/login?ref=${sender.referral_code}&email=${encodeURIComponent(normalizedEmail)}`;
     const senderName = sender.first_name
       ? `${sender.first_name}${sender.last_name ? ' ' + sender.last_name : ''}`
       : 'A friend';
 
     await sendAudienceEmail(
-      email.trim(),
+      normalizedEmail,
       `${senderName} invited you to Your Scene`,
       `
       <div style="font-family: monospace; background: #000; color: #fff; padding: 40px; max-width: 560px; margin: 0 auto;">

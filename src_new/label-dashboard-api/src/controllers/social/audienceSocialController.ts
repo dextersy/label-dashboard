@@ -139,6 +139,50 @@ export async function createAcceptedConnection(
 
 // ─── Send connection request ──────────────────────────────────────────────────
 
+/**
+ * Core logic for creating a pending connection request from `sender` to `target`.
+ * Shared by the HTTP handler and the invite-friend flow (when the invited email
+ * already belongs to an existing user).
+ */
+export async function createPendingConnectionRequest(
+  sender: AudienceUser,
+  target: AudienceUser,
+  res: Response,
+): Promise<Response> {
+  const existing = await findConnection(sender.id, target.id);
+  if (existing) {
+    if (existing.status === 'accepted') {
+      return res.status(409).json({ error: 'Already connected.' });
+    }
+    if (existing.status === 'blocked') {
+      return res.status(409).json({ error: 'Unable to send request.' });
+    }
+    return res.status(409).json({ error: 'Request already sent.' });
+  }
+
+  const connection = await AudienceConnection.create({
+    requester_id: sender.id,
+    addressee_id: target.id,
+    status: 'pending',
+  });
+
+  const senderName = sender.first_name
+    ? `${sender.first_name}${sender.last_name ? ' ' + sender.last_name.charAt(0) + '.' : ''}`
+    : 'Someone';
+
+  await AudienceNotification.create({
+    audience_user_id: target.id,
+    type: 'connection_request',
+    title: `${senderName} wants to connect`,
+    link: '/my-connections',
+    actor_id: sender.id,
+  });
+
+  sendConnectionEmail(target.id, senderName, 'request').catch(() => {});
+
+  return res.json({ connection_id: connection.id, status: 'pending' });
+}
+
 export const sendConnectionRequest = async (req: Request, res: Response) => {
   try {
     const me = (req as any).audienceUser as AudienceUser;
@@ -154,39 +198,7 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
     const target = await AudienceUser.findByPk(user_id);
     if (!target) return res.status(404).json({ error: 'User not found.' });
 
-    const existing = await findConnection(me.id, user_id);
-    if (existing) {
-      if (existing.status === 'accepted') {
-        return res.status(409).json({ error: 'Already connected.' });
-      }
-      if (existing.status === 'blocked') {
-        return res.status(409).json({ error: 'Unable to send request.' });
-      }
-      // pending already
-      return res.status(409).json({ error: 'Request already sent.' });
-    }
-
-    const connection = await AudienceConnection.create({
-      requester_id: me.id,
-      addressee_id: user_id,
-      status: 'pending',
-    });
-
-    const senderName = me.first_name
-      ? `${me.first_name}${me.last_name ? ' ' + me.last_name.charAt(0) + '.' : ''}`
-      : 'Someone';
-
-    await AudienceNotification.create({
-      audience_user_id: user_id,
-      type: 'connection_request',
-      title: `${senderName} wants to connect`,
-      link: '/my-connections',
-      actor_id: me.id,
-    });
-
-    sendConnectionEmail(user_id, senderName, 'request').catch(() => {});
-
-    return res.json({ connection_id: connection.id, status: 'pending' });
+    return createPendingConnectionRequest(me, target, res);
   } catch (error) {
     console.error('sendConnectionRequest error:', error);
     return res.status(500).json({ error: 'Internal server error' });
