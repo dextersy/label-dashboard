@@ -35,6 +35,7 @@ interface AudienceUserAttributes {
   referral_code?: string | null;
   referred_by_user_id?: number | null;
   social_discoverable?: boolean;
+  is_public?: boolean;
 }
 
 interface AudienceUserCreationAttributes extends Optional<AudienceUserAttributes, 'id'> {}
@@ -74,6 +75,7 @@ class AudienceUser extends Model<AudienceUserAttributes, AudienceUserCreationAtt
   public referral_code?: string | null;
   public referred_by_user_id?: number | null;
   public social_discoverable?: boolean;
+  public is_public?: boolean;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -205,6 +207,11 @@ AudienceUser.init(
       allowNull: true,
     },
     social_discoverable: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    is_public: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
