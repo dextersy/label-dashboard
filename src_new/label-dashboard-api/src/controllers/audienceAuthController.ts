@@ -7,7 +7,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { Op } from 'sequelize';
-import { AudienceUser, AudienceEmailPreference, Event, Ticket } from '../models';
+import { AudienceUser, AudienceEmailPreference, AudiencePushNotifPreference, Event, Ticket } from '../models';
 import { hashPassword, validatePassword } from '../utils/passwordUtils';
 import { getCardLevel, awardRetroactiveTicketPoints, awardReferralPoints, isProfileComplete, awardProfileCompletePoints } from '../utils/audiencePoints';
 import { createAcceptedConnection, createPendingConnectionRequest } from './social/audienceSocialController';
@@ -975,13 +975,37 @@ function buildUserPayload(user: AudienceUser) {
     music_genres: user.music_genres ?? null,
     event_frequency: user.event_frequency ?? null,
     profile_complete: isProfileComplete(user),
+    social_discoverable: user.social_discoverable ?? false,
+    is_public: user.is_public ?? false,
   };
 }
+
+export const audienceUpdatePrivacy = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const { is_public, social_discoverable } = req.body;
+
+    const updateData: any = {};
+    if (typeof is_public === 'boolean') updateData.is_public = is_public;
+    if (typeof social_discoverable === 'boolean') updateData.social_discoverable = social_discoverable;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No valid privacy fields provided' });
+    }
+
+    await user.update(updateData);
+    const freshUser = await AudienceUser.findByPk(user.id);
+    return res.json(buildUserPayload(freshUser ?? user));
+  } catch (error) {
+    console.error('Audience updatePrivacy error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 export const audienceUpdateProfile = async (req: Request, res: Response) => {
   try {
     const user = (req as any).audienceUser as AudienceUser;
-    const { first_name, last_name, contact_number, city, country, date_of_birth, gender_identity, music_genres, event_frequency } = req.body;
+    const { first_name, last_name, contact_number, city, country, date_of_birth, gender_identity, music_genres, event_frequency, social_discoverable, is_public } = req.body;
 
     if (!first_name || !last_name) {
       return res.status(400).json({ error: 'First name and last name are required' });
@@ -1006,7 +1030,7 @@ export const audienceUpdateProfile = async (req: Request, res: Response) => {
 
     const wasComplete = isProfileComplete(user);
 
-    await user.update({
+    const updateData: any = {
       first_name,
       last_name,
       contact_number: contact_number || null,
@@ -1016,7 +1040,11 @@ export const audienceUpdateProfile = async (req: Request, res: Response) => {
       gender_identity: gender_identity || null,
       music_genres: music_genres || null,
       event_frequency: event_frequency || null,
-    });
+    };
+    if (typeof social_discoverable === 'boolean') updateData.social_discoverable = social_discoverable;
+    if (typeof is_public === 'boolean') updateData.is_public = is_public;
+
+    await user.update(updateData);
 
     // Award profile completion points if this save completes the profile for the first time.
     // Must be awaited before reloading the user so the updated points_total is reflected.
@@ -1191,6 +1219,60 @@ export const audienceUpdateEmailPreferences = async (req: Request, res: Response
     });
   } catch (error) {
     console.error('audienceUpdateEmailPreferences error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ─── Push notification preferences ───────────────────────────────────────────
+
+async function getOrCreatePushNotifPreference(audienceUserId: number) {
+  const [pref] = await AudiencePushNotifPreference.findOrCreate({
+    where: { audience_user_id: audienceUserId },
+    defaults: {
+      audience_user_id: audienceUserId,
+      connection_requests: true,
+      new_events: true,
+      points_rewards: true,
+    },
+  });
+  return pref;
+}
+
+export const audienceGetPushNotifPreferences = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const pref = await getOrCreatePushNotifPreference(user.id);
+    return res.json({
+      connection_requests: pref.connection_requests,
+      new_events: pref.new_events,
+      points_rewards: pref.points_rewards,
+    });
+  } catch (error) {
+    console.error('audienceGetPushNotifPreferences error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const audienceUpdatePushNotifPreferences = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).audienceUser as AudienceUser;
+    const { connection_requests, new_events, points_rewards } = req.body;
+
+    const pref = await getOrCreatePushNotifPreference(user.id);
+
+    await pref.update({
+      connection_requests: connection_requests !== undefined ? !!connection_requests : pref.connection_requests,
+      new_events: new_events !== undefined ? !!new_events : pref.new_events,
+      points_rewards: points_rewards !== undefined ? !!points_rewards : pref.points_rewards,
+    });
+    await pref.reload();
+    return res.json({
+      connection_requests: pref.connection_requests,
+      new_events: pref.new_events,
+      points_rewards: pref.points_rewards,
+    });
+  } catch (error) {
+    console.error('audienceUpdatePushNotifPreferences error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange, ticketingForgotPassword, ticketingValidateResetHash, dashboardGoogleRedirect, dashboardGoogleCallback, dashboardGoogleExchange } from '../controllers/authController';
-import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange, audienceFacebookRedirect, audienceFacebookCallback, audienceOAuthExchange, audienceUpdateProfile, audienceUploadProfilePhoto, profilePhotoUpload, audienceAcceptTerms, audienceGetEmailPreferences, audienceUpdateEmailPreferences } from '../controllers/audienceAuthController';
+import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange, audienceFacebookRedirect, audienceFacebookCallback, audienceOAuthExchange, audienceUpdateProfile, audienceUploadProfilePhoto, profilePhotoUpload, audienceAcceptTerms, audienceGetEmailPreferences, audienceUpdateEmailPreferences, audienceGetPushNotifPreferences, audienceUpdatePushNotifPreferences, audienceUpdatePrivacy } from '../controllers/audienceAuthController';
 import { authenticateToken, authenticateAudienceToken } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
@@ -49,6 +49,9 @@ audienceRouter.post('/facebook/exchange', authRateLimit, audienceOAuthExchange);
 audienceRouter.post('/accept-terms', authenticateAudienceToken, audienceAcceptTerms);
 audienceRouter.get('/me/email-preferences', authenticateAudienceToken, audienceGetEmailPreferences);
 audienceRouter.patch('/me/email-preferences', authenticateAudienceToken, audienceUpdateEmailPreferences);
+audienceRouter.get('/me/push-notif-preferences', authenticateAudienceToken, audienceGetPushNotifPreferences);
+audienceRouter.patch('/me/push-notif-preferences', authenticateAudienceToken, audienceUpdatePushNotifPreferences);
+audienceRouter.patch('/me/privacy', authenticateAudienceToken, audienceUpdatePrivacy);
 router.use('/audience', audienceRouter);
 
 // Dashboard portal Google auth

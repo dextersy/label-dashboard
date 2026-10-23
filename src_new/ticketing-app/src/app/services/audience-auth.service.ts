@@ -26,6 +26,8 @@ export interface AudienceUser {
   music_genres?: string[] | null;
   event_frequency?: string | null;
   profile_complete?: boolean;
+  is_public?: boolean;
+  social_discoverable?: boolean;
 }
 
 export interface AudienceEmailPreferences {
@@ -34,6 +36,12 @@ export interface AudienceEmailPreferences {
   organizer_updates: boolean;
   points_rewards: boolean;
   connection_emails: boolean;
+}
+
+export interface AudiencePushNotifPreferences {
+  connection_requests: boolean;
+  new_events: boolean;
+  points_rewards: boolean;
 }
 
 export interface AudienceAuthResponse {
@@ -161,9 +169,25 @@ export class AudienceAuthService {
     return this.http.get<AudienceEmailPreferences>(`${this.apiUrl}/auth/audience/me/email-preferences`, { headers });
   }
 
+  updatePrivacy(data: { is_public?: boolean; social_discoverable?: boolean }): Observable<AudienceUser> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<AudienceUser>(`${this.apiUrl}/auth/audience/me/privacy`, data, { headers })
+      .pipe(tap(user => this.updateStoredUser(user)));
+  }
+
   updateEmailPreferences(prefs: Partial<AudienceEmailPreferences>): Observable<AudienceEmailPreferences> {
     const headers = this.getAuthHeaders();
     return this.http.patch<AudienceEmailPreferences>(`${this.apiUrl}/auth/audience/me/email-preferences`, prefs, { headers });
+  }
+
+  getPushNotifPreferences(): Observable<AudiencePushNotifPreferences> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<AudiencePushNotifPreferences>(`${this.apiUrl}/auth/audience/me/push-notif-preferences`, { headers });
+  }
+
+  updatePushNotifPreferences(prefs: Partial<AudiencePushNotifPreferences>): Observable<AudiencePushNotifPreferences> {
+    const headers = this.getAuthHeaders();
+    return this.http.patch<AudiencePushNotifPreferences>(`${this.apiUrl}/auth/audience/me/push-notif-preferences`, prefs, { headers });
   }
 
   uploadProfilePhoto(file: File): Observable<AudienceUser> {
