@@ -63,7 +63,7 @@ import { AudienceAttendee } from '../../../models/audience-connection';
                   }
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-black text-white uppercase truncate">
-                      {{ item.user.first_name }} {{ item.user.last_name_initial }}
+                      {{ item.user.first_name }} {{ item.user.last_name ?? item.user.last_name_initial }}
                     </p>
                     <p class="text-xs font-mono text-white/30 truncate">
                       {{ item.user.city ? item.user.city + ' · ' : '' }}{{ item.user.membership_tier }}

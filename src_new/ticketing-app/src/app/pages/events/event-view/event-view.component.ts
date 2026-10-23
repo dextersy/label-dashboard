@@ -471,7 +471,7 @@ interface PublicEventView {
                 }
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-black text-white uppercase truncate leading-tight">
-                    {{ item.user.first_name }} {{ item.user.last_name_initial }}
+                    {{ item.user.first_name }} {{ item.user.last_name ?? item.user.last_name_initial }}
                   </p>
                   @if (item.user.city) {
                     <p class="text-[10px] font-mono text-white/30 truncate">{{ item.user.city }}</p>

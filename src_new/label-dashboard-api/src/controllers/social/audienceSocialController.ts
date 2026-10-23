@@ -81,10 +81,12 @@ async function sendConnectionEmail(
 
 function publicProfile(user: AudienceUser) {
   const level = user.points_total >= 700 ? 'Platinum' : user.points_total >= 300 ? 'Gold' : 'Silver';
+  const showFullName = user.is_public || user.social_discoverable;
   return {
     id: user.id,
     first_name: user.first_name,
-    last_name_initial: user.last_name ? user.last_name.charAt(0) + '.' : null,
+    last_name: showFullName ? (user.last_name ?? null) : null,
+    last_name_initial: !showFullName && user.last_name ? user.last_name.charAt(0) + '.' : null,
     profile_photo_url: user.profile_photo_url ?? null,
     membership_tier: level,
     city: user.city ?? null,
@@ -341,8 +343,8 @@ export const getMyConnections = async (req: Request, res: Response) => {
         [Op.or]: [{ requester_id: me.id }, { addressee_id: me.id }],
       },
       include: [
-        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total'] },
-        { model: AudienceUser, as: 'addressee', attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total'] },
+        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'is_public', 'social_discoverable'] },
+        { model: AudienceUser, as: 'addressee', attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'is_public', 'social_discoverable'] },
       ],
       order: [['created_at', 'DESC']],
     });
@@ -370,7 +372,7 @@ export const getPendingRequests = async (req: Request, res: Response) => {
     const pending = await AudienceConnection.findAll({
       where: { addressee_id: me.id, status: 'pending' },
       include: [
-        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total'] },
+        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'is_public', 'social_discoverable'] },
       ],
       order: [['created_at', 'DESC']],
     });
@@ -414,7 +416,7 @@ export const discoverAtEvent = async (req: Request, res: Response) => {
 
     const users = await AudienceUser.findAll({
       where: { id: { [Op.in]: attendeeIds }, social_discoverable: true },
-      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total'],
+      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'is_public', 'social_discoverable'],
     });
 
     // Fetch existing connections to annotate connection_status
@@ -466,7 +468,7 @@ export const getAudienceUserProfile = async (req: Request, res: Response) => {
     const targetId = parseInt(req.params.id as string, 10);
 
     const target = await AudienceUser.findByPk(targetId, {
-      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'social_discoverable'],
+      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'is_public', 'social_discoverable'],
     });
     if (!target || !target.social_discoverable) return res.status(404).json({ error: 'User not found.' });
 

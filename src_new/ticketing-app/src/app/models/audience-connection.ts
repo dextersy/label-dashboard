@@ -3,6 +3,7 @@ export type ConnectionStatus = 'pending' | 'accepted' | 'blocked';
 export interface AudiencePublicProfile {
   id: number;
   first_name: string;
+  last_name: string | null;
   last_name_initial: string | null;
   profile_photo_url: string | null;
   membership_tier: 'Silver' | 'Gold' | 'Platinum';
