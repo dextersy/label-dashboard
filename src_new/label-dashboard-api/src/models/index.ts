@@ -63,6 +63,7 @@ import EventAccess from './EventAccess';
 import EventBrandCollaboration from './EventBrandCollaboration';
 import AudienceConnection from './AudienceConnection';
 import AudienceNotification from './AudienceNotification';
+import AudiencePushNotifPreference from './AudiencePushNotifPreference';
 
 // Define relationships
 // Brand relationships
@@ -214,6 +215,8 @@ AudienceUser.hasMany(AudiencePointTransaction, { foreignKey: 'audience_user_id',
 AudiencePointTransaction.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
 AudienceUser.hasOne(AudienceEmailPreference, { foreignKey: 'audience_user_id', as: 'emailPreference' });
 AudienceEmailPreference.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
+AudienceUser.hasOne(AudiencePushNotifPreference, { foreignKey: 'audience_user_id', as: 'pushNotifPreference' });
+AudiencePushNotifPreference.belongsTo(AudienceUser, { foreignKey: 'audience_user_id', as: 'audienceUser' });
 
 // AudienceConnection relationships
 AudienceConnection.belongsTo(AudienceUser, { foreignKey: 'requester_id', as: 'requester' });
@@ -471,6 +474,7 @@ export {
   EventBrandCollaboration,
   AudienceConnection,
   AudienceNotification,
+  AudiencePushNotifPreference,
 };
 
 // Initialize database connection
