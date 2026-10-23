@@ -46,6 +46,7 @@ export class WristbandOrderReviewComponent implements OnInit {
   private readonly TMPL_H_FRAC = 0.64;
 
   downloading = false;
+  printingSheet = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -315,5 +316,106 @@ export class WristbandOrderReviewComponent implements OnInit {
         }, 'image/png');
       })
       .catch(() => { this.downloading = false; });
+  }
+
+  printSheet(): void {
+    const order = this.order;
+    if (!order?.design_url || this.printingSheet) return;
+
+    const canvasW = order.canvas_width ?? (this.TEMPLATE_W / this.TMPL_W_FRAC);
+    const canvasH = canvasW * this.CANVAS_ASPECT;
+    const scaleX = this.TEMPLATE_W / (this.TMPL_W_FRAC * canvasW);
+    const scaleY = this.TEMPLATE_H / (this.TMPL_H_FRAC * canvasH);
+
+    const x = ((order.design_x ?? 0) - this.TMPL_L * canvasW) * scaleX;
+    const y = ((order.design_y ?? 0) - this.TMPL_T * canvasH) * scaleY;
+    const w = (order.design_width ?? 0) * scaleX;
+    const h = (order.design_height ?? 0) * scaleY;
+
+    this.printingSheet = true;
+
+    const token = localStorage.getItem('auth_token');
+    const proxyUrl = `${environment.apiUrl}/events/wristband-orders/${order.id}/design`;
+
+    fetch(proxyUrl, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch design');
+        return res.blob();
+      })
+      .then(blob => new Promise<HTMLImageElement>((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { resolve(img); URL.revokeObjectURL(objectUrl); };
+        img.onerror = () => { reject(); URL.revokeObjectURL(objectUrl); };
+        img.src = objectUrl;
+      }))
+      .then(img => {
+        const STRIPS = 10;
+        const sheetCanvas = document.createElement('canvas');
+        sheetCanvas.width = STRIPS * this.TEMPLATE_H;  // 1520px (10 × 19mm)
+        sheetCanvas.height = this.TEMPLATE_W;           // 2000px (250mm)
+        const ctx = sheetCanvas.getContext('2d')!;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, sheetCanvas.width, sheetCanvas.height);
+
+        // Each strip is the wristband (TEMPLATE_W × TEMPLATE_H) rotated 90° CW
+        // so the left end of the wristband (x=0) appears at the top of the column.
+        // After translate((i+1)*TEMPLATE_H, 0) + rotate(π/2):
+        //   (0, 0) in strip space → top-right of column i on the sheet
+        //   (TEMPLATE_W, 0)       → bottom-right of column i
+        //   (0, -TEMPLATE_H)      → top-left of column i
+        const imgAspect = img.naturalWidth / img.naturalHeight;
+        const boxAspect = w / h;
+        let drawW: number, drawH: number, drawX: number, drawY: number;
+        if (imgAspect > boxAspect) {
+          drawW = w;   drawH = w / imgAspect;
+          drawX = x;   drawY = y + (h - drawH) / 2;
+        } else {
+          drawH = h;   drawW = h * imgAspect;
+          drawX = x + (w - drawW) / 2;   drawY = y;
+        }
+
+        // Calibration — tweak these three values to align the physical print:
+        //   PITCH       : px between strip columns; < TEMPLATE_H (152) compresses horizontally
+        //   BASE_OFFSET : leftward shift applied to every strip (negative = left)
+        //   STEP_OFFSET : additional leftward shift added per strip index (progressive)
+        const PITCH       = 149;   // compressed from 152
+        const BASE_OFFSET = -3;    // all strips shift left
+        const STEP_OFFSET = -1;    // each strip shifts 1 more px left than the previous
+
+        for (let i = 0; i < STRIPS; i++) {
+          ctx.save();
+          ctx.translate((i + 1) * PITCH + BASE_OFFSET + i * STEP_OFFSET, 0);
+          ctx.rotate(Math.PI / 2);
+          ctx.drawImage(img, drawX, drawY, drawW, drawH);
+          ctx.restore();
+        }
+
+        const dataUrl = sheetCanvas.toDataURL('image/png');
+        this.printingSheet = false;
+
+        const printWin = window.open('', '_blank');
+        if (!printWin) return;
+        const orderId = order.id;
+        printWin.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wristband Print Sheet \u2013 Order #${orderId}</title>
+  <style>
+    @page { size: 190mm 250mm; margin: 0; }
+    html, body { margin: 0; padding: 0; width: 190mm; height: 250mm; overflow: hidden; }
+    img { display: block; width: 190mm; height: 250mm; }
+  </style>
+</head>
+<body>
+  <img src="${dataUrl}" alt="Wristband print sheet">
+  <script>window.onload = function() { window.print(); };<\/script>
+</body>
+</html>`);
+        printWin.document.close();
+      })
+      .catch(() => { this.printingSheet = false; });
   }
 }

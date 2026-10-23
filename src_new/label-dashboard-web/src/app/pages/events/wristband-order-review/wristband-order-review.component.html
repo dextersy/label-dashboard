@@ -94,7 +94,7 @@
           </div>
         </div>
 
-        <div class="tw-mt-3">
+        <div class="tw-mt-3 tw-flex tw-flex-wrap tw-items-center tw-gap-2">
           <button
             type="button"
             class="btn-secondary btn-sm"
@@ -104,7 +104,17 @@
             <app-icon name="download" />
             {{ downloading ? 'Preparing…' : 'Download design PNG' }}
           </button>
-          <span class="tw-text-xs tw-text-gray-400 tw-ml-2">{{ TEMPLATE_W }}×{{ TEMPLATE_H }}px, transparent</span>
+          <span class="tw-text-xs tw-text-gray-400">{{ TEMPLATE_W }}×{{ TEMPLATE_H }}px, transparent</span>
+          <button
+            type="button"
+            class="btn-secondary btn-sm"
+            (click)="printSheet()"
+            [disabled]="printingSheet"
+          >
+            <app-icon name="printer" />
+            {{ printingSheet ? 'Preparing…' : 'Print printable sheet' }}
+          </button>
+          <span class="tw-text-xs tw-text-gray-400">190×250mm, 10-up</span>
         </div>
       </div>
     </div>
