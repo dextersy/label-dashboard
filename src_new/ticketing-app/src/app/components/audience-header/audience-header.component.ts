@@ -142,7 +142,7 @@ import { AudienceNotification } from '../../models/audience-notification';
                   </a>
                   <a routerLink="/my-profile" (click)="menuOpen.set(false)"
                     class="flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
-                    Edit Profile
+                    Account Settings
                   </a>
                   <a routerLink="/my-connections" (click)="menuOpen.set(false)"
                     class="flex items-center justify-between px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
