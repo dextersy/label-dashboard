@@ -274,7 +274,7 @@ async function sendCompleteProfileEmail(user: AudienceUser): Promise<void> {
 
 export const audienceSignup = async (req: Request, res: Response) => {
   try {
-    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, referral_code: incomingReferralCode } = req.body;
+    const { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, referral_code: incomingReferralCode, social_discoverable } = req.body;
 
     if (!email || !password || !first_name || !last_name) {
       return res.status(400).json({ error: 'Email, password, first name, and last name are required' });
@@ -327,6 +327,7 @@ export const audienceSignup = async (req: Request, res: Response) => {
       signup_reference: signup_reference ? String(signup_reference) : null,
       referral_code,
       referred_by_user_id,
+      social_discoverable: social_discoverable === true,
     });
 
     // Send verification email (non-blocking — don't fail signup if email fails)
@@ -1048,7 +1049,7 @@ export const profilePhotoUpload = multer({
 export const audienceAcceptTerms = async (req: Request, res: Response) => {
   try {
     const user = (req as any).audienceUser as AudienceUser;
-    const { terms_accepted, privacy_accepted, age_confirmed } = req.body;
+    const { terms_accepted, privacy_accepted, age_confirmed, social_discoverable } = req.body;
 
     if (!terms_accepted) {
       return res.status(400).json({ error: 'You must accept the Terms and Conditions' });
@@ -1065,6 +1066,7 @@ export const audienceAcceptTerms = async (req: Request, res: Response) => {
       terms_accepted_at: user.terms_accepted_at ?? now,
       privacy_accepted_at: user.privacy_accepted_at ?? now,
       age_confirmed_at: user.age_confirmed_at ?? now,
+      social_discoverable: social_discoverable === true,
     });
 
     return res.json(buildUserPayload(user));

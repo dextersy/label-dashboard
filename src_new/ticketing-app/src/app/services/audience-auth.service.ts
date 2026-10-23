@@ -75,13 +75,13 @@ export class AudienceAuthService {
       .pipe(tap(res => this.storeAuth(res)));
   }
 
-  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean, signed_up_from?: string, signup_reference?: string, referral_code?: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, referral_code });
+  signup(email: string, password: string, first_name: string, last_name: string, terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean, signed_up_from?: string, signup_reference?: string, referral_code?: string, social_discoverable?: boolean): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/audience/signup`, { email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, referral_code, social_discoverable });
   }
 
-  acceptTerms(terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean): Observable<AudienceUser> {
+  acceptTerms(terms_accepted: boolean, privacy_accepted: boolean, age_confirmed: boolean, social_discoverable: boolean): Observable<AudienceUser> {
     const headers = this.getAuthHeaders();
-    return this.http.post<AudienceUser>(`${this.apiUrl}/auth/audience/accept-terms`, { terms_accepted, privacy_accepted, age_confirmed }, { headers })
+    return this.http.post<AudienceUser>(`${this.apiUrl}/auth/audience/accept-terms`, { terms_accepted, privacy_accepted, age_confirmed, social_discoverable }, { headers })
       .pipe(tap(user => this.updateStoredUser(user)));
   }
 

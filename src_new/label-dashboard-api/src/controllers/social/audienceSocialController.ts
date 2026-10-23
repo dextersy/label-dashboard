@@ -197,6 +197,9 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
 
     const target = await AudienceUser.findByPk(user_id);
     if (!target) return res.status(404).json({ error: 'User not found.' });
+    if (!target.social_discoverable) {
+      return res.status(403).json({ error: 'This user is not accepting connection requests.' });
+    }
 
     return createPendingConnectionRequest(me, target, res);
   } catch (error) {
@@ -410,7 +413,7 @@ export const discoverAtEvent = async (req: Request, res: Response) => {
     if (attendeeIds.length === 0) return res.json({ attendees: [] });
 
     const users = await AudienceUser.findAll({
-      where: { id: { [Op.in]: attendeeIds } },
+      where: { id: { [Op.in]: attendeeIds }, social_discoverable: true },
       attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total'],
     });
 
@@ -463,9 +466,9 @@ export const getAudienceUserProfile = async (req: Request, res: Response) => {
     const targetId = parseInt(req.params.id as string, 10);
 
     const target = await AudienceUser.findByPk(targetId, {
-      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total'],
+      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'social_discoverable'],
     });
-    if (!target) return res.status(404).json({ error: 'User not found.' });
+    if (!target || !target.social_discoverable) return res.status(404).json({ error: 'User not found.' });
 
     const connection = await findConnection(me.id, targetId);
     const connData = connection

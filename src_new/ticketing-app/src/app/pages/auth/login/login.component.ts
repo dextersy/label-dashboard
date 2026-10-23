@@ -317,6 +317,16 @@ type View = 'login' | 'signup' | 'forgot-password' | 'reset-password';
                       <p class="mt-1 text-xs font-mono text-red-500">You must confirm your age.</p>
                     }
                   </div>
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="social_discoverable"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        Let other verified attendees discover and connect with me at events
+                        <span class="text-gray-400">(optional — you can change this anytime in your profile)</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
                 <p class="mt-3 text-xs text-gray-400 leading-snug">
                   Tickets previously purchased with your email address will be automatically linked to your profile.
@@ -581,6 +591,7 @@ export class LoginComponent implements OnInit {
       terms_accepted: [false, Validators.requiredTrue],
       privacy_accepted: [false, Validators.requiredTrue],
       age_confirmed: [false, Validators.requiredTrue],
+      social_discoverable: [false],
     });
     this.organizerForm = this.fb.group({
       full_name: ['', Validators.required],
@@ -807,9 +818,9 @@ export class LoginComponent implements OnInit {
     if (this.audienceForm.invalid) { this.audienceForm.markAllAsTouched(); return; }
     this.audienceLoading.set(true);
     this.error.set('');
-    const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed } = this.audienceForm.value;
+    const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed, social_discoverable } = this.audienceForm.value;
     const refCode = this.referralCode() || undefined;
-    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, undefined, undefined, refCode).subscribe({
+    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, undefined, undefined, refCode, social_discoverable).subscribe({
       next: () => {
         this.audienceLoading.set(false);
         this.signupPendingEmail.set(email);

@@ -98,6 +98,16 @@ import { environment } from '../../../../environments/environment';
                   <p class="mt-1 text-xs font-mono text-red-500">You must confirm your age to continue.</p>
                 }
               </div>
+              <div>
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" formControlName="social_discoverable"
+                    class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                  <span class="text-xs font-mono text-gray-600 leading-relaxed">
+                    Let other verified attendees discover and connect with me at events
+                    <span class="text-gray-400">(optional — you can change this anytime in your profile)</span>
+                  </span>
+                </label>
+              </div>
             </div>
 
             <button type="submit" [disabled]="loading()"
@@ -133,6 +143,7 @@ export class AcceptTermsComponent {
       terms_accepted: [false, Validators.requiredTrue],
       privacy_accepted: [false, Validators.requiredTrue],
       age_confirmed: [false, Validators.requiredTrue],
+      social_discoverable: [false],
     });
 
     // If the user doesn't need to accept terms, redirect them away

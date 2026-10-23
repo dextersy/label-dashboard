@@ -231,6 +231,16 @@ import { environment } from '../../../../environments/environment';
                       <p class="mt-1 text-xs font-mono text-red-500">You must confirm your age.</p>
                     }
                   </div>
+                  <div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" formControlName="social_discoverable"
+                        class="mt-0.5 h-4 w-4 flex-shrink-0 accent-yellow-400 cursor-pointer">
+                      <span class="text-xs font-mono text-gray-500 leading-relaxed">
+                        Let other verified attendees discover and connect with me at events
+                        <span class="text-gray-400">(optional — you can change this anytime in your profile)</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
                 <p class="mt-3 text-xs text-gray-400 leading-snug">
                   Tickets previously purchased with your email will be automatically linked to your profile.
@@ -290,6 +300,7 @@ export class ConnectComponent implements OnInit {
       terms_accepted: [false, Validators.requiredTrue],
       privacy_accepted: [false, Validators.requiredTrue],
       age_confirmed: [false, Validators.requiredTrue],
+      social_discoverable: [false],
     });
   }
 
@@ -365,10 +376,10 @@ export class ConnectComponent implements OnInit {
     if (this.signupForm.invalid) { this.signupForm.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
-    const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed } = this.signupForm.value;
+    const { first_name, last_name, email, password, terms_accepted, privacy_accepted, age_confirmed, social_discoverable } = this.signupForm.value;
     const signed_up_from = this.signupFromEventId ? 'event_tickets' : undefined;
     const signup_reference = this.signupFromEventId ?? undefined;
-    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference).subscribe({
+    this.audienceAuth.signup(email, password, first_name, last_name, terms_accepted, privacy_accepted, age_confirmed, signed_up_from, signup_reference, undefined, social_discoverable).subscribe({
       next: () => { this.loading.set(false); this.signupPendingEmail.set(email); },
       error: (err: any) => {
         this.loading.set(false);

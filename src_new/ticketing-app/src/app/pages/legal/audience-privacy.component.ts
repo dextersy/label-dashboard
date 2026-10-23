@@ -23,7 +23,7 @@ import { CommonModule } from '@angular/common';
         <p class="text-xs font-mono text-yellow-400 uppercase tracking-[0.25em] mb-3">— legal —</p>
         <h1 class="text-3xl font-black uppercase tracking-tight mb-2">Privacy Policy</h1>
         <p class="text-xs font-mono text-white/30 mb-2">For ticket buyers and audience members</p>
-        <p class="text-xs font-mono text-white/30 mb-10">Last updated: August 2026</p>
+        <p class="text-xs font-mono text-white/30 mb-10">Last updated: October 2026</p>
 
         <div class="space-y-10 text-sm font-mono text-white/60 leading-relaxed">
 
@@ -116,6 +116,11 @@ import { CommonModule } from '@angular/common';
                 <p class="mt-1 text-yellow-400/70 text-xs uppercase tracking-wider">Legal basis: Legal obligation / Legitimate interests</p>
               </div>
               <div class="border border-white/10 p-4">
+                <p class="text-white/80 font-bold mb-1">Social discovery (opt-in)</p>
+                <p>If you choose to enable social discovery, your first name, last name initial, profile photo, city, music genre preferences, and membership tier may be shown to other verified attendees at the same event, so they can send you a connection request. Your full last name, email address, and ticket details are never shared with other users. You can enable or disable this at any time in your profile settings without affecting your access to the Platform.</p>
+                <p class="mt-1 text-yellow-400/70 text-xs uppercase tracking-wider">Legal basis: Consent (freely given, separately obtained, and withdrawable)</p>
+              </div>
+              <div class="border border-white/10 p-4">
                 <p class="text-white/80 font-bold mb-1">Optional marketing communications</p>
                 <p>To send you newsletters, promotional offers, or event recommendations. We will only do this if you have explicitly opted in. You may withdraw this consent at any time via the unsubscribe link in any marketing email, without affecting your access to the Platform.</p>
                 <p class="mt-1 text-yellow-400/70 text-xs uppercase tracking-wider">Legal basis: Consent (freely given, separately obtained, and withdrawable)</p>
@@ -138,7 +143,7 @@ import { CommonModule } from '@angular/common';
                 <span class="text-white/80">Legal obligation (Art. 6(1)(c)):</span> Some processing is required to comply with laws that apply to us, such as financial record-keeping obligations.
               </li>
               <li>
-                <span class="text-white/80">Consent (Art. 6(1)(a)):</span> We rely on consent only for optional activities such as marketing emails. Consent is always freely given, specific, informed, and unambiguous — obtained through a clear opt-in action separate from account creation. Accepting this Privacy Policy is not treated as consent to any processing activity. Where consent is the basis, you may withdraw it at any time without detriment.
+                <span class="text-white/80">Consent (Art. 6(1)(a)):</span> We rely on consent for optional activities such as marketing emails and social discovery (making your profile visible to other verified attendees at events). Consent is always freely given, specific, informed, and unambiguous — obtained through a clear opt-in action separate from account creation. Accepting this Privacy Policy is not treated as consent to any processing activity. Where consent is the basis, you may withdraw it at any time without detriment.
               </li>
             </ul>
           </section>
