@@ -1,6 +1,6 @@
 <app-breadcrumb></app-breadcrumb>
 
-<div class="container-fluid">
+<div class="container-fluid tw-pt-6">
 
   <!-- Loading -->
   <div *ngIf="loading" class="card mb-4">
@@ -44,10 +44,58 @@
       <span class="tw-text-sm tw-text-red-800">{{ actionError }}</span>
     </div>
 
-    <!-- Design preview — full width so the wristband canvas is as wide as possible -->
-    <div *ngIf="order.design_url" class="card mb-4">
-      <div class="card-body">
-        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Design Preview</h3>
+    <!-- Design preview — limited to 75% width on desktop -->
+    <div *ngIf="order.design_url" class="card mb-4 preview-width-cap preview-card">
+      <div class="card-body tw-pt-4">
+        <div class="tw-flex tw-items-center tw-justify-between tw-mb-3">
+          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Design Preview</h3>
+
+          <div class="tw-relative tw-inline-block">
+            <button
+              type="button"
+              class="btn-secondary btn-sm download-toggle"
+              (click)="downloadDropdownOpen = !downloadDropdownOpen"
+              [disabled]="downloading || printingSheet"
+            >
+              <app-icon name="download" />
+              <span *ngIf="!downloading && !printingSheet">Download</span>
+              <span *ngIf="downloading">Preparing PNG…</span>
+              <span *ngIf="printingSheet">Preparing sheet…</span>
+              <app-icon name="chevron-down" class="tw-ml-1" *ngIf="!downloading && !printingSheet" />
+            </button>
+
+            <div *ngIf="downloadDropdownOpen" class="download-dropdown-menu download-dropdown-menu--right">
+              <button
+                type="button"
+                class="download-dropdown-item"
+                (click)="downloadDesign(); downloadDropdownOpen = false"
+                [disabled]="downloading"
+              >
+                <div class="tw-flex tw-items-center tw-gap-2">
+                  <app-icon name="image" class="tw-text-gray-400 tw-shrink-0" />
+                  <div>
+                    <div class="tw-font-medium">Download design PNG</div>
+                    <div class="tw-text-xs tw-text-gray-400">{{ TEMPLATE_W }}×{{ TEMPLATE_H }}px, transparent</div>
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                class="download-dropdown-item"
+                (click)="printSheet(); downloadDropdownOpen = false"
+                [disabled]="printingSheet"
+              >
+                <div class="tw-flex tw-items-center tw-gap-2">
+                  <app-icon name="printer" class="tw-text-gray-400 tw-shrink-0" />
+                  <div>
+                    <div class="tw-font-medium">Print printable sheet</div>
+                    <div class="tw-text-xs tw-text-gray-400">190×250mm, 10-up</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Color picker -->
         <div *ngIf="orderedColors.length" class="color-selector-row">
@@ -94,74 +142,62 @@
           </div>
         </div>
 
-        <div class="tw-mt-3 tw-flex tw-flex-wrap tw-items-center tw-gap-2">
-          <button
-            type="button"
-            class="btn-secondary btn-sm"
-            (click)="downloadDesign()"
-            [disabled]="downloading"
-          >
-            <app-icon name="download" />
-            {{ downloading ? 'Preparing…' : 'Download design PNG' }}
-          </button>
-          <span class="tw-text-xs tw-text-gray-400">{{ TEMPLATE_W }}×{{ TEMPLATE_H }}px, transparent</span>
-          <button
-            type="button"
-            class="btn-secondary btn-sm"
-            (click)="printSheet()"
-            [disabled]="printingSheet"
-          >
-            <app-icon name="printer" />
-            {{ printingSheet ? 'Preparing…' : 'Print printable sheet' }}
-          </button>
-          <span class="tw-text-xs tw-text-gray-400">190×250mm, 10-up</span>
-        </div>
       </div>
     </div>
 
-    <div class="tw-max-w-2xl">
+    <div>
 
-      <!-- Delivery address card -->
-      <div *ngIf="deliveryAddress" class="card mb-4">
-        <div class="card-body">
-          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Shipping Address</h3>
-          <p class="tw-text-sm tw-text-gray-700 tw-whitespace-pre-line tw-mb-0">{{ deliveryAddress }}</p>
+      <!-- Shipping address + Order items — side by side on desktop -->
+      <div class="md:tw-grid md:tw-grid-cols-3 md:tw-gap-4 md:tw-items-start tw-mb-4 preview-width-cap">
+
+        <!-- Delivery address card -->
+        <div *ngIf="deliveryAddress" class="card tw-mb-4 md:tw-mb-0 md:tw-col-span-1">
+          <div class="card-body tw-pt-4">
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Shipping Address</h3>
+            <p class="tw-text-sm tw-text-gray-700 tw-whitespace-pre-line tw-mb-0">{{ deliveryAddress }}</p>
+          </div>
         </div>
-      </div>
 
-      <!-- Order details card -->
-      <div class="card mb-4">
-        <div class="card-body">
+        <!-- Order details card -->
+        <div class="card md:tw-col-span-2">
+          <div class="card-body tw-pt-4">
           <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Order Items</h3>
 
-          <table class="table table-sm mb-0">
-            <thead>
-              <tr>
-                <th>Color</th>
-                <th class="text-end">Qty</th>
-                <th class="text-end">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of order.items">
-                <td>{{ item.color?.label ?? '—' }}</td>
-                <td class="text-end">{{ item.quantity }}</td>
-                <td class="text-end">₱{{ ((item.quantity / 10) * PRICE_PER_10) | number:'1.2-2' }}</td>
-              </tr>
-              <tr *ngIf="order.shipping_fee != null">
-                <td class="tw-text-gray-500">Shipping fee</td>
-                <td class="text-end tw-text-gray-500">—</td>
-                <td class="text-end tw-text-gray-500">₱{{ order.shipping_fee | number:'1.2-2' }}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr class="fw-semibold">
-                <td>Total</td>
-                <td class="text-end">{{ totalQty }}</td>
-                <td class="text-end">₱{{ grandTotal | number:'1.2-2' }}</td>
-              </tr>
-            </tfoot>
-          </table>
+          <div class="table-responsive">
+            <table class="table table-financial order-items-table mb-0">
+              <thead>
+                <tr>
+                  <th>Color</th>
+                  <th class="text-end">Qty</th>
+                  <th class="text-end">Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of order.items">
+                  <td>
+                    <div class="tw-flex tw-items-center tw-gap-2">
+                      <span *ngIf="item.color?.bg_color" class="color-dot" [style.backgroundColor]="item.color!.bg_color"></span>
+                      {{ item.color?.label ?? '—' }}
+                    </div>
+                  </td>
+                  <td class="text-end">{{ item.quantity }}</td>
+                  <td class="text-end">₱{{ ((item.quantity / 10) * PRICE_PER_10) | number:'1.2-2' }}</td>
+                </tr>
+                <tr *ngIf="order.shipping_fee != null">
+                  <td class="tw-text-gray-500">Shipping fee</td>
+                  <td class="text-end tw-text-gray-500">—</td>
+                  <td class="text-end tw-text-gray-500">₱{{ order.shipping_fee | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td class="text-end">{{ totalQty }}</td>
+                  <td class="text-end">₱{{ grandTotal | number:'1.2-2' }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
 
           <!-- Shipping fee controls -->
           <div class="tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-100">
@@ -205,39 +241,12 @@
           </div>
 
         </div>
-      </div>
-
-      <!-- Action buttons — only shown when order is in 'placed' state and no action taken yet -->
-      <div *ngIf="order.status === 'placed' && !actionDone" class="card mb-4">
-        <div class="card-body">
-          <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-3">Action Required</h3>
-          <p class="tw-text-sm tw-text-gray-600 tw-mb-4">Review the order above and accept or reject it. Accepted orders are counted toward the organizer's payment total.</p>
-          <div class="tw-flex tw-gap-3">
-            <button
-              type="button"
-              class="btn-primary"
-              (click)="confirm()"
-              [disabled]="actioning"
-            >
-              <app-icon name="check" />
-              {{ actioning ? 'Processing…' : 'Accept Order' }}
-            </button>
-            <button
-              type="button"
-              class="btn-secondary text-danger"
-              (click)="reject()"
-              [disabled]="actioning"
-            >
-              <app-icon name="x" />
-              Reject Order
-            </button>
-          </div>
-        </div>
-      </div>
+        </div><!-- /card -->
+      </div><!-- /grid -->
 
       <!-- Already actioned notice -->
-      <div *ngIf="order.status !== 'placed' && !actionDone" class="card mb-4">
-        <div class="card-body tw-text-sm tw-text-gray-500">
+      <div *ngIf="order.status !== 'placed' && !actionDone" class="card mb-4 preview-width-cap">
+        <div class="card-body tw-pt-4 tw-text-sm tw-text-gray-500">
           This order has already been <strong>{{ order.status }}</strong> and cannot be actioned again.
         </div>
       </div>
@@ -247,3 +256,28 @@
   </ng-container>
 
 </div>
+
+<!-- Floating action bar — shown when order is in 'placed' state and no action taken yet -->
+<app-floating-action-bar *ngIf="order && order.status === 'placed' && !actionDone">
+  <span floatingStart class="tw-text-sm tw-text-muted">
+    Review the order above and accept or reject it.
+  </span>
+  <button
+    type="button"
+    class="btn-secondary text-danger"
+    (click)="reject()"
+    [disabled]="actioning"
+  >
+    <app-icon name="x" />
+    Reject Order
+  </button>
+  <button
+    type="button"
+    class="btn-primary fab-primary-btn"
+    (click)="confirm()"
+    [disabled]="actioning"
+  >
+    <app-icon name="check" />
+    {{ actioning ? 'Processing…' : 'Accept Order' }}
+  </button>
+</app-floating-action-bar>

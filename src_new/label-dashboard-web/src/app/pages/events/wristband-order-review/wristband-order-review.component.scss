@@ -1,3 +1,112 @@
+// ── Design preview width cap ──────────────────────────────────────────────────
+
+.preview-width-cap {
+  @media (min-width: 768px) {
+    max-width: 75%;
+  }
+}
+
+// ── Color dot ─────────────────────────────────────────────────────────────────
+
+.color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+// ── Order items table ──────────────────────────────────────────────────────────
+
+.order-items-table {
+  font-size: 13px !important;
+
+  thead th {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  tbody td {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  tfoot tr td {
+    padding: 8px 12px !important;
+    border-top: 2px solid #e5e7eb !important;
+    font-weight: 600;
+    color: #111827;
+    font-size: 13px !important;
+    vertical-align: middle !important;
+
+    &.text-end {
+      text-align: right !important;
+    }
+  }
+}
+
+// ── Design preview card — allow dropdown to overflow ─────────────────────────
+
+.preview-card {
+  overflow: visible !important;
+}
+
+// ── Download dropdown ──────────────────────────────────────────────────────────
+
+.download-toggle {
+  border: none !important;
+  font-weight: 600 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+
+  &:hover {
+    background: transparent !important;
+    text-decoration: underline;
+  }
+}
+
+.download-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+
+  &--right {
+    left: auto;
+    right: 0;
+  }
+  z-index: 100;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+.download-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #374151;
+  font-size: 13px;
+  transition: background-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background-color: #f9fafb;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 // ── Color selector ────────────────────────────────────────────────────────────
 
 .color-selector-row {

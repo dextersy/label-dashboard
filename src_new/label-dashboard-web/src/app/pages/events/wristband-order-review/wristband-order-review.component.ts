@@ -5,12 +5,13 @@ import { ActivatedRoute } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { EventService, WristbandColor, WristbandOrder } from '../../../services/event.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-wristband-order-review',
-  imports: [CommonModule, FormsModule, BreadcrumbComponent, IconComponent],
+  imports: [CommonModule, FormsModule, BreadcrumbComponent, IconComponent, FloatingActionBarComponent],
   templateUrl: './wristband-order-review.component.html',
   styleUrl: './wristband-order-review.component.scss',
 })
@@ -47,6 +48,7 @@ export class WristbandOrderReviewComponent implements OnInit {
 
   downloading = false;
   printingSheet = false;
+  downloadDropdownOpen = false;
 
   constructor(
     private route: ActivatedRoute,
