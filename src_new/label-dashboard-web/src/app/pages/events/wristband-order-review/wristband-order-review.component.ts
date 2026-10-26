@@ -382,9 +382,9 @@ export class WristbandOrderReviewComponent implements OnInit {
         //   PITCH       : px between strip columns; < TEMPLATE_H (152) compresses horizontally
         //   BASE_OFFSET : leftward shift applied to every strip (negative = left)
         //   STEP_OFFSET : additional leftward shift added per strip index (progressive)
-        const PITCH       = 149;   // compressed from 152
+        const PITCH       = 150;   // compressed from 152
         const BASE_OFFSET = -3;    // all strips shift left
-        const STEP_OFFSET = -1;    // each strip shifts 1 more px left than the previous
+        const STEP_OFFSET = -0.3;  // each strip shifts 0.3px more left than the previous
 
         for (let i = 0; i < STRIPS; i++) {
           ctx.save();
