@@ -1970,9 +1970,11 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
     startOfToday.setHours(0, 0, 0, 0);
     const events = await Event.findAll({
       where: {
-        date_and_time: { [Op.gte]: startOfToday },
         status: 'published',
         listed_on_ticketing: true,
+        [Op.and]: sequelize.literal(
+          `("Event"."date_and_time" >= '${startOfToday.toISOString()}' OR EXISTS (SELECT 1 FROM event_day ed WHERE ed.event_id = "Event"."id" AND ed.date_and_time >= '${startOfToday.toISOString()}'))`
+        ),
       },
       include: [
         {
@@ -1992,6 +1994,12 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
           as: 'tags',
           through: { attributes: [] },
           attributes: ['id', 'name', 'is_custom'],
+          required: false,
+        },
+        {
+          model: EventDay,
+          as: 'days',
+          attributes: ['id', 'date_and_time', 'label'],
           required: false,
         },
       ],
@@ -2072,6 +2080,9 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
         brand_name: brand?.brand_name || null,
         brand_id: brand?.id || null,
         co_organizer_names: collabsByEvent[event.id] || [],
+        days: ((event as any).days || [])
+          .sort((a: any, b: any) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())
+          .map((d: any) => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null })),
       };
     });
 
