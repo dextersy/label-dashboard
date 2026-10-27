@@ -64,6 +64,9 @@ import EventBrandCollaboration from './EventBrandCollaboration';
 import AudienceConnection from './AudienceConnection';
 import AudienceNotification from './AudienceNotification';
 import AudiencePushNotifPreference from './AudiencePushNotifPreference';
+import EventDay from './EventDay';
+import TicketTypeDay from './TicketTypeDay';
+import TicketScanLog from './TicketScanLog';
 
 // Define relationships
 // Brand relationships
@@ -165,6 +168,20 @@ Event.belongsToMany(EventTag, { through: EventTagMapping, foreignKey: 'event_id'
 EventTag.belongsToMany(Event, { through: EventTagMapping, foreignKey: 'tag_id', otherKey: 'event_id', as: 'events' });
 EventTag.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
 Brand.hasMany(EventTag, { foreignKey: 'brand_id', as: 'eventTags' });
+
+// EventDay relationships
+Event.hasMany(EventDay, { foreignKey: 'event_id', as: 'days', onDelete: 'CASCADE' });
+EventDay.belongsTo(Event, { foreignKey: 'event_id', as: 'event' });
+EventDay.belongsToMany(TicketType, { through: TicketTypeDay, foreignKey: 'event_day_id', otherKey: 'ticket_type_id', as: 'ticketTypes' });
+EventDay.hasMany(TicketScanLog, { foreignKey: 'event_day_id', as: 'scanLogs' });
+
+// TicketTypeDay relationships
+TicketType.belongsToMany(EventDay, { through: TicketTypeDay, foreignKey: 'ticket_type_id', otherKey: 'event_day_id', as: 'days' });
+
+// TicketScanLog relationships
+Ticket.hasMany(TicketScanLog, { foreignKey: 'ticket_id', as: 'scanLogs' });
+TicketScanLog.belongsTo(Ticket, { foreignKey: 'ticket_id', as: 'ticket' });
+TicketScanLog.belongsTo(EventDay, { foreignKey: 'event_day_id', as: 'eventDay' });
 
 // Event relationships
 Event.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
@@ -475,6 +492,9 @@ export {
   AudienceConnection,
   AudienceNotification,
   AudiencePushNotifPreference,
+  EventDay,
+  TicketTypeDay,
+  TicketScanLog,
 };
 
 // Initialize database connection
