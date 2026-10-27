@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { Event, Brand, Domain, Ticket, TicketType, EventReferrer, User, WalkInType, WalkInTransaction, WalkInTransactionItem } from '../models';
+import { Event, Brand, Domain, Ticket, TicketType, EventReferrer, User, WalkInType, WalkInTransaction, WalkInTransactionItem, EventDay, TicketTypeDay, TicketScanLog } from '../models';
 import { sequelize } from '../config/database';
 import { getRequestDomain } from '../utils/requestUtils';
 import { ScannerRequest } from '../middleware/scannerAuth';
@@ -22,15 +22,18 @@ export const scannerLogin = async (req: Request, res: Response) => {
 
     const event = await Event.findOne({
       where: { id: event_id },
-      include: [{
-        model: Brand,
-        as: 'brand',
-        include: [{
-          model: Domain,
-          as: 'domains',
-          attributes: ['domain_name']
-        }]
-      }]
+      include: [
+        {
+          model: Brand,
+          as: 'brand',
+          include: [{
+            model: Domain,
+            as: 'domains',
+            attributes: ['domain_name']
+          }]
+        },
+        { model: EventDay, as: 'days', order: [['date_and_time', 'ASC']] }
+      ]
     });
 
     if (!event) {
@@ -62,6 +65,9 @@ export const scannerLogin = async (req: Request, res: Response) => {
       { expiresIn: '1h' }
     );
 
+    const eventDays: any[] = (event as any).days ?? [];
+    const sortedDays = [...eventDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+
     res.json({
       token,
       event: {
@@ -70,6 +76,7 @@ export const scannerLogin = async (req: Request, res: Response) => {
         date_and_time: event.date_and_time,
         venue: event.venue,
         poster_url: event.poster_url,
+        days: sortedDays.map(d => ({ id: d.id, date_and_time: d.date_and_time, label: d.label })),
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
@@ -82,6 +89,26 @@ export const scannerLogin = async (req: Request, res: Response) => {
     console.error('Scanner login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+/**
+ * Find the EventDay matching today's calendar date for a given event.
+ * Returns null if no day matches today (soft warning — scanning is still allowed by caller).
+ */
+const findCurrentEventDay = async (eventId: number): Promise<EventDay | null> => {
+  const days = await EventDay.findAll({ where: { event_id: eventId } });
+  if (days.length === 0) return null;
+  if (days.length === 1) return days[0];
+
+  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
+  const matching = days.filter(d => {
+    const dayStr = new Date(d.date_and_time).toISOString().slice(0, 10);
+    return dayStr === todayStr;
+  });
+
+  if (matching.length === 0) return null;
+  // Pick earliest matching day if there are multiple on the same calendar date
+  return matching.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())[0];
 };
 
 /**
@@ -124,7 +151,30 @@ export const scannerGetTicket = async (req: ScannerRequest, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found or not confirmed' });
     }
 
-    const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
+    // Determine current event day
+    const currentEventDay = await findCurrentEventDay(eventId!);
+
+    // Check if this ticket's type is valid for today's day (only enforce if a day was found)
+    if (currentEventDay && ticket.ticket_type_id) {
+      const dayLink = await TicketTypeDay.findOne({
+        where: { ticket_type_id: ticket.ticket_type_id, event_day_id: currentEventDay.id }
+      });
+      if (!dayLink) {
+        return res.status(403).json({ error: 'This ticket is not valid for today' });
+      }
+    }
+
+    // Compute per-day claimed count
+    let claimedToday = 0;
+    let remainingToday = ticket.number_of_entries;
+    if (currentEventDay) {
+      const { Op } = require('sequelize');
+      const result = await TicketScanLog.sum('entries_claimed', {
+        where: { ticket_id: ticket.id, event_day_id: currentEventDay.id }
+      });
+      claimedToday = result || 0;
+      remainingToday = ticket.number_of_entries - claimedToday;
+    }
 
     res.json({
       ticket: {
@@ -134,8 +184,16 @@ export const scannerGetTicket = async (req: ScannerRequest, res: Response) => {
         email_address: ticket.email_address,
         number_of_entries: ticket.number_of_entries,
         number_of_claimed_entries: ticket.number_of_claimed_entries,
-        remaining_entries: remainingEntries,
+        claimed_today: claimedToday,
+        remaining_today: remainingToday,
+        remaining_entries: remainingToday,
         status: ticket.status,
+        current_event_day: currentEventDay ? {
+          id: currentEventDay.id,
+          date_and_time: currentEventDay.date_and_time,
+          label: currentEventDay.label
+        } : null,
+        no_matching_day: !currentEventDay,
         event: {
           id: ticket.event.id,
           title: ticket.event.title,
@@ -197,20 +255,69 @@ export const scannerCheckIn = async (req: ScannerRequest, res: Response) => {
       return res.status(400).json({ error: 'Ticket is not confirmed and cannot be checked in' });
     }
 
-    const remainingEntries = ticket.number_of_entries - ticket.number_of_claimed_entries;
+    // Determine current event day
+    const currentEventDay = await findCurrentEventDay(eventId!);
 
-    if (entriesToClaimNum > remainingEntries) {
-      return res.status(400).json({
-        error: `Cannot claim ${entriesToClaimNum} entries. Only ${remainingEntries} entries remaining.`
+    // Validate ticket type is valid for today (only enforce when a day is found)
+    if (currentEventDay && ticket.ticket_type_id) {
+      const dayLink = await TicketTypeDay.findOne({
+        where: { ticket_type_id: ticket.ticket_type_id, event_day_id: currentEventDay.id }
       });
+      if (!dayLink) {
+        return res.status(403).json({ error: 'This ticket is not valid for today' });
+      }
     }
 
-    const newClaimedEntries = ticket.number_of_claimed_entries + entriesToClaimNum;
-    await ticket.update({
-      number_of_claimed_entries: newClaimedEntries
-    });
+    // Wrap the read-validate-write in a transaction with row lock to prevent double check-in
+    const t = await sequelize.transaction();
+    let claimedToday = 0;
+    let remainingToday = 0;
+    try {
+      // Lock the ticket row for the duration of this transaction
+      await Ticket.findOne({
+        where: { id: ticket.id },
+        lock: t.LOCK.UPDATE,
+        transaction: t
+      });
 
-    const updatedRemainingEntries = ticket.number_of_entries - newClaimedEntries;
+      if (currentEventDay) {
+        const result = await TicketScanLog.sum('entries_claimed', {
+          where: { ticket_id: ticket.id, event_day_id: currentEventDay.id },
+          transaction: t
+        });
+        claimedToday = result || 0;
+      }
+      remainingToday = ticket.number_of_entries - claimedToday;
+
+      if (entriesToClaimNum > remainingToday) {
+        await t.rollback();
+        return res.status(400).json({
+          error: `Cannot claim ${entriesToClaimNum} entries. Only ${remainingToday} entries remaining today.`
+        });
+      }
+
+      // Create scan log entry
+      if (currentEventDay) {
+        await TicketScanLog.create({
+          ticket_id: ticket.id,
+          event_day_id: currentEventDay.id,
+          entries_claimed: entriesToClaimNum,
+          scanned_at: new Date()
+        }, { transaction: t });
+      }
+
+      // Update cumulative claimed count on ticket for backward compat
+      const newClaimedEntries = ticket.number_of_claimed_entries + entriesToClaimNum;
+      await ticket.update({ number_of_claimed_entries: newClaimedEntries }, { transaction: t });
+
+      await t.commit();
+    } catch (txError) {
+      await t.rollback();
+      throw txError;
+    }
+
+    const updatedRemainingToday = remainingToday - entriesToClaimNum;
+    const newClaimedEntries = ticket.number_of_claimed_entries + entriesToClaimNum;
 
     res.json({
       success: true,
@@ -221,7 +328,14 @@ export const scannerCheckIn = async (req: ScannerRequest, res: Response) => {
         name: ticket.name,
         number_of_entries: ticket.number_of_entries,
         number_of_claimed_entries: newClaimedEntries,
-        remaining_entries: updatedRemainingEntries,
+        claimed_today: claimedToday + entriesToClaimNum,
+        remaining_today: updatedRemainingToday,
+        remaining_entries: updatedRemainingToday,
+        current_event_day: currentEventDay ? {
+          id: currentEventDay.id,
+          date_and_time: currentEventDay.date_and_time,
+          label: currentEventDay.label
+        } : null,
         event: {
           id: ticket.event.id,
           title: ticket.event.title,
