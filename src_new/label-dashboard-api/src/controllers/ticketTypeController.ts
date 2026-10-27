@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { TicketType, Event } from '../models';
+import { TicketType, Event, EventDay, TicketTypeDay } from '../models';
 import { resolveEventRole, findEventForUser } from '../utils/eventAccess';
 
 interface AuthRequest extends Request {
@@ -25,6 +25,7 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
 
     const ticketTypes = await TicketType.findAll({
       where: { event_id: eventIdNum },
+      include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }],
       order: [['id', 'ASC']]
     });
 
@@ -52,7 +53,7 @@ export const getTicketTypes = async (req: AuthRequest, res: Response) => {
 
 export const createTicketType = async (req: AuthRequest, res: Response) => {
   try {
-    const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false, special_instructions = null, special_instructions_for_scanner = null } = req.body;
+    const { event_id, name, price, max_tickets = 0, start_date, end_date, disabled = false, special_instructions = null, special_instructions_for_scanner = null, day_ids } = req.body;
 
     if (!event_id || !name || price === undefined) {
       return res.status(400).json({
@@ -129,9 +130,23 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
       special_instructions_for_scanner: special_instructions_for_scanner ? special_instructions_for_scanner.trim() : null
     });
 
+    // Link to specified days or all event days by default
+    const eventDays = await EventDay.findAll({ where: { event_id: eventIdNum }, order: [['date_and_time', 'ASC']] });
+    const filteredDayIds: number[] = Array.isArray(day_ids)
+      ? day_ids.map(Number).filter((id: number) => eventDays.some((d: any) => d.id === id))
+      : [];
+    const parsedDayIds: number[] = filteredDayIds.length > 0 ? filteredDayIds : eventDays.map((d: any) => d.id);
+    for (const dayId of parsedDayIds) {
+      await TicketTypeDay.create({ ticket_type_id: ticketType.id, event_day_id: dayId });
+    }
+
+    const ticketTypeWithDays = await TicketType.findByPk(ticketType.id, {
+      include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }]
+    });
+
     res.status(201).json({
       message: 'Ticket type created successfully',
-      ticketType
+      ticketType: ticketTypeWithDays
     });
   } catch (error) {
     console.error('Create ticket type error:', error);
@@ -142,7 +157,7 @@ export const createTicketType = async (req: AuthRequest, res: Response) => {
 export const updateTicketType = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, price, max_tickets, start_date, end_date, disabled, special_instructions, special_instructions_for_scanner } = req.body;
+    const { name, price, max_tickets, start_date, end_date, disabled, special_instructions, special_instructions_for_scanner, day_ids } = req.body;
 
     const ticketTypeId = parseInt(id as string, 10);
 
@@ -243,9 +258,26 @@ export const updateTicketType = async (req: AuthRequest, res: Response) => {
 
     await ticketType.update(updateData);
 
+    // Update day assignments if provided
+    if (day_ids !== undefined && Array.isArray(day_ids)) {
+      const eventDays = await EventDay.findAll({ where: { event_id: ticketType.event_id }, order: [['date_and_time', 'ASC']] });
+      const validDayIds: number[] = day_ids.length > 0
+        ? day_ids.map(Number).filter((id: number) => eventDays.some((d: any) => d.id === id))
+        : eventDays.map((d: any) => d.id);
+      // Remove all existing links and re-create
+      await TicketTypeDay.destroy({ where: { ticket_type_id: ticketTypeId } });
+      for (const dayId of validDayIds) {
+        await TicketTypeDay.create({ ticket_type_id: ticketTypeId, event_day_id: dayId });
+      }
+    }
+
+    const ticketTypeWithDays = await TicketType.findByPk(ticketTypeId, {
+      include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }]
+    });
+
     res.json({
       message: 'Ticket type updated successfully',
-      ticketType
+      ticketType: ticketTypeWithDays
     });
   } catch (error) {
     console.error('Update ticket type error:', error);
@@ -273,12 +305,15 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
         event_id: eventIdNum,
         disabled: false
       },
-      include: [{
-        model: require('../models').Ticket,
-        as: 'tickets',
-        required: false,
-        attributes: ['id']
-      }],
+      include: [
+        {
+          model: require('../models').Ticket,
+          as: 'tickets',
+          required: false,
+          attributes: ['id']
+        },
+        { model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }
+      ],
       order: [['id', 'ASC']]
     });
 
@@ -291,23 +326,20 @@ export const getAvailableTicketTypes = async (req: AuthRequest, res: Response) =
       const remainingTickets = await ticketType.getRemainingTickets();
       const soldCount = await ticketType.getSoldCount();
 
+      const entry = {
+        ...ticketType.toJSON(),
+        is_available: isAvailable,
+        is_sold_out: isSoldOut,
+        remaining_tickets: remainingTickets,
+        sold_count: soldCount,
+        valid_days: (ticketType as any).days ?? []
+      };
+
       if (includeCustom) {
-        availableTicketTypes.push({
-          ...ticketType.toJSON(),
-          is_available: isAvailable,
-          is_sold_out: isSoldOut,
-          remaining_tickets: remainingTickets,
-          sold_count: soldCount
-        });
+        availableTicketTypes.push(entry);
       } else {
         if (!isAvailable || isSoldOut) continue;
-        availableTicketTypes.push({
-          ...ticketType.toJSON(),
-          is_available: isAvailable,
-          is_sold_out: isSoldOut,
-          remaining_tickets: remainingTickets,
-          sold_count: soldCount
-        });
+        availableTicketTypes.push(entry);
       }
     }
 

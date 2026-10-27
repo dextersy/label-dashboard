@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag, EventAccess, EventBrandCollaboration } from '../models';
+import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag, EventAccess, EventBrandCollaboration, EventDay, TicketTypeDay, TicketScanLog } from '../models';
 import { resolveEventRole as resolveEventRoleUtil, findEventForUser as findEventForUserUtil } from '../utils/eventAccess';
 import { scheduleEventClosePayout, cancelEventClosePayout } from '../schedules/eventClosePayouts';
 import { PaymentService } from '../utils/paymentService';
@@ -419,8 +419,9 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
         { model: Brand, as: 'brand' },
         { model: Ticket, as: 'tickets' },
         { model: EventReferrer, as: 'referrers' },
-        { model: TicketType, as: 'ticketTypes' },
-        { model: EventTag, as: 'tags', through: { attributes: [] } }
+        { model: TicketType, as: 'ticketTypes', include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }] },
+        { model: EventTag, as: 'tags', through: { attributes: [] } },
+        { model: EventDay, as: 'days', order: [['date_and_time', 'ASC']] }
       ]
     });
 
@@ -428,7 +429,7 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Process ticket types to include statistics
+    // Process ticket types to include statistics and assigned days
     const processedTicketTypes = [];
     if ((event as any).ticketTypes) {
       for (const ticketType of (event as any).ticketTypes) {
@@ -440,7 +441,8 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
           ...ticketType.toJSON(),
           sold_tickets: soldCount,
           pending_tickets: pendingCount,
-          remaining_tickets: remainingTickets
+          remaining_tickets: remainingTickets,
+          days: (ticketType as any).days ?? []
         });
       }
     }
@@ -509,11 +511,15 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       walk_in_supports_gcash,
       walk_in_supports_card,
       walk_in_max_count,
-      walkInTypes
+      walkInTypes,
+      days
     } = req.body;
 
     const parsedTicketTypes = parseJsonField(ticketTypes, 'ticketTypes', res);
     if (ticketTypes !== undefined && parsedTicketTypes === null) return;
+
+    const parsedDays = parseJsonField(days, 'days', res);
+    if (days !== undefined && parsedDays === null) return;
 
     // Parse ticketing_enabled early so we can skip ticket-related validation when disabled
     const isTicketingEnabled = parseBool(ticketing_enabled, true);
@@ -675,13 +681,36 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       await (event as any).setTags(tagIds);
     }
 
+    // Create EventDays — either from provided `days` array or a single day from date_and_time
+    const createdEventDays: EventDay[] = [];
+    if (parsedDays && Array.isArray(parsedDays) && parsedDays.length > 0) {
+      const sortedDays = [...parsedDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      for (const day of sortedDays) {
+        const ed = await EventDay.create({
+          event_id: event.id,
+          date_and_time: new Date(day.date_and_time),
+          label: day.label ? day.label.trim() : null
+        });
+        createdEventDays.push(ed);
+      }
+      // Keep event.date_and_time in sync with first day
+      await event.update({ date_and_time: createdEventDays[0].date_and_time });
+    } else {
+      const ed = await EventDay.create({
+        event_id: event.id,
+        date_and_time: new Date(date_and_time),
+        label: null
+      });
+      createdEventDays.push(ed);
+    }
+
     // Create ticket types only when ticketing is enabled
     // When disabled, ticket types are skipped now and can be added when ticketing is later enabled
     if (isTicketingEnabled) {
       if (parsedTicketTypes && Array.isArray(parsedTicketTypes) && parsedTicketTypes.length > 0) {
         // Create provided ticket types, including start_date and end_date
         for (const ticketType of parsedTicketTypes) {
-          await TicketType.create({
+          const createdType = await TicketType.create({
             event_id: event.id,
             name: ticketType.name.trim(),
             price: parseFloat(ticketType.price),
@@ -692,10 +721,18 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
             special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null,
             special_instructions_for_scanner: ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null
           });
+          // Link to specified days or all event days by default
+          const filteredDayIds: number[] = Array.isArray(ticketType.day_ids)
+            ? ticketType.day_ids.map(Number).filter((id: number) => createdEventDays.some(d => d.id === id))
+            : [];
+          const dayIds: number[] = filteredDayIds.length > 0 ? filteredDayIds : createdEventDays.map(d => d.id);
+          for (const dayId of dayIds) {
+            await TicketTypeDay.create({ ticket_type_id: createdType.id, event_day_id: dayId });
+          }
         }
       } else {
         // Create default ticket type using legacy ticket_price and ticket_naming
-        await TicketType.create({
+        const createdType = await TicketType.create({
           event_id: event.id,
           name: ticket_naming || 'Regular',
           price: parseFloat(ticket_price),
@@ -704,6 +741,9 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
           end_date: null,
           disabled: false
         });
+        for (const day of createdEventDays) {
+          await TicketTypeDay.create({ ticket_type_id: createdType.id, event_day_id: day.id });
+        }
       }
     }
 
@@ -790,11 +830,15 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       external_ticket_link,
       listed_on_ticketing,
       show_attendee_count,
-      tags
+      tags,
+      days
     } = req.body;
 
     const parsedTicketTypes = parseJsonField(ticketTypes, 'ticketTypes', res);
     if (ticketTypes !== undefined && parsedTicketTypes === null) return;
+
+    const parsedDaysUpdate = parseJsonField(days, 'days', res);
+    if (days !== undefined && parsedDaysUpdate === null) return;
 
     const parsedWalkInTypes = parseJsonField(walkInTypes, 'walkInTypes', res);
     if (walkInTypes !== undefined && parsedWalkInTypes === null) return;
@@ -988,6 +1032,16 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
           if (updatedCount === 0) {
             return res.status(500).json({ error: `Failed to update ticket type with id ${ticketType.id}` });
           }
+          // Update day assignments if day_ids provided
+          if (Array.isArray(ticketType.day_ids)) {
+            const allEventDays = await EventDay.findAll({ where: { event_id: event.id } });
+            await TicketTypeDay.destroy({ where: { ticket_type_id: ticketType.id } });
+            const filteredUpdatedDayIds: number[] = ticketType.day_ids.map(Number).filter((id: number) => allEventDays.some(d => d.id === id));
+            const updatedDayIds: number[] = filteredUpdatedDayIds.length > 0 ? filteredUpdatedDayIds : allEventDays.map((d: any) => d.id);
+            for (const dayId of updatedDayIds) {
+              await TicketTypeDay.create({ ticket_type_id: ticketType.id, event_day_id: dayId });
+            }
+          }
         } else {
           // Create new ticket type
           const created = await TicketType.create({
@@ -1004,7 +1058,77 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
           if (!created) {
             return res.status(500).json({ error: 'Failed to create new ticket type' });
           }
+          // Link to specified days or all event days by default
+          const allEventDays = await EventDay.findAll({ where: { event_id: event.id } });
+          const filteredNewDayIds: number[] = Array.isArray(ticketType.day_ids)
+            ? ticketType.day_ids.map(Number).filter((id: number) => allEventDays.some(d => d.id === id))
+            : [];
+          const newDayIds: number[] = filteredNewDayIds.length > 0 ? filteredNewDayIds : allEventDays.map((d: any) => d.id);
+          for (const dayId of newDayIds) {
+            await TicketTypeDay.create({ ticket_type_id: created.id, event_day_id: dayId });
+          }
         }
+      }
+    }
+
+    // Update event days if provided in request
+    if (parsedDaysUpdate && Array.isArray(parsedDaysUpdate) && parsedDaysUpdate.length > 0) {
+      const existingDays = await EventDay.findAll({ where: { event_id: event.id }, order: [['date_and_time', 'ASC']] });
+      const existingDayIds = existingDays.map((d: any) => d.id);
+      const requestedDayIds = parsedDaysUpdate.filter((d: any) => d.id).map((d: any) => parseInt(d.id, 10)).filter(Boolean);
+
+      // Delete days not present in request (block if any have scan logs)
+      const dayIdsToDelete = existingDayIds.filter((id: number) => !requestedDayIds.includes(id));
+      for (const id of dayIdsToDelete) {
+        const scanLogCount = await TicketScanLog.count({ where: { event_day_id: id } });
+        if (scanLogCount > 0) {
+          return res.status(400).json({ error: 'Cannot remove an event day that already has scan activity' });
+        }
+      }
+      for (const id of dayIdsToDelete) {
+        await TicketTypeDay.destroy({ where: { event_day_id: id } });
+        await EventDay.destroy({ where: { id, event_id: event.id } });
+      }
+
+      // Update or create days
+      const updatedDays: EventDay[] = [];
+      const sortedDaysUpdate = [...parsedDaysUpdate].sort((a: any, b: any) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      for (const day of sortedDaysUpdate) {
+        if (day.id) {
+          const [, rows] = await EventDay.update(
+            { date_and_time: new Date(day.date_and_time), label: day.label ? day.label.trim() : null },
+            { where: { id: parseInt(day.id, 10), event_id: event.id }, returning: true }
+          );
+          if (rows && rows[0]) updatedDays.push(rows[0]);
+          else {
+            const existing = existingDays.find((d: any) => d.id === parseInt(day.id, 10));
+            if (existing) updatedDays.push(existing);
+          }
+        } else {
+          const newDay = await EventDay.create({
+            event_id: event.id,
+            date_and_time: new Date(day.date_and_time),
+            label: day.label ? day.label.trim() : null
+          });
+          updatedDays.push(newDay);
+          // Link new day to all existing ticket types
+          const allTicketTypes = await TicketType.findAll({ where: { event_id: event.id } });
+          for (const tt of allTicketTypes) {
+            await TicketTypeDay.findOrCreate({ where: { ticket_type_id: tt.id, event_day_id: newDay.id } });
+          }
+        }
+      }
+
+      // Keep event.date_and_time in sync with first day
+      if (updatedDays.length > 0) {
+        const firstDay = updatedDays.reduce((a, b) => a.date_and_time < b.date_and_time ? a : b);
+        await event.update({ date_and_time: firstDay.date_and_time });
+      }
+    } else if (date_and_time && (!parsedDaysUpdate || parsedDaysUpdate.length === 0)) {
+      // If only date_and_time was updated (legacy / single-day path), sync the single EventDay
+      const existingDays = await EventDay.findAll({ where: { event_id: event.id } });
+      if (existingDays.length === 1) {
+        await EventDay.update({ date_and_time: new Date(date_and_time) }, { where: { id: existingDays[0].id } });
       }
     }
 
@@ -2108,12 +2232,18 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
         {
           model: Event,
           as: 'event',
-          include: [{ model: Brand, as: 'brand' }]
+          include: [
+            { model: Brand, as: 'brand' },
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+          ]
         },
         {
           model: TicketType,
           as: 'ticketType',
-          attributes: ['id', 'name', 'price']
+          attributes: ['id', 'name', 'price', 'special_instructions'],
+          include: [
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+          ]
         }
       ]
     });
@@ -2144,7 +2274,8 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
             ticket_type: (ticket as any).ticketType ? {
               id: (ticket as any).ticketType.id,
               name: (ticket as any).ticketType.name,
-              special_instructions: (ticket as any).ticketType.special_instructions || null
+              special_instructions: (ticket as any).ticketType.special_instructions || null,
+              days: (ticket as any).ticketType.days || []
             } : undefined
           },
           {
@@ -2156,7 +2287,8 @@ export const resendTicket = async (req: AuthRequest, res: Response) => {
             venue_address: ticket.event.venue_address,
             venue_latitude: ticket.event.venue_latitude,
             venue_longitude: ticket.event.venue_longitude,
-            venue_maps_url: ticket.event.venue_maps_url
+            venue_maps_url: ticket.event.venue_maps_url,
+            days: (ticket as any).event.days || []
           },
           {
             brand_name: ticket.event.brand?.brand_name
