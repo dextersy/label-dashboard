@@ -30,6 +30,7 @@ interface PublicEventView {
   venue_maps_url?: string;
   venue_phone?: string;
   venue_website?: string;
+  days?: { id: number; date_and_time: string; label?: string | null }[];
   ticketTypes?: {
     id: number;
     name: string;
@@ -38,6 +39,7 @@ interface PublicEventView {
     is_sold_out: boolean;
     remaining_tickets: number | null;
     special_instructions?: string;
+    valid_days?: { id: number; date_and_time: string; label?: string | null }[];
   }[];
   brand?: {
     id: number;
@@ -153,8 +155,17 @@ interface PublicEventView {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                   </svg>
                   <div>
-                    <p class="font-mono text-white text-sm">{{ event()!.date_and_time | date:'EEEE, MMMM d, y' }}</p>
-                    <p class="font-mono text-white/50 text-xs">{{ event()!.date_and_time | date:'h:mm a' }}</p>
+                    @if (event()!.days && event()!.days!.length > 1) {
+                      @for (day of event()!.days!; track day.id) {
+                        <p class="font-mono text-white text-sm">
+                          @if (day.label) { <span class="text-yellow-400/70">{{ day.label }} — </span> }
+                          {{ day.date_and_time | date:'EEE, MMM d' }}<span class="text-white/50"> at </span>{{ day.date_and_time | date:'h:mm a' }}
+                        </p>
+                      }
+                    } @else {
+                      <p class="font-mono text-white text-sm">{{ event()!.date_and_time | date:'EEEE, MMMM d, y' }}</p>
+                      <p class="font-mono text-white/50 text-xs">{{ event()!.date_and_time | date:'h:mm a' }}</p>
+                    }
                   </div>
                 </div>
 
@@ -326,6 +337,11 @@ interface PublicEventView {
                       <div class="flex items-center justify-between p-4 border border-white/10 bg-zinc-950">
                         <div>
                           <p class="text-white text-sm font-bold uppercase">{{ tt.name }}</p>
+                          @if (event()!.days && event()!.days!.length > 1 && tt.valid_days) {
+                            <p class="text-yellow-400/50 text-xs font-mono mt-0.5 uppercase tracking-wider">
+                              {{ getDayBadge(tt.valid_days!, event()!.days!) }}
+                            </p>
+                          }
                           @if (tt.special_instructions) {
                             <p class="text-white/35 text-xs font-mono mt-0.5">{{ tt.special_instructions }}</p>
                           }
@@ -621,6 +637,17 @@ export class EventViewComponent implements OnInit, OnDestroy {
   normalizeUrl(url: string | null | undefined): string {
     if (!url) return '';
     return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+  }
+
+  getDayBadge(validDays: { id: number; label?: string | null }[], allDays: { id: number; label?: string | null }[]): string {
+    if (!validDays || validDays.length === 0) return '';
+    if (validDays.length === allDays.length) return `All ${allDays.length} days`;
+    const numbers = validDays
+      .map(vd => allDays.findIndex(d => d.id === vd.id) + 1)
+      .filter(n => n > 0)
+      .sort((a, b) => a - b);
+    if (numbers.length === 1) return `Day ${numbers[0]} only`;
+    return `Days ${numbers.join(', ')}`;
   }
 
   toggleLike(): void {

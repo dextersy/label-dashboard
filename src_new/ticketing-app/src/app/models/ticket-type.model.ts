@@ -12,6 +12,8 @@ export interface TicketType {
   sold_tickets?: number;
   pending_tickets?: number;
   remaining_tickets?: number | null;
+  days?: { id: number; date_and_time: string; label?: string | null }[];
+  valid_days?: { id: number; date_and_time: string; label?: string | null }[];
 }
 
 export interface TicketTypeFormData {

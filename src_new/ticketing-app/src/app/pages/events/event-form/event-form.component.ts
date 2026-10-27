@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -12,6 +13,12 @@ import { GooglePlacesService, GooglePlacesPrediction, VenueSelection } from '../
 import { AuthService } from '../../../services/auth.service';
 import { OrganizationService, EventFeeSettings } from '../../../services/organization.service';
 import { EventTag } from '../../../models/event.model';
+
+interface EventDayFormItem {
+  id?: number;
+  date_and_time: string;
+  label: string;
+}
 
 interface TicketTypeFormItem {
   id?: number;
@@ -27,6 +34,7 @@ interface TicketTypeFormItem {
   special_instructions: string | null;
   special_instructions_for_scanner: string | null;
   isEditing: boolean;
+  day_ids: number[];
   _backup?: TicketTypeFormItem;
 }
 
@@ -37,7 +45,8 @@ function newTicketTypeItem(): TicketTypeFormItem {
     start_date: null, end_date: null, showDateRange: false,
     disabled: false,
     special_instructions: null, special_instructions_for_scanner: null,
-    isEditing: true
+    isEditing: true,
+    day_ids: []
   };
 }
 
@@ -46,7 +55,7 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, CommonModule, RouterLink, QuillModule],
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, RouterLink, QuillModule, DatePipe],
   styles: [`
     .venue-dropdown {
       position: absolute; top: 100%; left: 0; right: 0; z-index: 9999;
@@ -143,12 +152,56 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                   placeholder="Concert Night 2025">
               </div>
 
-              <div>
-                <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Start Date & Time *</label>
-                <input type="datetime-local" formControlName="date_and_time"
-                  (change)="onEventDateChange()"
-                  class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
-              </div>
+              <!-- Single-day date picker (default) -->
+              @if (!isMultiDay) {
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest">Date & Time *</label>
+                    <button type="button" (click)="switchToMultiDay()"
+                      class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider transition-colors">
+                      + Add Another Day
+                    </button>
+                  </div>
+                  <input type="datetime-local" formControlName="date_and_time"
+                    (change)="onEventDateChange()"
+                    class="w-full px-3 py-2.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                </div>
+              }
+
+              <!-- Multi-day manager -->
+              @if (isMultiDay) {
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest">Event Days *</label>
+                    <button type="button" (click)="addDay()"
+                      class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider transition-colors">
+                      + Add Day
+                    </button>
+                  </div>
+                  <div class="space-y-2">
+                    @for (day of eventDays; track day; let di = $index) {
+                      <div class="border border-gray-200 p-3 space-y-2">
+                        <div class="flex items-center gap-2">
+                          <span class="text-xs font-mono text-gray-400 w-14 flex-shrink-0">Day {{ di + 1 }}</span>
+                          <input type="datetime-local" [(ngModel)]="day.date_and_time" [ngModelOptions]="{standalone:true}"
+                            (change)="onDayDateChange(di)"
+                            class="flex-1 px-2 py-1.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                          @if (eventDays.length > 1) {
+                            <button type="button" (click)="removeDay(di)" class="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                              </svg>
+                            </button>
+                          }
+                        </div>
+                        <input type="text" [(ngModel)]="day.label" [ngModelOptions]="{standalone:true}"
+                          placeholder="Label (optional, e.g. Day 1, Night Session)"
+                          class="w-full px-2 py-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-mono placeholder-gray-300 focus:outline-none focus:border-yellow-400 transition-colors">
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
 
             <!-- Venue -->
@@ -437,6 +490,28 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                             </div>
 
                             @if (tt._showAdvanced) {
+
+                              <!-- Day assignment (multiday events only) -->
+                              @if (isMultiDay && eventDays.length > 0) {
+                                <div class="sm:col-span-2">
+                                  <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Valid On</label>
+                                  <div class="flex flex-wrap gap-3">
+                                    @for (day of eventDays; track day; let di = $index) {
+                                      <label class="flex items-center gap-1.5 text-xs font-mono text-gray-500 cursor-pointer">
+                                        <input type="checkbox"
+                                          [checked]="tt.day_ids.length === 0 || (day.id ? tt.day_ids.includes(day.id) : true)"
+                                          (change)="toggleTicketTypeDay(tt, day)"
+                                          class="w-3.5 h-3.5 accent-yellow-400">
+                                        {{ day.label || ('Day ' + (di + 1)) }}
+                                        @if (day.date_and_time) {
+                                          <span class="text-gray-400">{{ day.date_and_time | date:'MMM d' }}</span>
+                                        }
+                                      </label>
+                                    }
+                                  </div>
+                                </div>
+                              }
+
                               <div class="sm:col-span-2">
                                 <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Buyer Instructions <span class="normal-case text-gray-400">(shown at checkout)</span></label>
                                 <textarea [(ngModel)]="tt.special_instructions" [ngModelOptions]="{standalone:true}" rows="2"
@@ -805,6 +880,10 @@ export class EventFormComponent implements OnInit, OnDestroy {
     ]
   };
 
+  // Multiday event days
+  eventDays: EventDayFormItem[] = [];
+  isMultiDay = false;
+
   hasExternalLink = false;
   pendingPublish = false;
   shortlinkDomain = signal<string | null>(null);
@@ -990,6 +1069,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
           }
           if (event.poster_url) this.posterPreview.set(event.poster_url);
           if (event.verification_pin) this.verificationPin.set(event.verification_pin);
+          // Load event days
+          if (event.days && event.days.length > 0) {
+            this.eventDays = event.days
+              .sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())
+              .map(d => ({ id: d.id, date_and_time: this.toLocalDatetimeString(new Date(d.date_and_time)), label: d.label || '' }));
+            this.isMultiDay = this.eventDays.length > 1;
+          }
           if (event.tags) this.selectedTagIds.set(event.tags.map(t => t.id));
           // Load slug from stored url_slug; fall back to extracting from buy_shortlink for legacy events
           if (event.url_slug) {
@@ -1029,6 +1115,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
             special_instructions: tt.special_instructions || null,
             special_instructions_for_scanner: tt.special_instructions_for_scanner || null,
             isEditing: false,
+            day_ids: tt.days?.map(d => d.id) ?? [],
             _showAdvanced: !!(tt.special_instructions || tt.special_instructions_for_scanner || tt.disabled),
           }));
         }
@@ -1037,6 +1124,37 @@ export class EventFormComponent implements OnInit, OnDestroy {
       // New event: one default ticket type ready to fill in
       this.ticketTypes = [newTicketTypeItem()];
     }
+  }
+
+  // ---- Event Days ----
+  switchToMultiDay(): void {
+    const dateStr = this.form.get('date_and_time')?.value as string;
+    this.eventDays = [{ date_and_time: dateStr || '', label: '' }];
+    this.isMultiDay = true;
+  }
+
+  addDay(): void {
+    this.eventDays.push({ date_and_time: '', label: '' });
+  }
+
+  removeDay(i: number): void {
+    if (this.eventDays.length <= 1) return;
+    this.eventDays.splice(i, 1);
+    // Sync form date_and_time with first remaining day
+    const first = this.sortedEventDays()[0];
+    if (first) this.form.patchValue({ date_and_time: first.date_and_time });
+  }
+
+  onDayDateChange(_i: number): void {
+    // Sync form date_and_time with the earliest day (any day change can affect ordering)
+    const first = this.sortedEventDays()[0];
+    if (first) this.form.patchValue({ date_and_time: first.date_and_time });
+  }
+
+  sortedEventDays(): EventDayFormItem[] {
+    return [...this.eventDays].sort((a, b) =>
+      new Date(a.date_and_time || 0).getTime() - new Date(b.date_and_time || 0).getTime()
+    );
   }
 
   ngOnDestroy(): void {
@@ -1075,6 +1193,20 @@ export class EventFormComponent implements OnInit, OnDestroy {
   removeTicketType(i: number): void {
     if (this.ticketTypes.length <= 1) return;
     this.ticketTypes.splice(i, 1);
+  }
+
+  toggleTicketTypeDay(tt: TicketTypeFormItem, day: EventDayFormItem): void {
+    if (!day.id) return;
+    // If day_ids is empty it means "all days" — expand it first
+    if (tt.day_ids.length === 0) {
+      tt.day_ids = this.eventDays.filter(d => d.id).map(d => d.id!);
+    }
+    const idx = tt.day_ids.indexOf(day.id);
+    if (idx === -1) {
+      tt.day_ids = [...tt.day_ids, day.id];
+    } else {
+      tt.day_ids = tt.day_ids.filter(id => id !== day.id);
+    }
   }
 
   // ---- Tags ----
@@ -1236,6 +1368,21 @@ export class EventFormComponent implements OnInit, OnDestroy {
     if (data.date_and_time) data.date_and_time = new Date(data.date_and_time).toISOString();
     if (data.close_time) data.close_time = new Date(data.close_time).toISOString();
 
+    // Include multiday event days
+    if (this.isMultiDay && this.eventDays.length > 0) {
+      const daysForApi = this.eventDays
+        .filter(d => d.date_and_time)
+        .map(d => ({
+          ...(d.id ? { id: d.id } : {}),
+          date_and_time: new Date(d.date_and_time).toISOString(),
+          label: d.label || null
+        }));
+      data.days = JSON.stringify(daysForApi);
+      // Sync date_and_time with first day
+      const sorted = [...daysForApi].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      if (sorted[0]) data.date_and_time = sorted[0].date_and_time;
+    }
+
     // Close time
     if (this.closeAtShowTime) data.close_time = '';
 
@@ -1255,6 +1402,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
         disabled: tt.disabled ?? false,
         special_instructions: tt.special_instructions || null,
         special_instructions_for_scanner: tt.special_instructions_for_scanner || null,
+        ...(this.isMultiDay && tt.day_ids.length > 0 ? { day_ids: tt.day_ids } : {})
       }));
       data.ticketTypes = JSON.stringify(ticketTypesForApi);
       data.ticket_price = String(ticketTypesForApi[0]?.price ?? 0);

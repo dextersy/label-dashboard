@@ -1,3 +1,10 @@
+export interface EventDay {
+  id: number;
+  event_id: number;
+  date_and_time: string;
+  label?: string | null;
+}
+
 export interface Event {
   id: number;
   title: string;
@@ -51,6 +58,8 @@ export interface Event {
   updated_at?: string;
   // Access control — populated by the API for the current user's session
   user_role?: 'owner' | 'manager' | 'viewer';
+  // Multiday support
+  days?: EventDay[];
 }
 
 export interface EventTag {

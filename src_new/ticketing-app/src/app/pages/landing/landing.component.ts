@@ -29,6 +29,7 @@ interface PublicEvent {
   external_ticket_link?: string | null;
   like_count?: number;
   co_organizer_names?: string[];
+  days?: { id: number; date_and_time: string; label?: string | null }[];
 }
 
 @Component({
@@ -361,16 +362,24 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   todayEvents = computed(() => {
     const todayStr = new Date().toLocaleDateString('en-CA');
-    return this.allEvents().filter(e =>
-      new Date(e.date_and_time).toLocaleDateString('en-CA') === todayStr
-    );
+    const isToday = (e: PublicEvent) => {
+      const allDates = e.days?.length
+        ? e.days.map(d => d.date_and_time)
+        : [e.date_and_time];
+      return allDates.some(d => new Date(d).toLocaleDateString('en-CA') === todayStr);
+    };
+    return this.allEvents().filter(isToday);
   });
 
   upcomingEvents = computed(() => {
     const todayStr = new Date().toLocaleDateString('en-CA');
-    return this.allEvents().filter(e =>
-      new Date(e.date_and_time).toLocaleDateString('en-CA') !== todayStr
-    );
+    const isToday = (e: PublicEvent) => {
+      const allDates = e.days?.length
+        ? e.days.map(d => d.date_and_time)
+        : [e.date_and_time];
+      return allDates.some(d => new Date(d).toLocaleDateString('en-CA') === todayStr);
+    };
+    return this.allEvents().filter(e => !isToday(e));
   });
 
   heroIndex = signal(0);
