@@ -1078,12 +1078,34 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       const existingDayIds = existingDays.map((d: any) => d.id);
       const requestedDayIds = parsedDaysUpdate.filter((d: any) => d.id).map((d: any) => parseInt(d.id, 10)).filter(Boolean);
 
-      // Delete days not present in request (block if any have scan logs)
+      // Delete days not present in request (block if any have scan logs or sold tickets that would be orphaned)
       const dayIdsToDelete = existingDayIds.filter((id: number) => !requestedDayIds.includes(id));
+      const survivingDayIds = existingDayIds.filter((id: number) => !dayIdsToDelete.includes(id));
       for (const id of dayIdsToDelete) {
         const scanLogCount = await TicketScanLog.count({ where: { event_day_id: id } });
         if (scanLogCount > 0) {
           return res.status(400).json({ error: 'Cannot remove an event day that already has scan activity' });
+        }
+
+        // Find ticket types assigned exclusively to this day (not on any surviving day)
+        const typesOnThisDay = await TicketTypeDay.findAll({ where: { event_day_id: id } });
+        for (const ttd of typesOnThisDay) {
+          const alsoOnSurvivingDay = survivingDayIds.length > 0 && await TicketTypeDay.count({
+            where: { ticket_type_id: ttd.ticket_type_id, event_day_id: { [Op.in]: survivingDayIds } }
+          }) > 0;
+          if (!alsoOnSurvivingDay) {
+            const soldCount = await Ticket.count({
+              where: { ticket_type_id: ttd.ticket_type_id, status: 'Ticket sent.' }
+            });
+            if (soldCount > 0) {
+              const ticketType = await TicketType.findByPk(ttd.ticket_type_id, { attributes: ['name'] });
+              const day = existingDays.find((d: any) => d.id === id);
+              const dayLabel = day?.label || new Date(day?.date_and_time).toLocaleDateString();
+              return res.status(400).json({
+                error: `Cannot remove "${dayLabel}" — ticket type "${ticketType?.name}" has sold tickets and is not assigned to any other day.`
+              });
+            }
+          }
         }
       }
       for (const id of dayIdsToDelete) {
