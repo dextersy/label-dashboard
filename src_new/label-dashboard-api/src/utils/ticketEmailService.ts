@@ -98,15 +98,28 @@ export const sendTicketEmail = async (
     const formattedTime = fmtTime(eventDate);
 
     // Generate Google Calendar "Add to Calendar" link
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const fmtLocalDate = (d: Date) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
     const formatGoogleCalendarDate = (date: Date): string => {
       return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
     };
-    const calendarStart = formatGoogleCalendarDate(eventDate);
-    const calendarEnd = formatGoogleCalendarDate(new Date(eventDate.getTime() + 2 * 60 * 60 * 1000));
+    let calendarDates: string;
+    if (isMultiday) {
+      const sortedDays = [...eventDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      const firstDayLocal = new Date(sortedDays[0].date_and_time);
+      const lastDayLocal = new Date(sortedDays[sortedDays.length - 1].date_and_time);
+      const endExclusive = new Date(lastDayLocal);
+      endExclusive.setDate(endExclusive.getDate() + 1);
+      calendarDates = `${fmtLocalDate(firstDayLocal)}/${fmtLocalDate(endExclusive)}`;
+    } else {
+      const calendarStart = formatGoogleCalendarDate(eventDate);
+      const calendarEnd = formatGoogleCalendarDate(new Date(eventDate.getTime() + 2 * 60 * 60 * 1000));
+      calendarDates = `${calendarStart}/${calendarEnd}`;
+    }
     const calendarLocation = event.venue_address
       ? `${event.venue}, ${event.venue_address}`
       : event.venue;
-    const addToCalendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calendarStart}/${calendarEnd}&location=${encodeURIComponent(calendarLocation)}`;
+    const addToCalendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${calendarDates}&location=${encodeURIComponent(calendarLocation)}`;
 
     // Generate Google Maps link only if specific location data is available
     let mapsLink = '';

@@ -22,6 +22,12 @@ import { EventWalkInSettingsComponent } from '../events/components/event-walk-in
 import { IconComponent } from '../../components/shared/icon/icon.component';
 import { EventListingTabComponent } from '../events/components/event-listing-tab/event-listing-tab.component';
 
+export interface EventDayFormItem {
+  id?: number;
+  date_and_time: string; // datetime-local format
+  label: string;
+}
+
 export interface TicketType {
   id?: number;
   event_id?: number;
@@ -36,6 +42,8 @@ export interface TicketType {
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
+  days?: { id: number; date_and_time: string; label?: string | null }[]; // server-populated association
+  day_ids?: number[]; // UI state - selected event day IDs
 }
 
 // Factory function for creating default ticket type
@@ -140,6 +148,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     walk_in_max_count: 0
   };
   
+  // Multiday state
+  eventDays: EventDayFormItem[] = [];
+  isMultiDay = false;
+
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
   currentVenueSelection: VenueSelection | null = null;
@@ -148,6 +160,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   originalEventData: any = null;
   originalTicketTypes: TicketType[] = [];
   originalWalkInTypes: any[] = [];
+  originalEventDays: EventDayFormItem[] = [];
+  originalIsMultiDay = false;
   slugManuallyEdited = false;
   slugLocked = false; // true when a shortlink already exists — slug cannot be changed
   
@@ -343,6 +357,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
     // Add default ticket type for new events
     this.ticketTypes = [createDefaultTicketType()];
+
+    // Reset multiday state
+    this.isMultiDay = false;
+    this.eventDays = [];
   }
 
   get navTabs(): InPageNavTab[] {
@@ -440,8 +458,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           if (this.isNewEvent) {
             // Reset dirty state so the unsaved-changes guard doesn't trigger
             this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
-            this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+            this.originalTicketTypes = this.snapshotTicketTypes();
             this.originalWalkInTypes = JSON.parse(JSON.stringify(this.walkInTypes));
+            this.originalEventDays = JSON.parse(JSON.stringify(this.eventDays));
+            this.originalIsMultiDay = this.isMultiDay;
             this.selectedPosterFile = null;
             // Save listing settings then navigate (wait so tags are in DB before loadEvent runs)
             const listingSave$: Observable<Event | null> = capturedListingState
@@ -465,7 +485,9 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
             this.event = event;
             // Update originalEventData to match current form state (what was just saved)
             this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
-            this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+            this.originalTicketTypes = this.snapshotTicketTypes();
+            this.originalEventDays = JSON.parse(JSON.stringify(this.eventDays));
+            this.originalIsMultiDay = this.isMultiDay;
             // Reload walk-in types from server to get IDs for newly created ones
             this.loadWalkInTypes();
             // Clear the selected poster file since it's now uploaded
@@ -560,8 +582,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           if (this.isNewEvent) {
             // Reset dirty state so the unsaved-changes guard doesn't trigger
             this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
-            this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+            this.originalTicketTypes = this.snapshotTicketTypes();
             this.originalWalkInTypes = JSON.parse(JSON.stringify(this.walkInTypes));
+            this.originalEventDays = JSON.parse(JSON.stringify(this.eventDays));
+            this.originalIsMultiDay = this.isMultiDay;
             this.selectedPosterFile = null;
             // Save listing settings then navigate (wait so tags are in DB before loadEvent runs)
             const listingSavePublish$: Observable<Event | null> = capturedListingStatePublish
@@ -739,6 +763,42 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   onShowExternalTicketLinkChange(enabled: boolean): void {
     if (!enabled) {
       this.eventData.external_ticket_link = null;
+    }
+  }
+
+  // ── Multiday event day management ────────────────────────────────────────
+
+  switchToMultiDay(): void {
+    if (!this.eventData.date_and_time) {
+      this.notificationService.showError('Set the event date first before adding another day.');
+      return;
+    }
+    // Preserve the existing EventDay id (if any) so the backend updates rather
+    // than deletes+recreates it — deletion would be blocked if scan logs exist.
+    const existingFirst = this.eventDays.length > 0 ? this.eventDays[0] : null;
+    this.eventDays = [
+      { ...(existingFirst?.id ? { id: existingFirst.id } : {}), date_and_time: this.eventData.date_and_time, label: existingFirst?.label || '' },
+      { date_and_time: '', label: '' }
+    ];
+    this.isMultiDay = true;
+  }
+
+  addEventDay(): void {
+    this.eventDays.push({ date_and_time: '', label: '' });
+  }
+
+  removeEventDay(i: number): void {
+    if (this.eventDays.length <= 2) return;
+    this.eventDays.splice(i, 1);
+    // Keep eventData.date_and_time in sync with first day
+    if (i === 0 && this.eventDays.length > 0) {
+      this.eventData.date_and_time = this.eventDays[0].date_and_time;
+    }
+  }
+
+  onEventDayDateChange(i: number): void {
+    if (i === 0) {
+      this.eventData.date_and_time = this.eventDays[0].date_and_time;
     }
   }
 
@@ -940,13 +1000,17 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   isEventPast(): boolean {
+    const now = new Date();
+    // For multi-day events, past only when the last day has passed
+    if (this.isMultiDay && this.eventDays.length > 0) {
+      const sorted = [...this.eventDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      const lastDay = sorted[sorted.length - 1];
+      return !!lastDay.date_and_time && new Date(lastDay.date_and_time) < now;
+    }
     // Always reflect the current form value (even if unsaved)
     const dateAndTime = this.eventData?.date_and_time || this.event?.date_and_time;
     if (!dateAndTime) return false;
-    const eventDate = new Date(dateAndTime);
-    const now = new Date();
-    return eventDate < now;
-
+    return new Date(dateAndTime) < now;
   }
 
 
@@ -1000,6 +1064,10 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         venue_website: this.eventData.venue_website,
         venue_maps_url: this.eventData.venue_maps_url,
       });
+    } else if (field === 'date_and_time') {
+      this.fieldOriginals.set('date_and_time', this.eventData.date_and_time);
+      this.fieldOriginals.set('_isMultiDay', this.isMultiDay);
+      this.fieldOriginals.set('_eventDays', JSON.parse(JSON.stringify(this.eventDays)));
     } else {
       this.fieldOriginals.set(field, this.eventData[field]);
     }
@@ -1026,6 +1094,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
           venue_website: orig.venue_website || null,
           venue_maps_url: orig.venue_maps_url || null,
         } : null;
+      } else if (field === 'date_and_time') {
+        this.eventData.date_and_time = this.fieldOriginals.get('date_and_time');
+        this.isMultiDay = this.fieldOriginals.get('_isMultiDay');
+        this.eventDays = this.fieldOriginals.get('_eventDays');
+        this.fieldOriginals.delete('_isMultiDay');
+        this.fieldOriginals.delete('_eventDays');
       } else if (field === 'description') {
         this.eventData.description = this.fieldOriginals.get(field);
         this.descriptionCharCount = this.getPlainTextLength(this.eventData.description || '');
@@ -1050,18 +1124,32 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     });
   }
 
+  private normalizeTicketTypesForComparison(arr: TicketType[]): TicketType[] {
+    return arr.map(tt => ({
+      ...tt,
+      day_ids: tt.day_ids ?? (tt.days ? tt.days.map(d => d.id) : []),
+      showDateRange: undefined,
+      isFree: undefined,
+      isUnlimited: undefined,
+      days: undefined
+    }));
+  }
+
+  private snapshotTicketTypes(): TicketType[] {
+    return JSON.parse(JSON.stringify(this.normalizeTicketTypesForComparison(this.ticketTypes)));
+  }
+
   isFormDirty(): boolean {
     if (!this.originalEventData) return false;
     // Compare eventData
     const eventDataChanged = JSON.stringify(this.eventData) !== JSON.stringify(this.originalEventData);
     // Compare ticketTypes (deep compare, ignoring UI-only fields)
-    const stripUiFields = (arr: TicketType[]) => arr.map(tt => {
-      const { showDateRange, isFree, isUnlimited, ...rest } = tt;
-      return rest;
-    });
+    const stripUiFields = (arr: TicketType[]) => this.normalizeTicketTypesForComparison(arr);
     const ticketTypesChanged = JSON.stringify(stripUiFields(this.ticketTypes)) !== JSON.stringify(stripUiFields(this.originalTicketTypes));
     const walkInTypesChanged = JSON.stringify(this.walkInTypes) !== JSON.stringify(this.originalWalkInTypes);
-    return eventDataChanged || ticketTypesChanged || walkInTypesChanged || this.selectedPosterFile !== null;
+    const eventDaysChanged = this.isMultiDay !== this.originalIsMultiDay ||
+      JSON.stringify(this.eventDays) !== JSON.stringify(this.originalEventDays);
+    return eventDataChanged || ticketTypesChanged || walkInTypesChanged || eventDaysChanged || this.selectedPosterFile !== null;
   }
 
   async onUnpublish(): Promise<void> {
@@ -1110,6 +1198,16 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       this.setActiveSection('details');
       this.focusFieldAfterSwitch(() => (document.getElementById('eventDateTime') as HTMLElement)?.focus());
       return false;
+    }
+
+    if (this.isMultiDay) {
+      for (let i = 1; i < this.eventDays.length; i++) {
+        if (!this.eventDays[i].date_and_time) {
+          this.notificationService.showError(`Day ${i + 1} is missing a date — check the Details tab`);
+          this.setActiveSection('details');
+          return false;
+        }
+      }
     }
 
     if (!this.eventData.venue || !this.eventData.venue.trim()) {
@@ -1254,6 +1352,16 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       formData.venue_maps_url = this.currentVenueSelection.venue_maps_url;
     }
 
+    if (this.isMultiDay && this.eventDays.length > 0) {
+      formData.days = this.eventDays
+        .filter(d => d.date_and_time)
+        .map(d => ({
+          ...(d.id ? { id: d.id } : {}),
+          date_and_time: this.formatDateForAPI(d.date_and_time),
+          label: d.label || null
+        }));
+    }
+
     if (this.selectedPosterFile) {
       formData.poster_file = this.selectedPosterFile;
     }
@@ -1266,7 +1374,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     const eventData = this.prepareEventData(status);
 
     Object.keys(eventData).forEach(key => {
-      if (key === 'ticketTypes' || key === 'walkInTypes') {
+      if (key === 'ticketTypes' || key === 'walkInTypes' || key === 'days') {
         formData.append(key, JSON.stringify(eventData[key]));
       } else if (eventData[key] !== null && eventData[key] !== undefined) {
         const val = eventData[key];
@@ -1332,6 +1440,16 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       eventData.venue_phone = this.currentVenueSelection.venue_phone;
       eventData.venue_website = this.currentVenueSelection.venue_website;
       eventData.venue_maps_url = this.currentVenueSelection.venue_maps_url;
+    }
+
+    if (this.isMultiDay && this.eventDays.length > 0) {
+      eventData.days = this.eventDays
+        .filter(d => d.date_and_time)
+        .map(d => ({
+          ...(d.id ? { id: d.id } : {}),
+          date_and_time: this.formatDateForAPI(d.date_and_time),
+          label: d.label || null
+        }));
     }
 
     return eventData;
@@ -1407,6 +1525,20 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       };
     }
 
+    // Load multiday state — always populate eventDays so existing day ids are
+    // preserved when the user later switches a single-day event to multiday.
+    if (event.days && event.days.length > 0) {
+      this.eventDays = event.days.map((d: any) => ({
+        id: d.id,
+        date_and_time: this.formatDateForInput(d.date_and_time),
+        label: d.label || ''
+      }));
+      this.isMultiDay = event.days.length > 1;
+    } else {
+      this.isMultiDay = false;
+      this.eventDays = [];
+    }
+
     if (this.eventId) {
       this.loadTicketTypes();
       this.loadWalkInTypes();
@@ -1428,6 +1560,8 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
     // Store original data for dirty checking
     this.originalEventData = JSON.parse(JSON.stringify(this.eventData));
+    this.originalEventDays = JSON.parse(JSON.stringify(this.eventDays));
+    this.originalIsMultiDay = this.isMultiDay;
 
     // Reset inline editing state
     this.editingFields.clear();
@@ -1441,7 +1575,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       this.eventService.getTicketTypes(this.eventId).subscribe({
         next: (response) => {
           this.ticketTypes = response.ticketTypes || [];
-          this.originalTicketTypes = JSON.parse(JSON.stringify(this.ticketTypes));
+          this.originalTicketTypes = this.snapshotTicketTypes();
         },
         error: (error) => {
           console.error('Error loading ticket types:', error);

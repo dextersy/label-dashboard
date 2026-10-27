@@ -21,10 +21,14 @@
     <div *ngIf="editingIndex === i"
          class="tw-bg-white tw-rounded-lg tw-border tw-border-gray-200 tw-ring-2 tw-p-4"
          [style.--tw-ring-color]="'var(--brand-color, #3b82f6)'">
+
+      <!-- Name -->
       <div class="tw-mb-3">
         <label class="tw-label">Ticket Name</label>
         <input type="text" class="tw-input" [(ngModel)]="ticketType.name" placeholder="Enter ticket name">
       </div>
+
+      <!-- Price + Capacity -->
       <div class="tw-mb-3 tw-grid tw-grid-cols-2 tw-gap-3">
         <div>
           <label class="tw-label">Price</label>
@@ -47,46 +51,86 @@
           <input *ngIf="!ticketType.isUnlimited" type="number" class="tw-input tw-mt-1" [(ngModel)]="ticketType.max_tickets" min="1" placeholder="Max tickets">
         </div>
       </div>
+
+      <!-- Scheduling -->
       <div class="tw-mb-3">
-        <label class="tw-label">Scheduling</label>
-        <div class="form-check form-switch tw-mb-2">
-          <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="ticketType.showDateRange" id="editScheduled{{i}}">
-          <label class="form-check-label small tw-text-sm" for="editScheduled{{i}}">Scheduled</label>
+        <div class="tw-flex tw-items-center tw-justify-between">
+          <label class="tw-label tw-mb-0">Scheduling</label>
+          <div class="form-check form-switch tw-mb-0">
+            <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="ticketType.showDateRange" id="editScheduled{{i}}">
+            <label class="form-check-label small tw-text-sm tw-text-gray-500" for="editScheduled{{i}}">Restrict sale dates</label>
+          </div>
         </div>
-        <div *ngIf="ticketType.showDateRange">
-          <div class="tw-mb-3">
-            <label class="tw-label">Start Date</label>
+        <div *ngIf="ticketType.showDateRange" class="tw-grid tw-grid-cols-2 tw-gap-3 tw-mt-2">
+          <div>
+            <label class="tw-label">Sale opens</label>
             <div class="input-group">
               <input type="datetime-local" class="tw-input" [(ngModel)]="ticketType.start_date">
-              <button type="button" class="btn-secondary btn-sm" [disabled]="!ticketType.start_date" (click)="clearEditTicketStartDate(ticketType)" title="Clear start date">
+              <button type="button" class="btn-secondary btn-sm" [disabled]="!ticketType.start_date" (click)="clearEditTicketStartDate(ticketType)" title="Clear">
                 <app-icon name="x" iconOnly />
               </button>
             </div>
           </div>
-          <div class="tw-mb-3">
-            <label class="tw-label">End Date</label>
+          <div>
+            <label class="tw-label">Sale closes</label>
             <div class="input-group">
               <input type="datetime-local" class="tw-input" [(ngModel)]="ticketType.end_date">
-              <button type="button" class="btn-secondary btn-sm" [disabled]="!ticketType.end_date" (click)="clearEditTicketEndDate(ticketType)" title="Clear end date">
+              <button type="button" class="btn-secondary btn-sm" [disabled]="!ticketType.end_date" (click)="clearEditTicketEndDate(ticketType)" title="Clear">
                 <app-icon name="x" iconOnly />
               </button>
             </div>
           </div>
-          <small class="form-text tw-text-muted">
-            <app-icon name="info" /> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
-          </small>
+          <p class="tw-col-span-2 tw-mb-0 tw-text-xs tw-text-gray-400">
+            <app-icon name="info" /> Leave blank for always available. Only affects public ticket sales, not manually added tickets.
+          </p>
         </div>
       </div>
-      <div class="tw-mb-3">
-        <label class="tw-label">Special Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
-        <textarea class="tw-input" [(ngModel)]="ticketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
-        <small class="form-text tw-text-muted">Shown to buyers who select this ticket type, and included in their ticket email and PDF.</small>
+
+      <!-- Special Instructions + Scanner Instructions -->
+      <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-3">
+        <div>
+          <label class="tw-label">Special Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
+          <textarea class="tw-input" [(ngModel)]="ticketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
+          <small class="form-text tw-text-muted">Shown to buyers and included in their ticket email and PDF.</small>
+        </div>
+        <div>
+          <label class="tw-label">Scanner Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
+          <textarea class="tw-input" [(ngModel)]="ticketType.special_instructions_for_scanner" rows="2" placeholder="e.g. Check ID or proof of enrollment."></textarea>
+          <small class="form-text tw-text-muted">Shown to the scanner operator at check-in.</small>
+        </div>
       </div>
-      <div class="tw-mb-3">
-        <label class="tw-label">Scanner Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
-        <textarea class="tw-input" [(ngModel)]="ticketType.special_instructions_for_scanner" rows="2" placeholder="e.g. Please check ID or proof of enrollment as student."></textarea>
-        <small class="form-text tw-text-muted">Shown to the scanner operator when checking in a ticket of this type.</small>
+
+      <!-- Valid Days (multiday events) -->
+      <div *ngIf="isMultiDay && eventDays.length > 0 && eventDays[0]?.id" class="tw-mb-3">
+        <div class="tw-flex tw-items-baseline tw-gap-2 tw-mb-2">
+          <label class="tw-label tw-mb-0">Valid days</label>
+          <span class="tw-text-xs tw-text-gray-400">
+            {{ (ticketType.day_ids && ticketType.day_ids.length > 0) ? 'Only on selected days' : 'Valid for all days — select days to restrict' }}
+          </span>
+        </div>
+        <div class="tw-flex tw-flex-wrap tw-gap-2">
+          <button *ngFor="let day of eventDays; let di = index"
+            type="button"
+            class="tw-flex tw-flex-col tw-items-start tw-px-3 tw-py-1.5 tw-rounded-lg tw-border tw-text-left tw-transition-all"
+            [class.tw-border-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
+            [class.tw-bg-blue-50]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
+            [class.tw-border-gray-200]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))"
+            [class.tw-bg-white]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))"
+            (click)="toggleTicketTypeDay(ticketType, day.id)">
+            <span class="tw-text-xs tw-font-semibold"
+              [class.tw-text-blue-700]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
+              [class.tw-text-gray-700]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))">
+              {{ getDayLabel(day, di) }}
+            </span>
+            <span class="tw-text-xs"
+              [class.tw-text-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
+              [class.tw-text-gray-400]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))">
+              {{ day.date_and_time | date:'EEE, MMM d' }}
+            </span>
+          </button>
+        </div>
       </div>
+
       <div class="tw-flex tw-gap-2 tw-justify-end">
         <button type="button" class="btn-primary btn-sm tw-w-1/2 sm:tw-w-auto tw-px-10" (click)="saveEdit(i)">Save</button>
         <button type="button" class="btn-secondary btn-sm tw-w-1/2 sm:tw-w-auto tw-px-10" (click)="cancelEdit()">Cancel</button>
@@ -104,6 +148,9 @@
           <span class="badge bg-success tw-text-xs" *ngIf="!ticketType.isFree">₱{{ ticketType.price | number:'1.2-2' }}</span>
           <span class="badge bg-primary tw-text-xs" *ngIf="ticketType.isFree">Free</span>
           <span class="badge bg-secondary tw-text-xs tw-ml-1" *ngIf="ticketType.disabled">Hidden</span>
+          <ng-container *ngIf="isMultiDay && ticketType.day_ids && ticketType.day_ids.length > 0 && ticketType.day_ids.length < eventDays.length">
+            <span class="badge bg-info tw-text-xs tw-ml-1">{{ getDayBadgeLabel(ticketType) }}</span>
+          </ng-container>
         </div>
         <div class="tw-text-xs tw-text-gray-400 tw-leading-snug">
           <span *ngIf="ticketType.isUnlimited">Unlimited slots</span>
@@ -158,10 +205,14 @@
     </p>
   </div>
   <div class="tw-p-4">
+
+    <!-- Name -->
     <div class="tw-mb-3">
       <label class="tw-label">Ticket Name</label>
       <input type="text" class="tw-input" [(ngModel)]="newTicketType.name" placeholder="Enter ticket type name">
     </div>
+
+    <!-- Price + Capacity -->
     <div class="tw-mb-3 tw-grid tw-grid-cols-2 tw-gap-3">
       <div>
         <label class="tw-label">Price</label>
@@ -184,46 +235,86 @@
         <input *ngIf="!newTicketType.isUnlimited" type="number" class="tw-input tw-mt-1" [(ngModel)]="newTicketType.max_tickets" min="1" placeholder="Max tickets">
       </div>
     </div>
+
+    <!-- Scheduling -->
     <div class="tw-mb-3">
-      <label class="tw-label">Scheduling</label>
-      <div class="form-check form-switch tw-mb-2">
-        <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="newTicketType.showDateRange" id="newScheduledToggle">
-        <label class="form-check-label small tw-text-sm" for="newScheduledToggle">Scheduled</label>
+      <div class="tw-flex tw-items-center tw-justify-between">
+        <label class="tw-label tw-mb-0">Scheduling</label>
+        <div class="form-check form-switch tw-mb-0">
+          <input class="form-check-input" type="checkbox" role="switch" [(ngModel)]="newTicketType.showDateRange" id="newScheduledToggle">
+          <label class="form-check-label small tw-text-sm tw-text-gray-500" for="newScheduledToggle">Restrict sale dates</label>
+        </div>
       </div>
-      <div *ngIf="newTicketType.showDateRange">
-        <div class="tw-mb-3">
-          <label class="tw-label">Start Date</label>
+      <div *ngIf="newTicketType.showDateRange" class="tw-grid tw-grid-cols-2 tw-gap-3 tw-mt-2">
+        <div>
+          <label class="tw-label">Sale opens</label>
           <div class="input-group">
             <input type="datetime-local" class="tw-input" [(ngModel)]="newTicketType.start_date">
-            <button type="button" class="btn-secondary btn-sm" [disabled]="!newTicketType.start_date" (click)="clearNewTicketStartDate()" title="Clear start date">
+            <button type="button" class="btn-secondary btn-sm" [disabled]="!newTicketType.start_date" (click)="clearNewTicketStartDate()" title="Clear">
               <app-icon name="x" iconOnly />
             </button>
           </div>
         </div>
-        <div class="tw-mb-3">
-          <label class="tw-label">End Date</label>
+        <div>
+          <label class="tw-label">Sale closes</label>
           <div class="input-group">
             <input type="datetime-local" class="tw-input" [(ngModel)]="newTicketType.end_date">
-            <button type="button" class="btn-secondary btn-sm" [disabled]="!newTicketType.end_date" (click)="clearNewTicketEndDate()" title="Clear end date">
+            <button type="button" class="btn-secondary btn-sm" [disabled]="!newTicketType.end_date" (click)="clearNewTicketEndDate()" title="Clear">
               <app-icon name="x" iconOnly />
             </button>
           </div>
         </div>
+        <p class="tw-col-span-2 tw-mb-0 tw-text-xs tw-text-gray-400">
+          <app-icon name="info" /> Leave blank for always available. Only affects public ticket sales, not manually added tickets.
+        </p>
       </div>
-      <small class="form-text tw-text-muted" *ngIf="newTicketType.showDateRange">
-        <app-icon name="info" /> Leave empty for always available. Date range only affects public ticket sales, not custom tickets.
-      </small>
     </div>
-    <div class="tw-mb-3">
-      <label class="tw-label">Special Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
-      <textarea class="tw-input" [(ngModel)]="newTicketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
-      <small class="form-text tw-text-muted">Shown to buyers who select this ticket type, and included in their ticket email and PDF.</small>
+
+    <!-- Special Instructions + Scanner Instructions -->
+    <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-3">
+      <div>
+        <label class="tw-label">Special Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
+        <textarea class="tw-input" [(ngModel)]="newTicketType.special_instructions" rows="2" placeholder="e.g. Please bring a valid ID for age verification."></textarea>
+        <small class="form-text tw-text-muted">Shown to buyers and included in their ticket email and PDF.</small>
+      </div>
+      <div>
+        <label class="tw-label">Scanner Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
+        <textarea class="tw-input" [(ngModel)]="newTicketType.special_instructions_for_scanner" rows="2" placeholder="e.g. Check ID or proof of enrollment."></textarea>
+        <small class="form-text tw-text-muted">Shown to the scanner operator at check-in.</small>
+      </div>
     </div>
-    <div class="tw-mb-3">
-      <label class="tw-label">Scanner Instructions <span class="tw-font-normal tw-text-muted">(optional)</span></label>
-      <textarea class="tw-input" [(ngModel)]="newTicketType.special_instructions_for_scanner" rows="2" placeholder="e.g. Please check ID or proof of enrollment as student."></textarea>
-      <small class="form-text tw-text-muted">Shown to the scanner operator when checking in a ticket of this type.</small>
+
+    <!-- Valid Days (multiday events) -->
+    <div *ngIf="isMultiDay && eventDays.length > 0 && eventDays[0]?.id" class="tw-mb-3">
+      <div class="tw-flex tw-items-baseline tw-gap-2 tw-mb-2">
+        <label class="tw-label tw-mb-0">Valid days</label>
+        <span class="tw-text-xs tw-text-gray-400">
+          {{ newTicketType.day_ids.length > 0 ? 'Only on selected days' : 'Valid for all days — select days to restrict' }}
+        </span>
+      </div>
+      <div class="tw-flex tw-flex-wrap tw-gap-2">
+        <button *ngFor="let day of eventDays; let di = index"
+          type="button"
+          class="tw-flex tw-flex-col tw-items-start tw-px-3 tw-py-1.5 tw-rounded-lg tw-border tw-text-left tw-transition-all"
+          [class.tw-border-blue-500]="newTicketType.day_ids.includes(day.id)"
+          [class.tw-bg-blue-50]="newTicketType.day_ids.includes(day.id)"
+          [class.tw-border-gray-200]="!newTicketType.day_ids.includes(day.id)"
+          [class.tw-bg-white]="!newTicketType.day_ids.includes(day.id)"
+          (click)="newTicketType.day_ids.includes(day.id) ? newTicketType.day_ids.splice(newTicketType.day_ids.indexOf(day.id), 1) : newTicketType.day_ids.push(day.id)">
+          <span class="tw-text-xs tw-font-semibold"
+            [class.tw-text-blue-700]="newTicketType.day_ids.includes(day.id)"
+            [class.tw-text-gray-700]="!newTicketType.day_ids.includes(day.id)">
+            {{ getDayLabel(day, di) }}
+          </span>
+          <span class="tw-text-xs"
+            [class.tw-text-blue-500]="newTicketType.day_ids.includes(day.id)"
+            [class.tw-text-gray-400]="!newTicketType.day_ids.includes(day.id)">
+            {{ day.date_and_time | date:'EEE, MMM d' }}
+          </span>
+        </button>
+      </div>
     </div>
+
     <div class="tw-flex tw-gap-2 tw-justify-end">
       <button type="button" class="btn-primary btn-sm" [disabled]="!newTicketType.name.trim() || (!newTicketType.isFree && newTicketType.price < 0)" (click)="saveNewTicketType()" title="Save new ticket type">
         <app-icon name="check" iconOnly />

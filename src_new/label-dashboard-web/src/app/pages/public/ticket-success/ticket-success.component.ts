@@ -143,6 +143,7 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
                 ticket_price: response.ticket.price_per_ticket,
                 ticket_naming: response.ticket.ticketType?.name || 'Regular',
                 buy_shortlink: response.ticket.event.buy_shortlink,
+                days: response.ticket.event.days,
                 brand: response.ticket.event.brand ? {
                   id: response.ticket.event.brand.id,
                   name: response.ticket.event.brand.name,
@@ -249,17 +250,31 @@ export class TicketSuccessComponent implements OnInit, OnDestroy {
 
   getGoogleCalendarUrl(): string {
     if (!this.event?.date_and_time) return '';
-    const start = new Date(this.event.date_and_time);
-    const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
-    const fmt = (d: Date) => {
-      const pad = (n: number) => n.toString().padStart(2, '0');
-      return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-    };
+    const pad = (n: number) => n.toString().padStart(2, '0');
     const location = [this.event.venue, this.event.venue_address].filter(Boolean).join(', ');
+    let dates: string;
+    if (this.event.days && this.event.days.length > 1) {
+      // All-day event spanning all days; Google Calendar all-day end date is exclusive
+      const fmtDate = (iso: string) => {
+        const d = new Date(iso);
+        return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+      };
+      const firstDay = this.event.days[0].date_and_time;
+      const lastDay = this.event.days[this.event.days.length - 1].date_and_time;
+      const endExclusive = new Date(lastDay);
+      endExclusive.setDate(endExclusive.getDate() + 1);
+      const endStr = `${endExclusive.getFullYear()}${pad(endExclusive.getMonth() + 1)}${pad(endExclusive.getDate())}`;
+      dates = `${fmtDate(firstDay)}/${endStr}`;
+    } else {
+      const start = new Date(this.event.date_and_time);
+      const end = new Date(start.getTime() + 3 * 60 * 60 * 1000);
+      const fmt = (d: Date) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+      dates = `${fmt(start)}/${fmt(end)}`;
+    }
     const params = new URLSearchParams({
       action: 'TEMPLATE',
       text: this.event.title || '',
-      dates: `${fmt(start)}/${fmt(end)}`,
+      dates,
       location,
       details: `Event by ${this.event.brand?.name || 'the organizer'}`
     });

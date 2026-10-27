@@ -47,6 +47,7 @@ export interface PublicEvent {
     color?: string;
     logo_url?: string;
   };
+  days?: { id: number; date_and_time: string; label?: string | null }[];
   ticketTypes?: Array<{
     id: number;
     name: string;
@@ -59,6 +60,7 @@ export interface PublicEvent {
     remaining_tickets?: number | null;
     sold_count?: number;
     special_instructions?: string | null;
+    days?: { id: number; date_and_time: string; label?: string | null }[];
   }>;
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
@@ -110,6 +112,8 @@ export interface CheckInResponse {
     number_of_entries: number;
     number_of_claimed_entries: number;
     remaining_entries: number;
+    remaining_today?: number;
+    claimed_today?: number;
     event: {
       id: number;
       title: string;
@@ -202,6 +206,7 @@ export class PublicService {
         color: string;
         logo_url: string;
       };
+      days?: { id: number; date_and_time: string; label?: string | null }[];
     };
   }> {
     return this.http.get<{
@@ -217,6 +222,7 @@ export class PublicService {
           color: string;
           logo_url: string;
         };
+        days?: { id: number; date_and_time: string; label?: string | null }[];
       };
     }>(`${this.apiUrl}/public/events/${eventId}/info`);
   }
@@ -298,6 +304,7 @@ export class PublicService {
         venue_maps_url?: string;
         poster_url?: string;
         buy_shortlink?: string;
+        days?: { id: number; date_and_time: string; label?: string | null }[];
         brand?: {
           id: number;
           name: string;
@@ -386,6 +393,7 @@ export class PublicService {
         color: string;
         logo_url: string;
       };
+      days?: { id: number; date_and_time: string; label?: string | null }[];
     };
   }> {
     return this.http.post<any>(`${this.apiUrl}/scanner/login`, { event_id: eventId, pin });
@@ -400,6 +408,10 @@ export class PublicService {
       number_of_entries: number;
       number_of_claimed_entries: number;
       remaining_entries: number;
+      remaining_today?: number;
+      claimed_today?: number;
+      no_matching_day?: boolean;
+      current_event_day?: { id: number; date_and_time: string; label?: string | null } | null;
       status: string;
       event: {
         id: number;

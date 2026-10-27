@@ -18,9 +18,11 @@ export interface TicketType {
   sold_tickets?: number;
   pending_tickets?: number;
   remaining_tickets?: number | null;
+  days?: { id: number; date_and_time: string; label?: string | null }[];
   showDateRange?: boolean; // UI state
   isFree?: boolean; // UI state - whether ticket is free
   isUnlimited?: boolean; // UI state - whether ticket has unlimited capacity
+  day_ids?: number[]; // UI state - selected event day IDs
 }
 
 // Factory function for creating new ticket type form state
@@ -36,7 +38,8 @@ function createNewTicketTypeForm() {
     special_instructions_for_scanner: null as string | null,
     showDateRange: false,
     isFree: false,
-    isUnlimited: true
+    isUnlimited: true,
+    day_ids: [] as number[]
   };
 }
 
@@ -50,6 +53,8 @@ function createNewTicketTypeForm() {
 export class TicketTypesComponent implements OnInit, OnChanges {
   @Input() ticketTypes: TicketType[] = [];
   @Input() isAdmin: boolean = false;
+  @Input() eventDays: any[] = [];
+  @Input() isMultiDay: boolean = false;
   @Output() ticketTypesChange = new EventEmitter<TicketType[]>();
   @Output() alertMessage = new EventEmitter<{type: string, text: string}>();
 
@@ -131,10 +136,32 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   isDirty(): boolean {
     // Compare ticketTypes to originalTicketTypes, ignoring UI-only fields
     const stripUiFields = (arr: TicketType[]) => arr.map(tt => {
-      const { showDateRange, isFree, isUnlimited, ...rest } = tt;
+      const { showDateRange, isFree, isUnlimited, days, ...rest } = tt;
       return rest;
     });
     return JSON.stringify(stripUiFields(this.ticketTypes)) !== JSON.stringify(stripUiFields(this.originalTicketTypes));
+  }
+
+  toggleTicketTypeDay(ticketType: TicketType, dayId: number): void {
+    if (!ticketType.day_ids) ticketType.day_ids = [];
+    const idx = ticketType.day_ids.indexOf(dayId);
+    if (idx === -1) {
+      ticketType.day_ids.push(dayId);
+    } else {
+      ticketType.day_ids.splice(idx, 1);
+    }
+    this.ticketTypesChange.emit([...this.ticketTypes]);
+  }
+
+  getDayLabel(day: any, i: number): string {
+    return day.label || `Day ${i + 1}`;
+  }
+
+  getDayBadgeLabel(ticketType: TicketType): string {
+    if (!ticketType.day_ids || ticketType.day_ids.length === 0) return '';
+    if (ticketType.day_ids.length > 1) return `${ticketType.day_ids.length} days`;
+    const idx = this.eventDays.findIndex(d => d.id === ticketType.day_ids![0]);
+    return idx >= 0 ? this.getDayLabel(this.eventDays[idx], idx) + ' only' : '1 day';
   }
 
   resetTicketTypes(): void {
@@ -149,7 +176,8 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       ...tt,
       showDateRange: tt.showDateRange ?? (tt.start_date != null || tt.end_date != null),
       isFree: tt.isFree ?? (tt.price === 0),
-      isUnlimited: tt.isUnlimited ?? (tt.max_tickets === 0)
+      isUnlimited: tt.isUnlimited ?? (tt.max_tickets === 0),
+      day_ids: tt.day_ids ?? (tt.days ? tt.days.map(d => d.id) : [])
     }));
 
     // For new events with default "Regular" ticket, start in edit mode (only once per component instance)
@@ -263,7 +291,8 @@ export class TicketTypesComponent implements OnInit, OnChanges {
       special_instructions_for_scanner: this.newTicketType.special_instructions_for_scanner ? this.newTicketType.special_instructions_for_scanner.trim() : null,
       showDateRange: this.newTicketType.showDateRange,
       isFree: this.newTicketType.isFree,
-      isUnlimited: this.newTicketType.isUnlimited
+      isUnlimited: this.newTicketType.isUnlimited,
+      day_ids: this.newTicketType.day_ids || []
     };
 
     this.ticketTypes = [...this.ticketTypes, newType];

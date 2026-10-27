@@ -382,7 +382,8 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
         { model: Ticket, as: 'tickets' },
         { model: EventReferrer, as: 'referrers' },
         { model: TicketType, as: 'ticketTypes' },
-        { model: EventTag, as: 'tags', through: { attributes: [] } }
+        { model: EventTag, as: 'tags', through: { attributes: [] } },
+        { model: EventDay, as: 'days', order: [['date_and_time', 'ASC']] }
       ],
       order: [['date_and_time', 'DESC']]
     });

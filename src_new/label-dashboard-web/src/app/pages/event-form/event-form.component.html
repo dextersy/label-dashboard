@@ -103,27 +103,69 @@
               </div>
 
               <!-- Date & Time -->
-              <div>
+              <div [class.md:tw-col-span-2]="isMultiDay">
                 <label for="eventDateTime" class="ef-label">
                   Event Date & Time <span class="ef-label-required">*</span>
                   <span class="ef-label-optional">(GMT+8 PH)</span>
                 </label>
-                <!-- View mode -->
-                <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time')" class="tw-flex tw-items-center tw-gap-1">
+                <!-- View mode (single day) -->
+                <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time') && !isMultiDay" class="tw-flex tw-items-center tw-gap-1">
                   <span class="tw-text-base">{{ formatEventDate(eventData.date_and_time) }}</span>
                   <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit date and time" *ngIf="!isEventCanceled() && !isViewer"><app-icon name="edit" iconOnly /></button>
                 </div>
-                <!-- Edit mode -->
-                <div *ngIf="!isDetailsViewMode || isEditingField('date_and_time')" class="tw-flex tw-items-center tw-gap-1">
-                  <div class="ef-field ef-field--icon-end tw-flex-1" [class.ef-field--filled]="!!eventData.date_and_time">
-                    <input type="datetime-local" id="eventDateTime" class="tw-input" [(ngModel)]="eventData.date_and_time" required>
-                    <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><app-icon name="calendar" /></span>
-                    <span class="ef-field-check" *ngIf="eventData.date_and_time && !isDetailsViewMode"><app-icon name="check" /></span>
+                <!-- View mode (multiday) -->
+                <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time') && isMultiDay" class="tw-flex tw-items-center tw-gap-1">
+                  <div>
+                    <div *ngFor="let day of eventDays" class="tw-text-base">
+                      <span *ngIf="day.label" class="tw-font-medium tw-text-gray-700">{{ day.label }}: </span>{{ formatEventDate(day.date_and_time) }}
+                    </div>
                   </div>
-                  <ng-container *ngIf="isDetailsViewMode">
-                    <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('date_and_time')" title="Confirm"><app-icon name="check" iconOnly /></button>
-                    <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('date_and_time')" title="Cancel"><app-icon name="x" iconOnly /></button>
-                  </ng-container>
+                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit dates" *ngIf="!isEventCanceled() && !isViewer"><app-icon name="edit" iconOnly /></button>
+                </div>
+                <!-- Edit mode (single day) -->
+                <div *ngIf="(!isDetailsViewMode || isEditingField('date_and_time')) && !isMultiDay">
+                  <div class="tw-flex tw-items-center tw-gap-1">
+                    <div class="ef-field ef-field--icon-end tw-flex-1" [class.ef-field--filled]="!!eventData.date_and_time">
+                      <input type="datetime-local" id="eventDateTime" class="tw-input" [(ngModel)]="eventData.date_and_time" required>
+                      <span class="ef-field-icon-end" *ngIf="!eventData.date_and_time"><app-icon name="calendar" /></span>
+                      <span class="ef-field-check" *ngIf="eventData.date_and_time && !isDetailsViewMode"><app-icon name="check" /></span>
+                    </div>
+                    <ng-container *ngIf="isDetailsViewMode">
+                      <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('date_and_time')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                      <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('date_and_time')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                    </ng-container>
+                  </div>
+                  <a *ngIf="!isViewer && !isEventCanceled()" href="javascript:void(0)" (click)="switchToMultiDay()"
+                    class="tw-text-xs tw-text-blue-500 hover:tw-underline tw-mt-1 tw-inline-block">
+                    + This is a multi-day event
+                  </a>
+                </div>
+                <!-- Edit mode (multiday) -->
+                <div *ngIf="(!isDetailsViewMode || isEditingField('date_and_time')) && isMultiDay">
+                  <div *ngFor="let day of eventDays; let i = index" class="tw-flex tw-items-center tw-gap-2 tw-mb-2">
+                    <div class="ef-field ef-field--icon-end tw-flex-1" [class.ef-field--filled]="!!day.date_and_time">
+                      <input type="datetime-local" class="tw-input" [(ngModel)]="day.date_and_time" (change)="onEventDayDateChange(i)">
+                      <span class="ef-field-icon-end" *ngIf="!day.date_and_time"><app-icon name="calendar" /></span>
+                    </div>
+                    <input type="text" class="tw-input" style="width:130px" placeholder="Label (e.g. Day 1)"
+                      [(ngModel)]="day.label">
+                    <button type="button"
+                      class="tw-flex-shrink-0 tw-text-gray-400 hover:tw-text-red-500 tw-p-1 tw-transition-colors"
+                      *ngIf="eventDays.length > 2"
+                      (click)="removeEventDay(i)" title="Remove day">
+                      <app-icon name="x" iconOnly />
+                    </button>
+                  </div>
+                  <div class="tw-flex tw-items-center tw-gap-4 tw-mt-1">
+                    <a href="javascript:void(0)" (click)="addEventDay()"
+                      class="tw-text-xs tw-text-blue-500 hover:tw-underline">
+                      + Add Another Day
+                    </a>
+                    <ng-container *ngIf="isDetailsViewMode">
+                      <button type="button" class="tw-text-green-500 hover:tw-text-green-700 tw-p-1 tw-shrink-0" (click)="stopEditingField('date_and_time')" title="Confirm"><app-icon name="check" iconOnly /></button>
+                      <button type="button" class="tw-text-red-400 hover:tw-text-red-600 tw-p-1 tw-shrink-0" (click)="cancelEditingField('date_and_time')" title="Cancel"><app-icon name="x" iconOnly /></button>
+                    </ng-container>
+                  </div>
                 </div>
               </div>
             </div>
@@ -367,6 +409,8 @@
               <app-ticket-types
                 [(ticketTypes)]="ticketTypes"
                 [isAdmin]="isManager"
+                [eventDays]="eventDays"
+                [isMultiDay]="isMultiDay"
                 (ticketTypesChange)="onTicketTypesChanged()">
               </app-ticket-types>
 
@@ -727,7 +771,7 @@
     type="button"
     class="btn-secondary"
     (click)="onSave()"
-    [disabled]="saving || isEventPast()"
+    [disabled]="saving || isEventPast() || !isFormDirty()"
     *ngIf="!isNewEvent && isEventDraft()">
     <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
     <app-icon name="save" class="" *ngIf="!saving" />
@@ -793,7 +837,7 @@
     type="button"
     class="btn-primary fab-primary-btn ef-save-btn"
     (click)="onSave()"
-    [disabled]="saving || isEventPast()"
+    [disabled]="saving || isEventPast() || !isFormDirty()"
     *ngIf="isEventPublished()">
     <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
     <app-icon name="save" class="" *ngIf="!saving" />

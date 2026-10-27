@@ -102,10 +102,16 @@ export class EventSelectionComponent implements OnInit, OnDestroy {
     }
     
     const now = new Date();
-    const eventDate = new Date(event.date_and_time);
-    const closeTime = event.close_time ? new Date(event.close_time) : eventDate;
-    
-    if (now > eventDate) {
+    const days = (event as any).days as { date_and_time: string }[] | undefined;
+    const sortedDays = days && days.length > 1
+      ? [...days].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())
+      : days;
+    const lastDate = sortedDays && sortedDays.length > 1
+      ? new Date(sortedDays[sortedDays.length - 1].date_and_time)
+      : new Date(event.date_and_time);
+    const closeTime = event.close_time ? new Date(event.close_time) : lastDate;
+
+    if (now > lastDate) {
       return 'Past';
     } else if (now > closeTime) {
       return 'Closed';

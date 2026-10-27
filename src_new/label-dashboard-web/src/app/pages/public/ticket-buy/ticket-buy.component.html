@@ -92,8 +92,8 @@
           <!-- Unified date / venue info bar -->
           <div class="tw-mt-5 tw-rounded-xl tw-bg-white tw-flex tw-flex-col sm:tw-flex-row tw-divide-y sm:tw-divide-y-0 sm:tw-divide-x tw-divide-gray-100" style="border: 0.5px solid #e5e7eb;">
 
-            <!-- Top/Left: Date & Time -->
-            <div class="tw-flex tw-items-center tw-gap-3.5 tw-flex-shrink-0 tw-px-5 tw-py-4">
+            <!-- Top/Left: Date & Time — single day -->
+            <div *ngIf="!event.days || event.days.length <= 1" class="tw-flex tw-items-center tw-gap-3.5 tw-flex-shrink-0 tw-px-5 tw-py-4">
               <!-- Date badge -->
               <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-12 tw-h-12 tw-text-white" style="background-color: #2D28B8;">
                 <span class="tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(event.date_and_time) }}</span>
@@ -109,6 +109,27 @@
                   <span>Add to calendar</span>
                 </a>
               </div>
+            </div>
+
+            <!-- Top/Left: Date & Time — multiday -->
+            <div *ngIf="event.days && event.days.length > 1" class="tw-flex-shrink-0 tw-px-5 tw-py-4">
+              <div class="tw-grid tw-grid-cols-3 sm:tw-grid-cols-none sm:tw-grid-flow-col sm:tw-auto-cols-fr tw-gap-x-3 tw-gap-y-3">
+                <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-flex-col tw-items-center tw-text-center">
+                  <!-- Date badge -->
+                  <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-w-10 tw-h-10 tw-text-white tw-mb-1" style="background-color: #2D28B8;">
+                    <span class="tw-text-[8px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(day.date_and_time) }}</span>
+                    <span class="tw-text-base tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[1] }}</span>
+                    <span class="tw-text-[8px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[0] }}</span>
+                  </div>
+                  <span class="tw-text-[11px] tw-font-bold tw-text-gray-900 tw-leading-snug">{{ day.label || ('Day ' + (di + 1)) }}</span>
+                  <span class="tw-text-[10px] tw-text-gray-500">{{ formatEventTime(day.date_and_time) }}</span>
+                </div>
+              </div>
+              <a *ngIf="getGoogleCalendarUrl()" [href]="getGoogleCalendarUrl()" target="_blank"
+                class="tw-flex tw-items-center tw-gap-1 tw-text-[11px] tw-text-indigo-500 hover:tw-text-indigo-700 tw-no-underline tw-font-medium tw-whitespace-nowrap tw-transition-colors tw-mt-2">
+                <app-icon name="calendar-plus" class="tw-text-[10px]" />
+                <span>Add to calendar</span>
+              </a>
             </div>
 
             <!-- Bottom/Right: Venue -->
@@ -245,6 +266,12 @@
                   class="tw-mt-1 tw-text-[11px] tw-text-gray-500">
                   {{ ticketType.remaining_tickets }} left
                 </span>
+                <!-- Valid days (only shown for multiday events where ticket doesn't cover all days) -->
+                <ng-container *ngIf="event.days && event.days.length > 1 && ticketType.days && ticketType.days.length > 0 && ticketType.days.length < event.days.length">
+                  <span class="tw-mt-1 tw-text-[10px] tw-leading-snug">
+                    <span class="tw-text-gray-400">Valid on </span><span class="tw-text-indigo-500 tw-font-medium"><ng-container *ngFor="let d of ticketType.days; let last = last">{{ d.date_and_time | date:'EEE MMM d' }}<ng-container *ngIf="!last"> · </ng-container></ng-container></span>
+                  </span>
+                </ng-container>
                 <span *ngIf="selectedTicketType?.id === ticketType.id"
                   class="tw-absolute tw-top-2 tw-right-2 tw-w-4 tw-h-4 tw-rounded-full tw-bg-indigo-500 tw-flex tw-items-center tw-justify-center">
                   <app-icon name="check" class="tw-text-white" style="font-size: 8px;" />
@@ -409,8 +436,8 @@
         <!-- Card 2: Event details (date & venue) — same style as normal buy page -->
         <div class="tw-rounded-xl tw-bg-white tw-flex tw-flex-col sm:tw-flex-row tw-divide-y sm:tw-divide-y-0 sm:tw-divide-x tw-divide-gray-100 tw-mb-4" style="border: 0.5px solid #e5e7eb;">
 
-          <!-- Date & Time -->
-          <div class="tw-flex tw-items-center tw-gap-3.5 tw-flex-shrink-0 tw-px-5 tw-py-4">
+          <!-- Date & Time — single day -->
+          <div *ngIf="!event.days || event.days.length <= 1" class="tw-flex tw-items-center tw-gap-3.5 tw-flex-shrink-0 tw-px-5 tw-py-4">
             <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-12 tw-h-12 tw-text-white" style="background-color: #2D28B8;">
               <span class="tw-text-[9px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(event.date_and_time) }}</span>
               <span class="tw-text-xl tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(event.date_and_time).split(' ')[1] }}</span>
@@ -418,6 +445,21 @@
             </div>
             <div class="tw-flex tw-flex-col tw-gap-1 tw-min-w-0">
               <span class="tw-text-sm tw-font-bold tw-text-gray-900 tw-leading-none">{{ formatEventTime(event.date_and_time) }}</span>
+            </div>
+          </div>
+
+          <!-- Date & Time — multiday -->
+          <div *ngIf="event.days && event.days.length > 1" class="tw-flex tw-flex-col tw-gap-2 tw-flex-shrink-0 tw-px-5 tw-py-4">
+            <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-items-center tw-gap-3">
+              <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" style="background-color: #2D28B8;">
+                <span class="tw-text-[8px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(day.date_and_time) }}</span>
+                <span class="tw-text-base tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[1] }}</span>
+                <span class="tw-text-[8px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[0] }}</span>
+              </div>
+              <div class="tw-flex tw-flex-col tw-min-w-0">
+                <span class="tw-text-xs tw-font-bold tw-text-gray-900 tw-leading-snug">{{ day.label || ('Day ' + (di + 1)) }}</span>
+                <span class="tw-text-xs tw-text-gray-500">{{ formatEventTime(day.date_and_time) }}</span>
+              </div>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -22,6 +22,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
     selector: 'app-ticket-verify',
     imports: [
         CommonModule,
+        DatePipe,
         ReactiveFormsModule,
         FormsModule,
         MatFormFieldModule,
@@ -57,6 +58,8 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
   currentEvent: any = null;
   currentTicket: any = null;
   lastCheckInEntries: number = 0;
+  currentEventDay: any = null;
+  noMatchingDay = false;
   
   // UI state
   alertType: 'success' | 'error' | 'info' | 'warning' = 'info';
@@ -150,6 +153,23 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private detectCurrentEventDay(days: any[]): void {
+    if (!days || days.length === 0) {
+      this.currentEventDay = null;
+      return;
+    }
+    const today = new Date().toISOString().substring(0, 10); // YYYY-MM-DD UTC
+    const match = days.find(d => {
+      if (!d.date_and_time) return false;
+      return new Date(d.date_and_time).toISOString().substring(0, 10) === today;
+    });
+    this.currentEventDay = match || null;
+    // Show warning when it's a multiday event but none of the days match today
+    if (days.length > 1 && !match) {
+      this.noMatchingDay = true;
+    }
+  }
+
   private loadEventInfo(): void {
     if (!this.eventId) {
       return;
@@ -160,6 +180,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (response) => {
           this.currentEvent = response.event;
+          this.detectCurrentEventDay(response.event?.days || []);
         },
         error: (error) => {
           console.error('Failed to load event info:', error);
@@ -274,6 +295,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
           this.isPinValidated = true;
           this.scannerToken = response.token;
           this.currentEvent = response.event;
+          this.detectCurrentEventDay(response.event?.days || []);
           // Persist token in localStorage
           localStorage.setItem(`scanner_token_${this.eventId}`, response.token);
           this.showSuccess("You're in! You can now scan tickets below.");
@@ -376,6 +398,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.isLoading = true;
+    this.noMatchingDay = false;
     this.resetUIState();
 
     this.publicService.scannerGetTicket(this.scannerToken, ticketCode)
@@ -383,29 +406,49 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (response) => {
           this.currentTicket = response.ticket;
+          this.noMatchingDay = response.ticket.no_matching_day || false;
+
+          const effectiveRemaining = response.ticket.remaining_today ?? response.ticket.remaining_entries;
+
+          // Scenario 0: Ticket not valid for today's event day
+          if (response.ticket.no_matching_day) {
+            this.showPersistentError('This ticket is not valid for today. It is only valid on specific days of this event.');
+            this.isLoading = false;
+            return;
+          }
 
           // Scenario 1: Ticket found with remaining entries - show check-in form
-          if (response.ticket.remaining_entries > 0) {
+          if (effectiveRemaining > 0) {
             this.showInputForm = false;
             this.showCheckInForm = true;
             this.checkInForm.patchValue({
-              entriesToClaim: Math.min(1, response.ticket.remaining_entries)
+              entriesToClaim: Math.min(1, effectiveRemaining)
             });
             this.checkInForm.get('entriesToClaim')?.setValidators([
               Validators.required,
               Validators.min(1),
-              Validators.max(response.ticket.remaining_entries)
+              Validators.max(effectiveRemaining)
             ]);
             setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
           } else {
             // Scenario 3: Ticket found but no remaining entries
-            this.showPersistentError('All entries for this ticket have been claimed.');
+            const msg = this.currentEventDay
+              ? 'All entries for today have been claimed.'
+              : 'All entries for this ticket have been claimed.';
+            this.showPersistentError(msg);
           }
 
           this.isLoading = false;
         },
         error: (error) => {
-          if (error.status === 401 || error.status === 403) {
+          if (error.status === 403) {
+            const errMsg = (error.error?.error || '').toLowerCase();
+            if (errMsg.includes('not valid') || errMsg.includes('today') || errMsg.includes('day')) {
+              this.showPersistentError('This ticket is not valid for today.');
+            } else {
+              this.handleScannerError(error);
+            }
+          } else if (error.status === 401) {
             this.handleScannerError(error);
           } else {
             // Scenario 2: Ticket not found
@@ -450,7 +493,7 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const allRemainingEntries = this.currentTicket.remaining_entries;
+    const allRemainingEntries = this.currentTicket.remaining_today ?? this.currentTicket.remaining_entries;
     if (allRemainingEntries <= 0) {
       return;
     }
