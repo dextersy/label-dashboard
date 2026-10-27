@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer, EventBrandCollaboration } from '../models';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer, EventBrandCollaboration, EventDay } from '../models';
+import { sequelize } from '../config/database';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -710,14 +711,24 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
     startOfToday.setHours(0, 0, 0, 0);
     const upcomingEventsWhere: any = {
       status: 'published',
-      date_and_time: { [Op.gte]: startOfToday },
       [Op.or]: [
         { brand_id: req.user.brand_id },
         ...(collabEventIds.length > 0 ? [{ id: collabEventIds }] : [])
-      ]
+      ],
+      [Op.and]: sequelize.literal(
+        `("Event"."date_and_time" >= '${startOfToday.toISOString()}' OR EXISTS (SELECT 1 FROM event_day ed WHERE ed.event_id = "Event"."id" AND ed.date_and_time >= '${startOfToday.toISOString()}'))`
+      )
     };
     const upcomingEventsRaw = await Event.findAll({
       where: upcomingEventsWhere,
+      include: [
+        {
+          model: EventDay,
+          as: 'days',
+          attributes: ['id', 'date_and_time', 'label'],
+          required: false,
+        }
+      ],
       order: [['date_and_time', 'ASC']],
       limit: 3,
       attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url', 'status', 'brand_id']
@@ -736,6 +747,9 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
           const gross = (t.price_per_ticket || 0) * (t.number_of_entries || 0);
           return sum + gross - (t.platform_fee || 0);
         }, 0);
+        const days = ((e as any).days || [])
+          .sort((a: any, b: any) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())
+          .map((d: any) => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null }));
         return {
           id: e.id,
           title: e.title,
@@ -744,7 +758,8 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
           poster_url: e.poster_url || null,
           tickets_sold: ticketsSold,
           net_earnings: netEarnings,
-          user_role: isCollab ? (collabRoleMap.get(e.id) || 'viewer') : 'owner'
+          user_role: isCollab ? (collabRoleMap.get(e.id) || 'viewer') : 'owner',
+          days,
         };
       })
     );

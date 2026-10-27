@@ -59,6 +59,7 @@ export interface UpcomingEvent {
   tickets_sold: number;
   net_earnings: number;
   user_role?: 'owner' | 'manager' | 'viewer';
+  days?: { id: number; date_and_time: string; label?: string | null }[];
 }
 
 interface CampaignsDashboardData {
@@ -180,8 +181,14 @@ export class EventsDashboardComponent implements OnInit {
     this.todayEventTicketSummary = null;
     this.todayEventWalkInTotal = null;
 
-    const first = upcomingEvents?.[0];
-    if (!first || this.getDaysAway(first.date_and_time) !== 0) return;
+    const isEventToday = (event: UpcomingEvent): boolean => {
+      const allDates = event.days?.length
+        ? event.days.map(d => d.date_and_time)
+        : [event.date_and_time];
+      return allDates.some(d => this.getDaysAway(d) === 0);
+    };
+    const first = upcomingEvents?.find(isEventToday) ?? null;
+    if (!first) return;
 
     this.eventService.getEvent(first.id).pipe(catchError(() => of(null))).subscribe(event => {
       if (!event) return;
