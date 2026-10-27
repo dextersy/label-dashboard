@@ -684,6 +684,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
 
     // Create EventDays — either from provided `days` array or a single day from date_and_time
     const createdEventDays: EventDay[] = [];
+    // Maps _temp_id (client proxy) → actual created event_day.id, for day_ids resolution on ticket types
+    const tempIdMap = new Map<number, number>();
     if (parsedDays && Array.isArray(parsedDays) && parsedDays.length > 0) {
       const sortedDays = [...parsedDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
       for (const day of sortedDays) {
@@ -693,6 +695,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
           label: day.label ? day.label.trim() : null
         });
         createdEventDays.push(ed);
+        if (day._temp_id) tempIdMap.set(Number(day._temp_id), ed.id);
       }
       // Keep event.date_and_time in sync with first day
       await event.update({ date_and_time: createdEventDays[0].date_and_time });
@@ -722,9 +725,10 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
             special_instructions: ticketType.special_instructions ? ticketType.special_instructions.trim() : null,
             special_instructions_for_scanner: ticketType.special_instructions_for_scanner ? ticketType.special_instructions_for_scanner.trim() : null
           });
-          // Link to specified days or all event days by default
+          // Link to specified days or all event days by default.
+          // day_ids may contain _temp_id proxies (for new events) — resolve them first.
           const filteredDayIds: number[] = Array.isArray(ticketType.day_ids)
-            ? ticketType.day_ids.map(Number).filter((id: number) => createdEventDays.some(d => d.id === id))
+            ? ticketType.day_ids.map(Number).map((id: number) => tempIdMap.get(id) ?? id).filter((id: number) => createdEventDays.some(d => d.id === id))
             : [];
           const dayIds: number[] = filteredDayIds.length > 0 ? filteredDayIds : createdEventDays.map(d => d.id);
           for (const dayId of dayIds) {

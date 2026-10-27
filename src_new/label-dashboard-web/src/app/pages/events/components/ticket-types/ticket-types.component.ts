@@ -160,7 +160,7 @@ export class TicketTypesComponent implements OnInit, OnChanges {
   getDayBadgeLabel(ticketType: TicketType): string {
     if (!ticketType.day_ids || ticketType.day_ids.length === 0) return '';
     if (ticketType.day_ids.length > 1) return `${ticketType.day_ids.length} days`;
-    const idx = this.eventDays.findIndex(d => d.id === ticketType.day_ids![0]);
+    const idx = this.eventDays.findIndex(d => (d.id || d._tempId) === ticketType.day_ids![0]);
     return idx >= 0 ? this.getDayLabel(this.eventDays[idx], idx) + ' only' : '1 day';
   }
 

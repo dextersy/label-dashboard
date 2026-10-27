@@ -101,7 +101,7 @@
       </div>
 
       <!-- Valid Days (multiday events) -->
-      <div *ngIf="isMultiDay && eventDays.length > 0 && eventDays[0]?.id" class="tw-mb-3">
+      <div *ngIf="isMultiDay && eventDays.length > 0" class="tw-mb-3">
         <div class="tw-flex tw-items-baseline tw-gap-2 tw-mb-2">
           <label class="tw-label tw-mb-0">Valid days</label>
           <span class="tw-text-xs tw-text-gray-400">
@@ -112,19 +112,19 @@
           <button *ngFor="let day of eventDays; let di = index"
             type="button"
             class="tw-flex tw-flex-col tw-items-start tw-px-3 tw-py-1.5 tw-rounded-lg tw-border tw-text-left tw-transition-all"
-            [class.tw-border-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
-            [class.tw-bg-blue-50]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
-            [class.tw-border-gray-200]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))"
-            [class.tw-bg-white]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))"
-            (click)="toggleTicketTypeDay(ticketType, day.id)">
+            [class.tw-border-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-bg-blue-50]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-border-gray-200]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))"
+            [class.tw-bg-white]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))"
+            (click)="toggleTicketTypeDay(ticketType, day.id || day._tempId)">
             <span class="tw-text-xs tw-font-semibold"
-              [class.tw-text-blue-700]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
-              [class.tw-text-gray-700]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))">
+              [class.tw-text-blue-700]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+              [class.tw-text-gray-700]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))">
               {{ getDayLabel(day, di) }}
             </span>
             <span class="tw-text-xs"
-              [class.tw-text-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id)"
-              [class.tw-text-gray-400]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id))">
+              [class.tw-text-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+              [class.tw-text-gray-400]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))">
               {{ day.date_and_time | date:'EEE, MMM d' }}
             </span>
           </button>
@@ -285,7 +285,7 @@
     </div>
 
     <!-- Valid Days (multiday events) -->
-    <div *ngIf="isMultiDay && eventDays.length > 0 && eventDays[0]?.id" class="tw-mb-3">
+    <div *ngIf="isMultiDay && eventDays.length > 0" class="tw-mb-3">
       <div class="tw-flex tw-items-baseline tw-gap-2 tw-mb-2">
         <label class="tw-label tw-mb-0">Valid days</label>
         <span class="tw-text-xs tw-text-gray-400">
@@ -296,19 +296,19 @@
         <button *ngFor="let day of eventDays; let di = index"
           type="button"
           class="tw-flex tw-flex-col tw-items-start tw-px-3 tw-py-1.5 tw-rounded-lg tw-border tw-text-left tw-transition-all"
-          [class.tw-border-blue-500]="newTicketType.day_ids.includes(day.id)"
-          [class.tw-bg-blue-50]="newTicketType.day_ids.includes(day.id)"
-          [class.tw-border-gray-200]="!newTicketType.day_ids.includes(day.id)"
-          [class.tw-bg-white]="!newTicketType.day_ids.includes(day.id)"
-          (click)="newTicketType.day_ids.includes(day.id) ? newTicketType.day_ids.splice(newTicketType.day_ids.indexOf(day.id), 1) : newTicketType.day_ids.push(day.id)">
+          [class.tw-border-blue-500]="newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-bg-blue-50]="newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-border-gray-200]="!newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-bg-white]="!newTicketType.day_ids.includes(day.id || day._tempId)"
+          (click)="newTicketType.day_ids.includes(day.id || day._tempId) ? newTicketType.day_ids.splice(newTicketType.day_ids.indexOf(day.id || day._tempId), 1) : newTicketType.day_ids.push(day.id || day._tempId)">
           <span class="tw-text-xs tw-font-semibold"
-            [class.tw-text-blue-700]="newTicketType.day_ids.includes(day.id)"
-            [class.tw-text-gray-700]="!newTicketType.day_ids.includes(day.id)">
+            [class.tw-text-blue-700]="newTicketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-text-gray-700]="!newTicketType.day_ids.includes(day.id || day._tempId)">
             {{ getDayLabel(day, di) }}
           </span>
           <span class="tw-text-xs"
-            [class.tw-text-blue-500]="newTicketType.day_ids.includes(day.id)"
-            [class.tw-text-gray-400]="!newTicketType.day_ids.includes(day.id)">
+            [class.tw-text-blue-500]="newTicketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-text-gray-400]="!newTicketType.day_ids.includes(day.id || day._tempId)">
             {{ day.date_and_time | date:'EEE, MMM d' }}
           </span>
         </button>

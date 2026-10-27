@@ -24,6 +24,7 @@ import { EventListingTabComponent } from '../events/components/event-listing-tab
 
 export interface EventDayFormItem {
   id?: number;
+  _tempId?: number; // client-side proxy ID for new (unsaved) days
   date_and_time: string; // datetime-local format
   label: string;
 }
@@ -151,6 +152,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   // Multiday state
   eventDays: EventDayFormItem[] = [];
   isMultiDay = false;
+  private nextTempId = 1;
 
   selectedPosterFile: File | null = null;
   posterPreview: string | null = null;
@@ -776,15 +778,18 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     // Preserve the existing EventDay id (if any) so the backend updates rather
     // than deletes+recreates it — deletion would be blocked if scan logs exist.
     const existingFirst = this.eventDays.length > 0 ? this.eventDays[0] : null;
+    // For new events (no DB id), assign _tempId so the ticket-type day picker can reference them
+    const firstTempId = existingFirst?.id ? undefined : this.nextTempId++;
+    const secondTempId = this.nextTempId++;
     this.eventDays = [
-      { ...(existingFirst?.id ? { id: existingFirst.id } : {}), date_and_time: this.eventData.date_and_time, label: existingFirst?.label || '' },
-      { date_and_time: '', label: '' }
+      { ...(existingFirst?.id ? { id: existingFirst.id } : { _tempId: firstTempId }), date_and_time: this.eventData.date_and_time, label: existingFirst?.label || '' },
+      { _tempId: secondTempId, date_and_time: '', label: '' }
     ];
     this.isMultiDay = true;
   }
 
   addEventDay(): void {
-    this.eventDays.push({ date_and_time: '', label: '' });
+    this.eventDays.push({ _tempId: this.nextTempId++, date_and_time: '', label: '' });
   }
 
   removeEventDay(i: number): void {
@@ -1357,6 +1362,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         .filter(d => d.date_and_time)
         .map(d => ({
           ...(d.id ? { id: d.id } : {}),
+          ...(!d.id && d._tempId ? { _temp_id: d._tempId } : {}),
           date_and_time: this.formatDateForAPI(d.date_and_time),
           label: d.label || null
         }));
@@ -1447,6 +1453,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         .filter(d => d.date_and_time)
         .map(d => ({
           ...(d.id ? { id: d.id } : {}),
+          ...(!d.id && d._tempId ? { _temp_id: d._tempId } : {}),
           date_and_time: this.formatDateForAPI(d.date_and_time),
           label: d.label || null
         }));
