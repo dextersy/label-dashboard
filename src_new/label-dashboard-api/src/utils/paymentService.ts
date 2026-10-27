@@ -5,7 +5,7 @@ import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
-import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor } from '../models';
+import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor, EventDay } from '../models';
 import Artist from '../models/Artist';
 import ArtistAccess from '../models/ArtistAccess';
 import Payment from '../models/Payment';
@@ -985,23 +985,29 @@ export class PaymentService {
       const ticket = await Ticket.findOne({
         where: { id: ticketId },
         include: [
-          { 
-            model: Event, 
+          {
+            model: Event,
             as: 'event',
-            include: [{ model: Brand, as: 'brand' }]
+            include: [
+              { model: Brand, as: 'brand' },
+              { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+            ]
           },
-          { 
-            model: TicketType, 
+          {
+            model: TicketType,
             as: 'ticketType',
-            attributes: ['id', 'name']
+            attributes: ['id', 'name', 'special_instructions'],
+            include: [
+              { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+            ]
           }
         ]
       });
-      
+
       if (!ticket || !ticket.event || !ticket.event.brand) {
         return false;
       }
-      
+
       // Send ticket email
       const success = await sendTicketEmail(
         {
@@ -1013,7 +1019,8 @@ export class PaymentService {
           ticket_type: (ticket as any).ticketType ? {
             id: (ticket as any).ticketType.id,
             name: (ticket as any).ticketType.name,
-            special_instructions: (ticket as any).ticketType.special_instructions || null
+            special_instructions: (ticket as any).ticketType.special_instructions || null,
+            days: (ticket as any).ticketType.days || []
           } : undefined
         },
         {
@@ -1025,7 +1032,8 @@ export class PaymentService {
           venue_address: ticket.event.venue_address,
           venue_latitude: ticket.event.venue_latitude,
           venue_longitude: ticket.event.venue_longitude,
-          venue_maps_url: ticket.event.venue_maps_url
+          venue_maps_url: ticket.event.venue_maps_url,
+          days: (ticket as any).event.days || []
         },
         {
           brand_name: ticket.event.brand.brand_name

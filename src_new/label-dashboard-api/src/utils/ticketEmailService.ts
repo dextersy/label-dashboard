@@ -58,6 +58,7 @@ export const sendTicketEmail = async (
       id: number;
       name: string;
       special_instructions?: string | null;
+      days?: { date_and_time: Date | string; label?: string | null }[];
     };
   },
   event: {
@@ -70,6 +71,7 @@ export const sendTicketEmail = async (
     venue_latitude?: number;
     venue_longitude?: number;
     venue_maps_url?: string;
+    days?: { date_and_time: Date | string; label?: string | null }[];
   },
   brand: {
     brand_name?: string;
@@ -80,21 +82,20 @@ export const sendTicketEmail = async (
     // Get or create QR code from S3
     const qrCodeUrl = await QRCodeService.getOrCreateQRCodeUrl(event.id, ticket.ticket_code);
 
+    const eventDays = event.days || [];
+    const isMultiday = eventDays.length > 1;
+
+    const fmtDate = (d: Date | string) => new Date(d).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila'
+    });
+    const fmtTime = (d: Date | string) => new Date(d).toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila'
+    });
+
     // Format event date and time in Philippine timezone
     const eventDate = new Date(event.date_and_time);
-    const formattedDate = eventDate.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'Asia/Manila'
-    });
-    const formattedTime = eventDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Manila'
-    });
+    const formattedDate = fmtDate(eventDate);
+    const formattedTime = fmtTime(eventDate);
 
     // Generate Google Calendar "Add to Calendar" link
     const formatGoogleCalendarDate = (date: Date): string => {
@@ -134,6 +135,50 @@ export const sendTicketEmail = async (
       brand_name: brand.brand_name || 'Melt Records',
       ticket_type_name: ticket.ticket_type?.name || 'Regular'
     };
+
+    // Multiday: build event days HTML and valid dates text
+    if (isMultiday) {
+      const sortedDays = [...eventDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      const daysHtml = sortedDays.map((day, i) => {
+        const label = day.label ? ` (${day.label})` : ` (Day ${i + 1})`;
+        return `<div style="margin-bottom: 4px; padding-left: 12px;">${fmtDate(day.date_and_time)}, ${fmtTime(day.date_and_time)}${label}</div>`;
+      }).join('');
+      templateData.event_days_html = daysHtml;
+
+      templateData.show_single_date = '<!--';
+      templateData['/show_single_date'] = '-->';
+      templateData.show_multi_date = '';
+      templateData['/show_multi_date'] = '';
+
+      // Valid dates below ticket code
+      const ticketDays: { date_and_time: Date | string; label?: string | null }[] = ticket.ticket_type?.days || [];
+      const validDaysSource = ticketDays.length > 0
+        ? [...ticketDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())
+        : sortedDays;
+
+      if (ticketDays.length > 0) {
+        templateData.valid_dates_text = `Valid on: ${validDaysSource.map((d, i) => {
+          const dayIdx = sortedDays.findIndex(sd =>
+            Math.floor(new Date(sd.date_and_time).getTime() / 1000) === Math.floor(new Date(d.date_and_time).getTime() / 1000)
+          );
+          const lbl = d.label ? ` (${d.label})` : ` (Day ${dayIdx >= 0 ? dayIdx + 1 : '?'})`;
+          return fmtDate(d.date_and_time) + lbl;
+        }).join(', ')}`;
+      } else {
+        templateData.valid_dates_text = 'Valid on all days';
+      }
+      templateData.show_valid_dates = '';
+      templateData['/show_valid_dates'] = '';
+    } else {
+      templateData.event_days_html = '';
+      templateData.show_single_date = '';
+      templateData['/show_single_date'] = '';
+      templateData.show_multi_date = '<!--';
+      templateData['/show_multi_date'] = '-->';
+      templateData.valid_dates_text = '';
+      templateData.show_valid_dates = '<!--';
+      templateData['/show_valid_dates'] = '-->';
+    }
 
     // Add conditional special instructions section
     const specialInstructions = ticket.ticket_type?.special_instructions;

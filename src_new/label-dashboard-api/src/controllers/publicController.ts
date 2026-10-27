@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow, EventBrandCollaboration } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow, EventBrandCollaboration, EventDay } from '../models';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
@@ -134,15 +134,20 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Get ticket types with availability information
+    // Get event days
+    const eventDays = await EventDay.findAll({
+      where: { event_id: eventId },
+      order: [['date_and_time', 'ASC']],
+      attributes: ['id', 'date_and_time', 'label']
+    });
+
+    // Get ticket types with availability information and their valid days
     const ticketTypes = await TicketType.findAll({
       where: { event_id: eventId, disabled: false },
-      include: [{
-        model: Ticket,
-        as: 'tickets',
-        required: false,
-        attributes: ['id']
-      }],
+      include: [
+        { model: Ticket, as: 'tickets', required: false, attributes: ['id'] },
+        { model: EventDay, as: 'days', through: { attributes: [] }, attributes: ['id', 'date_and_time', 'label'] }
+      ],
       order: [['id', 'ASC']]
     });
 
@@ -154,6 +159,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       const soldCount = await ticketType.getSoldCount();
 
       // For public event details, include all enabled tickets with availability status
+      const ttDays: any[] = (ticketType as any).days || [];
       processedTicketTypes.push({
         id: ticketType.id,
         name: ticketType.name,
@@ -162,7 +168,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         is_sold_out: isSoldOut,
         remaining_tickets: remainingTickets,
         sold_count: soldCount,
-        special_instructions: ticketType.special_instructions || null
+        special_instructions: ticketType.special_instructions || null,
+        days: ttDays.map((d: any) => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null }))
       });
     }
 
@@ -267,6 +274,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
           logo_url: event.brand.logo_url
         } : null,
         ticketTypes: processedTicketTypes,
+        days: eventDays.map(d => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null })),
         like_count: likeCount,
         user_liked: userLiked,
         member_discount_type: event.member_discount_type || null,
@@ -385,7 +393,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
             },
             {
               model: TicketType,
-              as: 'ticketType'
+              as: 'ticketType',
+              include: [{ model: EventDay, as: 'days', through: { attributes: [] }, attributes: ['id', 'date_and_time', 'label'] }]
             }
           ]
         });
@@ -393,6 +402,12 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         if (!ticket) {
           return res.status(404).json({ error: 'Ticket not found' });
         }
+
+        const ticketEventDays = await EventDay.findAll({
+          where: { event_id: eventId },
+          order: [['date_and_time', 'ASC']],
+          attributes: ['id', 'date_and_time', 'label']
+        });
 
         // Return ticket details for cookie-authenticated request
         return res.json({
@@ -418,6 +433,7 @@ export const getTicketDetails = async (req: Request, res: Response) => {
               venue_maps_url: ticket.event.venue_maps_url,
               poster_url: ticket.event.poster_url,
               buy_shortlink: ticket.event.buy_shortlink,
+              days: ticketEventDays.map(d => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null })),
               brand: ticket.event.brand ? {
                 id: ticket.event.brand.id,
                 name: ticket.event.brand.brand_name,
@@ -428,7 +444,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
             ticketType: ticket.ticketType ? {
               id: ticket.ticketType.id,
               name: ticket.ticketType.name,
-              price: ticket.ticketType.price
+              price: ticket.ticketType.price,
+              days: ((ticket.ticketType as any).days || []).map((d: any) => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null }))
             } : undefined
           }
         });
@@ -470,7 +487,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
         {
           model: TicketType,
           as: 'ticketType',
-          attributes: ['id', 'name', 'price', 'special_instructions_for_scanner']
+          attributes: ['id', 'name', 'price', 'special_instructions_for_scanner'],
+          include: [{ model: EventDay, as: 'days', through: { attributes: [] }, attributes: ['id', 'date_and_time', 'label'] }]
         },
         { model: EventReferrer, as: 'referrer' }
       ]
@@ -531,7 +549,8 @@ export const getTicketDetails = async (req: Request, res: Response) => {
           id: (ticket as any).ticketType.id,
           name: (ticket as any).ticketType.name,
           price: (ticket as any).ticketType.price,
-          special_instructions_for_scanner: (ticket as any).ticketType.special_instructions_for_scanner || null
+          special_instructions_for_scanner: (ticket as any).ticketType.special_instructions_for_scanner || null,
+          days: ((ticket as any).ticketType.days || []).map((d: any) => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null }))
         } : null
       }
     });
@@ -589,7 +608,15 @@ export const buyTicket = async (req: Request, res: Response) => {
           model: TicketType,
           as: 'ticketTypes',
           attributes: ['id', 'name', 'price', 'special_instructions'],
-          where: { disabled: false }
+          where: { disabled: false },
+          include: [
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+          ]
+        },
+        {
+          model: EventDay,
+          as: 'days',
+          attributes: ['id', 'date_and_time', 'label']
         }
       ]
     });
@@ -727,7 +754,8 @@ export const buyTicket = async (req: Request, res: Response) => {
             ticket_type: selectedTicketType ? {
               id: selectedTicketType.id,
               name: selectedTicketType.name,
-              special_instructions: selectedTicketType.special_instructions || null
+              special_instructions: selectedTicketType.special_instructions || null,
+              days: (selectedTicketType as any).days || []
             } : undefined
           },
           {
@@ -739,7 +767,8 @@ export const buyTicket = async (req: Request, res: Response) => {
             venue_address: event.venue_address,
             venue_latitude: event.venue_latitude,
             venue_longitude: event.venue_longitude,
-            venue_maps_url: event.venue_maps_url
+            venue_maps_url: event.venue_maps_url,
+            days: (event as any).days || []
           },
           {
             brand_name: event.brand?.brand_name
@@ -886,15 +915,16 @@ export const downloadTicketPDF = async (req: Request, res: Response) => {
           model: Event,
           as: 'event',
           include: [
-            {
-              model: Brand,
-              as: 'brand'
-            }
+            { model: Brand, as: 'brand' },
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
           ]
         },
         {
           model: TicketType,
-          as: 'ticketType'
+          as: 'ticketType',
+          include: [
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+          ]
         }
       ]
     });
@@ -998,7 +1028,26 @@ async function streamTicketPDF(ticket: any, res: Response): Promise<void> {
 
     // Ticket code (large, bold, centered)
     doc.fontSize(32).font('Helvetica-Bold').fillColor('#333333').text(ticket.ticket_code, { align: 'center' });
-    doc.moveDown(0.5);
+    doc.moveDown(0.3);
+
+    // Valid date(s) — shown below ticket code if ticket type has specific days
+    const ticketDays: any[] = ticket.ticketType?.days || [];
+    const eventDays: any[] = ticket.event?.days || [];
+    const isMultiday = eventDays.length > 1;
+    if (isMultiday) {
+      const fmtDay = (d: any) => new Date(d.date_and_time).toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila'
+      });
+      let validText: string;
+      if (ticketDays.length > 0) {
+        const sorted = [...ticketDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+        validText = `Valid on: ${sorted.map(fmtDay).join(', ')}`;
+      } else {
+        validText = 'Valid on: All days';
+      }
+      doc.fontSize(9).font('Helvetica').fillColor('#666666').text(validText, { align: 'center' });
+      doc.moveDown(0.4);
+    }
 
     // Admit X person(s)
     doc.fontSize(11).font('Helvetica').fillColor('#333333').text(
@@ -1015,39 +1064,55 @@ async function streamTicketPDF(ticket: any, res: Response): Promise<void> {
     const boxY = doc.y;
     const boxPadding = 15;
     const lineHeight = 16;
-    const boxHeight = ticket.event?.venue_address ? 100 : 85;
+    const eventDaysForBox: any[] = ticket.event?.days || [];
+    const isMultidayEvent = eventDaysForBox.length > 1;
+
+    // Calculate box height dynamically
+    // Single-day: Date + Time + Venue = 3 lines; multiday: one line per day + Venue
+    let boxLineCount = isMultidayEvent ? eventDaysForBox.length + 1 : 3;
+    if (ticket.event?.venue_address) boxLineCount += 1;
+    const boxHeight = boxPadding * 2 + 20 + boxLineCount * lineHeight;
+
     doc.rect(margin, boxY, contentWidth, boxHeight).fillAndStroke('#f8f9fa', '#f8f9fa');
 
     // Event Details heading
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#000000').text('Event Details', margin + boxPadding, boxY + boxPadding);
 
     if (ticket.event) {
-      const eventDate = new Date(ticket.event.date_and_time);
-      const formattedDate = eventDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: 'Asia/Manila'
-      });
-      const formattedTime = eventDate.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Manila'
-      });
-
       let detailY = boxY + boxPadding + 25;
       doc.fontSize(9).font('Helvetica').fillColor('#333333');
 
-      doc.font('Helvetica-Bold').text('Date: ', margin + boxPadding, detailY, { continued: true });
-      doc.font('Helvetica').text(formattedDate);
+      if (isMultidayEvent) {
+        // Show each day on its own line
+        const sortedDays = [...eventDaysForBox].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+        sortedDays.forEach((day, i) => {
+          const d = new Date(day.date_and_time);
+          const dayDate = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' });
+          const dayTime = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' });
+          const label = day.label ? ` (${day.label})` : ` (Day ${i + 1})`;
+          const prefix = i === 0 ? 'Dates: ' : '';
+          if (i === 0) {
+            doc.font('Helvetica-Bold').text(prefix, margin + boxPadding, detailY, { continued: true });
+            doc.font('Helvetica').text(`${dayDate}, ${dayTime}${label}`);
+          } else {
+            doc.font('Helvetica').text(`${dayDate}, ${dayTime}${label}`, margin + boxPadding + 30, detailY);
+          }
+          detailY += lineHeight;
+        });
+      } else {
+        const eventDate = new Date(ticket.event.date_and_time);
+        const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' });
+        const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' });
 
-      detailY += lineHeight;
-      doc.font('Helvetica-Bold').text('Time: ', margin + boxPadding, detailY, { continued: true });
-      doc.font('Helvetica').text(formattedTime);
+        doc.font('Helvetica-Bold').text('Date: ', margin + boxPadding, detailY, { continued: true });
+        doc.font('Helvetica').text(formattedDate);
 
-      detailY += lineHeight;
+        detailY += lineHeight;
+        doc.font('Helvetica-Bold').text('Time: ', margin + boxPadding, detailY, { continued: true });
+        doc.font('Helvetica').text(formattedTime);
+        detailY += lineHeight;
+      }
+
       doc.font('Helvetica-Bold').text('Venue: ', margin + boxPadding, detailY, { continued: true });
       doc.font('Helvetica').text(ticket.event.venue);
 
@@ -1113,9 +1178,18 @@ export const downloadAudienceTicketPDF = async (req: Request, res: Response) => 
         {
           model: Event,
           as: 'event',
-          include: [{ model: Brand, as: 'brand' }],
+          include: [
+            { model: Brand, as: 'brand' },
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+          ],
         },
-        { model: TicketType, as: 'ticketType' },
+        {
+          model: TicketType,
+          as: 'ticketType',
+          include: [
+            { model: EventDay, as: 'days', attributes: ['id', 'date_and_time', 'label'] }
+          ]
+        },
       ],
     });
 
@@ -1298,6 +1372,12 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
       };
     }
 
+    const eventDaysInfo = await EventDay.findAll({
+      where: { event_id: event.id },
+      order: [['date_and_time', 'ASC']],
+      attributes: ['id', 'date_and_time', 'label']
+    });
+
     res.json({
       event: {
         id: event.id,
@@ -1307,6 +1387,7 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
         poster_url: event.poster_url,
         walk_in_enabled: event.walk_in_enabled || false,
         walk_in: walkInInfo,
+        days: eventDaysInfo.map(d => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null })),
         brand: event.brand ? {
           id: event.brand.id,
           name: event.brand.brand_name,
