@@ -1095,7 +1095,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
           }) > 0;
           if (!alsoOnSurvivingDay) {
             const soldCount = await Ticket.count({
-              where: { ticket_type_id: ttd.ticket_type_id, status: 'Ticket sent.' }
+              where: { ticket_type_id: ttd.ticket_type_id, status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] } }
             });
             if (soldCount > 0) {
               const ticketType = await TicketType.findByPk(ttd.ticket_type_id, { attributes: ['name'] });

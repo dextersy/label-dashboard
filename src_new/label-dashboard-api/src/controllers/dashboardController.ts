@@ -716,7 +716,7 @@ export const getEventsDashboardData = async (req: AuthRequest, res: Response) =>
         ...(collabEventIds.length > 0 ? [{ id: collabEventIds }] : [])
       ],
       [Op.and]: sequelize.literal(
-        `("Event"."date_and_time" >= '${startOfToday.toISOString()}' OR EXISTS (SELECT 1 FROM event_day ed WHERE ed.event_id = "Event"."id" AND ed.date_and_time >= '${startOfToday.toISOString()}'))`
+        `("Event"."date_and_time" >= ${sequelize.escape(startOfToday)} OR EXISTS (SELECT 1 FROM event_day ed WHERE ed.event_id = "Event"."id" AND ed.date_and_time >= ${sequelize.escape(startOfToday)}))`
       )
     };
     const upcomingEventsRaw = await Event.findAll({
