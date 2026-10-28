@@ -186,6 +186,7 @@ export interface Event {
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
   user_role?: 'owner' | 'manager' | 'viewer';
+  days?: { id: number; date_and_time: string; label?: string | null }[];
 }
 
 export interface EventTag {
@@ -216,7 +217,9 @@ export interface EventTicket {
   ticketType?: {
     id: number;
     name: string;
+    days?: { id: number }[];
   };
+  scanLogs?: { id: number; ticket_id: number; event_day_id: number; entries_claimed: number; scanned_at: string; eventDay?: { id: number; date_and_time: string; label?: string | null } }[];
 }
 
 export interface EventReferrer {

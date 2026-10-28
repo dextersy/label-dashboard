@@ -1634,7 +1634,16 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
       include: [
         { model: Event, as: 'event' },
         { model: EventReferrer, as: 'referrer' },
-        { model: TicketType, as: 'ticketType' }
+        {
+          model: TicketType, as: 'ticketType',
+          include: [{ model: EventDay, as: 'days', attributes: ['id'], through: { attributes: [] } }]
+        },
+        {
+          model: TicketScanLog,
+          as: 'scanLogs',
+          required: false,
+          include: [{ model: EventDay, as: 'eventDay', attributes: ['id', 'date_and_time', 'label'] }]
+        }
       ],
       order,
       limit: perPageNum,
@@ -2923,6 +2932,52 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
     // Admin grand total after processing fees and tax
     const adminGrandTotal = Number((netRevenue * 0.995).toFixed(2)) || 0;
 
+    // Check-in breakdown by event day
+    const eventDays = await EventDay.findAll({ where: { event_id: eventIdNum }, order: [['date_and_time', 'ASC']] });
+    let checked_in_by_day: { day_id: number; label: string | null; date: string; count: number; valid_tickets: number }[] = [];
+    if (eventDays.length > 1) {
+      const eventDayIds = eventDays.map((d: any) => d.id);
+
+      const scanLogs = await TicketScanLog.findAll({
+        where: { event_day_id: { [Op.in]: eventDayIds } },
+        attributes: ['event_day_id', 'entries_claimed']
+      });
+      const dayTotals = new Map<number, number>();
+      for (const log of scanLogs) {
+        dayTotals.set(log.event_day_id, (dayTotals.get(log.event_day_id) || 0) + (log.entries_claimed || 0));
+      }
+
+      // Compute valid ticket count per day via TicketTypeDay
+      const ticketTypeDays = await TicketTypeDay.findAll({
+        where: { event_day_id: { [Op.in]: eventDayIds } },
+        attributes: ['ticket_type_id', 'event_day_id']
+      });
+      // Map: day_id -> Set of valid ticket_type_ids for that day
+      const validTypesByDay = new Map<number, Set<number>>();
+      for (const ttd of ticketTypeDays) {
+        if (!validTypesByDay.has(ttd.event_day_id)) validTypesByDay.set(ttd.event_day_id, new Set());
+        validTypesByDay.get(ttd.event_day_id)!.add(ttd.ticket_type_id);
+      }
+      // Count confirmed ticket entries valid per day
+      const sentTickets = allTickets.filter(t => t.status === 'Ticket sent.' || t.status === 'Payment Confirmed');
+      const dayValidTickets = new Map<number, number>();
+      for (const day of eventDays) {
+        const validTypes = validTypesByDay.get((day as any).id);
+        const count = sentTickets
+          .filter(t => !validTypes || validTypes.size === 0 || validTypes.has(t.ticket_type_id!))
+          .reduce((sum, t) => sum + (Number(t.number_of_entries) || 0), 0);
+        dayValidTickets.set((day as any).id, count);
+      }
+
+      checked_in_by_day = eventDays.map((day: any) => ({
+        day_id: day.id,
+        label: day.label || null,
+        date: day.date_and_time,
+        count: dayTotals.get(day.id) || 0,
+        valid_tickets: dayValidTickets.get(day.id) || 0
+      }));
+    }
+
     // Revenue breakdown by ticket type (confirmed/sent only)
     const revenueByTicketTypeMap = new Map<string, number>();
     for (const ticket of confirmedTickets) {
@@ -2947,7 +3002,8 @@ export const getEventTicketSummary = async (req: AuthRequest, res: Response) => 
         grand_total: grandTotal,
         tax: tax,
         admin_grand_total: adminGrandTotal,
-        by_ticket_type
+        by_ticket_type,
+        checked_in_by_day: checked_in_by_day.length > 0 ? checked_in_by_day : undefined
       }
     });
   } catch (error) {

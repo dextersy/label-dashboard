@@ -27,11 +27,20 @@
     <!-- Stats summary -->
     <div class="ticket-stats" *ngIf="summary">
       <div class="ticket-stats__main">
-        <div class="ticket-stats__stat">
-          <div class="ticket-stats__label">Check-ins</div>
-          <div class="ticket-stats__value">{{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}</div>
-          <div class="ticket-stats__sub">attendees</div>
-        </div>
+        <ng-container *ngIf="summary.checked_in_by_day && summary.checked_in_by_day.length > 1; else singleCheckin">
+          <div class="ticket-stats__stat ticket-stats__stat--day" *ngFor="let day of summary.checked_in_by_day; let i = index">
+            <div class="ticket-stats__label">{{ day.label || ('Day ' + (i + 1)) }} · {{ day.date | date:'MMM d' }}</div>
+            <div class="ticket-stats__value">{{ day.count }} / {{ day.valid_tickets }}</div>
+            <div class="ticket-stats__sub">check-ins</div>
+          </div>
+        </ng-container>
+        <ng-template #singleCheckin>
+          <div class="ticket-stats__stat">
+            <div class="ticket-stats__label">Check-ins</div>
+            <div class="ticket-stats__value">{{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}</div>
+            <div class="ticket-stats__sub">attendees</div>
+          </div>
+        </ng-template>
         <div class="ticket-stats__divider"></div>
         <div class="ticket-stats__stat">
           <div class="ticket-stats__label">Gross sales</div>
@@ -100,7 +109,8 @@
             </div>
             <div class="ticket-card__info">
               <div class="ticket-card__name">{{ ticket.name }}</div>
-              <div class="ticket-card__email">{{ ticket.email_address }}</div>
+              <div class="ticket-card__email"><app-icon name="envelope" /> {{ ticket.email_address }}</div>
+              <div class="ticket-card__email" *ngIf="ticket.contact_number"><app-icon name="phone" /> {{ ticket.contact_number }}</div>
             </div>
             <div class="ticket-card__meta">
               <span class="ticket-card__code">{{ ticket.ticket_code }}</span>
@@ -114,15 +124,8 @@
               <app-icon name="more-vertical" />
             </button>
           </div>
-          <div class="ticket-card__phone" *ngIf="ticket.contact_number">
-            <app-icon name="phone" /> {{ ticket.contact_number }}
-          </div>
           <div class="ticket-card__footer">
-            <span class="ticket-card__claimed"
-                  [class.ticket-card__claimed--done]="ticket.number_of_claimed_entries >= ticket.number_of_entries">
-              <app-icon name="check-circle" />
-              {{ ticket.number_of_claimed_entries }}/{{ ticket.number_of_entries }} claimed
-            </span>
+            <div [innerHTML]="getClaimCirclesHtml(ticket)"></div>
             <span class="ticket-card__type">{{ ticket.ticket_type_name || 'Regular' }}</span>
           </div>
         </div>

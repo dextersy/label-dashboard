@@ -97,6 +97,16 @@
       flex: 1;
       text-align: center;
       padding: 4px 8px;
+
+      &--day {
+        flex: 0 0 160px;
+        padding: 4px 16px;
+        border-right: 1px solid #e5e7eb;
+
+        &:last-of-type {
+          border-right: none;
+        }
+      }
     }
 
     &__divider {
@@ -229,6 +239,33 @@
     @media (max-width: 575px) {
       padding: 12px 14px 10px;
 
+      &__main {
+        flex-wrap: wrap;
+        gap: 4px 0;
+      }
+
+      &__stat {
+        flex: 1 1 30%;
+        min-width: 0;
+
+        &--day {
+          flex: 1 1 30%;
+          border-right: none;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 8px;
+
+          &:nth-last-of-type(1),
+          &:nth-last-of-type(2),
+          &:nth-last-of-type(3) {
+            border-bottom: none;
+          }
+        }
+      }
+
+      &__divider {
+        display: none;
+      }
+
       &__value {
         font-size: 16px;
       }
@@ -291,6 +328,15 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      app-icon {
+        font-size: 10px;
+        flex-shrink: 0;
+        color: #d1d5db;
+      }
     }
 
     &__meta {
