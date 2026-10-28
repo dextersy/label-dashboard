@@ -35,6 +35,7 @@ interface TicketTypeFormItem {
   special_instructions_for_scanner: string | null;
   isEditing: boolean;
   day_ids: number[];
+  _showAdvanced?: boolean;
   _backup?: TicketTypeFormItem;
 }
 
@@ -46,6 +47,7 @@ function newTicketTypeItem(): TicketTypeFormItem {
     disabled: false,
     special_instructions: null, special_instructions_for_scanner: null,
     isEditing: true,
+    _showAdvanced: true,
     day_ids: []
   };
 }
@@ -334,7 +336,7 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                   <input type="checkbox" [(ngModel)]="closeAtShowTime" [ngModelOptions]="{standalone:true}"
                     (change)="onCloseAtShowTimeChange()"
                     class="w-4 h-4 accent-yellow-400">
-                  <span class="text-xs font-mono text-gray-500">At show time</span>
+                  <span class="text-xs font-mono text-gray-500">Sell until end of event</span>
                 </label>
                 @if (!closeAtShowTime) {
                   <input type="datetime-local" formControlName="close_time"
@@ -497,14 +499,18 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                                   <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Valid On</label>
                                   <div class="flex flex-wrap gap-3">
                                     @for (day of eventDays; track day; let di = $index) {
-                                      <label class="flex items-center gap-1.5 text-xs font-mono text-gray-500 cursor-pointer">
+                                      <label class="flex items-center gap-1.5 text-xs font-mono cursor-pointer"
+                                        [class.text-gray-300]="isDayPast(day)"
+                                        [class.text-gray-500]="!isDayPast(day)"
+                                        [class.cursor-not-allowed]="isDayPast(day)">
                                         <input type="checkbox"
                                           [checked]="tt.day_ids.length === 0 || (day.id ? tt.day_ids.includes(day.id) : true)"
                                           (change)="toggleTicketTypeDay(tt, day)"
+                                          [disabled]="isDayPast(day)"
                                           class="w-3.5 h-3.5 accent-yellow-400">
                                         {{ day.label || ('Day ' + (di + 1)) }}
                                         @if (day.date_and_time) {
-                                          <span class="text-gray-400">{{ day.date_and_time | date:'MMM d' }}</span>
+                                          <span [class.text-gray-300]="isDayPast(day)" [class.text-gray-400]="!isDayPast(day)">{{ day.date_and_time | date:'MMM d' }}</span>
                                         }
                                       </label>
                                     }
@@ -863,7 +869,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
   ];
 
   // Ticket types
-  ticketTypes: (TicketTypeFormItem & { _showAdvanced?: boolean })[] = [];
+  ticketTypes: TicketTypeFormItem[] = [];
 
   // Tags
   availableTags = signal<EventTag[]>([]);
@@ -1116,7 +1122,7 @@ export class EventFormComponent implements OnInit, OnDestroy {
             special_instructions_for_scanner: tt.special_instructions_for_scanner || null,
             isEditing: false,
             day_ids: tt.days?.map(d => d.id) ?? [],
-            _showAdvanced: !!(tt.special_instructions || tt.special_instructions_for_scanner || tt.disabled),
+            _showAdvanced: true,
           }));
         }
       });
@@ -1164,7 +1170,13 @@ export class EventFormComponent implements OnInit, OnDestroy {
 
   // ---- Ticket Types ----
   addTicketType(): void {
-    this.ticketTypes.push(newTicketTypeItem());
+    const item = newTicketTypeItem();
+    // For multiday events, default new ticket types to future days only (past days stay unchecked)
+    const futureDayIds = this.eventDays.filter(d => d.id && !this.isDayPast(d)).map(d => d.id!);
+    if (this.isMultiDay && futureDayIds.length < this.eventDays.length) {
+      item.day_ids = futureDayIds;
+    }
+    this.ticketTypes.push(item);
   }
 
   startEditTicketType(i: number): void {
@@ -1195,8 +1207,12 @@ export class EventFormComponent implements OnInit, OnDestroy {
     this.ticketTypes.splice(i, 1);
   }
 
+  isDayPast(day: EventDayFormItem): boolean {
+    return !!day.date_and_time && new Date(day.date_and_time) < new Date();
+  }
+
   toggleTicketTypeDay(tt: TicketTypeFormItem, day: EventDayFormItem): void {
-    if (!day.id) return;
+    if (!day.id || this.isDayPast(day)) return;
     // If day_ids is empty it means "all days" — expand it first
     if (tt.day_ids.length === 0) {
       tt.day_ids = this.eventDays.filter(d => d.id).map(d => d.id!);

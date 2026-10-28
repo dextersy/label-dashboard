@@ -8,7 +8,7 @@ import { TicketTypeService } from '../../../services/ticket-type.service';
 import { WalkInService } from '../../../services/walk-in.service';
 import { ReferrerService } from '../../../services/referrer.service';
 import { Event } from '../../../models/event.model';
-import { Ticket } from '../../../models/ticket.model';
+import { Ticket, TicketScanLog } from '../../../models/ticket.model';
 import { TicketType } from '../../../models/ticket-type.model';
 import { WalkInType } from '../../../models/walk-in-type.model';
 import { WalkInTransaction } from '../../../models/walk-in-transaction.model';
@@ -186,9 +186,21 @@ import { EventReferrer } from '../../../models/event-referrer.model';
           <div class="border border-gray-200 bg-white p-6">
             <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Event Details</h3>
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Date</dt>
-                <dd class="text-sm font-mono text-gray-600">{{ event()?.date_and_time | date:'long' }}</dd>
+              <div [class.sm:col-span-2]="isMultidayEvent()">
+                <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">
+                  {{ isMultidayEvent() ? 'Dates' : 'Date' }}
+                </dt>
+                @if (isMultidayEvent()) {
+                  <dd class="flex flex-wrap gap-x-6 gap-y-1">
+                    @for (day of event()!.days; track day.id; let di = $index) {
+                      <span class="text-sm font-mono text-gray-600">
+                        <span class="text-gray-400 mr-1">{{ day.label || ('Day ' + (di + 1)) }}</span>{{ day.date_and_time | date:'MMM d, y, h:mm a' }}
+                      </span>
+                    }
+                  </dd>
+                } @else {
+                  <dd class="text-sm font-mono text-gray-600">{{ event()?.date_and_time | date:'long' }}</dd>
+                }
               </div>
               <div>
                 <dt class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Venue</dt>
@@ -452,9 +464,48 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                           <td class="px-4 py-3.5 text-sm font-mono text-yellow-600 font-bold">{{ ticket.ticket_code || '—' }}</td>
                           <td class="px-4 py-3.5 text-sm text-gray-500 font-mono">{{ ticket.ticket_type_name }}</td>
                           <td class="px-4 py-3.5 text-sm text-gray-500 font-mono">
-                            {{ ticket.number_of_entries }}
-                            @if (ticket.number_of_claimed_entries != null) {
-                              <span class="text-gray-400"> / {{ ticket.number_of_claimed_entries }} in</span>
+                            @if (isMultidayEvent()) {
+                              <div class="flex flex-wrap gap-1">
+                                @for (day of event()!.days; track day.id; let di = $index) {
+                                  @if (isTicketValidForDay(ticket, day.id)) {
+                                    <div class="inline-flex flex-col items-center">
+                                      <span class="text-[0.6rem] text-gray-400 mb-0.5 max-w-[44px] truncate">{{ day.label || ('Day ' + (di + 1)) }}</span>
+                                      <svg width="44" height="44" viewBox="0 0 44 44">
+                                        <circle cx="22" cy="22" r="16" fill="none" stroke="#e5e7eb" stroke-width="3.5"/>
+                                        <circle cx="22" cy="22" r="16" fill="none" stroke="#ca8a04" stroke-width="3.5"
+                                          stroke-linecap="round"
+                                          [attr.stroke-dasharray]="dayClaimDash(ticket, day.id)"
+                                          [attr.stroke-dashoffset]="dayClaimOffset(ticket, day.id)"
+                                          transform="rotate(-90 22 22)"/>
+                                        <text x="22" y="22" text-anchor="middle" dominant-baseline="middle"
+                                          style="font-size:9px;font-weight:700;fill:#111827">{{ dayClaimedCount(ticket, day.id) }}/{{ ticket.number_of_entries }}</text>
+                                      </svg>
+                                    </div>
+                                  } @else {
+                                    <div class="inline-flex flex-col items-center">
+                                      <span class="text-[0.6rem] text-gray-300 mb-0.5 max-w-[44px] truncate">{{ day.label || ('Day ' + (di + 1)) }}</span>
+                                      <svg width="44" height="44" viewBox="0 0 44 44">
+                                        <circle cx="22" cy="22" r="16" fill="none" stroke="#e5e7eb" stroke-width="3.5" stroke-dasharray="4 4"/>
+                                        <text x="22" y="22" text-anchor="middle" dominant-baseline="middle"
+                                          style="font-size:8px;font-weight:600;fill:#d1d5db">N/A</text>
+                                      </svg>
+                                    </div>
+                                  }
+                                }
+                              </div>
+                            } @else {
+                              <div class="inline-flex flex-col items-center">
+                                <svg width="44" height="44" viewBox="0 0 44 44">
+                                  <circle cx="22" cy="22" r="16" fill="none" stroke="#e5e7eb" stroke-width="3.5"/>
+                                  <circle cx="22" cy="22" r="16" fill="none" stroke="#ca8a04" stroke-width="3.5"
+                                    stroke-linecap="round"
+                                    [attr.stroke-dasharray]="entryCircleDash(ticket.number_of_claimed_entries ?? 0, ticket.number_of_entries)"
+                                    [attr.stroke-dashoffset]="entryCircleOffset(ticket.number_of_claimed_entries ?? 0, ticket.number_of_entries)"
+                                    transform="rotate(-90 22 22)"/>
+                                  <text x="22" y="22" text-anchor="middle" dominant-baseline="middle"
+                                    style="font-size:9px;font-weight:700;fill:#111827">{{ ticket.number_of_claimed_entries ?? 0 }}/{{ ticket.number_of_entries }}</text>
+                                </svg>
+                              </div>
                             }
                           </td>
                           <td class="px-4 py-3.5 text-sm font-black text-gray-900">{{ ticket.amount | currency:'PHP':'symbol':'1.2-2' }}</td>
@@ -916,6 +967,29 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                     class="w-4 h-4 border-gray-300 focus:ring-yellow-400">
                   <label for="tt-disabled" class="text-xs font-mono text-gray-600 uppercase tracking-widest">Disabled</label>
                 </div>
+                @if (isMultidayEvent()) {
+                  <div class="col-span-2">
+                    <label class="block text-xs font-mono text-gray-500 uppercase tracking-widest mb-1.5">Valid On</label>
+                    <div class="flex flex-wrap gap-3">
+                      @for (day of event()!.days; track day.id; let di = $index) {
+                        <label class="flex items-center gap-1.5 text-xs font-mono cursor-pointer"
+                          [class.text-gray-300]="isEventDayPast(day)"
+                          [class.text-gray-500]="!isEventDayPast(day)"
+                          [class.cursor-not-allowed]="isEventDayPast(day)">
+                          <input type="checkbox"
+                            [checked]="ticketTypeModalDayIds().length === 0 || ticketTypeModalDayIds().includes(day.id)"
+                            (change)="toggleModalDay(day.id, isEventDayPast(day))"
+                            [disabled]="isEventDayPast(day)"
+                            class="w-3.5 h-3.5 accent-yellow-400">
+                          {{ day.label || ('Day ' + (di + 1)) }}
+                          @if (day.date_and_time) {
+                            <span [class.text-gray-300]="isEventDayPast(day)" [class.text-gray-400]="!isEventDayPast(day)">{{ day.date_and_time | date:'MMM d' }}</span>
+                          }
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
               @if (ticketTypeError()) {
                 <div class="p-3 border border-red-300 bg-red-50 text-red-600 text-xs font-mono">{{ ticketTypeError() }}</div>
@@ -1228,6 +1302,7 @@ export class EventDetailComponent implements OnInit {
   ticketsLoading = signal(false);
   ticketSearch = '';
 
+
   // Ticket summary
   ticketSummary = signal<any>(null);
   ticketSummaryLoading = signal(false);
@@ -1235,6 +1310,7 @@ export class EventDetailComponent implements OnInit {
   // Ticket types tab
   ticketTypes = signal<TicketType[]>([]);
   ticketTypeModal = signal<Partial<TicketType> | null>(null);
+  ticketTypeModalDayIds = signal<number[]>([]);
   ticketTypeForm: FormGroup;
   ticketTypeSaving = signal(false);
   ticketTypeError = signal('');
@@ -1390,7 +1466,13 @@ export class EventDetailComponent implements OnInit {
       status_filter: 'sent',
       search: this.ticketSearch || undefined,
     }).subscribe({
-      next: (res) => { this.tickets.set(res.tickets); this.ticketsLoading.set(false); },
+      next: (res) => {
+        this.tickets.set(res.tickets.map((t: any) => ({
+          ...t,
+          ticket_type_day_ids: t.ticketType?.days?.map((d: any) => d.id) ?? [],
+        })));
+        this.ticketsLoading.set(false);
+      },
       error: () => this.ticketsLoading.set(false)
     });
   }
@@ -1416,6 +1498,7 @@ export class EventDetailComponent implements OnInit {
     this.ticketTypeError.set('');
     if (tt) {
       this.ticketTypeModal.set(tt);
+      this.ticketTypeModalDayIds.set(tt.days?.map(d => d.id) ?? []);
       this.ticketTypeForm.patchValue({
         name: tt.name,
         price: tt.price,
@@ -1428,7 +1511,25 @@ export class EventDetailComponent implements OnInit {
       });
     } else {
       this.ticketTypeModal.set({});
+      // Default new ticket types to future days only
+      const allDays = this.event()?.days ?? [];
+      const futureDayIds = allDays.filter(d => !this.isEventDayPast(d)).map(d => d.id);
+      this.ticketTypeModalDayIds.set(futureDayIds.length < allDays.length ? futureDayIds : []);
       this.ticketTypeForm.reset({ name: '', price: 0, max_tickets: 0, start_date: '', end_date: '', special_instructions: '', special_instructions_for_scanner: '', disabled: false });
+    }
+  }
+
+  isEventDayPast(day: { date_and_time: string }): boolean {
+    return !!day.date_and_time && new Date(day.date_and_time) < new Date();
+  }
+
+  toggleModalDay(dayId: number, past: boolean): void {
+    if (past) return;
+    const ids = this.ticketTypeModalDayIds();
+    if (ids.includes(dayId)) {
+      this.ticketTypeModalDayIds.set(ids.filter(id => id !== dayId));
+    } else {
+      this.ticketTypeModalDayIds.set([...ids, dayId]);
     }
   }
 
@@ -1436,9 +1537,12 @@ export class EventDetailComponent implements OnInit {
     if (this.ticketTypeForm.invalid) return;
     this.ticketTypeSaving.set(true);
     this.ticketTypeError.set('');
-    const data = { ...this.ticketTypeForm.value };
+    const data: any = { ...this.ticketTypeForm.value };
     if (!data.start_date) delete data.start_date;
     if (!data.end_date) delete data.end_date;
+    if (this.isMultidayEvent()) {
+      data.day_ids = this.ticketTypeModalDayIds();
+    }
 
     const modal = this.ticketTypeModal();
     const action = modal?.id
@@ -1926,5 +2030,41 @@ export class EventDetailComponent implements OnInit {
       case 'Refunded': return 'Refunded';
       default: return status;
     }
+  }
+
+  isMultidayEvent(): boolean {
+    return (this.event()?.days?.length ?? 0) > 1;
+  }
+
+  private readonly CIRCLE_C = 2 * Math.PI * 16; // circumference for r=16
+
+  isTicketValidForDay(ticket: Ticket, dayId: number): boolean {
+    const ids = ticket.ticket_type_day_ids;
+    return !ids || ids.length === 0 || ids.includes(dayId);
+  }
+
+  dayClaimedCount(ticket: Ticket, dayId: number): number {
+    const log = ticket.scanLogs?.find(l => l.event_day_id === dayId);
+    return log?.entries_claimed ?? 0;
+  }
+
+  dayClaimDash(ticket: Ticket, dayId: number): string {
+    const claimed = this.dayClaimedCount(ticket, dayId);
+    const total = ticket.number_of_entries;
+    const pct = total > 0 ? Math.min(1, claimed / total) : 0;
+    return `${(pct * this.CIRCLE_C).toFixed(2)} ${((1 - pct) * this.CIRCLE_C).toFixed(2)}`;
+  }
+
+  dayClaimOffset(ticket: Ticket, dayId: number): string {
+    return '0';
+  }
+
+  entryCircleDash(claimed: number, total: number): string {
+    const pct = total > 0 ? Math.min(1, claimed / total) : 0;
+    return `${(pct * this.CIRCLE_C).toFixed(2)} ${((1 - pct) * this.CIRCLE_C).toFixed(2)}`;
+  }
+
+  entryCircleOffset(claimed: number, total: number): string {
+    return '0';
   }
 }

@@ -1,3 +1,12 @@
+export interface TicketScanLog {
+  id: number;
+  ticket_id: number;
+  event_day_id: number;
+  entries_claimed: number;
+  scanned_at: string;
+  eventDay?: { id: number; date_and_time: string; label?: string | null };
+}
+
 export interface Ticket {
   id: number;
   event_id: number;
@@ -8,6 +17,8 @@ export interface Ticket {
   contact_number?: string;
   number_of_entries: number;
   number_of_claimed_entries?: number;
+  scanLogs?: TicketScanLog[];
+  ticket_type_day_ids?: number[];
   amount: number;
   price_per_ticket?: number;
   payment_processing_fee?: number;
