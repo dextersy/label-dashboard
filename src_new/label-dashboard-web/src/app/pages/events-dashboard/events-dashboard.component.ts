@@ -93,10 +93,50 @@ export class EventsDashboardComponent implements OnInit {
   error: string | null = null;
   today: Date = new Date();
 
+  todayUpcomingEvent: UpcomingEvent | null = null;
   todayEventFull: AppEvent | null = null;
-  todayEventTicketSummary: { total_tickets_sold: number; total_checked_in: number } | null = null;
+  todayEventTicketSummary: {
+    total_tickets_sold: number;
+    total_checked_in: number;
+    checked_in_by_day?: { day_id: number; label: string | null; date: string; count: number; valid_tickets: number }[];
+  } | null = null;
   todayEventWalkInTotal: number | null = null;
   copiedField: 'link' | 'pin' | null = null;
+
+  /** Check-in count for today only (uses day-specific data for multiday events). */
+  get todayCheckedIn(): number {
+    if (!this.todayEventTicketSummary) return 0;
+    const byDay = this.todayEventTicketSummary.checked_in_by_day;
+    if (byDay?.length) {
+      const todayEntry = byDay.find(d => this.getDaysAway(d.date) === 0);
+      if (todayEntry) return todayEntry.count;
+    }
+    return this.todayEventTicketSummary.total_checked_in;
+  }
+
+  /** Valid tickets for today (denominator for progress circle). */
+  get todayValidTickets(): number {
+    if (!this.todayEventTicketSummary) return 0;
+    const byDay = this.todayEventTicketSummary.checked_in_by_day;
+    if (byDay?.length) {
+      const todayEntry = byDay.find(d => this.getDaysAway(d.date) === 0);
+      if (todayEntry) return todayEntry.valid_tickets;
+    }
+    return this.todayEventTicketSummary.total_tickets_sold;
+  }
+
+  /** SVG circle progress (0–100). */
+  get claimProgressPercent(): number {
+    const denom = this.todayValidTickets;
+    if (!denom) return 0;
+    return Math.min(100, (this.todayCheckedIn / denom) * 100);
+  }
+
+  /** SVG stroke-dashoffset for a circle with r=20 (circumference ≈ 125.66). */
+  get claimCircleDashOffset(): number {
+    const circumference = 2 * Math.PI * 20;
+    return circumference * (1 - this.claimProgressPercent / 100);
+  }
 
   constructor(
     private http: HttpClient,
@@ -177,6 +217,7 @@ export class EventsDashboardComponent implements OnInit {
   }
 
   private loadTodayEventDetails(upcomingEvents: UpcomingEvent[]): void {
+    this.todayUpcomingEvent = null;
     this.todayEventFull = null;
     this.todayEventTicketSummary = null;
     this.todayEventWalkInTotal = null;
@@ -189,6 +230,7 @@ export class EventsDashboardComponent implements OnInit {
     };
     const first = upcomingEvents?.find(isEventToday) ?? null;
     if (!first) return;
+    this.todayUpcomingEvent = first;
 
     this.eventService.getEvent(first.id).pipe(catchError(() => of(null))).subscribe(event => {
       if (!event) return;
@@ -227,7 +269,7 @@ export class EventsDashboardComponent implements OnInit {
     const today = new Date();
     const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
     const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    return Math.max(0, Math.round((eventDay.getTime() - todayDay.getTime()) / (1000 * 60 * 60 * 24)));
+    return Math.round((eventDay.getTime() - todayDay.getTime()) / (1000 * 60 * 60 * 24));
   }
 
   getDaysAwayLabel(dateStr: string): string {
@@ -235,5 +277,17 @@ export class EventsDashboardComponent implements OnInit {
     if (days === 0) return 'today';
     if (days === 1) return '1 day away';
     return `${days} days away`;
+  }
+
+  /** Returns the next upcoming day's date for multiday events, or the event's own date. */
+  getNextEventDate(event: UpcomingEvent): string {
+    if (event.days?.length) {
+      const next = event.days
+        .map(d => d.date_and_time)
+        .filter(d => this.getDaysAway(d) > 0)
+        .sort()[0];
+      if (next) return next;
+    }
+    return event.date_and_time;
   }
 }

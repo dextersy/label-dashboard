@@ -40,7 +40,7 @@
       <ng-container *ngIf="dashboardData.upcomingEvents?.length">
 
         <!-- ── TODAY'S EVENT variant ─────────────────────────── -->
-        <ng-container *ngIf="getDaysAway(dashboardData.upcomingEvents[0].date_and_time) === 0">
+        <ng-container *ngIf="todayUpcomingEvent">
           <div class="tw-flex tw-flex-col sm:tw-flex-row sm:tw-items-start tw-gap-5 sm:tw-gap-8"
                [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
 
@@ -63,8 +63,9 @@
                   <app-icon name="users" class="tw-text-[9px]" />Collab
                 </span>
               </div>
-              <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug tw-w-full"
-                  [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
+              <h3 class="tw-mb-2 tw-mt-0 tw-truncate tw-leading-snug tw-w-full tw-cursor-pointer"
+                  [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                  (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'details')">
                 {{ dashboardData.upcomingEvents[0].title }}
               </h3>
               <p class="tw-text-sm tw-mb-0"
@@ -79,27 +80,51 @@
             <div class="tw-flex tw-flex-col tw-gap-3 tw-flex-shrink-0 tw-w-full sm:tw-w-auto">
 
               <!-- Stats row -->
-              <div class="tw-grid tw-grid-cols-2 tw-gap-2 sm:tw-flex sm:tw-gap-8 sm:tw-justify-end">
+              <div class="tw-grid tw-grid-cols-2 tw-gap-2 sm:tw-flex sm:tw-gap-8 sm:tw-justify-end sm:tw-items-end">
 
-                <!-- Tickets claimed -->
+                <!-- Tickets claimed today -->
                 <div class="tw-text-center sm:tw-text-right tw-cursor-pointer"
                      (click)="navigateToEvent(dashboardData.upcomingEvents[0], 'tickets')">
                   <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-mb-1.5 tw-mt-0"
                      [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
                      [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
                      [class.tw-text-gray-500]="!dashboardData.upcomingEvents[0].poster_url">Claimed</p>
-                  <p class="tw-text-2xl tw-leading-none tw-mb-0"
-                     [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
-                     [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url">
-                    <ng-container *ngIf="todayEventTicketSummary; else claimedLoading">
-                      {{ todayEventTicketSummary.total_checked_in }}
-                      <span class="tw-text-sm tw-font-normal"
-                            [style.opacity]="dashboardData.upcomingEvents[0].poster_url ? '0.45' : '0.4'">
-                        / {{ todayEventTicketSummary.total_tickets_sold }}
+
+                  <ng-container *ngIf="todayEventTicketSummary; else claimedLoading">
+                    <!-- Progress circle -->
+                    <div class="tw-inline-flex tw-items-center tw-justify-center tw-relative" style="width:56px;height:56px;">
+                      <svg width="56" height="56" viewBox="0 0 56 56" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
+                        <!-- Track -->
+                        <circle cx="28" cy="28" r="20" fill="none" stroke-width="4"
+                                [attr.stroke]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'"></circle>
+                        <!-- Progress arc -->
+                        <circle cx="28" cy="28" r="20" fill="none" stroke-width="4"
+                                stroke-linecap="round"
+                                [attr.stroke]="dashboardData.upcomingEvents[0].poster_url ? '#4ade80' : 'var(--brand-color,#667eea)'"
+                                [attr.stroke-dasharray]="2 * 3.14159 * 20"
+                                [attr.stroke-dashoffset]="claimCircleDashOffset"
+                                style="transition: stroke-dashoffset 0.6s ease;"></circle>
+                      </svg>
+                      <!-- Stacked count / total inside circle -->
+                      <span class="tw-flex tw-flex-col tw-items-center tw-leading-none tw-gap-0.5">
+                        <span class="tw-text-base tw-font-bold"
+                              [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
+                              [class.tw-text-gray-900]="!dashboardData.upcomingEvents[0].poster_url">{{ todayCheckedIn }}</span>
+                        <span class="tw-text-[9px] tw-font-medium"
+                              [style.opacity]="dashboardData.upcomingEvents[0].poster_url ? '0.45' : '0.38'">/ {{ todayValidTickets }}</span>
                       </span>
-                    </ng-container>
-                    <ng-template #claimedLoading><span style="opacity:0.35;">—</span></ng-template>
-                  </p>
+                    </div>
+                  </ng-container>
+                  <ng-template #claimedLoading>
+                    <div class="tw-inline-flex tw-items-center tw-justify-center tw-relative" style="width:56px;height:56px;">
+                      <svg width="56" height="56" viewBox="0 0 56 56" style="position:absolute;top:0;left:0;transform:rotate(-90deg);">
+                        <circle cx="28" cy="28" r="20" fill="none" stroke-width="4"
+                                [attr.stroke]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'"></circle>
+                      </svg>
+                      <span style="opacity:0.35;"
+                            [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">—</span>
+                    </div>
+                  </ng-template>
                 </div>
 
                 <!-- Walk-ins (only if enabled) -->
@@ -170,7 +195,7 @@
         </ng-container>
 
         <!-- ── UPCOMING EVENT variant ─────────────────────────── -->
-        <ng-container *ngIf="getDaysAway(dashboardData.upcomingEvents[0].date_and_time) > 0">
+        <ng-container *ngIf="!todayUpcomingEvent">
           <div class="tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-gap-5 sm:tw-gap-8"
                [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url">
 
@@ -183,7 +208,7 @@
                       [style.background]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)'"
                       [style.color]="dashboardData.upcomingEvents[0].poster_url ? 'rgba(255,255,255,0.9)' : '#6b7280'"
                       [style.border]="dashboardData.upcomingEvents[0].poster_url ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(0,0,0,0.1)'">
-                  Next event &nbsp;·&nbsp; {{ getDaysAwayLabel(dashboardData.upcomingEvents[0].date_and_time) }}
+                  Next event &nbsp;·&nbsp; {{ getDaysAwayLabel(getNextEventDate(dashboardData.upcomingEvents[0])) }}
                 </span>
                 <span *ngIf="dashboardData.upcomingEvents[0].user_role && dashboardData.upcomingEvents[0].user_role !== 'owner'"
                       class="tw-inline-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-px-2 tw-py-0.5 tw-rounded-full"
@@ -202,7 +227,7 @@
                  [class.tw-text-white]="dashboardData.upcomingEvents[0].poster_url"
                  [class.tw-opacity-70]="dashboardData.upcomingEvents[0].poster_url"
                  [class.tw-text-muted]="!dashboardData.upcomingEvents[0].poster_url">
-                {{ dashboardData.upcomingEvents[0].date_and_time | date:'EEE, MMM d · h:mm a' }}<span *ngIf="dashboardData.upcomingEvents[0].venue"> · {{ dashboardData.upcomingEvents[0].venue }}</span>
+                {{ getNextEventDate(dashboardData.upcomingEvents[0]) | date:'EEE, MMM d · h:mm a' }}<span *ngIf="dashboardData.upcomingEvents[0].venue"> · {{ dashboardData.upcomingEvents[0].venue }}</span>
               </p>
             </div>
 

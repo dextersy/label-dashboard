@@ -758,6 +758,7 @@ export class EventService {
     grand_total: number;
     tax: number;
     admin_grand_total: number;
+    checked_in_by_day?: { day_id: number; label: string | null; date: string; count: number; valid_tickets: number }[];
   }> {
     if (!eventId || isNaN(eventId) || eventId <= 0) {
       return throwError(() => new Error('Invalid event ID provided'));
