@@ -662,8 +662,17 @@ export const buyTicket = async (req: Request, res: Response) => {
       }
     }
 
-    // Check if event is closed (fall back to event start if no close_time set)
-    const buyCloseTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    // Check if event is closed — mirror the same multiday fallback used in the public event detail endpoint:
+    // for multiday events without an explicit close_time, allow purchases until 8h after the last day's
+    // start time; for single-day events (or explicit close_time) use close_time / date_and_time.
+    const purchaseEventDays: any[] = (event as any).days ?? [];
+    let buyCloseTime: Date;
+    if (!event.close_time && purchaseEventDays.length > 1) {
+      const sortedDays = [...purchaseEventDays].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+      buyCloseTime = new Date(new Date(sortedDays[sortedDays.length - 1].date_and_time).getTime() + 8 * 60 * 60 * 1000);
+    } else {
+      buyCloseTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    }
     if (new Date() > buyCloseTime) {
       return res.status(400).json({ error: 'Ticket sales are closed for this event' });
     }
