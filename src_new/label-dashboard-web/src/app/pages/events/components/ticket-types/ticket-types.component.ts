@@ -142,6 +142,10 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     return JSON.stringify(stripUiFields(this.ticketTypes)) !== JSON.stringify(stripUiFields(this.originalTicketTypes));
   }
 
+  isDayPast(day: any): boolean {
+    return !!day.date_and_time && new Date(day.date_and_time) < new Date();
+  }
+
   toggleTicketTypeDay(ticketType: TicketType, dayId: number): void {
     if (!ticketType.day_ids) ticketType.day_ids = [];
     const idx = ticketType.day_ids.indexOf(dayId);

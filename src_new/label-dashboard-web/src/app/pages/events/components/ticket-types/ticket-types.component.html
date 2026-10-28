@@ -112,19 +112,22 @@
           <button *ngFor="let day of eventDays; let di = index"
             type="button"
             class="tw-flex tw-flex-col tw-items-start tw-px-3 tw-py-1.5 tw-rounded-lg tw-border tw-text-left tw-transition-all"
-            [class.tw-border-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
-            [class.tw-bg-blue-50]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
-            [class.tw-border-gray-200]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))"
-            [class.tw-bg-white]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))"
-            (click)="toggleTicketTypeDay(ticketType, day.id || day._tempId)">
+            [class.tw-border-blue-500]="!isDayPast(day) && ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-bg-blue-50]="!isDayPast(day) && ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-border-gray-200]="isDayPast(day) || !(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))"
+            [class.tw-bg-white]="isDayPast(day) || !(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))"
+            [class.tw-opacity-40]="isDayPast(day)"
+            [class.tw-cursor-not-allowed]="isDayPast(day)"
+            [disabled]="isDayPast(day)"
+            (click)="!isDayPast(day) && toggleTicketTypeDay(ticketType, day.id || day._tempId)">
             <span class="tw-text-xs tw-font-semibold"
-              [class.tw-text-blue-700]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
-              [class.tw-text-gray-700]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))">
+              [class.tw-text-blue-700]="!isDayPast(day) && ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+              [class.tw-text-gray-700]="isDayPast(day) || !(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))">
               {{ getDayLabel(day, di) }}
             </span>
             <span class="tw-text-xs"
-              [class.tw-text-blue-500]="ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
-              [class.tw-text-gray-400]="!(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))">
+              [class.tw-text-blue-500]="!isDayPast(day) && ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId)"
+              [class.tw-text-gray-400]="isDayPast(day) || !(ticketType.day_ids && ticketType.day_ids.includes(day.id || day._tempId))">
               {{ day.date_and_time | date:'EEE, MMM d' }}
             </span>
           </button>
@@ -296,19 +299,22 @@
         <button *ngFor="let day of eventDays; let di = index"
           type="button"
           class="tw-flex tw-flex-col tw-items-start tw-px-3 tw-py-1.5 tw-rounded-lg tw-border tw-text-left tw-transition-all"
-          [class.tw-border-blue-500]="newTicketType.day_ids.includes(day.id || day._tempId)"
-          [class.tw-bg-blue-50]="newTicketType.day_ids.includes(day.id || day._tempId)"
-          [class.tw-border-gray-200]="!newTicketType.day_ids.includes(day.id || day._tempId)"
-          [class.tw-bg-white]="!newTicketType.day_ids.includes(day.id || day._tempId)"
-          (click)="newTicketType.day_ids.includes(day.id || day._tempId) ? newTicketType.day_ids.splice(newTicketType.day_ids.indexOf(day.id || day._tempId), 1) : newTicketType.day_ids.push(day.id || day._tempId)">
+          [class.tw-border-blue-500]="!isDayPast(day) && newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-bg-blue-50]="!isDayPast(day) && newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-border-gray-200]="isDayPast(day) || !newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-bg-white]="isDayPast(day) || !newTicketType.day_ids.includes(day.id || day._tempId)"
+          [class.tw-opacity-40]="isDayPast(day)"
+          [class.tw-cursor-not-allowed]="isDayPast(day)"
+          [disabled]="isDayPast(day)"
+          (click)="!isDayPast(day) && (newTicketType.day_ids.includes(day.id || day._tempId) ? newTicketType.day_ids.splice(newTicketType.day_ids.indexOf(day.id || day._tempId), 1) : newTicketType.day_ids.push(day.id || day._tempId))">
           <span class="tw-text-xs tw-font-semibold"
-            [class.tw-text-blue-700]="newTicketType.day_ids.includes(day.id || day._tempId)"
-            [class.tw-text-gray-700]="!newTicketType.day_ids.includes(day.id || day._tempId)">
+            [class.tw-text-blue-700]="!isDayPast(day) && newTicketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-text-gray-700]="isDayPast(day) || !newTicketType.day_ids.includes(day.id || day._tempId)">
             {{ getDayLabel(day, di) }}
           </span>
           <span class="tw-text-xs"
-            [class.tw-text-blue-500]="newTicketType.day_ids.includes(day.id || day._tempId)"
-            [class.tw-text-gray-400]="!newTicketType.day_ids.includes(day.id || day._tempId)">
+            [class.tw-text-blue-500]="!isDayPast(day) && newTicketType.day_ids.includes(day.id || day._tempId)"
+            [class.tw-text-gray-400]="isDayPast(day) || !newTicketType.day_ids.includes(day.id || day._tempId)">
             {{ day.date_and_time | date:'EEE, MMM d' }}
           </span>
         </button>
