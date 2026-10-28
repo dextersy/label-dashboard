@@ -5,7 +5,7 @@ import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
-import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor, EventDay } from '../models';
+import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor, EventDay, EventBrandCollaboration, EventAccess } from '../models';
 import Artist from '../models/Artist';
 import ArtistAccess from '../models/ArtistAccess';
 import Payment from '../models/Payment';
@@ -1074,7 +1074,38 @@ export class PaymentService {
     try {
       const adminEmails = await this.getAdminEmails(event.brand_id);
 
-      if (adminEmails.length === 0) {
+      // Get collab brand admin emails and their user IDs for in-app notifications
+      const collabBrandAdminEmails: string[] = [];
+      const collabBrandNotifications: { brandId: number; userIds: number[] }[] = [];
+
+      const collabBrands = await EventBrandCollaboration.findAll({
+        where: { event_id: event.id, status: 'Accepted' }
+      });
+
+      for (const collab of collabBrands) {
+        const collabAdmins = await User.findAll({
+          where: { brand_id: collab.brand_id, is_admin: true },
+          attributes: ['id', 'email_address']
+        });
+        collabBrandAdminEmails.push(...collabAdmins.map((a: any) => a.email_address).filter(Boolean));
+        collabBrandNotifications.push({
+          brandId: collab.brand_id,
+          userIds: collabAdmins.map((a: any) => a.id)
+        });
+      }
+
+      // Get event team member emails (accepted members)
+      const teamAccessRecords = await EventAccess.findAll({
+        where: { event_id: event.id, status: 'Accepted' }
+      });
+      const teamEmails = teamAccessRecords.map((m: any) => m.invite_email).filter(Boolean);
+      const teamMemberUserIds = teamAccessRecords
+        .map((m: any) => m.user_id)
+        .filter((id: any) => id != null) as number[];
+
+      const allEmails = [...new Set([...adminEmails, ...collabBrandAdminEmails, ...teamEmails])];
+
+      if (allEmails.length === 0) {
         return false;
       }
 
@@ -1119,19 +1150,47 @@ export class PaymentService {
         DASHBOARD_URL: dashboardUrl
       };
 
-      // Send branded email to all admins (handles loop + grouped logging internally)
-      await sendBrandedEmail(adminEmails, 'ticket_admin_notification', templateData, event.brand_id);
+      // Send branded email to all recipients (brand admins, collab brand admins, event team members)
+      await sendBrandedEmail(allEmails, 'ticket_admin_notification', templateData, event.brand_id);
 
-      // Create in-app notifications for brand admins
+      // Create in-app notifications for the owning brand's admins
       const adminIds = await getBrandAdminUserIds(event.brand_id);
+      const notificationTitle = `New ticket sold: ${event.title}`;
+      const notificationBody = `${ticket.name} — ${ticketTypeName} x${ticket.number_of_entries}`;
       await createNotificationsForUsers(
         adminIds,
         event.brand_id,
         'ticket_purchased',
-        `New ticket sold: ${event.title}`,
-        `${ticket.name} — ${ticketTypeName} x${ticket.number_of_entries}`,
+        notificationTitle,
+        notificationBody,
         '/campaigns/events/tickets'
       );
+
+      // Create in-app notifications for each collab brand's admins
+      for (const { brandId, userIds } of collabBrandNotifications) {
+        if (userIds.length > 0) {
+          await createNotificationsForUsers(
+            userIds,
+            brandId,
+            'ticket_purchased',
+            notificationTitle,
+            notificationBody,
+            '/campaigns/events/tickets'
+          );
+        }
+      }
+
+      // Create in-app notifications for event team members with user accounts
+      if (teamMemberUserIds.length > 0) {
+        await createNotificationsForUsers(
+          teamMemberUserIds,
+          event.brand_id,
+          'ticket_purchased',
+          notificationTitle,
+          notificationBody,
+          '/campaigns/events/tickets'
+        );
+      }
 
       return true;
     } catch (error) {
