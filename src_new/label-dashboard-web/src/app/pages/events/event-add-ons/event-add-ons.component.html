@@ -288,7 +288,15 @@
                   >
                     <app-icon name="minus" iconOnly></app-icon>
                   </button>
-                  <span class="qty-display">{{ color.quantity }}</span>
+                  <input
+                    type="number"
+                    class="qty-input"
+                    min="0"
+                    step="10"
+                    [value]="color.quantity"
+                    (change)="setQuantityFromInput(color, $event)"
+                    (keydown.enter)="setQuantityFromInput(color, $event)"
+                  >
                   <button
                     type="button"
                     class="btn-secondary btn-sm qty-btn"

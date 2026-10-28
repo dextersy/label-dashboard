@@ -882,6 +882,19 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     }
   }
 
+  setQuantityFromInput(color: WristbandColorRow, event: Event): void {
+    const raw = parseInt((event.target as HTMLInputElement).value, 10);
+    const snapped = isNaN(raw) || raw < 0 ? 0 : Math.round(raw / 10) * 10;
+    color.quantity = snapped;
+    (event.target as HTMLInputElement).value = String(snapped);
+    if (snapped === 0 && this.previewColorSlug === color.slug) {
+      const next = this.formColorsWithQuantity[0];
+      this.previewColorSlug = next ? next.slug : '';
+    } else if (snapped > 0 && !this.formColorsWithQuantity.find(c => c.slug === this.previewColorSlug)) {
+      this.previewColorSlug = color.slug;
+    }
+  }
+
   increaseQuantity(color: WristbandColorRow): void {
     color.quantity += 10;
     // Auto-select this color if nothing valid is currently previewed

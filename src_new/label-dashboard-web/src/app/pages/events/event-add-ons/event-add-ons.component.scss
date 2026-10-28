@@ -109,6 +109,24 @@
   font-size: 0.9rem;
 }
 
+.qty-input {
+  width: 56px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 2px 4px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 // ── Color selector ────────────────────────────────────────────────────────────
 
 .color-selector-row {
