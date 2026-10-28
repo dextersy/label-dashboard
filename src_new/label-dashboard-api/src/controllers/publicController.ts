@@ -158,13 +158,21 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       const remainingTickets = await ticketType.getRemainingTickets();
       const soldCount = await ticketType.getSoldCount();
 
-      // For public event details, include all enabled tickets with availability status
+      // For public event details, include all enabled tickets with availability status.
+      // For multiday events: mark a ticket type unavailable if any of its assigned days
+      // ended more than 8h ago (approx. end of event day), so e.g. a 2-day pass cannot
+      // be purchased once day 1 is over.
       const ttDays: any[] = (ticketType as any).days || [];
+      const now = new Date();
+      const isDayExpired = eventDays.length > 1 && ttDays.length > 0 && ttDays.some((d: any) => {
+        const endOfDay = new Date(new Date(d.date_and_time).getTime() + 8 * 60 * 60 * 1000);
+        return endOfDay < now;
+      });
       processedTicketTypes.push({
         id: ticketType.id,
         name: ticketType.name,
         price: ticketType.price,
-        is_available: isAvailable,
+        is_available: isAvailable && !isDayExpired,
         is_sold_out: isSoldOut,
         remaining_tickets: remainingTickets,
         sold_count: soldCount,
@@ -173,9 +181,17 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       });
     }
 
-    // Check if event is closed due to time (fall back to event start if no close_time set)
-    const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
-    const isClosedByTime = new Date() > closeTime;
+    // Check if event is closed due to time.
+    // For multiday events without an explicit close_time, fall back to 8h after the last day's
+    // start time so ticket sales remain open through the final day (timezone-agnostic).
+    // For single-day events (or explicit close_time), use close_time / date_and_time as before.
+    let fallbackCloseTime: Date;
+    if (!event.close_time && eventDays.length > 1) {
+      fallbackCloseTime = new Date(new Date((eventDays[eventDays.length - 1] as any).date_and_time).getTime() + 8 * 60 * 60 * 1000);
+    } else {
+      fallbackCloseTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+    }
+    const isClosedByTime = new Date() > fallbackCloseTime;
 
     // Check if event is closed due to no available ticket types
     let hasAvailableTicketTypes = false;

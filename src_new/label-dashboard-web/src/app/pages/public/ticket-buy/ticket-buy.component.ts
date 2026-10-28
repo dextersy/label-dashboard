@@ -285,7 +285,7 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
   }
 
   selectTicketTypeCard(ticketType: any) {
-    if (ticketType.is_sold_out) return;
+    if (ticketType.is_sold_out || ticketType.is_available === false) return;
     this.selectedTicketType = ticketType;
     this.ticketForm.patchValue({ ticket_type_id: ticketType.id });
     this.calculateTotal();
