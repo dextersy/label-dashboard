@@ -106,9 +106,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   // Table configuration
   tableColumns: TableColumn[] = [
     { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true, cardHeader: true, renderHtml: true,
-      formatter: (item) => item.ticket_code
-        ? `<span style="font-size:0.75rem;font-weight:600;letter-spacing:0.05em;background:#f3f4f6;border-radius:4px;padding:2px 8px;color:#374151;white-space:nowrap">${item.ticket_code}</span>`
-        : '—'
+      formatter: (item) => {
+        if (!item.ticket_code) return '—';
+        const { bg, color } = this.getTicketTypeColor(item.ticket_type_name);
+        return `<span style="font-size:0.95rem;font-weight:600;letter-spacing:0.05em;background:${bg};border-radius:4px;padding:2px 8px;color:${color};white-space:nowrap;user-select:text">${item.ticket_code}</span>`;
+      }
     },
     { key: 'email_address', label: 'Email Address', searchable: true, hidden: true },
     { key: 'contact_number', label: 'Contact Number', searchable: true, hidden: true },
@@ -126,14 +128,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
         return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${this.esc(initials)}</span><span>${this.esc(item.name)}${sub}</span></span>`;
       }
     },
-    { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
-    { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, formatter: (item) => item.ticket_type_name || 'Regular' },
-    { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
-    { key: 'platform_fee', label: 'Platform Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getPlatformFee(item) > 0 ? this.formatCurrency(this.getPlatformFee(item)) : '-' },
-    { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
-    { key: 'order_timestamp', label: 'Time Ordered', sortable: true, type: 'date' },
-    { key: 'date_paid', label: 'Date Paid', sortable: true, type: 'date', formatter: (item) => item.date_paid ? new Date(item.date_paid).toLocaleString() : '-' },
-    { key: 'claimed_status', label: 'Claimed', sortable: false, renderHtml: true, minWidth: '200px', formatter: (item) => {
+    { key: 'claimed_status', label: 'Claimed / Seats', sortable: false, renderHtml: true, minWidth: '200px', formatter: (item) => {
       const days = this.selectedEvent?.days;
       if (!days || days.length <= 1) {
         return this.claimCircleSvg(item.number_of_claimed_entries, item.number_of_entries);
@@ -147,6 +142,24 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
         return this.claimCircleSvg(claimed, item.number_of_entries, label);
       }).join('');
       return `<div style="display:flex;flex-wrap:wrap;gap:4px">${circles}</div>`;
+    }},
+    { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
+      const name = item.ticket_type_name || 'Regular';
+      const { bg, color } = this.getTicketTypeColor(name);
+      return `<span style="font-size:0.95rem;font-weight:600;background:${bg};border-radius:4px;padding:2px 8px;color:${color};white-space:nowrap">${this.esc(name)}</span>`;
+    }},
+    { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
+    { key: 'platform_fee', label: 'Platform Fee', sortable: false, type: 'number', align: 'right', formatter: (item) => this.getPlatformFee(item) > 0 ? this.formatCurrency(this.getPlatformFee(item)) : '-' },
+    { key: 'referrer_name', label: 'Referred By', searchable: true, sortable: true },
+    { key: 'order_timestamp', label: 'Time Ordered', sortable: true, renderHtml: true, formatter: (item) => {
+      if (!item.order_timestamp) return '-';
+      const full = new Date(item.order_timestamp).toLocaleString();
+      return `<span title="${full}" style="cursor:default">${this.timeAgo(item.order_timestamp)}</span>`;
+    }},
+    { key: 'date_paid', label: 'Date Paid', sortable: true, renderHtml: true, formatter: (item) => {
+      if (!item.date_paid) return '-';
+      const full = new Date(item.date_paid).toLocaleString();
+      return `<span title="${full}" style="cursor:default">${this.timeAgo(item.date_paid)}</span>`;
     }},
   ];
 
@@ -307,6 +320,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       this.eventService.getEventTickets(this.selectedEvent.id, params).subscribe({
         next: (response) => {
           // Convert API tickets to component format
+          this.ticketTypeColorMap.clear();
           this.tickets = response.tickets.map(ticket => this.convertServiceTicketToComponentTicket(ticket));
           this.pagination = response.pagination;
           this.loading = false;
@@ -824,6 +838,35 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
 
   private readonly avatarColors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
 
+  private readonly ticketTypePalette = [
+    { bg: '#ede9fe', color: '#5b21b6' }, // violet
+    { bg: '#dbeafe', color: '#1e40af' }, // blue
+    { bg: '#dcfce7', color: '#166534' }, // green
+    { bg: '#fef3c7', color: '#92400e' }, // amber
+    { bg: '#fce7f3', color: '#9d174d' }, // pink
+    { bg: '#ccfbf1', color: '#0f766e' }, // teal
+    { bg: '#fee2e2', color: '#991b1b' }, // red
+    { bg: '#e0f2fe', color: '#075985' }, // sky
+    { bg: '#fef9c3', color: '#854d0e' }, // yellow
+    { bg: '#f3e8ff', color: '#7e22ce' }, // purple
+    { bg: '#d1fae5', color: '#065f46' }, // emerald
+    { bg: '#ffedd5', color: '#9a3412' }, // orange
+    { bg: '#e0e7ff', color: '#3730a3' }, // indigo
+    { bg: '#fdf2f8', color: '#86198f' }, // fuchsia
+    { bg: '#f0fdf4', color: '#14532d' }, // lime
+  ];
+
+  private ticketTypeColorMap = new Map<string, { bg: string; color: string }>();
+
+  getTicketTypeColor(ticketTypeName: string): { bg: string; color: string } {
+    const name = ticketTypeName || 'Regular';
+    if (!this.ticketTypeColorMap.has(name)) {
+      const idx = this.ticketTypeColorMap.size % this.ticketTypePalette.length;
+      this.ticketTypeColorMap.set(name, this.ticketTypePalette[idx]);
+    }
+    return this.ticketTypeColorMap.get(name)!;
+  }
+
   getAvatarColor(name: string): string {
     return this.avatarColors[this.getAvatarColorIndex(name)];
   }
@@ -882,6 +925,20 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
           style="font-size:8px;font-weight:600;fill:#d1d5db">N/A</text>
       </svg>
     </div>`;
+  }
+
+  timeAgo(dateStr: string): string {
+    const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo ago`;
+    return `${Math.floor(months / 12)}y ago`;
   }
 
   private esc(s: string | null | undefined): string {

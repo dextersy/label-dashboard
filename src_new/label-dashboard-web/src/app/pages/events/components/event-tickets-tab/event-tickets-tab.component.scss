@@ -109,13 +109,14 @@
     }
 
     &__day-circles {
-      display: grid;
-      grid-template-columns: repeat(3, 64px);
-      gap: 8px;
+      display: flex;
+      flex-wrap: wrap;
       justify-content: center;
+      gap: 8px;
+      max-width: calc(5 * 64px + 4 * 8px);
 
       &--single {
-        grid-template-columns: 64px;
+        max-width: 64px;
       }
     }
 
@@ -288,10 +289,10 @@
       }
 
       &__day-circles {
-        grid-template-columns: repeat(3, 56px);
+        max-width: calc(4 * 64px + 3 * 8px);
 
         &--single {
-          grid-template-columns: 56px;
+          max-width: 64px;
         }
       }
 

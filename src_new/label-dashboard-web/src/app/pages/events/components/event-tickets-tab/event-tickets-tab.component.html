@@ -142,8 +142,9 @@
               <div class="ticket-card__email" *ngIf="ticket.contact_number"><app-icon name="phone" /> {{ ticket.contact_number }}</div>
             </div>
             <div class="ticket-card__meta">
-              <span class="ticket-card__code">{{ ticket.ticket_code }}</span>
-              <span class="ticket-card__qty">{{ ticket.number_of_entries }} ticket{{ ticket.number_of_entries !== 1 ? 's' : '' }}</span>
+              <span [style.background]="getTicketTypeColor(ticket.ticket_type_name).bg"
+                    [style.color]="getTicketTypeColor(ticket.ticket_type_name).color"
+                    class="ticket-card__code">{{ ticket.ticket_code }}</span>
             </div>
             <button *ngIf="isAdmin && visibleActions.length > 0"
                     class="ticket-card__menu kebab-btn"
@@ -154,8 +155,13 @@
             </button>
           </div>
           <div class="ticket-card__footer">
-            <div [innerHTML]="getClaimCirclesHtml(ticket)"></div>
-            <span class="ticket-card__type">{{ ticket.ticket_type_name || 'Regular' }}</span>
+            <div class="tw-flex tw-items-center tw-gap-2">
+              <span class="tw-text-[10px] tw-font-medium tw-text-gray-400 tw-uppercase tw-tracking-wide">Seats</span>
+              <div [innerHTML]="getClaimCirclesHtml(ticket)"></div>
+            </div>
+            <span class="ticket-card__type"
+                  [style.background]="getTicketTypeColor(ticket.ticket_type_name).bg"
+                  [style.color]="getTicketTypeColor(ticket.ticket_type_name).color">{{ ticket.ticket_type_name || 'Regular' }}</span>
           </div>
         </div>
       </ng-template>
