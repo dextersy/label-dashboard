@@ -183,13 +183,10 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                   <div class="space-y-2">
                     @for (day of eventDays; track day; let di = $index) {
                       <div class="border border-gray-200 p-3 space-y-2">
-                        <div class="flex items-center gap-2">
-                          <span class="text-xs font-mono text-gray-400 w-14 flex-shrink-0">Day {{ di + 1 }}</span>
-                          <input type="datetime-local" [(ngModel)]="day.date_and_time" [ngModelOptions]="{standalone:true}"
-                            (change)="onDayDateChange(di)"
-                            class="flex-1 px-2 py-1.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
+                        <div class="flex items-center justify-between mb-0.5">
+                          <span class="text-xs font-mono text-gray-400">Day {{ di + 1 }}</span>
                           @if (eventDays.length > 1) {
-                            <button type="button" (click)="removeDay(di)" class="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+                            <button type="button" (click)="removeDay(di)" class="text-gray-300 hover:text-red-400 transition-colors">
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                               </svg>
@@ -197,8 +194,11 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                           }
                         </div>
                         <input type="text" [(ngModel)]="day.label" [ngModelOptions]="{standalone:true}"
-                          placeholder="Label (optional, e.g. Day 1, Night Session)"
-                          class="w-full px-2 py-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-mono placeholder-gray-300 focus:outline-none focus:border-yellow-400 transition-colors">
+                          placeholder="Label (optional, e.g. Night 1, Day Session)"
+                          class="w-full px-2 py-1.5 bg-white border border-gray-200 text-gray-700 text-sm font-mono placeholder-gray-300 focus:outline-none focus:border-yellow-400 transition-colors">
+                        <input type="datetime-local" [(ngModel)]="day.date_and_time" [ngModelOptions]="{standalone:true}"
+                          (change)="onDayDateChange(di)"
+                          class="w-full px-2 py-1.5 bg-white border border-gray-300 text-gray-900 text-sm focus:outline-none focus:border-yellow-400 transition-colors">
                       </div>
                     }
                   </div>
