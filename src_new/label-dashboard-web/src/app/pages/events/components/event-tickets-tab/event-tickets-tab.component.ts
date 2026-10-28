@@ -120,10 +120,10 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
         const envelopeSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${iconStyle}"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>`;
         const phoneSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="${iconStyle}"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.12 6.12l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
         const sub = [
-          item.email_address ? `<span style="display:flex;align-items:center;font-size:0.85rem;color:#6b7280;margin-top:1px">${envelopeSvg}${item.email_address}</span>` : '',
-          item.contact_number ? `<span style="display:flex;align-items:center;font-size:0.85rem;color:#6b7280;margin-top:1px">${phoneSvg}${item.contact_number}</span>` : ''
+          item.email_address ? `<span style="display:flex;align-items:center;font-size:0.85rem;color:#6b7280;margin-top:1px">${envelopeSvg}${this.esc(item.email_address)}</span>` : '',
+          item.contact_number ? `<span style="display:flex;align-items:center;font-size:0.85rem;color:#6b7280;margin-top:1px">${phoneSvg}${this.esc(item.contact_number)}</span>` : ''
         ].filter(Boolean).join('');
-        return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span><span>${item.name}${sub}</span></span>`;
+        return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${this.esc(initials)}</span><span>${this.esc(item.name)}${sub}</span></span>`;
       }
     },
     { key: 'number_of_entries', label: 'No. of Tickets', searchable: true, sortable: true, type: 'number', align: 'center' },
@@ -882,6 +882,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
           style="font-size:8px;font-weight:600;fill:#d1d5db">N/A</text>
       </svg>
     </div>`;
+  }
+
+  private esc(s: string | null | undefined): string {
+    if (!s) return '';
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   // Helper methods
