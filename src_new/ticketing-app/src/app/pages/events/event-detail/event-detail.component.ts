@@ -378,22 +378,40 @@ import { EventReferrer } from '../../../models/event-referrer.model';
             }
 
             @if (ticketSummary()) {
-              <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
                 <div class="bg-white border border-gray-200 p-4">
                   <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Sold</p>
                   <p class="text-xl font-black text-gray-900">{{ ticketSummary().total_tickets_sold }}</p>
                 </div>
                 <div class="bg-white border border-gray-200 p-4">
                   <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Checked In</p>
-                  <p class="text-xl font-black text-gray-900">{{ ticketSummary().total_checked_in }}</p>
+                  @if (!ticketSummary().checked_in_by_day) {
+                    <p class="text-xl font-black text-gray-900">{{ ticketSummary().total_checked_in }} <span class="text-sm font-normal text-gray-400">/ {{ ticketSummary().total_tickets_sold }}</span></p>
+                  } @else {
+                    <div class="mt-2 grid grid-cols-3 gap-2">
+                      @for (day of ticketSummary().checked_in_by_day; track day.day_id) {
+                        <div class="flex flex-col items-center">
+                          <svg width="56" height="56" viewBox="0 0 56 56">
+                            <circle cx="28" cy="28" r="23" fill="none" stroke="#e5e7eb" stroke-width="4"/>
+                            <circle cx="28" cy="28" r="23" fill="none" stroke="#eab308" stroke-width="4"
+                              stroke-dasharray="144.51"
+                              [attr.stroke-dashoffset]="144.51 * (1 - (day.valid_tickets > 0 ? day.count / day.valid_tickets : 0))"
+                              stroke-linecap="butt"
+                              transform="rotate(-90 28 28)"/>
+                            <text x="28" y="25" text-anchor="middle" dominant-baseline="middle"
+                              font-size="12" font-weight="900" fill="#111827">{{ day.count }}</text>
+                            <text x="28" y="37" text-anchor="middle" dominant-baseline="middle"
+                              font-size="8" fill="#9ca3af">/ {{ day.valid_tickets }}</text>
+                          </svg>
+                          <p class="text-xs text-gray-400 text-center mt-1 leading-tight">{{ day.label || (day.date | date:'MMM d') }}</p>
+                        </div>
+                      }
+                    </div>
+                  }
                 </div>
                 <div class="bg-white border border-gray-200 p-4">
                   <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Revenue</p>
                   <p class="text-xl font-black text-yellow-500">{{ ticketSummary().total_revenue | currency:'PHP':'symbol':'1.0-0' }}</p>
-                </div>
-                <div class="bg-white border border-gray-200 p-4">
-                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Processing</p>
-                  <p class="text-xl font-black text-gray-500">{{ ticketSummary().total_processing_fee | currency:'PHP':'symbol':'1.0-0' }}</p>
                 </div>
                 <div class="bg-white border border-gray-200 p-4">
                   <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Platform</p>
@@ -402,10 +420,6 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                 <div class="bg-white border border-gray-200 p-4">
                   <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Net</p>
                   <p class="text-xl font-black text-gray-900">{{ ticketSummary().net_revenue | currency:'PHP':'symbol':'1.0-0' }}</p>
-                </div>
-                <div class="bg-white border border-gray-200 p-4">
-                  <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Tax (0.5%)</p>
-                  <p class="text-xl font-black text-gray-500">{{ ticketSummary().tax | currency:'PHP':'symbol':'1.0-0' }}</p>
                 </div>
               </div>
             }
