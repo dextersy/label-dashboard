@@ -1138,11 +1138,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
             label: day.label ? day.label.trim() : null
           });
           updatedDays.push(newDay);
-          // Link new day to all existing ticket types
-          const allTicketTypes = await TicketType.findAll({ where: { event_id: event.id } });
-          for (const tt of allTicketTypes) {
-            await TicketTypeDay.findOrCreate({ where: { ticket_type_id: tt.id, event_day_id: newDay.id } });
-          }
+          // Do not auto-assign new days to existing ticket types.
+          // Organisers must explicitly set day assignments via the "Valid On" field.
         }
       }
 
