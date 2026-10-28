@@ -48,6 +48,8 @@ export interface TableColumn {
   cardHeader?: boolean; // Use this column as the card title in mobile view
   hideDataLabel?: boolean; // Hide the data-label prefix in mobile card view
   maxWidth?: string; // Cap column width and wrap text (e.g. '200px')
+  minWidth?: string; // Set a minimum column width (e.g. '220px')
+  hidden?: boolean; // Exclude from table rendering but keep in search filters
   mergeCell?: boolean; // When item[key] is truthy, render row as a full-width merged cell (mobile only)
   mobileGroup?: string; // Collapse this column into the group's main column on mobile
   mobileGroupMain?: boolean; // This column is the prominent one; other group members render as secondary text inside it
@@ -477,7 +479,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getTotalColspan(): number {
-    return this.displayColumns.length
+    return this.displayColumns.filter(c => !c.hidden).length
       + (this.hasActionsColumn() ? 1 : 0)
       + (this.enableBulkOperations ? 1 : 0);
   }
