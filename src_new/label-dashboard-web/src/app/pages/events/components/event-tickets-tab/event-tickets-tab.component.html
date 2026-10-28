@@ -28,17 +28,46 @@
     <div class="ticket-stats" *ngIf="summary">
       <div class="ticket-stats__main">
         <ng-container *ngIf="summary.checked_in_by_day && summary.checked_in_by_day.length > 1; else singleCheckin">
-          <div class="ticket-stats__stat ticket-stats__stat--day" *ngFor="let day of summary.checked_in_by_day; let i = index">
-            <div class="ticket-stats__label">{{ day.label || ('Day ' + (i + 1)) }} · {{ day.date | date:'MMM d' }}</div>
-            <div class="ticket-stats__value">{{ day.count }} / {{ day.valid_tickets }}</div>
-            <div class="ticket-stats__sub">check-ins</div>
+          <div class="ticket-stats__checkin-grid ticket-stats__checkin-grid--multiday">
+            <div class="ticket-stats__label tw-mb-2 tw-text-center">Check-ins</div>
+            <div class="ticket-stats__day-circles">
+              <div class="ticket-stats__day-circle" *ngFor="let day of summary.checked_in_by_day; let i = index">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="27" fill="none" stroke="#e5e7eb" stroke-width="4"/>
+                  <circle cx="32" cy="32" r="27" fill="none" [attr.stroke]="'var(--brand-color, #3b82f6)'" stroke-width="4"
+                    stroke-dasharray="169.65"
+                    [attr.stroke-dashoffset]="169.65 * (1 - (day.valid_tickets > 0 ? day.count / day.valid_tickets : 0))"
+                    stroke-linecap="butt"
+                    transform="rotate(-90 32 32)"/>
+                  <text x="32" y="29" text-anchor="middle" dominant-baseline="middle"
+                    font-size="15" font-weight="900" fill="#111827">{{ day.count }}</text>
+                  <text x="32" y="43" text-anchor="middle" dominant-baseline="middle"
+                    font-size="10" fill="#9ca3af">/ {{ day.valid_tickets }}</text>
+                </svg>
+                <div class="ticket-stats__day-circle-label">{{ day.label || (day.date | date:'MMM d') }}</div>
+              </div>
+            </div>
           </div>
         </ng-container>
         <ng-template #singleCheckin>
-          <div class="ticket-stats__stat">
-            <div class="ticket-stats__label">Check-ins</div>
-            <div class="ticket-stats__value">{{ summary.total_checked_in || 0 }} / {{ summary.total_tickets_sold }}</div>
-            <div class="ticket-stats__sub">attendees</div>
+          <div class="ticket-stats__checkin-grid">
+            <div class="ticket-stats__label tw-mb-2 tw-text-center">Check-ins</div>
+            <div class="ticket-stats__day-circles ticket-stats__day-circles--single">
+              <div class="ticket-stats__day-circle">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="27" fill="none" stroke="#e5e7eb" stroke-width="4"/>
+                  <circle cx="32" cy="32" r="27" fill="none" [attr.stroke]="'var(--brand-color, #3b82f6)'" stroke-width="4"
+                    stroke-dasharray="169.65"
+                    [attr.stroke-dashoffset]="169.65 * (1 - (summary.total_tickets_sold > 0 ? (summary.total_checked_in || 0) / summary.total_tickets_sold : 0))"
+                    stroke-linecap="butt"
+                    transform="rotate(-90 32 32)"/>
+                  <text x="32" y="29" text-anchor="middle" dominant-baseline="middle"
+                    font-size="15" font-weight="900" fill="#111827">{{ summary.total_checked_in || 0 }}</text>
+                  <text x="32" y="43" text-anchor="middle" dominant-baseline="middle"
+                    font-size="10" fill="#9ca3af">/ {{ summary.total_tickets_sold }}</text>
+                </svg>
+              </div>
+            </div>
           </div>
         </ng-template>
         <div class="ticket-stats__divider"></div>

@@ -97,17 +97,42 @@
       flex: 1;
       text-align: center;
       padding: 4px 8px;
+    }
 
-      &--day {
-        flex: 0 0 160px;
-        padding: 4px 16px;
-        border-right: 1px solid #e5e7eb;
+    &__checkin-grid {
+      flex: 1;
+      padding: 4px 16px 4px 8px;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-        &:last-of-type {
-          border-right: none;
-        }
+    &__day-circles {
+      display: grid;
+      grid-template-columns: repeat(3, 64px);
+      gap: 8px;
+      justify-content: center;
+
+      &--single {
+        grid-template-columns: 64px;
       }
     }
+
+    &__day-circle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    &__day-circle-label {
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 3px;
+      line-height: 1.2;
+    }
+
 
     &__divider {
       width: 1px;
@@ -247,18 +272,26 @@
       &__stat {
         flex: 1 1 30%;
         min-width: 0;
+      }
 
-        &--day {
-          flex: 1 1 30%;
-          border-right: none;
+      &__checkin-grid {
+        flex: 1 1 auto;
+        border-right: none;
+        padding-bottom: 0;
+
+        &--multiday {
+          width: 100%;
           border-bottom: 1px solid #e5e7eb;
-          padding-bottom: 8px;
+          padding-bottom: 10px;
+          margin-bottom: 4px;
+        }
+      }
 
-          &:nth-last-of-type(1),
-          &:nth-last-of-type(2),
-          &:nth-last-of-type(3) {
-            border-bottom: none;
-          }
+      &__day-circles {
+        grid-template-columns: repeat(3, 56px);
+
+        &--single {
+          grid-template-columns: 56px;
         }
       }
 
