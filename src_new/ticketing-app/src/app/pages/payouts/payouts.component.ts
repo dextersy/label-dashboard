@@ -128,16 +128,28 @@ import { PayoutsService, PayoutMethod, Payout, BalanceSummary } from '../../serv
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
-                  @if (!method.is_default_for_brand) {
-                    <button (click)="setDefault(method.id)"
-                      class="text-xs font-mono text-gray-400 hover:text-yellow-500 uppercase tracking-wider transition-colors">
-                      Set default
+                  @if (pendingDeleteMethodId() === method.id) {
+                    <span class="text-xs font-mono text-gray-500">Sure?</span>
+                    <button (click)="deleteMethod(method.id)"
+                      class="text-xs font-mono text-red-500 hover:text-red-700 uppercase tracking-wider font-black transition-colors">
+                      Yes
+                    </button>
+                    <button (click)="pendingDeleteMethodId.set(null)"
+                      class="text-xs font-mono text-gray-400 hover:text-gray-700 uppercase tracking-wider transition-colors">
+                      No
+                    </button>
+                  } @else {
+                    @if (!method.is_default_for_brand) {
+                      <button (click)="setDefault(method.id)"
+                        class="text-xs font-mono text-gray-400 hover:text-yellow-500 uppercase tracking-wider transition-colors">
+                        Set default
+                      </button>
+                    }
+                    <button (click)="pendingDeleteMethodId.set(method.id)"
+                      class="text-xs font-mono text-red-400 hover:text-red-600 transition-colors">
+                      Remove
                     </button>
                   }
-                  <button (click)="deleteMethod(method.id)"
-                    class="text-xs font-mono text-red-400 hover:text-red-600 transition-colors">
-                    Remove
-                  </button>
                 </div>
               </div>
             }
@@ -200,11 +212,11 @@ import { PayoutsService, PayoutMethod, Payout, BalanceSummary } from '../../serv
               <p class="text-xs font-mono text-gray-400">Page {{ currentPage() }} of {{ totalPages() }}</p>
               <div class="flex gap-2">
                 <button (click)="loadHistory(currentPage() - 1)" [disabled]="currentPage() === 1"
-                  class="px-3 py-1 text-xs font-mono border border-gray-300 disabled:opacity-40 hover:border-gray-500 transition-colors">
+                  class="px-3 py-1.5 text-xs font-mono border border-gray-300 disabled:opacity-40 hover:border-gray-500 transition-colors">
                   Prev
                 </button>
                 <button (click)="loadHistory(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
-                  class="px-3 py-1 text-xs font-mono border border-gray-300 disabled:opacity-40 hover:border-gray-500 transition-colors">
+                  class="px-3 py-1.5 text-xs font-mono border border-gray-300 disabled:opacity-40 hover:border-gray-500 transition-colors">
                   Next
                 </button>
               </div>
@@ -232,6 +244,7 @@ export class PayoutsComponent implements OnInit {
   showAddForm = signal(false);
   addingMethod = signal(false);
   addMethodError = signal<string | null>(null);
+  pendingDeleteMethodId = signal<number | null>(null);
 
   newMethod = { bank_selection: '', account_name: '', account_number_or_email: '' };
 
@@ -335,8 +348,8 @@ export class PayoutsComponent implements OnInit {
 
   deleteMethod(id: number): void {
     this.payoutsService.deletePayoutMethod(this.brandId, id).subscribe({
-      next: () => this.loadMethods(),
-      error: () => {}
+      next: () => { this.pendingDeleteMethodId.set(null); this.loadMethods(); },
+      error: () => this.pendingDeleteMethodId.set(null)
     });
   }
 

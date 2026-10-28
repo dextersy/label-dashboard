@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EventsService } from '../../../services/events.service';
 import { TicketsService } from '../../../services/tickets.service';
@@ -277,8 +277,14 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                           <td class="px-4 py-2.5">
                             @if (isManager()) {
                               <div class="flex items-center justify-end gap-3">
-                                <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
-                                <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                                @if (pendingDeleteTtId() === tt.id) {
+                                  <span class="text-xs font-mono text-gray-500">Sure?</span>
+                                  <button (click)="deleteTicketType(tt)" class="text-xs font-mono text-red-500 hover:text-red-700 uppercase tracking-wider font-black">Yes</button>
+                                  <button (click)="pendingDeleteTtId.set(null)" class="text-xs font-mono text-gray-400 hover:text-gray-700 uppercase tracking-wider">No</button>
+                                } @else {
+                                  <button (click)="openTicketTypeModal(tt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                                  <button (click)="pendingDeleteTtId.set(tt.id)" class="text-xs font-mono text-red-400 hover:text-red-500 uppercase tracking-wider">Delete</button>
+                                }
                               </div>
                             }
                           </td>
@@ -329,8 +335,14 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                           <td class="px-4 py-2.5">
                             @if (isManager()) {
                               <div class="flex items-center justify-end gap-3">
-                                <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
-                                <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                                @if (pendingDeleteWtId() === wt.id) {
+                                  <span class="text-xs font-mono text-gray-500">Sure?</span>
+                                  <button (click)="deleteWalkInType(wt)" class="text-xs font-mono text-red-500 hover:text-red-700 uppercase tracking-wider font-black">Yes</button>
+                                  <button (click)="pendingDeleteWtId.set(null)" class="text-xs font-mono text-gray-400 hover:text-gray-700 uppercase tracking-wider">No</button>
+                                } @else {
+                                  <button (click)="openWalkInTypeModal(wt)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Edit</button>
+                                  <button (click)="pendingDeleteWtId.set(wt.id)" class="text-xs font-mono text-red-400 hover:text-red-500 uppercase tracking-wider">Delete</button>
+                                }
                               </div>
                             }
                           </td>
@@ -426,17 +438,17 @@ import { EventReferrer } from '../../../models/event-referrer.model';
 
             <div class="flex items-center justify-between mb-3 gap-3">
               <input type="text" [(ngModel)]="ticketSearch" (input)="loadTickets()"
-                class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                class="px-3 py-1.5 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                 placeholder="Search by name...">
               <div class="flex items-center gap-2">
                 @if (isManager()) {
                   <button (click)="openCreateTicketModal()"
-                    class="px-3 py-2 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
+                    class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black text-xs font-black uppercase tracking-wider transition-colors">
                     + Create Ticket
                   </button>
                 }
                 <a [href]="ticketsService.exportCsvUrl({ event_id: routeEventId() })"
-                   class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
+                   class="px-3 py-1.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 hover:border-gray-500 uppercase tracking-wider transition-colors">
                   Export CSV
                 </a>
               </div>
@@ -572,20 +584,20 @@ import { EventReferrer } from '../../../models/event-referrer.model';
             } @else {
               <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <input type="text" [(ngModel)]="pendingSearch" (input)="loadPendingTickets()"
-                  class="px-3 py-2 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
+                  class="px-3 py-1.5 bg-white border border-gray-300 text-gray-900 text-sm w-64 placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors"
                   placeholder="Search by name...">
                 <div class="flex items-center gap-2">
                   <a [href]="eventsService.getPendingCsvUrl(routeEventId())"
-                     class="px-3 py-2 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
+                     class="px-3 py-1.5 border border-gray-300 text-gray-400 text-xs font-mono hover:text-gray-900 uppercase tracking-wider transition-colors">
                     CSV
                   </a>
                   @if (isManager()) {
                     <button (click)="verifyPayments()"
-                      class="px-3 py-2 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                      class="px-3 py-1.5 border border-yellow-400/30 text-yellow-400/70 hover:text-yellow-400 text-xs font-mono uppercase tracking-wider transition-colors">
                       Verify Payments
                     </button>
                     <button (click)="cancelAllUnpaid()"
-                      class="px-3 py-2 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
+                      class="px-3 py-1.5 border border-red-400/30 text-red-400/70 hover:text-red-400 text-xs font-mono uppercase tracking-wider transition-colors">
                       Cancel All Unpaid
                     </button>
                   }
@@ -762,7 +774,13 @@ import { EventReferrer } from '../../../models/event-referrer.model';
                               <button (click)="downloadQrCode(ref.referral_shortlink, ref.name)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">QR</button>
                             }
                             @if (isManager()) {
-                              <button (click)="deleteReferrer(ref)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Delete</button>
+                              @if (pendingDeleteRefId() === ref.id) {
+                                <span class="text-xs font-mono text-gray-500">Sure?</span>
+                                <button (click)="deleteReferrer(ref)" class="text-xs font-mono text-red-500 hover:text-red-700 uppercase tracking-wider font-black">Yes</button>
+                                <button (click)="pendingDeleteRefId.set(null)" class="text-xs font-mono text-gray-400 hover:text-gray-700 uppercase tracking-wider">No</button>
+                              } @else {
+                                <button (click)="pendingDeleteRefId.set(ref.id)" class="text-xs font-mono text-red-400 hover:text-red-500 uppercase tracking-wider">Delete</button>
+                              }
                             }
                           </div>
                         </td>
@@ -1343,6 +1361,11 @@ export class EventDetailComponent implements OnInit {
   walkInTransactions = signal<WalkInTransaction[]>([]);
   walkInTransactionsLoading = signal(false);
 
+  // Inline delete confirm state
+  pendingDeleteTtId = signal<number | null>(null);
+  pendingDeleteWtId = signal<number | null>(null);
+  pendingDeleteRefId = signal<number | null>(null);
+
   // Referrals tab
   referrers = signal<EventReferrer[]>([]);
   referrerModal = signal(false);
@@ -1389,6 +1412,12 @@ export class EventDetailComponent implements OnInit {
 
   onTabChange(tabId: string): void {
     this.activeTab.set(tabId);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tabId },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
     if (tabId === 'sales') {
       this.loadWalkInTransactions();
     }
@@ -1413,6 +1442,7 @@ export class EventDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     public eventsService: EventsService,
     public ticketsService: TicketsService,
     private ticketTypeService: TicketTypeService,
@@ -1461,6 +1491,11 @@ export class EventDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.routeEventId();
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam && this.tabs.some(t => t.id === tabParam)) {
+      this.activeTab.set(tabParam);
+      if (tabParam === 'sales') this.loadWalkInTransactions();
+    }
     this.eventsService.getEvent(id).subscribe({ next: (e) => this.event.set(e) });
     this.loadTickets();
     this.loadTicketSummary();
@@ -1577,10 +1612,9 @@ export class EventDetailComponent implements OnInit {
   }
 
   deleteTicketType(tt: TicketType): void {
-    if (!confirm(`Delete ticket type "${tt.name}"?`)) return;
     this.ticketTypeService.deleteTicketType(tt.id).subscribe({
-      next: () => this.loadTicketTypes(),
-      error: (err) => alert(err.error?.error || 'Failed to delete ticket type.')
+      next: () => { this.pendingDeleteTtId.set(null); this.loadTicketTypes(); },
+      error: (err) => { this.pendingDeleteTtId.set(null); alert(err.error?.error || 'Failed to delete ticket type.'); }
     });
   }
 
@@ -1657,10 +1691,9 @@ export class EventDetailComponent implements OnInit {
   }
 
   deleteWalkInType(wt: WalkInType): void {
-    if (!confirm(`Delete walk-in type "${wt.name}"?`)) return;
     this.walkInService.deleteWalkInType(wt.id).subscribe({
-      next: () => this.loadWalkInTypes(),
-      error: (err) => alert(err.error?.error || 'Failed to delete walk-in type.')
+      next: () => { this.pendingDeleteWtId.set(null); this.loadWalkInTypes(); },
+      error: (err) => { this.pendingDeleteWtId.set(null); alert(err.error?.error || 'Failed to delete walk-in type.'); }
     });
   }
 
@@ -1704,10 +1737,9 @@ export class EventDetailComponent implements OnInit {
   }
 
   deleteReferrer(ref: EventReferrer): void {
-    if (!confirm(`Delete referrer "${ref.name}"?`)) return;
     this.referrerService.deleteReferrer(ref.id).subscribe({
-      next: () => this.loadReferrers(),
-      error: (err) => alert(err.error?.error || 'Failed to delete referrer.')
+      next: () => { this.pendingDeleteRefId.set(null); this.loadReferrers(); },
+      error: (err) => { this.pendingDeleteRefId.set(null); alert(err.error?.error || 'Failed to delete referrer.'); }
     });
   }
 
