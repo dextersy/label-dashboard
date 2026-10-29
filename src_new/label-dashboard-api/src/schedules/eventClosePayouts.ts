@@ -317,7 +317,7 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
           { close_time: { [Op.gt]: now } },
           { date_and_time: { [Op.gt]: now } },
           // Multi-day events where date_and_time (first day) is past but a later day is still future
-          literal(`EXISTS (SELECT 1 FROM event_days WHERE event_days.event_id = "Event"."id" AND event_days.date_and_time > NOW())`)
+          literal(`EXISTS (SELECT 1 FROM event_day WHERE event_day.event_id = "Event"."id" AND event_day.date_and_time > NOW())`)
         ]
       },
       attributes: ['id', 'brand_id', 'close_time', 'date_and_time'],
