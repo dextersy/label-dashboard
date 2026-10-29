@@ -1340,8 +1340,7 @@ export const sendAddOnPaymentNotification = async (
 
     // Branded receipt to initiator
     if (initiatorUser?.email_address) {
-      const orgBrandForReceipt = await Brand.findByPk(event.brand_id);
-      const receiptBrand = orgBrandForReceipt ?? ownerBrand;
+      const receiptBrand = ownerBrand;
 
       const brandLogoHtml = receiptBrand.logo_url
         ? `<img src="${escapeHtml(receiptBrand.logo_url)}" alt="${escapeHtml(receiptBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
@@ -1374,7 +1373,7 @@ export const sendAddOnPaymentNotification = async (
           REFERENCE_ROW: referenceRow,
           NOTES_ROW: notesRow,
         },
-        brandIdForEmail
+        ownerBrandId
       );
     }
   } catch (err) {
