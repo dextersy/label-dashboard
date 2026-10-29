@@ -9,7 +9,7 @@
  */
 
 import { Op, literal } from 'sequelize';
-import { Brand, Event, Earning, Ticket, LabelPayment, LabelPaymentMethod, Release, Royalty, EventAddOnPayment, User } from '../models';
+import { Brand, Event, EventDay, Earning, Ticket, LabelPayment, LabelPaymentMethod, Release, Royalty, EventAddOnPayment, User } from '../models';
 import { PaymentService } from '../utils/paymentService';
 import { sendEmail } from '../utils/emailService';
 
@@ -308,7 +308,7 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
     const brandIds = eligibleBrands.map(b => b.id);
     console.log(`[eventClosePayouts] Found ${brandIds.length} brand(s) with payout_on_event_close=true: [${brandIds.join(', ')}]`);
 
-    // Find all future events for these brands
+    // Find all future events for these brands, including days for multiday fallback
     const events = await Event.findAll({
       where: {
         brand_id: { [Op.in]: brandIds },
@@ -317,7 +317,8 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
           { date_and_time: { [Op.gt]: now } }
         ]
       },
-      attributes: ['id', 'brand_id', 'close_time', 'date_and_time']
+      attributes: ['id', 'brand_id', 'close_time', 'date_and_time'],
+      include: [{ model: EventDay, as: 'days', attributes: ['date_and_time'] }]
     });
 
     console.log(`[eventClosePayouts] Found ${events.length} future event(s) to rehydrate`);
@@ -325,7 +326,16 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
     let scheduled = 0;
     let skipped = 0;
     for (const event of events) {
-      const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+      const days: { date_and_time: Date | string }[] = (event as any).days ?? [];
+      let closeTime: Date;
+      if (event.close_time) {
+        closeTime = new Date(event.close_time);
+      } else if (days.length > 1) {
+        const sorted = [...days].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+        closeTime = new Date(new Date(sorted[sorted.length - 1].date_and_time).getTime() + 8 * 60 * 60 * 1000);
+      } else {
+        closeTime = new Date(event.date_and_time);
+      }
       if (closeTime > now) {
         scheduleEventClosePayout(event.id, event.brand_id, closeTime);
         scheduled++;

@@ -46,6 +46,21 @@ const resolveEventRole = resolveEventRoleUtil;
 const findEventForUser = findEventForUserUtil;
 
 /**
+ * Determine the effective ticket-sales close time for payout scheduling.
+ * Mirrors the multiday fallback used in publicController: when close_time is
+ * null and the event has more than one day, use 8h after the last day's start
+ * time so the payout fires after the final day, not the first.
+ */
+const resolvePayoutCloseTime = (event: any, days: { date_and_time: Date | string }[]): Date => {
+  if (event.close_time) return new Date(event.close_time);
+  if (days.length > 1) {
+    const sorted = [...days].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+    return new Date(new Date(sorted[sorted.length - 1].date_and_time).getTime() + 8 * 60 * 60 * 1000);
+  }
+  return new Date(event.date_and_time);
+};
+
+/**
  * Verify the user has at least viewer-level access to the event.
  * Returns true if allowed, false and sends 403 if denied.
  */
@@ -769,7 +784,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
     try {
       const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
       if (brand?.payout_on_event_close) {
-        const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+        const closeTime = resolvePayoutCloseTime(event, createdEventDays);
         scheduleEventClosePayout(event.id, event.brand_id, closeTime);
       }
     } catch (scheduleErr) {
@@ -1212,7 +1227,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
       if (brand?.payout_on_event_close) {
         if (event.close_time || event.date_and_time) {
-          const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+          const eventDaysForPayout = await EventDay.findAll({ where: { event_id: event.id }, attributes: ['date_and_time'], order: [['date_and_time', 'ASC']] });
+          const closeTime = resolvePayoutCloseTime(event, eventDaysForPayout);
           scheduleEventClosePayout(event.id, event.brand_id, closeTime);
         } else {
           cancelEventClosePayout(event.id);
