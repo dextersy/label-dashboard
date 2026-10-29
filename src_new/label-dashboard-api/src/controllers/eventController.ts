@@ -3192,6 +3192,18 @@ export const publishEvent = async (req: AuthRequest, res: Response) => {
       ]
     });
 
+    // Schedule event-close payout if brand has payout_on_event_close enabled
+    try {
+      const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
+      if (brand?.payout_on_event_close) {
+        (event as any).days = await EventDay.findAll({ where: { event_id: event.id }, attributes: ['date_and_time'], order: [['date_and_time', 'ASC']] });
+        const closeTime = resolvePayoutCloseTime(event);
+        scheduleEventClosePayout(event.id, event.brand_id, closeTime);
+      }
+    } catch (scheduleErr) {
+      console.error('Failed to schedule event-close payout:', scheduleErr);
+    }
+
     res.json({
       message: 'Event published successfully',
       event: eventWithTickets
@@ -3245,6 +3257,9 @@ export const unpublishEvent = async (req: AuthRequest, res: Response) => {
         }
       ]
     });
+
+    // Cancel any pending payout timer since the event is no longer published
+    cancelEventClosePayout(eventId);
 
     res.json({
       message: 'Event unpublished successfully',
