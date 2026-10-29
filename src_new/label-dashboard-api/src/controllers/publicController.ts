@@ -9,6 +9,7 @@ import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { sendEmail, sendArtistRegistrationNotification } from '../utils/emailService';
 import { getBrandAdminUserIds, createNotificationsForUsers } from '../utils/notificationService';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
+import { resolveEventCloseTime } from '../utils/eventCloseTime';
 import { Op } from 'sequelize';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
@@ -40,9 +41,7 @@ const getOptionalAudienceUserId = (req: Request): number | null => {
 // Helper function to determine if countdown should be shown for an event
 const shouldShowCountdown = (event: any): boolean => {
   const now = new Date();
-  
-  // Use close_time if available, otherwise fall back to event date
-  const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+  const closeTime = resolveEventCloseTime(event);
   const timeDiff = closeTime.getTime() - now.getTime();
   const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
@@ -140,6 +139,9 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       order: [['date_and_time', 'ASC']],
       attributes: ['id', 'date_and_time', 'label']
     });
+
+    // Attach days to event so resolveEventCloseTime can derive the close time
+    (event as any).days = eventDays;
 
     // Get ticket types with availability information and their valid days
     const ticketTypes = await TicketType.findAll({
@@ -1901,6 +1903,12 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
           through: { attributes: [] },
           attributes: ['id', 'name', 'is_custom'],
           required: false
+        },
+        {
+          model: EventDay,
+          as: 'days',
+          attributes: ['date_and_time'],
+          required: false
         }
       ],
       order: [['date_and_time', 'ASC']]
@@ -1960,7 +1968,7 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
             ticket_price_display: priceDisplay.displayText,
             ticket_naming: event.ticket_naming,
             buy_shortlink: event.buy_shortlink,
-            is_closed: new Date() > new Date(event.close_time || event.date_and_time),
+            is_closed: new Date() > resolveEventCloseTime(event),
             tickets_sold: event.show_attendee_count !== false ? (ticketCounts[event.id] || 0) : undefined,
             event_type: event.event_type || null,
             tags: (event as any).tags || [],
@@ -2095,7 +2103,7 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
         ticket_price_display: priceDisplay.displayText,
         ticket_naming: event.ticket_naming,
         buy_shortlink: event.buy_shortlink,
-        is_closed: new Date() > new Date(event.close_time || event.date_and_time),
+        is_closed: new Date() > resolveEventCloseTime(event),
         tickets_sold: event.show_attendee_count !== false ? (ticketCounts[event.id] || 0) : undefined,
         event_type: event.event_type || null,
         tags: (event as any).tags || [],

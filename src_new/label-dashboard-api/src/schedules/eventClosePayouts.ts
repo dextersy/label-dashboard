@@ -11,6 +11,7 @@
 import { Op, literal } from 'sequelize';
 import { Brand, Event, EventDay, Earning, Ticket, LabelPayment, LabelPaymentMethod, Release, Royalty, EventAddOnPayment, User } from '../models';
 import { PaymentService } from '../utils/paymentService';
+import { resolveEventCloseTime } from '../utils/eventCloseTime';
 import { sendEmail } from '../utils/emailService';
 
 interface PendingPayout {
@@ -329,16 +330,7 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
     let scheduled = 0;
     let skipped = 0;
     for (const event of events) {
-      const days: { date_and_time: Date | string }[] = (event as any).days ?? [];
-      let closeTime: Date;
-      if (event.close_time) {
-        closeTime = new Date(event.close_time);
-      } else if (days.length > 1) {
-        const sorted = [...days].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
-        closeTime = new Date(new Date(sorted[sorted.length - 1].date_and_time).getTime() + 8 * 60 * 60 * 1000);
-      } else {
-        closeTime = new Date(event.date_and_time);
-      }
+      const closeTime = resolveEventCloseTime(event);
       if (closeTime > now) {
         scheduleEventClosePayout(event.id, event.brand_id, closeTime);
         scheduled++;

@@ -8,6 +8,7 @@ import { sendTicketEmail, sendTicketCancellationEmail, sendPaymentLinkEmail, sen
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import { calculatePlatformFeeForEventTickets } from '../utils/platformFeeCalculator';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
+import { resolveEventCloseTime } from '../utils/eventCloseTime';
 import { sendEmail, sendEmailWithInlineImages, loadEmailTemplate, processTemplate } from '../utils/emailService';
 
 // Helper function to add responsive image styling to content
@@ -45,20 +46,8 @@ const findEventForBrand = async (eventId: number, brandId: number, include?: any
 const resolveEventRole = resolveEventRoleUtil;
 const findEventForUser = findEventForUserUtil;
 
-/**
- * Determine the effective ticket-sales close time for payout scheduling.
- * Mirrors the multiday fallback used in publicController: when close_time is
- * null and the event has more than one day, use 8h after the last day's start
- * time so the payout fires after the final day, not the first.
- */
-const resolvePayoutCloseTime = (event: any, days: { date_and_time: Date | string }[]): Date => {
-  if (event.close_time) return new Date(event.close_time);
-  if (days.length > 1) {
-    const sorted = [...days].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
-    return new Date(new Date(sorted[sorted.length - 1].date_and_time).getTime() + 8 * 60 * 60 * 1000);
-  }
-  return new Date(event.date_and_time);
-};
+// Alias used in payout scheduling — days must be eager-loaded on the event
+const resolvePayoutCloseTime = resolveEventCloseTime;
 
 /**
  * Verify the user has at least viewer-level access to the event.
@@ -784,7 +773,8 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
     try {
       const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
       if (brand?.payout_on_event_close && event.status === 'published') {
-        const closeTime = resolvePayoutCloseTime(event, createdEventDays);
+        (event as any).days = createdEventDays;
+        const closeTime = resolvePayoutCloseTime(event);
         scheduleEventClosePayout(event.id, event.brand_id, closeTime);
       }
     } catch (scheduleErr) {
@@ -1227,8 +1217,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
       if (brand?.payout_on_event_close && event.status === 'published') {
         if (event.close_time || event.date_and_time) {
-          const eventDaysForPayout = await EventDay.findAll({ where: { event_id: event.id }, attributes: ['date_and_time'], order: [['date_and_time', 'ASC']] });
-          const closeTime = resolvePayoutCloseTime(event, eventDaysForPayout);
+          (event as any).days = await EventDay.findAll({ where: { event_id: event.id }, attributes: ['date_and_time'], order: [['date_and_time', 'ASC']] });
+          const closeTime = resolvePayoutCloseTime(event);
           scheduleEventClosePayout(event.id, event.brand_id, closeTime);
         } else {
           cancelEventClosePayout(event.id);
@@ -3280,7 +3270,7 @@ export const getShortlinkDomain = async (req: AuthRequest, res: Response) => {
 // Helper: determine if countdown should be shown
 const shouldShowCountdown = (event: any): boolean => {
   const now = new Date();
-  const closeTime = event.close_time ? new Date(event.close_time) : new Date(event.date_and_time);
+  const closeTime = resolveEventCloseTime(event);
   const timeDiff = closeTime.getTime() - now.getTime();
   const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
@@ -3303,7 +3293,8 @@ export const getEventPreview = async (req: AuthRequest, res: Response) => {
     if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
 
     const event = await findEventForUser(req, eventId, [
-      { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] }
+      { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] },
+      { model: EventDay, as: 'days', attributes: ['date_and_time'], order: [['date_and_time', 'ASC']] }
     ]);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
