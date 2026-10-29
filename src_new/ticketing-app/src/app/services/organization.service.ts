@@ -10,6 +10,7 @@ export interface OrgSettings {
   brand_color?: string;
   brand_website?: string;
   about_us?: string | null;
+  payment_processing_fee_for_payouts?: number;
 }
 
 export interface EventFeeSettings {

@@ -2,7 +2,8 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { PayoutsService, PayoutMethod, Payout, BalanceSummary } from '../../services/payouts.service';
+import { PayoutsService, PayoutMethod, Payout, BalanceSummary, PayoutSettings } from '../../services/payouts.service';
+import { OrganizationService } from '../../services/organization.service';
 
 @Component({
   selector: 'app-payouts',
@@ -157,6 +158,102 @@ import { PayoutsService, PayoutMethod, Payout, BalanceSummary } from '../../serv
         </div>
       </div>
 
+      <!-- Payout Settings -->
+      <div class="bg-white border border-gray-200 mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Payout Settings</h2>
+        </div>
+
+        @if (settingsLoading()) {
+          <div class="px-6 py-8 text-center">
+            <p class="text-xs font-mono text-gray-400 uppercase tracking-widest animate-pulse">loading...</p>
+          </div>
+        } @else if (draft) {
+          <div class="px-6 py-5 space-y-5">
+
+            <!-- Pay on Event Close -->
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-mono text-gray-900">Pay on event close</p>
+                <p class="text-xs font-mono text-gray-400 mt-0.5">Automatically send a payout when each event closes.</p>
+              </div>
+              <button (click)="togglePayOnClose()"
+                class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+                [class.bg-yellow-400]="draft.payout_on_event_close"
+                [class.bg-gray-200]="!draft.payout_on_event_close">
+                <span
+                  class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200"
+                  [class.translate-x-5]="draft.payout_on_event_close"
+                  [class.translate-x-0]="!draft.payout_on_event_close">
+                </span>
+              </button>
+            </div>
+
+            <!-- Payout Schedule -->
+            <div>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">Scheduled Payouts</label>
+              <select
+                [(ngModel)]="draft.payout_schedule"
+                (ngModelChange)="settingsDirty = true"
+                class="w-full px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400 bg-white">
+                <option [ngValue]="null">None (manual only)</option>
+                <option value="every_friday">Every Friday</option>
+                <option value="1st_and_16th">1st and 16th of each month</option>
+                <option value="1st_of_month">1st of each month</option>
+              </select>
+              <p class="text-xs font-mono text-gray-400 mt-1">Automatically send payouts on a recurring schedule.</p>
+            </div>
+
+            <!-- Payout Threshold -->
+            <div>
+              <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">Minimum Payout Amount</label>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-mono text-gray-500">₱</span>
+                <input
+                  type="number"
+                  [(ngModel)]="draft.payout_threshold"
+                  (ngModelChange)="settingsDirty = true"
+                  min="0"
+                  placeholder="No minimum"
+                  class="w-48 px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400">
+              </div>
+              <p class="text-xs font-mono text-gray-400 mt-1">Payouts will only be sent when balance meets this minimum. Leave blank for no minimum.</p>
+            </div>
+
+            <!-- Transaction Fee (read-only, platform-level) -->
+            <div class="pt-1 border-t border-gray-100">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs font-mono text-gray-500 uppercase tracking-wider mb-0.5">Transaction Fee</p>
+                  <p class="text-xs font-mono text-gray-400">A flat fee deducted from each payout to cover transfer costs.</p>
+                </div>
+                <p class="text-sm font-mono text-gray-900 whitespace-nowrap">
+                  @if (processingFee() !== null) {
+                    {{ processingFee() | currency:'PHP':'symbol':'1.2-2' }}
+                  } @else {
+                    —
+                  }
+                </p>
+              </div>
+            </div>
+
+            <!-- Save row -->
+            <div class="flex items-center gap-4 pt-1">
+              <button (click)="saveSettings()" [disabled]="!settingsDirty || savingSettings()"
+                class="px-5 py-2 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed text-black text-xs font-black uppercase tracking-wider transition-colors">
+                {{ savingSettings() ? 'Saving...' : 'Save Settings' }}
+              </button>
+              @if (settingsError()) {
+                <p class="text-xs font-mono text-red-500">{{ settingsError() }}</p>
+              }
+              @if (settingsSaved()) {
+                <p class="text-xs font-mono text-green-600">Saved.</p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
       <!-- Payout History -->
       <div class="bg-white border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200">
@@ -241,6 +338,15 @@ export class PayoutsComponent implements OnInit {
 
   supportedBanks = signal<{ bank_code: string; bank_name: string }[]>([]);
 
+  processingFee = signal<number | null>(null);
+
+  draft: PayoutSettings | null = null;
+  settingsDirty = false;
+  settingsLoading = signal(true);
+  savingSettings = signal(false);
+  settingsError = signal<string | null>(null);
+  settingsSaved = signal(false);
+
   showAddForm = signal(false);
   addingMethod = signal(false);
   addMethodError = signal<string | null>(null);
@@ -252,7 +358,8 @@ export class PayoutsComponent implements OnInit {
 
   constructor(
     private auth: AuthService,
-    private payoutsService: PayoutsService
+    private payoutsService: PayoutsService,
+    private orgService: OrganizationService
   ) {}
 
   ngOnInit(): void {
@@ -264,6 +371,11 @@ export class PayoutsComponent implements OnInit {
     this.loadMethods();
     this.loadHistory(1);
     this.loadSupportedBanks();
+    this.loadSettings();
+    this.orgService.getSettings(this.brandId).subscribe({
+      next: (org) => this.processingFee.set(org.payment_processing_fee_for_payouts ?? null),
+      error: () => {}
+    });
   }
 
   loadBalance(): void {
@@ -350,6 +462,44 @@ export class PayoutsComponent implements OnInit {
     this.payoutsService.deletePayoutMethod(this.brandId, id).subscribe({
       next: () => { this.pendingDeleteMethodId.set(null); this.loadMethods(); },
       error: () => this.pendingDeleteMethodId.set(null)
+    });
+  }
+
+  loadSettings(): void {
+    this.settingsLoading.set(true);
+    this.payoutsService.getPayoutSettings(this.brandId).subscribe({
+      next: (data) => {
+        this.draft = { ...data };
+        this.settingsDirty = false;
+        this.settingsLoading.set(false);
+      },
+      error: () => this.settingsLoading.set(false)
+    });
+  }
+
+  togglePayOnClose(): void {
+    if (!this.draft) return;
+    this.draft.payout_on_event_close = !this.draft.payout_on_event_close;
+    this.settingsDirty = true;
+  }
+
+  saveSettings(): void {
+    if (!this.draft) return;
+    this.savingSettings.set(true);
+    this.settingsError.set(null);
+    this.settingsSaved.set(false);
+    this.payoutsService.updatePayoutSettings(this.brandId, this.draft).subscribe({
+      next: (data) => {
+        this.draft = { ...data };
+        this.settingsDirty = false;
+        this.savingSettings.set(false);
+        this.settingsSaved.set(true);
+        setTimeout(() => this.settingsSaved.set(false), 2000);
+      },
+      error: (err) => {
+        this.savingSettings.set(false);
+        this.settingsError.set(err?.error?.error || 'Failed to save settings.');
+      }
     });
   }
 

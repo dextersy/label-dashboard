@@ -34,6 +34,12 @@ export interface BalanceSummary {
   receivable_balance: number;
 }
 
+export interface PayoutSettings {
+  payout_schedule: '1st_and_16th' | '1st_of_month' | 'every_friday' | null;
+  payout_on_event_close: boolean;
+  payout_threshold: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PayoutsService {
   constructor(private http: HttpClient) {}
@@ -71,5 +77,13 @@ export class PayoutsService {
 
   getSupportedBanks(): Observable<{ bank_code: string; bank_name: string }[]> {
     return this.http.get<{ bank_code: string; bank_name: string }[]>(`${environment.apiUrl}/brands/supported-banks`);
+  }
+
+  getPayoutSettings(brandId: number): Observable<PayoutSettings> {
+    return this.http.get<PayoutSettings>(`${environment.apiUrl}/brands/${brandId}/payout-settings`);
+  }
+
+  updatePayoutSettings(brandId: number, settings: Partial<PayoutSettings>): Observable<PayoutSettings> {
+    return this.http.put<PayoutSettings>(`${environment.apiUrl}/brands/${brandId}/payout-settings`, settings);
   }
 }
