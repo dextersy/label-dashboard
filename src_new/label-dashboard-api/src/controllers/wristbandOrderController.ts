@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
-import { WristbandOrder, WristbandOrderItem, WristbandColor, EventWristbandSettings, Event } from '../models';
+import { WristbandOrder, WristbandOrderItem, WristbandColor, EventWristbandSettings, Event, Brand } from '../models';
 import { findEventForUser, resolveEventRole } from '../utils/eventAccess';
 import { uploadToS3, deleteFromS3, getS3ObjectStream } from '../utils/s3Service';
 import { sendEmail, sendWristbandOrderStatusEmail } from '../utils/emailService';
@@ -53,18 +53,26 @@ function escapeHtml(value: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
+// ─── Auth helper ───────────────────────────────────────────────────────────
+
+// Returns the brand ID of the wristband order owner/approver for a given organizer brand:
+// the organizer's parent brand, or the organizer itself if it has no parent.
+async function getOwnerBrandId(organizerBrandId: number): Promise<number> {
+  const orgBrand = await Brand.findByPk(organizerBrandId, { attributes: ['parent_brand'] });
+  return orgBrand?.parent_brand ?? organizerBrandId;
+}
+
 // ─── Email notification ────────────────────────────────────────────────────
 
 async function sendWristbandOrderNotification(order: any, event: any): Promise<void> {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId) return;
+    const ownerBrandId = await getOwnerBrandId(event.brand_id);
 
-    const admins = await User.findAll({ where: { brand_id: parentBrandId, is_admin: true }, attributes: ['email_address'] });
+    const admins = await User.findAll({ where: { brand_id: ownerBrandId, is_admin: true }, attributes: ['email_address'] });
     const recipients = admins.map((u: any) => u.email_address).filter(Boolean);
     if (!recipients.length) return;
 
-    const frontendUrl = await getBrandFrontendUrl(parentBrandId);
+    const frontendUrl = await getBrandFrontendUrl(ownerBrandId);
     const manageUrl = `${frontendUrl}/campaigns/events/wristband-order-review?order_id=${order.id}`;
 
     const items = (order.items ?? []) as any[];
@@ -110,7 +118,7 @@ async function sendWristbandOrderNotification(order: any, event: any): Promise<v
       </div>
     `;
 
-    await sendEmail(recipients, `Wristband Order #${order.id} Pending Confirmation`, html, parentBrandId);
+    await sendEmail(recipients, `Wristband Order #${order.id} Pending Confirmation`, html, ownerBrandId);
   } catch (err) {
     console.error('sendWristbandOrderNotification error:', err);
   }
@@ -253,17 +261,16 @@ export const createWristbandOrder = async (req: AuthRequest, res: Response) => {
 
     if (order.status === 'placed') {
       sendWristbandOrderNotification(fullOrder, event);
-      const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-      if (parentBrandId) {
-        getBrandAdminUserIds(parentBrandId).then(adminIds =>
+      getOwnerBrandId(event.brand_id).then(ownerBrandId =>
+        getBrandAdminUserIds(ownerBrandId).then(adminIds =>
           createNotificationsForUsers(
-            adminIds, parentBrandId, 'wristband_order_placed',
+            adminIds, ownerBrandId, 'wristband_order_placed',
             `New wristband order: ${event.title ?? `Event #${eventId}`}`,
             `Order #${order.id} placed — review required`,
             `/campaigns/events/wristband-order-review?order_id=${order.id}`
           )
-        ).catch(console.error);
-      }
+        )
+      ).catch(console.error);
     }
 
     res.status(201).json({ order: fullOrder });
@@ -351,17 +358,17 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
     if (previousStatus !== 'placed' && newStatus === 'placed') {
       const evt = await Event.findByPk((order as any).event_id);
       sendWristbandOrderNotification(fullOrder, evt);
-      const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-      if (parentBrandId) {
-        getBrandAdminUserIds(parentBrandId).then(adminIds =>
+      if (!(evt as any)?.brand_id) return;
+      getOwnerBrandId((evt as any).brand_id).then(ownerBrandId =>
+        getBrandAdminUserIds(ownerBrandId).then(adminIds =>
           createNotificationsForUsers(
-            adminIds, parentBrandId, 'wristband_order_placed',
+            adminIds, ownerBrandId, 'wristband_order_placed',
             `New wristband order: ${(evt as any)?.title ?? `Event #${(order as any).event_id}`}`,
             `Order #${orderId} placed — review required`,
             `/campaigns/events/wristband-order-review?order_id=${orderId}`
           )
-        ).catch(console.error);
-      }
+        )
+      ).catch(console.error);
     }
 
     res.json({ order: fullOrder });
@@ -373,10 +380,6 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
 
 export const getWristbandOrder = async (req: AuthRequest, res: Response) => {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
     const orderId = parseInt(String(req.params.id));
     const order = await WristbandOrder.findByPk(orderId, {
       include: [
@@ -386,8 +389,10 @@ export const getWristbandOrder = async (req: AuthRequest, res: Response) => {
           include: [{ model: EventWristbandSettings, as: 'wristbandSettings' }],
         },
       ],
-    });
+    }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     res.json({ order });
   } catch (error) {
     console.error('getWristbandOrder error:', error);
@@ -397,10 +402,6 @@ export const getWristbandOrder = async (req: AuthRequest, res: Response) => {
 
 export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
     const orderId = parseInt(String(req.params.id));
     const order = await WristbandOrder.findByPk(orderId, {
       include: [
@@ -409,6 +410,8 @@ export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => 
       ],
     }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be confirmed' });
     await order.update({ status: 'confirmed' });
     const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
@@ -433,10 +436,6 @@ export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => 
 
 export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
     const orderId = parseInt(String(req.params.id));
     const order = await WristbandOrder.findByPk(orderId, {
       include: [
@@ -445,6 +444,8 @@ export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
       ],
     }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be rejected' });
     await order.update({ status: 'rejected' });
     const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
@@ -508,13 +509,13 @@ export const deleteWristbandOrder = async (req: AuthRequest, res: Response) => {
 
 export const setWristbandShippingFee = async (req: AuthRequest, res: Response) => {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
     const orderId = parseInt(String(req.params.id));
-    const order = await WristbandOrder.findByPk(orderId) as any;
+    const order = await WristbandOrder.findByPk(orderId, {
+      include: [{ model: Event, as: 'event', attributes: ['id', 'brand_id'] }],
+    }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
 
     const { shipping_fee } = req.body;
     if (shipping_fee !== null && shipping_fee !== undefined) {
@@ -545,13 +546,14 @@ export const setWristbandShippingFee = async (req: AuthRequest, res: Response) =
 
 export const proxyWristbandDesign = async (req: AuthRequest, res: Response) => {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId || req.user.brand_id !== parentBrandId) {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
     const orderId = parseInt(String(req.params.id));
-    const order = await WristbandOrder.findByPk(orderId, { attributes: ['id', 'design_url'] }) as any;
+    const order = await WristbandOrder.findByPk(orderId, {
+      attributes: ['id', 'design_url'],
+      include: [{ model: Event, as: 'event', attributes: ['id', 'brand_id'] }],
+    }) as any;
     if (!order?.design_url) return res.status(404).json({ error: 'Design not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
 
     const key = order.design_url.split('/').pop() as string;
     const { Body, ContentType, ContentLength } = await getS3ObjectStream({

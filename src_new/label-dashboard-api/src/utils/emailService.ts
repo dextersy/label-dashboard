@@ -1204,10 +1204,15 @@ export const sendWristbandOrderStatusEmail = async (
   ctaUrl: string
 ): Promise<void> => {
   try {
-    const brand = await Brand.findByPk(event.brand_id);
+    const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'parent_brand'] });
+    if (!orgBrand) return;
+
+    // Use the parent brand for branding/logging if one exists, otherwise the organizer's own brand
+    const brandingBrandId = orgBrand.parent_brand ?? orgBrand.id;
+    const brand = await Brand.findByPk(brandingBrandId);
     if (!brand) return;
 
-    const adminEmails = await getBrandAdministrators(brand.id);
+    const adminEmails = await getBrandAdministrators(orgBrand.id);
     if (!adminEmails.length) return;
 
     const brandLogoHtml = brand.logo_url
@@ -1270,16 +1275,16 @@ export const sendAddOnPaymentNotification = async (
   orders: any[]
 ): Promise<void> => {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-    if (!parentBrandId) return;
-
-    const parentBrand = await Brand.findByPk(parentBrandId);
-    if (!parentBrand) return;
-
     const orgBrand = await Brand.findByPk(event.brand_id);
-    const orgBrandName = orgBrand?.brand_name ?? 'Organizer';
+    if (!orgBrand) return;
+    const orgBrandName = orgBrand.brand_name ?? 'Organizer';
 
-    const frontendUrl = await import('./brandUtils').then(m => m.getBrandFrontendUrl(parentBrandId)).catch(() => '');
+    // Use the organizer's parent brand for the link, branding, and admin recipients,
+    // falling back to the organizer itself if it has no parent.
+    const ownerBrandId = orgBrand.parent_brand ?? event.brand_id;
+    const ownerBrand = await Brand.findByPk(ownerBrandId);
+    if (!ownerBrand) return;
+    const frontendUrl = await import('./brandUtils').then(m => m.getBrandFrontendUrl(ownerBrandId)).catch(() => '');
 
     const PRICE_PER_10 = 35;
     const orderRows = orders
@@ -1328,16 +1333,15 @@ export const sendAddOnPaymentNotification = async (
       </div>
     `;
 
-    const adminEmails = await getBrandAdministrators(parentBrandId);
+    const adminEmails = await getBrandAdministrators(ownerBrandId);
     if (adminEmails.length) {
-      await sendEmail(adminEmails, `Add-On Payment Received — ${event.title ?? `Event #${event.id}`}`, adminHtml, parentBrandId);
+      await sendEmail(adminEmails, `Add-On Payment Received — ${event.title ?? `Event #${event.id}`}`, adminHtml, ownerBrandId);
     }
 
     // Branded receipt to initiator
     if (initiatorUser?.email_address) {
-      const brandIdForEmail = event.brand_id ?? parentBrandId;
-      const orgBrandForReceipt = await Brand.findByPk(brandIdForEmail);
-      const receiptBrand = orgBrandForReceipt ?? parentBrand;
+      const orgBrandForReceipt = await Brand.findByPk(event.brand_id);
+      const receiptBrand = orgBrandForReceipt ?? ownerBrand;
 
       const brandLogoHtml = receiptBrand.logo_url
         ? `<img src="${escapeHtml(receiptBrand.logo_url)}" alt="${escapeHtml(receiptBrand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`

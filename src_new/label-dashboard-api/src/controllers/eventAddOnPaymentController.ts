@@ -33,8 +33,6 @@ async function isFullyPaid(eventId: number): Promise<boolean> {
 
 async function notifyAddOnPayment(payment: any, event: any, initiatorUser: any): Promise<void> {
   try {
-    const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-
     const fullyPaid = await isFullyPaid(event.id);
     if (!fullyPaid) return;
 
@@ -47,19 +45,19 @@ async function notifyAddOnPayment(payment: any, event: any, initiatorUser: any):
     // Email: admins + receipt to initiator
     sendAddOnPaymentNotification(payment, event, initiatorUser, orders);
 
-    // Bell notification: ticketing parent brand admins
-    if (parentBrandId) {
-      const parentAdminIds = await getBrandAdminUserIds(parentBrandId);
-      const addOnsLink = '/campaigns/events/add-ons?tab=payment';
-      await createNotificationsForUsers(
-        parentAdminIds,
-        parentBrandId,
-        'addon_payment_made',
-        `Add-on payment received: ${event.title ?? `Event #${event.id}`}`,
-        `₱${parseFloat(payment.amount).toFixed(2)} via ${payment.method === 'balance' ? 'Label Balance' : 'Paymongo'}`,
-        addOnsLink
-      );
-    }
+    // Bell notification: owner brand admins (organizer's parent brand, or organizer itself if no parent)
+    const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['parent_brand'] });
+    const ownerBrandId = orgBrand?.parent_brand ?? event.brand_id;
+    const ownerAdminIds = await getBrandAdminUserIds(ownerBrandId);
+    const addOnsLink = '/campaigns/events/add-ons?tab=payment';
+    await createNotificationsForUsers(
+      ownerAdminIds,
+      ownerBrandId,
+      'addon_payment_made',
+      `Add-on payment received: ${event.title ?? `Event #${event.id}`}`,
+      `₱${parseFloat(payment.amount).toFixed(2)} via ${payment.method === 'balance' ? 'Label Balance' : 'Paymongo'}`,
+      addOnsLink
+    );
 
     // Bell notification: the initiator (if different brand from parent)
     if (initiatorUser) {
