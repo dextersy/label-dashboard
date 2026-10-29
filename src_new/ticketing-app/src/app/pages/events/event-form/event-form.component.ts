@@ -336,7 +336,7 @@ type FormTab = 'details' | 'tickets' | 'walk-in' | 'discovery';
                   <input type="checkbox" [(ngModel)]="closeAtShowTime" [ngModelOptions]="{standalone:true}"
                     (change)="onCloseAtShowTimeChange()"
                     class="w-4 h-4 accent-yellow-400">
-                  <span class="text-xs font-mono text-gray-500">Sell until end of event</span>
+                  <span class="text-xs font-mono text-gray-500">{{ isMultiDay ? 'Sell until end of event' : 'Sell until event start' }}</span>
                 </label>
                 @if (!closeAtShowTime) {
                   <input type="datetime-local" formControlName="close_time"

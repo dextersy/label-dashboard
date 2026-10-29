@@ -468,7 +468,7 @@
                              (ngModelChange)="onCloseAtEventStartChange($event)"
                              [disabled]="isEventPast() || isViewer"
                              id="closeAtEventStart">
-                      <label class="form-check-label" for="closeAtEventStart">Sell until end of event</label>
+                      <label class="form-check-label" for="closeAtEventStart">{{ isMultiDay ? 'Sell until end of event' : 'Sell until event start' }}</label>
                     </div>
                     <input *ngIf="!closeAtEventStart" type="datetime-local" id="closeTime"
                            class="tw-grow tw-input tw-min-w-0"
