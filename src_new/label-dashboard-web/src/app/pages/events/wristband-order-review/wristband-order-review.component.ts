@@ -22,9 +22,10 @@ export class WristbandOrderReviewComponent implements OnInit {
   loadError: string | null = null;
 
   actionDone = false;
-  actionResult: 'confirmed' | 'rejected' | null = null;
+  actionResult: 'confirmed' | 'rejected' | 'shipped' | null = null;
   actionError: string | null = null;
   actioning = false;
+  markingAsShipped = false;
 
   showShippingFeeForm = false;
   shippingFeeInput: number | null = null;
@@ -170,6 +171,24 @@ export class WristbandOrderReviewComponent implements OnInit {
   confirm(): void { this.executeAction('confirm'); }
   reject(): void  { this.executeAction('reject'); }
 
+  markAsShipped(): void {
+    if (!this.orderId || this.markingAsShipped) return;
+    this.markingAsShipped = true;
+    this.actionError = null;
+    this.eventService.markWristbandOrderAsShipped(this.orderId).subscribe({
+      next: () => {
+        this.markingAsShipped = false;
+        this.actionDone = true;
+        this.actionResult = 'shipped';
+        if (this.order) this.order = { ...this.order, status: 'shipped' };
+      },
+      error: (err: any) => {
+        this.markingAsShipped = false;
+        this.actionError = err?.error?.error ?? 'Failed to mark order as shipped.';
+      },
+    });
+  }
+
   get eventTitle(): string | null {
     return (this.order as any)?.event?.title ?? null;
   }
@@ -254,6 +273,7 @@ export class WristbandOrderReviewComponent implements OnInit {
       placed: 'status-info',
       rejected: 'status-danger',
       confirmed: 'status-success',
+      shipped: 'status-shipped',
     };
     return `status-badge ${map[status] ?? 'status-secondary'}`;
   }

@@ -249,7 +249,7 @@
                 </div>
 
                 <!-- Locked note for non-editable placed orders -->
-                <div *ngIf="order.status === 'placed' || order.status === 'confirmed'" class="mc-locked-note">
+                <div *ngIf="order.status === 'placed' || order.status === 'confirmed' || order.status === 'shipped'" class="mc-locked-note">
                   <app-icon name="lock" iconOnly></app-icon> Placed orders can't be edited.
                 </div>
 
@@ -641,13 +641,13 @@
               <div class="payment-stat-label tw-text-red-500">Balance Due</div>
               <div class="payment-stat-value tw-text-red-600">₱{{ addonRemainingBalance | number:'1.2-2' }}</div>
               <div class="tw-flex tw-gap-2 tw-mt-1 tw-flex-wrap">
-                <button type="button" class="btn-primary btn-sm" (click)="openPaymentModal()" [disabled]="!hasDeliveryAddress">
+                <button type="button" class="btn-primary btn-sm tw-flex-1" (click)="openPaymentModal()" [disabled]="!hasDeliveryAddress">
                   <app-icon name="credit-card" />
-                  Make a Payment
+                  Pay
                 </button>
-                <button type="button" class="btn-secondary btn-sm" (click)="downloadInvoice()" [disabled]="downloadingInvoice">
+                <button type="button" class="btn-secondary btn-sm tw-flex-1" (click)="downloadInvoice()" [disabled]="downloadingInvoice">
                   <app-icon [name]="downloadingInvoice ? 'loader' : 'download'" iconOnly />
-                  {{ downloadingInvoice ? 'Downloading…' : 'Download Invoice' }}
+                  {{ downloadingInvoice ? 'Downloading…' : 'Invoice' }}
                 </button>
               </div>
             </ng-container>

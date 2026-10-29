@@ -778,7 +778,8 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
       draft: 'status-warning',
       placed: 'status-info',
       rejected: 'status-danger',
-      confirmed: 'status-success'
+      confirmed: 'status-success',
+      shipped: 'status-shipped',
     };
     return `status-badge ${map[status] ?? 'status-secondary'}`;
   }

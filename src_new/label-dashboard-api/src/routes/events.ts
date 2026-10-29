@@ -60,6 +60,7 @@ import {
   deleteWristbandOrder,
   confirmWristbandOrder,
   rejectWristbandOrder,
+  markWristbandOrderAsShipped,
   setWristbandShippingFee,
   proxyWristbandDesign,
   upload as wristbandUpload,
@@ -89,6 +90,7 @@ router.get('/wristband-orders/:id/design', requireAdmin, proxyWristbandDesign);
 router.patch('/wristband-orders/:id/shipping-fee', requireAdmin, setWristbandShippingFee);
 router.post('/wristband-orders/:id/confirm', requireAdmin, confirmWristbandOrder);
 router.post('/wristband-orders/:id/reject', requireAdmin, rejectWristbandOrder);
+router.post('/wristband-orders/:id/ship', requireAdmin, markWristbandOrderAsShipped);
 router.delete('/wristband-orders/:id', deleteWristbandOrder);
 
 // Add-on payments

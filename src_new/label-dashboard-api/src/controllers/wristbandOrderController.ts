@@ -468,6 +468,40 @@ export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const markWristbandOrderAsShipped = async (req: AuthRequest, res: Response) => {
+  try {
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId, {
+      include: [
+        { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        { model: Event, as: 'event' },
+      ],
+    }) as any;
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
+    if (order.status !== 'confirmed') return res.status(400).json({ error: 'Only confirmed orders can be marked as shipped' });
+    await order.update({ status: 'shipped' });
+    const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
+    if (orgFrontendUrl) {
+      const orderUrl = `${orgFrontendUrl}/campaigns/events/add-ons`;
+      sendWristbandOrderStatusEmail(order, order.event, 'shipped', orderUrl);
+    }
+    getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
+      createNotificationsForUsers(
+        orgAdminIds, order.event.brand_id, 'wristband_order_shipped',
+        `Wristband order shipped: ${order.event.title ?? `Event #${order.event_id}`}`,
+        `Order #${orderId} has been shipped and is on its way.`,
+        '/campaigns/events/add-ons'
+      )
+    ).catch(console.error);
+    res.json({ order });
+  } catch (error) {
+    console.error('markWristbandOrderAsShipped error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const deleteWristbandOrder = async (req: AuthRequest, res: Response) => {
   try {
     const orderId = parseInt(String(req.params.id));

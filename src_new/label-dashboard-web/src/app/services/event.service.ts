@@ -43,7 +43,7 @@ export interface WristbandOrderItem {
 export interface WristbandOrder {
   id: number;
   event_id: number;
-  status: 'draft' | 'placed' | 'rejected' | 'confirmed';
+  status: 'draft' | 'placed' | 'rejected' | 'confirmed' | 'shipped';
   design_url: string | null;
   design_x: number | null;
   design_y: number | null;
@@ -1185,6 +1185,14 @@ export class EventService {
   rejectWristbandOrder(orderId: number): Observable<any> {
     return this.http.post(
       `${environment.apiUrl}/events/wristband-orders/${orderId}/reject`,
+      {},
+      { headers: this.getAuthHeaders() }
+    ).pipe(catchError(this.handleError));
+  }
+
+  markWristbandOrderAsShipped(orderId: number): Observable<any> {
+    return this.http.post(
+      `${environment.apiUrl}/events/wristband-orders/${orderId}/ship`,
       {},
       { headers: this.getAuthHeaders() }
     ).pipe(catchError(this.handleError));

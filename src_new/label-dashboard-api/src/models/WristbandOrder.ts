@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-export type WristbandOrderStatus = 'draft' | 'placed' | 'rejected' | 'confirmed';
+export type WristbandOrderStatus = 'draft' | 'placed' | 'rejected' | 'confirmed' | 'shipped';
 
 interface WristbandOrderAttributes {
   id: number;
@@ -52,7 +52,7 @@ WristbandOrder.init(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM('draft', 'placed', 'rejected', 'confirmed'),
+      type: DataTypes.ENUM('draft', 'placed', 'rejected', 'confirmed', 'shipped'),
       allowNull: false,
       defaultValue: 'draft',
     },

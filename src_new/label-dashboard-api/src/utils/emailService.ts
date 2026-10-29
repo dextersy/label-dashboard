@@ -1200,7 +1200,7 @@ function escapeHtml(value: unknown): string {
 export const sendWristbandOrderStatusEmail = async (
   order: any,
   event: any,
-  status: 'confirmed' | 'rejected',
+  status: 'confirmed' | 'rejected' | 'shipped',
   ctaUrl: string
 ): Promise<void> => {
   try {
@@ -1245,15 +1245,18 @@ export const sendWristbandOrderStatusEmail = async (
     const totalPrice = (itemsSubtotal + shippingFee).toFixed(2);
 
     const isConfirmed = status === 'confirmed';
+    const isShipped = status === 'shipped';
 
     await sendBrandedEmail(adminEmails, 'wristband_order_status', {
       BRAND_NAME: brand.brand_name,
       BRAND_LOGO_HTML: brandLogoHtml,
       BRAND_COLOR: brand.brand_color || '#333333',
-      STATUS_LABEL: isConfirmed ? 'Order Accepted' : 'Order Rejected',
-      STATUS_COLOR: isConfirmed ? '#16a34a' : '#dc2626',
+      STATUS_LABEL: isConfirmed ? 'Order Accepted' : isShipped ? 'Order Shipped' : 'Order Rejected',
+      STATUS_COLOR: isConfirmed ? '#16a34a' : isShipped ? '#2563eb' : '#dc2626',
       STATUS_MESSAGE: isConfirmed
         ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been accepted. You can now proceed to pay for it.`
+        : isShipped
+        ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been shipped and is on its way to you.`
         : `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,
       ORDER_ID: escapeHtml(order.id),
       EVENT_TITLE: escapeHtml(event.title),
@@ -1261,7 +1264,7 @@ export const sendWristbandOrderStatusEmail = async (
       TOTAL_QTY: String(totalQty),
       TOTAL_PRICE: totalPrice,
       CTA_URL: ctaUrl,
-      CTA_LABEL: isConfirmed ? 'Pay for Order' : 'Review Order',
+      CTA_LABEL: isConfirmed ? 'Pay for Order' : isShipped ? 'View Order' : 'Review Order',
     }, brand.id);
   } catch (err) {
     console.error('sendWristbandOrderStatusEmail error:', err);
