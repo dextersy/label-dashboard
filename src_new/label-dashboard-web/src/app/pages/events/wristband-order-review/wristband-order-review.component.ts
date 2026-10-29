@@ -7,6 +7,7 @@ import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { EventService, WristbandColor, WristbandOrder } from '../../../services/event.service';
+import { BrandService, BrandSettings } from '../../../services/brand.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -34,6 +35,7 @@ export class WristbandOrderReviewComponent implements OnInit {
   previewColorSlug = '';
 
   private orderId: number | null = null;
+  private brandSettings: BrandSettings | null = null;
 
   readonly PRICE_PER_10 = 35;
 
@@ -48,12 +50,14 @@ export class WristbandOrderReviewComponent implements OnInit {
 
   downloading = false;
   printingSheet = false;
+  downloadingPackingSlip = false;
   downloadDropdownOpen = false;
 
   constructor(
     private route: ActivatedRoute,
     private breadcrumbService: BreadcrumbService,
     private eventService: EventService,
+    private brandService: BrandService,
   ) {}
 
   ngOnInit(): void {
@@ -62,6 +66,8 @@ export class WristbandOrderReviewComponent implements OnInit {
       { label: 'Add-ons', route: '/campaigns/events/add-ons' },
       { label: 'Review Order' },
     ]);
+
+    this.brandService.brandSettings$.subscribe(s => { this.brandSettings = s; });
 
     this.eventService.getWristbandColors().subscribe({
       next: (colors) => {
@@ -419,5 +425,119 @@ export class WristbandOrderReviewComponent implements OnInit {
         printWin.document.close();
       })
       .catch(() => { this.printingSheet = false; });
+  }
+
+  downloadPackingSlip(): void {
+    const order = this.order;
+    if (!order || this.downloadingPackingSlip) return;
+
+    this.downloadingPackingSlip = true;
+
+    const address = this.deliveryAddress ?? '(No delivery address on file)';
+    const eventTitle = this.eventTitle ?? '';
+
+    const brand = this.brandSettings;
+    const brandColor = brand?.brand_color ?? '#000000';
+    const brandName = brand?.name ?? '';
+    const logoUrl = brand?.logo_url ?? null;
+
+    const logoHtml = logoUrl
+      ? `<img src="${logoUrl}" alt="${brandName}" class="brand-logo">`
+      : `<span class="brand-name-text">${brandName}</span>`;
+
+    const itemRows = (order.items ?? [])
+      .filter(i => i.quantity > 0)
+      .map(i => {
+        const label = i.color?.label ?? '—';
+        const price = ((i.quantity / 10) * this.PRICE_PER_10).toFixed(2);
+        return `<tr>
+          <td>${label}</td>
+          <td class="num">${i.quantity}</td>
+          <td class="num">&#8369;${price}</td>
+        </tr>`;
+      })
+      .join('');
+
+    const shippingRow = order.shipping_fee != null
+      ? `<tr class="subtotal">
+          <td>Shipping fee</td>
+          <td class="num">—</td>
+          <td class="num">&#8369;${parseFloat(String(order.shipping_fee)).toFixed(2)}</td>
+        </tr>`
+      : '';
+
+    const addressHtml = address.split('\n').map(l => `<div>${l}</div>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Packing Slip \u2013 Wristband Order #${order.id}</title>
+  <style>
+    @page { size: A4; margin: 20mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #111; margin: 0; padding: 0; }
+    .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid ${brandColor}; padding-bottom: 5mm; margin-bottom: 7mm; }
+    .brand-logo { max-height: 14mm; max-width: 50mm; object-fit: contain; display: block; filter: brightness(0); }
+    .brand-name-text { font-size: 14pt; font-weight: bold; color: ${brandColor}; }
+    .header-right { text-align: right; }
+    h1 { font-size: 18pt; margin: 0 0 1mm; }
+    .meta { font-size: 9pt; color: #555; }
+    .section-label { font-size: 8pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #666; margin-bottom: 2mm; border-bottom: 1px solid #ccc; padding-bottom: 1mm; margin-top: 6mm; }
+    .address { font-size: 10pt; line-height: 1.6; margin-top: 2mm; }
+    table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+    th { text-align: left; font-size: 9pt; font-weight: bold; padding: 2mm 2mm; border-bottom: 1.5px solid #333; }
+    td { padding: 2mm 2mm; font-size: 10pt; border-bottom: 1px solid #e0e0e0; }
+    .num { text-align: right; }
+    tr.subtotal td { color: #555; }
+    tfoot tr td { font-weight: bold; border-top: 1.5px solid #333; border-bottom: none; padding-top: 3mm; }
+    .footer { font-size: 8pt; color: #aaa; margin-top: 8mm; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 3mm; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>${logoHtml}</div>
+    <div class="header-right">
+      <h1>Packing Slip</h1>
+      <div class="meta">Order #${order.id}${eventTitle ? ' &mdash; ' + eventTitle : ''}</div>
+    </div>
+  </div>
+
+  <div class="section-label">Ship To</div>
+  <div class="address">${addressHtml}</div>
+
+  <div class="section-label">Items</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Color</th>
+        <th class="num">Qty</th>
+        <th class="num">Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+      ${shippingRow}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>Total</td>
+        <td class="num">${this.totalQty}</td>
+        <td class="num">&#8369;${this.grandTotal.toFixed(2)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="footer">${brandName} &mdash; Generated ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+  <script>window.onload = function() { window.print(); };<\/script>
+</body>
+</html>`;
+
+    this.downloadingPackingSlip = false;
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
   }
 }
