@@ -780,10 +780,10 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    // Schedule event-close payout if brand has payout_on_event_close enabled
+    // Schedule event-close payout if brand has payout_on_event_close enabled (published events only)
     try {
       const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
-      if (brand?.payout_on_event_close) {
+      if (brand?.payout_on_event_close && event.status === 'published') {
         const closeTime = resolvePayoutCloseTime(event, createdEventDays);
         scheduleEventClosePayout(event.id, event.brand_id, closeTime);
       }
@@ -1222,10 +1222,10 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       ]
     });
 
-    // Update event-close payout schedule if brand has payout_on_event_close enabled
+    // Update event-close payout schedule if brand has payout_on_event_close enabled (published events only)
     try {
       const brand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'payout_on_event_close'] });
-      if (brand?.payout_on_event_close) {
+      if (brand?.payout_on_event_close && event.status === 'published') {
         if (event.close_time || event.date_and_time) {
           const eventDaysForPayout = await EventDay.findAll({ where: { event_id: event.id }, attributes: ['date_and_time'], order: [['date_and_time', 'ASC']] });
           const closeTime = resolvePayoutCloseTime(event, eventDaysForPayout);

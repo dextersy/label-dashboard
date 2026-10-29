@@ -308,10 +308,11 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
     const brandIds = eligibleBrands.map(b => b.id);
     console.log(`[eventClosePayouts] Found ${brandIds.length} brand(s) with payout_on_event_close=true: [${brandIds.join(', ')}]`);
 
-    // Find all future events for these brands, including days for multiday fallback
+    // Find all future published events for these brands, including days for multiday fallback
     const events = await Event.findAll({
       where: {
         brand_id: { [Op.in]: brandIds },
+        status: 'published',
         [Op.or]: [
           { close_time: { [Op.gt]: now } },
           { date_and_time: { [Op.gt]: now } }
