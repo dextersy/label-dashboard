@@ -80,6 +80,21 @@ export class WristbandOrderReviewComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.orderId = params['order_id'] ? parseInt(params['order_id']) : null;
 
+      // Reset all transient state when navigating to a different order
+      this.order = null;
+      this.loading = true;
+      this.loadError = null;
+      this.actionDone = false;
+      this.actionResult = null;
+      this.actionError = null;
+      this.actioning = false;
+      this.markingAsShipped = false;
+      this.showShippingFeeForm = false;
+      this.shippingFeeInput = null;
+      this.shippingFeeError = null;
+      this.previewColorSlug = '';
+      this.downloadDropdownOpen = false;
+
       if (!this.orderId) {
         this.loading = false;
         this.loadError = 'No order ID specified.';
