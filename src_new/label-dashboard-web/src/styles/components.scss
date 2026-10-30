@@ -314,6 +314,22 @@ $btn-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:last-child { margin-bottom: 0; }
   }
+
+  .kebab-divider {
+    border: none;
+    border-top: 1px solid;
+    @apply tw-border-border-subtle;
+    margin: 4px 0;
+  }
+
+  .kebab-group-label {
+    @apply tw-text-muted;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 4px 10px 2px;
+  }
 }
 
 /* ----------------------------------------------------------------- */

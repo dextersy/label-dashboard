@@ -20,6 +20,7 @@ export interface TableAction {
   type?: 'primary' | 'secondary' | 'danger';
   hidden?: (item: any) => boolean;       // Return true to hide for a given row
   primary?: boolean;                     // Mark as the row's primary action (executed on row click)
+  group?: string;                        // Group name for visual grouping in the kebab menu
 }
 
 export interface HeaderAction {
@@ -207,6 +208,21 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   getVisibleActions(item: any): TableAction[] {
     return this.actions.filter(a => !a.hidden || !a.hidden(item));
+  }
+
+  getVisibleActionsGrouped(item: any): { group: string | null; actions: TableAction[] }[] {
+    const visible = this.getVisibleActions(item);
+    const hasGroups = visible.some(a => a.group);
+    if (!hasGroups) {
+      return visible.length > 0 ? [{ group: null, actions: visible }] : [];
+    }
+    const buckets: Map<string | null, TableAction[]> = new Map();
+    for (const action of visible) {
+      const key = action.group ?? null;
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(action);
+    }
+    return Array.from(buckets.entries()).map(([group, actions]) => ({ group, actions }));
   }
 
   getPrimaryAction(item: any): TableAction | null {

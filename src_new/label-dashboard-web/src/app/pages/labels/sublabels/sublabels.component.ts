@@ -227,44 +227,52 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       handler: (item) => this.openSublabelDashboard(item)
     },
     {
+      icon: 'users',
+      label: 'Manage Admins',
+      group: 'Administration',
+      handler: (item) => this.openAdminsModal(item)
+    },
+    {
       icon: 'shield',
       label: 'Verify Domains',
+      group: 'Administration',
       hidden: (item) => !this.canVerifyDomains(item),
       handler: (item) => this.verifyDomains(item)
     },
     {
-      icon: 'users',
-      label: 'Manage Admins',
-      handler: (item) => this.openAdminsModal(item)
+      icon: 'tag',
+      label: 'Assign Plan',
+      group: 'Plan',
+      handler: (item) => this.openAssignPlanModal(item)
     },
     {
       icon: 'currency',
       label: 'Fee Settings',
+      group: 'Plan',
       handler: (item) => this.openFeeSettingsModal(item)
     },
     {
       icon: 'toggle',
       label: 'Toggle Features',
+      group: 'Plan',
       handler: (item) => this.openFeatureTogglesModal(item)
-    },
-    {
-      icon: 'tag',
-      label: 'Assign Plan',
-      handler: (item) => this.openAssignPlanModal(item)
-    },
-    {
-      icon: 'currency',
-      label: 'Pay Out',
-      handler: (item) => this.openPayoutModal(item)
     },
     {
       icon: 'plus',
       label: 'Add Earning',
+      group: 'Finance',
       handler: (item) => this.openAddEarningModal(item)
+    },
+    {
+      icon: 'credit-card',
+      label: 'Pay Out',
+      group: 'Finance',
+      handler: (item) => this.openPayoutModal(item)
     },
     {
       icon: 'ban',
       label: 'Deactivate',
+      type: 'danger',
       hidden: () => !this.isSuperAdmin(),
       handler: (item) => this.deactivateSublabel(item)
     }
