@@ -470,7 +470,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get hasPlacedOrConfirmedOrders(): boolean {
-    return this.orders.some(o => o.status === 'confirmed');
+    return this.orders.some(o => o.status === 'confirmed' || o.status === 'shipped');
   }
 
   get hasPendingOrders(): boolean {
@@ -483,7 +483,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
   get addonWristbandTotal(): number {
     return this.orders
-      .filter(o => o.status === 'confirmed')
+      .filter(o => o.status === 'confirmed' || o.status === 'shipped')
       .reduce((sum, o) => sum + this.orderPrice(o) + this.orderShippingFee(o), 0);
   }
 
@@ -853,7 +853,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get placedOrders(): WristbandOrder[] {
-    return this.orders.filter(o => o.status === 'confirmed');
+    return this.orders.filter(o => o.status === 'confirmed' || o.status === 'shipped');
   }
 
   get allOrdersTotalQty(): number {
