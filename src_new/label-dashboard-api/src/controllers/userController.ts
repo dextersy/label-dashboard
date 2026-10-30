@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { User, Brand, LoginAttempt, AudienceUser } from '../models';
+import { User, Brand, LoginAttempt, AudienceUser, Notification } from '../models';
 import { sendEmail } from '../utils/emailService';
 import { createNotification } from '../utils/notificationService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -13,6 +13,17 @@ import { getEffectiveLimitsForBrand } from '../services/subscriptionService';
 
 interface AuthRequest extends Request {
   user?: any;
+}
+
+/**
+ * Resolve the effective brand ID for an operation.
+ * If `target_brand_id` is provided, verify it is a direct child of the caller's brand.
+ * Returns the resolved brand ID, or null if access is denied.
+ */
+async function resolveTargetBrandId(callerBrandId: number, targetBrandId?: number): Promise<number | null> {
+  if (!targetBrandId || targetBrandId === callerBrandId) return callerBrandId;
+  const child = await Brand.findOne({ where: { id: targetBrandId, parent_brand: callerBrandId, is_active: true } });
+  return child ? targetBrandId : null;
 }
 
 export const checkUsernameExists = async (req: Request, res: Response) => {
@@ -229,7 +240,7 @@ export const inviteUser = async (req: AuthRequest, res: Response) => {
 
 export const toggleAdmin = async (req: AuthRequest, res: Response) => {
   try {
-    const { user_id } = req.body;
+    const { user_id, target_brand_id } = req.body;
 
     if (!req.user.is_admin) {
       return res.status(403).json({ error: 'Admin access required' });
@@ -239,10 +250,15 @@ export const toggleAdmin = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'User ID is required' });
     }
 
+    const effectiveBrandId = await resolveTargetBrandId(req.user.brand_id, target_brand_id);
+    if (effectiveBrandId === null) {
+      return res.status(403).json({ error: 'Access denied to target brand' });
+    }
+
     const user = await User.findOne({
-      where: { 
+      where: {
         id: user_id,
-        brand_id: req.user.brand_id 
+        brand_id: effectiveBrandId
       }
     });
 
@@ -317,10 +333,17 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
       return value.replace(/[%_]/g, '\\$&');
     };
 
-    // Build base where condition
+    // Resolve target brand (supports parent brand managing sublabel users)
+    const targetBrandIdParam = req.query.target_brand_id ? parseInt(req.query.target_brand_id as string, 10) : undefined;
+    const effectiveBrandId = await resolveTargetBrandId(req.user.brand_id, targetBrandIdParam);
+    if (effectiveBrandId === null) {
+      return res.status(403).json({ error: 'Access denied to target brand' });
+    }
+
+    // Build where condition (scoped to effective brand)
     const usernameFilter = req.query.username as string;
     const whereCondition: any = {
-      brand_id: req.user.brand_id
+      brand_id: effectiveBrandId
     };
 
     // IMPORTANT: Username filter changes the base condition
@@ -774,9 +797,9 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
   let user: any = null; // Declare user variable at function scope for cleanup
   
   try {
-    const { email_address, first_name, last_name } = req.body;
+    const { email_address, first_name, last_name, target_brand_id } = req.body;
 
-    // Only superadmins can invite other admins
+    // Only admins can invite other admins
     if (!req.user.is_admin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
@@ -791,11 +814,16 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
+    const effectiveBrandId = await resolveTargetBrandId(req.user.brand_id, target_brand_id);
+    if (effectiveBrandId === null) {
+      return res.status(403).json({ error: 'Access denied to target brand' });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({
       where: {
         email_address,
-        brand_id: req.user.brand_id
+        brand_id: effectiveBrandId
       }
     });
 
@@ -804,9 +832,9 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
     }
 
     // Enforce plan admin user limit
-    const limits = await getEffectiveLimitsForBrand(req.user.brand_id);
+    const limits = await getEffectiveLimitsForBrand(effectiveBrandId);
     if (limits && limits.limit_admin_users !== null) {
-      const adminCount = await User.count({ where: { brand_id: req.user.brand_id, is_admin: true } });
+      const adminCount = await User.count({ where: { brand_id: effectiveBrandId, is_admin: true } });
       if (adminCount >= limits.limit_admin_users) {
         return res.status(402).json({ error: 'LIMIT_REACHED', limit_type: 'admin_users', limit: limits.limit_admin_users });
       }
@@ -820,21 +848,21 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
       email_address,
       first_name: first_name?.trim() || null,
       last_name: last_name?.trim() || null,
-      brand_id: req.user.brand_id,
+      brand_id: effectiveBrandId,
       is_admin: true,
       reset_hash: inviteHash // Using reset_hash field for invite
     });
 
     // Get brand details for email
-    const brand = await Brand.findByPk(req.user.brand_id);
+    const brand = await Brand.findByPk(effectiveBrandId);
 
     // Get brand frontend URL - NEVER use fallback URL for multi-brand security
     let inviteLink: string;
     try {
-      const brandUrl = await getBrandFrontendUrl(req.user.brand_id);
+      const brandUrl = await getBrandFrontendUrl(effectiveBrandId);
       inviteLink = `${brandUrl}/admin-invite?token=${inviteHash}`;
     } catch (error) {
-      console.error(`No domains found for brand ${req.user.brand_id}. Cannot send admin invite without proper brand domain.`);
+      console.error(`No domains found for brand ${effectiveBrandId}. Cannot send admin invite without proper brand domain.`);
       // Clean up user if domain lookup failed
       await user.destroy();
       return res.status(400).json({ error: 'No domains configured for this brand. Please configure a domain before sending invites.' });
@@ -859,7 +887,7 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
       [user.email_address],
       `You're invited to be an admin for ${brand?.brand_name || 'Label Dashboard'}`,
       emailTemplate,
-      req.user.brand_id
+      effectiveBrandId
     );
 
     if (emailSent) {
@@ -898,16 +926,22 @@ export const inviteAdmin = async (req: AuthRequest, res: Response) => {
 export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const target_brand_id = req.body?.target_brand_id ?? req.query?.target_brand_id;
 
     if (!req.user.is_admin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    const effectiveBrandId = await resolveTargetBrandId(req.user.brand_id, target_brand_id ? parseInt(target_brand_id as string, 10) : undefined);
+    if (effectiveBrandId === null) {
+      return res.status(403).json({ error: 'Access denied to target brand' });
+    }
+
     // Find user with pending invite (has reset_hash)
     const user = await User.findOne({
-      where: { 
+      where: {
         id,
-        brand_id: req.user.brand_id
+        brand_id: effectiveBrandId
       },
       attributes: ['id', 'email_address', 'first_name', 'last_name', 'is_admin', 'reset_hash', 'password_hash', 'password_md5', 'username', 'brand_id'],
       include: [{
@@ -937,13 +971,13 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
     // Get brand frontend URL - NEVER use fallback URL for multi-brand security
     let inviteLink: string;
     try {
-      const brandUrl = await getBrandFrontendUrl(req.user.brand_id);
+      const brandUrl = await getBrandFrontendUrl(effectiveBrandId);
       inviteLink = `${brandUrl}/admin-invite?token=${inviteHash}`;
     } catch (error) {
-      console.error(`No domains found for brand ${req.user.brand_id}. Cannot send admin invite without proper brand domain.`);
+      console.error(`No domains found for brand ${effectiveBrandId}. Cannot send admin invite without proper brand domain.`);
       return res.status(400).json({ error: 'No domains configured for this brand. Please configure a domain before sending invites.' });
     }
-    
+
     // Load email template
     const fs = require('fs');
     const path = require('path');
@@ -966,7 +1000,7 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
       [user.email_address],
       `You're invited to be ${roleText} for ${brand?.brand_name || 'Label Dashboard'}`,
       emailTemplate,
-      req.user.brand_id
+      effectiveBrandId
     );
 
     if (emailSent) {
@@ -983,16 +1017,22 @@ export const resendAdminInvite = async (req: AuthRequest, res: Response) => {
 export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const target_brand_id = req.body?.target_brand_id ?? req.query?.target_brand_id;
 
     if (!req.user.is_admin) {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    const effectiveBrandId = await resolveTargetBrandId(req.user.brand_id, target_brand_id ? parseInt(target_brand_id as string, 10) : undefined);
+    if (effectiveBrandId === null) {
+      return res.status(403).json({ error: 'Access denied to target brand' });
+    }
+
     // Find user with pending invite (has reset_hash)
     const user = await User.findOne({
-      where: { 
+      where: {
         id,
-        brand_id: req.user.brand_id
+        brand_id: effectiveBrandId
       },
       attributes: ['id', 'email_address', 'first_name', 'last_name', 'is_admin', 'reset_hash', 'password_hash', 'password_md5', 'username', 'brand_id']
     });
@@ -1010,6 +1050,9 @@ export const cancelAdminInvite = async (req: AuthRequest, res: Response) => {
     if (hasPassword(user)) {
       return res.status(400).json({ error: 'Cannot cancel - user has already set up their account' });
     }
+
+    // Remove notifications created for this user (FK constraint blocks user deletion otherwise)
+    await Notification.destroy({ where: { user_id: user.id } });
 
     // Remove the user
     await user.destroy();

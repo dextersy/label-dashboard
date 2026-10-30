@@ -322,6 +322,14 @@
 </div>
 <div class="modal-backdrop fade show" *ngIf="showAssignPlanModal" (click)="closeAssignPlanModal()"></div>
 
+<!-- Admins Modal -->
+<app-sublabel-admins-modal
+  [show]="showAdminsModal"
+  [sublabelId]="selectedSublabelForAdmins?.brand_id || null"
+  [sublabelName]="selectedSublabelForAdmins?.brand_name || ''"
+  (close)="closeAdminsModal()">
+</app-sublabel-admins-modal>
+
 <!-- Add Earning Modal (parent recording for sublabel) -->
 <app-sublabel-add-earning-modal
   [show]="showAddEarningModal"

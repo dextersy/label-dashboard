@@ -17,6 +17,7 @@ import { SublabelPayoutModalComponent, SubLabelPayoutData } from '../../admin/co
 import { EarningsBreakdownModalComponent, AggregatedTotals } from '../../admin/components/earnings-breakdown-modal.component';
 import { SublabelPaymentsModalComponent } from '../../admin/components/sublabel-payments-modal.component';
 import { SublabelAddEarningModalComponent } from '../components/sublabel-add-earning-modal/sublabel-add-earning-modal.component';
+import { SublabelAdminsModalComponent } from '../../admin/components/sublabel-admins-modal.component';
 import { FeeSettings } from '../../../services/admin.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { ConfirmationService } from '../../../services/confirmation.service';
@@ -24,7 +25,7 @@ import { SubscriptionService, AdminPlan } from '../../../services/subscription.s
 
 @Component({
     selector: 'app-labels-sublabels',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, SublabelAddEarningModalComponent, BreadcrumbComponent, IconComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, SublabelAddEarningModalComponent, BreadcrumbComponent, IconComponent, SublabelAdminsModalComponent],
     templateUrl: './sublabels.component.html',
     styleUrls: ['./sublabels.component.scss']
 })
@@ -50,6 +51,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   selectedSublabelForPayments: ChildBrand | null = null;
   showAddEarningModal: boolean = false;
   selectedSublabelForEarning: ChildBrand | null = null;
+  showAdminsModal: boolean = false;
+  selectedSublabelForAdmins: ChildBrand | null = null;
   showAssignPlanModal: boolean = false;
   selectedSublabelForPlan: ChildBrand | null = null;
   availablePlans: AdminPlan[] = [];
@@ -228,6 +231,11 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       label: 'Verify Domains',
       hidden: (item) => !this.canVerifyDomains(item),
       handler: (item) => this.verifyDomains(item)
+    },
+    {
+      icon: 'users',
+      label: 'Manage Admins',
+      handler: (item) => this.openAdminsModal(item)
     },
     {
       icon: 'currency',
@@ -795,6 +803,17 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   onEarningAdded(): void {
     this.loadChildBrands();
+  }
+
+  // Admins Modal handlers
+  openAdminsModal(childBrand: ChildBrand): void {
+    this.selectedSublabelForAdmins = childBrand;
+    this.showAdminsModal = true;
+  }
+
+  closeAdminsModal(): void {
+    this.showAdminsModal = false;
+    this.selectedSublabelForAdmins = null;
   }
 
   // Handle breakdown button clicks from the table

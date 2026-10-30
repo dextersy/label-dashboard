@@ -1077,6 +1077,38 @@ export class AdminService {
     });
   }
 
+  // Sublabel Admin Management (reuses existing user endpoints with target_brand_id)
+  getSublabelAdmins(sublabelId: number): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/users?target_brand_id=${sublabelId}&is_admin=true&limit=999`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  inviteSublabelAdmin(sublabelId: number, adminData: { email_address: string; first_name?: string; last_name?: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/users/invite-admin`, { ...adminData, target_brand_id: sublabelId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  resendSublabelAdminInvite(sublabelId: number, userId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/users/${userId}/resend-invite`, { target_brand_id: sublabelId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  cancelSublabelAdminInvite(sublabelId: number, userId: number): Observable<any> {
+    return this.http.delete(`${environment.apiUrl}/users/${userId}/invite`, {
+      headers: this.getAuthHeaders(),
+      body: { target_brand_id: sublabelId }
+    });
+  }
+
+  removeSublabelAdmin(sublabelId: number, userId: number): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/users/toggle-admin`, { user_id: userId, target_brand_id: sublabelId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Fee Settings Management
   getFeeSettings(brandId: number): Observable<FeeSettings> {
     return this.http.get<FeeSettings>(`${environment.apiUrl}/brands/${brandId}/fee-settings`, {
