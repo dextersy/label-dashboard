@@ -52,6 +52,7 @@ import { campaignsAccessGuard } from './guards/campaigns-access.guard';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
 import { EventBrandCollabInviteComponent } from './pages/event-brand-collab-invite/event-brand-collab-invite.component';
+import { AdminAccessComponent } from './pages/admin-access/admin-access.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -66,6 +67,7 @@ export const routes: Routes = [
   { path: 'event-brand-collab-invite', component: EventBrandCollabInviteComponent }, // No auth guard - standalone brand collab invite flow
   { path: 'admin-invite', component: AdminInviteComponent }, // No auth guard - standalone
   { path: 'admin-setup', component: AdminSetupComponent }, // No auth guard - standalone
+  { path: 'admin-access', component: AdminAccessComponent }, // No auth guard - exchanges one-time code
   
   // Public Routes (no authentication required)
   { path: 'public/events', component: PublicEventsComponent },

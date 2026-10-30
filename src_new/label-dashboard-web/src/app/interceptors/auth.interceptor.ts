@@ -66,6 +66,7 @@ export class AuthInterceptor implements HttpInterceptor {
             !req.url.includes('/public/') &&
             !req.url.includes('/scanner/') &&
             !req.url.includes('/auth/login') &&
+            !req.url.includes('/auth/exchange-admin-access-code') &&
             !req.url.includes('/auth/audience/') &&
             !req.url.includes('/auth/dashboard/google/') &&
             !this.router.url.startsWith('/google-callback')) {

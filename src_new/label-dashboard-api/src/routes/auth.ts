@@ -1,11 +1,13 @@
 import { Router } from 'express';
-import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange, ticketingForgotPassword, ticketingValidateResetHash, dashboardGoogleRedirect, dashboardGoogleCallback, dashboardGoogleExchange } from '../controllers/authController';
+import { login, logout, checkAuth, forgotPassword, resetPassword, validateResetHash, completeProfile, loginUnified, selectBrand, organizerSignup, organizerLogin, organizerGoogleRedirect, organizerGoogleCallback, organizerGoogleExchange, ticketingForgotPassword, ticketingValidateResetHash, dashboardGoogleRedirect, dashboardGoogleCallback, dashboardGoogleExchange, generateAdminAccessCode, exchangeAdminAccessCode } from '../controllers/authController';
 import { audienceSignup, audienceLogin, audienceGetMe, audienceForgotPassword, audienceResetPassword, audienceValidateResetHash, audienceVerifyEmail, audienceResendVerification, audienceResendVerificationByEmail, audienceGoogleRedirect, audienceGoogleCallback, audienceGoogleExchange, audienceFacebookRedirect, audienceFacebookCallback, audienceOAuthExchange, audienceUpdateProfile, audienceUploadProfilePhoto, profilePhotoUpload, audienceAcceptTerms, audienceGetEmailPreferences, audienceUpdateEmailPreferences, audienceGetPushNotifPreferences, audienceUpdatePushNotifPreferences, audienceUpdatePrivacy } from '../controllers/audienceAuthController';
-import { authenticateToken, authenticateAudienceToken } from '../middleware/auth';
+import { authenticateToken, authenticateAudienceToken, requireAdmin } from '../middleware/auth';
 import { authRateLimit } from '../middleware/rateLimiting';
 
 const router = Router();
 
+router.post('/admin-access-code', authenticateToken, requireAdmin, generateAdminAccessCode);
+router.post('/exchange-admin-access-code', authRateLimit, exchangeAdminAccessCode);
 router.post('/login', authRateLimit, login);
 router.post('/login-unified', authRateLimit, loginUnified);
 router.post('/select-brand', authRateLimit, selectBrand);

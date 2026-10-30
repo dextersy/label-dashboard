@@ -185,6 +185,18 @@ export class AuthService {
     return user?.event_access?.map(a => a.event_id) ?? [];
   }
 
+  exchangeAdminAccessCode(code: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/exchange-admin-access-code`, { code }).pipe(
+      tap((response: LoginResponse) => {
+        if (response.token) {
+          localStorage.setItem('auth_token', response.token);
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          this.currentUserSubject.next(response.user);
+        }
+      })
+    );
+  }
+
   // Refresh user data from backend and update local state
   refreshUserData(): Observable<User> {
     const token = this.getToken();

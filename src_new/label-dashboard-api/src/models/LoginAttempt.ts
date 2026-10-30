@@ -2,11 +2,11 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
 type LoginStatus = 'Successful' | 'Failed';
-type AuthMethod = 'password' | 'google';
+type AuthMethod = 'password' | 'google' | 'admin_impersonation';
 
 interface LoginAttemptAttributes {
   id: number;
-  user_id: number;
+  user_id: number | null;
   status: LoginStatus;
   date_and_time: Date;
   brand_id: number;
@@ -19,7 +19,7 @@ interface LoginAttemptCreationAttributes extends Optional<LoginAttemptAttributes
 
 class LoginAttempt extends Model<LoginAttemptAttributes, LoginAttemptCreationAttributes> implements LoginAttemptAttributes {
   public id!: number;
-  public user_id!: number;
+  public user_id!: number | null;
   public status!: LoginStatus;
   public date_and_time!: Date;
   public brand_id!: number;
@@ -40,7 +40,7 @@ LoginAttempt.init(
     },
     user_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     status: {
       type: DataTypes.ENUM('Successful', 'Failed'),
@@ -63,7 +63,7 @@ LoginAttempt.init(
       allowNull: true,
     },
     auth_method: {
-      type: DataTypes.ENUM('password', 'google'),
+      type: DataTypes.ENUM('password', 'google', 'admin_impersonation'),
       allowNull: true,
     },
   },

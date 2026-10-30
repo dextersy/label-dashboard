@@ -27,12 +27,17 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     }
 
     const user = await User.findByPk(decoded.userId);
-    
+
     if (!user) {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
     req.user = user;
+    // Allow brand_id to be overridden by the JWT (used by admin impersonation to
+    // scope the session to a sublabel brand without changing the user record).
+    if (decoded.brandId !== undefined && decoded.brandId !== user.brand_id) {
+      req.user = { ...user.get({ plain: true }), brand_id: decoded.brandId };
+    }
     next();
   } catch (error) {
     return res.status(403).json({ error: 'Invalid token' });

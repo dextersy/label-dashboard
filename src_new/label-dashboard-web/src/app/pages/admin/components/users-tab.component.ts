@@ -167,9 +167,8 @@ export class UsersTabComponent implements OnInit {
       return result;
     }},
     { key: 'auth_method', label: 'Method', type: 'text', searchable: false, sortable: true, renderHtml: true, formatter: (item) => {
-      if (item.auth_method === 'google') {
-        return `<span class="status-badge status-info">Google</span>`;
-      }
+      if (item.auth_method === 'google') return `<span class="status-badge status-info">Google</span>`;
+      if (item.auth_method === 'admin_impersonation') return `<span class="status-badge status-warning">Admin Override</span>`;
       return `<span class="status-badge status-secondary">Password</span>`;
     }},
     { key: 'remote_ip', label: 'Remote IP', type: 'text', searchable: true, sortable: true }

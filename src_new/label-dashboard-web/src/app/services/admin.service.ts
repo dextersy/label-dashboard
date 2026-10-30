@@ -789,6 +789,12 @@ export class AdminService {
     });
   }
 
+  generateAdminAccessCode(brandId: number): Observable<{ code: string }> {
+    return this.http.post<{ code: string }>(`${environment.apiUrl}/auth/admin-access-code`, { brand_id: brandId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Users Management
   getUsers(page: number = 1, limit: number = 20, filters: any = {}, sortBy?: string, sortDirection?: string): Observable<{data: User[], pagination: any}> {
     let queryParams = `page=${page}&limit=${limit}`;

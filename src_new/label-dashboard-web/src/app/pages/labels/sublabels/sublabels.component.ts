@@ -221,10 +221,10 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   sublabelActions: TableAction[] = [
     {
-      icon: 'external-link',
-      label: 'Go to Dashboard',
-      hidden: (item) => !this.hasDomains(item),
-      handler: (item) => this.openSublabelDashboard(item)
+      icon: 'key',
+      label: 'Log in as Admin',
+      hidden: (item) => !this.hasDomains(item) || !this.authService.isAdmin(),
+      handler: (item) => this.loginAsSublabelAdmin(item)
     },
     {
       icon: 'users',
@@ -291,7 +291,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
   constructor(
     private adminService: AdminService,
     private notificationService: NotificationService,
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router,
     private sanitizer: DomSanitizer,
     private confirmationService: ConfirmationService,
@@ -594,17 +594,51 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     return childBrand.domains[0].domain_name;
   }
 
-  // Open sublabel dashboard in new tab
-  openSublabelDashboard(childBrand: ChildBrand): void {
+  // Open sublabel dashboard as admin in new tab using postMessage (code never in URL)
+  loginAsSublabelAdmin(childBrand: ChildBrand): void {
     const domain = this.getBestDomainForSublabel(childBrand);
-    if (domain) {
-      const url = `https://${domain}`;
-      window.open(url, '_blank');
-    } else {
+    if (!domain) {
       this.notificationService.showError('No domain found for this sublabel');
+      return;
     }
+
+    this.adminService.generateAdminAccessCode(childBrand.brand_id).subscribe({
+      next: ({ code }) => {
+        const isLocal = /localhost|127\.0\.0\.1|:\d+$/.test(domain);
+        const targetOrigin = `${isLocal ? 'http' : 'https'}://${domain}`;
+
+        // Use postMessage so the code never appears in any URL
+        const newTab = window.open(`${targetOrigin}/admin-access`, '_blank');
+        if (!newTab) {
+          this.notificationService.showError('Popup blocked. Please allow popups for this site.');
+          return;
+        }
+
+        // Wait for the new tab to signal it is ready, then deliver the code directly
+        // to its window object — never touches the URL.
+        const handler = (event: MessageEvent) => {
+          if (event.origin !== targetOrigin) return;
+          if (event.data === 'admin-access-ready') {
+            newTab.postMessage({ adminAccessCode: code }, targetOrigin);
+            window.removeEventListener('message', handler);
+            clearTimeout(timeout);
+          }
+        };
+        window.addEventListener('message', handler);
+
+        // If the tab never signals ready within 30 s, clean up the listener
+        const timeout = setTimeout(() => {
+          window.removeEventListener('message', handler);
+        }, 30_000);
+      },
+      error: (error) => {
+        const msg = error.error?.error || 'Failed to generate admin access';
+        this.notificationService.showError(msg);
+      }
+    });
   }
 
+  // Open sublabel dashboard in new tab
   // Check if a sublabel has any domains configured
   hasDomains(childBrand: ChildBrand): boolean {
     return !!(childBrand.domains && childBrand.domains.length > 0);

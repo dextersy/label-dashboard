@@ -95,8 +95,11 @@
             <span><app-icon name="clock" /> {{ attempt.date_and_time | date:'medium' }}</span>
             <span class="user-card__ip"><app-icon name="network" /> {{ attempt.remote_ip }}</span>
             <span>
-              <span class="status-badge" [class.status-info]="attempt.auth_method === 'google'" [class.status-secondary]="attempt.auth_method !== 'google'">
-                {{ attempt.auth_method === 'google' ? 'Google' : 'Password' }}
+              <span class="status-badge"
+                [class.status-info]="attempt.auth_method === 'google'"
+                [class.status-warning]="attempt.auth_method === 'admin_impersonation'"
+                [class.status-secondary]="attempt.auth_method !== 'google' && attempt.auth_method !== 'admin_impersonation'">
+                {{ attempt.auth_method === 'google' ? 'Google' : attempt.auth_method === 'admin_impersonation' ? 'Admin Override' : 'Password' }}
               </span>
             </span>
           </div>
