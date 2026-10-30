@@ -26,6 +26,8 @@ export class WristbandOrderReviewComponent implements OnInit {
   actionError: string | null = null;
   actioning = false;
   markingAsShipped = false;
+  showShipForm = false;
+  trackingUrlInput = '';
 
   showShippingFeeForm = false;
   shippingFeeInput: number | null = null;
@@ -89,6 +91,8 @@ export class WristbandOrderReviewComponent implements OnInit {
       this.actionError = null;
       this.actioning = false;
       this.markingAsShipped = false;
+      this.showShipForm = false;
+      this.trackingUrlInput = '';
       this.showShippingFeeForm = false;
       this.shippingFeeInput = null;
       this.shippingFeeError = null;
@@ -186,16 +190,30 @@ export class WristbandOrderReviewComponent implements OnInit {
   confirm(): void { this.executeAction('confirm'); }
   reject(): void  { this.executeAction('reject'); }
 
+  openShipForm(): void {
+    this.trackingUrlInput = '';
+    this.actionError = null;
+    this.showShipForm = true;
+  }
+
+  cancelShipForm(): void {
+    this.showShipForm = false;
+    this.trackingUrlInput = '';
+  }
+
   markAsShipped(): void {
     if (!this.orderId || this.markingAsShipped) return;
     this.markingAsShipped = true;
     this.actionError = null;
-    this.eventService.markWristbandOrderAsShipped(this.orderId).subscribe({
+    const raw = this.trackingUrlInput.trim();
+    const trackingUrl = raw && !/^https?:\/\//i.test(raw) ? `https://${raw}` : raw || null;
+    this.eventService.markWristbandOrderAsShipped(this.orderId, trackingUrl).subscribe({
       next: () => {
         this.markingAsShipped = false;
+        this.showShipForm = false;
         this.actionDone = true;
         this.actionResult = 'shipped';
-        if (this.order) this.order = { ...this.order, status: 'shipped' };
+        if (this.order) this.order = { ...this.order, status: 'shipped', tracking_url: trackingUrl };
       },
       error: (err: any) => {
         this.markingAsShipped = false;

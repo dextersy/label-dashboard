@@ -278,13 +278,59 @@
   <button
     type="button"
     class="btn-primary fab-primary-btn"
-    (click)="markAsShipped()"
-    [disabled]="markingAsShipped"
+    (click)="openShipForm()"
   >
     <app-icon name="truck" />
-    {{ markingAsShipped ? 'Saving…' : 'Mark as Shipped' }}
+    Mark as Shipped
   </button>
 </app-floating-action-bar>
+
+<!-- Mark as Shipped Modal -->
+<ng-container *ngIf="showShipForm">
+  <div class="modal-backdrop fade show"></div>
+  <div class="modal fade show" style="display:block" tabindex="-1" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width:420px">
+      <div class="modal-content tw-rounded-xl tw-border-0 tw-shadow-xl">
+
+        <!-- Header -->
+        <div class="tw-flex tw-items-center tw-justify-between tw-px-6 tw-pt-5 tw-pb-4 tw-border-b tw-border-gray-100">
+          <h5 class="tw-text-base tw-font-semibold tw-text-gray-900 tw-mb-0">Mark as Shipped</h5>
+          <button type="button" class="btn-close" (click)="cancelShipForm()" [disabled]="markingAsShipped"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="tw-px-6 tw-py-5 tw-flex tw-flex-col tw-gap-4">
+          <p class="tw-text-sm tw-text-gray-600 tw-mb-0">
+            The organizer will be notified that Order #{{ order!.id }} has been shipped.
+          </p>
+          <div>
+            <label class="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-1">
+              Tracking URL <span class="tw-text-gray-400 tw-font-normal">(optional)</span>
+            </label>
+            <input
+              type="url"
+              class="form-control"
+              placeholder="https://track.example.com/..."
+              [(ngModel)]="trackingUrlInput"
+              [disabled]="markingAsShipped"
+            />
+          </div>
+          <div *ngIf="actionError" class="tw-text-sm tw-text-red-600 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-4 tw-py-2.5">{{ actionError }}</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="tw-flex tw-justify-end tw-gap-2 tw-px-6 tw-pb-5">
+          <button type="button" class="btn-secondary btn-sm" (click)="cancelShipForm()" [disabled]="markingAsShipped">Cancel</button>
+          <button type="button" class="btn-primary btn-sm" (click)="markAsShipped()" [disabled]="markingAsShipped">
+            <app-icon name="truck" />
+            {{ markingAsShipped ? 'Saving…' : 'Confirm Shipped' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</ng-container>
 
 <!-- Floating action bar — shown when order is in 'placed' state and no action taken yet -->
 <app-floating-action-bar *ngIf="order && order.status === 'placed' && !actionDone">

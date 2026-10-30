@@ -53,6 +53,7 @@ export interface WristbandOrder {
   disclaimer_acknowledged: boolean;
   notes: string | null;
   shipping_fee: number | null;
+  tracking_url: string | null;
   created_by: number;
   createdAt: string;
   updatedAt: string;
@@ -1190,10 +1191,10 @@ export class EventService {
     ).pipe(catchError(this.handleError));
   }
 
-  markWristbandOrderAsShipped(orderId: number): Observable<any> {
+  markWristbandOrderAsShipped(orderId: number, trackingUrl?: string | null): Observable<any> {
     return this.http.post(
       `${environment.apiUrl}/events/wristband-orders/${orderId}/ship`,
-      {},
+      { tracking_url: trackingUrl ?? null },
       { headers: this.getAuthHeaders() }
     ).pipe(catchError(this.handleError));
   }

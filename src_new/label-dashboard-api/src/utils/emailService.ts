@@ -1201,7 +1201,8 @@ export const sendWristbandOrderStatusEmail = async (
   order: any,
   event: any,
   status: 'confirmed' | 'rejected' | 'shipped',
-  ctaUrl: string
+  ctaUrl: string,
+  trackingUrl?: string | null
 ): Promise<void> => {
   try {
     const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'parent_brand'] });
@@ -1256,7 +1257,7 @@ export const sendWristbandOrderStatusEmail = async (
       STATUS_MESSAGE: isConfirmed
         ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been accepted. You can now proceed to pay for it.`
         : isShipped
-        ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been shipped and is on its way to you.`
+        ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been shipped and is on its way to you.${trackingUrl ? ` <a href="${escapeHtml(trackingUrl)}" style="color:#2563eb">Track your shipment</a>` : ''}`
         : `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,
       ORDER_ID: escapeHtml(order.id),
       EVENT_TITLE: escapeHtml(event.title),

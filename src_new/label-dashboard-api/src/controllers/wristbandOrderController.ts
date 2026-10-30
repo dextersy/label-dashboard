@@ -481,11 +481,12 @@ export const markWristbandOrderAsShipped = async (req: AuthRequest, res: Respons
     const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
     if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     if (order.status !== 'confirmed') return res.status(400).json({ error: 'Only confirmed orders can be marked as shipped' });
-    await order.update({ status: 'shipped' });
+    const { tracking_url } = req.body;
+    await order.update({ status: 'shipped', tracking_url: tracking_url || null });
     const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
     if (orgFrontendUrl) {
       const orderUrl = `${orgFrontendUrl}/campaigns/events/add-ons`;
-      sendWristbandOrderStatusEmail(order, order.event, 'shipped', orderUrl);
+      sendWristbandOrderStatusEmail(order, order.event, 'shipped', orderUrl, tracking_url || null);
     }
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
