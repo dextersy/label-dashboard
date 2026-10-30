@@ -124,7 +124,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   // Kebab menu state
   openKebabItem: any = null;
-  dropdownPosition: { top: number; right: number } | null = null;
+  dropdownPosition: { top: number | null; bottom: number | null; right: number } | null = null;
 
   // Mobile actions dropdown state
   mobileActionsOpen: boolean = false;
@@ -165,11 +165,23 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
     } else {
       const btn = (event.target as HTMLElement).closest('.kebab-btn') as HTMLElement;
       const rect = btn.getBoundingClientRect();
+      const viewportHeight = document.documentElement.clientHeight;
+      const estimatedDropdownHeight = 300;
+      const margin = 8;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
       this.openKebabItem = item;
-      this.dropdownPosition = {
-        top: rect.bottom + 2,
-        right: document.documentElement.clientWidth - rect.right
-      };
+      if (spaceBelow >= estimatedDropdownHeight) {
+        // Enough room below — open downward
+        this.dropdownPosition = { top: rect.bottom + 2, bottom: null, right: document.documentElement.clientWidth - rect.right };
+      } else if (spaceAbove >= estimatedDropdownHeight) {
+        // Not enough room below but enough above — flip upward
+        this.dropdownPosition = { top: null, bottom: viewportHeight - rect.top + 2, right: document.documentElement.clientWidth - rect.right };
+      } else {
+        // Neither fits fully — clamp top so it stays within viewport
+        const top = Math.max(margin, Math.min(rect.bottom + 2, viewportHeight - estimatedDropdownHeight - margin));
+        this.dropdownPosition = { top, bottom: null, right: document.documentElement.clientWidth - rect.right };
+      }
     }
   }
 
