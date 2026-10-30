@@ -81,25 +81,52 @@
   <!-- Kanban board -->
   <ng-container *ngIf="viewMode === 'kanban'">
   <div class="planning-board-outer">
-  <div class="planning-board-scroll" #boardScroll>
+  <!-- Sticky column headers — sibling of scroll container, synced via JS -->
+  <div class="planning-board-header" #boardHeader>
+    <div class="planning-board-header__inner">
+      <div class="planning-board__corner"></div>
+      <div
+        *ngFor="let s of statusDefs"
+        class="planning-col-header"
+        [ngClass]="'planning-col-header--' + s.id">
+        <span class="planning-col-header__title">{{ s.label }}</span>
+        <span class="planning-col-header__count">{{ statusCountForCol(s.status) }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="planning-board-scroll" #boardScroll (scroll)="syncHeaderScroll()">
   <div *ngIf="!loading" class="planning-board">
-    <div *ngFor="let col of columns; trackBy: trackByColId" class="planning-column">
-      <div class="planning-column__header" [ngClass]="'planning-column__header--' + col.id">
-        <span class="planning-column__title">{{ col.label }}</span>
-        <span class="planning-column__count">{{ col.tasks.length }}</span>
+
+    <!-- Swim-lane rows -->
+    <ng-container *ngFor="let row of kanbanRows; trackBy: trackByRowBucket; last as isLastRow">
+
+      <!-- Row label (rotated vertical text) -->
+      <div class="planning-row-label"
+           [ngClass]="'planning-row-label--' + row.bucket"
+           [class.planning-row--last]="isLastRow">
+        <span class="planning-row-label__text">{{ row.label }}</span>
       </div>
 
-      <div class="planning-column__body">
-        <!-- Empty state -->
-        <div *ngIf="col.tasks.length === 0" class="planning-empty">
-          No tasks
-        </div>
+      <!-- 3 cells -->
+      <div
+        *ngFor="let cell of row.cells; trackBy: trackByCellId"
+        class="planning-cell"
+        [ngClass]="'planning-cell--' + statusCssId(cell.status)"
+        [class.planning-cell--last-row]="isLastRow"
+        cdkDropList
+        [cdkDropListData]="cell"
+        [cdkDropListConnectedTo]="allCellIds"
+        [id]="cell.id"
+        (cdkDropListDropped)="onTaskDrop($event, cell)">
 
         <!-- Task cards -->
         <div
-          *ngFor="let task of col.tasks; trackBy: trackByTaskId"
+          *ngFor="let task of cell.tasks; trackBy: trackByTaskId"
           class="task-card"
-          [class.task-card--done]="task.status === 'done'">
+          [class.task-card--done]="task.status === 'done'"
+          [class.task-card--saving]="savingTaskId === task.id"
+          cdkDrag
+          [cdkDragData]="task">
 
           <!-- Clickable body -->
           <button class="task-card__body" (click)="openEdit(task)">
@@ -132,22 +159,16 @@
             </div>
           </button>
 
-          <!-- Card footer row: status badge + delete -->
+          <!-- Footer: status badge + delete -->
           <div class="task-card__footer">
-            <button
+            <span
               class="task-status-btn"
               [class.task-status-btn--not-started]="task.status === 'not_started'"
               [class.task-status-btn--in-progress]="task.status === 'in_progress'"
-              [class.task-status-btn--done]="task.status === 'done'"
-              [disabled]="savingTaskId === task.id"
-              [title]="statusLabel(task.status)"
-              (click)="openEdit(task)">
-              <app-icon
-                [name]="savingTaskId === task.id ? 'spinner' : statusIcon(task.status)"
-                [class.tw-animate-spin]="savingTaskId === task.id" />
+              [class.task-status-btn--done]="task.status === 'done'">
+              <app-icon [name]="statusIcon(task.status)" />
               <span class="task-status-label">{{ statusLabel(task.status) }}</span>
-            </button>
-
+            </span>
             <button
               *ngIf="canDelete(task)"
               class="task-card__delete"
@@ -158,8 +179,14 @@
           </div>
 
         </div>
+
+        <!-- Empty drop zone hint -->
+        <div *ngIf="cell.tasks.length === 0" class="planning-cell__empty"></div>
+
       </div>
-    </div>
+
+    </ng-container>
+
   </div>
   </div>
   </div>

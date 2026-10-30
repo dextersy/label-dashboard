@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnChanges, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { Release } from '../../../../services/release.service';
 import { ReleaseTaskService } from '../../../../services/release-task.service';
 import { AuthService } from '../../../../services/auth.service';
@@ -13,10 +14,33 @@ import { TemplatePickerModalComponent } from './template-picker-modal/template-p
 
 type FilterMode = 'all' | 'mine' | 'unassigned';
 
+type DueBucket = 'due-now' | 'due-this-week' | 'due-later' | 'no-date';
+
+interface KanbanCell {
+  id: string;           // e.g. 'due-now--not-started'
+  status: ReleaseTaskStatus;
+  bucket: DueBucket;
+  tasks: ReleaseTask[];
+}
+
+interface KanbanRow {
+  bucket: DueBucket;
+  label: string;
+  cells: KanbanCell[]; // always length 3: not_started, in_progress, done
+}
+
+/** @deprecated used only for list view */
 interface TaskColumn {
   id: string;
   label: string;
   tasks: ReleaseTask[];
+}
+
+/** @deprecated kept for type compat with old drag handler */
+interface StatusColumn {
+  status: ReleaseTaskStatus;
+  id: string;
+  label: string;
 }
 
 const TASK_SUGGESTIONS = [
@@ -35,7 +59,7 @@ const TASK_SUGGESTIONS = [
 @Component({
   selector: 'app-release-planning-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, ModalToBodyDirective, TemplatePickerModalComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, IconComponent, ModalToBodyDirective, TemplatePickerModalComponent],
   templateUrl: './release-planning-tab.component.html',
   styleUrl: './release-planning-tab.component.scss',
 })
@@ -44,6 +68,7 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
   @Input() isAdmin = false;
 
   @ViewChild('boardScroll') private boardScrollRef?: ElementRef<HTMLElement>;
+  @ViewChild('boardHeader') private boardHeaderRef?: ElementRef<HTMLElement>;
 
   tasks: ReleaseTask[] = [];
   assignableUsers: AssignableUser[] = [];
@@ -117,8 +142,86 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     return this.tasks;
   }
 
-  // --- Kanban columns ---
+  // --- Kanban 2D grid (rows = due buckets, cols = status) ---
 
+  static readonly STATUS_DEFS: { status: ReleaseTaskStatus; id: string; label: string }[] = [
+    { status: 'not_started', id: 'not-started', label: 'Not started' },
+    { status: 'in_progress', id: 'in-progress', label: 'In progress' },
+    { status: 'done',        id: 'done',         label: 'Done' },
+  ];
+
+  static readonly BUCKET_DEFS: { bucket: DueBucket; label: string }[] = [
+    { bucket: 'due-now',       label: 'Due now' },
+    { bucket: 'due-this-week', label: 'Due this week' },
+    { bucket: 'due-later',     label: 'Due later' },
+    { bucket: 'no-date',       label: 'No date' },
+  ];
+
+  get kanbanRows(): KanbanRow[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(today);
+    weekEnd.setDate(today.getDate() + 7);
+
+    const getBucket = (task: ReleaseTask): DueBucket => {
+      if (!task.due_date) return 'no-date';
+      const d = new Date(task.due_date);
+      d.setHours(0, 0, 0, 0);
+      if (d <= today) return 'due-now';
+      if (d <= weekEnd) return 'due-this-week';
+      return 'due-later';
+    };
+
+    // Build a map: bucket → status → tasks[]
+    const map = new Map<DueBucket, Map<ReleaseTaskStatus, ReleaseTask[]>>();
+    for (const { bucket } of ReleasePlanningTabComponent.BUCKET_DEFS) {
+      const inner = new Map<ReleaseTaskStatus, ReleaseTask[]>();
+      for (const { status } of ReleasePlanningTabComponent.STATUS_DEFS) {
+        inner.set(status, []);
+      }
+      map.set(bucket, inner);
+    }
+
+    for (const task of this.filteredTasks) {
+      const bucket = getBucket(task);
+      map.get(bucket)!.get(task.status)!.push(task);
+    }
+
+    // Sort tasks within each cell by due date
+    const sortByDate = (tasks: ReleaseTask[]) =>
+      tasks.sort((a, b) => {
+        if (!a.due_date && !b.due_date) return 0;
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      });
+
+    const rows: KanbanRow[] = ReleasePlanningTabComponent.BUCKET_DEFS.map(({ bucket, label }) => ({
+      bucket,
+      label,
+      cells: ReleasePlanningTabComponent.STATUS_DEFS.map(({ status, id }) => ({
+        id: `${bucket}--${id}`,
+        status,
+        bucket,
+        tasks: sortByDate(map.get(bucket)!.get(status)!),
+      })),
+    }));
+
+    // Hide rows where every cell is empty
+    return rows.filter(row => row.cells.some(c => c.tasks.length > 0));
+  }
+
+  get allCellIds(): string[] {
+    return ReleasePlanningTabComponent.BUCKET_DEFS.flatMap(({ bucket }) =>
+      ReleasePlanningTabComponent.STATUS_DEFS.map(({ id }) => `${bucket}--${id}`)
+    );
+  }
+
+  statusCountForCol(status: ReleaseTaskStatus): number {
+    return this.filteredTasks.filter(t => t.status === status).length;
+  }
+
+  /** @deprecated list view only */
   get columns(): TaskColumn[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -159,11 +262,41 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     return [...tasks].sort((a, b) => {
       const statusDiff = statusOrder[a.status] - statusOrder[b.status];
       if (statusDiff !== 0) return statusDiff;
-      // Most immediate due date first (nulls last)
       if (!a.due_date && !b.due_date) return 0;
       if (!a.due_date) return 1;
       if (!b.due_date) return -1;
       return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+    });
+  }
+
+  // --- Drag and drop ---
+
+  onTaskDrop(event: CdkDragDrop<KanbanCell>, targetCell: KanbanCell): void {
+    const task: ReleaseTask = event.item.data;
+    if (task.status === targetCell.status) return;
+
+    const canChange = this.isAdmin || task.assigned_user_id === this.currentUserId;
+    if (!canChange) {
+      this.notificationService.showError('Only the assigned person or an admin can change the status.');
+      return;
+    }
+
+    this.savingTaskId = task.id;
+    const idx = this.tasks.findIndex(t => t.id === task.id);
+    if (idx !== -1) this.tasks[idx] = { ...this.tasks[idx], status: targetCell.status };
+
+    this.taskService.updateTask(this.release!.id, task.id, { status: targetCell.status }).subscribe({
+      next: ({ task: updated }) => {
+        this.replaceTask(updated);
+        this.savingTaskId = null;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        if (idx !== -1) this.tasks[idx] = { ...this.tasks[idx], status: task.status };
+        this.notificationService.showError('Failed to update status');
+        this.savingTaskId = null;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -184,6 +317,14 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
         this.addingTaskTitle = null;
       },
     });
+  }
+
+  syncHeaderScroll(): void {
+    const scroll = this.boardScrollRef?.nativeElement;
+    const header = this.boardHeaderRef?.nativeElement;
+    if (scroll && header) {
+      header.scrollLeft = scroll.scrollLeft;
+    }
   }
 
   private scrollToNoDateColumn(): void {
@@ -365,9 +506,24 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     return col.id;
   }
 
+  get statusDefs() { return ReleasePlanningTabComponent.STATUS_DEFS; }
+
+  statusCssId(status: ReleaseTaskStatus): string {
+    return status.replace(/_/g, '-');
+  }
+
+  trackByRowBucket(_: number, row: KanbanRow): string {
+    return row.bucket;
+  }
+
+  trackByCellId(_: number, cell: KanbanCell): string {
+    return cell.id;
+  }
+
   trackByTaskId(_: number, task: ReleaseTask): number {
     return task.id;
   }
+
 
   // --- Assignee preview in modals ---
 

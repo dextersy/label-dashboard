@@ -124,84 +124,99 @@
 .planning-board-outer {
   position: relative;
 
-  @media (max-width: 768px) {
-    // Gradient hint that more content is to the right
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 56px;
-      background: linear-gradient(to right, transparent, #fff 85%);
-      pointer-events: none;
-      z-index: 2;
-    }
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--page-bg, #fff) 85%);
+    pointer-events: none;
+    z-index: 2;
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    &::after { display: block; }
   }
 }
 
 .planning-board-scroll {
-  @media (max-width: 768px) {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    &::-webkit-scrollbar { display: none; }
-  }
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
 }
 
+// 2D grid: [row-label col] + [3 status cols]
+// rows: [header row] + [N swim-lane rows]
 .planning-board {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  align-items: start;
+  grid-template-columns: 28px repeat(3, minmax(200px, 1fr));
+  min-width: 660px;
+  // Border drawn on scroll wrapper so sticky children aren't clipped
+}
 
-  @media (max-width: 900px) {
-    grid-template-columns: repeat(2, 1fr);
+// Sticky header bar (lives outside the scroll container)
+.planning-board-header {
+  position: sticky;
+  top: 50px; /* desktop: clear fixed navbar only */
+  z-index: 4;
+
+  @media (max-width: 1024px) {
+    top: 93px; /* tablet/mobile: navbar (50px) + horizontal tab bar (~43px) */
   }
+  overflow: hidden; // clips content that scrolls out of view (driven by JS)
+  border: 1px solid var(--border-color, #dee2e6);
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(4, 220px);
-    width: max-content;
+  &__inner {
+    display: grid;
+    grid-template-columns: 28px repeat(3, minmax(200px, 1fr));
+    min-width: 660px;
   }
 }
 
-.planning-column {
+// Top-left corner spacer
+.planning-board__corner {
+  grid-column: 1;
   background: var(--light-bg, #f8f9fa);
-  border-radius: 10px;
-  overflow: hidden;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  border-right: 1px solid var(--border-color, #dee2e6);
+}
 
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border-color, #dee2e6);
-    border-left: 3px solid transparent;
+// Column header cells (row 1, cols 2-4)
+.planning-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--light-bg, #f8f9fa);
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  border-left: 3px solid transparent;
 
-    // Color variants
-    &--no-date {
-      border-left-color: #9ca3af;
-      .planning-column__title { color: #6b7280; }
-      .planning-column__count { background: #e5e7eb; color: #6b7280; }
-    }
-    &--due-now {
-      border-left-color: #dc3545;
-      background: rgba(220, 53, 69, 0.04);
-      .planning-column__title { color: #b91c1c; }
-      .planning-column__count { background: #fee2e2; color: #b91c1c; }
-    }
-    &--due-this-week {
-      border-left-color: #f59e0b;
-      background: rgba(245, 158, 11, 0.04);
-      .planning-column__title { color: #92400e; }
-      .planning-column__count { background: #fef3c7; color: #92400e; }
-    }
-    &--due-later {
-      border-left-color: #10b981;
-      background: rgba(16, 185, 129, 0.04);
-      .planning-column__title { color: #065f46; }
-      .planning-column__count { background: #d1fae5; color: #065f46; }
-    }
+  &:not(:last-child) {
+    border-right: 1px solid var(--border-color, #dee2e6);
+  }
+
+  &--not-started {
+    border-left-color: #9ca3af;
+    .planning-col-header__title { color: #6b7280; }
+    .planning-col-header__count { background: #e5e7eb; color: #6b7280; }
+  }
+  &--in-progress {
+    border-left-color: #f59e0b;
+    .planning-col-header__title { color: #92400e; }
+    .planning-col-header__count { background: #fef3c7; color: #92400e; }
+  }
+  &--done {
+    border-left-color: #10b981;
+    .planning-col-header__title { color: #065f46; }
+    .planning-col-header__count { background: #d1fae5; color: #065f46; }
   }
 
   &__title {
@@ -217,14 +232,96 @@
     border-radius: 10px;
     padding: 1px 7px;
   }
+}
 
-  &__body {
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 80px;
+// Swim-lane row label (col 1, data rows)
+.planning-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border-color, #dee2e6);
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+
+  &--due-now       { background: rgba(220, 53, 69, 0.05); }
+  &--due-this-week { background: rgba(245, 158, 11, 0.05); }
+  &--due-later     { background: rgba(16, 185, 129, 0.05); }
+  &--no-date       { background: transparent; }
+
+  &__text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
+    padding: 8px 0;
   }
+
+  &--due-now       .planning-row-label__text { color: #b91c1c; }
+  &--due-this-week .planning-row-label__text { color: #92400e; }
+  &--due-later     .planning-row-label__text { color: #065f46; }
+  &--no-date       .planning-row-label__text { color: #9ca3af; }
+}
+
+// Individual drop-zone cells
+.planning-cell {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 80px;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+  border-right: 1px solid var(--border-color, #dee2e6);
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &__empty {
+    flex: 1;
+    min-height: 40px;
+  }
+}
+
+// Remove bottom border on the last swim-lane row
+.planning-row--last,
+.planning-cell--last-row {
+  border-bottom: none;
+}
+
+// --- Drag and drop ---
+
+// Drag preview (floating card while dragging)
+.cdk-drag-preview {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  border-radius: 8px;
+  background: #fff;
+  opacity: 0.95;
+}
+
+// Placeholder slot in the drop list
+.cdk-drag-placeholder {
+  opacity: 0;
+  min-height: 60px;
+  background: var(--light-bg, #f8f9fa);
+  border: 2px dashed var(--border-color, #dee2e6);
+  border-radius: 8px;
+}
+
+// Animate items when another card passes over them
+.cdk-drop-list-dragging .task-card:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Column highlight when dragging over it
+.cdk-drop-list-receiving {
+  background: rgba(21, 149, 231, 0.04);
+  border-radius: 10px;
 }
 
 .planning-empty {
@@ -239,11 +336,17 @@
 .task-card {
   background: #fff;
   border-radius: 8px;
+  border: 1px solid var(--border-color, #dee2e6);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   transition: box-shadow 0.15s;
   display: flex;
   flex-direction: column;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
 
   &:hover {
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
@@ -259,7 +362,7 @@
     background: none;
     border: none;
     text-align: left;
-    padding: 10px 10px 6px;
+    padding: 10px 10px 6px 10px;
     cursor: pointer;
     flex: 1;
 
@@ -272,8 +375,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 10px 8px;
+    padding: 4px 8px 6px;
     border-top: 1px solid var(--border-color, #dee2e6);
+  }
+
+  &--saving {
+    opacity: 0.6;
+    pointer-events: none;
   }
 
   &__title {
