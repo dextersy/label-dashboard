@@ -65,6 +65,7 @@ export const routes: Routes = [
           { path: 'events', loadComponent: () => import('./pages/events/events-list/events-list.component').then(m => m.EventsListComponent) },
           { path: 'events/new', loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
           { path: 'events/:id/edit', canActivate: [eventManagerGuard], loadComponent: () => import('./pages/events/event-form/event-form.component').then(m => m.EventFormComponent) },
+          { path: 'events/:id/add-ons', canActivate: [eventManagerGuard], loadComponent: () => import('./pages/events/event-add-ons/event-add-ons.component').then(m => m.EventAddOnsComponent) },
           { path: 'events/:id', loadComponent: () => import('./pages/events/event-detail/event-detail.component').then(m => m.EventDetailComponent) },
           { path: 'payouts', loadComponent: () => import('./pages/payouts/payouts.component').then(m => m.PayoutsComponent) },
           { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) },

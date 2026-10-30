@@ -13,12 +13,13 @@ import { TicketType } from '../../../models/ticket-type.model';
 import { WalkInType } from '../../../models/walk-in-type.model';
 import { WalkInTransaction } from '../../../models/walk-in-transaction.model';
 import { EventReferrer } from '../../../models/event-referrer.model';
+import { EventAddOnsComponent } from '../event-add-ons/event-add-ons.component';
 
 @Component({
   selector: 'app-event-detail',
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ReactiveFormsModule, EventAddOnsComponent],
   styles: [`
     .prose-event h2 { font-size: 0.95rem; font-weight: 700; margin: 0.6rem 0 0.2rem; }
     .prose-event h3 { font-size: 0.875rem; font-weight: 600; margin: 0.4rem 0 0.2rem; }
@@ -949,6 +950,9 @@ import { EventReferrer } from '../../../models/event-referrer.model';
         </div>
       }
 
+      <!-- ====== ADD-ONS TAB ====== -->
+      <app-event-add-ons [hidden]="activeTab() !== 'add-ons'" [embedded]="true" [embeddedEvent]="event()" />
+
       <!-- ====== TICKET TYPE MODAL ====== -->
       @if (ticketTypeModal()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -1408,6 +1412,7 @@ export class EventDetailComponent implements OnInit {
     { id: 'referrals', label: 'Referrals', ticketingOnly: true },
     { id: 'email', label: 'Email', ticketingOnly: false },
     { id: 'scanner', label: 'Scanner', ticketingOnly: true },
+    { id: 'add-ons', label: 'Add-ons', ticketingOnly: false },
   ];
 
   onTabChange(tabId: string): void {
