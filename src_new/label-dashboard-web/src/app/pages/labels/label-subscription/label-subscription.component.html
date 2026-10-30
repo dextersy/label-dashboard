@@ -205,8 +205,11 @@
                         </span>
                       </div>
 
-                      <!-- Storage -->
-                      <div class="tw-flex tw-flex-col tw-items-center tw-gap-1 sm:tw-flex-row sm:tw-gap-2">
+                      <!-- Storage (clickable for breakdown) -->
+                      <button type="button"
+                              class="tw-flex tw-flex-col tw-items-center tw-gap-1 sm:tw-flex-row sm:tw-gap-2 tw-bg-transparent tw-border-0 tw-p-0 tw-cursor-pointer tw-group"
+                              (click)="openStorageBreakdownModal()"
+                              title="View storage breakdown">
                         <svg class="tw-w-5 tw-h-5 tw-shrink-0 tw-rotate-[-90deg]" viewBox="0 0 36 36">
                           <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--color-border-subtle)" stroke-width="4"/>
                           @if (storageLimitBytes !== null) {
@@ -223,7 +226,7 @@
                           }
                         </svg>
                         <span class="tw-text-center sm:tw-text-left">
-                          <span class="tw-block tw-text-xs tw-whitespace-nowrap sm:tw-inline sm:tw-text-sm"
+                          <span class="tw-block tw-text-xs tw-whitespace-nowrap sm:tw-inline sm:tw-text-sm group-hover:tw-underline group-hover:tw-underline-offset-2"
                                 [class.tw-text-danger]="storageLimitBytes !== null && usageStorageBytes > storageLimitBytes"
                                 [class.tw-text-warning]="storageLimitBytes !== null && usageStorageBytes === storageLimitBytes"
                                 [class.tw-text-[var(--color-muted)]]="!(storageLimitBytes !== null && usageStorageBytes >= storageLimitBytes)">
@@ -232,7 +235,7 @@
                           <span class="tw-block tw-text-xs tw-text-[var(--color-muted)] sm:tw-hidden">Storage</span>
                           <span class="tw-hidden sm:tw-inline tw-text-sm tw-font-medium tw-text-[var(--color-body)]">&nbsp;Storage</span>
                         </span>
-                      </div>
+                      </button>
 
                     </div>
 
@@ -629,3 +632,76 @@
 
   </div>
 </div>
+
+<!-- Storage breakdown modal -->
+@if (showStorageBreakdownModal) {
+  <div class="modal-backdrop fade show" (click)="closeStorageBreakdownModal()"></div>
+  <div class="modal fade show tw-flex tw-items-center tw-justify-center" style="display:block; z-index:1055;" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:300px" role="document">
+      <div class="modal-content">
+
+        <div class="modal-header tw-px-4 tw-py-3 tw-border-b tw-border-[var(--color-border-subtle)]">
+          <h5 class="modal-title tw-text-sm tw-font-semibold tw-text-[var(--color-heading)]">Storage Breakdown</h5>
+          <button type="button" class="btn-close tw-scale-75" (click)="closeStorageBreakdownModal()" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body tw-px-4 tw-py-3">
+          @if (storageBreakdown) {
+            <div class="tw-flex tw-flex-col tw-gap-1.5">
+
+              <div class="tw-flex tw-items-center tw-gap-2">
+                <span class="tw-text-sm tw-text-[var(--color-muted)] tw-flex tw-items-center tw-gap-1.5 tw-shrink-0">
+                  <app-icon name="image" class="tw-w-3.5 tw-h-3.5" />
+                  Images
+                </span>
+                <div class="tw-flex-1 tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                  <div class="tw-h-full tw-rounded-full tw-bg-[var(--brand-color)]"
+                       [style.width.%]="storageBreakdownPercent(storageBreakdown.images_bytes)"></div>
+                </div>
+                <span class="tw-text-sm tw-font-medium tw-text-[var(--color-body)] tw-shrink-0">{{ formatBytes(storageBreakdown.images_bytes) }}</span>
+              </div>
+
+              <div class="tw-flex tw-items-center tw-gap-2">
+                <span class="tw-text-sm tw-text-[var(--color-muted)] tw-flex tw-items-center tw-gap-1.5 tw-shrink-0">
+                  <app-icon name="file" class="tw-w-3.5 tw-h-3.5" />
+                  Documents
+                </span>
+                <div class="tw-flex-1 tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                  <div class="tw-h-full tw-rounded-full tw-bg-amber-400"
+                       [style.width.%]="storageBreakdownPercent(storageBreakdown.documents_bytes)"></div>
+                </div>
+                <span class="tw-text-sm tw-font-medium tw-text-[var(--color-body)] tw-shrink-0">{{ formatBytes(storageBreakdown.documents_bytes) }}</span>
+              </div>
+
+              <div class="tw-flex tw-items-center tw-gap-2">
+                <span class="tw-text-sm tw-text-[var(--color-muted)] tw-flex tw-items-center tw-gap-1.5 tw-shrink-0">
+                  <app-icon name="music" class="tw-w-3.5 tw-h-3.5" />
+                  Audio
+                </span>
+                <div class="tw-flex-1 tw-h-1.5 tw-rounded-full tw-bg-[var(--color-border-subtle)] tw-overflow-hidden">
+                  <div class="tw-h-full tw-rounded-full tw-bg-sky-400"
+                       [style.width.%]="storageBreakdownPercent(storageBreakdown.audio_bytes)"></div>
+                </div>
+                <span class="tw-text-sm tw-font-medium tw-text-[var(--color-body)] tw-shrink-0">{{ formatBytes(storageBreakdown.audio_bytes) }}</span>
+              </div>
+
+              <div class="tw-flex tw-items-center tw-justify-between tw-border-t tw-border-[var(--color-border-subtle)] tw-mt-1 tw-pt-2">
+                <span class="tw-text-xs tw-font-semibold tw-text-[var(--color-muted)] tw-uppercase tw-tracking-wider">Total</span>
+                <span class="tw-text-sm tw-font-semibold tw-text-[var(--color-heading)]">
+                  {{ formatBytes(usageStorageBytes) }}
+                  @if (storageLimitBytes !== null && usageLimits) {
+                    <span class="tw-font-normal tw-text-[var(--color-muted)]">&nbsp;/ {{ usageLimits.limit_storage_gb }} GB</span>
+                  }
+                </span>
+              </div>
+
+            </div>
+          } @else {
+            <p class="tw-text-sm tw-text-[var(--color-muted)] tw-mb-0">No breakdown available.</p>
+          }
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

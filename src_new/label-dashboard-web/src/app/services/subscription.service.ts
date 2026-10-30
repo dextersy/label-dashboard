@@ -128,6 +128,12 @@ export interface BillingDetails {
   billing_tin: string | null;
 }
 
+export interface StorageBreakdown {
+  images_bytes: number;
+  documents_bytes: number;
+  audio_bytes: number;
+}
+
 export interface UsageResponse {
   limits: EffectiveLimits | null;
   usage: {
@@ -137,6 +143,7 @@ export interface UsageResponse {
     press_campaigns_this_month: number;
     sync_pitches_this_month: number;
     storage_used_bytes: number;
+    storage_breakdown?: StorageBreakdown;
   };
 }
 

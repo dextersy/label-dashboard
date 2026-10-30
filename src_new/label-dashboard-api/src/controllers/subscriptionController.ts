@@ -19,6 +19,7 @@ import {
   resolveEffectiveLimits,
   getEffectiveLimitsForBrand,
   getStorageUsedBytesForBrand,
+  getStorageBreakdownForBrand,
   calculateProration,
   getPayPalSubscriptionNextBillingTime,
 } from '../services/subscriptionService';
@@ -152,7 +153,10 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
-    const storageUsedBytes = await getStorageUsedBytesForBrand(brandId);
+    const [storageUsedBytes, storageBreakdown] = await Promise.all([
+      getStorageUsedBytesForBrand(brandId),
+      getStorageBreakdownForBrand(brandId),
+    ]);
 
     res.json({
       limits,
@@ -163,6 +167,7 @@ export const getUsage = async (req: Request, res: Response): Promise<void> => {
         press_campaigns_this_month: pressCampaignsThisMonth,
         sync_pitches_this_month: syncPitchesThisMonth,
         storage_used_bytes: storageUsedBytes,
+        storage_breakdown: storageBreakdown,
       },
     });
   } catch (error: any) {

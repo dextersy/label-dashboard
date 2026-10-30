@@ -419,6 +419,92 @@ export async function getStorageUsedBytesForBrand(brandId: number): Promise<numb
   return Number(result?.total_bytes ?? 0);
 }
 
+export interface StorageBreakdown {
+  images_bytes: number;
+  documents_bytes: number;
+  audio_bytes: number;
+}
+
+/**
+ * Returns storage used (in bytes) broken down by category for a brand.
+ *
+ * - images:    ArtistImage, PressCampaignArtistPhoto, Release cover art, PressCampaign cover art
+ * - documents: ArtistDocument
+ * - audio:     Song (audio_file + audio_file_mp3), PressCampaign mp3
+ */
+export async function getStorageBreakdownForBrand(brandId: number): Promise<StorageBreakdown> {
+  const [rows]: any[] = await sequelize.query(
+    `
+    SELECT
+      COALESCE(SUM(CASE WHEN category = 'images' THEN bytes ELSE 0 END), 0)::BIGINT    AS images_bytes,
+      COALESCE(SUM(CASE WHEN category = 'documents' THEN bytes ELSE 0 END), 0)::BIGINT AS documents_bytes,
+      COALESCE(SUM(CASE WHEN category = 'audio' THEN bytes ELSE 0 END), 0)::BIGINT     AS audio_bytes
+    FROM (
+      -- Artist images
+      SELECT 'images' AS category, COALESCE(ai.file_size, 0) AS bytes
+      FROM artist_image ai
+      JOIN artist a ON a.id = ai.artist_id
+      WHERE a.brand_id = :brandId AND ai.file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Press campaign artist photos
+      SELECT 'images' AS category, COALESCE(pcap.file_size, 0) AS bytes
+      FROM press_campaign_artist_photo pcap
+      JOIN press_campaign pc ON pc.id = pcap.campaign_id
+      WHERE pc.brand_id = :brandId AND pcap.file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Release cover art
+      SELECT 'images' AS category, COALESCE(cover_art_file_size, 0) AS bytes
+      FROM release
+      WHERE brand_id = :brandId AND cover_art_file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Press campaign cover art
+      SELECT 'images' AS category, COALESCE(cover_art_file_size, 0) AS bytes
+      FROM press_campaign
+      WHERE brand_id = :brandId AND cover_art_file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Artist documents
+      SELECT 'documents' AS category, COALESCE(ad.file_size, 0) AS bytes
+      FROM artist_documents ad
+      JOIN artist a ON a.id = ad.artist_id
+      WHERE a.brand_id = :brandId AND ad.file_size IS NOT NULL
+
+      UNION ALL
+
+      -- Song audio files
+      SELECT 'audio' AS category, COALESCE(audio_file_size, 0) + COALESCE(audio_file_mp3_size, 0) AS bytes
+      FROM song
+      WHERE brand_id = :brandId
+        AND (audio_file_size IS NOT NULL OR audio_file_mp3_size IS NOT NULL)
+
+      UNION ALL
+
+      -- Press campaign MP3
+      SELECT 'audio' AS category, COALESCE(mp3_file_size, 0) AS bytes
+      FROM press_campaign
+      WHERE brand_id = :brandId AND mp3_file_size IS NOT NULL
+    ) AS storage_rows
+    `,
+    {
+      replacements: { brandId },
+      type: QueryTypes.SELECT,
+    }
+  );
+  const row = (rows as any) ?? {};
+  return {
+    images_bytes: Number(row.images_bytes ?? 0),
+    documents_bytes: Number(row.documents_bytes ?? 0),
+    audio_bytes: Number(row.audio_bytes ?? 0),
+  };
+}
+
 /**
  * Checks whether adding additionalBytes to a brand's storage would exceed its plan limit.
  * Returns the limit in bytes (null = unlimited), and whether the action is blocked.

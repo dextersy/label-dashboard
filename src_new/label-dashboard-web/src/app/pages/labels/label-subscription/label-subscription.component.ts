@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits, SubscriptionInvoice, SubscriptionPayment, BillingDetails } from '../../../services/subscription.service';
+import { SubscriptionService, Plan, CurrentSubscription, EffectiveLimits, SubscriptionInvoice, SubscriptionPayment, BillingDetails, StorageBreakdown } from '../../../services/subscription.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService, ConfirmationDialogData, ConfirmationDialogDetail } from '../../../services/confirmation.service';
 import { environment } from '../../../../environments/environment';
@@ -31,6 +31,8 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
   usagePressCampaignsThisMonth = 0;
   usageSyncPitchesThisMonth = 0;
   usageStorageBytes = 0;
+  storageBreakdown: StorageBreakdown | null = null;
+  showStorageBreakdownModal = false;
   billingCycle: 'monthly' | 'annual' = 'monthly';
 
   // In-page nav
@@ -213,6 +215,7 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
         this.usagePressCampaignsThisMonth = usage.usage.press_campaigns_this_month;
         this.usageSyncPitchesThisMonth = usage.usage.sync_pitches_this_month;
         this.usageStorageBytes = usage.usage.storage_used_bytes ?? 0;
+        this.storageBreakdown = usage.usage.storage_breakdown ?? null;
         // Pre-select billing cycle on first load only — don't reset it during polling
         // (user may have switched the toggle while waiting for the webhook).
         if (this.currentSubscription && this.pollAttempts === 0) {
@@ -243,6 +246,19 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
     if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     if (bytes >= 1024) return (bytes / 1024).toFixed(0) + ' KB';
     return bytes + ' B';
+  }
+
+  openStorageBreakdownModal(): void {
+    this.showStorageBreakdownModal = true;
+  }
+
+  closeStorageBreakdownModal(): void {
+    this.showStorageBreakdownModal = false;
+  }
+
+  storageBreakdownPercent(bytes: number): number {
+    if (!this.usageStorageBytes) return 0;
+    return Math.round((bytes / this.usageStorageBytes) * 100);
   }
 
   get storageLimitBytes(): number | null {
