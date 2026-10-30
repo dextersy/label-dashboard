@@ -1642,12 +1642,11 @@ const createSublabelAsync = async (
   brand_name: string,
   domain_name: string | undefined,
   subdomain_name: string | undefined,
-  currentUserId: number,
   parentBrandName: string
 ) => {
   try {
     console.log(`[Async] Starting sublabel creation for: ${brand_name}`);
-    
+
     let finalDomainName: string;
     let isSubdomainOfMeltRecords = false;
 
@@ -1661,12 +1660,6 @@ const createSublabelAsync = async (
       isSubdomainOfMeltRecords = true;
     } else {
       finalDomainName = domain_name!.toLowerCase().trim();
-    }
-
-    // Get user information
-    const currentUser = await User.findByPk(currentUserId);
-    if (!currentUser) {
-      throw new Error('Current user not found');
     }
 
     // Generate a unique catalog prefix from the brand name
@@ -1752,22 +1745,6 @@ const createSublabelAsync = async (
       console.log(`[Async][Security] CSRF/CORS cache cleared after creating connected domain: ${finalDomainName}`);
     }
 
-    // Create admin user for the new brand (copy current user's info)
-    const newUser = await User.create({
-      username: currentUser.username,
-      password_md5: currentUser.password_md5,
-      email_address: currentUser.email_address,
-      first_name: currentUser.first_name,
-      last_name: currentUser.last_name,
-      profile_photo: currentUser.profile_photo,
-      is_admin: true, // New sublabel user is admin for their brand
-      brand_id: newBrand.id,
-      reset_hash: null, // Clear reset hash for new user
-      last_logged_in: null // Clear last login for new user
-    });
-
-    console.log(`[Async] Created admin user with ID: ${newUser.id}`);
-
     // Assign the free plan to the new sublabel
     const freePlan = await Plan.findOne({ where: { is_default_free: true, is_active: true } });
     if (freePlan) {
@@ -1798,7 +1775,6 @@ const createSublabelAsync = async (
         brand_name: newBrand.brand_name,
         domain_name: newDomain.domain_name,
         domain_status: newDomain.status,
-        admin_user_id: newUser.id,
         dns_configured: isSubdomainOfMeltRecords && (domainStatus === 'Connected' || domainStatus === 'No SSL' || domainStatus === 'Pending'),
         ssl_configured: sslConfigured,
         ssl_message: sslMessage
@@ -1819,7 +1795,6 @@ export const createSublabel = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
     const { brand_name, domain_name, subdomain_name } = req.body;
-    const currentUserId = (req as any).user?.id;
 
     // Validate input
     if (!brand_name) {
@@ -1860,12 +1835,6 @@ export const createSublabel = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Parent brand not found' });
     }
 
-    // Check if current user exists and get their information
-    const currentUser = await User.findByPk(currentUserId);
-    if (!currentUser) {
-      return res.status(404).json({ error: 'Current user not found' });
-    }
-
     // Check if brand name already exists
     const existingBrandName = await Brand.findOne({ where: { brand_name: brand_name.trim() } });
     if (existingBrandName) {
@@ -1882,7 +1851,7 @@ export const createSublabel = async (req: Request, res: Response) => {
 
     // Start async sublabel creation process
     setImmediate(() => {
-      createSublabelAsync(brandId as string, brand_name, domain_name, subdomain_name, currentUserId, parentBrand.brand_name);
+      createSublabelAsync(brandId as string, brand_name, domain_name, subdomain_name, parentBrand.brand_name);
     });
 
     // Return immediately with job started response
