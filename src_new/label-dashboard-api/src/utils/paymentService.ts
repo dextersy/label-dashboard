@@ -570,7 +570,7 @@ export class PaymentService {
         if (event) {
           // Check if balance is fully paid
           const confirmedOrders = await WristbandOrder.findAll({
-            where: { event_id: event.id, status: 'confirmed' },
+            where: { event_id: event.id, status: ['confirmed', 'shipped'] },
             include: [{ model: WristbandOrderItem, as: 'items' }],
           });
           const totalOwed = confirmedOrders.reduce((sum: number, o: any) => {

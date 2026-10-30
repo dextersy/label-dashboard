@@ -12,6 +12,28 @@ interface AuthRequest extends Request {
   user?: any;
 }
 
+async function getOrgAddOnsUrl(eventId: number, orgBrandId: number, suffix = ''): Promise<string | null> {
+  const ticketingParentId = process.env.TICKETING_PARENT_BRAND_ID ? parseInt(process.env.TICKETING_PARENT_BRAND_ID) : null;
+  let frontendUrl: string | null = null;
+  let addOnsPath: string;
+  if (ticketingParentId != null) {
+    const orgBrand = await Brand.findByPk(orgBrandId, { attributes: ['parent_brand'] });
+    const isTicketingOrganizer = orgBrand && (orgBrand as any).parent_brand === ticketingParentId;
+    if (isTicketingOrganizer) {
+      frontendUrl = process.env.TICKETING_FRONTEND_URL ?? null;
+      addOnsPath = `/app/events/${eventId}/add-ons`;
+    } else {
+      frontendUrl = await getBrandFrontendUrl(orgBrandId).catch(() => null);
+      addOnsPath = '/campaigns/events/add-ons';
+    }
+  } else {
+    frontendUrl = await getBrandFrontendUrl(orgBrandId).catch(() => null);
+    addOnsPath = '/campaigns/events/add-ons';
+  }
+  if (!frontendUrl) return null;
+  return `${frontendUrl}${addOnsPath}${suffix}`;
+}
+
 // Multer for memory storage — PNG uploads only
 const storage = multer.memoryStorage();
 const fileFilter = (_req: any, file: any, cb: any) => {
@@ -414,17 +436,15 @@ export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => 
     if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be confirmed' });
     await order.update({ status: 'confirmed' });
-    const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
-    if (orgFrontendUrl) {
-      const payUrl = `${orgFrontendUrl}/campaigns/events/add-ons?tab=payment`;
-      sendWristbandOrderStatusEmail(order, order.event, 'confirmed', payUrl);
-    }
+    const payUrl = await getOrgAddOnsUrl(order.event_id, order.event.brand_id, '?tab=payment');
+    if (payUrl) sendWristbandOrderStatusEmail(order, order.event, 'confirmed', payUrl);
+    const payPath = payUrl ?? '/campaigns/events/add-ons?tab=payment';
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
         orgAdminIds, order.event.brand_id, 'wristband_order_accepted',
         `Wristband order accepted: ${order.event.title ?? `Event #${order.event_id}`}`,
         `Order #${orderId} has been accepted. You can now proceed to payment.`,
-        '/campaigns/events/add-ons?tab=payment'
+        payPath
       )
     ).catch(console.error);
     res.json({ order });
@@ -448,17 +468,15 @@ export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
     if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be rejected' });
     await order.update({ status: 'rejected' });
-    const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
-    if (orgFrontendUrl) {
-      const wristbandUrl = `${orgFrontendUrl}/campaigns/events/add-ons`;
-      sendWristbandOrderStatusEmail(order, order.event, 'rejected', wristbandUrl);
-    }
+    const wristbandUrl = await getOrgAddOnsUrl(order.event_id, order.event.brand_id);
+    if (wristbandUrl) sendWristbandOrderStatusEmail(order, order.event, 'rejected', wristbandUrl);
+    const wristbandPath = wristbandUrl ?? '/campaigns/events/add-ons';
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
         orgAdminIds, order.event.brand_id, 'wristband_order_rejected',
         `Wristband order rejected: ${order.event.title ?? `Event #${order.event_id}`}`,
         `Order #${orderId} was rejected. Please review and re-submit.`,
-        '/campaigns/events/add-ons'
+        wristbandPath
       )
     ).catch(console.error);
     res.json({ order });
@@ -483,17 +501,15 @@ export const markWristbandOrderAsShipped = async (req: AuthRequest, res: Respons
     if (order.status !== 'confirmed') return res.status(400).json({ error: 'Only confirmed orders can be marked as shipped' });
     const { tracking_url } = req.body;
     await order.update({ status: 'shipped', tracking_url: tracking_url || null });
-    const orgFrontendUrl = await getBrandFrontendUrl(order.event.brand_id).catch(() => null);
-    if (orgFrontendUrl) {
-      const orderUrl = `${orgFrontendUrl}/campaigns/events/add-ons`;
-      sendWristbandOrderStatusEmail(order, order.event, 'shipped', orderUrl, tracking_url || null);
-    }
+    const orderUrl = await getOrgAddOnsUrl(order.event_id, order.event.brand_id);
+    if (orderUrl) sendWristbandOrderStatusEmail(order, order.event, 'shipped', orderUrl, tracking_url || null);
+    const orderPath = orderUrl ?? '/campaigns/events/add-ons';
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
         orgAdminIds, order.event.brand_id, 'wristband_order_shipped',
         `Wristband order shipped: ${order.event.title ?? `Event #${order.event_id}`}`,
         `Order #${orderId} has been shipped and is on its way.`,
-        '/campaigns/events/add-ons'
+        orderPath
       )
     ).catch(console.error);
     res.json({ order });

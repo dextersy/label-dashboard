@@ -15,7 +15,7 @@ const PRICE_PER_10 = 35;
 
 async function isFullyPaid(eventId: number): Promise<boolean> {
   const confirmedOrders = await WristbandOrder.findAll({
-    where: { event_id: eventId, status: 'confirmed' },
+    where: { event_id: eventId, status: ['confirmed', 'shipped'] },
     include: [{ model: WristbandOrderItem, as: 'items' }],
   });
   const totalOwed = confirmedOrders.reduce((sum: number, o: any) => {
@@ -160,7 +160,7 @@ async function buildAddOnInvoicePdfBuffer(eventId: number, brandId: number): Pro
     if (!event) return null;
 
     const confirmedOrders = await WristbandOrder.findAll({
-      where: { event_id: eventId, status: 'confirmed' },
+      where: { event_id: eventId, status: ['confirmed', 'shipped'] },
       include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
       order: [['id', 'ASC']],
     });
@@ -526,9 +526,18 @@ export const initiateAddOnPayment = async (req: AuthRequest, res: Response) => {
     const event = await Event.findOne({ where: { id: event_id } });
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const frontendUrl = await getBrandFrontendUrl(req.user.brand_id);
-    const successUrl = `${frontendUrl}/campaigns/events/add-ons?tab=payment&payment_status=success`;
-    const cancelUrl = `${frontendUrl}/campaigns/events/add-ons?tab=payment&payment_status=cancelled`;
+    const ticketingParentId = process.env.TICKETING_PARENT_BRAND_ID ? parseInt(process.env.TICKETING_PARENT_BRAND_ID) : null;
+    const userBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
+    const isTicketingOrganizer = ticketingParentId != null && userBrand &&
+      (userBrand as any).parent_brand === ticketingParentId;
+    const frontendUrl = isTicketingOrganizer
+      ? process.env.TICKETING_FRONTEND_URL!
+      : await getBrandFrontendUrl(req.user.brand_id);
+    const addOnsPath = isTicketingOrganizer
+      ? `/app/events/${event_id}/add-ons`
+      : '/campaigns/events/add-ons';
+    const successUrl = `${frontendUrl}${addOnsPath}?tab=payment&payment_status=success`;
+    const cancelUrl = `${frontendUrl}${addOnsPath}?tab=payment&payment_status=cancelled`;
 
     // Create a pending payment record first so the webhook can match it
     const payment = await EventAddOnPayment.create({
