@@ -23,6 +23,7 @@ export class SelectArtistComponent implements OnInit {
   isAdmin = false;
 
   private autoSelectId: number | null = null;
+  private autoSelectRedirect: string = '/artist/profile';
 
   constructor(
     private http: HttpClient,
@@ -35,6 +36,10 @@ export class SelectArtistComponent implements OnInit {
   ngOnInit(): void {
     const selectParam = this.route.snapshot.queryParamMap.get('select');
     this.autoSelectId = selectParam ? parseInt(selectParam, 10) : null;
+    const redirectParam = this.route.snapshot.queryParamMap.get('redirect');
+    if (redirectParam) {
+      this.autoSelectRedirect = redirectParam;
+    }
 
     // Clear the current artist selection when this page loads
     this.artistStateService.setSelectedArtist(null);
@@ -65,7 +70,7 @@ export class SelectArtistComponent implements OnInit {
         if (this.autoSelectId) {
           const target = this.artists.find(a => a.id === this.autoSelectId);
           if (target) {
-            this.selectArtist(target, '/artist/profile');
+            this.selectArtist(target, this.autoSelectRedirect);
           }
         }
       },

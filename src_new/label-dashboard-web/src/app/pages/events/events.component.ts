@@ -164,15 +164,23 @@ export class EventsComponent implements OnInit, OnDestroy, HasUnsavedChanges {
           this.availableEvents = events;
           this.eventService.setAvailableEvents(events);
 
+          // Check if a specific event was requested via query param (e.g. from a notification link)
+          const eventParam = this.route.snapshot.queryParamMap.get('event');
+          const requestedEventId = eventParam ? parseInt(eventParam, 10) : null;
+
           // Check if we have a previously selected event from localStorage
           const currentSelected = this.eventService.getSelectedEvent();
           let eventToSelect: Event | null = null;
-          
-          if (currentSelected && events.find(e => e.id === currentSelected.id)) {
+
+          if (requestedEventId) {
+            eventToSelect = events.find(e => e.id === requestedEventId) || null;
+          }
+
+          if (!eventToSelect && currentSelected && events.find(e => e.id === currentSelected.id)) {
             // Stored event still exists in the list
             eventToSelect = events.find(e => e.id === currentSelected.id) || null;
           }
-          
+
           // Auto-select first event if no valid selection exists
           if (events.length > 0 && !eventToSelect) {
             eventToSelect = events[0];
