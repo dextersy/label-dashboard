@@ -24,14 +24,15 @@ async function getOrgAddOnsUrl(eventId: number, orgBrandId: number, suffix = '')
       addOnsPath = `/app/events/${eventId}/add-ons`;
     } else {
       frontendUrl = await getBrandFrontendUrl(orgBrandId).catch(() => null);
-      addOnsPath = '/campaigns/events/add-ons';
+      addOnsPath = `/campaigns/events/add-ons?event=${eventId}`;
     }
   } else {
     frontendUrl = await getBrandFrontendUrl(orgBrandId).catch(() => null);
-    addOnsPath = '/campaigns/events/add-ons';
+    addOnsPath = `/campaigns/events/add-ons?event=${eventId}`;
   }
   if (!frontendUrl) return null;
-  return `${frontendUrl}${addOnsPath}${suffix}`;
+  const connector = suffix && addOnsPath.includes('?') ? suffix.replace(/^\?/, '&') : suffix;
+  return `${frontendUrl}${addOnsPath}${connector}`;
 }
 
 // Multer for memory storage — PNG uploads only
@@ -438,7 +439,7 @@ export const confirmWristbandOrder = async (req: AuthRequest, res: Response) => 
     await order.update({ status: 'confirmed' });
     const payUrl = await getOrgAddOnsUrl(order.event_id, order.event.brand_id, '?tab=payment');
     if (payUrl) sendWristbandOrderStatusEmail(order, order.event, 'confirmed', payUrl);
-    const payPath = payUrl ?? '/campaigns/events/add-ons?tab=payment';
+    const payPath = payUrl ?? `/campaigns/events/add-ons?event=${order.event_id}&tab=payment`;
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
         orgAdminIds, order.event.brand_id, 'wristband_order_accepted',
@@ -470,7 +471,7 @@ export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
     await order.update({ status: 'rejected' });
     const wristbandUrl = await getOrgAddOnsUrl(order.event_id, order.event.brand_id);
     if (wristbandUrl) sendWristbandOrderStatusEmail(order, order.event, 'rejected', wristbandUrl);
-    const wristbandPath = wristbandUrl ?? '/campaigns/events/add-ons';
+    const wristbandPath = wristbandUrl ?? `/campaigns/events/add-ons?event=${order.event_id}`;
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
         orgAdminIds, order.event.brand_id, 'wristband_order_rejected',
@@ -503,7 +504,7 @@ export const markWristbandOrderAsShipped = async (req: AuthRequest, res: Respons
     await order.update({ status: 'shipped', tracking_url: tracking_url || null });
     const orderUrl = await getOrgAddOnsUrl(order.event_id, order.event.brand_id);
     if (orderUrl) sendWristbandOrderStatusEmail(order, order.event, 'shipped', orderUrl, tracking_url || null);
-    const orderPath = orderUrl ?? '/campaigns/events/add-ons';
+    const orderPath = orderUrl ?? `/campaigns/events/add-ons?event=${order.event_id}`;
     getBrandAdminUserIds(order.event.brand_id).then(orgAdminIds =>
       createNotificationsForUsers(
         orgAdminIds, order.event.brand_id, 'wristband_order_shipped',

@@ -1117,7 +1117,7 @@ export class PaymentService {
       });
 
       const domainName = domains.length > 0 ? domains[0].domain_name : 'dashboard.meltrecords.com';
-      const dashboardUrl = `https://${domainName}/campaigns/events/tickets`;
+      const dashboardUrl = `https://${domainName}/campaigns/events/tickets?event=${event.id}`;
 
       const totalPayment = ticket.price_per_ticket * ticket.number_of_entries;
 
@@ -1163,7 +1163,7 @@ export class PaymentService {
         'ticket_purchased',
         notificationTitle,
         notificationBody,
-        '/campaigns/events/tickets'
+        `/campaigns/events/tickets?event=${event.id}`
       );
 
       // Create in-app notifications for each collab brand's admins
@@ -1175,7 +1175,7 @@ export class PaymentService {
             'ticket_purchased',
             notificationTitle,
             notificationBody,
-            '/campaigns/events/tickets'
+            `/campaigns/events/tickets?event=${event.id}`
           );
         }
       }
@@ -1188,7 +1188,7 @@ export class PaymentService {
           'ticket_purchased',
           notificationTitle,
           notificationBody,
-          '/campaigns/events/tickets'
+          `/campaigns/events/tickets?event=${event.id}`
         );
       }
 

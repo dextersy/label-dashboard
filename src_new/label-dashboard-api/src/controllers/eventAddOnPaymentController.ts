@@ -49,7 +49,7 @@ async function notifyAddOnPayment(payment: any, event: any, initiatorUser: any):
     const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['parent_brand'] });
     const ownerBrandId = orgBrand?.parent_brand ?? event.brand_id;
     const ownerAdminIds = await getBrandAdminUserIds(ownerBrandId);
-    const addOnsLink = '/campaigns/events/add-ons?tab=payment';
+    const addOnsLink = `/campaigns/events/add-ons?event=${event.id}&tab=payment`;
     await createNotificationsForUsers(
       ownerAdminIds,
       ownerBrandId,
@@ -67,7 +67,7 @@ async function notifyAddOnPayment(payment: any, event: any, initiatorUser: any):
         'addon_payment_made',
         `Payment submitted: ${event.title ?? `Event #${event.id}`}`,
         `₱${parseFloat(payment.amount).toFixed(2)} via ${payment.method === 'balance' ? 'Label Balance' : 'Paymongo'}`,
-        '/campaigns/events/add-ons?tab=payment'
+        `/campaigns/events/add-ons?event=${event.id}&tab=payment`
       );
     }
   } catch (err) {
