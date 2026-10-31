@@ -130,7 +130,14 @@ export class InAppNotificationService implements OnDestroy {
       'wristband_order_placed': 'Wristband order placed',
       'wristband_order_accepted': 'Wristband order accepted',
       'wristband_order_rejected': 'Wristband order rejected',
-      'addon_payment_made': 'Add-on payment'
+      'wristband_order_shipped': 'Wristband order shipped',
+      'addon_payment_made': 'Add-on payment',
+      'event_invite': 'Event invite',
+      'event_brand_collab_invite': 'Collaboration invite',
+      'task_assigned': 'Task assigned',
+      'task_due_today': 'Task due today',
+      'artist_registration': 'Artist registration',
+      'payment_succeeded': 'Payment sent'
     };
     return labels[type] || type;
   }

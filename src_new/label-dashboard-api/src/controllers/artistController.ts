@@ -587,7 +587,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
         const brand = await Brand.findByPk(req.user.brand_id);
         
         // Generate dashboard URL
-        const dashboardUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/artist`;
+        const dashboardUrl = `${await getBrandFrontendUrl(req.user.brand_id)}/artist?select=${artistId}`;
         
         // Get updater name
         const updaterName = req.user.first_name && req.user.last_name 
@@ -624,7 +624,7 @@ export const updateArtist = async (req: AuthRequest, res: Response) => {
     try {
       const notifyUserIds = await getArtistTeamAndAdminUserIds(artistId, req.user.brand_id);
       console.log(`[Notification] artist_updated — artistId=${artistId} brandId=${req.user.brand_id} userIds=${JSON.stringify(notifyUserIds)}`);
-      await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'artist_updated', `Artist profile updated: ${artist.name}`, undefined, `/artist/profile`);
+      await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'artist_updated', `Artist profile updated: ${artist.name}`, undefined, `/artist?select=${artistId}`);
       console.log(`[Notification] artist_updated inserted for ${notifyUserIds.length} user(s)`);
     } catch (notifyError) {
       console.error('Failed to create artist update notifications:', notifyError);
@@ -837,13 +837,14 @@ export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
             artist.name,
             payout_point,
             updaterName,
-            artist.brand
+            artist.brand,
+            artist.id
           );
         }
 
         // Create in-app notifications
         const notifyUserIds = await getArtistTeamAndAdminUserIds(artist.id, req.user.brand_id);
-        await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'payout_point_updated', `Payout threshold updated for ${artist.name}`, undefined, `/artist/profile`);
+        await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'payout_point_updated', `Payout threshold updated for ${artist.name}`, undefined, `/artist?select=${artist.id}&redirect=/financial`);
       } catch (emailError) {
         console.error('Failed to send payout point notification:', emailError);
         // Continue with the process even if email fails
@@ -2126,12 +2127,13 @@ export const addPaymentMethod = async (req: AuthRequest, res: Response) => {
             account_number_or_email
           },
           updaterName,
-          brand
+          brand,
+          artist.id
         );
 
         // Create in-app notifications
         const notifyUserIds = await getArtistTeamAndAdminUserIds(artist.id, req.user.brand_id);
-        await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'payment_method_updated', `Payment method updated for ${artist.name}`, undefined, `/artist/profile`);
+        await createNotificationsForUsers(notifyUserIds, req.user.brand_id, 'payment_method_updated', `Payment method updated for ${artist.name}`, undefined, `/artist?select=${artist.id}&redirect=/financial`);
       }
     } catch (emailError) {
       console.error('Failed to send payment method notification:', emailError);

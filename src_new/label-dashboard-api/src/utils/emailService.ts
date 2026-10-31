@@ -502,7 +502,8 @@ export const sendPaymentMethodNotification = async (
     account_number_or_email: string;
   },
   updaterName: string,
-  brand: any
+  brand: any,
+  artistId: number
 ): Promise<boolean> => {
   try {
     // Get brand administrators
@@ -528,7 +529,7 @@ export const sendPaymentMethodNotification = async (
     template = template.replace(/%MEMBER_NAME%/g, updaterName);
     template = template.replace(/%BRAND%/g, brand?.name || 'Your Label');
     template = template.replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
-    template = template.replace(/%LINK%/g, `${await getBrandFrontendUrl(brand?.id || 1)}/financial#payments`);
+    template = template.replace(/%LINK%/g, `${await getBrandFrontendUrl(brand?.id || 1)}/artist?select=${artistId}&redirect=/financial`);
 
     const subject = `A new payment method has been added to ${artistName}`;
     return await sendEmail(allRecipients, subject, template, brand?.id || 1);
@@ -544,7 +545,8 @@ export const sendPayoutPointNotification = async (
   artistName: string,
   newPayoutPoint: number,
   updaterName: string,
-  brand: any
+  brand: any,
+  artistId: number
 ): Promise<boolean> => {
   try {
     const templatePath = path.join(__dirname, '../../src/assets/templates/artist_update_payout_point.html');
@@ -557,7 +559,7 @@ export const sendPayoutPointNotification = async (
     template = template.replace(/%BRAND_NAME%/g, brand?.name || 'Your Label');
     template = template.replace(/%BRAND_COLOR%/g, brand?.brand_color || '#1595e7');
     template = template.replace(/%MEMBER_NAME%/g, updaterName);
-    template = template.replace(/%URL%/g, `${await getBrandFrontendUrl(brand?.id || 1)}/financial#payments`);
+    template = template.replace(/%URL%/g, `${await getBrandFrontendUrl(brand?.id || 1)}/artist?select=${artistId}&redirect=/financial`);
 
     const subject = `Payout point for ${artistName} updated.`;
     return await sendEmail(recipients, subject, template, brand?.id || 1);
