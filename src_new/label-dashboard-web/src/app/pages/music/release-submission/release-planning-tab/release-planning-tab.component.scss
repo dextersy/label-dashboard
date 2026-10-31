@@ -121,7 +121,15 @@
 
 // --- Board ---
 
+.planning-boards-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
 .planning-board-outer {
+  flex: 1;
+  min-width: 0;
   position: relative;
 
   &::after {
@@ -142,6 +150,32 @@
   }
 }
 
+// Done panel — standalone column beside swim lanes
+.planning-done-panel {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+
+  // The header reuses .planning-board-header but needs full radius since it's standalone
+  .planning-board-header {
+    border-radius: 10px 10px 0 0;
+    border: 1px solid var(--border-color, #dee2e6);
+    border-bottom: none;
+  }
+
+  &__body {
+    flex: 1;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid var(--border-color, #dee2e6);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    min-height: 80px;
+  }
+}
+
 .planning-board-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -151,12 +185,11 @@
   border-radius: 0 0 10px 10px;
 }
 
-// 2D grid: [row-label col] + [3 status cols]
-// rows: [header row] + [N swim-lane rows]
+// 2D grid: [row-label col] + [2 swim-lane status cols]
 .planning-board {
   display: grid;
-  grid-template-columns: 28px repeat(3, minmax(200px, 1fr));
-  min-width: 660px;
+  grid-template-columns: 28px repeat(2, minmax(200px, 1fr));
+  min-width: 428px;
   // Border drawn on scroll wrapper so sticky children aren't clipped
 }
 
@@ -176,8 +209,8 @@
 
   &__inner {
     display: grid;
-    grid-template-columns: 28px repeat(3, minmax(200px, 1fr));
-    min-width: 660px;
+    grid-template-columns: 28px repeat(2, minmax(200px, 1fr));
+    min-width: 428px;
   }
 }
 

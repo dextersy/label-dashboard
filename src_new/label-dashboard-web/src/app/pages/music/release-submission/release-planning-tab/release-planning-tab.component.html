@@ -80,115 +80,134 @@
 
   <!-- Kanban board -->
   <ng-container *ngIf="viewMode === 'kanban'">
-  <div class="planning-board-outer">
-  <!-- Sticky column headers — sibling of scroll container, synced via JS -->
-  <div class="planning-board-header" #boardHeader>
-    <div class="planning-board-header__inner">
-      <div class="planning-board__corner"></div>
-      <div
-        *ngFor="let s of statusDefs"
-        class="planning-col-header"
-        [ngClass]="'planning-col-header--' + s.id">
-        <span class="planning-col-header__title">{{ s.label }}</span>
-        <span class="planning-col-header__count">{{ statusCountForCol(s.status) }}</span>
+  <div class="planning-boards-wrap">
+
+    <!-- ── Swim-lane panel (Not started + In progress) ── -->
+    <div class="planning-board-outer">
+      <!-- Sticky column headers, synced horizontally via JS -->
+      <div class="planning-board-header" #boardHeader>
+        <div class="planning-board-header__inner">
+          <div class="planning-board__corner"></div>
+          <div
+            *ngFor="let s of swimStatusDefs"
+            class="planning-col-header"
+            [ngClass]="'planning-col-header--' + s.id">
+            <span class="planning-col-header__title">{{ s.label }}</span>
+            <span class="planning-col-header__count">{{ statusCountForCol(s.status) }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="planning-board-scroll" #boardScroll (scroll)="syncHeaderScroll()">
+      <div *ngIf="!loading" class="planning-board">
+        <ng-container *ngFor="let row of kanbanRows; trackBy: trackByRowBucket; last as isLastRow">
+          <div class="planning-row-label"
+               [ngClass]="'planning-row-label--' + row.bucket"
+               [class.planning-row--last]="isLastRow">
+            <span class="planning-row-label__text">{{ row.label }}</span>
+          </div>
+          <div
+            *ngFor="let cell of row.cells; trackBy: trackByCellId"
+            class="planning-cell"
+            [ngClass]="'planning-cell--' + statusCssId(cell.status)"
+            [class.planning-cell--last-row]="isLastRow"
+            cdkDropList
+            [cdkDropListData]="cell"
+            [cdkDropListConnectedTo]="allCellIds"
+            [id]="cell.id"
+            (cdkDropListDropped)="onTaskDrop($event, cell)">
+            <div
+              *ngFor="let task of cell.tasks; trackBy: trackByTaskId"
+              class="task-card"
+              [class.task-card--done]="task.status === 'done'"
+              [class.task-card--saving]="savingTaskId === task.id"
+              cdkDrag
+              [cdkDragData]="task"
+              (cdkDragStarted)="onDragStarted()">
+              <button class="task-card__body" (click)="openEdit(task)">
+                <p class="task-card__title" [class.task-card__title--done]="task.status === 'done'">{{ task.title }}</p>
+                <p *ngIf="task.notes" class="task-card__notes">{{ task.notes }}</p>
+                <div class="task-card__meta">
+                  <span *ngIf="task.assignedUser" class="task-card__assignee">
+                    <span class="task-avatar task-avatar--xs" [style.background]="avatarColor(task.assignedUser)">{{ avatarInitials(task.assignedUser) }}</span>
+                    {{ assigneeName(task) }}
+                  </span>
+                  <span *ngIf="!task.assigned_user_id" class="task-card__unassigned">Unassigned</span>
+                  <span *ngIf="task.due_date" class="task-card__due"
+                        [class.task-card__due--overdue]="isDueSoon(task.due_date) && task.status !== 'done'">
+                    <app-icon name="calendar" iconOnly class="tw-mr-0.5" />{{ formatDueDate(task.due_date) }}
+                  </span>
+                </div>
+              </button>
+              <div class="task-card__footer">
+                <span class="task-status-btn"
+                      [class.task-status-btn--not-started]="task.status === 'not_started'"
+                      [class.task-status-btn--in-progress]="task.status === 'in_progress'"
+                      [class.task-status-btn--done]="task.status === 'done'">
+                  <app-icon [name]="statusIcon(task.status)" />
+                  <span class="task-status-label">{{ statusLabel(task.status) }}</span>
+                </span>
+                <button *ngIf="canDelete(task)" class="task-card__delete" title="Delete task" (click)="deleteTask(task, $event)">
+                  <app-icon name="trash" iconOnly />
+                </button>
+              </div>
+            </div>
+            <div *ngIf="cell.tasks.length === 0" class="planning-cell__empty"></div>
+          </div>
+        </ng-container>
+      </div>
       </div>
     </div>
-  </div>
-  <div class="planning-board-scroll" #boardScroll (scroll)="syncHeaderScroll()">
-  <div *ngIf="!loading" class="planning-board">
 
-    <!-- Swim-lane rows -->
-    <ng-container *ngFor="let row of kanbanRows; trackBy: trackByRowBucket; last as isLastRow">
-
-      <!-- Row label (rotated vertical text) -->
-      <div class="planning-row-label"
-           [ngClass]="'planning-row-label--' + row.bucket"
-           [class.planning-row--last]="isLastRow">
-        <span class="planning-row-label__text">{{ row.label }}</span>
+    <!-- ── Done panel (single column, sorted by newest updated) ── -->
+    <div class="planning-done-panel" *ngIf="!loading">
+      <div class="planning-done-panel__header planning-board-header">
+        <div class="planning-col-header planning-col-header--done tw-w-full">
+          <span class="planning-col-header__title">Done</span>
+          <span class="planning-col-header__count">{{ statusCountForCol('done') }}</span>
+        </div>
       </div>
-
-      <!-- 3 cells -->
       <div
-        *ngFor="let cell of row.cells; trackBy: trackByCellId"
-        class="planning-cell"
-        [ngClass]="'planning-cell--' + statusCssId(cell.status)"
-        [class.planning-cell--last-row]="isLastRow"
+        class="planning-done-panel__body"
         cdkDropList
-        [cdkDropListData]="cell"
+        [cdkDropListData]="doneCellData"
         [cdkDropListConnectedTo]="allCellIds"
-        [id]="cell.id"
-        (cdkDropListDropped)="onTaskDrop($event, cell)">
-
-        <!-- Task cards -->
+        id="done-column"
+        (cdkDropListDropped)="onTaskDrop($event, doneCellData)">
         <div
-          *ngFor="let task of cell.tasks; trackBy: trackByTaskId"
-          class="task-card"
-          [class.task-card--done]="task.status === 'done'"
+          *ngFor="let task of doneTasks; trackBy: trackByTaskId"
+          class="task-card task-card--done"
           [class.task-card--saving]="savingTaskId === task.id"
           cdkDrag
-          [cdkDragData]="task">
-
-          <!-- Clickable body -->
+          [cdkDragData]="task"
+          (cdkDragStarted)="onDragStarted()">
           <button class="task-card__body" (click)="openEdit(task)">
-            <p class="task-card__title" [class.task-card__title--done]="task.status === 'done'">
-              {{ task.title }}
-            </p>
-
+            <p class="task-card__title task-card__title--done">{{ task.title }}</p>
             <p *ngIf="task.notes" class="task-card__notes">{{ task.notes }}</p>
-
             <div class="task-card__meta">
               <span *ngIf="task.assignedUser" class="task-card__assignee">
-                <span
-                  class="task-avatar task-avatar--xs"
-                  [style.background]="avatarColor(task.assignedUser)">
-                  {{ avatarInitials(task.assignedUser) }}
-                </span>
+                <span class="task-avatar task-avatar--xs" [style.background]="avatarColor(task.assignedUser)">{{ avatarInitials(task.assignedUser) }}</span>
                 {{ assigneeName(task) }}
               </span>
-              <span *ngIf="!task.assigned_user_id" class="task-card__unassigned">
-                Unassigned
-              </span>
-
-              <span
-                *ngIf="task.due_date"
-                class="task-card__due"
-                [class.task-card__due--overdue]="isDueSoon(task.due_date) && task.status !== 'done'">
-                <app-icon name="calendar" iconOnly class="tw-mr-0.5" />
-                {{ formatDueDate(task.due_date) }}
+              <span *ngIf="!task.assigned_user_id" class="task-card__unassigned">Unassigned</span>
+              <span *ngIf="task.due_date" class="task-card__due">
+                <app-icon name="calendar" iconOnly class="tw-mr-0.5" />{{ formatDueDate(task.due_date) }}
               </span>
             </div>
           </button>
-
-          <!-- Footer: status badge + delete -->
           <div class="task-card__footer">
-            <span
-              class="task-status-btn"
-              [class.task-status-btn--not-started]="task.status === 'not_started'"
-              [class.task-status-btn--in-progress]="task.status === 'in_progress'"
-              [class.task-status-btn--done]="task.status === 'done'">
-              <app-icon [name]="statusIcon(task.status)" />
-              <span class="task-status-label">{{ statusLabel(task.status) }}</span>
+            <span class="task-status-btn task-status-btn--done">
+              <app-icon [name]="statusIcon('done')" />
+              <span class="task-status-label">{{ statusLabel('done') }}</span>
             </span>
-            <button
-              *ngIf="canDelete(task)"
-              class="task-card__delete"
-              title="Delete task"
-              (click)="deleteTask(task, $event)">
+            <button *ngIf="canDelete(task)" class="task-card__delete" title="Delete task" (click)="deleteTask(task, $event)">
               <app-icon name="trash" iconOnly />
             </button>
           </div>
-
         </div>
-
-        <!-- Empty drop zone hint -->
-        <div *ngIf="cell.tasks.length === 0" class="planning-cell__empty"></div>
-
+        <div *ngIf="doneTasks.length === 0" class="planning-cell__empty"></div>
       </div>
+    </div>
 
-    </ng-container>
-
-  </div>
-  </div>
   </div>
   </ng-container>
 

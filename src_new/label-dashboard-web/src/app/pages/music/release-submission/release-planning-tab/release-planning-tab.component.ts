@@ -77,6 +77,7 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
   loading = false;
   suggestionsExpanded = false;
   savingTaskId: number | null = null;
+  isDragging = false;
   addingTaskTitle: string | null = null; // suggestion being added
 
   readonly suggestions = TASK_SUGGESTIONS;
@@ -144,10 +145,17 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
 
   // --- Kanban 2D grid (rows = due buckets, cols = status) ---
 
+  // All 3 statuses (used for list view counts etc.)
   static readonly STATUS_DEFS: { status: ReleaseTaskStatus; id: string; label: string }[] = [
     { status: 'not_started', id: 'not-started', label: 'Not started' },
     { status: 'in_progress', id: 'in-progress', label: 'In progress' },
     { status: 'done',        id: 'done',         label: 'Done' },
+  ];
+
+  // Only the two swim-lane statuses
+  static readonly SWIM_STATUS_DEFS: { status: ReleaseTaskStatus; id: string; label: string }[] = [
+    { status: 'not_started', id: 'not-started', label: 'Not started' },
+    { status: 'in_progress', id: 'in-progress', label: 'In progress' },
   ];
 
   static readonly BUCKET_DEFS: { bucket: DueBucket; label: string }[] = [
@@ -172,17 +180,18 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
       return 'due-later';
     };
 
-    // Build a map: bucket → status → tasks[]
+    // Build a map: bucket → swim status → tasks[] (done excluded)
     const map = new Map<DueBucket, Map<ReleaseTaskStatus, ReleaseTask[]>>();
     for (const { bucket } of ReleasePlanningTabComponent.BUCKET_DEFS) {
       const inner = new Map<ReleaseTaskStatus, ReleaseTask[]>();
-      for (const { status } of ReleasePlanningTabComponent.STATUS_DEFS) {
+      for (const { status } of ReleasePlanningTabComponent.SWIM_STATUS_DEFS) {
         inner.set(status, []);
       }
       map.set(bucket, inner);
     }
 
     for (const task of this.filteredTasks) {
+      if (task.status === 'done') continue;
       const bucket = getBucket(task);
       map.get(bucket)!.get(task.status)!.push(task);
     }
@@ -199,7 +208,7 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     const rows: KanbanRow[] = ReleasePlanningTabComponent.BUCKET_DEFS.map(({ bucket, label }) => ({
       bucket,
       label,
-      cells: ReleasePlanningTabComponent.STATUS_DEFS.map(({ status, id }) => ({
+      cells: ReleasePlanningTabComponent.SWIM_STATUS_DEFS.map(({ status, id }) => ({
         id: `${bucket}--${id}`,
         status,
         bucket,
@@ -211,10 +220,28 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
     return rows.filter(row => row.cells.some(c => c.tasks.length > 0));
   }
 
-  get allCellIds(): string[] {
+  get doneTasks(): ReleaseTask[] {
+    return this.filteredTasks
+      .filter(t => t.status === 'done')
+      .sort((a, b) => {
+        const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+        const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+        return bTime - aTime;
+      });
+  }
+
+  get doneCellData(): KanbanCell {
+    return { id: 'done-column', status: 'done', bucket: 'no-date', tasks: this.doneTasks };
+  }
+
+  get swimCellIds(): string[] {
     return ReleasePlanningTabComponent.BUCKET_DEFS.flatMap(({ bucket }) =>
-      ReleasePlanningTabComponent.STATUS_DEFS.map(({ id }) => `${bucket}--${id}`)
+      ReleasePlanningTabComponent.SWIM_STATUS_DEFS.map(({ id }) => `${bucket}--${id}`)
     );
+  }
+
+  get allCellIds(): string[] {
+    return [...this.swimCellIds, 'done-column'];
   }
 
   statusCountForCol(status: ReleaseTaskStatus): number {
@@ -368,7 +395,15 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
 
   // --- Edit dialog ---
 
+  onDragStarted(): void {
+    this.isDragging = true;
+  }
+
   openEdit(task: ReleaseTask): void {
+    if (this.isDragging) {
+      this.isDragging = false;
+      return;
+    }
     this.editForm = {
       title: task.title,
       notes: task.notes || '',
@@ -507,6 +542,7 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
   }
 
   get statusDefs() { return ReleasePlanningTabComponent.STATUS_DEFS; }
+  get swimStatusDefs() { return ReleasePlanningTabComponent.SWIM_STATUS_DEFS; }
 
   statusCssId(status: ReleaseTaskStatus): string {
     return status.replace(/_/g, '-');
