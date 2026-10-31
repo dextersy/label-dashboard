@@ -402,7 +402,8 @@
               </div>
             </div>
             <button type="submit" class="btn-primary tw-w-full tw-py-4"
-              [disabled]="ticketForm.invalid || isSubmitting || isPreview">
+              [disabled]="isSubmitting || isPreview"
+              [class.tw-opacity-60]="ticketForm.invalid && !isSubmitting && !isPreview">
               <app-icon [name]="discountedTotal > 0 ? 'credit-card' : 'user-check'" class="tw-mr-2" />
               {{ isPreview ? 'Purchasing disabled in preview' : (isSubmitting ? 'Processing...' : (discountedTotal > 0 ? 'Proceed to Payment' : 'Register Now')) }}
             </button>

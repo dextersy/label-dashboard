@@ -518,6 +518,24 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
 
   onSubmit() {
     if (this.isPreview) return;
+
+    if (this.ticketForm.invalid) {
+      // Mark all fields as touched so validation errors become visible
+      this.ticketForm.markAllAsTouched();
+      // Scroll to the first invalid field within the content-scroll container
+      setTimeout(() => {
+        const scrollEl = this._contentScrollEl?.nativeElement;
+        const firstInvalid = scrollEl?.querySelector<HTMLElement>('.ng-invalid');
+        if (scrollEl && firstInvalid) {
+          const containerTop = scrollEl.getBoundingClientRect().top;
+          const fieldTop = firstInvalid.getBoundingClientRect().top;
+          const offset = fieldTop - containerTop + scrollEl.scrollTop - 80;
+          scrollEl.scrollTo({ top: offset, behavior: 'smooth' });
+        }
+      }, 50);
+      return;
+    }
+
     if (this.ticketForm.valid && this.event) {
       // Check if selected ticket type is sold out
       const selectedTicketTypeId = this.ticketForm.value.ticket_type_id;
