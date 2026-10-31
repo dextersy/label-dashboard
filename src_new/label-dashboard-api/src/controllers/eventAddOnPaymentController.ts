@@ -49,7 +49,7 @@ async function notifyAddOnPayment(payment: any, event: any, initiatorUser: any):
     const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['parent_brand'] });
     const ownerBrandId = orgBrand?.parent_brand ?? event.brand_id;
     const ownerAdminIds = await getBrandAdminUserIds(ownerBrandId);
-    const addOnsLink = `/campaigns/events/add-ons?event=${event.id}&tab=payment`;
+    const addOnsLink = `/campaigns/events/wristband-order-review?event=${event.id}`;
     await createNotificationsForUsers(
       ownerAdminIds,
       ownerBrandId,
