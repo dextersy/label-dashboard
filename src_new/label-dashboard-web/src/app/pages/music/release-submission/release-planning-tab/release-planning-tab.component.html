@@ -80,12 +80,12 @@
 
   <!-- Kanban board -->
   <ng-container *ngIf="viewMode === 'kanban'">
+  <div class="planning-kanban-scroll">
   <div class="planning-boards-wrap">
 
     <!-- ── Swim-lane panel (Not started + In progress) ── -->
     <div class="planning-board-outer">
-      <!-- Sticky column headers, synced horizontally via JS -->
-      <div class="planning-board-header" #boardHeader>
+      <div class="planning-board-header">
         <div class="planning-board-header__inner">
           <div class="planning-board__corner"></div>
           <div
@@ -97,7 +97,6 @@
           </div>
         </div>
       </div>
-      <div class="planning-board-scroll" #boardScroll (scroll)="syncHeaderScroll()">
       <div *ngIf="!loading" class="planning-board">
         <ng-container *ngFor="let row of kanbanRows; trackBy: trackByRowBucket; last as isLastRow">
           <div class="planning-row-label"
@@ -155,7 +154,6 @@
           </div>
         </ng-container>
       </div>
-      </div>
     </div>
 
     <!-- ── Done panel (single column, sorted by newest updated) ── -->
@@ -208,6 +206,7 @@
       </div>
     </div>
 
+  </div>
   </div>
   </ng-container>
 

@@ -68,7 +68,6 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
   @Input() isAdmin = false;
 
   @ViewChild('boardScroll') private boardScrollRef?: ElementRef<HTMLElement>;
-  @ViewChild('boardHeader') private boardHeaderRef?: ElementRef<HTMLElement>;
 
   tasks: ReleaseTask[] = [];
   assignableUsers: AssignableUser[] = [];
@@ -344,14 +343,6 @@ export class ReleasePlanningTabComponent implements OnInit, OnChanges {
         this.addingTaskTitle = null;
       },
     });
-  }
-
-  syncHeaderScroll(): void {
-    const scroll = this.boardScrollRef?.nativeElement;
-    const header = this.boardHeaderRef?.nativeElement;
-    if (scroll && header) {
-      header.scrollLeft = scroll.scrollLeft;
-    }
   }
 
   private scrollToNoDateColumn(): void {

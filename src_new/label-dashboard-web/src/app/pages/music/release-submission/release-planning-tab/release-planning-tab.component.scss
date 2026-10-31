@@ -121,33 +121,25 @@
 
 // --- Board ---
 
+// Single outer scroll container — both panels scroll together horizontally.
+// overflow-y: clip avoids creating a vertical scroll container (which would
+// break position: sticky on the column headers).
+.planning-kanban-scroll {
+  overflow-x: auto;
+  overflow-y: clip;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
 .planning-boards-wrap {
   display: flex;
   align-items: stretch;
   gap: 12px;
+  min-width: max-content; // keeps both panels at their natural width
 }
 
 .planning-board-outer {
   flex: 1;
-  min-width: 0;
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 40px;
-    background: linear-gradient(to right, transparent, var(--page-bg, #fff) 85%);
-    pointer-events: none;
-    z-index: 2;
-    display: none;
-  }
-
-  @media (max-width: 900px) {
-    &::after { display: block; }
-  }
 }
 
 // Done panel — standalone column beside swim lanes
@@ -176,14 +168,6 @@
   }
 }
 
-.planning-board-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  border: 1px solid var(--border-color, #dee2e6);
-  border-top: none;
-  border-radius: 0 0 10px 10px;
-}
 
 // 2D grid: [row-label col] + [2 swim-lane status cols]
 .planning-board {
@@ -193,7 +177,7 @@
   // Border drawn on scroll wrapper so sticky children aren't clipped
 }
 
-// Sticky header bar (lives outside the scroll container)
+// Sticky column headers — now inside the scroll container, scrolls H naturally
 .planning-board-header {
   position: sticky;
   top: 50px; /* desktop: clear fixed navbar only */
@@ -202,7 +186,7 @@
   @media (max-width: 1024px) {
     top: 93px; /* tablet/mobile: navbar (50px) + horizontal tab bar (~43px) */
   }
-  overflow: hidden; // clips content that scrolls out of view (driven by JS)
+
   border: 1px solid var(--border-color, #dee2e6);
   border-bottom: none;
   border-radius: 10px 10px 0 0;
