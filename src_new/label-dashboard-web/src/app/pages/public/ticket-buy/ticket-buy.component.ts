@@ -522,11 +522,21 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     if (this.ticketForm.invalid) {
       // Mark all fields as touched so validation errors become visible
       this.ticketForm.markAllAsTouched();
-      // Scroll to the first invalid field within the content-scroll container
+      // Scroll to the first invalid field.
+      // On desktop, content-scroll is the scrollable container.
+      // On mobile (<= 768px), the whole page scrolls via the window.
       setTimeout(() => {
         const scrollEl = this._contentScrollEl?.nativeElement;
         const firstInvalid = scrollEl?.querySelector<HTMLElement>('.ng-invalid');
-        if (scrollEl && firstInvalid) {
+        if (!scrollEl || !firstInvalid) return;
+
+        const isMobileLayout = scrollEl.scrollHeight <= scrollEl.clientHeight + 2;
+        if (isMobileLayout) {
+          // Window scrolls on mobile
+          const fieldTop = firstInvalid.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: fieldTop, behavior: 'smooth' });
+        } else {
+          // Container scrolls on desktop
           const containerTop = scrollEl.getBoundingClientRect().top;
           const fieldTop = firstInvalid.getBoundingClientRect().top;
           const offset = fieldTop - containerTop + scrollEl.scrollTop - 80;
