@@ -121,6 +121,7 @@
               [class.task-card--saving]="savingTaskId === task.id"
               cdkDrag
               [cdkDragData]="task"
+              [cdkDragStartDelay]="{ touch: 200, mouse: 0 }"
               (cdkDragStarted)="onDragStarted()">
               <button class="task-card__body" (click)="openEdit(task)">
                 <p class="task-card__title" [class.task-card__title--done]="task.status === 'done'">{{ task.title }}</p>
@@ -177,6 +178,7 @@
           [class.task-card--saving]="savingTaskId === task.id"
           cdkDrag
           [cdkDragData]="task"
+          [cdkDragStartDelay]="{ touch: 200, mouse: 0 }"
           (cdkDragStarted)="onDragStarted()">
           <button class="task-card__body" (click)="openEdit(task)">
             <p class="task-card__title task-card__title--done">{{ task.title }}</p>
