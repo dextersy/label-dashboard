@@ -14,6 +14,7 @@ import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification, sendPaymentSucceededAdminNotification, sendAddOnPaymentNotification } from './emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamUserIds, getBrandAdminUserIds } from './notificationService';
 import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
+import { getBrandFrontendUrl } from './brandUtils';
 
 interface PayMongoLinkData {
   amount: number; // in cents
@@ -1074,23 +1075,42 @@ export class PaymentService {
     try {
       const adminEmails = await this.getAdminEmails(event.brand_id);
 
-      // Get collab brand admin emails and their user IDs for in-app notifications
-      const collabBrandAdminEmails: string[] = [];
-      const collabBrandNotifications: { brandId: number; userIds: number[] }[] = [];
+      // Get collab brand admin emails, their user IDs, and their per-brand dashboard URLs
+      const collabBrandNotifications: { brandId: number; userIds: number[]; emails: string[]; dashboardUrl: string }[] = [];
 
       const collabBrands = await EventBrandCollaboration.findAll({
         where: { event_id: event.id, status: 'Accepted' }
       });
+
+      const ticketingParentId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+      const ticketingEventPath = `/campaigns/events/tickets?event=${event.id}`;
 
       for (const collab of collabBrands) {
         const collabAdmins = await User.findAll({
           where: { brand_id: collab.brand_id, is_admin: true },
           attributes: ['id', 'email_address']
         });
-        collabBrandAdminEmails.push(...collabAdmins.map((a: any) => a.email_address).filter(Boolean));
+
+        const collabBrand = await Brand.findByPk(collab.brand_id, { attributes: ['id', 'parent_brand'] });
+        const isTicketingBrand = ticketingParentId > 0 && (collabBrand as any)?.parent_brand === ticketingParentId;
+        let collabDashboardUrl: string;
+        if (isTicketingBrand) {
+          const ticketingBase = (process.env.TICKETING_FRONTEND_URL || '').replace(/\/$/, '');
+          collabDashboardUrl = ticketingBase ? `${ticketingBase}/app/events/${event.id}?tab=sales` : '';
+        } else {
+          try {
+            const collabFrontendUrl = await getBrandFrontendUrl(collab.brand_id);
+            collabDashboardUrl = `${collabFrontendUrl}${ticketingEventPath}`;
+          } catch {
+            collabDashboardUrl = '';
+          }
+        }
+
         collabBrandNotifications.push({
           brandId: collab.brand_id,
-          userIds: collabAdmins.map((a: any) => a.id)
+          userIds: collabAdmins.map((a: any) => a.id),
+          emails: collabAdmins.map((a: any) => a.email_address).filter(Boolean),
+          dashboardUrl: collabDashboardUrl,
         });
       }
 
@@ -1103,15 +1123,17 @@ export class PaymentService {
         .map((m: any) => m.user_id)
         .filter((id: any) => id != null) as number[];
 
-      const allEmails = [...new Set([...adminEmails, ...collabBrandAdminEmails, ...teamEmails])];
+      // Owning brand recipients: admins + team members
+      const ownerRecipientEmails = [...new Set([...adminEmails, ...teamEmails])];
+      const hasAnyRecipients = ownerRecipientEmails.length > 0 || collabBrandNotifications.some(c => c.emails.length > 0);
 
-      if (allEmails.length === 0) {
+      if (!hasAnyRecipients) {
         return false;
       }
 
       const brand = event.brand;
 
-      // Get domain for the brand
+      // Get domain for the owning brand
       const domains = await Domain.findAll({
         where: { brand_id: event.brand_id }
       });
@@ -1150,8 +1172,18 @@ export class PaymentService {
         DASHBOARD_URL: dashboardUrl
       };
 
-      // Send branded email to all recipients (brand admins, collab brand admins, event team members)
-      await sendBrandedEmail(allEmails, 'ticket_admin_notification', templateData, event.brand_id);
+      // Send branded email to owning brand admins and team members
+      if (ownerRecipientEmails.length > 0) {
+        await sendBrandedEmail(ownerRecipientEmails, 'ticket_admin_notification', templateData, event.brand_id);
+      }
+
+      // Send separate branded emails to each collab brand's admins using their own brand's URL
+      for (const collab of collabBrandNotifications) {
+        if (collab.emails.length > 0 && collab.dashboardUrl) {
+          const collabTemplateData = { ...templateData, DASHBOARD_URL: collab.dashboardUrl };
+          await sendBrandedEmail(collab.emails, 'ticket_admin_notification', collabTemplateData, event.brand_id);
+        }
+      }
 
       // Create in-app notifications for the owning brand's admins
       const adminIds = await getBrandAdminUserIds(event.brand_id);
