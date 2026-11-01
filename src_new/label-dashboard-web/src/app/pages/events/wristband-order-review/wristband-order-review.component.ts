@@ -545,6 +545,16 @@ export class WristbandOrderReviewComponent implements OnInit {
     tr.subtotal td { color: #555; }
     tfoot tr td { font-weight: bold; border-top: 1.5px solid #333; border-bottom: none; padding-top: 3mm; }
     .footer { font-size: 8pt; color: #aaa; margin-top: 8mm; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 3mm; }
+    .receipt-cut { position: fixed; bottom: 0; left: 0; right: 0; border-top: 2px dashed #999; padding-top: 4mm; background: #fff; page-break-inside: avoid; }
+    .receipt-cut-label { font-size: 7.5pt; color: #888; text-align: center; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4mm; }
+    .receipt-cut-label::before, .receipt-cut-label::after { content: '  ✂  '; }
+    .receipt-title { font-size: 12pt; font-weight: bold; margin: 0 0 1mm; }
+    .receipt-meta { font-size: 9pt; color: #555; margin-bottom: 3mm; }
+    .receipt-fields { display: flex; gap: 8mm; margin-top: 5mm; padding-bottom: 4mm; }
+    .receipt-field { flex: 1; }
+    .receipt-field-wide { flex: 2; }
+    .receipt-field-label { font-size: 8pt; color: #666; margin-bottom: 2mm; }
+    .receipt-field-line { border-bottom: 1px solid #333; height: 14mm; }
   </style>
 </head>
 <body>
@@ -582,6 +592,24 @@ export class WristbandOrderReviewComponent implements OnInit {
   </table>
 
   <div class="footer">${brandName} &mdash; Generated ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+  <div class="receipt-cut">
+    <div class="receipt-cut-label">Delivery Receipt &mdash; Cut and retain</div>
+    <div class="receipt-title">Delivery Receipt</div>
+    <div class="receipt-meta">Order #${order.id}${eventTitle ? ' &mdash; ' + eventTitle : ''} &mdash; ${this.totalQty} wristband${this.totalQty !== 1 ? 's' : ''}</div>
+    <div class="address">${addressHtml}</div>
+    <div class="receipt-fields">
+      <div class="receipt-field receipt-field-wide">
+        <div class="receipt-field-label">Received by (print name &amp; signature)</div>
+        <div class="receipt-field-line"></div>
+      </div>
+      <div class="receipt-field">
+        <div class="receipt-field-label">Date received</div>
+        <div class="receipt-field-line"></div>
+      </div>
+    </div>
+  </div>
+
   <script>window.onload = function() { window.print(); };<\/script>
 </body>
 </html>`;
