@@ -46,6 +46,7 @@ export interface PublicEvent {
     name: string;
     color?: string;
     logo_url?: string;
+    domain?: string | null;
   };
   days?: { id: number; date_and_time: string; label?: string | null }[];
   ticketTypes?: Array<{

@@ -192,6 +192,15 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
           
           if (event.event) {
             const loadedEvent: PublicEvent = event.event;
+
+            // Redirect to owner brand's domain if accessed from a collaborator domain
+            if (!this.isPreview && this.currentBrand && loadedEvent.brand) {
+              if (this.currentBrand.id !== loadedEvent.brand.id && loadedEvent.brand.domain) {
+                window.location.href = `https://${loadedEvent.brand.domain}/public/tickets/buy/${eventId}`;
+                return;
+              }
+            }
+
             this.event = loadedEvent;
 
             // Ticket types are already filtered (enabled only) in the event response

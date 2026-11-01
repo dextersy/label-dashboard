@@ -118,7 +118,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         {
           model: Brand,
           as: 'brand',
-          attributes: ['id', 'brand_name', 'brand_color', 'logo_url']
+          attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          include: [{ model: Domain, as: 'domains', required: false, attributes: ['domain_name', 'is_primary'] }]
         },
         {
           model: EventTag,
@@ -289,7 +290,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
           id: event.brand.id,
           name: event.brand.brand_name,
           color: event.brand.brand_color,
-          logo_url: event.brand.logo_url
+          logo_url: event.brand.logo_url,
+          domain: (() => { const domains: any[] = (event.brand as any).domains || []; return (domains.find((d: any) => d.is_primary) || domains[0])?.domain_name ?? null; })()
         } : null,
         ticketTypes: processedTicketTypes,
         days: eventDays.map(d => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null })),
