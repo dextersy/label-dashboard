@@ -6,7 +6,7 @@ import { sequelize } from '../config/database';
 import { PaymentService } from '../utils/paymentService';
 import { generateUniqueTicketCode, sendTicketEmail } from '../utils/ticketEmailService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
-import { sendEmail, sendArtistRegistrationNotification } from '../utils/emailService';
+import { sendEmail, sendArtistRegistrationNotification, sendTicketAdminNotification } from '../utils/emailService';
 import { getBrandAdminUserIds, createNotificationsForUsers } from '../utils/notificationService';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { resolveEventCloseTime } from '../utils/eventCloseTime';
@@ -806,6 +806,15 @@ export const buyTicket = async (req: Request, res: Response) => {
         console.error('Failed to send free ticket email:', emailError);
         // Continue even if email fails - ticket is still registered
       }
+
+      // Send admin notification email + in-app notifications (fire-and-forget)
+      sendTicketAdminNotification({
+        event,
+        ticket,
+        ticketTypeName: selectedTicketType?.name || event.ticket_naming || 'Regular',
+        totalPayment: 0,
+        platformFee: 0,
+      }).catch(err => console.error('Failed to send free ticket admin notification:', err));
 
       // Set secure cookie for success page access
       setTicketAccessCookie(res, ticket.id, eventIdNum);

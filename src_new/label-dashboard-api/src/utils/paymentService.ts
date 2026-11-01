@@ -5,7 +5,7 @@ import path from 'path';
 import Brand from '../models/Brand';
 import PaymentMethod from '../models/PaymentMethod';
 import LabelPaymentMethod from '../models/LabelPaymentMethod';
-import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor, EventDay, EventBrandCollaboration, EventAccess } from '../models';
+import { Ticket, Event, User, Domain, TicketType, Donation, Fundraiser, EventAddOnPayment, WristbandOrder, WristbandOrderItem, WristbandColor, EventDay } from '../models';
 import Artist from '../models/Artist';
 import ArtistAccess from '../models/ArtistAccess';
 import Payment from '../models/Payment';
@@ -14,7 +14,7 @@ import { sendTicketEmail } from './ticketEmailService';
 import { sendBrandedEmail, sendEmail, sendPaymentNotification, sendSublabelPaymentNotification, sendPaymentFailedAdminNotification, sendPaymentSucceededAdminNotification, sendAddOnPaymentNotification } from './emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamUserIds, getBrandAdminUserIds } from './notificationService';
 import { calculatePlatformFeeForEventTickets, calculatePlatformFeeForFundraiserDonation } from './platformFeeCalculator';
-import { getBrandFrontendUrl } from './brandUtils';
+import { sendTicketAdminNotification } from './emailService';
 
 interface PayMongoLinkData {
   amount: number; // in cents
@@ -731,7 +731,13 @@ export class PaymentService {
     }
     
     // Send admin notification with updated ticket data
-    const adminNotificationSent = await this.sendAdminNotification(updatedTicket.event, updatedTicket);
+    const adminNotificationSent = await sendTicketAdminNotification({
+      event: updatedTicket.event,
+      ticket: updatedTicket,
+      ticketTypeName: (updatedTicket as any).ticketType ? (updatedTicket as any).ticketType.name : 'Regular',
+      totalPayment: updatedTicket.price_per_ticket * updatedTicket.number_of_entries,
+      platformFee: updatedTicket.platform_fee || 0,
+    });
     
     if (!adminNotificationSent) {
       this.webhookLog('ERROR: Failed to send admin notification');
@@ -1071,165 +1077,6 @@ export class PaymentService {
     }
   }
   
-  private async sendAdminNotification(event: any, ticket: any): Promise<boolean> {
-    try {
-      const adminEmails = await this.getAdminEmails(event.brand_id);
-
-      // Get collab brand admin emails, their user IDs, and their per-brand dashboard URLs
-      const collabBrandNotifications: { brandId: number; userIds: number[]; emails: string[]; dashboardUrl: string }[] = [];
-
-      const collabBrands = await EventBrandCollaboration.findAll({
-        where: { event_id: event.id, status: 'Accepted' }
-      });
-
-      const ticketingParentId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
-      const ticketingEventPath = `/campaigns/events/tickets?event=${event.id}`;
-
-      for (const collab of collabBrands) {
-        const collabAdmins = await User.findAll({
-          where: { brand_id: collab.brand_id, is_admin: true },
-          attributes: ['id', 'email_address']
-        });
-
-        const collabBrand = await Brand.findByPk(collab.brand_id, { attributes: ['id', 'parent_brand'] });
-        const isTicketingBrand = ticketingParentId > 0 && (collabBrand as any)?.parent_brand === ticketingParentId;
-        let collabDashboardUrl: string;
-        if (isTicketingBrand) {
-          const ticketingBase = (process.env.TICKETING_FRONTEND_URL || '').replace(/\/$/, '');
-          collabDashboardUrl = ticketingBase ? `${ticketingBase}/app/events/${event.id}?tab=sales` : '';
-        } else {
-          try {
-            const collabFrontendUrl = await getBrandFrontendUrl(collab.brand_id);
-            collabDashboardUrl = `${collabFrontendUrl}${ticketingEventPath}`;
-          } catch {
-            collabDashboardUrl = '';
-          }
-        }
-
-        collabBrandNotifications.push({
-          brandId: collab.brand_id,
-          userIds: collabAdmins.map((a: any) => a.id),
-          emails: collabAdmins.map((a: any) => a.email_address).filter(Boolean),
-          dashboardUrl: collabDashboardUrl,
-        });
-      }
-
-      // Get event team member emails (accepted members)
-      const teamAccessRecords = await EventAccess.findAll({
-        where: { event_id: event.id, status: 'Accepted' }
-      });
-      const teamEmails = teamAccessRecords.map((m: any) => m.invite_email).filter(Boolean);
-      const teamMemberUserIds = teamAccessRecords
-        .map((m: any) => m.user_id)
-        .filter((id: any) => id != null) as number[];
-
-      // Owning brand recipients: admins + team members
-      const ownerRecipientEmails = [...new Set([...adminEmails, ...teamEmails])];
-      const hasAnyRecipients = ownerRecipientEmails.length > 0 || collabBrandNotifications.some(c => c.emails.length > 0);
-
-      if (!hasAnyRecipients) {
-        return false;
-      }
-
-      const brand = event.brand;
-
-      // Get domain for the owning brand
-      const domains = await Domain.findAll({
-        where: { brand_id: event.brand_id }
-      });
-
-      const domainName = domains.length > 0 ? domains[0].domain_name : 'dashboard.meltrecords.com';
-      const dashboardUrl = `https://${domainName}/campaigns/events/tickets?event=${event.id}`;
-
-      const totalPayment = ticket.price_per_ticket * ticket.number_of_entries;
-
-      // Ensure platform fee is a number
-      const platformFee = parseFloat(ticket.platform_fee) || 0;
-
-      const ticketTypeName = (ticket as any).ticketType ? (ticket as any).ticketType.name : 'Regular';
-
-      // Generate logo HTML - either an image or text fallback
-      const brandLogoHtml = brand?.logo_url
-        ? `<img src="${brand.logo_url}" alt="${brand.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
-        : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${brand?.brand_name || 'Dashboard'}</div>`;
-
-      const netAmount = totalPayment - platformFee;
-
-      const templateData = {
-        BRAND_NAME: brand?.brand_name || 'Dashboard',
-        BRAND_LOGO_HTML: brandLogoHtml,
-        BRAND_COLOR: brand?.brand_color || '#333333',
-        EVENT_TITLE: event.title,
-        TICKET_ID: ticket.id.toString(),
-        CUSTOMER_NAME: ticket.name,
-        CUSTOMER_EMAIL: ticket.email_address,
-        TICKET_CODE: ticket.ticket_code,
-        TICKET_TYPE: ticketTypeName,
-        NUMBER_OF_ENTRIES: ticket.number_of_entries.toString(),
-        PAYMENT_AMOUNT: `₱${totalPayment.toFixed(2)}`,
-        PLATFORM_FEE: `₱${platformFee.toFixed(2)}`,
-        NET_AMOUNT: `₱${netAmount.toFixed(2)}`,
-        DASHBOARD_URL: dashboardUrl
-      };
-
-      // Send branded email to owning brand admins and team members
-      if (ownerRecipientEmails.length > 0) {
-        await sendBrandedEmail(ownerRecipientEmails, 'ticket_admin_notification', templateData, event.brand_id);
-      }
-
-      // Send separate branded emails to each collab brand's admins using their own brand's URL
-      for (const collab of collabBrandNotifications) {
-        if (collab.emails.length > 0 && collab.dashboardUrl) {
-          const collabTemplateData = { ...templateData, DASHBOARD_URL: collab.dashboardUrl };
-          await sendBrandedEmail(collab.emails, 'ticket_admin_notification', collabTemplateData, event.brand_id);
-        }
-      }
-
-      // Create in-app notifications for the owning brand's admins
-      const adminIds = await getBrandAdminUserIds(event.brand_id);
-      const notificationTitle = `New ticket sold: ${event.title}`;
-      const notificationBody = `${ticket.name} — ${ticketTypeName} x${ticket.number_of_entries}`;
-      await createNotificationsForUsers(
-        adminIds,
-        event.brand_id,
-        'ticket_purchased',
-        notificationTitle,
-        notificationBody,
-        `/campaigns/events/tickets?event=${event.id}`
-      );
-
-      // Create in-app notifications for each collab brand's admins
-      for (const { brandId, userIds } of collabBrandNotifications) {
-        if (userIds.length > 0) {
-          await createNotificationsForUsers(
-            userIds,
-            brandId,
-            'ticket_purchased',
-            notificationTitle,
-            notificationBody,
-            `/campaigns/events/tickets?event=${event.id}`
-          );
-        }
-      }
-
-      // Create in-app notifications for event team members with user accounts
-      if (teamMemberUserIds.length > 0) {
-        await createNotificationsForUsers(
-          teamMemberUserIds,
-          event.brand_id,
-          'ticket_purchased',
-          notificationTitle,
-          notificationBody,
-          `/campaigns/events/tickets?event=${event.id}`
-        );
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Failed to send admin notification:', error);
-      return false;
-    }
-  }
   
   private async sendAdminFailureNotification(reason: string, brandId?: number, payload?: any): Promise<boolean> {
     try {
