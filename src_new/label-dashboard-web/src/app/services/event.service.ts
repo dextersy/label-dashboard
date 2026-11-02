@@ -53,6 +53,7 @@ export interface WristbandOrder {
   disclaimer_acknowledged: boolean;
   notes: string | null;
   shipping_fee: number | null;
+  discount: number | null;
   tracking_url: string | null;
   created_by: number;
   createdAt: string;
@@ -1203,6 +1204,14 @@ export class EventService {
     return this.http.patch<{ order: WristbandOrder }>(
       `${environment.apiUrl}/events/wristband-orders/${orderId}/shipping-fee`,
       { shipping_fee: shippingFee },
+      { headers: this.getAuthHeaders() }
+    ).pipe(map(r => r.order), catchError(this.handleError));
+  }
+
+  setWristbandDiscount(orderId: number, discount: number | null): Observable<WristbandOrder> {
+    return this.http.patch<{ order: WristbandOrder }>(
+      `${environment.apiUrl}/events/wristband-orders/${orderId}/discount`,
+      { discount },
       { headers: this.getAuthHeaders() }
     ).pipe(map(r => r.order), catchError(this.handleError));
   }

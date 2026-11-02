@@ -29,6 +29,7 @@ export interface WristbandOrder {
   disclaimer_acknowledged: boolean;
   notes: string | null;
   shipping_fee: number | null;
+  discount: number | null;
   created_by: number;
   createdAt: string;
   updatedAt: string;

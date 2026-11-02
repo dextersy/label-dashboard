@@ -60,7 +60,7 @@ interface DesignPos {
         Wristbands
       </button>
       @if (hasConfirmedOrders) {
-        <button (click)="activeTab = 'payment'; loadPayments()"
+        <button (click)="activeTab = 'payment'; loadOrders(); loadPayments()"
           class="px-4 py-2.5 text-xs font-mono uppercase tracking-widest whitespace-nowrap border-b-2 transition-colors"
           [class]="activeTab === 'payment' ? 'border-yellow-400 text-yellow-500' : 'border-transparent text-gray-400 hover:text-gray-900'">
           Billing & Payments
@@ -87,7 +87,7 @@ interface DesignPos {
         <div class="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded px-4 py-3 mb-4 text-sm text-yellow-800">
           <span class="shrink-0">⚠</span>
           You have an outstanding balance of <strong class="font-semibold ml-1">₱{{ addonRemainingBalance | number:'1.2-2' }}</strong>.
-          <button (click)="activeTab = 'payment'; loadPayments()" class="ml-auto text-xs font-mono underline">Pay now</button>
+          <button (click)="activeTab = 'payment'; loadOrders(); loadPayments()" class="ml-auto text-xs font-mono underline">Pay now</button>
         </div>
       }
 
@@ -313,6 +313,9 @@ interface DesignPos {
                       @if (orderShippingFee(order) > 0) {
                         <span class="text-gray-400 text-xs"> + ₱{{ orderShippingFee(order) | number:'1.0-0' }} ship.</span>
                       }
+                      @if (orderDiscount(order) > 0) {
+                        <span class="text-green-600 text-xs"> − ₱{{ orderDiscount(order) | number:'1.0-0' }} disc.</span>
+                      }
                     </td>
                     <td class="px-5 py-3 text-center">
                       <span class="text-xs px-2 py-0.5 border font-mono uppercase" [class]="statusClass(order.status)">
@@ -354,7 +357,12 @@ interface DesignPos {
                   }
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-sm font-mono text-gray-700">₱{{ orderPrice(order) | number:'1.0-0' }}</span>
+                  <span class="text-sm font-mono text-gray-700">
+                    ₱{{ orderPrice(order) | number:'1.0-0' }}
+                    @if (orderDiscount(order) > 0) {
+                      <span class="text-green-600 text-xs"> − ₱{{ orderDiscount(order) | number:'1.0-0' }}</span>
+                    }
+                  </span>
                   <div class="flex gap-3">
                     @if (canEdit(order) && !isEventPast) {
                       <button (click)="openEditOrder(order)" class="text-xs font-mono text-gray-400 hover:text-yellow-500">Edit</button>
@@ -560,7 +568,7 @@ interface DesignPos {
           } @else {
 
             <!-- Summary row -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-3 gap-4 mb-4">
               <div class="border border-gray-100 p-4">
                 <p class="text-xs font-mono text-gray-400 uppercase tracking-widest mb-1">Total Due</p>
                 <p class="text-xl font-black text-gray-900">₱{{ addonTotalDue | number:'1.2-2' }}</p>
@@ -574,6 +582,14 @@ interface DesignPos {
                 <p class="text-xl font-black" [class]="addonRemainingBalance > 0 ? 'text-red-500' : 'text-gray-300'">₱{{ addonRemainingBalance | number:'1.2-2' }}</p>
               </div>
             </div>
+
+            <!-- Discount line (only shown when there's a discount) -->
+            @if (addonTotalDiscount > 0) {
+              <div class="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 px-4 py-2 mb-4">
+                <span class="text-xs font-mono uppercase tracking-widest text-green-600">Discount applied</span>
+                <span class="ml-auto font-mono font-semibold">−₱{{ addonTotalDiscount | number:'1.2-2' }}</span>
+              </div>
+            }
 
             <div class="flex flex-wrap items-center gap-3 mb-6">
               @if (addonRemainingBalance > 0) {
@@ -941,7 +957,13 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   get addonWristbandTotal(): number {
     return this.orders
       .filter(o => o.status === 'confirmed' || o.status === 'shipped')
-      .reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o), 0);
+      .reduce((s, o) => s + this.orderTotal(o), 0);
+  }
+
+  get addonTotalDiscount(): number {
+    return this.orders
+      .filter(o => o.status === 'confirmed' || o.status === 'shipped')
+      .reduce((s, o) => s + this.orderDiscount(o), 0);
   }
 
   get addonTotalDue(): number { return this.addonWristbandTotal; }
@@ -1042,7 +1064,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     );
   }
 
-  private loadOrders(): void {
+  loadOrders(): void {
     this.loadingOrders = true;
     this.subs.add(
       this.wristbandService.getWristbandOrders(this.eventId).subscribe({
@@ -1296,6 +1318,14 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
 
   orderShippingFee(order: WristbandOrder): number {
     return parseFloat(String(order.shipping_fee ?? 0));
+  }
+
+  orderDiscount(order: WristbandOrder): number {
+    return parseFloat(String(order.discount ?? 0));
+  }
+
+  orderTotal(order: WristbandOrder): number {
+    return Math.max(0, this.orderPrice(order) + this.orderShippingFee(order) - this.orderDiscount(order));
   }
 
   canEdit(order: WristbandOrder): boolean {

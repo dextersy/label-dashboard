@@ -140,6 +140,7 @@
                     <td class="text-end small">
                       <div>₱{{ orderPrice(order) | number:'1.2-2' }}</div>
                       <div *ngIf="orderShippingFee(order) > 0" class="tw-text-gray-400 tw-text-xs tw-mt-0.5">+ ₱{{ orderShippingFee(order) | number:'1.2-2' }} shipping</div>
+                      <div *ngIf="orderDiscount(order) > 0" class="tw-text-green-600 tw-text-xs tw-mt-0.5">− ₱{{ orderDiscount(order) | number:'1.2-2' }} discount</div>
                     </td>
                     <td class="text-end">
                       <div class="d-flex justify-content-end gap-1">
@@ -245,6 +246,7 @@
                   <span class="mc-footer-price">
                     ₱{{ orderPrice(order) | number:'1.2-2' }}
                     <span *ngIf="orderShippingFee(order) > 0" class="tw-text-gray-400 tw-text-xs tw-font-normal tw-block">+ ₱{{ orderShippingFee(order) | number:'1.2-2' }} shipping</span>
+                    <span *ngIf="orderDiscount(order) > 0" class="tw-text-green-600 tw-text-xs tw-font-normal tw-block">− ₱{{ orderDiscount(order) | number:'1.2-2' }} discount</span>
                   </span>
                 </div>
 
@@ -725,8 +727,8 @@
                 <ng-container *ngFor="let order of placedOrders; let last = last">
                   <div
                     class="tw-flex tw-items-start tw-justify-between tw-gap-3 tw-py-2.5"
-                    [class.tw-border-b]="!last || orderShippingFee(order) > 0"
-                    [class.tw-border-gray-100]="!last || orderShippingFee(order) > 0"
+                    [class.tw-border-b]="!last || orderShippingFee(order) > 0 || orderDiscount(order) > 0"
+                    [class.tw-border-gray-100]="!last || orderShippingFee(order) > 0 || orderDiscount(order) > 0"
                   >
                     <div class="tw-flex-1 tw-min-w-0">
                       <div class="tw-text-sm tw-font-medium tw-text-gray-800">Wristband <span class="tw-text-gray-400 tw-font-normal">#{{ order.id }}</span></div>
@@ -736,11 +738,19 @@
                   </div>
                   <div *ngIf="orderShippingFee(order) > 0"
                     class="tw-flex tw-items-start tw-justify-between tw-gap-3 tw-py-2.5"
+                    [class.tw-border-b]="!last || orderDiscount(order) > 0"
+                    [class.tw-border-gray-100]="!last || orderDiscount(order) > 0"
+                  >
+                    <div class="tw-text-sm tw-text-gray-500 tw-pl-3">Shipping <span class="tw-text-gray-400 tw-font-normal">#{{ order.id }}</span></div>
+                    <div class="tw-text-sm tw-text-gray-500 tw-whitespace-nowrap tw-shrink-0" style="font-variant-numeric: tabular-nums">₱{{ orderShippingFee(order) | number:'1.2-2' }}</div>
+                  </div>
+                  <div *ngIf="orderDiscount(order) > 0"
+                    class="tw-flex tw-items-start tw-justify-between tw-gap-3 tw-py-2.5"
                     [class.tw-border-b]="!last"
                     [class.tw-border-gray-100]="!last"
                   >
-                    <div class="tw-text-sm tw-text-gray-500">Shipping <span class="tw-text-gray-400 tw-font-normal">#{{ order.id }}</span></div>
-                    <div class="tw-text-sm tw-text-gray-500 tw-whitespace-nowrap tw-shrink-0" style="font-variant-numeric: tabular-nums">₱{{ orderShippingFee(order) | number:'1.2-2' }}</div>
+                    <div class="tw-text-sm tw-text-green-600 tw-pl-3">Discount <span class="tw-text-green-400 tw-font-normal">#{{ order.id }}</span></div>
+                    <div class="tw-text-sm tw-text-green-600 tw-whitespace-nowrap tw-shrink-0" style="font-variant-numeric: tabular-nums">−₱{{ orderDiscount(order) | number:'1.2-2' }}</div>
                   </div>
                 </ng-container>
 

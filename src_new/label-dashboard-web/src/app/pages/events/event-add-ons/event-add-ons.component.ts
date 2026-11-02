@@ -484,7 +484,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   get addonWristbandTotal(): number {
     return this.orders
       .filter(o => o.status === 'confirmed' || o.status === 'shipped')
-      .reduce((sum, o) => sum + this.orderPrice(o) + this.orderShippingFee(o), 0);
+      .reduce((sum, o) => sum + this.orderPrice(o) + this.orderShippingFee(o) - this.orderDiscount(o), 0);
   }
 
   get addonTotalDue(): number {
@@ -744,6 +744,10 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
     return parseFloat(String(order.shipping_fee ?? 0));
   }
 
+  orderDiscount(order: WristbandOrder): number {
+    return parseFloat(String(order.discount ?? 0));
+  }
+
   colorsSummary(order: WristbandOrder): string {
     return (order.items ?? [])
       .filter(i => i.quantity > 0)
@@ -756,7 +760,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get mobileOrdersTotalPrice(): number {
-    return this.orders.reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o), 0);
+    return this.orders.reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o) - this.orderDiscount(o), 0);
   }
 
   toggleOrderMenu(id: number, event: MouseEvent): void {
@@ -861,7 +865,7 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
   }
 
   get allOrdersTotalPrice(): number {
-    return this.placedOrders.reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o), 0);
+    return this.placedOrders.reduce((s, o) => s + this.orderPrice(o) + this.orderShippingFee(o) - this.orderDiscount(o), 0);
   }
 
   get hasPlacedOrders(): boolean {

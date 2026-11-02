@@ -55,6 +55,7 @@ export class WristbandService {
   getWristbandOrders(eventId: number): Observable<WristbandOrder[]> {
     return this.http.get<{ orders: WristbandOrder[] }>(`${this.eventsBase}/wristband-orders`, {
       params: new HttpParams().set('event_id', eventId),
+      headers: { 'Cache-Control': 'no-cache' },
     }).pipe(map(r => r.orders));
   }
 

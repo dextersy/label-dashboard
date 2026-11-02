@@ -34,6 +34,11 @@ export class WristbandOrderReviewComponent implements OnInit {
   settingShippingFee = false;
   shippingFeeError: string | null = null;
 
+  showDiscountForm = false;
+  discountInput: number | null = null;
+  settingDiscount = false;
+  discountError: string | null = null;
+
   wristbandColors: WristbandColor[] = [];
   previewColorSlug = '';
 
@@ -96,6 +101,9 @@ export class WristbandOrderReviewComponent implements OnInit {
       this.showShippingFeeForm = false;
       this.shippingFeeInput = null;
       this.shippingFeeError = null;
+      this.showDiscountForm = false;
+      this.discountInput = null;
+      this.discountError = null;
       this.previewColorSlug = '';
       this.downloadDropdownOpen = false;
 
@@ -235,7 +243,9 @@ export class WristbandOrderReviewComponent implements OnInit {
   }
 
   get grandTotal(): number {
-    return this.totalPrice + parseFloat(String(this.order?.shipping_fee ?? 0));
+    const subtotal = this.totalPrice + parseFloat(String(this.order?.shipping_fee ?? 0));
+    const discount = parseFloat(String(this.order?.discount ?? 0));
+    return Math.max(0, subtotal - discount);
   }
 
   get deliveryAddress(): string | null {
@@ -296,6 +306,56 @@ export class WristbandOrderReviewComponent implements OnInit {
       error: (err: any) => {
         this.settingShippingFee = false;
         this.shippingFeeError = err?.error?.error ?? 'Failed to remove shipping fee.';
+      },
+    });
+  }
+
+  openDiscountForm(): void {
+    this.discountInput = this.order?.discount ?? null;
+    this.discountError = null;
+    this.showDiscountForm = true;
+  }
+
+  cancelDiscountForm(): void {
+    this.showDiscountForm = false;
+    this.discountError = null;
+  }
+
+  saveDiscount(): void {
+    if (!this.order || this.settingDiscount) return;
+    const amount = this.discountInput;
+    if (amount !== null && (isNaN(amount) || amount < 0)) {
+      this.discountError = 'Enter a valid non-negative amount.';
+      return;
+    }
+    this.settingDiscount = true;
+    this.discountError = null;
+    this.eventService.setWristbandDiscount(this.order.id, amount).subscribe({
+      next: (updated) => {
+        this.order = updated;
+        this.settingDiscount = false;
+        this.showDiscountForm = false;
+      },
+      error: (err: any) => {
+        this.settingDiscount = false;
+        this.discountError = err?.error?.error ?? 'Failed to save discount.';
+      },
+    });
+  }
+
+  removeDiscount(): void {
+    if (!this.order || this.settingDiscount) return;
+    this.settingDiscount = true;
+    this.discountError = null;
+    this.eventService.setWristbandDiscount(this.order.id, null).subscribe({
+      next: (updated) => {
+        this.order = updated;
+        this.settingDiscount = false;
+        this.showDiscountForm = false;
+      },
+      error: (err: any) => {
+        this.settingDiscount = false;
+        this.discountError = err?.error?.error ?? 'Failed to remove discount.';
       },
     });
   }
@@ -519,6 +579,14 @@ export class WristbandOrderReviewComponent implements OnInit {
         </tr>`
       : '';
 
+    const discountRow = order.discount != null
+      ? `<tr class="subtotal">
+          <td>Discount</td>
+          <td class="num">—</td>
+          <td class="num">&#8722;&#8369;${parseFloat(String(order.discount)).toFixed(2)}</td>
+        </tr>`
+      : '';
+
     const addressHtml = address.split('\n').map(l => `<div>${l}</div>`).join('');
 
     const html = `<!DOCTYPE html>
@@ -581,6 +649,7 @@ export class WristbandOrderReviewComponent implements OnInit {
     <tbody>
       ${itemRows}
       ${shippingRow}
+      ${discountRow}
     </tbody>
     <tfoot>
       <tr>

@@ -201,6 +201,11 @@
                   <td class="text-end tw-text-gray-500">—</td>
                   <td class="text-end tw-text-gray-500">₱{{ order.shipping_fee | number:'1.2-2' }}</td>
                 </tr>
+                <tr *ngIf="order.discount != null">
+                  <td class="tw-text-gray-500">Discount</td>
+                  <td class="text-end tw-text-gray-500">—</td>
+                  <td class="text-end tw-text-green-600">−₱{{ order.discount | number:'1.2-2' }}</td>
+                </tr>
               </tbody>
               <tfoot>
                 <tr>
@@ -212,25 +217,45 @@
             </table>
           </div>
 
-          <!-- Shipping fee controls -->
+          <!-- Shipping fee + Discount controls -->
           <div class="tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-100">
-            <ng-container *ngIf="!showShippingFeeForm">
-              <button type="button" class="btn-secondary btn-sm" (click)="openShippingFeeForm()">
-                <app-icon name="truck" />
-                {{ order.shipping_fee != null ? 'Edit shipping fee' : 'Add shipping fee' }}
-              </button>
-              <button
-                *ngIf="order.shipping_fee != null"
-                type="button"
-                class="btn-secondary btn-sm text-danger tw-ml-2"
-                (click)="removeShippingFee()"
-                [disabled]="settingShippingFee"
-              >
-                <app-icon name="x" />
-                Remove
-              </button>
+
+            <!-- Buttons row (hidden when a form is open) -->
+            <ng-container *ngIf="!showShippingFeeForm && !showDiscountForm">
+              <div class="tw-flex tw-flex-wrap tw-gap-2">
+                <button type="button" class="btn-secondary btn-sm" (click)="openShippingFeeForm()">
+                  <app-icon name="truck" />
+                  {{ order.shipping_fee != null ? 'Edit shipping fee' : 'Add shipping fee' }}
+                </button>
+                <button
+                  *ngIf="order.shipping_fee != null"
+                  type="button"
+                  class="btn-secondary btn-sm text-danger"
+                  (click)="removeShippingFee()"
+                  [disabled]="settingShippingFee"
+                >
+                  <app-icon name="x" />
+                  Remove fee
+                </button>
+
+                <button type="button" class="btn-secondary btn-sm" (click)="openDiscountForm()">
+                  <app-icon name="tag" />
+                  {{ order.discount != null ? 'Edit discount' : 'Add discount' }}
+                </button>
+                <button
+                  *ngIf="order.discount != null"
+                  type="button"
+                  class="btn-secondary btn-sm text-danger"
+                  (click)="removeDiscount()"
+                  [disabled]="settingDiscount"
+                >
+                  <app-icon name="x" />
+                  Remove discount
+                </button>
+              </div>
             </ng-container>
 
+            <!-- Shipping fee form -->
             <ng-container *ngIf="showShippingFeeForm">
               <div class="tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
                 <span class="tw-text-sm tw-text-gray-600">₱</span>
@@ -251,6 +276,29 @@
               </div>
               <div *ngIf="shippingFeeError" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ shippingFeeError }}</div>
             </ng-container>
+
+            <!-- Discount form -->
+            <ng-container *ngIf="showDiscountForm">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
+                <span class="tw-text-sm tw-text-gray-600">−₱</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  class="form-control form-control-sm tw-w-36"
+                  placeholder="0.00"
+                  [(ngModel)]="discountInput"
+                />
+                <button type="button" class="btn-primary btn-sm" (click)="saveDiscount()" [disabled]="settingDiscount">
+                  {{ settingDiscount ? 'Saving…' : 'Save' }}
+                </button>
+                <button type="button" class="btn-secondary btn-sm" (click)="cancelDiscountForm()" [disabled]="settingDiscount">
+                  Cancel
+                </button>
+              </div>
+              <div *ngIf="discountError" class="tw-text-xs tw-text-red-600 tw-mt-1">{{ discountError }}</div>
+            </ng-container>
+
           </div>
 
         </div>
