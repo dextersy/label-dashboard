@@ -62,6 +62,7 @@ import {
   rejectWristbandOrder,
   markWristbandOrderAsShipped,
   setWristbandShippingFee,
+  setWristbandDiscount,
   proxyWristbandDesign,
   upload as wristbandUpload,
 } from '../controllers/wristbandOrderController';
@@ -88,6 +89,7 @@ router.put('/wristband-orders/:id', wristbandUpload.single('design'), updateWris
 router.get('/wristband-orders/:id', requireAdmin, getWristbandOrder);
 router.get('/wristband-orders/:id/design', requireAdmin, proxyWristbandDesign);
 router.patch('/wristband-orders/:id/shipping-fee', requireAdmin, setWristbandShippingFee);
+router.patch('/wristband-orders/:id/discount', requireAdmin, setWristbandDiscount);
 router.post('/wristband-orders/:id/confirm', requireAdmin, confirmWristbandOrder);
 router.post('/wristband-orders/:id/reject', requireAdmin, rejectWristbandOrder);
 router.post('/wristband-orders/:id/ship', requireAdmin, markWristbandOrderAsShipped);

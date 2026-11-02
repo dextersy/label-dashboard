@@ -593,6 +593,43 @@ export const setWristbandShippingFee = async (req: AuthRequest, res: Response) =
   }
 };
 
+export const setWristbandDiscount = async (req: AuthRequest, res: Response) => {
+  try {
+    const orderId = parseInt(String(req.params.id));
+    const order = await WristbandOrder.findByPk(orderId, {
+      include: [{ model: Event, as: 'event', attributes: ['id', 'brand_id'] }],
+    }) as any;
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const ownerBrandId = await getOwnerBrandId(order.event.brand_id);
+    if (req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
+
+    const { discount } = req.body;
+    if (discount !== null && discount !== undefined) {
+      const amount = parseFloat(discount);
+      if (isNaN(amount) || amount < 0) {
+        return res.status(400).json({ error: 'discount must be a non-negative number' });
+      }
+      await order.update({ discount: amount });
+    } else {
+      await order.update({ discount: null });
+    }
+
+    const updated = await WristbandOrder.findByPk(orderId, {
+      include: [
+        { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        {
+          model: Event, as: 'event', attributes: ['id', 'title', 'brand_id'],
+          include: [{ model: EventWristbandSettings, as: 'wristbandSettings' }],
+        },
+      ],
+    });
+    res.json({ order: updated });
+  } catch (error) {
+    console.error('setWristbandDiscount error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const proxyWristbandDesign = async (req: AuthRequest, res: Response) => {
   try {
     const orderId = parseInt(String(req.params.id));

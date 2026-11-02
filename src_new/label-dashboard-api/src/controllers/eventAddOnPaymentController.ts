@@ -20,7 +20,10 @@ async function isFullyPaid(eventId: number): Promise<boolean> {
   });
   const totalOwed = confirmedOrders.reduce((sum: number, o: any) => {
     const qty = (o.items ?? []).reduce((s: number, i: any) => s + i.quantity, 0);
-    return sum + ((qty / 10) * PRICE_PER_10);
+    const wristbandPrice = (qty / 10) * PRICE_PER_10;
+    const shipping = parseFloat(o.shipping_fee ?? '0') || 0;
+    const discount = parseFloat(o.discount ?? '0') || 0;
+    return sum + Math.max(0, wristbandPrice + shipping - discount);
   }, 0);
 
   if (totalOwed <= 0) return false;
@@ -175,7 +178,10 @@ async function buildAddOnInvoicePdfBuffer(eventId: number, brandId: number): Pro
     const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount as any), 0);
     const totalDue = confirmedOrders.reduce((sum, o: any) => {
       const qty = (o.items ?? []).reduce((s: number, i: any) => s + i.quantity, 0);
-      return sum + (Math.floor(qty / 10) * PRICE_PER_10_INVOICE) + (parseFloat(o.shipping_fee ?? '0') || 0);
+      const wristbandPrice = Math.floor(qty / 10) * PRICE_PER_10_INVOICE;
+      const shipping = parseFloat(o.shipping_fee ?? '0') || 0;
+      const discount = parseFloat(o.discount ?? '0') || 0;
+      return sum + Math.max(0, wristbandPrice + shipping - discount);
     }, 0);
     const isPaid = totalDue > 0 && totalPaid >= totalDue;
 
@@ -390,7 +396,8 @@ async function buildAddOnInvoicePdfBuffer(eventId: number, brandId: number): Pro
           .map((i: any) => `${i.color.label} x${i.quantity}`)
           .join(', ');
 
-        const rowHeight = (colorSummary ? 28 : 18) + (shipping > 0 ? 20 : 0);
+        const discount = parseFloat((order as any).discount ?? '0') || 0;
+        const rowHeight = (colorSummary ? 28 : 18) + (shipping > 0 ? 20 : 0) + (discount > 0 ? 20 : 0);
         maybePageBreak(rowHeight);
 
         const rowStartY = curY;
@@ -412,6 +419,16 @@ async function buildAddOnInvoicePdfBuffer(eventId: number, brandId: number): Pro
           doc.text('1', qtyRight - qtyW, curY, { width: qtyW, align: 'right', lineBreak: false });
           doc.text(formatMoney(shipping, currency), unitRight - unitW, curY, { width: unitW, align: 'right', lineBreak: false });
           doc.text(formatMoney(shipping, currency), amtRight - amtW, curY, { width: amtW, align: 'right', lineBreak: false });
+          curY += 20;
+        }
+
+        if (discount > 0) {
+          doc.font('Helvetica').fontSize(8).fillColor(MUTED)
+            .text(`Discount #${(order as any).id}`, colDesc, curY, { width: descW, lineBreak: false });
+          doc.text('—', qtyRight - qtyW, curY, { width: qtyW, align: 'right', lineBreak: false });
+          doc.text('', unitRight - unitW, curY, { width: unitW, align: 'right', lineBreak: false });
+          doc.fillColor('#17744B')
+            .text(`-${formatMoney(discount, currency)}`, amtRight - amtW, curY, { width: amtW, align: 'right', lineBreak: false });
           curY += 20;
         }
       }
