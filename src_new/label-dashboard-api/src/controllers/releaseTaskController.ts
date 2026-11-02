@@ -46,13 +46,15 @@ async function sendTaskAssignedNotification(
   brandId: number
 ): Promise<void> {
   try {
-    const frontendUrl = await getBrandFrontendUrl(brandId);
+    // Use the assignee's own brand domain so parent brand admins get a working link
+    const linkBrandId = assignedUser.brand_id ?? brandId;
+    const frontendUrl = await getBrandFrontendUrl(linkBrandId);
     const releaseUrl = `${frontendUrl}/music/releases/edit/${release.id}?tab=planning`;
 
-    // In-app notification
+    // In-app notification (use assignee's brand so parent brand admins can see it)
     await createNotification(
       assignedUser.id,
-      brandId,
+      linkBrandId,
       'task_assigned',
       `You've been assigned a task on "${release.title}"`,
       task.title,
@@ -247,7 +249,7 @@ export const createReleaseTask = async (req: AuthRequest, res: Response) => {
 
     // Notify assigned user
     if (assigned_user_id) {
-      const assignedUser = await User.findByPk(assigned_user_id, { attributes: ['id', 'first_name', 'last_name', 'email_address'] });
+      const assignedUser = await User.findByPk(assigned_user_id, { attributes: ['id', 'first_name', 'last_name', 'email_address', 'brand_id'] });
       if (assignedUser && assignedUser.id !== req.user.id) {
         await sendTaskAssignedNotification(task, assignedUser, release, (release as any).brand_id);
       }
@@ -301,7 +303,7 @@ export const updateReleaseTask = async (req: AuthRequest, res: Response) => {
     // If assignee changed, notify new assignee
     const newAssignedUserId = assigned_user_id !== undefined ? assigned_user_id : task.assigned_user_id;
     if (newAssignedUserId && newAssignedUserId !== previousAssignedUserId) {
-      const assignedUser = await User.findByPk(newAssignedUserId, { attributes: ['id', 'first_name', 'last_name', 'email_address'] });
+      const assignedUser = await User.findByPk(newAssignedUserId, { attributes: ['id', 'first_name', 'last_name', 'email_address', 'brand_id'] });
       if (assignedUser && assignedUser.id !== req.user.id) {
         await sendTaskAssignedNotification(task, assignedUser, release, (release as any).brand_id);
       }

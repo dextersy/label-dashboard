@@ -763,7 +763,7 @@ export const getTaskDigest = async (req: Request, res: Response) => {
         {
           model: User,
           as: 'assignedUser',
-          attributes: ['id', 'email_address', 'first_name', 'last_name'],
+          attributes: ['id', 'email_address', 'first_name', 'last_name', 'brand_id'],
           required: true,
         },
         {
@@ -790,7 +790,8 @@ export const getTaskDigest = async (req: Request, res: Response) => {
       const key = `${t.assigned_user_id}:${t.release_id}`;
 
       if (!digestMap.has(key)) {
-        const frontendUrl = await getBrandFrontendUrl(t.brand_id);
+        const linkBrandId = t.assignedUser.brand_id ?? t.brand_id;
+        const frontendUrl = await getBrandFrontendUrl(linkBrandId);
         digestMap.set(key, {
           user_id: t.assigned_user_id,
           user_email: t.assignedUser.email_address,
