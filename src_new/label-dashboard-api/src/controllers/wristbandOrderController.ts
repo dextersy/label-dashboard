@@ -104,7 +104,9 @@ async function sendWristbandOrderNotification(order: any, event: any): Promise<v
       .map((i: any) => `<tr><td style="padding:4px 8px">${escapeHtml(i.color?.label ?? i.wristband_color_id)}</td><td style="padding:4px 8px;text-align:right">${escapeHtml(i.quantity)}</td></tr>`)
       .join('');
     const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
-    const totalPrice = ((totalQty / 10) * 35).toFixed(2);
+    const shippingFeeN = order.shipping_fee != null ? parseFloat(String(order.shipping_fee)) : 0;
+    const discountN = order.discount != null ? parseFloat(String(order.discount)) : 0;
+    const totalPrice = Math.max(0, (totalQty / 10) * 35 + shippingFeeN - discountN).toFixed(2);
 
     let deliveryHtml = '';
     const settings = await EventWristbandSettings.findOne({ where: { event_id: event.id } }) as any;

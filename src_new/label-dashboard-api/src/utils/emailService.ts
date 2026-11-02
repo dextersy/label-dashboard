@@ -1240,6 +1240,7 @@ export const sendWristbandOrderStatusEmail = async (
     const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
     const itemsSubtotal = (totalQty / 10) * PRICE_PER_10;
     const shippingFee = order.shipping_fee != null ? parseFloat(String(order.shipping_fee)) : 0;
+    const discount = order.discount != null ? parseFloat(String(order.discount)) : 0;
     const shippingRow = shippingFee > 0
       ? `<tr style="border-top: 1px solid #e5e5e5;">
           <td style="font-size: 14px; color: #666666; padding: 8px 12px;">Shipping fee</td>
@@ -1247,7 +1248,14 @@ export const sendWristbandOrderStatusEmail = async (
           <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">₱${shippingFee.toFixed(2)}</td>
         </tr>`
       : '';
-    const totalPrice = (itemsSubtotal + shippingFee).toFixed(2);
+    const discountRow = discount > 0
+      ? `<tr style="border-top: 1px solid #e5e5e5;">
+          <td style="font-size: 14px; color: #666666; padding: 8px 12px;">Discount</td>
+          <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">—</td>
+          <td style="font-size: 14px; color: #16a34a; padding: 8px 12px; text-align: right;">−₱${discount.toFixed(2)}</td>
+        </tr>`
+      : '';
+    const totalPrice = Math.max(0, itemsSubtotal + shippingFee - discount).toFixed(2);
 
     const isConfirmed = status === 'confirmed';
     const isShipped = status === 'shipped';
@@ -1265,7 +1273,7 @@ export const sendWristbandOrderStatusEmail = async (
         : `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,
       ORDER_ID: escapeHtml(order.id),
       EVENT_TITLE: escapeHtml(event.title),
-      ITEMS_ROWS: itemsRows + shippingRow,
+      ITEMS_ROWS: itemsRows + shippingRow + discountRow,
       TOTAL_QTY: String(totalQty),
       TOTAL_PRICE: totalPrice,
       CTA_URL: ctaUrl,
@@ -1299,7 +1307,9 @@ export const sendAddOnPaymentNotification = async (
       .map((o: any) => {
         const items = (o.items ?? []) as any[];
         const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
-        const totalPrice = ((totalQty / 10) * PRICE_PER_10).toFixed(2);
+        const shippingFeeO = o.shipping_fee != null ? parseFloat(String(o.shipping_fee)) : 0;
+        const discountO = o.discount != null ? parseFloat(String(o.discount)) : 0;
+        const totalPrice = Math.max(0, (totalQty / 10) * PRICE_PER_10 + shippingFeeO - discountO).toFixed(2);
         const manageUrl = frontendUrl ? `${frontendUrl}/campaigns/events/wristband-order-review?order_id=${escapeHtml(o.id)}` : '';
         return `<tr style="border-top:1px solid #e5e5e5;">
           <td style="padding:8px 12px;font-size:14px;color:#333">#${escapeHtml(o.id)}</td>
