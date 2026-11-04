@@ -101,4 +101,8 @@ export class PublicWristbandService {
   getDesignUrl(token: string): string {
     return `${this.base}/wristband-orders/${token}/design`;
   }
+
+  downloadInvoice(token: string): Observable<Blob> {
+    return this.http.get(`${this.base}/wristband-orders/${token}/invoice`, { responseType: 'blob' });
+  }
 }

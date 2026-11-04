@@ -20,6 +20,7 @@ import { PublicWristbandService } from '../../services/public-wristband.service'
 
     @if (submitted) {
       <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+
         <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
           <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -35,10 +36,10 @@ import { PublicWristbandService } from '../../services/public-wristband.service'
     } @else {
       <div class="bg-white rounded-2xl border border-gray-200 p-8">
         <form (ngSubmit)="start()" #form="ngForm" novalidate>
-          <div class="tw-space-y-4">
+          <div class="space-y-5">
 
             <div>
-              <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1.5">Name *</label>
+              <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-2">Name *</label>
               <input
                 type="text"
                 [(ngModel)]="name"
@@ -51,7 +52,7 @@ import { PublicWristbandService } from '../../services/public-wristband.service'
             </div>
 
             <div>
-              <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1.5">Email address *</label>
+              <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-2">Email address *</label>
               <input
                 type="email"
                 [(ngModel)]="email"
@@ -79,6 +80,10 @@ import { PublicWristbandService } from '../../services/public-wristband.service'
         </form>
       </div>
     }
+
+    <p class="text-center text-xs text-gray-400 mt-6">
+      Need help? <a href="mailto:support@melt-records.com" class="underline hover:text-gray-600">support@melt-records.com</a>
+    </p>
 
   </div>
 </div>

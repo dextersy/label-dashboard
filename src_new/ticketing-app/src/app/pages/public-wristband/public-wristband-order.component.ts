@@ -6,6 +6,8 @@ import { ActivatedRoute } from '@angular/router';
 import { PublicWristbandService, PublicWristbandOrder } from '../../services/public-wristband.service';
 import { WristbandColor } from '../../models/wristband.model';
 
+const SUPPORT_EMAIL = 'support@melt-records.com';
+
 interface DesignPos { x: number; y: number; width: number; height: number; }
 
 const PRICE_PER_10 = 45;
@@ -18,6 +20,19 @@ interface ColorRow extends WristbandColor {
   selector: 'app-public-wristband-order',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  styles: [`
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes checkDraw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(80px) rotate(360deg); opacity: 0; }
+    }
+    .modal-backdrop { animation: fadeIn 0.25s ease-out forwards; }
+    .modal-card { animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    .check-path { stroke-dasharray: 100; animation: checkDraw 0.5s 0.3s ease-out forwards; stroke-dashoffset: 100; }
+    .confetti-piece { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: confettiFall 1s ease-in forwards; }
+  `],
   template: `
 <div class="min-h-screen bg-gray-50 px-4 py-8">
   <div class="max-w-2xl mx-auto">
@@ -408,6 +423,14 @@ interface ColorRow extends WristbandColor {
             class="w-full rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm py-3 transition-colors uppercase tracking-wide">
             @if (initiatingPayment) { Redirecting… } @else { Pay via Paymongo }
           </button>
+
+          <div class="mt-4 text-center">
+            <button (click)="downloadInvoice()" [disabled]="downloadingInvoice"
+              class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 underline disabled:opacity-50">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              @if (downloadingInvoice) { Downloading… } @else { Download Invoice PDF }
+            </button>
+          </div>
         </div>
       }
 
@@ -455,17 +478,115 @@ interface ColorRow extends WristbandColor {
               <img [src]="designProxyUrl" alt="Wristband design" class="block w-full rounded-lg border border-gray-200 max-h-48 object-contain bg-gray-50" />
             </div>
           }
+          @if (order.payment_status === 'paid') {
+            <div class="mt-5 pt-4 border-t border-gray-100 text-center">
+              <button (click)="downloadInvoice()" [disabled]="downloadingInvoice"
+                class="inline-flex items-center gap-2 rounded-lg border border-gray-300 hover:border-gray-400 text-gray-700 text-xs font-mono uppercase tracking-widest px-4 py-2 transition-colors disabled:opacity-50">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                @if (downloadingInvoice) { Downloading… } @else { Download Invoice PDF }
+              </button>
+            </div>
+          }
         </div>
       }
 
     }
 
+    <!-- Footer -->
+    <div class="mt-8 pb-4 text-center">
+      <p class="text-xs text-gray-400">Need help? <a href="mailto:{{ SUPPORT_EMAIL }}" class="underline hover:text-gray-600">{{ SUPPORT_EMAIL }}</a></p>
+    </div>
+
   </div>
+
 </div>
+
+<!-- ═══ ORDER PLACED MODAL ═══ -->
+@if (showOrderPlacedModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" style="background: rgba(0,0,0,0.5);">
+    <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center modal-card overflow-hidden">
+
+      <!-- Confetti pieces -->
+      <div class="pointer-events-none">
+        @for (piece of confettiPieces; track piece.id) {
+          <div class="confetti-piece"
+            [style.left.px]="piece.x"
+            [style.top.px]="piece.top"
+            [style.background]="piece.color"
+            [style.animation-delay]="piece.delay + 'ms'"
+            [style.animation-duration]="piece.duration + 'ms'">
+          </div>
+        }
+      </div>
+
+      <!-- Check circle -->
+      <div class="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="18" stroke="#22c55e" stroke-width="2" opacity="0.3"/>
+          <path class="check-path" d="M11 21l6 6 12-13" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">Order Placed!</h2>
+      <p class="text-sm text-gray-500 leading-relaxed mb-6">
+        Your wristband order has been submitted successfully. We'll review it and email you once it's confirmed or if we need anything.
+      </p>
+      <p class="text-xs text-gray-400 mb-6">Order #{{ order?.id }}</p>
+
+      <button (click)="closeOrderPlacedModal()"
+        class="w-full rounded-xl bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm py-3 transition-colors uppercase tracking-wide">
+        Got it!
+      </button>
+    </div>
+  </div>
+}
+
+<!-- ═══ PAYMENT SUCCESS MODAL ═══ -->
+@if (showPaymentSuccessModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" style="background: rgba(0,0,0,0.5);">
+    <div class="relative bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center modal-card overflow-hidden">
+
+      <!-- Confetti pieces -->
+      <div class="pointer-events-none">
+        @for (piece of confettiPieces; track piece.id) {
+          <div class="confetti-piece"
+            [style.left.px]="piece.x"
+            [style.top.px]="piece.top"
+            [style.background]="piece.color"
+            [style.animation-delay]="piece.delay + 'ms'"
+            [style.animation-duration]="piece.duration + 'ms'">
+          </div>
+        }
+      </div>
+
+      <!-- Check circle -->
+      <div class="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5">
+        <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="18" stroke="#22c55e" stroke-width="2" opacity="0.3"/>
+          <path class="check-path" d="M11 21l6 6 12-13" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h2 class="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">Payment Received!</h2>
+      <p class="text-sm text-gray-500 leading-relaxed mb-6">
+        Your payment has been confirmed. We'll start printing your wristbands and notify you once they've been shipped.
+      </p>
+      @if (order) {
+        <p class="text-xs text-gray-400 mb-6">Order #{{ order.id }}</p>
+      }
+
+      <button (click)="closePaymentSuccessModal()"
+        class="w-full rounded-xl bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm py-3 transition-colors uppercase tracking-wide">
+        Got it!
+      </button>
+    </div>
+  </div>
+}
   `,
 })
 export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
   readonly PRICE_PER_10 = PRICE_PER_10;
+  readonly SUPPORT_EMAIL = SUPPORT_EMAIL;
 
   // Canvas layout constants (must mirror wristband-order-review)
   readonly tmplL = 0.05;
@@ -561,6 +682,15 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
   paymentError = '';
   paymentStatus: string | null = null;
 
+  // Invoice download
+  downloadingInvoice = false;
+
+  // Order placed modal
+  showOrderPlacedModal = false;
+  // Payment success modal
+  showPaymentSuccessModal = false;
+  confettiPieces: { id: number; x: number; top: number; color: string; delay: number; duration: number }[] = [];
+
   constructor(private route: ActivatedRoute, private svc: PublicWristbandService) {}
 
   ngOnInit(): void {
@@ -577,6 +707,9 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
         this.order = order;
         this.prefillDelivery(order);
         this.disclaimerAcknowledged = order.disclaimer_acknowledged;
+        if (this.paymentStatus === 'success') {
+          this.openPaymentSuccessModal();
+        }
         if (order.status === 'draft' || order.status === 'rejected') {
           this.loadColors();
           if (order.design_url) {
@@ -958,6 +1091,7 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
           next: (order) => {
             this.placingOrder = false;
             this.order = order;
+            this.openOrderPlacedModal();
           },
           error: (err) => {
             this.placingOrder = false;
@@ -1049,6 +1183,59 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.initiatingPayment = false;
         this.paymentError = err?.error?.error ?? 'Failed to start payment. Please try again.';
+      },
+    });
+  }
+
+  openOrderPlacedModal(): void {
+    const colors = ['#FACC15', '#34D399', '#60A5FA', '#F472B6', '#A78BFA', '#FB923C'];
+    this.confettiPieces = Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 300,
+      top: -10,
+      color: colors[i % colors.length],
+      delay: Math.random() * 400,
+      duration: 800 + Math.random() * 600,
+    }));
+    this.showOrderPlacedModal = true;
+  }
+
+  closeOrderPlacedModal(): void {
+    this.showOrderPlacedModal = false;
+  }
+
+  openPaymentSuccessModal(): void {
+    const colors = ['#FACC15', '#34D399', '#60A5FA', '#F472B6', '#A78BFA', '#FB923C'];
+    this.confettiPieces = Array.from({ length: 18 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 300,
+      top: -10,
+      color: colors[i % colors.length],
+      delay: Math.random() * 400,
+      duration: 800 + Math.random() * 600,
+    }));
+    this.showPaymentSuccessModal = true;
+  }
+
+  closePaymentSuccessModal(): void {
+    this.showPaymentSuccessModal = false;
+  }
+
+  downloadInvoice(): void {
+    if (this.downloadingInvoice) return;
+    this.downloadingInvoice = true;
+    this.svc.downloadInvoice(this.token).subscribe({
+      next: (blob) => {
+        this.downloadingInvoice = false;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-order-${this.order?.id ?? this.token}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.downloadingInvoice = false;
       },
     });
   }
