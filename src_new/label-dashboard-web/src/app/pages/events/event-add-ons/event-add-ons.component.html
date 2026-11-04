@@ -652,6 +652,7 @@
                   {{ downloadingInvoice ? 'Downloading…' : 'Invoice' }}
                 </button>
               </div>
+              <a routerLink="/admin/subscription" [queryParams]="{tab: 'billing-details'}" class="tw-text-xs tw-text-muted hover:tw-underline tw-mt-1 tw-block">Update billing details</a>
             </ng-container>
             <ng-container *ngIf="addonRemainingBalance === 0">
               <div class="tw-flex tw-items-center tw-gap-2 tw-text-green-700">
@@ -664,6 +665,7 @@
                 <app-icon [name]="downloadingInvoice ? 'loader' : 'download'" iconOnly />
                 {{ downloadingInvoice ? 'Downloading…' : 'Download Invoice' }}
               </button>
+              <a routerLink="/admin/subscription" [queryParams]="{tab: 'billing-details'}" class="tw-text-xs tw-text-muted hover:tw-underline tw-mt-1 tw-block">Update billing details</a>
             </ng-container>
           </div>
 

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { trigger, transition, style, animate, keyframes } from '@angular/animations';
 import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 import { BreadcrumbService } from '../../../services/breadcrumb.service';
 import { InPageNavComponent, InPageNavTab } from '../../../components/shared/in-page-nav/in-page-nav.component';
@@ -25,7 +25,7 @@ interface DesignPos {
 
 @Component({
   selector: 'app-event-add-ons',
-  imports: [CommonModule, FormsModule, BreadcrumbComponent, InPageNavComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, BreadcrumbComponent, InPageNavComponent, IconComponent],
   templateUrl: './event-add-ons.component.html',
   styleUrl: './event-add-ons.component.scss',
   animations: [

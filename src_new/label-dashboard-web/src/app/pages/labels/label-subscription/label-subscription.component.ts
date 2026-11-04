@@ -193,6 +193,11 @@ export class LabelSubscriptionComponent implements OnInit, OnDestroy {
       // PayPal redirects back — webhook may not have fired yet, poll until active
       this.returnStatus = 'pending';
     }
+    const tab = qp.get('tab');
+    if (tab === 'billing-details') {
+      this.activeSection = 'billing-details';
+      this.loadBillingDetails();
+    }
     this.loadPlans();
   }
 
