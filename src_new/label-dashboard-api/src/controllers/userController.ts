@@ -654,134 +654,103 @@ export const getLoginAttempts = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    // Parse pagination parameters
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 50;
     const offset = (page - 1) * limit;
 
-    // Parse filter and sort parameters
-    const sortBy = req.query.sortBy as string;
-    const sortDirection = (req.query.sortDirection as string) || 'DESC';
+    const sortBy = (req.query.sortBy as string) || 'date_and_time';
+    const dir = (req.query.sortDirection as string || 'DESC').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    // Build where condition for main table
-    const whereCondition: any = { brand_id: req.user.brand_id };
+    const usernameFilter  = (req.query.username as string || '').trim();
+    const nameFilter      = (req.query.name as string || '').trim();
+    const dateFilter      = (req.query.date_and_time as string || '').trim();
+    const resultFilter    = (req.query.result as string || '').trim();
+    const remoteIpFilter  = (req.query.remote_ip as string || '').trim();
 
-    // Build where condition for user include
-    const userWhereCondition: any = {
-      username: {
-        [Op.ne]: '',
-        [Op.not]: null
-      }
+    // Build dynamic WHERE clauses for the base CTE.
+    // All values are passed as named replacements to prevent SQL injection.
+    const whereClauses: string[] = ['la.brand_id = :brandId'];
+    const replacements: Record<string, any> = { brandId: req.user.brand_id, limit, offset };
+
+    if (usernameFilter)  { whereClauses.push('u.username ILIKE :username');   replacements.username = `%${usernameFilter}%`; }
+    if (nameFilter)      { whereClauses.push('(u.first_name ILIKE :name OR u.last_name ILIKE :name)'); replacements.name = `%${nameFilter}%`; }
+    if (dateFilter)      { whereClauses.push("la.date_and_time::text ILIKE :date_and_time"); replacements.date_and_time = `%${dateFilter}%`; }
+    if (resultFilter)    { whereClauses.push('la.status ILIKE :result');       replacements.result = `%${resultFilter}%`; }
+    if (remoteIpFilter)  { whereClauses.push('(la.remote_ip ILIKE :remote_ip OR la.proxy_ip ILIKE :remote_ip)'); replacements.remote_ip = `%${remoteIpFilter}%`; }
+
+    const whereSQL = whereClauses.join(' AND ');
+
+    // Map frontend sort keys to grouped-CTE column names
+    const sortColumnMap: Record<string, string> = {
+      date_and_time: 'date_and_time',
+      username:      'username',
+      name:          'name',
+      result:        'result',
+      remote_ip:     'remote_ip',
     };
+    const sortCol = sortColumnMap[sortBy] || 'date_and_time';
 
-    // Add filters - these need to be handled carefully with the JOIN
-    const username = req.query.username as string;
-    const name = req.query.name as string;
-    const date_and_time = req.query.date_and_time as string;
-    const result = req.query.result as string;
-    const remote_ip = req.query.remote_ip as string;
+    // Consecutive-run grouping using the classic "gaps and islands" window function technique:
+    //   rn  = row number over the full ordered set
+    //   rn_part = row number partitioned by (user_id, status)
+    //   grp_key = rn - rn_part is constant for consecutive rows with the same user+status
+    const baseCTE = `
+      WITH filtered AS (
+        SELECT
+          la.id,
+          la.user_id,
+          la.status,
+          la.date_and_time,
+          COALESCE(la.remote_ip, la.proxy_ip, 'Unknown') AS remote_ip,
+          COALESCE(la.auth_method, 'password')           AS auth_method,
+          COALESCE(u.username, 'Unknown')                AS username,
+          TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) AS name,
+          ROW_NUMBER() OVER (ORDER BY la.date_and_time DESC)                                     AS rn,
+          ROW_NUMBER() OVER (PARTITION BY la.user_id, la.status ORDER BY la.date_and_time DESC)  AS rn_part
+        FROM login_attempt la
+        LEFT JOIN "user" u ON u.id = la.user_id
+        WHERE ${whereSQL}
+      ),
+      islands AS (
+        SELECT *, (rn - rn_part) AS grp_key FROM filtered
+      ),
+      grouped AS (
+        SELECT
+          MIN(user_id)    AS user_id,
+          status          AS result,
+          grp_key,
+          MIN(username)   AS username,
+          MIN(name)       AS name,
+          MAX(date_and_time)  AS date_and_time,
+          COUNT(*)::int       AS attempt_count,
+          MIN(remote_ip)  AS remote_ip,
+          MIN(auth_method) AS auth_method,
+          array_agg(date_and_time ORDER BY date_and_time DESC) AS all_times
+        FROM islands
+        GROUP BY user_id, status, grp_key
+      )`;
 
-    // Username filter
-    if (username && username.trim() !== '') {
-      userWhereCondition.username = {
-        ...userWhereCondition.username,
-        [require('sequelize').Op.like]: `%${username}%`
-      };
-    }
+    const dataSQL   = `${baseCTE} SELECT * FROM grouped ORDER BY ${sortCol} ${dir} LIMIT :limit OFFSET :offset`;
+    const countSQL  = `${baseCTE} SELECT COUNT(*)::int AS total FROM grouped`;
 
-    // Name filter (first_name or last_name)
-    if (name && name.trim() !== '') {
-      const nameCondition = {
-        [require('sequelize').Op.or]: [
-          { first_name: { [require('sequelize').Op.like]: `%${name}%` } },
-          { last_name: { [require('sequelize').Op.like]: `%${name}%` } }
-        ]
-      };
-      userWhereCondition[require('sequelize').Op.and] = [
-        userWhereCondition[require('sequelize').Op.and] || {},
-        nameCondition
-      ].filter(Boolean);
-    }
+    const [rows, countRows] = await Promise.all([
+      sequelize.query(dataSQL,  { replacements, type: QueryTypes.SELECT }),
+      sequelize.query(countSQL, { replacements, type: QueryTypes.SELECT }),
+    ]);
 
-    // Date filter
-    if (date_and_time && date_and_time.trim() !== '') {
-      whereCondition.date_and_time = {
-        [require('sequelize').Op.like]: `%${date_and_time}%`
-      };
-    }
-
-    // Result filter (status)
-    if (result && result.trim() !== '') {
-      whereCondition.status = {
-        [require('sequelize').Op.like]: `%${result}%`
-      };
-    }
-
-    // Remote IP filter
-    if (remote_ip && remote_ip.trim() !== '') {
-      whereCondition[require('sequelize').Op.or] = [
-        { remote_ip: { [require('sequelize').Op.like]: `%${remote_ip}%` } },
-        { proxy_ip: { [require('sequelize').Op.like]: `%${remote_ip}%` } }
-      ];
-    }
-
-    // Build order clause
-    let orderClause: any[] = [['date_and_time', 'DESC']]; // Default ordering
-    const sortableFields = ['username', 'name', 'date_and_time', 'result', 'remote_ip'];
-    if (sortBy && sortableFields.includes(sortBy)) {
-      const direction = sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-      if (sortBy === 'username') {
-        orderClause = [[{ model: User, as: 'user' }, 'username', direction]];
-      } else if (sortBy === 'name') {
-        orderClause = [[{ model: User, as: 'user' }, 'first_name', direction]];
-      } else if (sortBy === 'result') {
-        orderClause = [['status', direction]];
-      } else if (sortBy === 'remote_ip') {
-        orderClause = [['remote_ip', direction]];
-      } else {
-        orderClause = [[sortBy, direction]];
-      }
-    }
-
-    const { count, rows: loginAttempts } = await LoginAttempt.findAndCountAll({
-      where: whereCondition,
-      include: [{ 
-        model: User, 
-        as: 'user',
-        attributes: ['username', 'first_name', 'last_name'],
-        where: userWhereCondition,
-        required: false // Left join to include attempts even if user is deleted
-      }],
-      order: orderClause,
-      limit,
-      offset
-    });
-
-    // Format the response to match the frontend interface
-    const formattedAttempts = loginAttempts.map(attempt => {
-      const user = (attempt as any).user;
-      return {
-        username: user?.username || 'Unknown',
-        name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Unknown User',
-        date_and_time: attempt.date_and_time,
-        result: attempt.status,
-        remote_ip: attempt.remote_ip || attempt.proxy_ip || 'Unknown',
-        auth_method: attempt.auth_method || 'password'
-      };
-    });
-
-    const totalPages = Math.ceil(count / limit);
+    const totalCount = (countRows[0] as any).total as number;
+    const totalPages = Math.ceil(totalCount / limit);
 
     res.json({
-      data: formattedAttempts,
+      data: rows,
       pagination: {
         current_page: page,
         total_pages: totalPages,
-        total_count: count,
+        total_count: totalCount,
         per_page: limit,
         has_next: page < totalPages,
-        has_prev: page > 1
-      }
+        has_prev: page > 1,
+      },
     });
   } catch (error) {
     console.error('Get login attempts error:', error);

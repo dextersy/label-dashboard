@@ -111,7 +111,9 @@ export interface LoginAttempt {
   date_and_time: string;
   result: string;
   remote_ip: string;
-  auth_method: 'password' | 'google';
+  auth_method: 'password' | 'google' | 'admin_impersonation';
+  attempt_count: number;
+  all_times: string[];
 }
 
 export interface EmailLog {

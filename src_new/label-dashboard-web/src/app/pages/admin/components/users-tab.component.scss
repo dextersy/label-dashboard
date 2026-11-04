@@ -101,4 +101,56 @@
     font-size: 11px;
     color: #9ca3af;
   }
+
+  &--subrow {
+    margin-left: 20px;
+    box-shadow: none;
+    border: 1px solid #f3f4f6;
+    background: #fafafa;
+    padding: 8px 16px;
+    margin-bottom: 4px;
+  }
+
+  &--group {
+    cursor: pointer;
+  }
+}
+
+// Desktop table row styles for grouped login attempts
+:host ::ng-deep {
+  .login-attempt-subrow {
+    background: #fafafa;
+
+    td { color: #6b7280; font-size: 12px; padding-top: 6px !important; padding-bottom: 6px !important; }
+  }
+
+  .login-attempt-group-header {
+    cursor: pointer;
+
+    &:hover { background: #f0f9ff !important; }
+  }
+}
+
+.login-group-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 600;
+  font-style: italic;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  cursor: pointer;
+  vertical-align: middle;
+
+  &--expanded {
+    background: #f0fdf4;
+    color: #15803d;
+  }
+}
+
+.login-subrow-indent {
+  color: #9ca3af;
+  margin-right: 4px;
 }

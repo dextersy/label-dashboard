@@ -26,10 +26,12 @@ export class UsersTabComponent implements OnInit {
   
   // Login attempts
   loginAttempts: LoginAttempt[] = [];
+  displayLoginAttempts: any[] = [];
   loginAttemptsPagination: PaginationInfo | null = null;
   loginAttemptsLoading: boolean = false;
   loginAttemptsFilters: any = {};
   loginAttemptsSort: SortInfo | null = null;
+  expandedGroups = new Set<string>();
 
   // Sidebar navigation
   activeSection: string = 'users';
@@ -156,7 +158,22 @@ export class UsersTabComponent implements OnInit {
       return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${item.username}</span>`;
     }},
     { key: 'name', label: 'Name', type: 'text', searchable: true, sortable: true },
-    { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true },
+    { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true, renderHtml: true,
+      formatter: (item: any) => {
+        const timeStr = new Date(item.date_and_time).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+        if (item._isSubRow) return `<span class="login-subrow-indent">↳</span> ${timeStr}`;
+        if (item.attempt_count > 1) {
+          const isExpanded = this.expandedGroups.has(item._groupKey);
+          const badge = isExpanded
+            ? `<span class="login-group-badge login-group-badge--expanded">▲ Collapse</span>`
+            : `<span class="login-group-badge">(+${item.attempt_count - 1} more)</span>`;
+          return `${timeStr} ${badge}`;
+        }
+        return timeStr;
+      }
+    },
     { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
       const result = item.result;
       if (result === 'Success' || result === 'Successful') {
@@ -258,19 +275,52 @@ export class UsersTabComponent implements OnInit {
 
   loadLoginAttempts(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.loginAttemptsLoading = true;
-    
-    this.adminService.getLoginAttempts(page, 20, filters, sort?.column, sort?.direction).subscribe({
+
+    this.adminService.getLoginAttempts(page, 15, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
         this.loginAttempts = response.data;
+        this.expandedGroups.clear();
+        this.rebuildDisplayAttempts();
         this.loginAttemptsPagination = response.pagination;
         this.loginAttemptsLoading = false;
       },
-      error: (error) => {
+      error: () => {
         this.notificationService.showError('Error loading login attempts');
         this.loginAttemptsLoading = false;
       }
     });
   }
+
+  private rebuildDisplayAttempts(): void {
+    const result: any[] = [];
+    this.loginAttempts.forEach((attempt, i) => {
+      const groupKey = `${attempt.username}|${attempt.result}|${attempt.date_and_time}`;
+      result.push({ ...attempt, _groupKey: groupKey, _isSubRow: false });
+      if (attempt.attempt_count > 1 && this.expandedGroups.has(groupKey)) {
+        // all_times[0] is already the latest (shown on the header row); add the rest as sub-rows
+        for (let t = 1; t < attempt.all_times.length; t++) {
+          result.push({ ...attempt, _groupKey: groupKey, _isSubRow: true, date_and_time: attempt.all_times[t] });
+        }
+      }
+    });
+    this.displayLoginAttempts = result;
+  }
+
+  onAttemptRowClick(item: any): void {
+    if (item._isSubRow || item.attempt_count <= 1) return;
+    if (this.expandedGroups.has(item._groupKey)) {
+      this.expandedGroups.delete(item._groupKey);
+    } else {
+      this.expandedGroups.add(item._groupKey);
+    }
+    this.rebuildDisplayAttempts();
+  }
+
+  loginAttemptRowClass = (item: any): string => {
+    if (item._isSubRow) return 'login-attempt-subrow';
+    if (item.attempt_count > 1) return 'login-attempt-group-header';
+    return '';
+  };
 
   toggleAdminStatus(userId: number): void {
     this.adminService.toggleAdminStatus(userId).subscribe({

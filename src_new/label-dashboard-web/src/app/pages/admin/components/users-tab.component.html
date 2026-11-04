@@ -62,18 +62,32 @@
   <div *ngIf="activeSection === 'login-attempts'">
     <app-paginated-table
       title="Recent Login Attempts"
-      [data]="loginAttempts"
+      [data]="displayLoginAttempts"
       [pagination]="loginAttemptsPagination"
       [loading]="loginAttemptsLoading"
       [columns]="loginAttemptsColumns"
       [showSortableHeaders]="true"
       [sortInfo]="loginAttemptsSort"
+      [rowClickable]="true"
+      [rowClassGetter]="loginAttemptRowClass"
       (pageChange)="onLoginAttemptsPageChange($event)"
       (filtersChange)="onLoginAttemptsFiltersChange($event)"
-      (sortChange)="onLoginAttemptsSortChange($event)">
+      (sortChange)="onLoginAttemptsSortChange($event)"
+      (rowClick)="onAttemptRowClick($event)">
 
       <ng-template #mobileRowTemplate let-attempt>
-        <div class="user-card">
+        <!-- Sub-row: compact indented timestamp -->
+        <div *ngIf="attempt._isSubRow" class="user-card user-card--subrow">
+          <div class="user-card__footer tw-mt-0 tw-pt-0 tw-border-0">
+            <span><app-icon name="clock" /> {{ attempt.date_and_time | date:'medium' }}</span>
+            <span class="user-card__ip"><app-icon name="network" /> {{ attempt.remote_ip }}</span>
+          </div>
+        </div>
+
+        <!-- Group header or single attempt -->
+        <div *ngIf="!attempt._isSubRow" class="user-card"
+             [class.user-card--group]="attempt.attempt_count > 1"
+             (click)="onAttemptRowClick(attempt)">
           <div class="user-card__header">
             <div class="user-card__avatar" [style.background-color]="getAvatarColor(attempt.name || attempt.username || '?')">
               {{ getInitials(attempt.name || attempt.username || '?') }}
@@ -84,15 +98,20 @@
             </div>
             <div class="user-card__badges">
               <span class="status-badge"
-                    [class.status-success]="attempt.result === 'Success' || attempt.result === 'Successful'"
+                    [class.status-success]="attempt.result === 'Successful'"
                     [class.status-danger]="attempt.result === 'Failed'"
-                    [class.status-secondary]="attempt.result !== 'Success' && attempt.result !== 'Successful' && attempt.result !== 'Failed'">
+                    [class.status-secondary]="attempt.result !== 'Successful' && attempt.result !== 'Failed'">
                 {{ attempt.result }}
               </span>
             </div>
           </div>
           <div class="user-card__footer">
-            <span><app-icon name="clock" /> {{ attempt.date_and_time | date:'medium' }}</span>
+            <span>
+              <app-icon name="clock" /> {{ attempt.date_and_time | date:'medium' }}
+              <span *ngIf="attempt.attempt_count > 1" class="login-group-badge tw-ml-1">
+                {{ expandedGroups.has(attempt._groupKey) ? '▲ Collapse' : '(+' + (attempt.attempt_count - 1) + ' more)' }}
+              </span>
+            </span>
             <span class="user-card__ip"><app-icon name="network" /> {{ attempt.remote_ip }}</span>
             <span>
               <span class="status-badge"
