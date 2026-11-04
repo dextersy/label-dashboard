@@ -30,6 +30,8 @@ export interface WristbandOrder {
   notes: string | null;
   shipping_fee: number | null;
   discount: number | null;
+  tracking_url: string | null;
+  is_public: boolean;
   created_by: number;
   createdAt: string;
   updatedAt: string;

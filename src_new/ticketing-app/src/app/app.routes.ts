@@ -142,5 +142,13 @@ export const routes: Routes = [
     path: 'event-brand-collab-invite',
     loadComponent: () => import('./pages/events/event-collab-invite/event-collab-invite.component').then(m => m.EventCollabInviteComponent)
   },
+  {
+    path: 'wristband-order',
+    loadComponent: () => import('./pages/public-wristband/public-wristband-start.component').then(m => m.PublicWristbandStartComponent)
+  },
+  {
+    path: 'wristband-order/:token',
+    loadComponent: () => import('./pages/public-wristband/public-wristband-order.component').then(m => m.PublicWristbandOrderComponent)
+  },
   { path: '**', redirectTo: '/' }
 ];

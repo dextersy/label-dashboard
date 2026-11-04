@@ -293,7 +293,12 @@ interface DesignPos {
               <tbody>
                 @for (order of orders; track order.id) {
                   <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td class="px-5 py-3 text-xs font-mono text-gray-400">#{{ order.id }}</td>
+                    <td class="px-5 py-3 text-xs font-mono text-gray-400">
+                      #{{ order.id }}
+                      @if (order.is_public) {
+                        <span class="ml-1 inline-block text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 font-mono uppercase tracking-wide">Public</span>
+                      }
+                    </td>
                     <td class="px-5 py-3 text-sm text-gray-700">
                       <div class="flex items-center gap-1.5 flex-wrap">
                         @for (item of (order.items || []); track item.id) {
@@ -343,7 +348,12 @@ interface DesignPos {
             @for (order of orders; track order.id) {
               <div class="px-4 py-4">
                 <div class="flex items-start justify-between mb-2">
-                  <span class="text-xs font-mono text-gray-400">#{{ order.id }}</span>
+                  <span class="text-xs font-mono text-gray-400">
+                    #{{ order.id }}
+                    @if (order.is_public) {
+                      <span class="ml-1 inline-block text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 font-mono uppercase tracking-wide">Public</span>
+                    }
+                  </span>
                   <span class="text-xs px-2 py-0.5 border font-mono uppercase" [class]="statusClass(order.status)">{{ order.status }}</span>
                 </div>
                 <div class="flex flex-wrap gap-1 mb-2">
@@ -1285,7 +1295,9 @@ export class EventAddOnsComponent implements OnInit, OnDestroy {
       if (row) row.quantity = item.quantity;
     });
     this.formDesignFile = null;
-    this.formDesignDataUrl = order.design_url ?? null;
+    this.formDesignDataUrl = order.design_url
+      ? `${this.wristbandService.getDesignUrl(order.id)}?v=${encodeURIComponent(order.design_url.split('/').pop() ?? '')}`
+      : null;
     this.formDesignIsImage = !!order.design_url;
     this.formDesignError = null;
     this.saveOrderError = null;

@@ -72,6 +72,10 @@ export class WristbandService {
     return this.http.delete(`${this.eventsBase}/wristband-orders/${id}`);
   }
 
+  getDesignUrl(orderId: number): string {
+    return `${this.eventsBase}/wristband-orders/${orderId}/design`;
+  }
+
   // ─── Payments ────────────────────────────────────────────────────────────
 
   getAddOnPayments(eventId: number): Observable<{ payments: EventAddOnPayment[]; total_paid: number }> {
