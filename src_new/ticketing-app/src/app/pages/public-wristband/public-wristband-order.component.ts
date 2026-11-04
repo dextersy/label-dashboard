@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } fro
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PublicWristbandService, PublicWristbandOrder } from '../../services/public-wristband.service';
 import { WristbandColor } from '../../models/wristband.model';
 
@@ -19,7 +19,7 @@ interface ColorRow extends WristbandColor {
 @Component({
   selector: 'app-public-wristband-order',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   styles: [`
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes scaleIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -49,6 +49,29 @@ interface ColorRow extends WristbandColor {
     <!-- Loading -->
     @if (loadingOrder) {
       <div class="text-xs font-mono text-gray-400 py-10 text-center uppercase tracking-widest">Loading…</div>
+    }
+
+    <!-- Not found -->
+    @if (!loadingOrder && orderNotFound) {
+      <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+        <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h2 class="text-lg font-bold text-gray-900 mb-2">Order not found</h2>
+        <p class="text-sm text-gray-500 mb-6">This link may have expired or the order doesn't exist.</p>
+        <div class="flex flex-col gap-3">
+          <a routerLink="/wristband-order"
+            class="block rounded-lg bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-sm py-2.5 transition-colors uppercase tracking-wide text-center">
+            Create a New Order
+          </a>
+          <a href="https://yourscene.live" target="_blank"
+            class="block rounded-lg border border-gray-300 hover:border-gray-400 text-gray-600 text-sm py-2.5 transition-colors text-center">
+            Go to Your Scene
+          </a>
+        </div>
+      </div>
     }
 
     @if (!loadingOrder && order) {
@@ -608,6 +631,7 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
   token = '';
   order: PublicWristbandOrder | null = null;
   loadingOrder = true;
+  orderNotFound = false;
 
   // Colors
   colorRows: ColorRow[] = [];
@@ -717,7 +741,7 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
           }
         }
       },
-      error: () => { this.loadingOrder = false; },
+      error: () => { this.loadingOrder = false; this.orderNotFound = true; },
     });
   }
 
