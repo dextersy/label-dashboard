@@ -1,14 +1,13 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PublicWristbandService, PublicWristbandOrder } from '../../services/public-wristband.service';
 import { WristbandColor } from '../../models/wristband.model';
+import { WristbandDesignEditorComponent, WristbandColorOption } from '../../components/wristband-design-editor/wristband-design-editor.component';
 
 const SUPPORT_EMAIL = 'support@melt-records.com';
-
-interface DesignPos { x: number; y: number; width: number; height: number; }
 
 const PRICE_PER_10 = 45;
 
@@ -19,7 +18,7 @@ interface ColorRow extends WristbandColor {
 @Component({
   selector: 'app-public-wristband-order',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, WristbandDesignEditorComponent],
   styles: [`
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes scaleIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -148,7 +147,7 @@ interface ColorRow extends WristbandColor {
             @if (loadingColors) {
               <p class="text-xs text-gray-400 text-center py-4">Loading colours…</p>
             } @else {
-              <div class="tw-space-y-3">
+              <div class="space-y-3">
                 @for (row of colorRows; track row.id) {
                   <div class="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
                     <div class="w-8 h-8 rounded-full shrink-0 border border-gray-200" [style.background-color]="row.bg_color"></div>
@@ -182,82 +181,10 @@ interface ColorRow extends WristbandColor {
             <div class="mt-6 pt-5 border-t border-gray-100">
               <h2 class="text-sm font-black uppercase tracking-widest text-gray-700 mb-1">Wristband Design</h2>
               <p class="text-xs text-gray-400 mb-3">Upload a PNG file of your wristband artwork. Max 10 MB.</p>
-
-              @if (designProcessing) {
-                <p class="text-xs text-gray-400 mt-2">Processing image…</p>
-              }
-
-              @if (designError) {
-                <p class="text-xs text-red-500 mt-2">{{ designError }}</p>
-              }
-
-              @if (designIsImage && designDataUrl) {
-                <div class="mt-3">
-                  <!-- Color preview selector -->
-                  @if (hasColoredRows) {
-                    <div class="flex items-center gap-2 mb-2">
-                      <span class="text-xs font-mono text-gray-400">Preview color:</span>
-                      @for (row of colorRows; track row.id) {
-                        @if (row.quantity > 0) {
-                          <button type="button" (click)="previewColorId = row.id"
-                            class="w-6 h-6 rounded-full border-2 transition-all"
-                            [style.background]="row.bg_color"
-                            [class.border-gray-900]="previewColor?.id === row.id"
-                            [class.border-transparent]="previewColor?.id !== row.id">
-                          </button>
-                        }
-                      }
-                    </div>
-                  }
-
-                  <!-- Canvas editor -->
-                  <div class="relative select-none overflow-hidden border border-gray-200"
-                    #previewContainer
-                    [style.background]="previewColor?.bg_color || '#F535B2'"
-                    [style.aspect-ratio]="'1 / 0.107'">
-
-                    <div class="absolute inset-0">
-                      <div class="absolute border border-dashed border-black/20"
-                        [style.left.%]="tmplL * 100"
-                        [style.top.%]="tmplT * 100"
-                        [style.width.%]="tmplW * 100"
-                        [style.height.%]="tmplH * 100">
-                      </div>
-                    </div>
-
-                    <div class="absolute"
-                      [style.left.px]="designPos.x"
-                      [style.top.px]="designPos.y"
-                      [style.width.px]="designPos.width"
-                      [style.height.px]="designPos.height"
-                      [style.cursor]="isDragging ? 'grabbing' : 'grab'"
-                      (mousedown)="startDrag($event)"
-                      (touchstart)="startDragTouch($event)">
-                      <img [src]="designDataUrl" class="w-full h-full object-contain pointer-events-none" style="mix-blend-mode:multiply">
-                      @for (handle of resizeHandles; track handle) {
-                        <div class="absolute w-3 h-3 bg-white border border-gray-400 rounded-sm"
-                          [class]="resizeHandleClass(handle)"
-                          (mousedown)="startResize($event, handle)"
-                          (touchstart)="startResizeTouch($event, handle)">
-                        </div>
-                      }
-                    </div>
-                  </div>
-                  <p class="text-xs text-gray-400 mt-1">Drag to reposition · corner handles to resize proportionally</p>
-                </div>
-              }
-
-              <label class="block w-full cursor-pointer rounded-lg border-2 border-dashed border-gray-300 hover:border-yellow-400 transition-colors px-6 py-5 text-center mt-3">
-                <input type="file" accept="image/png" (change)="onDesignFileChange($event)" class="hidden" />
-                @if (designFile) {
-                  <p class="text-sm text-gray-700 font-medium">{{ designFile.name }}</p>
-                  <p class="text-xs text-gray-400 mt-1">Click to change</p>
-                } @else if (order.design_url) {
-                  <p class="text-sm text-gray-400">Click to replace design</p>
-                } @else {
-                  <p class="text-sm text-gray-400">Click to upload a PNG file</p>
-                }
-              </label>
+              <app-wristband-design-editor
+                [colors]="colorsForEditor"
+                accept="image/png">
+              </app-wristband-design-editor>
             </div>
           </div>
 
@@ -273,7 +200,7 @@ interface ColorRow extends WristbandColor {
         @if (activeStep === 2) {
           <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
             <h2 class="text-sm font-black uppercase tracking-widest text-gray-700 mb-4">Delivery Address</h2>
-            <div class="tw-space-y-3">
+            <div class="space-y-3">
               <div>
                 <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">Recipient Name *</label>
                 <input type="text" [(ngModel)]="deliveryName" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="Full name" />
@@ -307,9 +234,44 @@ interface ColorRow extends WristbandColor {
             </div>
           </div>
 
+          <!-- Billing Address -->
+          <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-4">
+            <h2 class="text-sm font-black uppercase tracking-widest text-gray-700 mb-4">Billing Address</h2>
+            <label class="flex items-center gap-3 cursor-pointer mb-4">
+              <input type="checkbox" [(ngModel)]="billingSameAsShipping" class="rounded border-gray-300 text-yellow-400 focus:ring-yellow-400" />
+              <span class="text-sm text-gray-700">Same as shipping address</span>
+            </label>
+            @if (!billingSameAsShipping) {
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">Billing Name *</label>
+                  <input type="text" [(ngModel)]="billingName" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="Full name" />
+                </div>
+                <div>
+                  <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">Street Address *</label>
+                  <input type="text" [(ngModel)]="billingStreet" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="Street / barangay" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">City *</label>
+                    <input type="text" [(ngModel)]="billingCity" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="City / municipality" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">ZIP</label>
+                    <input type="text" [(ngModel)]="billingZip" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="ZIP code" />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">Country</label>
+                  <input type="text" [(ngModel)]="billingCountry" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="Philippines" />
+                </div>
+              </div>
+            }
+          </div>
+
           <div class="flex items-center justify-between">
             <button (click)="activeStep = 1" class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700">← Back</button>
-            <button (click)="saveDeliveryAndNext()" [disabled]="savingDelivery || !deliveryName.trim() || !deliveryStreet.trim() || !deliveryCity.trim()"
+            <button (click)="saveDeliveryAndNext()" [disabled]="savingDelivery || !deliveryName.trim() || !deliveryStreet.trim() || !deliveryCity.trim() || (!billingSameAsShipping && (!billingName.trim() || !billingStreet.trim() || !billingCity.trim()))"
               class="rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm px-6 py-2.5 transition-colors uppercase tracking-wide">
               @if (savingDelivery) { Saving… } @else { Next: Review }
             </button>
@@ -356,6 +318,18 @@ interface ColorRow extends WristbandColor {
               <p>{{ joinTruthy([order.event?.wristbandSettings?.delivery_city, order.event?.wristbandSettings?.delivery_country, order.event?.wristbandSettings?.delivery_zip]) }}</p>
               @if (order.event?.wristbandSettings?.delivery_phone) { <p>{{ order.event?.wristbandSettings?.delivery_phone }}</p> }
               @if (order.notes) { <p class="mt-1 italic text-gray-400">{{ order.notes }}</p> }
+            </div>
+
+            <!-- Billing summary -->
+            <div class="bg-gray-50 rounded-lg p-3 mb-4 text-xs text-gray-600 space-y-0.5">
+              <p class="font-bold text-gray-700 mb-1">Billing address:</p>
+              @if (order.billing_same_as_shipping !== false) {
+                <p class="italic text-gray-400">Same as shipping address</p>
+              } @else {
+                @if (order.billing_name) { <p>{{ order.billing_name }}</p> }
+                @if (order.billing_street) { <p>{{ order.billing_street }}</p> }
+                <p>{{ joinTruthy([order.billing_city, order.billing_country, order.billing_zip]) }}</p>
+              }
             </div>
 
             <!-- Design preview -->
@@ -495,6 +469,16 @@ interface ColorRow extends WristbandColor {
               @if (order.event?.wristbandSettings?.delivery_phone) { <p>{{ order.event?.wristbandSettings?.delivery_phone }}</p> }
             </div>
           }
+          <div class="bg-gray-50 rounded-lg p-3 mt-3 text-xs text-gray-600 space-y-0.5">
+            <p class="font-bold text-gray-700 mb-1">Billing address:</p>
+            @if (order.billing_same_as_shipping !== false) {
+              <p class="italic text-gray-400">Same as shipping address</p>
+            } @else {
+              @if (order.billing_name) { <p>{{ order.billing_name }}</p> }
+              @if (order.billing_street) { <p>{{ order.billing_street }}</p> }
+              <p>{{ joinTruthy([order.billing_city, order.billing_country, order.billing_zip]) }}</p>
+            }
+          </div>
           @if (order.design_url) {
             <div class="mt-4">
               <p class="text-xs font-mono uppercase tracking-widest text-gray-500 mb-2">Design</p>
@@ -611,18 +595,7 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
   readonly PRICE_PER_10 = PRICE_PER_10;
   readonly SUPPORT_EMAIL = SUPPORT_EMAIL;
 
-  // Canvas layout constants (must mirror wristband-order-review)
-  readonly tmplL = 0.05;
-  readonly tmplT = 0.18;
-  readonly tmplW = 0.90;
-  readonly tmplH = 0.64;
-  private readonly BAND_L = 0.13;
-  private readonly BAND_R = 0.99;
-  private readonly BAND_T = 0.28;
-  private readonly BAND_B = 0.72;
-  private readonly MIN_SIZE = 10;
-
-  @ViewChild('previewContainer') previewContainer!: ElementRef;
+  @ViewChild(WristbandDesignEditorComponent) editorRef?: WristbandDesignEditorComponent;
 
   joinTruthy(parts: (string | null | undefined)[], sep = ', '): string {
     return parts.filter(v => !!v).join(sep);
@@ -647,40 +620,6 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
 
   // Step 1
   savingItems = false;
-  designFile: File | null = null;
-  designDataUrl: string | null = null;
-  designIsImage = false;
-  designProcessing = false;
-  designError = '';
-  previewColorId: number | null = null;
-
-  // Design canvas positioning
-  designPos: DesignPos = { x: 60, y: 20, width: 240, height: 80 };
-  private _dragging = false;
-  private _resizing = false;
-  private _resizeHandle = '';
-  private _dragStartX = 0;
-  private _dragStartY = 0;
-  private _startPos: DesignPos = { x: 0, y: 0, width: 0, height: 0 };
-
-  get isDragging(): boolean { return this._dragging || this._resizing; }
-
-  readonly resizeHandles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
-
-  resizeHandleClass(handle: string): string {
-    const map: Record<string, string> = {
-      nw: 'top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nw-resize',
-      n:  'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-n-resize',
-      ne: 'top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-ne-resize',
-      e:  'top-1/2 right-0 translate-x-1/2 -translate-y-1/2 cursor-e-resize',
-      se: 'bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-se-resize',
-      s:  'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 cursor-s-resize',
-      sw: 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2 cursor-sw-resize',
-      w:  'top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 cursor-w-resize',
-    };
-    return map[handle] ?? '';
-  }
-
 
   // Step 2
   deliveryName = '';
@@ -690,6 +629,12 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
   deliveryZip = '';
   deliveryPhone = '';
   notes = '';
+  billingSameAsShipping = true;
+  billingName = '';
+  billingStreet = '';
+  billingCity = '';
+  billingCountry = 'Philippines';
+  billingZip = '';
   savingDelivery = false;
 
   // Step 3
@@ -746,43 +691,17 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
   }
 
   private loadExistingDesign(order: PublicWristbandOrder): void {
-    this.designIsImage = true;
-    this.designProcessing = true;
-    fetch(this.designProxyUrl)
-      .then(r => { if (!r.ok) throw new Error('Failed to fetch design'); return r.blob(); })
-      .then(blob => new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target?.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      }))
-      .then(dataUrl => this.processDesignImage(dataUrl))
-      .then(processed => {
-        this.designDataUrl = processed;
-        this.designProcessing = false;
-        // Restore saved position, scaled from canvas_width to current preview width
-        const savedCanvasW = (order as any).canvas_width;
-        const dx = (order as any).design_x;
-        const dy = (order as any).design_y;
-        const dw = (order as any).design_width;
-        const dh = (order as any).design_height;
-        if (savedCanvasW && dw != null) {
-          const b = this.getPreviewBounds();
-          const scale = b.width / savedCanvasW;
-          this.designPos = {
-            x:      Math.round(dx * scale),
-            y:      Math.round(dy * scale),
-            width:  Math.round(dw * scale),
-            height: Math.round(dh * scale),
-          };
-        } else {
-          this.resetDesignPos();
-        }
-      })
-      .catch(() => {
-        this.designIsImage = false;
-        this.designProcessing = false;
-      });
+    const savedCanvasW = (order as any).canvas_width;
+    const dx = (order as any).design_x;
+    const dy = (order as any).design_y;
+    const dw = (order as any).design_width;
+    const dh = (order as any).design_height;
+    const savedPos = (savedCanvasW && dw != null)
+      ? { x: dx, y: dy, width: dw, height: dh, canvasWidth: savedCanvasW }
+      : undefined;
+    setTimeout(() => {
+      this.editorRef?.loadFromUrl(this.designProxyUrl, savedPos);
+    }, 0);
   }
 
   loadColors(): void {
@@ -808,6 +727,12 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
     this.deliveryZip = s?.delivery_zip ?? '';
     this.deliveryPhone = s?.delivery_phone ?? '';
     this.notes = order.notes ?? '';
+    this.billingSameAsShipping = order.billing_same_as_shipping !== false;
+    this.billingName = order.billing_name ?? '';
+    this.billingStreet = order.billing_street ?? '';
+    this.billingCity = order.billing_city ?? '';
+    this.billingCountry = order.billing_country ?? 'Philippines';
+    this.billingZip = order.billing_zip ?? '';
   }
 
   get totalQty(): number {
@@ -860,20 +785,21 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
       .map(r => ({ wristband_color_id: r.id, quantity: r.quantity }));
 
     const payload: any = { items };
+    const editorDataUrl = this.editorRef?.designDataUrl;
 
-    if (this.designIsImage && this.designDataUrl) {
-      const b = this.getPreviewBounds();
-      payload.design_x      = this.designPos.x;
-      payload.design_y      = this.designPos.y;
-      payload.design_width  = this.designPos.width;
-      payload.design_height = this.designPos.height;
-      payload.canvas_width  = b.width;
+    if (editorDataUrl && this.editorRef) {
+      const pos = this.editorRef.designPos;
+      payload.design_x      = pos.x;
+      payload.design_y      = pos.y;
+      payload.design_width  = pos.width;
+      payload.design_height = pos.height;
+      payload.canvas_width  = this.editorRef.getCanvasWidth();
     }
 
     // Send the processed dataUrl as a blob (background already removed)
     const sendDesign = (): Promise<File | undefined> => {
-      if (!this.designIsImage || !this.designDataUrl) return Promise.resolve(undefined);
-      return fetch(this.designDataUrl).then(r => r.blob()).then(blob => new File([blob], 'design.png', { type: 'image/png' }));
+      if (!editorDataUrl) return Promise.resolve(undefined);
+      return fetch(editorDataUrl).then(r => r.blob()).then(blob => new File([blob], 'design.png', { type: 'image/png' }));
     };
 
     sendDesign().then(file => {
@@ -890,6 +816,7 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
 
   saveDeliveryAndNext(): void {
     if (!this.deliveryName.trim() || !this.deliveryStreet.trim() || !this.deliveryCity.trim()) return;
+    if (!this.billingSameAsShipping && (!this.billingName.trim() || !this.billingStreet.trim() || !this.billingCity.trim())) return;
     this.savingDelivery = true;
     this.svc.updateOrder(this.token, {
       delivery_name: this.deliveryName,
@@ -899,6 +826,12 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
       delivery_zip: this.deliveryZip,
       delivery_phone: this.deliveryPhone,
       notes: this.notes,
+      billing_same_as_shipping: this.billingSameAsShipping,
+      billing_name: this.billingSameAsShipping ? null : this.billingName,
+      billing_street: this.billingSameAsShipping ? null : this.billingStreet,
+      billing_city: this.billingSameAsShipping ? null : this.billingCity,
+      billing_country: this.billingSameAsShipping ? null : this.billingCountry,
+      billing_zip: this.billingSameAsShipping ? null : this.billingZip,
     }).subscribe({
       next: (order) => {
         this.savingDelivery = false;
@@ -909,199 +842,10 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
     });
   }
 
-  onDesignFileChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    this.designError = '';
-    if (!file) return;
-    if (file.type !== 'image/png') { this.designError = 'Only PNG files are accepted.'; input.value = ''; return; }
-    if (file.size > 10 * 1024 * 1024) { this.designError = 'File is too large. Maximum size is 10 MB.'; input.value = ''; return; }
-    this.designFile = file;
-    this.designIsImage = true;
-    this.designProcessing = true;
-    this.designDataUrl = null;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.processDesignImage(e.target?.result as string)
-        .then(processed => {
-          this.designDataUrl = processed;
-          this.designProcessing = false;
-          this.resetDesignPos();
-        })
-        .catch(err => {
-          this.designFile = null;
-          this.designDataUrl = null;
-          this.designIsImage = false;
-          this.designProcessing = false;
-          this.designError = err.message;
-        });
-    };
-    reader.readAsDataURL(file);
-    input.value = '';
-  }
-
-  private processDesignImage(dataUrl: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const W = img.naturalWidth, H = img.naturalHeight;
-        const canvas = document.createElement('canvas');
-        canvas.width = W; canvas.height = H;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, W, H);
-        const data = imageData.data;
-        let hasTransparent = false, hasNonBlackOpaque = false;
-        const BT = 40;
-        for (let i = 0; i < data.length; i += 4) {
-          const a = data[i + 3];
-          if (a < 128) { hasTransparent = true; }
-          else if (data[i] + data[i + 1] + data[i + 2] > BT * 3) { hasNonBlackOpaque = true; }
-          if (hasTransparent && hasNonBlackOpaque) break;
-        }
-        if (hasTransparent && !hasNonBlackOpaque) { resolve(canvas.toDataURL('image/png')); return; }
-        const patchSize = Math.min(5, Math.floor(Math.min(W, H) / 4));
-        const samples: [number, number, number][] = [];
-        for (let py = 0; py < patchSize; py++) {
-          for (let px = 0; px < patchSize; px++) {
-            for (const [cx, cy] of [[px, py], [W - 1 - px, py], [px, H - 1 - py], [W - 1 - px, H - 1 - py]]) {
-              const i = (cy * W + cx) * 4;
-              samples.push([data[i], data[i + 1], data[i + 2]]);
-            }
-          }
-        }
-        const avg: [number, number, number] = [
-          samples.reduce((s, c) => s + c[0], 0) / samples.length,
-          samples.reduce((s, c) => s + c[1], 0) / samples.length,
-          samples.reduce((s, c) => s + c[2], 0) / samples.length,
-        ];
-        const variance = samples.reduce((s, c) => s + Math.abs(c[0] - avg[0]) + Math.abs(c[1] - avg[1]) + Math.abs(c[2] - avg[2]), 0) / samples.length;
-        if (variance > 80) { reject(new Error('Image not suitable: use a solid-colour background with solid black artwork.')); return; }
-        const TOL = 45;
-        let opaquePixels = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          if (data[i + 3] === 0) continue;
-          const dist = Math.sqrt((data[i] - avg[0]) ** 2 + (data[i + 1] - avg[1]) ** 2 + (data[i + 2] - avg[2]) ** 2);
-          if (dist <= TOL) { data[i + 3] = 0; }
-          else { data[i] = 0; data[i + 1] = 0; data[i + 2] = 0; data[i + 3] = 255; opaquePixels++; }
-        }
-        if (opaquePixels / (W * H) < 0.005) { reject(new Error('Image not suitable: use a solid-colour background with solid black artwork.')); return; }
-        ctx.putImageData(imageData, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => reject(new Error('Could not load the image file.'));
-      img.src = dataUrl;
-    });
-  }
-
-  private getPreviewBounds(): { width: number; height: number } {
-    if (this.previewContainer?.nativeElement) {
-      const el = this.previewContainer.nativeElement;
-      return { width: el.clientWidth, height: el.clientHeight };
-    }
-    return { width: 600, height: 64 };
-  }
-
-  resetDesignPos(): void {
-    const b = this.getPreviewBounds();
-    const bandLeft   = b.width  * (this.tmplL + this.tmplW * this.BAND_L);
-    const bandRight  = b.width  * (this.tmplL + this.tmplW * this.BAND_R);
-    const bandTop    = b.height * (this.tmplT + this.tmplH * this.BAND_T);
-    const bandBottom = b.height * (this.tmplT + this.tmplH * this.BAND_B);
-    const bw = bandRight - bandLeft, bh = bandBottom - bandTop;
-    this.designPos = {
-      x:      Math.round(bandLeft + bw * 0.05),
-      y:      Math.round(bandTop  + bh * 0.1),
-      width:  Math.round(bw * 0.55),
-      height: Math.round(bh * 0.8),
-    };
-  }
-
-  startDrag(event: MouseEvent): void {
-    if (this._resizing) return;
-    this._dragging = true;
-    this._dragStartX = event.clientX; this._dragStartY = event.clientY;
-    this._startPos = { ...this.designPos };
-    event.preventDefault();
-  }
-
-  startDragTouch(event: TouchEvent): void {
-    if (this._resizing) return;
-    const t = event.touches[0];
-    this._dragging = true;
-    this._dragStartX = t.clientX; this._dragStartY = t.clientY;
-    this._startPos = { ...this.designPos };
-  }
-
-  startResize(event: MouseEvent, handle: string): void {
-    this._resizing = true; this._resizeHandle = handle;
-    this._dragStartX = event.clientX; this._dragStartY = event.clientY;
-    this._startPos = { ...this.designPos };
-    event.preventDefault(); event.stopPropagation();
-  }
-
-  startResizeTouch(event: TouchEvent, handle: string): void {
-    const t = event.touches[0];
-    this._resizing = true; this._resizeHandle = handle;
-    this._dragStartX = t.clientX; this._dragStartY = t.clientY;
-    this._startPos = { ...this.designPos };
-    event.stopPropagation();
-  }
-
-  @HostListener('document:mousemove', ['$event'])
-  onMouseMove(event: MouseEvent): void {
-    if (!this._dragging && !this._resizing) return;
-    const dx = event.clientX - this._dragStartX, dy = event.clientY - this._dragStartY;
-    const b = this.getPreviewBounds();
-    if (this._dragging) {
-      this.designPos = { ...this.designPos,
-        x: Math.max(0, Math.min(b.width  - this.designPos.width,  this._startPos.x + dx)),
-        y: Math.max(0, Math.min(b.height - this.designPos.height, this._startPos.y + dy)),
-      };
-    }
-    if (this._resizing) {
-      let { x, y, width, height } = this._startPos;
-      if (this._resizeHandle.length === 2) {
-        const aspect = this._startPos.width / this._startPos.height;
-        const pdx = this._resizeHandle.includes('e') ? dx : -dx;
-        const pdy = this._resizeHandle.includes('s') ? dy : -dy;
-        const delta = Math.abs(pdx) >= Math.abs(pdy) ? pdx : pdy * aspect;
-        const nw = Math.max(this.MIN_SIZE, width + delta), nh = nw / aspect;
-        if (this._resizeHandle.includes('w')) x = Math.max(0, x + width - nw);
-        if (this._resizeHandle.includes('n')) y = Math.max(0, y + height - nh);
-        width = nw; height = nh;
-      } else {
-        if (this._resizeHandle === 'e') width  = Math.max(this.MIN_SIZE, width  + dx);
-        if (this._resizeHandle === 's') height = Math.max(this.MIN_SIZE, height + dy);
-        if (this._resizeHandle === 'w') { const r = x + width; const nw = Math.max(this.MIN_SIZE, width - dx); x = Math.max(0, r - nw); width = r - x; }
-        if (this._resizeHandle === 'n') { const bot = y + height; const nh = Math.max(this.MIN_SIZE, height - dy); y = Math.max(0, bot - nh); height = bot - y; }
-      }
-      this.designPos = { x, y, width, height };
-    }
-  }
-
-  @HostListener('document:mouseup') onMouseUp(): void { this._dragging = false; this._resizing = false; }
-
-  @HostListener('document:touchmove', ['$event'])
-  onTouchMove(event: TouchEvent): void {
-    if (!this._dragging && !this._resizing) return;
-    const t = event.touches[0];
-    this.onMouseMove({ clientX: t.clientX, clientY: t.clientY } as MouseEvent);
-  }
-
-  @HostListener('document:touchend') onTouchEnd(): void { this._dragging = false; this._resizing = false; }
-
   ngOnDestroy(): void {}
 
-  get hasColoredRows(): boolean {
-    return this.colorRows.some(r => r.quantity > 0);
-  }
-
-  get previewColor(): ColorRow | null {
-    if (this.previewColorId !== null) {
-      return this.colorRows.find(r => r.id === this.previewColorId) ?? null;
-    }
-    return this.colorRows.find(r => r.quantity > 0) ?? null;
+  get colorsForEditor(): WristbandColorOption[] {
+    return this.colorRows.map(r => ({ id: r.id, slug: r.slug, label: r.label, bg_color: r.bg_color }));
   }
 
   placeOrder(): void {
@@ -1160,19 +904,20 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
       .map(r => ({ wristband_color_id: r.id, quantity: r.quantity }));
 
     const payload: any = { items };
+    const editorDataUrl = this.editorRef?.designDataUrl;
 
-    if (this.designIsImage && this.designDataUrl) {
-      const b = this.getPreviewBounds();
-      payload.design_x      = this.designPos.x;
-      payload.design_y      = this.designPos.y;
-      payload.design_width  = this.designPos.width;
-      payload.design_height = this.designPos.height;
-      payload.canvas_width  = b.width;
+    if (editorDataUrl && this.editorRef) {
+      const pos = this.editorRef.designPos;
+      payload.design_x      = pos.x;
+      payload.design_y      = pos.y;
+      payload.design_width  = pos.width;
+      payload.design_height = pos.height;
+      payload.canvas_width  = this.editorRef.getCanvasWidth();
     }
 
     const sendDesign = (): Promise<File | undefined> => {
-      if (!this.designIsImage || !this.designDataUrl) return Promise.resolve(undefined);
-      return fetch(this.designDataUrl).then(r => r.blob()).then(blob => new File([blob], 'design.png', { type: 'image/png' }));
+      if (!editorDataUrl) return Promise.resolve(undefined);
+      return fetch(editorDataUrl).then(r => r.blob()).then(blob => new File([blob], 'design.png', { type: 'image/png' }));
     };
 
     return new Observable<any>(observer => {
@@ -1194,6 +939,12 @@ export class PublicWristbandOrderComponent implements OnInit, OnDestroy {
       delivery_zip:    this.deliveryZip,
       delivery_phone:  this.deliveryPhone,
       notes:           this.notes,
+      billing_same_as_shipping: this.billingSameAsShipping,
+      billing_name:    this.billingSameAsShipping ? null : this.billingName,
+      billing_street:  this.billingSameAsShipping ? null : this.billingStreet,
+      billing_city:    this.billingSameAsShipping ? null : this.billingCity,
+      billing_country: this.billingSameAsShipping ? null : this.billingCountry,
+      billing_zip:     this.billingSameAsShipping ? null : this.billingZip,
     });
   }
 
