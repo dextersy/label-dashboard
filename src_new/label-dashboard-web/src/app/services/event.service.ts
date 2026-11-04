@@ -43,6 +43,10 @@ export interface WristbandOrderItem {
 export interface WristbandOrder {
   id: number;
   event_id: number;
+  is_public: boolean;
+  public_token: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
   status: 'draft' | 'placed' | 'rejected' | 'confirmed' | 'shipped';
   design_url: string | null;
   design_x: number | null;
@@ -55,7 +59,7 @@ export interface WristbandOrder {
   shipping_fee: number | null;
   discount: number | null;
   tracking_url: string | null;
-  created_by: number;
+  created_by: number | null;
   createdAt: string;
   updatedAt: string;
   items?: WristbandOrderItem[];
@@ -80,7 +84,7 @@ export interface EventAddOnPayment {
   status: 'pending' | 'succeeded' | 'failed';
   reference_number: string | null;
   notes: string | null;
-  created_by: number;
+  created_by: number | null;
   createdAt: string;
   updatedAt: string;
   creator?: { id: number; first_name: string; last_name: string; email_address: string };
