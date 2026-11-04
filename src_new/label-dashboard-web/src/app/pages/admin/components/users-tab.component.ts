@@ -25,11 +25,13 @@ export class UsersTabComponent implements OnInit {
   usersSort: SortInfo | null = null;
   
   // Login attempts
-  loginAttempts: LoginAttempt[] = [];
+  rawLoginAttempts: LoginAttempt[] = [];
+  displayLoginAttempts: any[] = [];
   loginAttemptsPagination: PaginationInfo | null = null;
   loginAttemptsLoading: boolean = false;
   loginAttemptsFilters: any = {};
   loginAttemptsSort: SortInfo | null = null;
+  expandedGroups = new Set<string>();
 
   // Sidebar navigation
   activeSection: string = 'users';
@@ -156,7 +158,24 @@ export class UsersTabComponent implements OnInit {
       return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${initials}</span>${item.username}</span>`;
     }},
     { key: 'name', label: 'Name', type: 'text', searchable: true, sortable: true },
-    { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true },
+    { key: 'date_and_time', label: 'Time', type: 'date', searchable: true, sortable: true, renderHtml: true,
+      formatter: (item: any) => {
+        const timeStr = new Date(item.date_and_time).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+        if (item._isGroupHeader && item._groupCount > 1) {
+          const isExpanded = this.expandedGroups.has(item._groupKey);
+          const badge = isExpanded
+            ? `<span class="login-group-badge login-group-badge--expanded">▲ Collapse</span>`
+            : `<span class="login-group-badge">+${item._groupCount - 1} more</span>`;
+          return `${timeStr} ${badge}`;
+        }
+        if (item._isSubRow) {
+          return `<span class="login-subrow-indent">↳</span> ${timeStr}`;
+        }
+        return timeStr;
+      }
+    },
     { key: 'result', label: 'Result', type: 'text', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
       const result = item.result;
       if (result === 'Success' || result === 'Successful') {
@@ -258,10 +277,12 @@ export class UsersTabComponent implements OnInit {
 
   loadLoginAttempts(page: number, filters: any = {}, sort: SortInfo | null = null): void {
     this.loginAttemptsLoading = true;
-    
+
     this.adminService.getLoginAttempts(page, 20, filters, sort?.column, sort?.direction).subscribe({
       next: (response) => {
-        this.loginAttempts = response.data;
+        this.rawLoginAttempts = response.data;
+        this.expandedGroups.clear();
+        this.rebuildDisplayAttempts();
         this.loginAttemptsPagination = response.pagination;
         this.loginAttemptsLoading = false;
       },
@@ -271,6 +292,54 @@ export class UsersTabComponent implements OnInit {
       }
     });
   }
+
+  private rebuildDisplayAttempts(): void {
+    const result: any[] = [];
+    let groupIndex = 0;
+
+    for (let i = 0; i < this.rawLoginAttempts.length; ) {
+      const current = this.rawLoginAttempts[i];
+      const groupKey = `group-${groupIndex++}`;
+
+      let j = i + 1;
+      while (
+        j < this.rawLoginAttempts.length &&
+        this.rawLoginAttempts[j].username === current.username &&
+        this.rawLoginAttempts[j].result === current.result
+      ) {
+        j++;
+      }
+
+      const count = j - i;
+      result.push({ ...current, _groupKey: groupKey, _groupCount: count, _isGroupHeader: true, _isSubRow: false });
+
+      if (count > 1 && this.expandedGroups.has(groupKey)) {
+        for (let k = i + 1; k < j; k++) {
+          result.push({ ...this.rawLoginAttempts[k], _groupKey: groupKey, _groupCount: count, _isGroupHeader: false, _isSubRow: true });
+        }
+      }
+
+      i = j;
+    }
+
+    this.displayLoginAttempts = result;
+  }
+
+  onAttemptRowClick(item: any): void {
+    if (!item._isGroupHeader || item._groupCount <= 1) return;
+    if (this.expandedGroups.has(item._groupKey)) {
+      this.expandedGroups.delete(item._groupKey);
+    } else {
+      this.expandedGroups.add(item._groupKey);
+    }
+    this.rebuildDisplayAttempts();
+  }
+
+  loginAttemptRowClass = (item: any): string => {
+    if (item._isSubRow) return 'login-attempt-subrow';
+    if (item._isGroupHeader && item._groupCount > 1) return 'login-attempt-group-header';
+    return '';
+  };
 
   toggleAdminStatus(userId: number): void {
     this.adminService.toggleAdminStatus(userId).subscribe({
