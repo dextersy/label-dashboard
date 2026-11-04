@@ -546,7 +546,7 @@ export const initiateAddOnPayment = async (req: AuthRequest, res: Response) => {
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     const ticketingParentId = process.env.TICKETING_PARENT_BRAND_ID ? parseInt(process.env.TICKETING_PARENT_BRAND_ID) : null;
-    const userBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand'] });
+    const userBrand = await Brand.findByPk(req.user.brand_id, { attributes: ['parent_brand', 'billing_company_name', 'billing_address'] });
     const isTicketingOrganizer = ticketingParentId != null && userBrand &&
       (userBrand as any).parent_brand === ticketingParentId;
     const frontendUrl = isTicketingOrganizer
@@ -568,6 +568,12 @@ export const initiateAddOnPayment = async (req: AuthRequest, res: Response) => {
       created_by: req.user.id,
     });
 
+    const billingName  = [(req.user.first_name ?? ''), (req.user.last_name ?? '')].filter(Boolean).join(' ')
+      || (userBrand as any)?.billing_company_name
+      || '';
+    const billingEmail = req.user.email_address ?? '';
+    const billingLine1 = (userBrand as any)?.billing_address ?? '';
+
     const checkoutSession = await paymentService.createCheckoutSession({
       line_items: [{
         name: `Event Add-On Payment`,
@@ -579,6 +585,12 @@ export const initiateAddOnPayment = async (req: AuthRequest, res: Response) => {
       success_url: successUrl,
       cancel_url: cancelUrl,
       description: `Add-on payment for event #${event_id}${notes ? ': ' + notes : ''}`,
+      billing: {
+        name: billingName,
+        email: billingEmail,
+        phone: '',
+        ...(billingLine1 ? { address: { line1: billingLine1 } } : {}),
+      },
     });
 
     if (!checkoutSession) {
