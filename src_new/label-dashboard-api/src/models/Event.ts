@@ -3,7 +3,7 @@ import { sequelize } from '../config/database';
 
 interface EventAttributes {
   id: number;
-  brand_id: number;
+  brand_id: number | null;
   title: string;
   date_and_time: Date;
   venue: string;
@@ -49,11 +49,11 @@ interface EventAttributes {
   url_slug?: string;
 }
 
-interface EventCreationAttributes extends Optional<EventAttributes, 'id'> {}
+interface EventCreationAttributes extends Optional<EventAttributes, 'id' | 'brand_id'> {}
 
 class Event extends Model<EventAttributes, EventCreationAttributes> implements EventAttributes {
   public id!: number;
-  public brand_id!: number;
+  public brand_id!: number | null;
   public title!: string;
   public date_and_time!: Date;
   public venue!: string;
@@ -114,7 +114,7 @@ Event.init(
     },
     brand_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
     title: {
       type: DataTypes.STRING(255),

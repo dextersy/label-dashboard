@@ -11,12 +11,12 @@ interface EventAddOnPaymentAttributes {
   checkout_key?: string;
   checkout_session_id?: string;
   notes?: string;
-  created_by: number;
+  created_by: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface EventAddOnPaymentCreationAttributes extends Optional<EventAddOnPaymentAttributes, 'id'> {}
+interface EventAddOnPaymentCreationAttributes extends Optional<EventAddOnPaymentAttributes, 'id' | 'created_by'> {}
 
 class EventAddOnPayment extends Model<EventAddOnPaymentAttributes, EventAddOnPaymentCreationAttributes> implements EventAddOnPaymentAttributes {
   public id!: number;
@@ -28,7 +28,7 @@ class EventAddOnPayment extends Model<EventAddOnPaymentAttributes, EventAddOnPay
   public checkout_key?: string;
   public checkout_session_id?: string;
   public notes?: string;
-  public created_by!: number;
+  public created_by!: number | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -77,8 +77,7 @@ EventAddOnPayment.init(
     },
     created_by: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      references: { model: 'user', key: 'id' },
+      allowNull: true,
     },
   },
   {

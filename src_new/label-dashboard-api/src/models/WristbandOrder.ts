@@ -18,10 +18,14 @@ interface WristbandOrderAttributes {
   shipping_fee: number | null;
   discount: number | null;
   tracking_url: string | null;
-  created_by: number;
+  created_by: number | null;
+  is_public: boolean;
+  public_token: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
 }
 
-interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee' | 'discount' | 'tracking_url'> {}
+interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee' | 'discount' | 'tracking_url' | 'created_by' | 'is_public' | 'public_token' | 'customer_name' | 'customer_email'> {}
 
 class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreationAttributes> implements WristbandOrderAttributes {
   public id!: number;
@@ -38,7 +42,11 @@ class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreat
   public shipping_fee!: number | null;
   public discount!: number | null;
   public tracking_url!: string | null;
-  public created_by!: number;
+  public created_by!: number | null;
+  public is_public!: boolean;
+  public public_token!: string | null;
+  public customer_name!: string | null;
+  public customer_email!: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -107,7 +115,25 @@ WristbandOrder.init(
     },
     created_by: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    is_public: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
+      defaultValue: false,
+    },
+    public_token: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      unique: true,
+    },
+    customer_name: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+    },
+    customer_email: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
     },
   },
   {
