@@ -175,6 +175,12 @@
   grid-template-columns: 28px repeat(2, minmax(200px, 1fr));
   min-width: 428px;
   // Border drawn on scroll wrapper so sticky children aren't clipped
+
+  @media (max-width: 767px) {
+    // Fixed column width so first column is fully visible and second peeks
+    grid-template-columns: 28px repeat(2, 250px);
+    min-width: auto;
+  }
 }
 
 // Sticky column headers — now inside the scroll container, scrolls H naturally
@@ -195,6 +201,11 @@
     display: grid;
     grid-template-columns: 28px repeat(2, minmax(200px, 1fr));
     min-width: 428px;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 28px repeat(2, 250px);
+      min-width: auto;
+    }
   }
 }
 
