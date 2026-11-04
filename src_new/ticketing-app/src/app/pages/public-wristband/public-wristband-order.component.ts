@@ -179,6 +179,13 @@ interface ColorRow extends WristbandColor {
                   <span class="text-gray-500">Subtotal</span>
                   <span class="font-bold text-gray-900">{{ totalQty }} pcs · ₱{{ subtotal | number:'1.2-2' }}</span>
                 </div>
+                <div class="mt-3 flex items-start gap-2.5 bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2.5">
+                  <span class="text-base leading-none mt-0.5">💡</span>
+                  <p class="text-xs text-yellow-900 leading-relaxed">
+                    <strong>Save ₱{{ (totalQty / 10 * 10) | number:'1.0-0' }} on this order!</strong>
+                    <a href="/signup?mode=organizer" target="_blank" class="underline font-semibold hover:text-yellow-700 transition-colors"> List your event on Your Scene</a> and pay only ₱{{ (totalQty / 10 * 35) | number:'1.2-2' }} instead.
+                  </p>
+                </div>
               }
             }
 
