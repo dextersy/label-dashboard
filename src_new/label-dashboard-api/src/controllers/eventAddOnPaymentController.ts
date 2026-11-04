@@ -211,6 +211,7 @@ async function buildAddOnInvoicePdfBuffer(eventId: number, brandId: number): Pro
     const billedToEmail = (adminUser as any)?.email_address ?? null;
     const billedToCompany = (currentBrand as any)?.billing_company_name ?? null;
     const billedToAddress = (currentBrand as any)?.billing_address ?? null;
+    const billedToTin = (currentBrand as any)?.billing_tin ?? null;
 
     const issuerAddress = (issuerBrand as any)?.billing_address ?? process.env.INVOICE_ISSUER_ADDRESS ?? null;
     const issuerTin     = (issuerBrand as any)?.billing_tin     ?? process.env.INVOICE_ISSUER_TIN     ?? null;
@@ -325,7 +326,7 @@ async function buildAddOnInvoicePdfBuffer(eventId: number, brandId: number): Pro
 
       const colBottoms = [
         infoCol(ML,             'From',      [issuerName, issuerAddress, issuerTin ? `TIN: ${issuerTin}` : null]),
-        infoCol(ML + colW3,     'Billed to', [billedToCompany ?? billedToName, billedToCompany ? billedToName : null, billedToEmail, billedToAddress]),
+        infoCol(ML + colW3,     'Billed to', [billedToCompany ?? billedToName, billedToCompany ? billedToName : null, billedToEmail, billedToAddress, billedToTin ? `TIN: ${billedToTin}` : null]),
         infoCol(ML + colW3 * 2, 'Event',     [(event as any).title ?? `Event #${eventId}`, fmtShort((event as any).date_and_time)]),
       ];
       curY = Math.max(...colBottoms) + 14;
