@@ -39,6 +39,9 @@ export class WristbandOrderReviewComponent implements OnInit {
   settingDiscount = false;
   discountError: string | null = null;
 
+  showRejectModal = false;
+  rejectionReasonInput = '';
+
   wristbandColors: WristbandColor[] = [];
   previewColorSlug = '';
 
@@ -172,21 +175,25 @@ export class WristbandOrderReviewComponent implements OnInit {
     return ((this.order?.design_height ?? 0) / (cW * this.CANVAS_ASPECT)) * 100;
   }
 
-  private executeAction(action: 'confirm' | 'reject'): void {
+  private executeAction(action: 'confirm' | 'reject', rejectionReason?: string | null): void {
     if (!this.orderId || this.actioning) return;
     this.actioning = true;
     this.actionError = null;
 
     const obs = action === 'confirm'
       ? this.eventService.confirmWristbandOrder(this.orderId)
-      : this.eventService.rejectWristbandOrder(this.orderId);
+      : this.eventService.rejectWristbandOrder(this.orderId, rejectionReason);
 
     obs.subscribe({
       next: () => {
         this.actioning = false;
         this.actionDone = true;
         this.actionResult = action === 'confirm' ? 'confirmed' : 'rejected';
-        if (this.order) this.order = { ...this.order, status: action === 'confirm' ? 'confirmed' : 'rejected' };
+        if (this.order) this.order = {
+          ...this.order,
+          status: action === 'confirm' ? 'confirmed' : 'rejected',
+          ...(action === 'reject' ? { rejection_reason: rejectionReason ?? null } : {}),
+        };
       },
       error: (err: any) => {
         this.actioning = false;
@@ -196,7 +203,21 @@ export class WristbandOrderReviewComponent implements OnInit {
   }
 
   confirm(): void { this.executeAction('confirm'); }
-  reject(): void  { this.executeAction('reject'); }
+
+  reject(): void {
+    this.rejectionReasonInput = '';
+    this.showRejectModal = true;
+  }
+
+  cancelReject(): void {
+    this.showRejectModal = false;
+    this.rejectionReasonInput = '';
+  }
+
+  confirmReject(): void {
+    this.showRejectModal = false;
+    this.executeAction('reject', this.rejectionReasonInput.trim() || null);
+  }
 
   openShipForm(): void {
     this.trackingUrlInput = '';

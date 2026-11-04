@@ -136,6 +136,7 @@
                       <span [class]="statusBadgeClass(order.status)">
                         {{ order.status | titlecase }}
                       </span>
+                      <div *ngIf="order.status === 'rejected' && order.rejection_reason" class="tw-text-xs tw-text-red-700 tw-mt-1 tw-max-w-xs">{{ order.rejection_reason }}</div>
                     </td>
                     <td class="text-end small">
                       <div>₱{{ orderPrice(order) | number:'1.2-2' }}</div>
@@ -253,6 +254,12 @@
                 <!-- Locked note for non-editable placed orders -->
                 <div *ngIf="order.status === 'placed' || order.status === 'confirmed' || order.status === 'shipped'" class="mc-locked-note">
                   <app-icon name="lock" iconOnly></app-icon> Placed orders can't be edited.
+                </div>
+
+                <!-- Rejection reason note -->
+                <div *ngIf="order.status === 'rejected' && order.rejection_reason" class="tw-flex tw-items-start tw-gap-2 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded tw-px-3 tw-py-2 tw-mt-2 tw-text-xs tw-text-red-800">
+                  <app-icon name="warning" iconOnly class="tw-text-red-500 tw-shrink-0 tw-mt-0.5"></app-icon>
+                  <span><strong>Rejection reason:</strong> {{ order.rejection_reason }}</span>
                 </div>
 
                 <!-- Inline edit form -->

@@ -329,8 +329,9 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
       designUrl = result.Location;
     }
 
+    const newStatus = status || order.status;
     await order.update({
-      status: status || order.status,
+      status: newStatus,
       design_url: designUrl,
       design_x: design_x != null ? parseFloat(design_x) : order.design_x,
       design_y: design_y != null ? parseFloat(design_y) : order.design_y,
@@ -338,6 +339,7 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
       design_height: design_height != null ? parseFloat(design_height) : order.design_height,
       canvas_width: canvas_width != null ? parseFloat(canvas_width) : order.canvas_width,
       disclaimer_acknowledged: disclaimer_acknowledged === true || disclaimer_acknowledged === 'true',
+      ...(newStatus === 'placed' ? { rejection_reason: null } : {}),
     });
 
     if (parsedItems && Array.isArray(parsedItems)) {
@@ -352,7 +354,6 @@ export const updateWristbandOrder = async (req: AuthRequest, res: Response) => {
       include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
     });
 
-    const newStatus = (status || order.status) as string;
     if (previousStatus !== 'placed' && newStatus === 'placed') {
       const evt = await Event.findByPk((order as any).event_id);
       if (!(evt as any)?.brand_id) return;
@@ -438,9 +439,11 @@ export const rejectWristbandOrder = async (req: AuthRequest, res: Response) => {
     const ownerBrandId = await getOwnerBrandId(order);
     if (!ownerBrandId || req.user.brand_id !== ownerBrandId) return res.status(403).json({ error: 'Forbidden' });
     if (order.status !== 'placed') return res.status(400).json({ error: 'Only placed orders can be rejected' });
-    await order.update({ status: 'rejected' });
+    const { reason } = req.body;
+    const rejectionReason = typeof reason === 'string' && reason.trim() ? reason.trim() : null;
+    await order.update({ status: 'rejected', rejection_reason: rejectionReason });
     const rejectCtaUrl = await getOrgAddOnsUrl(order);
-    if (rejectCtaUrl) sendWristbandOrderStatusEmail(order, 'rejected', rejectCtaUrl).catch(console.error);
+    if (rejectCtaUrl) sendWristbandOrderStatusEmail(order, 'rejected', rejectCtaUrl, undefined, rejectionReason).catch(console.error);
     notifyOrgAdmins(order, 'wristband_order_rejected',
       `Wristband order rejected: ${order.event.title ?? `Event #${order.event_id}`}`,
       `Order #${orderId} was rejected. Please review and re-submit.`,

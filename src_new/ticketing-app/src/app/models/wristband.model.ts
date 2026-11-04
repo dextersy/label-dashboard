@@ -31,6 +31,7 @@ export interface WristbandOrder {
   shipping_fee: number | null;
   discount: number | null;
   tracking_url: string | null;
+  rejection_reason: string | null;
   is_public: boolean;
   created_by: number;
   createdAt: string;

@@ -34,9 +34,20 @@
       <span class="tw-text-sm tw-text-green-800">Order #{{ order.id }} has been <strong>accepted</strong>. The organizer's payment total has been updated.</span>
     </div>
     <div *ngIf="actionDone && actionResult === 'rejected'"
-      class="tw-flex tw-items-center tw-gap-3 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
-      <app-icon name="warning" class="tw-text-amber-500 tw-shrink-0"></app-icon>
-      <span class="tw-text-sm tw-text-amber-800">Order #{{ order.id }} has been <strong>rejected</strong>. The organizer can edit and re-submit it.</span>
+      class="tw-flex tw-items-start tw-gap-3 tw-bg-amber-50 tw-border tw-border-amber-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
+      <app-icon name="warning" class="tw-text-amber-500 tw-shrink-0 tw-mt-0.5"></app-icon>
+      <div class="tw-text-sm tw-text-amber-800">
+        <span>Order #{{ order.id }} has been <strong>rejected</strong>. The organizer can edit and re-submit it.</span>
+        <div *ngIf="order.rejection_reason" class="tw-mt-1 tw-text-amber-700"><strong>Reason:</strong> {{ order.rejection_reason }}</div>
+      </div>
+    </div>
+    <!-- Rejection reason banner — shown when viewing an already-rejected order -->
+    <div *ngIf="!actionDone && order.status === 'rejected' && order.rejection_reason"
+      class="tw-flex tw-items-start tw-gap-3 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
+      <app-icon name="warning" class="tw-text-red-500 tw-shrink-0 tw-mt-0.5"></app-icon>
+      <div class="tw-text-sm tw-text-red-800">
+        <strong>Rejection reason:</strong> {{ order.rejection_reason }}
+      </div>
     </div>
     <div *ngIf="actionDone && actionResult === 'shipped'"
       class="tw-flex tw-items-center tw-gap-3 tw-bg-blue-50 tw-border tw-border-blue-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mb-4 tw-max-w-2xl">
@@ -404,3 +415,35 @@
     {{ actioning ? 'Processing…' : 'Accept Order' }}
   </button>
 </app-floating-action-bar>
+
+<!-- Reject Order modal -->
+<div *ngIf="showRejectModal" class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reject Order #{{ order?.id }}</h5>
+        <button type="button" class="btn-close" (click)="cancelReject()" [disabled]="actioning"></button>
+      </div>
+      <div class="modal-body">
+        <p class="tw-text-sm tw-text-gray-600 tw-mb-3">Optionally provide a reason for rejection. This will be shown to the organizer and included in the notification email.</p>
+        <div class="mb-0">
+          <label class="form-label tw-text-sm">Reason <span class="tw-text-gray-400">(optional)</span></label>
+          <textarea
+            class="form-control"
+            rows="3"
+            [(ngModel)]="rejectionReasonInput"
+            placeholder="e.g. Design file is missing, quantities need adjustment…"
+            [disabled]="actioning"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary btn-sm" (click)="cancelReject()" [disabled]="actioning">Cancel</button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="confirmReject()" [disabled]="actioning">
+          <app-icon name="x" />
+          {{ actioning ? 'Rejecting…' : 'Reject Order' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -29,9 +29,10 @@ interface WristbandOrderAttributes {
   billing_city: string | null;
   billing_country: string | null;
   billing_zip: string | null;
+  rejection_reason: string | null;
 }
 
-interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee' | 'discount' | 'tracking_url' | 'created_by' | 'is_public' | 'public_token' | 'customer_name' | 'customer_email' | 'billing_same_as_shipping' | 'billing_name' | 'billing_street' | 'billing_city' | 'billing_country' | 'billing_zip'> {}
+interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee' | 'discount' | 'tracking_url' | 'created_by' | 'is_public' | 'public_token' | 'customer_name' | 'customer_email' | 'billing_same_as_shipping' | 'billing_name' | 'billing_street' | 'billing_city' | 'billing_country' | 'billing_zip' | 'rejection_reason'> {}
 
 class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreationAttributes> implements WristbandOrderAttributes {
   public id!: number;
@@ -59,6 +60,7 @@ class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreat
   public billing_city!: string | null;
   public billing_country!: string | null;
   public billing_zip!: string | null;
+  public rejection_reason!: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -170,6 +172,10 @@ WristbandOrder.init(
     },
     billing_zip: {
       type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    rejection_reason: {
+      type: DataTypes.TEXT,
       allowNull: true,
     },
   },

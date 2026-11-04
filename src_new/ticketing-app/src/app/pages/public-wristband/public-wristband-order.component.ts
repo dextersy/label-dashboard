@@ -89,9 +89,14 @@ interface ColorRow extends WristbandColor {
         </div>
       }
       @if (order.status === 'rejected') {
-        <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-5 text-sm text-red-800">
-          <span class="shrink-0">✕</span>
-          Your order was rejected. Please update your order and re-submit.
+        <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-5 text-sm text-red-800">
+          <span class="shrink-0 mt-0.5">✕</span>
+          <div>
+            Your order was rejected. Please update your order and re-submit.
+            @if (order.rejection_reason) {
+              <div class="mt-1"><strong>Reason:</strong> {{ order.rejection_reason }}</div>
+            }
+          </div>
         </div>
       }
       @if (order.status === 'shipped') {

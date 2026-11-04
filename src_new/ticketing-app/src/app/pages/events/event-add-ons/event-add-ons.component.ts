@@ -323,6 +323,9 @@ interface WristbandColorRow extends WristbandColor {
                       <span class="text-xs px-2 py-0.5 border font-mono uppercase" [class]="statusClass(order.status)">
                         {{ order.status }}
                       </span>
+                      @if (order.status === 'rejected' && order.rejection_reason) {
+                        <p class="text-xs text-red-600 mt-1 max-w-[160px] mx-auto text-left">{{ order.rejection_reason }}</p>
+                      }
                     </td>
                     <td class="px-5 py-3 text-right">
                       <div class="flex gap-2 justify-end">
@@ -353,6 +356,12 @@ interface WristbandColorRow extends WristbandColor {
                   </span>
                   <span class="text-xs px-2 py-0.5 border font-mono uppercase" [class]="statusClass(order.status)">{{ order.status }}</span>
                 </div>
+                @if (order.status === 'rejected' && order.rejection_reason) {
+                  <div class="flex items-start gap-1.5 bg-red-50 border border-red-200 rounded px-3 py-2 mb-2 text-xs text-red-700">
+                    <span class="shrink-0 mt-0.5">✕</span>
+                    <span>{{ order.rejection_reason }}</span>
+                  </div>
+                }
                 <div class="flex flex-wrap gap-1 mb-2">
                   @for (item of (order.items || []); track item.id) {
                     @if (item.quantity > 0 && item.color) {

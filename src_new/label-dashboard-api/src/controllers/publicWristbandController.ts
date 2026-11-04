@@ -281,7 +281,7 @@ export const placePublicWristbandOrder = async (req: Request, res: Response) => 
     if (totalQty === 0) return res.status(400).json({ error: 'Order must have at least one item' });
     if (!order.disclaimer_acknowledged) return res.status(400).json({ error: 'Disclaimer must be acknowledged' });
 
-    await order.update({ status: 'placed' });
+    await order.update({ status: 'placed', rejection_reason: null });
 
     const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
     if (parentBrandId) {

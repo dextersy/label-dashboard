@@ -59,6 +59,7 @@ export interface WristbandOrder {
   shipping_fee: number | null;
   discount: number | null;
   tracking_url: string | null;
+  rejection_reason: string | null;
   created_by: number | null;
   createdAt: string;
   updatedAt: string;
@@ -1188,10 +1189,10 @@ export class EventService {
     ).pipe(catchError(this.handleError));
   }
 
-  rejectWristbandOrder(orderId: number): Observable<any> {
+  rejectWristbandOrder(orderId: number, reason?: string | null): Observable<any> {
     return this.http.post(
       `${environment.apiUrl}/events/wristband-orders/${orderId}/reject`,
-      {},
+      { reason: reason ?? null },
       { headers: this.getAuthHeaders() }
     ).pipe(catchError(this.handleError));
   }

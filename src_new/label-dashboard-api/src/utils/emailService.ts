@@ -1227,7 +1227,8 @@ export const sendWristbandOrderStatusEmail = async (
   order: any,
   status: 'placed' | 'confirmed' | 'rejected' | 'shipped' | 'paid',
   ctaUrl: string,
-  trackingUrl?: string | null
+  trackingUrl?: string | null,
+  rejectionReason?: string | null
 ): Promise<void> => {
   try {
     let recipients: string[];
@@ -1301,6 +1302,17 @@ export const sendWristbandOrderStatusEmail = async (
     };
     const s = statusMap[status];
 
+    const rejectionReasonBlock = (status === 'rejected' && rejectionReason)
+      ? `<table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+          <tr>
+            <td style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 6px; padding: 14px 16px;">
+              <div style="font-size: 11px; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Reason for rejection</div>
+              <div style="font-size: 14px; color: #7f1d1d; line-height: 1.5;">${escapeHtml(rejectionReason)}</div>
+            </td>
+          </tr>
+        </table>`
+      : '';
+
     await sendBrandedEmail(recipients, 'wristband_order_status', {
       BRAND_NAME: brand.brand_name,
       BRAND_LOGO_HTML: brandLogoHtml,
@@ -1315,6 +1327,7 @@ export const sendWristbandOrderStatusEmail = async (
       TOTAL_PRICE: totalPrice,
       CTA_URL: ctaUrl,
       CTA_LABEL: s.ctaLabel,
+      REJECTION_REASON_BLOCK: rejectionReasonBlock,
     }, brand.id);
   } catch (err) {
     console.error('sendWristbandOrderStatusEmail error:', err);
