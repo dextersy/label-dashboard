@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Wristband Order</title>
+  <style>
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+    table, td, th { border-collapse: collapse; }
+    @media only screen and (max-width: 620px) {
+      .container { width: 100% !important; max-width: 100% !important; }
+      .content { padding: 24px 20px !important; }
+    }
+  </style>
+</head>
+<body style="width: 100% !important; min-height: 100% !important; margin: 0 !important; padding: 0 !important; background-color: #f5f5f5; font-family: Arial, Helvetica, sans-serif;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5;">
+    <tr>
+      <td align="center" style="padding: 30px 15px;">
+        <table class="container" width="500" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; width: 100%;">
+          <tr>
+            <td style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+              <!-- Brand Header -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="background-color: %BRAND_COLOR%; padding: 30px 20px;">
+                    %BRAND_LOGO_HTML%
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Content -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td class="content" style="padding: 35px 35px 40px 35px;">
+
+                    <!-- Title -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding-bottom: 20px;">
+                          <div style="font-size: 20px; font-weight: 700; color: #333333;">
+                            Hi %CUSTOMER_NAME%, your order has been started!
+                          </div>
+                          <div style="font-size: 14px; color: #555555; margin-top: 10px; line-height: 1.6;">
+                            We've saved your wristband order. Use the button below to continue filling in your order details — choose your wristband colours, quantities, delivery address, and upload your design.
+                          </div>
+                          <div style="font-size: 14px; color: #555555; margin-top: 10px; line-height: 1.6;">
+                            <strong>Keep this email</strong> — it's your secure link to manage your order at any time.
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Order ID -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 4px;">
+                      <tr>
+                        <td style="font-size: 14px; color: #666666; padding: 6px 0; width: 40%;">Order reference</td>
+                        <td style="font-size: 15px; color: #333333; padding: 6px 0; font-weight: 600;">#%ORDER_ID%</td>
+                      </tr>
+                    </table>
+
+                    <!-- Divider -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 20px;">
+                      <tr><td style="border-bottom: 1px solid #e5e5e5;"></td></tr>
+                    </table>
+
+                    <!-- CTA Button -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" style="padding-top: 28px;">
+                          <a href="%MANAGE_URL%" target="_blank" style="display: inline-block; background-color: %BRAND_COLOR%; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 6px;">
+                            Continue Your Order
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Security note -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" style="padding-top: 16px;">
+                          <div style="font-size: 12px; color: #999999; line-height: 1.5;">
+                            This link is unique to your order. Do not share it with others.
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Footer -->
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="center" style="padding-top: 35px;">
+                          <div style="font-size: 12px; color: #999999;">%BRAND_NAME%</div>
+                        </td>
+                      </tr>
+                    </table>
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

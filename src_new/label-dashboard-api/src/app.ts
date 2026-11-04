@@ -171,6 +171,7 @@ const startServer = async () => {
       { name: 'releaseTaskTemplates', path: './routes/releaseTaskTemplates' },
       { name: 'eventAccess', path: './routes/eventAccess' },
       { name: 'eventBrandCollab', path: './routes/eventBrandCollab' },
+      { name: 'publicWristband', path: './routes/publicWristband' },
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -231,6 +232,7 @@ const startServer = async () => {
     const releaseTaskTemplateRoutes = routes.releaseTaskTemplates;
     const eventAccessRoutes = routes.eventAccess;
     const eventBrandCollabRoutes = routes.eventBrandCollab;
+    const publicWristbandRoutes = routes.publicWristband;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -259,6 +261,7 @@ const startServer = async () => {
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);
+    app.use('/api/public', publicWristbandRoutes);
 
     // Scanner API Routes (login is public, other routes use scanner JWT middleware)
     app.use('/api/scanner', scannerRoutes);

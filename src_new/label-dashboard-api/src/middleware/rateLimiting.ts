@@ -356,6 +356,48 @@ export const connectionActionRateLimit = rateLimit({
   },
 });
 
+// Rate limiting for public wristband order creation (unauthenticated, sends email)
+export const wristbandOrderCreateRateLimit = rateLimit({
+  windowMs: parseInt(process.env.WRISTBAND_ORDER_CREATE_RATE_WINDOW_MS || '3600000'), // 1 hour
+  max: parseInt(process.env.WRISTBAND_ORDER_CREATE_RATE_MAX_REQUESTS || '10'),
+  message: {
+    error: 'Order Limit Reached',
+    message: 'Too many orders created from this IP. Please wait before trying again.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    notifySuperadmin(req, 'Wristband Order Create Rate Limit').catch(err =>
+      console.error('Failed to notify admin:', err)
+    );
+    createRateLimitErrorHandler({
+      error: 'Order Limit Reached',
+      message: 'Too many orders created from this IP. Please wait before trying again.',
+    })(req, res);
+  }
+});
+
+// Rate limiting for public wristband reminder emails
+export const wristbandReminderRateLimit = rateLimit({
+  windowMs: parseInt(process.env.WRISTBAND_REMINDER_RATE_WINDOW_MS || '3600000'), // 1 hour
+  max: parseInt(process.env.WRISTBAND_REMINDER_RATE_MAX_REQUESTS || '5'),
+  message: {
+    error: 'Reminder Limit Reached',
+    message: 'Too many reminder requests. Please wait before trying again.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    notifySuperadmin(req, 'Wristband Reminder Rate Limit').catch(err =>
+      console.error('Failed to notify admin:', err)
+    );
+    createRateLimitErrorHandler({
+      error: 'Reminder Limit Reached',
+      message: 'Too many reminder requests. Please wait before trying again.',
+    })(req, res);
+  }
+});
+
 // Global fallback rate limiter for all endpoints
 export const globalRateLimit = rateLimit({
   windowMs: parseInt(process.env.GLOBAL_RATE_WINDOW_MS || '60000'), // 1 minute

@@ -562,6 +562,37 @@ export class PaymentService {
 
       this.webhookLog('Successfully updated add-on payment ID ' + addOnPayment.id + ' to succeeded');
 
+      // Public wristband orders: mark WristbandOrder as paid, send buyer email, notify platform admins
+      try {
+        const publicOrder = await WristbandOrder.findOne({
+          where: { event_id: addOnPayment.event_id, is_public: true },
+          include: [{ model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] }],
+          order: [['id', 'DESC']],
+        });
+        if (publicOrder) {
+          this.webhookLog('Public wristband order ID ' + (publicOrder as any).id + ' payment confirmed');
+          const { sendWristbandOrderStatusEmail, sendWristbandOrderPaidAdminEmail } = await import('./emailService');
+          const PRICE_PER_10_PUBLIC = 45;
+          const amountPaid = parseFloat(addOnPayment.amount as any);
+          const paidCtaUrl = `${process.env.TICKETING_FRONTEND_URL}/wristband-order/${(publicOrder as any).public_token}`;
+          sendWristbandOrderStatusEmail(publicOrder, 'paid', paidCtaUrl).catch(console.error);
+          const parentBrandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
+          if (parentBrandId) {
+            sendWristbandOrderPaidAdminEmail(publicOrder, parentBrandId, amountPaid, PRICE_PER_10_PUBLIC).catch(console.error);
+            const parentAdminIds = await getBrandAdminUserIds(parentBrandId);
+            createNotificationsForUsers(
+              parentAdminIds, parentBrandId, 'addon_payment_made',
+              `Public wristband order paid: #${(publicOrder as any).id}`,
+              `₱${amountPaid.toFixed(2)} via Paymongo`,
+              `/campaigns/events/wristband-order-review?order_id=${(publicOrder as any).id}`
+            ).catch(console.error);
+          }
+          return true;
+        }
+      } catch (publicErr) {
+        console.error('Public wristband payment notification error:', publicErr);
+      }
+
       // Send email + bell notifications only when fully paid
       try {
         const PRICE_PER_10 = 35;
@@ -597,7 +628,7 @@ export class PaymentService {
                 'addon_payment_made',
                 `Add-on payment received: ${(event as any).title ?? `Event #${event.id}`}`,
                 `₱${parseFloat(addOnPayment.amount).toFixed(2)} via Paymongo`,
-                '/campaigns/events/add-ons?tab=payment'
+                `/campaigns/events/add-ons?event=${event.id}&tab=payment`
               );
             }
 
@@ -608,7 +639,7 @@ export class PaymentService {
                 'addon_payment_made',
                 `Payment confirmed: ${(event as any).title ?? `Event #${event.id}`}`,
                 `₱${parseFloat(addOnPayment.amount).toFixed(2)} via Paymongo`,
-                '/campaigns/events/add-ons?tab=payment'
+                `/campaigns/events/add-ons?event=${event.id}&tab=payment`
               );
             }
           }

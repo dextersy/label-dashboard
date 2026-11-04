@@ -270,8 +270,22 @@ export const sendBrandedEmail = async (
       break;
     case 'wristband_order_status':
       subject = templateData.STATUS_LABEL === 'Order Accepted'
-        ? `Your wristband order is confirmed! 🎉 — ${templateData.EVENT_TITLE}`
-        : `Update on your wristband order — ${templateData.EVENT_TITLE}`;
+        ? `Your wristband order is confirmed! 🎉 — Order #${templateData.ORDER_ID}`
+        : templateData.STATUS_LABEL === 'Order Placed'
+        ? `We received your wristband order — Order #${templateData.ORDER_ID}`
+        : templateData.STATUS_LABEL === 'Order Rejected'
+        ? `Your wristband order was rejected — Order #${templateData.ORDER_ID}`
+        : templateData.STATUS_LABEL === 'Order Shipped'
+        ? `Your wristband order has been shipped — Order #${templateData.ORDER_ID}`
+        : templateData.STATUS_LABEL === 'Payment Received'
+        ? `Payment received for your wristband order — Order #${templateData.ORDER_ID}`
+        : `Update on your wristband order — Order #${templateData.ORDER_ID}`;
+      break;
+    case 'wristband_order_created':
+      subject = `Your wristband order has been started — Order #${templateData.ORDER_ID}`;
+      break;
+    case 'wristband_order_saved':
+      subject = `Your wristband order draft has been saved — Order #${templateData.ORDER_ID}`;
       break;
     case 'event_invite_email':
       subject = `You've been invited to manage ${templateData.event_title} as a ${templateData.role_label}`;
@@ -1203,33 +1217,49 @@ function escapeHtml(value: unknown): string {
 
 export const sendWristbandOrderStatusEmail = async (
   order: any,
-  event: any,
-  status: 'confirmed' | 'rejected' | 'shipped',
+  status: 'placed' | 'confirmed' | 'rejected' | 'shipped' | 'paid',
   ctaUrl: string,
   trackingUrl?: string | null
 ): Promise<void> => {
   try {
-    const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'parent_brand'] });
-    if (!orgBrand) return;
+    let recipients: string[];
+    let brandId: number;
+    let pricePerTen: number;
+    let eventRow: string;
 
-    // Use the parent brand for branding/logging if one exists, otherwise the organizer's own brand
-    const brandingBrandId = orgBrand.parent_brand ?? orgBrand.id;
-    const brand = await Brand.findByPk(brandingBrandId);
+    if (order.is_public) {
+      if (!order.customer_email) return;
+      recipients = [order.customer_email];
+      brandId = parseInt(process.env.TICKETING_PARENT_BRAND_ID ?? '0');
+      pricePerTen = 45;
+      eventRow = '';
+    } else {
+      const event = order.event;
+      const orgBrand = await Brand.findByPk(event.brand_id, { attributes: ['id', 'parent_brand'] });
+      if (!orgBrand) return;
+      brandId = orgBrand.parent_brand ?? orgBrand.id;
+      recipients = await getBrandAdministrators(event.brand_id);
+      pricePerTen = 35;
+      eventRow = `<tr>
+        <td class="detail-label" style="font-size: 14px; color: #666666; padding: 8px 0; width: 40%;">Event</td>
+        <td class="detail-value" style="font-size: 15px; color: #333333; padding: 8px 0; font-weight: 600;">${escapeHtml(event.title)}</td>
+      </tr>`;
+    }
+
+    if (!recipients.length || !brandId) return;
+
+    const brand = await Brand.findByPk(brandId);
     if (!brand) return;
-
-    const adminEmails = await getBrandAdministrators(orgBrand.id);
-    if (!adminEmails.length) return;
 
     const brandLogoHtml = brand.logo_url
       ? `<img src="${escapeHtml(brand.logo_url)}" alt="${escapeHtml(brand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
       : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(brand.brand_name)}</div>`;
 
     const items = (order.items ?? []) as any[];
-    const PRICE_PER_10 = 35;
     const itemsRows = items
       .filter((i: any) => i.quantity > 0)
       .map((i: any) => {
-        const price = ((i.quantity / 10) * PRICE_PER_10).toFixed(2);
+        const price = ((i.quantity / 10) * pricePerTen).toFixed(2);
         return `<tr style="border-top: 1px solid #e5e5e5;">
           <td style="font-size: 14px; color: #333333; padding: 8px 12px;">${escapeHtml(i.color?.label ?? '—')}</td>
           <td style="font-size: 14px; color: #333333; padding: 8px 12px; text-align: right;">${escapeHtml(i.quantity)}</td>
@@ -1238,7 +1268,6 @@ export const sendWristbandOrderStatusEmail = async (
       })
       .join('');
     const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
-    const itemsSubtotal = (totalQty / 10) * PRICE_PER_10;
     const shippingFee = order.shipping_fee != null ? parseFloat(String(order.shipping_fee)) : 0;
     const discount = order.discount != null ? parseFloat(String(order.discount)) : 0;
     const shippingRow = shippingFee > 0
@@ -1246,38 +1275,38 @@ export const sendWristbandOrderStatusEmail = async (
           <td style="font-size: 14px; color: #666666; padding: 8px 12px;">Shipping fee</td>
           <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">—</td>
           <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">₱${shippingFee.toFixed(2)}</td>
-        </tr>`
-      : '';
+        </tr>` : '';
     const discountRow = discount > 0
       ? `<tr style="border-top: 1px solid #e5e5e5;">
           <td style="font-size: 14px; color: #666666; padding: 8px 12px;">Discount</td>
           <td style="font-size: 14px; color: #666666; padding: 8px 12px; text-align: right;">—</td>
           <td style="font-size: 14px; color: #16a34a; padding: 8px 12px; text-align: right;">−₱${discount.toFixed(2)}</td>
-        </tr>`
-      : '';
-    const totalPrice = Math.max(0, itemsSubtotal + shippingFee - discount).toFixed(2);
+        </tr>` : '';
+    const totalPrice = Math.max(0, (totalQty / 10) * pricePerTen + shippingFee - discount).toFixed(2);
 
-    const isConfirmed = status === 'confirmed';
-    const isShipped = status === 'shipped';
+    const statusMap: Record<string, { label: string; color: string; message: string; ctaLabel: string }> = {
+      placed:    { label: 'Order Placed',     color: '#2563eb', message: `We've received your wristband order. Our team will review it and confirm shortly.`,                                                                                                                        ctaLabel: 'View Order'    },
+      confirmed: { label: 'Order Accepted',   color: '#16a34a', message: order.is_public ? `Your wristband order has been accepted! You can now proceed to pay for it.` : `Your wristband order for <strong>${escapeHtml(order.event?.title)}</strong> has been accepted. You can now proceed to pay for it.`, ctaLabel: 'Pay for Order' },
+      rejected:  { label: 'Order Rejected',   color: '#dc2626', message: order.is_public ? `Your wristband order has been rejected. Please review your order, make any necessary changes, and re-submit.` : `Your wristband order for <strong>${escapeHtml(order.event?.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,                ctaLabel: 'Review Order'  },
+      shipped:   { label: 'Order Shipped',    color: '#2563eb', message: (order.is_public ? `Your wristband order has been shipped and is on its way to you.` : `Your wristband order for <strong>${escapeHtml(order.event?.title)}</strong> has been shipped and is on its way to you.`) + (trackingUrl ? ` <a href="${escapeHtml(trackingUrl)}" style="color:#2563eb">Track your shipment</a>` : ''), ctaLabel: 'View Order'    },
+      paid:      { label: 'Payment Received', color: '#16a34a', message: `We've received your payment for this order. Your wristbands will be shipped soon!`,                                                                                                                       ctaLabel: 'View Order'    },
+    };
+    const s = statusMap[status];
 
-    await sendBrandedEmail(adminEmails, 'wristband_order_status', {
+    await sendBrandedEmail(recipients, 'wristband_order_status', {
       BRAND_NAME: brand.brand_name,
       BRAND_LOGO_HTML: brandLogoHtml,
       BRAND_COLOR: brand.brand_color || '#333333',
-      STATUS_LABEL: isConfirmed ? 'Order Accepted' : isShipped ? 'Order Shipped' : 'Order Rejected',
-      STATUS_COLOR: isConfirmed ? '#16a34a' : isShipped ? '#2563eb' : '#dc2626',
-      STATUS_MESSAGE: isConfirmed
-        ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been accepted. You can now proceed to pay for it.`
-        : isShipped
-        ? `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been shipped and is on its way to you.${trackingUrl ? ` <a href="${escapeHtml(trackingUrl)}" style="color:#2563eb">Track your shipment</a>` : ''}`
-        : `Your wristband order for <strong>${escapeHtml(event.title)}</strong> has been rejected. Please review the order, make any necessary changes, and re-submit.`,
+      STATUS_LABEL: s.label,
+      STATUS_COLOR: s.color,
+      STATUS_MESSAGE: s.message,
       ORDER_ID: escapeHtml(order.id),
-      EVENT_TITLE: escapeHtml(event.title),
+      EVENT_ROW: eventRow,
       ITEMS_ROWS: itemsRows + shippingRow + discountRow,
       TOTAL_QTY: String(totalQty),
       TOTAL_PRICE: totalPrice,
       CTA_URL: ctaUrl,
-      CTA_LABEL: isConfirmed ? 'Pay for Order' : isShipped ? 'View Order' : 'Review Order',
+      CTA_LABEL: s.ctaLabel,
     }, brand.id);
   } catch (err) {
     console.error('sendWristbandOrderStatusEmail error:', err);
@@ -2046,3 +2075,209 @@ export async function sendTicketAdminNotification(params: TicketAdminNotificatio
     return false;
   }
 }
+
+// ─── Public Wristband Order Emails ────────────────────────────────────────
+
+async function getPublicWristbandBrand(): Promise<any | null> {
+  const parentBrandId = process.env.TICKETING_PARENT_BRAND_ID
+    ? parseInt(process.env.TICKETING_PARENT_BRAND_ID)
+    : null;
+  if (!parentBrandId) return null;
+  return await Brand.findByPk(parentBrandId);
+}
+
+function buildPublicWristbandBrandingVars(brand: any): Record<string, string> {
+  const brandLogoHtml = brand.logo_url
+    ? `<img src="${escapeHtml(brand.logo_url)}" alt="${escapeHtml(brand.brand_name)}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+    : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${escapeHtml(brand.brand_name)}</div>`;
+  return {
+    BRAND_NAME: brand.brand_name,
+    BRAND_LOGO_HTML: brandLogoHtml,
+    BRAND_COLOR: brand.brand_color || '#333333',
+  };
+}
+
+// Sent to the buyer when they first create an order (step 1 of wizard).
+export const sendPublicWristbandOrderCreatedEmail = async (order: any): Promise<void> => {
+  try {
+    const brand = await getPublicWristbandBrand();
+    if (!brand) return;
+
+    const frontendUrl = process.env.TICKETING_FRONTEND_URL!;
+    const manageUrl = `${frontendUrl}/wristband-order/${order.public_token}`;
+
+    await sendBrandedEmail(order.customer_email, 'wristband_order_created', {
+      ...buildPublicWristbandBrandingVars(brand),
+      CUSTOMER_NAME: escapeHtml(order.customer_name),
+      ORDER_ID: escapeHtml(order.id),
+      MANAGE_URL: manageUrl,
+    }, brand.id);
+  } catch (err) {
+    console.error('sendPublicWristbandOrderCreatedEmail error:', err);
+  }
+};
+
+// Sent to platform admins when a buyer places a public order.
+// Unified admin notification sent when any wristband order is placed and needs review.
+// ownerBrandId: the platform/parent brand whose admins receive the email.
+// pricePerTen: price per 10 wristbands (35 for organizer orders, 45 for public orders).
+export const sendWristbandOrderPlacedAdminEmail = async (
+  order: any,
+  ownerBrandId: number,
+  pricePerTen: number = 35,
+): Promise<void> => {
+  try {
+    const admins = await User.findAll({ where: { brand_id: ownerBrandId, is_admin: true }, attributes: ['email_address'] });
+    const recipients = admins.map((u: any) => u.email_address).filter(Boolean);
+    if (!recipients.length) {
+      console.warn(`sendWristbandOrderPlacedAdminEmail: no admin recipients found for brand_id=${ownerBrandId}`);
+      return;
+    }
+
+    const frontendUrl = await import('./brandUtils').then(m => m.getBrandFrontendUrl(ownerBrandId)).catch(() => '');
+    const manageUrl = frontendUrl ? `${frontendUrl}/campaigns/events/wristband-order-review?order_id=${order.id}` : '';
+
+    const items = (order.items ?? []) as any[];
+    const itemRows = items
+      .filter((i: any) => i.quantity > 0)
+      .map((i: any) => {
+        const price = ((i.quantity / 10) * pricePerTen).toFixed(2);
+        return `<tr><td style="padding:4px 8px">${escapeHtml(i.color?.label ?? i.wristband_color_id)}</td><td style="padding:4px 8px;text-align:right">${escapeHtml(i.quantity)}</td><td style="padding:4px 8px;text-align:right">₱${escapeHtml(price)}</td></tr>`;
+      })
+      .join('');
+    const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
+    const shippingFee = order.shipping_fee != null ? parseFloat(String(order.shipping_fee)) : 0;
+    const discount = order.discount != null ? parseFloat(String(order.discount)) : 0;
+    const totalPrice = Math.max(0, (totalQty / 10) * pricePerTen + shippingFee - discount).toFixed(2);
+
+    // Delivery — for public orders it's in order.event.wristbandSettings; for organizer orders
+    // fetch directly from EventWristbandSettings using the event_id.
+    let deliveryHtml = '';
+    let settings: any = order.event?.wristbandSettings ?? null;
+    if (!settings && order.event_id) {
+      const { EventWristbandSettings } = await import('../models');
+      settings = await (EventWristbandSettings as any).findOne({ where: { event_id: order.event_id } });
+    }
+    if (settings?.delivery_name || settings?.delivery_street) {
+      const parts = [
+        settings.delivery_name, settings.delivery_street,
+        [settings.delivery_city, settings.delivery_country, settings.delivery_zip].filter(Boolean).join(', '),
+        settings.delivery_phone,
+      ].filter(Boolean).map(escapeHtml);
+      deliveryHtml = `<p style="margin:16px 0 4px"><strong>Delivery Address:</strong></p><p style="margin:0;white-space:pre-line">${parts.join('\n')}</p>`;
+    }
+
+    const customerLine = order.customer_name
+      ? `<p><strong>Customer:</strong> ${escapeHtml(order.customer_name)} &lt;${escapeHtml(order.customer_email)}&gt;</p>`
+      : '';
+
+    const html = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+        <h2 style="margin:0 0 16px">New Wristband Order — Review Required</h2>
+        <p><strong>Order ID:</strong> #${escapeHtml(order.id)}</p>
+        ${customerLine}
+        <table style="border-collapse:collapse;width:100%;margin:12px 0">
+          <thead><tr style="background:#f5f5f5">
+            <th style="padding:4px 8px;text-align:left">Color</th>
+            <th style="padding:4px 8px;text-align:right">Qty</th>
+            <th style="padding:4px 8px;text-align:right">Price</th>
+          </tr></thead>
+          <tbody>${itemRows}</tbody>
+          <tfoot><tr style="font-weight:bold;border-top:1px solid #ddd">
+            <td style="padding:4px 8px">Total</td>
+            <td style="padding:4px 8px;text-align:right">${totalQty} pcs</td>
+            <td style="padding:4px 8px;text-align:right">₱${totalPrice}</td>
+          </tr></tfoot>
+        </table>
+        ${deliveryHtml}
+        ${manageUrl ? `<div style="margin-top:24px"><a href="${manageUrl}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold">Review Order</a></div>` : ''}
+      </div>
+    `;
+
+    console.log(`sendWristbandOrderPlacedAdminEmail: sending to ${recipients.join(', ')} for order #${order.id} (brand_id=${ownerBrandId})`);
+    await sendEmail(recipients, `Wristband Order #${order.id} — Review Required`, html, ownerBrandId);
+  } catch (err) {
+    console.error('sendWristbandOrderPlacedAdminEmail error:', err);
+  }
+};
+
+// Sent to platform admins when a public wristband order payment is confirmed.
+export const sendWristbandOrderPaidAdminEmail = async (
+  order: any,
+  ownerBrandId: number,
+  amountPaid: number,
+  pricePerTen: number = 45,
+): Promise<void> => {
+  try {
+    const admins = await User.findAll({ where: { brand_id: ownerBrandId, is_admin: true }, attributes: ['email_address'] });
+    const recipients = admins.map((u: any) => u.email_address).filter(Boolean);
+    if (!recipients.length) {
+      console.warn(`sendWristbandOrderPaidAdminEmail: no admin recipients found for brand_id=${ownerBrandId}`);
+      return;
+    }
+
+    const frontendUrl = await import('./brandUtils').then(m => m.getBrandFrontendUrl(ownerBrandId)).catch(() => '');
+    const manageUrl = frontendUrl ? `${frontendUrl}/campaigns/events/wristband-order-review?order_id=${order.id}` : '';
+
+    const items = (order.items ?? []) as any[];
+    const itemRows = items
+      .filter((i: any) => i.quantity > 0)
+      .map((i: any) => {
+        const price = ((i.quantity / 10) * pricePerTen).toFixed(2);
+        return `<tr><td style="padding:4px 8px">${escapeHtml(i.color?.label ?? i.wristband_color_id)}</td><td style="padding:4px 8px;text-align:right">${escapeHtml(i.quantity)}</td><td style="padding:4px 8px;text-align:right">₱${escapeHtml(price)}</td></tr>`;
+      })
+      .join('');
+    const totalQty = items.reduce((s: number, i: any) => s + i.quantity, 0);
+
+    const customerLine = order.customer_name
+      ? `<p><strong>Customer:</strong> ${escapeHtml(order.customer_name)} &lt;${escapeHtml(order.customer_email)}&gt;</p>`
+      : '';
+
+    const html = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+        <h2 style="margin:0 0 16px">Wristband Order Paid ✓</h2>
+        <p><strong>Order ID:</strong> #${escapeHtml(order.id)}</p>
+        ${customerLine}
+        <p><strong>Amount Paid:</strong> ₱${escapeHtml(amountPaid.toFixed(2))}</p>
+        <table style="border-collapse:collapse;width:100%;margin:12px 0">
+          <thead><tr style="background:#f5f5f5">
+            <th style="padding:4px 8px;text-align:left">Color</th>
+            <th style="padding:4px 8px;text-align:right">Qty</th>
+            <th style="padding:4px 8px;text-align:right">Price</th>
+          </tr></thead>
+          <tbody>${itemRows}</tbody>
+          <tfoot><tr style="font-weight:bold;border-top:1px solid #ddd">
+            <td style="padding:4px 8px">Total</td>
+            <td style="padding:4px 8px;text-align:right">${totalQty} pcs</td>
+          </tr></tfoot>
+        </table>
+        ${manageUrl ? `<div style="margin-top:24px"><a href="${manageUrl}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold">View Order</a></div>` : ''}
+      </div>
+    `;
+
+    await sendEmail(recipients, `Wristband Order #${order.id} — Payment Received`, html, ownerBrandId);
+  } catch (err) {
+    console.error('sendWristbandOrderPaidAdminEmail error:', err);
+  }
+};
+
+// Sent to buyer when they explicitly save a draft order (reminder with manage link).
+export const sendPublicWristbandOrderSavedReminderEmail = async (order: any): Promise<void> => {
+  try {
+    const brand = await getPublicWristbandBrand();
+    if (!brand) return;
+
+    const frontendUrl = process.env.TICKETING_FRONTEND_URL!;
+    const manageUrl = `${frontendUrl}/wristband-order/${order.public_token}`;
+
+    await sendBrandedEmail(order.customer_email, 'wristband_order_saved', {
+      ...buildPublicWristbandBrandingVars(brand),
+      CUSTOMER_NAME: escapeHtml(order.customer_name),
+      ORDER_ID: escapeHtml(order.id),
+      MANAGE_URL: manageUrl,
+    }, brand.id);
+  } catch (err) {
+    console.error('sendPublicWristbandOrderSavedReminderEmail error:', err);
+  }
+};
+
