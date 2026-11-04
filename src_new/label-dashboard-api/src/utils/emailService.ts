@@ -204,13 +204,21 @@ export const loadEmailTemplate = (templateName: string): string => {
 // Replace template variables with actual values
 export const processTemplate = (template: string, data: Record<string, any>): string => {
   let processedTemplate = template;
-  
+
+  // Always inject a support email footer snippet for all templates
+  const SUPPORT_EMAIL = 'support@melt-records.com';
+  const dataWithSupport = {
+    SUPPORT_EMAIL,
+    SUPPORT_EMAIL_LINE: `<div style="font-size: 12px; color: #999999; margin-top: 6px;">Need help? <a href="mailto:${SUPPORT_EMAIL}" style="color: #999999;">${SUPPORT_EMAIL}</a></div>`,
+    ...data,
+  };
+
   // Replace all %VARIABLE% placeholders with actual values
-  for (const [key, value] of Object.entries(data)) {
+  for (const [key, value] of Object.entries(dataWithSupport)) {
     const placeholder = `%${key.toUpperCase()}%`;
     processedTemplate = processedTemplate.replace(new RegExp(placeholder, 'g'), String(value || ''));
   }
-  
+
   return processedTemplate;
 };
 
