@@ -115,6 +115,9 @@ export const getBrandSettings = async (req: Request, res: Response) => {
       woocommerce_url: brand.woocommerce_url,
       woocommerce_consumer_key: brand.woocommerce_consumer_key,
       woocommerce_consumer_secret: brand.woocommerce_consumer_secret,
+      billing_company_name: brand.billing_company_name ?? null,
+      billing_address: brand.billing_address ?? null,
+      billing_tin: brand.billing_tin ?? null,
     });
 
   } catch (error) {
@@ -142,6 +145,9 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       woocommerce_url,
       woocommerce_consumer_key,
       woocommerce_consumer_secret,
+      billing_company_name,
+      billing_address,
+      billing_tin,
     } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
@@ -189,6 +195,9 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
       woocommerce_url: woocommerce_url !== undefined ? (woocommerce_url || null) : brand.woocommerce_url,
       woocommerce_consumer_key: woocommerce_consumer_key !== undefined ? (woocommerce_consumer_key || null) : brand.woocommerce_consumer_key,
       woocommerce_consumer_secret: woocommerce_consumer_secret !== undefined ? (woocommerce_consumer_secret || null) : brand.woocommerce_consumer_secret,
+      billing_company_name: billing_company_name !== undefined ? (billing_company_name || null) : brand.billing_company_name,
+      billing_address: billing_address !== undefined ? (billing_address || null) : brand.billing_address,
+      billing_tin: billing_tin !== undefined ? (billing_tin || null) : brand.billing_tin,
     });
 
     res.json({
@@ -212,6 +221,9 @@ export const updateBrandSettings = async (req: Request, res: Response) => {
         woocommerce_url: brand.woocommerce_url,
         woocommerce_consumer_key: brand.woocommerce_consumer_key,
         woocommerce_consumer_secret: brand.woocommerce_consumer_secret,
+        billing_company_name: brand.billing_company_name ?? null,
+        billing_address: brand.billing_address ?? null,
+        billing_tin: brand.billing_tin ?? null,
       }
     });
 

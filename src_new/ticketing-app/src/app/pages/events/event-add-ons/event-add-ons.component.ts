@@ -533,10 +533,13 @@ interface WristbandColorRow extends WristbandColor {
                 </button>
               }
               @if (addonPayments.length > 0 || addonTotalDue > 0) {
-                <button (click)="downloadInvoice()" [disabled]="downloadingInvoice"
-                  class="px-5 py-2.5 border border-gray-300 text-gray-600 hover:border-gray-500 hover:text-gray-900 text-xs font-mono uppercase tracking-wider transition-colors disabled:opacity-50">
-                  {{ downloadingInvoice ? 'Downloading…' : 'Download Invoice' }}
-                </button>
+                <div class="flex flex-col items-end gap-1">
+                  <button (click)="downloadInvoice()" [disabled]="downloadingInvoice"
+                    class="px-5 py-2.5 border border-gray-300 text-gray-600 hover:border-gray-500 hover:text-gray-900 text-xs font-mono uppercase tracking-wider transition-colors disabled:opacity-50">
+                    {{ downloadingInvoice ? 'Downloading…' : 'Download Invoice' }}
+                  </button>
+                  <a href="/app/settings#billing" class="text-xs font-mono text-gray-400 hover:text-gray-600 underline">Update billing details</a>
+                </div>
               }
             </div>
 

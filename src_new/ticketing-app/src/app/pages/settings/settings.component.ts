@@ -1,13 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { OrganizationService } from '../../services/organization.service';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Header -->
@@ -75,6 +77,37 @@ import { OrganizationService } from '../../services/organization.service';
                     class="w-32 px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400 uppercase"
                     placeholder="#000000" maxlength="7">
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Billing Details -->
+          <div id="billing" class="bg-white border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-xs font-black text-gray-500 uppercase tracking-widest">Billing Details</h2>
+            </div>
+            <div class="px-6 py-5 space-y-5">
+              <p class="text-xs font-mono text-gray-400">Used on invoices and pre-filled in Paymongo checkout sessions.</p>
+              <!-- Company Name -->
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">Company / Organization Name</label>
+                <input formControlName="billing_company_name" type="text"
+                  class="w-full px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400"
+                  placeholder="Registered legal name">
+              </div>
+              <!-- Address -->
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">Billing Address</label>
+                <input formControlName="billing_address" type="text"
+                  class="w-full px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400"
+                  placeholder="Street, city, country">
+              </div>
+              <!-- TIN -->
+              <div>
+                <label class="block text-xs font-mono text-gray-500 uppercase tracking-wider mb-1.5">TIN</label>
+                <input formControlName="billing_tin" type="text"
+                  class="w-full px-3 py-2 border border-gray-300 text-sm font-mono text-gray-900 focus:outline-none focus:border-yellow-400"
+                  placeholder="Tax Identification Number">
               </div>
             </div>
           </div>
@@ -174,6 +207,8 @@ export class SettingsComponent implements OnInit {
 
   private brandId!: number;
 
+  private route = inject(ActivatedRoute);
+
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
@@ -185,7 +220,10 @@ export class SettingsComponent implements OnInit {
       name: ['', Validators.required],
       brand_website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
       brand_color: ['#6366f1'],
-      about_us: ['', [Validators.maxLength(5000)]]
+      about_us: ['', [Validators.maxLength(5000)]],
+      billing_company_name: [''],
+      billing_address: [''],
+      billing_tin: [''],
     });
 
     const user = this.auth.getCurrentUser();
@@ -201,10 +239,18 @@ export class SettingsComponent implements OnInit {
           name: settings.name,
           brand_website: settings.brand_website || '',
           brand_color: settings.brand_color || '#6366f1',
-          about_us: settings.about_us || ''
+          about_us: settings.about_us || '',
+          billing_company_name: settings.billing_company_name || '',
+          billing_address: settings.billing_address || '',
+          billing_tin: settings.billing_tin || '',
         });
         this.logoUrl.set(settings.logo_url || null);
         this.loading.set(false);
+        if (this.route.snapshot.fragment) {
+          setTimeout(() => {
+            document.getElementById(this.route.snapshot.fragment!)?.scrollIntoView({ behavior: 'smooth' });
+          }, 0);
+        }
       },
       error: () => this.loading.set(false)
     });
@@ -216,13 +262,16 @@ export class SettingsComponent implements OnInit {
     this.saveSuccess.set(false);
     this.saveError.set(null);
 
-    const { name, brand_website, brand_color, about_us } = this.form.value;
+    const { name, brand_website, brand_color, about_us, billing_company_name, billing_address, billing_tin } = this.form.value;
 
     this.orgService.updateSettings(this.brandId, {
       name,
       brand_color: brand_color || undefined,
       brand_website: brand_website || null,
-      about_us: about_us || null
+      about_us: about_us || null,
+      billing_company_name: billing_company_name || null,
+      billing_address: billing_address || null,
+      billing_tin: billing_tin || null,
     }).subscribe({
       next: () => {
         this.saving.set(false);
