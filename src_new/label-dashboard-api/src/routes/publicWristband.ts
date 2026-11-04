@@ -8,6 +8,7 @@ import {
   remindPublicWristbandOrder,
   initiatePublicWristbandPayment,
   proxyPublicWristbandDesign,
+  getPublicWristbandOrderInvoice,
   upload,
 } from '../controllers/publicWristbandController';
 import {
@@ -29,5 +30,6 @@ router.post('/wristband-orders/:token/place', placePublicWristbandOrder);
 router.post('/wristband-orders/:token/remind', wristbandReminderRateLimit, remindPublicWristbandOrder);
 router.post('/wristband-orders/:token/payment/initiate', createPaymentRateLimit(5, 15 * 60 * 1000), initiatePublicWristbandPayment);
 router.get('/wristband-orders/:token/design', proxyPublicWristbandDesign);
+router.get('/wristband-orders/:token/invoice', getPublicWristbandOrderInvoice);
 
 export default router;
