@@ -23,9 +23,15 @@ interface WristbandOrderAttributes {
   public_token: string | null;
   customer_name: string | null;
   customer_email: string | null;
+  billing_same_as_shipping: boolean;
+  billing_name: string | null;
+  billing_street: string | null;
+  billing_city: string | null;
+  billing_country: string | null;
+  billing_zip: string | null;
 }
 
-interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee' | 'discount' | 'tracking_url' | 'created_by' | 'is_public' | 'public_token' | 'customer_name' | 'customer_email'> {}
+interface WristbandOrderCreationAttributes extends Optional<WristbandOrderAttributes, 'id' | 'design_url' | 'design_x' | 'design_y' | 'design_width' | 'design_height' | 'canvas_width' | 'notes' | 'disclaimer_acknowledged' | 'shipping_fee' | 'discount' | 'tracking_url' | 'created_by' | 'is_public' | 'public_token' | 'customer_name' | 'customer_email' | 'billing_same_as_shipping' | 'billing_name' | 'billing_street' | 'billing_city' | 'billing_country' | 'billing_zip'> {}
 
 class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreationAttributes> implements WristbandOrderAttributes {
   public id!: number;
@@ -47,6 +53,12 @@ class WristbandOrder extends Model<WristbandOrderAttributes, WristbandOrderCreat
   public public_token!: string | null;
   public customer_name!: string | null;
   public customer_email!: string | null;
+  public billing_same_as_shipping!: boolean;
+  public billing_name!: string | null;
+  public billing_street!: string | null;
+  public billing_city!: string | null;
+  public billing_country!: string | null;
+  public billing_zip!: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -133,6 +145,31 @@ WristbandOrder.init(
     },
     customer_email: {
       type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    billing_same_as_shipping: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    billing_name: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+    },
+    billing_street: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    billing_city: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    billing_country: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    billing_zip: {
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
   },

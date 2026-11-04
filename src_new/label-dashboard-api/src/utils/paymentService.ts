@@ -111,6 +111,14 @@ export class PaymentService {
       name: string;
       email: string;
       phone: string;
+      address?: {
+        line1?: string;
+        line2?: string;
+        city?: string;
+        state?: string;
+        postal_code?: string;
+        country?: string;
+      };
     };
   }): Promise<any> {
     try {
@@ -132,7 +140,8 @@ export class PaymentService {
         requestBody.data.attributes.billing = {
           name: data.billing.name,
           email: data.billing.email,
-          phone: data.billing.phone
+          phone: data.billing.phone,
+          ...(data.billing.address ? { address: data.billing.address } : {}),
         };
       }
 

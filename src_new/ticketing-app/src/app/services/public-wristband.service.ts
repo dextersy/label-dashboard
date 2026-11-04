@@ -13,6 +13,12 @@ export interface PublicWristbandOrder extends Omit<WristbandOrder, 'created_by'>
   customer_email: string;
   payment_status: 'unpaid' | 'pending' | 'paid' | null;
   tracking_url: string | null;
+  billing_same_as_shipping: boolean;
+  billing_name: string | null;
+  billing_street: string | null;
+  billing_city: string | null;
+  billing_country: string | null;
+  billing_zip: string | null;
   event?: {
     id: number;
     wristbandSettings?: {
@@ -41,6 +47,12 @@ export interface PublicOrderUpdatePayload {
   delivery_country?: string | null;
   delivery_zip?: string | null;
   delivery_phone?: string | null;
+  billing_same_as_shipping?: boolean;
+  billing_name?: string | null;
+  billing_street?: string | null;
+  billing_city?: string | null;
+  billing_country?: string | null;
+  billing_zip?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -79,6 +91,12 @@ export class PublicWristbandService {
     if (payload.delivery_country !== undefined) formData.append('delivery_country', payload.delivery_country ?? '');
     if (payload.delivery_zip !== undefined) formData.append('delivery_zip', payload.delivery_zip ?? '');
     if (payload.delivery_phone !== undefined) formData.append('delivery_phone', payload.delivery_phone ?? '');
+    if (payload.billing_same_as_shipping !== undefined) formData.append('billing_same_as_shipping', String(payload.billing_same_as_shipping));
+    if (payload.billing_name !== undefined) formData.append('billing_name', payload.billing_name ?? '');
+    if (payload.billing_street !== undefined) formData.append('billing_street', payload.billing_street ?? '');
+    if (payload.billing_city !== undefined) formData.append('billing_city', payload.billing_city ?? '');
+    if (payload.billing_country !== undefined) formData.append('billing_country', payload.billing_country ?? '');
+    if (payload.billing_zip !== undefined) formData.append('billing_zip', payload.billing_zip ?? '');
     if (designFile) formData.append('design', designFile);
 
     return this.http.put<{ order: PublicWristbandOrder }>(`${this.base}/wristband-orders/${token}`, formData)

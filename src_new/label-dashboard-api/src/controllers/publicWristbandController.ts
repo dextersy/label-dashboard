@@ -174,6 +174,7 @@ export const updatePublicWristbandOrder = async (req: Request, res: Response) =>
       items, disclaimer_acknowledged, notes,
       design_x, design_y, design_width, design_height, canvas_width,
       delivery_name, delivery_street, delivery_city, delivery_country, delivery_zip, delivery_phone,
+      billing_same_as_shipping, billing_name, billing_street, billing_city, billing_country, billing_zip,
     } = req.body;
 
     const parsedItems: { wristband_color_id: number; quantity: number }[] =
@@ -220,6 +221,10 @@ export const updatePublicWristbandOrder = async (req: Request, res: Response) =>
       designUrl = result.Location;
     }
 
+    const isSameAsShipping = billing_same_as_shipping !== undefined
+      ? (billing_same_as_shipping === true || billing_same_as_shipping === 'true')
+      : order.billing_same_as_shipping;
+
     await order.update({
       design_url: designUrl,
       design_x: design_x != null ? parseFloat(design_x) : order.design_x,
@@ -229,6 +234,12 @@ export const updatePublicWristbandOrder = async (req: Request, res: Response) =>
       canvas_width: canvas_width != null ? parseFloat(canvas_width) : order.canvas_width,
       disclaimer_acknowledged: disclaimer_acknowledged === true || disclaimer_acknowledged === 'true',
       notes: notes !== undefined ? notes : order.notes,
+      billing_same_as_shipping: isSameAsShipping,
+      billing_name: isSameAsShipping ? null : (billing_name !== undefined ? billing_name : order.billing_name),
+      billing_street: isSameAsShipping ? null : (billing_street !== undefined ? billing_street : order.billing_street),
+      billing_city: isSameAsShipping ? null : (billing_city !== undefined ? billing_city : order.billing_city),
+      billing_country: isSameAsShipping ? null : (billing_country !== undefined ? billing_country : order.billing_country),
+      billing_zip: isSameAsShipping ? null : (billing_zip !== undefined ? billing_zip : order.billing_zip),
     });
 
     if (parsedItems && Array.isArray(parsedItems)) {
@@ -305,7 +316,10 @@ export const initiatePublicWristbandPayment = async (req: Request, res: Response
     const { token } = req.params;
     const order = await WristbandOrder.findOne({
       where: { public_token: token, is_public: true },
-      include: [{ model: WristbandOrderItem, as: 'items' }],
+      include: [
+        { model: WristbandOrderItem, as: 'items' },
+        { model: Event, as: 'event', attributes: ['id'], include: [{ model: EventWristbandSettings, as: 'wristbandSettings' }] },
+      ],
     }) as any;
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (order.status !== 'confirmed') return res.status(400).json({ error: 'Order must be confirmed before payment' });
@@ -335,6 +349,20 @@ export const initiatePublicWristbandPayment = async (req: Request, res: Response
       success_url: `${manageUrl}?payment_status=success`,
       cancel_url: `${manageUrl}?payment_status=cancelled`,
       description: `Wristband order #${order.id}`,
+      billing: (() => {
+        const settings = order.event?.wristbandSettings ?? null;
+        const usesShipping = order.billing_same_as_shipping !== false;
+        const line1    = usesShipping ? (settings?.delivery_street ?? '') : (order.billing_street ?? '');
+        const city     = usesShipping ? (settings?.delivery_city    ?? '') : (order.billing_city    ?? '');
+        const country  = usesShipping ? (settings?.delivery_country ?? '') : (order.billing_country ?? '');
+        const postal   = usesShipping ? (settings?.delivery_zip     ?? '') : (order.billing_zip     ?? '');
+        return {
+          name:  order.customer_name  ?? '',
+          email: order.customer_email ?? '',
+          phone: settings?.delivery_phone ?? '',
+          address: { line1, city, country, postal_code: postal },
+        };
+      })(),
     });
 
     if (!checkoutSession) {
@@ -522,9 +550,18 @@ async function buildPublicOrderInvoicePdfBuffer(order: any): Promise<Buffer | nu
         return yy;
       };
 
+      // Resolve billing address: use billing fields if set, otherwise fall back to shipping address
+      const settings = order.event?.wristbandSettings ?? null;
+      const usesShippingForBilling = order.billing_same_as_shipping !== false;
+      const billingName    = usesShippingForBilling ? (settings?.delivery_name ?? null)   : (order.billing_name ?? null);
+      const billingStreet  = usesShippingForBilling ? (settings?.delivery_street ?? null) : (order.billing_street ?? null);
+      const billingCityZip = usesShippingForBilling
+        ? [settings?.delivery_city, settings?.delivery_zip, settings?.delivery_country].filter(Boolean).join(', ') || null
+        : [order.billing_city, order.billing_zip, order.billing_country].filter(Boolean).join(', ') || null;
+
       const colBottoms = [
         infoCol(ML,         'From',      [issuerName, issuerAddress, issuerTin ? `TIN: ${issuerTin}` : null]),
-        infoCol(ML + colW2, 'Billed to', [order.customer_name, order.customer_email]),
+        infoCol(ML + colW2, 'Billed to', [order.customer_name, order.customer_email, billingName, billingStreet, billingCityZip]),
       ];
       curY = Math.max(...colBottoms) + 14;
       hairline(doc, ML, curY, CW);
@@ -677,6 +714,7 @@ export const getPublicWristbandOrderInvoice = async (req: Request, res: Response
       where: { public_token: token, is_public: true },
       include: [
         { model: WristbandOrderItem, as: 'items', include: [{ model: WristbandColor, as: 'color' }] },
+        { model: Event, as: 'event', attributes: ['id'], include: [{ model: EventWristbandSettings, as: 'wristbandSettings' }] },
       ],
     });
     if (!order) return res.status(404).json({ error: 'Order not found' });
