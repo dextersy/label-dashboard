@@ -54,6 +54,7 @@ import {
   getWristbandSettings,
   upsertWristbandSettings,
   getWristbandOrders,
+  getPublicWristbandOrders,
   getWristbandOrder,
   createWristbandOrder,
   updateWristbandOrder,
@@ -84,6 +85,7 @@ router.get('/wristband-colors', getWristbandColors);
 router.get('/wristband-settings', getWristbandSettings);
 router.put('/wristband-settings', requireAdmin, upsertWristbandSettings);
 router.get('/wristband-orders', getWristbandOrders);
+router.get('/public-wristband-orders', requireAdmin, getPublicWristbandOrders);
 router.post('/wristband-orders', wristbandUpload.single('design'), createWristbandOrder);
 router.put('/wristband-orders/:id', wristbandUpload.single('design'), updateWristbandOrder);
 router.get('/wristband-orders/:id', requireAdmin, getWristbandOrder);
