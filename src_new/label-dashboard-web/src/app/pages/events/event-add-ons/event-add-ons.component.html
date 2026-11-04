@@ -1111,6 +1111,12 @@
         <div class="modal-body pt-2">
           <p class="text-muted small mb-3">Please read and acknowledge the following before placing your order.</p>
 
+          <div *ngIf="!formDesignIsImage"
+            class="tw-flex tw-items-start tw-gap-2 tw-bg-red-50 tw-border tw-border-red-200 tw-rounded tw-px-3 tw-py-2.5 tw-mb-4 tw-text-xs tw-text-red-800">
+            <app-icon name="warning" class="tw-text-red-500 tw-shrink-0 tw-mt-0.5"></app-icon>
+            <span><strong>No design has been uploaded.</strong> Your wristbands will be printed without artwork. Are you sure you want to proceed?</span>
+          </div>
+
           <div class="form-check mb-3">
             <input
               class="form-check-input"

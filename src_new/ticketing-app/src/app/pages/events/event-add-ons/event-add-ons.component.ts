@@ -599,6 +599,12 @@ interface WristbandColorRow extends WristbandColor {
     <div class="bg-white max-w-md w-full p-6">
       <h2 class="text-sm font-black uppercase tracking-widest mb-4">Confirm Order Submission</h2>
       <p class="text-sm text-gray-600 mb-4">Please confirm before submitting your order:</p>
+      @if (!designEditorRef?.designDataUrl) {
+        <div class="flex items-start gap-2 bg-red-50 border border-red-200 rounded px-3 py-2.5 mb-4 text-xs text-red-800">
+          <span class="shrink-0 mt-0.5">⚠</span>
+          <span><strong>No design has been uploaded.</strong> Your wristbands will be printed without artwork. Are you sure you want to proceed?</span>
+        </div>
+      }
       <div class="space-y-3 mb-5">
         <label class="flex items-start gap-3 cursor-pointer text-sm text-gray-700">
           <input type="checkbox" [(ngModel)]="dialogCheck1" class="mt-0.5 w-4 h-4 shrink-0">

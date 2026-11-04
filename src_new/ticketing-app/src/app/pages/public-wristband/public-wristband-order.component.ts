@@ -343,6 +343,11 @@ interface ColorRow extends WristbandColor {
                 <p class="text-xs font-mono uppercase tracking-widest text-gray-500 mb-2">Design</p>
                 <img [src]="designProxyUrl" alt="Wristband design" class="block w-full rounded-lg border border-gray-200 max-h-48 object-contain bg-gray-50" />
               </div>
+            } @else {
+              <div class="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4 text-xs text-red-800">
+                <span class="shrink-0 mt-0.5">⚠</span>
+                <span><strong>No design has been uploaded.</strong> Your wristbands will be printed without artwork. <button type="button" (click)="activeStep = 1" class="underline font-semibold">Go back to add one.</button></span>
+              </div>
             }
 
             <!-- Disclaimer -->
