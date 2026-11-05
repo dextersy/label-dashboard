@@ -14,7 +14,7 @@
 
 <!-- Ticket list -->
 <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-3 lg:tw-grid-cols-4 tw-gap-2 tw-mb-4">
-  <div *ngFor="let ticketType of ticketTypes; let i = index"
+  <div *ngFor="let ticketType of ticketTypes; let i = index; trackBy: trackTicketType"
        [class.tw-col-span-full]="editingIndex === i">
 
     <!-- Editing state: card form -->

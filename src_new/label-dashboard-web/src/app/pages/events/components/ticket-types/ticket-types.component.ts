@@ -154,7 +154,12 @@ export class TicketTypesComponent implements OnInit, OnChanges {
     } else {
       ticketType.day_ids.splice(idx, 1);
     }
-    this.ticketTypesChange.emit([...this.ticketTypes]);
+    // Don't emit here — this is only called from inside the edit form.
+    // saveEdit() will emit the final state when the user saves.
+  }
+
+  trackTicketType(index: number, tt: TicketType): any {
+    return tt.id || index;
   }
 
   getDayLabel(day: any, i: number): string {
