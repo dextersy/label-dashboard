@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 import { Event, Ticket, EventReferrer, Brand, Domain, TicketType, WalkInType, WalkInTransactionItem, EventTag, EventAccess, EventBrandCollaboration, EventDay, TicketTypeDay, TicketScanLog } from '../models';
 import { resolveEventRole as resolveEventRoleUtil, findEventForUser as findEventForUserUtil } from '../utils/eventAccess';
 import { scheduleEventClosePayout, cancelEventClosePayout } from '../schedules/eventClosePayouts';
@@ -383,9 +383,6 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
       where: whereClause,
       include: [
         { model: Brand, as: 'brand' },
-        { model: Ticket, as: 'tickets' },
-        { model: EventReferrer, as: 'referrers' },
-        { model: TicketType, as: 'ticketTypes' },
         { model: EventTag, as: 'tags', through: { attributes: [] } },
         { model: EventDay, as: 'days', order: [['date_and_time', 'ASC']] }
       ],
@@ -418,39 +415,72 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
     if (!effectiveRole) return res.status(403).json({ error: 'No access to this event' });
     const eventWhereClause: any = { id: eventId };
 
-    const event = await Event.findOne({
-      where: eventWhereClause,
-      include: [
-        { model: Brand, as: 'brand' },
-        { model: Ticket, as: 'tickets' },
-        { model: EventReferrer, as: 'referrers' },
-        { model: TicketType, as: 'ticketTypes', include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }] },
-        { model: EventTag, as: 'tags', through: { attributes: [] } },
-        { model: EventDay, as: 'days', order: [['date_and_time', 'ASC']] }
-      ]
-    });
+    const [event, ticketStatRows] = await Promise.all([
+      Event.findOne({
+        where: eventWhereClause,
+        include: [
+          { model: Brand, as: 'brand' },
+          // Only the fields needed for cancel-event checks (hasClaimedTickets, hasConfirmedTickets, onCancelEvent).
+          // No status filter here — hasClaimedTickets() must see scanned tickets even if later canceled/refunded.
+          {
+            model: Ticket,
+            as: 'tickets',
+            attributes: ['id', 'status', 'number_of_entries', 'number_of_claimed_entries', 'price_per_ticket'],
+          },
+          { model: EventReferrer, as: 'referrers' },
+          { model: TicketType, as: 'ticketTypes', include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }] },
+          { model: EventTag, as: 'tags', through: { attributes: [] } },
+          { model: EventDay, as: 'days', order: [['date_and_time', 'ASC']] }
+        ]
+      }),
+      // Single query to get sold + pending counts for all ticket types at once
+      Ticket.findAll({
+        attributes: [
+          'ticket_type_id',
+          [
+            fn('SUM', literal(`CASE WHEN status IN ('Payment Confirmed', 'Ticket sent.') THEN number_of_entries ELSE 0 END`)),
+            'sold_count'
+          ],
+          [
+            fn('SUM', literal(`CASE WHEN status NOT IN ('Payment Confirmed', 'Ticket sent.') AND status NOT IN ('Canceled', 'Refunded') THEN number_of_entries ELSE 0 END`)),
+            'pending_count'
+          ],
+        ],
+        where: {
+          event_id: eventId,
+          status: { [Op.notIn]: ['Canceled', 'Refunded'] },
+        },
+        group: ['ticket_type_id'],
+        raw: true,
+      }),
+    ]);
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Process ticket types to include statistics and assigned days
-    const processedTicketTypes = [];
-    if ((event as any).ticketTypes) {
-      for (const ticketType of (event as any).ticketTypes) {
-        const soldCount = await ticketType.getSoldCount();
-        const pendingCount = await ticketType.getPendingCount();
-        const remainingTickets = await ticketType.getRemainingTickets();
-
-        processedTicketTypes.push({
-          ...ticketType.toJSON(),
-          sold_tickets: soldCount,
-          pending_tickets: pendingCount,
-          remaining_tickets: remainingTickets,
-          days: (ticketType as any).days ?? []
-        });
-      }
+    // Build a lookup map from the aggregated query result
+    const statsMap = new Map<number, { sold: number; pending: number }>();
+    for (const row of ticketStatRows as any[]) {
+      statsMap.set(row.ticket_type_id, {
+        sold: parseInt(row.sold_count, 10) || 0,
+        pending: parseInt(row.pending_count, 10) || 0,
+      });
     }
+
+    // Process ticket types using the pre-aggregated stats
+    const processedTicketTypes = ((event as any).ticketTypes ?? []).map((ticketType: any) => {
+      const stats = statsMap.get(ticketType.id) ?? { sold: 0, pending: 0 };
+      const maxTickets: number = ticketType.max_tickets;
+      const remaining = maxTickets === 0 ? null : Math.max(0, maxTickets - stats.sold);
+      return {
+        ...ticketType.toJSON(),
+        sold_tickets: stats.sold,
+        pending_tickets: stats.pending,
+        remaining_tickets: remaining,
+        days: (ticketType as any).days ?? [],
+      };
+    });
 
     const eventResponse = {
       ...event.toJSON(),
