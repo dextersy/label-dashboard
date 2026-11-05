@@ -1129,6 +1129,18 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     });
   }
 
+  formatEventDayDate(dateStr: string): string {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+  }
+
+  formatEventDayTime(dateStr: string): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
   private normalizeTicketTypesForComparison(arr: TicketType[]): TicketType[] {
     return arr.map(tt => ({
       ...tt,

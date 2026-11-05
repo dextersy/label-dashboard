@@ -108,13 +108,20 @@
                   <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit date and time" *ngIf="!isEventCanceled() && !isViewer"><app-icon name="edit" iconOnly /></button>
                 </div>
                 <!-- View mode (multiday) -->
-                <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time') && isMultiDay" class="tw-flex tw-items-center tw-gap-1">
-                  <div>
-                    <div *ngFor="let day of eventDays" class="tw-text-base">
-                      <span *ngIf="day.label" class="tw-font-medium tw-text-gray-700">{{ day.label }}: </span>{{ formatEventDate(day.date_and_time) }}
+                <div *ngIf="isDetailsViewMode && !isEditingField('date_and_time') && isMultiDay">
+                  <div class="tw-flex tw-flex-wrap tw-items-start tw-gap-2">
+                    <div *ngFor="let day of eventDays; let i = index"
+                         class="tw-flex tw-flex-col tw-bg-gray-50 tw-border tw-border-gray-200 tw-rounded-lg tw-overflow-hidden tw-text-sm tw-min-w-[100px]">
+                      <div class="tw-w-full tw-px-3 tw-py-2 tw-bg-white tw-border-b tw-border-gray-200">
+                        <span class="tw-font-semibold tw-text-gray-700 tw-text-base">{{ day.label || ('Day ' + (i + 1)) }}</span>
+                      </div>
+                      <div class="tw-px-3 tw-py-2">
+                        <div class="tw-text-gray-800 tw-font-medium tw-text-sm">{{ formatEventDayDate(day.date_and_time) }}</div>
+                        <div class="tw-text-gray-500 tw-text-sm tw-mt-0.5">{{ formatEventDayTime(day.date_and_time) }}</div>
+                      </div>
                     </div>
+                    <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-self-center tw-shrink-0" (click)="startEditingField('date_and_time')" title="Edit dates" *ngIf="!isEventCanceled() && !isViewer"><app-icon name="edit" iconOnly /></button>
                   </div>
-                  <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5 tw-ml-1" (click)="startEditingField('date_and_time')" title="Edit dates" *ngIf="!isEventCanceled() && !isViewer"><app-icon name="edit" iconOnly /></button>
                 </div>
                 <!-- Edit mode (single day) -->
                 <div *ngIf="(!isDetailsViewMode || isEditingField('date_and_time')) && !isMultiDay">
