@@ -193,8 +193,8 @@
   }
 
   &__stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     margin-top: 12px;
   }
@@ -206,9 +206,16 @@
     background: #f9fafb;
     border-radius: 8px;
     padding: 7px 10px;
+    flex: 0 1 calc(33.333% - 4px);
+    min-width: 0;
   }
 
   &__stat--balance {
+    flex: 1 1 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
     background: color-mix(in srgb, var(--brand-color, #3b82f6) 12%, #fff);
 
     .brand-card__stat-value {

@@ -248,13 +248,18 @@
 
                       <!-- Earnings columns with breakdown buttons -->
                       <div *ngIf="column.showBreakdownButton" class="tw-flex tw-items-center tw-justify-end">
-                        <span class="tw-mr-2">{{ getColumnValue(item, column) }}</span>
-                        <button class="btn-sm btn-ghost tw-p-1 tw-text-muted"
-                                (click)="onBreakdownButtonClick(item, column.key)"
-                                title="View breakdown"
-                                style="border: none; box-shadow: none;">
-                          <app-icon name="chart-pie" iconOnly />
-                        </button>
+                        <ng-container *ngIf="item[column.key] !== 0; else zeroBreakdown">
+                          <span class="tw-mr-2">{{ getColumnValue(item, column) }}</span>
+                          <button class="btn-sm btn-ghost tw-p-1 tw-text-muted"
+                                  (click)="onBreakdownButtonClick(item, column.key)"
+                                  title="View breakdown"
+                                  style="border: none; box-shadow: none;">
+                            <app-icon name="chart-pie" iconOnly />
+                          </button>
+                        </ng-container>
+                        <ng-template #zeroBreakdown>
+                          <span class="tw-text-muted">—</span>
+                        </ng-template>
                       </div>
 
                       <!-- Balance column with color coding -->
