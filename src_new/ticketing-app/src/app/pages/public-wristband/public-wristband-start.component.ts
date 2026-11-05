@@ -65,13 +65,20 @@ import { PublicWristbandService } from '../../services/public-wristband.service'
               <p class="text-xs text-gray-400 mt-1">We'll email you a secure link to manage your order.</p>
             </div>
 
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="privacyAcknowledged" name="privacy" class="mt-0.5 rounded border-gray-300 text-yellow-400 focus:ring-yellow-400 shrink-0" />
+              <span class="text-xs text-gray-600 leading-relaxed">
+                I have read and agree to the <a href="https://yourscene.live/privacy" target="_blank" class="underline font-semibold hover:text-gray-900 transition-colors">Privacy Policy</a>. My personal details will be used to process this order.
+              </span>
+            </label>
+
             @if (error) {
               <p class="text-sm text-red-600">{{ error }}</p>
             }
 
             <button
               type="submit"
-              [disabled]="loading || !name.trim() || !email.trim()"
+              [disabled]="loading || !name.trim() || !email.trim() || !privacyAcknowledged"
               class="w-full rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm py-2.5 transition-colors uppercase tracking-wide">
               @if (loading) { Creating order… } @else { Get Started }
             </button>
@@ -95,6 +102,7 @@ export class PublicWristbandStartComponent {
   loading = false;
   error = '';
   submitted = false;
+  privacyAcknowledged = false;
 
   constructor(private svc: PublicWristbandService, private router: Router) {}
 

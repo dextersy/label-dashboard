@@ -33,7 +33,7 @@ interface ColorRow extends WristbandColor {
     .confetti-piece { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: confettiFall 1s ease-in forwards; }
   `],
   template: `
-<div class="min-h-screen bg-gray-50 px-4 py-8">
+<div class="min-h-screen bg-gray-50 px-4 py-8 pb-28 md:pb-8">
   <div class="max-w-2xl mx-auto">
 
     <!-- Header -->
@@ -131,7 +131,8 @@ interface ColorRow extends WristbandColor {
       @if (order.status === 'draft' || order.status === 'rejected') {
 
         <!-- Step indicator -->
-        <div class="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+        <div class="sticky top-0 z-10 bg-gray-50 -mx-4 px-4 pt-2 pb-3 mb-4 md:static md:mx-0 md:px-0 md:pt-0 md:pb-0 md:mb-6 md:bg-transparent border-b border-gray-100 md:border-0">
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 pr-4 md:pb-1 md:pr-0">
           @for (s of steps; track s.id) {
             <button
               (click)="goToStep(s.id)"
@@ -142,6 +143,7 @@ interface ColorRow extends WristbandColor {
               <span>{{ s.id }}.</span> {{ s.label }}
             </button>
           }
+        </div>
         </div>
 
         <!-- ─── Step 1: Colours & Design ─── -->
@@ -200,11 +202,21 @@ interface ColorRow extends WristbandColor {
             </div>
           </div>
 
-          <div class="flex justify-end">
+          <div class="fixed bottom-0 left-0 right-0 md:static bg-white md:bg-transparent border-t border-gray-200 md:border-0 px-4 pt-3 pb-4 md:px-0 md:pt-0 md:pb-0 md:mt-4 space-y-2 z-20">
             <button (click)="saveAndNext()" [disabled]="savingItems || totalQty === 0"
-              class="rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm px-6 py-2.5 transition-colors uppercase tracking-wide">
+              class="w-full rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm px-6 py-2.5 transition-colors uppercase tracking-wide">
               @if (savingItems) { Saving… } @else { Next: Delivery }
             </button>
+            <div class="text-center">
+              <button (click)="saveDraftReminder()" [disabled]="sendingReminder"
+                class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 underline">
+                @if (sendingReminder) { Sending… } @else { Save draft & email me a link }
+              </button>
+              @if (reminderSent) {
+                <p class="text-xs text-green-600 mt-1">✓ Link sent to {{ order.customer_email }}</p>
+              }
+            </div>
+            <p class="text-center text-xs text-gray-400">Need help? <a href="mailto:{{ SUPPORT_EMAIL }}" class="underline hover:text-gray-600">{{ SUPPORT_EMAIL }}</a></p>
           </div>
         }
 
@@ -227,7 +239,7 @@ interface ColorRow extends WristbandColor {
                   <input type="text" [(ngModel)]="deliveryCity" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="City / municipality" />
                 </div>
                 <div>
-                  <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">ZIP</label>
+                  <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">ZIP *</label>
                   <input type="text" [(ngModel)]="deliveryZip" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="ZIP code" />
                 </div>
               </div>
@@ -236,7 +248,7 @@ interface ColorRow extends WristbandColor {
                 <input type="text" [(ngModel)]="deliveryCountry" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="Philippines" />
               </div>
               <div>
-                <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">Phone Number</label>
+                <label class="block text-xs font-mono uppercase tracking-widest text-gray-500 mb-1">Phone Number *</label>
                 <input type="tel" [(ngModel)]="deliveryPhone" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" placeholder="+63 9XX XXX XXXX" />
               </div>
               <div>
@@ -281,12 +293,24 @@ interface ColorRow extends WristbandColor {
             }
           </div>
 
-          <div class="flex items-center justify-between">
-            <button (click)="activeStep = 1" class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700">← Back</button>
-            <button (click)="saveDeliveryAndNext()" [disabled]="savingDelivery || !deliveryName.trim() || !deliveryStreet.trim() || !deliveryCity.trim() || (!billingSameAsShipping && (!billingName.trim() || !billingStreet.trim() || !billingCity.trim()))"
-              class="rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm px-6 py-2.5 transition-colors uppercase tracking-wide">
-              @if (savingDelivery) { Saving… } @else { Next: Review }
-            </button>
+          <div class="fixed bottom-0 left-0 right-0 md:static bg-white md:bg-transparent border-t border-gray-200 md:border-0 px-4 pt-3 pb-4 md:px-0 md:pt-0 md:pb-0 space-y-2 z-20">
+            <div class="flex items-center justify-between">
+              <button (click)="activeStep = 1" class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700">← Back</button>
+              <button (click)="saveDeliveryAndNext()" [disabled]="savingDelivery || !deliveryName.trim() || !deliveryStreet.trim() || !deliveryCity.trim() || !deliveryZip.trim() || !deliveryPhone.trim() || (!billingSameAsShipping && (!billingName.trim() || !billingStreet.trim() || !billingCity.trim()))"
+                class="rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm px-6 py-2.5 transition-colors uppercase tracking-wide">
+                @if (savingDelivery) { Saving… } @else { Next: Review }
+              </button>
+            </div>
+            <div class="text-center">
+              <button (click)="saveDraftReminder()" [disabled]="sendingReminder"
+                class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 underline">
+                @if (sendingReminder) { Sending… } @else { Save draft & email me a link }
+              </button>
+              @if (reminderSent) {
+                <p class="text-xs text-green-600 mt-1">✓ Link sent to {{ order.customer_email }}</p>
+              }
+            </div>
+            <p class="text-center text-xs text-gray-400">Need help? <a href="mailto:{{ SUPPORT_EMAIL }}" class="underline hover:text-gray-600">{{ SUPPORT_EMAIL }}</a></p>
           </div>
         }
 
@@ -370,31 +394,23 @@ interface ColorRow extends WristbandColor {
             }
           </div>
 
-          <!-- Save draft reminder -->
-          <div class="flex items-center justify-between mb-4">
-            <button (click)="activeStep = 2" class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700">← Back</button>
-            <button (click)="saveDraftReminder()" [disabled]="sendingReminder"
-              class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 underline">
-              @if (sendingReminder) { Sending… } @else { Save & Email me a link }
+          <!-- Save draft reminder + Place order (sticky on mobile) -->
+          <div class="fixed bottom-0 left-0 right-0 md:static bg-white md:bg-transparent border-t border-gray-200 md:border-0 px-4 pt-3 pb-4 md:px-0 md:pt-0 md:pb-0 z-20 space-y-2">
+            <button (click)="placeOrder()" [disabled]="placingOrder || !disclaimerAcknowledged"
+              class="w-full rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm py-3 transition-colors uppercase tracking-wide">
+              @if (placingOrder) { Placing Order… } @else { Place Order }
             </button>
-          </div>
-
-          <button (click)="placeOrder()" [disabled]="placingOrder || !disclaimerAcknowledged"
-            class="w-full rounded-lg bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-bold text-sm py-3 transition-colors uppercase tracking-wide">
-            @if (placingOrder) { Placing Order… } @else { Place Order }
-          </button>
-        }
-
-        <!-- Save draft link (steps 1-2) -->
-        @if (activeStep < 3) {
-          <div class="mt-4 text-center">
-            <button (click)="saveDraftReminder()" [disabled]="sendingReminder"
-              class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 underline">
-              @if (sendingReminder) { Sending… } @else { Save draft & email me a link }
-            </button>
+            <div class="flex items-center justify-between">
+              <button (click)="activeStep = 2" class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700">← Back</button>
+              <button (click)="saveDraftReminder()" [disabled]="sendingReminder"
+                class="text-xs font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 underline">
+                @if (sendingReminder) { Sending… } @else { Save & Email me a link }
+              </button>
+            </div>
             @if (reminderSent) {
-              <p class="text-xs text-green-600 mt-1">✓ Link sent to {{ order.customer_email }}</p>
+              <p class="text-center text-xs text-green-600">✓ Link sent to {{ order.customer_email }}</p>
             }
+            <p class="text-center text-xs text-gray-400">Need help? <a href="mailto:{{ SUPPORT_EMAIL }}" class="underline hover:text-gray-600">{{ SUPPORT_EMAIL }}</a></p>
           </div>
         }
 
@@ -477,24 +493,27 @@ interface ColorRow extends WristbandColor {
               </tr>
             </tfoot>
           </table>
-          @if (order.event?.wristbandSettings?.delivery_name || order.event?.wristbandSettings?.delivery_street) {
-            <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-0.5">
-              <p class="font-bold text-gray-700 mb-1">Delivery address:</p>
-              @if (order.event?.wristbandSettings?.delivery_name) { <p>{{ order.event?.wristbandSettings?.delivery_name }}</p> }
-              @if (order.event?.wristbandSettings?.delivery_street) { <p>{{ order.event?.wristbandSettings?.delivery_street }}</p> }
-              <p>{{ joinTruthy([order.event?.wristbandSettings?.delivery_city, order.event?.wristbandSettings?.delivery_country, order.event?.wristbandSettings?.delivery_zip]) }}</p>
-              @if (order.event?.wristbandSettings?.delivery_phone) { <p>{{ order.event?.wristbandSettings?.delivery_phone }}</p> }
-            </div>
-          }
-          <div class="bg-gray-50 rounded-lg p-3 mt-3 text-xs text-gray-600 space-y-0.5">
-            <p class="font-bold text-gray-700 mb-1">Billing address:</p>
-            @if (order.billing_same_as_shipping !== false) {
-              <p class="italic text-gray-400">Same as shipping address</p>
-            } @else {
-              @if (order.billing_name) { <p>{{ order.billing_name }}</p> }
-              @if (order.billing_street) { <p>{{ order.billing_street }}</p> }
-              <p>{{ joinTruthy([order.billing_city, order.billing_country, order.billing_zip]) }}</p>
+          <div class="grid gap-3"
+            [class.md:grid-cols-2]="order.event?.wristbandSettings?.delivery_name || order.event?.wristbandSettings?.delivery_street">
+            @if (order.event?.wristbandSettings?.delivery_name || order.event?.wristbandSettings?.delivery_street) {
+              <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-0.5">
+                <p class="font-bold text-gray-700 mb-1">Delivery address:</p>
+                @if (order.event?.wristbandSettings?.delivery_name) { <p>{{ order.event?.wristbandSettings?.delivery_name }}</p> }
+                @if (order.event?.wristbandSettings?.delivery_street) { <p>{{ order.event?.wristbandSettings?.delivery_street }}</p> }
+                <p>{{ joinTruthy([order.event?.wristbandSettings?.delivery_city, order.event?.wristbandSettings?.delivery_country, order.event?.wristbandSettings?.delivery_zip]) }}</p>
+                @if (order.event?.wristbandSettings?.delivery_phone) { <p>{{ order.event?.wristbandSettings?.delivery_phone }}</p> }
+              </div>
             }
+            <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-0.5">
+              <p class="font-bold text-gray-700 mb-1">Billing address:</p>
+              @if (order.billing_same_as_shipping !== false) {
+                <p class="italic text-gray-400">Same as delivery address</p>
+              } @else {
+                @if (order.billing_name) { <p>{{ order.billing_name }}</p> }
+                @if (order.billing_street) { <p>{{ order.billing_street }}</p> }
+                <p>{{ joinTruthy([order.billing_city, order.billing_country, order.billing_zip]) }}</p>
+              }
+            </div>
           </div>
           @if (order.design_url) {
             <div class="mt-4">
@@ -515,11 +534,6 @@ interface ColorRow extends WristbandColor {
       }
 
     }
-
-    <!-- Footer -->
-    <div class="mt-8 pb-4 text-center">
-      <p class="text-xs text-gray-400">Need help? <a href="mailto:{{ SUPPORT_EMAIL }}" class="underline hover:text-gray-600">{{ SUPPORT_EMAIL }}</a></p>
-    </div>
 
   </div>
 
