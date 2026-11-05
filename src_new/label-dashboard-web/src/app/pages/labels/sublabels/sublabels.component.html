@@ -79,9 +79,9 @@
 <!-- Sticky Summary Cards - Outside main container -->
 <div class="summary-cards-sticky" *ngIf="!loading && childBrands.length > 0">
   <div class="container-fluid">
-    <div class="tw-grid tw-grid-cols-2 lg:tw-grid-cols-6 tw-gap-2">
+    <div class="tw-grid tw-grid-cols-2 lg:tw-flex lg:tw-flex-row tw-gap-2">
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card lg:tw-bg-transparent lg:tw-shadow-none lg:tw-rounded-none lg:tw-flex-1 lg:tw-border-r lg:tw-border-gray-200 last:lg:tw-border-r-0 tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
         <app-icon name="coins" class="tw-text-xl tw-text-success tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalBalance())">₱{{ getTotalBalance() | number:'1.2-2' }}</div>
@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
+      <div *ngIf="getTotalMusicEarnings() !== 0" class="tw-bg-white tw-rounded-card tw-shadow-card lg:tw-bg-transparent lg:tw-shadow-none lg:tw-rounded-none lg:tw-flex-1 lg:tw-border-r lg:tw-border-gray-200 last:lg:tw-border-r-0 tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
         <app-icon name="headphones" class="tw-text-xl tw-text-[#0891b2] tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalMusicEarnings())">₱{{ getTotalMusicEarnings() | number:'1.2-2' }}</div>
@@ -97,7 +97,7 @@
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-cursor-pointer hover:tw-bg-gray-50" (click)="openTotalEventBreakdown()">
+      <div *ngIf="getTotalEventEarnings() !== 0" class="tw-bg-white tw-rounded-card tw-shadow-card lg:tw-bg-transparent lg:tw-shadow-none lg:tw-rounded-none lg:tw-flex-1 lg:tw-border-r lg:tw-border-gray-200 last:lg:tw-border-r-0 tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 lg:tw-cursor-pointer lg:hover:tw-bg-gray-50" (click)="openTotalEventBreakdown()">
         <app-icon name="ticket" class="tw-text-xl tw-text-warning tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalEventEarnings())">₱{{ getTotalEventEarnings() | number:'1.2-2' }}</div>
@@ -105,7 +105,7 @@
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
+      <div *ngIf="getTotalFundraiserEarnings() !== 0" class="tw-bg-white tw-rounded-card tw-shadow-card lg:tw-bg-transparent lg:tw-shadow-none lg:tw-rounded-none lg:tw-flex-1 lg:tw-border-r lg:tw-border-gray-200 last:lg:tw-border-r-0 tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
         <app-icon name="heart" class="tw-text-xl tw-text-danger tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalFundraiserEarnings())">₱{{ getTotalFundraiserEarnings() | number:'1.2-2' }}</div>
@@ -113,7 +113,7 @@
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
+      <div *ngIf="getTotalPayments() !== 0" class="tw-bg-white tw-rounded-card tw-shadow-card lg:tw-bg-transparent lg:tw-shadow-none lg:tw-rounded-none lg:tw-flex-1 lg:tw-border-r lg:tw-border-gray-200 last:lg:tw-border-r-0 tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3">
         <app-icon name="currency" class="tw-text-xl tw-text-gray-400 tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalPayments())">₱{{ getTotalPayments() | number:'1.2-2' }}</div>
@@ -121,7 +121,7 @@
         </div>
       </div>
 
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-cursor-pointer hover:tw-bg-gray-50" (click)="openTotalPlatformFeesBreakdown()">
+      <div *ngIf="getTotalPlatformFees() !== 0" class="tw-bg-white tw-rounded-card tw-shadow-card lg:tw-bg-transparent lg:tw-shadow-none lg:tw-rounded-none lg:tw-flex-1 lg:tw-border-r lg:tw-border-gray-200 last:lg:tw-border-r-0 tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 lg:tw-cursor-pointer lg:hover:tw-bg-gray-50" (click)="openTotalPlatformFeesBreakdown()">
         <app-icon name="percentage" class="tw-text-xl tw-text-gray-600 tw-opacity-70" />
         <div>
           <div class="tw-text-base tw-font-semibold tw-leading-tight" [ngClass]="getAmountClass(getTotalPlatformFees())">₱{{ getTotalPlatformFees() | number:'1.2-2' }}</div>
