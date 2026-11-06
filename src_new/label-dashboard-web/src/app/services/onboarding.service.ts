@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { BehaviorSubject } from 'rxjs';
 import { WorkspaceService, WorkspaceType } from './workspace.service';
-import { AuthService } from './auth.service';
 import { SidebarService } from './sidebar.service';
+import { BrandService } from './brand.service';
 
 export interface OnboardingStep {
   id: string;
@@ -37,11 +35,10 @@ export class OnboardingService {
   private availableWorkspaces: WorkspaceType[] = [];
 
   constructor(
-    private http: HttpClient,
     private router: Router,
     private workspaceService: WorkspaceService,
-    private authService: AuthService,
-    private sidebarService: SidebarService
+    private sidebarService: SidebarService,
+    private brandService: BrandService
   ) {
     this.checkMobileView();
     window.addEventListener('resize', () => this.checkMobileView());
@@ -54,22 +51,20 @@ export class OnboardingService {
   /**
    * Initialize onboarding for a user
    */
-  initializeOnboarding(userOnboardingCompleted: boolean, workspaces: WorkspaceType[]): void {
-    if (!userOnboardingCompleted) {
-      this.availableWorkspaces = workspaces;
-      this.setupSteps();
+  initializeOnboarding(workspaces: WorkspaceType[]): void {
+    this.availableWorkspaces = workspaces;
+    this.setupSteps();
 
-      // Open/expand sidebar if the first step requires it
-      const firstStep = this.steps[0];
-      if (firstStep?.requiresSidebar) {
-        this.sidebarService.openSidebar();
-      }
-
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        this.showOnboardingSubject.next(true);
-      }, 1000);
+    // Open/expand sidebar if the first step requires it
+    const firstStep = this.steps[0];
+    if (firstStep?.requiresSidebar) {
+      this.sidebarService.openSidebar();
     }
+
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      this.showOnboardingSubject.next(true);
+    }, 1000);
   }
 
   /**
@@ -220,6 +215,39 @@ export class OnboardingService {
           showOnMobile: true,
           showOnDesktop: true
         });
+
+        // Sync licensing step (only when feature is enabled)
+        const brandSettings = this.brandService.getCurrentBrandSettings();
+        if (brandSettings?.feature_music_workspace !== false) {
+          this.steps.push({
+            id: 'sync-licensing',
+            title: 'Sync Licensing',
+            description: 'Manage sync licensing opportunities — track pitches, placements, and licensing deals for your artists\' music.',
+            targetElement: '.nav-menu-sync-licensing',
+            position: 'right',
+            workspace: 'campaigns',
+            navigateTo: '/campaigns/sync-licensing',
+            delay: 500,
+            requiresSidebar: true,
+            showOnMobile: true,
+            showOnDesktop: true
+          });
+        }
+
+        // Press campaigns step
+        this.steps.push({
+          id: 'press-campaigns',
+          title: 'Press Campaigns',
+          description: 'Manage press campaigns for your artists — track media coverage, press contacts, and promotional outreach.',
+          targetElement: '.nav-menu-press',
+          position: 'right',
+          workspace: 'campaigns',
+          navigateTo: '/campaigns/press',
+          delay: 500,
+          requiresSidebar: true,
+          showOnMobile: true,
+          showOnDesktop: true
+        });
         break;
 
       case 'admin':
@@ -350,17 +378,7 @@ export class OnboardingService {
     this.workspaceService.setWorkspace('music');
     this.router.navigate(['/dashboard']);
 
-    // Call API to mark onboarding as completed
-    this.http.post(`${environment.apiUrl}/users/complete-onboarding`, {})
-      .subscribe({
-        next: () => {
-          // Update user state in auth service and localStorage
-          this.authService.updateCurrentUser({ onboarding_completed: true });
-        },
-        error: (error) => {
-          console.error('Error completing onboarding:', error);
-        }
-      });
+    localStorage.setItem('onboarding_completed', 'true');
   }
 
   /**

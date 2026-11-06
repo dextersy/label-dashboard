@@ -147,12 +147,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Initialize onboarding for users who haven't completed it
     const authSubscription = this.authService.currentUser.subscribe(user => {
-      if (user && user.onboarding_completed === false) {
-        // Get available workspaces for this user based on admin status
-        const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
-
-        // Initialize onboarding with available workspaces
-        this.onboardingService.initializeOnboarding(user.onboarding_completed, availableWorkspaces);
+      if (user) {
+        const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
+        if (!onboardingCompleted) {
+          // Get available workspaces for this user based on admin status
+          const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
+          this.onboardingService.initializeOnboarding(availableWorkspaces);
+        }
       }
     });
     this.subscriptions.push(authSubscription);
