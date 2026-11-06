@@ -299,15 +299,16 @@ export class EventAccessTabComponent implements OnChanges {
 
     this.confirmationService.confirm({
       title: 'Leave event',
-      message: `Remove your brand's access to "${this.selectedEvent.title}"? This cannot be undone.`,
+      message: `Remove your access to "${this.selectedEvent.title}"? This cannot be undone.`,
       confirmText: 'Leave Event',
       type: 'danger',
     }).then(confirmed => {
       if (!confirmed) return;
-      this.http.delete<any>(
-        `${this.apiUrl}/event-brand-collab/${this.selectedEvent.id}/brand-collaborators`,
-        { headers: this.getHeaders(), body: { brand_id: brandId } }
-      ).subscribe({
+      const eventId = this.selectedEvent.id;
+      const request$ = currentUser.is_admin
+        ? this.http.delete<any>(`${this.apiUrl}/event-brand-collab/${eventId}/brand-collaborators`, { headers: this.getHeaders(), body: { brand_id: brandId } })
+        : this.http.delete<any>(`${this.apiUrl}/event-access/${eventId}/leave`, { headers: this.getHeaders() });
+      request$.subscribe({
         next: () => {
           this.notificationService.showSuccess('You have left the event.');
           this.eventService.getEvents().subscribe({
