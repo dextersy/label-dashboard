@@ -147,8 +147,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Initialize onboarding for authenticated users (never on public routes).
     // The service itself determines which wizards still need to be shown.
+    // Guard against stale localStorage from a different brand — only proceed when
+    // the user's brand_id matches the currently loaded brand.
     const authSubscription = this.authService.currentUser.subscribe(user => {
-      if (user && !window.location.pathname.startsWith('/public')) {
+      const currentBrandId = this.brandService.getCurrentBrandSettings()?.id;
+      if (user && currentBrandId && user.brand_id === currentBrandId && !window.location.pathname.startsWith('/public')) {
         const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
         this.onboardingService.initializeOnboarding(availableWorkspaces, user.is_admin);
       }

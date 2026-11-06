@@ -65,6 +65,9 @@ export class OnboardingService {
     // subscription re-emissions (e.g. token refresh) disrupting an in-progress tour.
     if (this.showOnboardingSubject.value) return;
 
+    // Nothing meaningful to show if the user has no workspaces and isn't an admin
+    if (workspaces.length === 0 && !isAdmin) return;
+
     this.availableWorkspaces = workspaces;
     this.isAdmin = isAdmin;
     this.setupSteps();
