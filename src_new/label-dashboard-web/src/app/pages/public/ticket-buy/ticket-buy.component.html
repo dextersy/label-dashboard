@@ -49,7 +49,7 @@
         </div>
         <p class="tw-text-white tw-font-bold tw-text-lg tw-leading-tight tw-mb-2">{{ event.title }}</p>
         <p class="tw-text-white/70 tw-text-sm tw-mb-0.5">
-          <app-icon name="calendar" class="tw-mr-1.5 tw-text-white/40" />{{ formatEventDate(event.date_and_time) }} · {{ formatEventTime(event.date_and_time) }}
+          <app-icon name="calendar" class="tw-mr-1.5 tw-text-white/40" /><ng-container *ngIf="event.days && event.days.length > 1">{{ formatMultidayDateRanges(event.days) }}</ng-container><ng-container *ngIf="!event.days || event.days.length <= 1">{{ formatEventDate(event.date_and_time) }} · {{ formatEventTime(event.date_and_time) }}</ng-container>
         </p>
         <p *ngIf="event.venue" class="tw-text-white/70 tw-text-sm">
           <app-icon name="map-pin" class="tw-mr-1.5 tw-text-white/40" />{{ event.venue }}

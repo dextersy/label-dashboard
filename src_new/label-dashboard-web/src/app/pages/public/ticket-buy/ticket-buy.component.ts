@@ -443,6 +443,38 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     });
   }
 
+  formatMultidayDateRanges(days?: { date_and_time: string }[]): string {
+    if (!days || days.length === 0) return '';
+    const sorted = [...days].sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime());
+    const ranges: string[] = [];
+    let i = 0;
+    while (i < sorted.length) {
+      const start = new Date(sorted[i].date_and_time);
+      let end = start;
+      let j = i + 1;
+      while (j < sorted.length) {
+        const next = new Date(sorted[j].date_and_time);
+        const prev = new Date(sorted[j - 1].date_and_time);
+        const diffDays = Math.round((next.getTime() - prev.getTime()) / 86400000);
+        if (diffDays === 1 && next.getMonth() === start.getMonth() && next.getFullYear() === start.getFullYear()) {
+          end = next;
+          j++;
+        } else {
+          break;
+        }
+      }
+      const month = start.toLocaleDateString('en-US', { month: 'long' });
+      const year = start.getFullYear();
+      if (end.getTime() === start.getTime()) {
+        ranges.push(`${month} ${start.getDate()} ${year}`);
+      } else {
+        ranges.push(`${month} ${start.getDate()}-${end.getDate()} ${year}`);
+      }
+      i = j;
+    }
+    return ranges.join(', ');
+  }
+
   formatEventTime(dateString?: string): string {
     if (!dateString) return '';
     const date = new Date(dateString);
