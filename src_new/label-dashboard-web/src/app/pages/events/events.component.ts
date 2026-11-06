@@ -202,13 +202,19 @@ export class EventsComponent implements OnInit, OnDestroy, HasUnsavedChanges {
           if (events.length > 0 && !eventToSelect) {
             eventToSelect = events[0];
           }
-          
+
+          // Non-admin with no accessible events should not be on the campaigns workspace
+          if (events.length === 0 && !this.isAdmin) {
+            this.router.navigate(['/dashboard']);
+            return;
+          }
+
           // Set the selected event
           if (eventToSelect) {
             this.selectedEvent = eventToSelect;
             this.eventService.setSelectedEvent(eventToSelect);
           }
-          
+
           this.loading = false;
           this.retryCount = 0;
         },
