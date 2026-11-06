@@ -351,21 +351,14 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
     // Maps event_id → effective role for non-admin collaborators
     const roleMap = new Map<number, 'viewer' | 'manager'>();
 
-    // Always check for brand-level collaborations (admins can also be collabs on other brands' events)
-    const brandAccessRows = await EventBrandCollaboration.findAll({
-      where: { brand_id: req.user.brand_id, status: 'Accepted' },
-      attributes: ['event_id', 'role'],
-    });
-    for (const r of brandAccessRows) roleMap.set((r as any).event_id, (r as any).role);
-
     if (!req.user.is_admin) {
-      // User-level access
+      // Non-admin users: only user-level EventAccess grants access.
+      // Brand-level EventBrandCollaboration is admin-only (mirrors findEventForUser priority 3).
       const userAccessRows = await EventAccess.findAll({
         where: { user_id: req.user.id, status: 'Accepted' },
         attributes: ['event_id', 'role'],
       });
 
-      // User-level access takes precedence over brand-level
       for (const r of userAccessRows) roleMap.set((r as any).event_id, (r as any).role);
 
       const accessibleIds = [...roleMap.keys()];
@@ -373,10 +366,18 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
         return res.json({ events: [] });
       }
       whereClause = { id: accessibleIds };
-    } else if (brandAccessRows.length > 0) {
-      // Admin: include own brand's events plus any collab events from other brands
-      const collabIds = brandAccessRows.map((r: any) => r.event_id);
-      whereClause = { [Op.or]: [{ brand_id: req.user.brand_id }, { id: collabIds }] };
+    } else {
+      // Admin: check brand-level collabs to include events from other brands
+      const brandAccessRows = await EventBrandCollaboration.findAll({
+        where: { brand_id: req.user.brand_id, status: 'Accepted' },
+        attributes: ['event_id', 'role'],
+      });
+      for (const r of brandAccessRows) roleMap.set((r as any).event_id, (r as any).role);
+
+      if (brandAccessRows.length > 0) {
+        const collabIds = brandAccessRows.map((r: any) => r.event_id);
+        whereClause = { [Op.or]: [{ brand_id: req.user.brand_id }, { id: collabIds }] };
+      }
     }
 
     const events = await Event.findAll({
