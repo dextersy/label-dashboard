@@ -8,6 +8,7 @@ import {
   acceptEventInvite,
   setupEventInviteProfile,
   getInviteInfo,
+  leaveEvent,
 } from '../controllers/eventAccessController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import { inviteRateLimit } from '../middleware/rateLimiting';
@@ -18,6 +19,9 @@ const router = Router();
 router.get('/invite-info', inviteRateLimit, getInviteInfo);
 router.post('/accept', inviteRateLimit, acceptEventInvite);
 router.post('/setup-profile', inviteRateLimit, setupEventInviteProfile);
+
+// Self-leave: any authenticated collaborator can remove their own access
+router.delete('/:id/leave', authenticateToken, leaveEvent);
 
 // Authenticated: collaborator management (admin only)
 router.get('/:id/collaborators', authenticateToken, requireAdmin, listCollaborators);

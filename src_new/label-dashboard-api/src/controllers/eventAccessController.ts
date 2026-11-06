@@ -354,6 +354,22 @@ export const updateCollaboratorRole = async (req: AuthRequest, res: Response) =>
   }
 };
 
+export const leaveEvent = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id as string, 10);
+    if (isNaN(eventId)) return res.status(400).json({ error: 'Invalid event ID' });
+
+    const access = await EventAccess.findOne({ where: { event_id: eventId, user_id: req.user.id, status: 'Accepted' } });
+    if (!access) return res.status(404).json({ error: 'No access record found for this event' });
+
+    await access.destroy();
+    res.json({ message: 'You have left the event.' });
+  } catch (error) {
+    console.error('leaveEvent error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const getInviteInfo = async (req: Request, res: Response) => {
   try {
     const hash = req.query.hash as string;
