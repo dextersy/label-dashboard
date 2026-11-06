@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService, Event, EventTicket as ServiceEventTicket, EventReferrer } from '../../../../services/event.service';
 import { CsvService } from '../../../../services/csv.service';
@@ -71,37 +71,13 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   selectedTicketForTransfer: EventTicket | null = null;
   showTransferModal = false;
 
-  // Sub-tab control: 'tickets' or 'walk-in'
-  activeSubTab: 'tickets' | 'walk-in' = 'tickets';
-  walkInTransactions: any[] = [];
-  walkInTransactionsLoading = false;
-  walkInPagination: PaginationInfo | null = null;
-  walkInTypes: any[] = [];
-  walkInTypesLoading = false;
-  walkInPaymentMethodSummary: { method: string; total: number }[] = [];
-
   // Revenue breakdown expand state
   grossSalesByTypeExpanded = false;
-  walkInRevenueExpanded = false;
 
   // Pagination properties
   pagination: PaginationInfo | null = null;
   currentSort: SortInfo | null = null;
   currentFilters: SearchFilters = {};
-
-  // Walk-in table configuration
-  walkInColumns: TableColumn[] = [
-    { key: 'id', label: '#', sortable: true, cardHeader: true },
-    { key: 'createdAt', label: 'Date', sortable: true, type: 'date', formatter: (item) => this.formatWalkInDate(item.createdAt) },
-    { key: 'items', label: 'Items', formatter: (item) => (item.items || []).map((i: any) => `${i.quantity}x ${i.walkInType?.name || 'Unknown'}`).join(', ') },
-    { key: 'payment_method', label: 'Payment', formatter: (item) => {
-      let str = item.payment_method || '';
-      if (item.payment_reference) str += ` (${item.payment_reference})`;
-      return str;
-    }},
-    { key: 'total_amount', label: 'Amount', sortable: true, type: 'number', align: 'right', formatter: (item) => '₱' + (Number(item.total_amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
-    { key: 'registeredBy', label: 'Registered By', formatter: (item) => item.registeredByUser?.first_name || 'System' },
-  ];
 
   // Table configuration
   tableColumns: TableColumn[] = [
@@ -218,14 +194,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     private csvService: CsvService,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute,
     private confirmationService: ConfirmationService,
     private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
-    const subTab = this.route.snapshot.queryParamMap.get('subTab');
-    if (subTab === 'walk-in') this.activeSubTab = 'walk-in';
     this.loadEventData();
   }
 
@@ -245,22 +218,12 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       this.summary = null;
       this.pagination = null;
       this.referrers = [];
-      this.walkInTransactions = [];
       return;
     }
 
     // Load referrers and summary first, then tickets
     this.loadEventReferrers();
     this.loadTicketSummary();
-
-    // Reload walk-in data if that sub-tab is active
-    if (this.activeSubTab === 'walk-in') {
-      this.loadWalkInTransactions();
-      this.loadWalkInTypes();
-    } else {
-      this.walkInTransactions = [];
-      this.walkInTypes = [];
-    }
   }
 
   private loadEventReferrers(): void {
@@ -744,82 +707,6 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
         }
       })
     );
-  }
-
-  // Walk-in transactions
-  setSubTab(tab: 'tickets' | 'walk-in'): void {
-    this.activeSubTab = tab;
-    if (tab === 'walk-in') {
-      if (!this.walkInPagination) {
-        this.loadWalkInTransactions();
-      }
-      if (this.walkInTypes.length === 0) {
-        this.loadWalkInTypes();
-      }
-    }
-  }
-
-  loadWalkInTransactions(page: number = 1): void {
-    if (!this.selectedEvent) return;
-
-    this.walkInTransactionsLoading = true;
-    this.subscriptions.add(
-      this.eventService.getWalkInTransactions(this.selectedEvent.id, page, 15).subscribe({
-        next: (response) => {
-          this.walkInTransactions = response.transactions;
-          this.walkInPagination = response.pagination;
-          this.walkInTransactionsLoading = false;
-        },
-        error: (error) => {
-          this.alertMessage.emit({ type: 'error', text: 'Failed to load walk-in transactions' });
-          this.walkInTransactionsLoading = false;
-        }
-      })
-    );
-  }
-
-  onWalkInPageChange(page: number): void {
-    this.loadWalkInTransactions(page);
-  }
-
-  loadWalkInTypes(): void {
-    if (!this.selectedEvent) return;
-
-    this.walkInTypesLoading = true;
-    this.subscriptions.add(
-      this.eventService.getWalkInTypes(this.selectedEvent.id).subscribe({
-        next: (response) => {
-          this.walkInTypes = response.walkInTypes;
-          this.walkInPaymentMethodSummary = response.by_payment_method || [];
-          this.walkInTypesLoading = false;
-        },
-        error: () => {
-          this.walkInTypesLoading = false;
-        }
-      })
-    );
-  }
-
-  getWalkInTotalSold(): number {
-    return this.walkInTypes.reduce((sum: number, t: any) => sum + (t.sold_count || 0), 0);
-  }
-
-  getWalkInTotalRevenue(): number {
-    return this.walkInTypes.reduce((sum: number, t: any) => sum + ((Number(t.price) || 0) * (t.sold_count || 0)), 0);
-  }
-
-  formatWalkInPrice(price: number): string {
-    return '₱' + (price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  formatWalkInDate(dateString: string): string {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
   }
 
   getInitials(name: string): string {

@@ -5,7 +5,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged, Subject, switchMap, of } from 'rxjs';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 import { PaginatedTableComponent, TableAction, TableColumn } from '../../../../components/shared/paginated-table/paginated-table.component';
-import { InPageNavComponent, InPageNavTab } from '../../../../components/shared/in-page-nav/in-page-nav.component';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { NotificationService } from '../../../../services/notification.service';
 import { EventService, Event } from '../../../../services/event.service';
@@ -44,7 +43,7 @@ interface BrandSearchResult {
 @Component({
   selector: 'app-event-access-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent, InPageNavComponent],
+  imports: [CommonModule, FormsModule, PaginatedTableComponent, IconComponent],
   templateUrl: './event-access-tab.component.html',
   styleUrl: './event-access-tab.component.scss',
 })
@@ -52,13 +51,7 @@ export class EventAccessTabComponent implements OnChanges {
   @Input() selectedEvent!: Event;
   @Input() isAdmin: boolean = false;
 
-  // ── In-page nav ────────────────────────────────────────────────────────────
   activeSubTab = 'collaborators';
-
-  readonly subTabs: InPageNavTab[] = [
-    { id: 'collaborators', label: 'Collaborators', icon: 'layers' },
-    { id: 'team-members', label: 'Team Members', icon: 'users' },
-  ];
 
   get isOwner(): boolean {
     return !this.selectedEvent?.user_role || this.selectedEvent.user_role === 'owner';

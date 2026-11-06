@@ -1,0 +1,66 @@
+<div class="event-walk-ins-tab">
+
+  <!-- Stats summary -->
+  <div class="ticket-stats" *ngIf="walkInTypes.length > 0">
+    <div class="ticket-stats__main">
+      <div class="ticket-stats__stat">
+        <div class="ticket-stats__label">Walk-ins</div>
+        <div class="ticket-stats__value">{{ getTotalSold() }}</div>
+        <div class="ticket-stats__sub">total registered</div>
+      </div>
+      <div class="ticket-stats__divider"></div>
+      <div class="ticket-stats__stat">
+        <div class="ticket-stats__label">Revenue</div>
+        <div class="ticket-stats__value ticket-stats__value--highlight">{{ formatPrice(getTotalRevenue()) }}</div>
+        <div class="ticket-stats__sub">total collected</div>
+        <div class="ticket-stats__breakdown" *ngIf="paymentMethodSummary.length > 0">
+          <button type="button" class="ticket-stats__breakdown-toggle" (click)="revenueExpanded = !revenueExpanded">
+            By payment method <app-icon [name]="revenueExpanded ? 'chevron-up' : 'chevron-down'" />
+          </button>
+          <div class="ticket-stats__breakdown-body" *ngIf="revenueExpanded">
+            <div class="ticket-stats__breakdown-row" *ngFor="let pm of paymentMethodSummary">
+              <span class="ticket-stats__breakdown-label">{{ pm.method | titlecase }}</span>
+              <span class="ticket-stats__breakdown-value">{{ formatPrice(pm.total) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-paginated-table
+    title=""
+    [data]="transactions"
+    [pagination]="pagination"
+    [loading]="transactionsLoading"
+    [columns]="columns"
+    [showSearch]="false"
+    [showSortableHeaders]="true"
+    (pageChange)="onPageChange($event)">
+
+    <ng-template #mobileRowTemplate let-tx>
+      <div class="walkin-card">
+        <div class="walkin-card__header">
+          <div class="walkin-card__id">#{{ tx.id }}</div>
+          <div class="walkin-card__date">{{ formatDate(tx.createdAt) }}</div>
+        </div>
+        <div class="walkin-card__items" *ngIf="tx.items?.length">
+          <span class="walkin-card__item" *ngFor="let item of tx.items">
+            {{ item.quantity }}x {{ item.walkInType?.name || 'Unknown' }}
+          </span>
+        </div>
+        <div class="walkin-card__footer">
+          <span class="walkin-card__payment">
+            <app-icon name="credit-card" /> {{ tx.payment_method }}<ng-container *ngIf="tx.payment_reference"> ({{ tx.payment_reference }})</ng-container>
+          </span>
+          <span class="walkin-card__amount">{{ formatPrice(tx.total_amount) }}</span>
+        </div>
+        <div class="walkin-card__registered" *ngIf="tx.registeredByUser?.first_name">
+          <app-icon name="user" /> {{ tx.registeredByUser?.first_name }}
+        </div>
+      </div>
+    </ng-template>
+
+  </app-paginated-table>
+
+</div>

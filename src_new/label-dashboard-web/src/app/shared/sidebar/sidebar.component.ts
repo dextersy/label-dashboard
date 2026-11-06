@@ -22,6 +22,8 @@ interface MenuItem {
   /** If true, visible to any event-access collaborator (non-admin viewer or manager) */
   eventAccessVisible?: boolean;
   children?: MenuItem[];
+  /** Additional routes that should mark this item as active */
+  activeRoutes?: string[];
 }
 
 interface MenuSection {
@@ -142,13 +144,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           eventAccessVisible: true,
           children: [
-            { route: '/campaigns/events/details', title: 'Manage events', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/tickets', title: 'Tickets & Walk-Ins', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/abandoned', title: 'Pending Orders', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/referrals', title: 'Referrals', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/add-ons', title: 'Manage Add-ons', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/email', title: 'Send Email', adminOnly: true, eventAccessVisible: true },
-            { route: '/campaigns/events/access', title: 'Collaborators', adminOnly: true, eventAccessVisible: true }
+            { route: '/campaigns/events/details', title: 'Manage Event', adminOnly: true, eventAccessVisible: true, activeRoutes: ['/campaigns/events/listing', '/campaigns/events/access', '/campaigns/events/add-ons', '/campaigns/events/new'] },
+            { route: '/campaigns/events/tickets', title: 'View Sales', adminOnly: true, eventAccessVisible: true, activeRoutes: ['/campaigns/events/walk-ins', '/campaigns/events/abandoned', '/campaigns/events/referrals'] },
+            { route: '/campaigns/events/email', title: 'Email Attendees', adminOnly: true, eventAccessVisible: true },
           ]
         },
         {
@@ -621,8 +619,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   // Removed mapColorToDataColor method - no longer needed
 
-  isActiveRoute(route: string): boolean {
-    return this.currentRoute === route;
+  isActiveRoute(route: string, item?: MenuItem): boolean {
+    if (this.currentRoute === route) return true;
+    if (item?.activeRoutes) return item.activeRoutes.includes(this.currentRoute);
+    return false;
   }
 
   isActiveParentRoute(parentRoute: string): boolean {

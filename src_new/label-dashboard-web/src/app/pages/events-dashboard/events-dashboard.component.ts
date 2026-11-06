@@ -192,9 +192,9 @@ export class EventsDashboardComponent implements OnInit {
     this.router.navigate(['/campaigns/sync-licensing'], id ? { queryParams: { open: id } } : {});
   }
 
-  navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets', subTab?: string): void {
+  navigateToEvent(event: UpcomingEvent, route: 'details' | 'tickets' | 'walk-ins'): void {
     this.eventService.setSelectedEvent(event as any);
-    this.router.navigate([`/campaigns/events/${route}`], subTab ? { queryParams: { subTab } } : {});
+    this.router.navigate([`/campaigns/events/${route}`]);
   }
 
   formatEventDate(dateStr: string): string {

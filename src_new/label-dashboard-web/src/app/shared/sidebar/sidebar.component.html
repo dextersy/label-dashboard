@@ -106,7 +106,7 @@
                [routerLink]="child.route"
                (click)="onMenuItemClick(child)"
                class="submenu-link"
-               [class.submenu-link-active]="isActiveRoute(child.route)">
+               [class.submenu-link-active]="isActiveRoute(child.route, child)">
               {{ child.title }}
             </a>
           </li>
@@ -130,7 +130,7 @@
          [routerLink]="child.route"
          (click)="closeFlyout(); onMenuItemClick(child)"
          class="flyout-link"
-         [class.flyout-link-active]="isActiveRoute(child.route)">
+         [class.flyout-link-active]="isActiveRoute(child.route, child)">
         {{ child.title }}
       </a>
     </li>

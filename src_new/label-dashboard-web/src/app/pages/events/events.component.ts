@@ -12,6 +12,7 @@ import { environment } from '../../../environments/environment';
 
 // Import tab components
 import { EventTicketsTabComponent } from './components/event-tickets-tab/event-tickets-tab.component';
+import { EventWalkInsTabComponent } from './components/event-walk-ins-tab/event-walk-ins-tab.component';
 import { EventAbandonedOrdersTabComponent } from './components/event-abandoned-orders-tab/event-abandoned-orders-tab.component';
 import { EventReferralsTabComponent } from './components/event-referrals-tab/event-referrals-tab.component';
 import { EventEmailTabComponent } from './components/event-email-tab/event-email-tab.component';
@@ -23,8 +24,10 @@ import { EventAddOnsComponent } from './event-add-ons/event-add-ons.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
+import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 
-export type EventsTabType = 'tickets' | 'abandoned' | 'referrals' | 'email' | 'listing' | 'access' | 'details' | 'add-ons';
+export type EventsTabType = 'tickets' | 'walk-ins' | 'abandoned' | 'referrals' | 'email' | 'listing' | 'access' | 'details' | 'add-ons';
+export type EventsSectionType = 'sales' | 'email' | 'settings';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -42,6 +45,7 @@ export type EventSelection = Event;
         CommonModule,
         FormsModule,
         EventTicketsTabComponent,
+        EventWalkInsTabComponent,
         EventAbandonedOrdersTabComponent,
         EventReferralsTabComponent,
         EventEmailTabComponent,
@@ -51,7 +55,8 @@ export type EventSelection = Event;
         EventFormComponent,
         EventAddOnsComponent,
         BreadcrumbComponent,
-        IconComponent],
+        IconComponent,
+        InPageNavComponent],
     templateUrl: './events.component.html',
     styleUrl: './events.component.scss'
 })
@@ -82,16 +87,28 @@ export class EventsComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   // Available events for selection
   availableEvents: EventSelection[] = [];
 
-  tabs = [
-    { id: 'tickets' as EventsTabType, label: 'Tickets & Walk-Ins', icon: 'ticket' },
-    { id: 'abandoned' as EventsTabType, label: 'Pending Orders', icon: 'cart' },
-    { id: 'referrals' as EventsTabType, label: 'Referrals', icon: 'user-plus' },
-    { id: 'email' as EventsTabType, label: 'Email Ticket Holders', icon: 'envelope' },
-    { id: 'listing' as EventsTabType, label: 'Listing', icon: 'globe' },
-    { id: 'access' as EventsTabType, label: 'Collaborators', icon: 'users', adminOnly: false },
-    { id: 'details' as EventsTabType, label: 'Manage Event', icon: 'settings' },
-    { id: 'add-ons' as EventsTabType, label: 'Add-ons', icon: 'package' },
+  salesNavTabs: InPageNavTab[] = [
+    { id: 'tickets', label: 'Tickets', icon: 'ticket' },
+    { id: 'walk-ins', label: 'Walk-ins', icon: 'walking' },
+    { id: 'abandoned', label: 'Pending Orders', icon: 'cart' },
+    { id: 'referrals', label: 'Referrals', icon: 'user-plus' },
   ];
+
+  private static readonly TAB_SECTION_MAP: Record<EventsTabType, EventsSectionType> = {
+    'tickets': 'sales',
+    'walk-ins': 'sales',
+    'abandoned': 'sales',
+    'referrals': 'sales',
+    'email': 'email',
+    'listing': 'settings',
+    'access': 'settings',
+    'details': 'settings',
+    'add-ons': 'settings',
+  };
+
+  get activeSection(): EventsSectionType {
+    return EventsComponent.TAB_SECTION_MAP[this.activeTab] ?? 'sales';
+  }
 
   constructor(
     private authService: AuthService,

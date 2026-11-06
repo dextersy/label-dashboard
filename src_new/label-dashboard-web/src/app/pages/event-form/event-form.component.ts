@@ -21,6 +21,7 @@ import { FloatingActionBarComponent } from '../../components/shared/floating-act
 import { EventWalkInSettingsComponent } from '../events/components/event-walk-in-settings/event-walk-in-settings.component';
 import { IconComponent } from '../../components/shared/icon/icon.component';
 import { EventListingTabComponent } from '../events/components/event-listing-tab/event-listing-tab.component';
+import { EventAccessTabComponent } from '../events/components/event-access-tab/event-access-tab.component';
 
 export interface EventDayFormItem {
   id?: number;
@@ -57,7 +58,7 @@ export function createDefaultTicketType(): TicketType {
   };
 }
 
-export type EventFormSection = 'details' | 'ticketing' | 'scanner' | 'walk-in' | 'listing';
+export type EventFormSection = 'details' | 'ticketing' | 'scanner' | 'walk-in' | 'listing' | 'collaborators';
 
 @Component({
   selector: 'app-event-form',
@@ -73,7 +74,8 @@ export type EventFormSection = 'details' | 'ticketing' | 'scanner' | 'walk-in' |
     FloatingActionBarComponent,
     EventWalkInSettingsComponent,
     IconComponent,
-    EventListingTabComponent
+    EventListingTabComponent,
+    EventAccessTabComponent
   ],
   templateUrl: './event-form.component.html',
   styleUrl: './event-form.component.scss'
@@ -370,11 +372,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
       { id: 'details', label: 'Details', icon: 'info' },
       { id: 'ticketing', label: 'Ticketing', icon: 'ticket' },
       { id: 'walk-in', label: 'Walk-in', icon: 'walking' },
-      { id: 'listing', label: 'Listing', icon: 'globe' }
+      { id: 'listing', label: 'Listing', icon: 'globe' },
     ];
     if (!this.isEventDraft()) {
       tabs.push({ id: 'scanner', label: 'Scanner', icon: 'scan' });
     }
+    tabs.push({ id: 'collaborators', label: 'Collaborators', icon: 'users' });
     return tabs;
   }
 
@@ -398,7 +401,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   goToNextTab(): void {
-    const tabOrder: EventFormSection[] = ['details', 'ticketing', 'walk-in', 'listing', 'scanner'];
+    const tabOrder: EventFormSection[] = ['details', 'ticketing', 'walk-in', 'listing', 'scanner', 'collaborators'];
     const currentIndex = tabOrder.indexOf(this.activeSection);
 
     if (currentIndex >= 0 && currentIndex < tabOrder.length - 1) {

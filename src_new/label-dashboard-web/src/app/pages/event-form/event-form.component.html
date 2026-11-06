@@ -24,9 +24,8 @@
 
   <app-in-page-nav class="tw-mt-3" [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="onNavTabChange($event)">
 
-    <div class="event-form-container">
-        <!-- Loading State -->
-        <div *ngIf="loading" class="loading-container">
+    <!-- Loading State -->
+    <div *ngIf="loading && activeSection !== 'collaborators'" class="loading-container">
           <div class="loading-dots">
             <div></div>
             <div></div>
@@ -34,8 +33,8 @@
           </div>
         </div>
 
-        <!-- Form Content -->
-        <div *ngIf="!loading" class="event-form-content">
+    <!-- Form Content -->
+    <div *ngIf="!loading && activeSection !== 'collaborators'" class="event-form-content">
           <!-- Canceled Event Banner -->
           <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-red-200 tw-bg-red-50 tw-text-red-800" *ngIf="isEventCanceled()">
             <div class="tw-flex tw-items-center tw-gap-3">
@@ -660,7 +659,12 @@
               </button>
             </div>
           </div>
-        </div>
+
+    </div>
+
+    <!-- Collaborators Section -->
+    <div *ngIf="activeSection === 'collaborators'">
+      <app-event-access-tab [selectedEvent]="event" [isAdmin]="isAdmin"></app-event-access-tab>
     </div>
 
   </app-in-page-nav>

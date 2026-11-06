@@ -25,42 +25,54 @@
     <!-- Past Event Warning -->
     <div class="tw-px-4 tw-py-3 tw-mb-4 tw-border tw-rounded-lg tw-text-sm tw-leading-normal tw-border-amber-200 tw-bg-amber-50 tw-text-amber-800 tw-mb-3" *ngIf="selectedEvent && isEventPast(selectedEvent)">
       <app-icon name="warning" class="tw-mr-2" />
-      <strong>This event occurred in the past.</strong> You can make limited changes to tickets and referrals.
+      <strong>This event occurred in the past.</strong> Changes you can make are limited.
     </div>
 
     <!-- Main Content -->
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="selectedEvent">
       <div class="tw-col-span-12">
-        
-        <!-- Event Tickets Tab -->
-        <div *ngIf="activeTab === 'tickets'">
-          <app-event-tickets-tab
-            [selectedEvent]="selectedEvent"
-            [isAdmin]="isManager"
-            (alertMessage)="onAlertMessage($event)">
-          </app-event-tickets-tab>
-        </div>
-        
-        <!-- Abandoned Orders Tab -->
-        <div *ngIf="activeTab === 'abandoned'">
-          <app-event-abandoned-orders-tab
-            [selectedEvent]="selectedEvent"
-            [isAdmin]="isManager"
-            (alertMessage)="onAlertMessage($event)">
-          </app-event-abandoned-orders-tab>
-        </div>
-        
-        <!-- Referrals Tab -->
-        <div *ngIf="activeTab === 'referrals'">
-          <app-event-referrals-tab
-            [selectedEvent]="selectedEvent"
-            [isAdmin]="isManager"
-            (alertMessage)="onAlertMessage($event)">
-          </app-event-referrals-tab>
-        </div>
-        
-        <!-- Email Tab -->
-        <div *ngIf="activeTab === 'email'">
+
+        <!-- Sales section: InPageNav with sub-tabs -->
+        <ng-container *ngIf="activeSection === 'sales'">
+          <app-in-page-nav [tabs]="salesNavTabs" [activeTab]="activeTab" (tabChange)="setActiveTab($any($event))">
+
+            <div *ngIf="activeTab === 'tickets'">
+              <app-event-tickets-tab
+                [selectedEvent]="selectedEvent"
+                [isAdmin]="isManager"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-tickets-tab>
+            </div>
+
+            <div *ngIf="activeTab === 'walk-ins'">
+              <app-event-walk-ins-tab
+                [selectedEvent]="selectedEvent"
+                [isAdmin]="isManager"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-walk-ins-tab>
+            </div>
+
+            <div *ngIf="activeTab === 'abandoned'">
+              <app-event-abandoned-orders-tab
+                [selectedEvent]="selectedEvent"
+                [isAdmin]="isManager"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-abandoned-orders-tab>
+            </div>
+
+            <div *ngIf="activeTab === 'referrals'">
+              <app-event-referrals-tab
+                [selectedEvent]="selectedEvent"
+                [isAdmin]="isManager"
+                (alertMessage)="onAlertMessage($event)">
+              </app-event-referrals-tab>
+            </div>
+
+          </app-in-page-nav>
+        </ng-container>
+
+        <!-- Email Attendees section -->
+        <div *ngIf="activeSection === 'email'">
           <app-event-email-tab
             [selectedEvent]="selectedEvent"
             [isAdmin]="isManager"
@@ -68,34 +80,14 @@
           </app-event-email-tab>
         </div>
 
-        <!-- Listing Tab -->
-        <div *ngIf="activeTab === 'listing'">
-          <app-event-listing-tab
-            [selectedEvent]="selectedEvent"
-            [isAdmin]="isManager"
-            (alertMessage)="onAlertMessage($event)"
-            (eventUpdated)="onEventUpdated($event)">
-          </app-event-listing-tab>
-        </div>
-
-        <!-- Access Tab -->
-        <div *ngIf="activeTab === 'access'">
-          <app-event-access-tab [selectedEvent]="selectedEvent" [isAdmin]="isAdmin"></app-event-access-tab>
-        </div>
-
-        <!-- Manage Event (Details) Tab -->
-        <div *ngIf="activeTab === 'details'">
+        <!-- Event Settings section: event-form handles its own nav (Details, Ticketing, Walk-in, Listing, Collaborators, Scanner) -->
+        <div *ngIf="activeSection === 'settings'">
           <app-event-form></app-event-form>
-        </div>
-
-        <!-- Add-ons Tab -->
-        <div *ngIf="activeTab === 'add-ons'">
-          <app-event-add-ons></app-event-add-ons>
         </div>
 
       </div>
     </div>
-    
+
     <!-- Loading Events -->
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="loading && availableEvents.length === 0">
       <div class="tw-col-span-12">
@@ -126,6 +118,6 @@
         </div>
       </div>
     </div>
-    
+
   </div>
 </div>

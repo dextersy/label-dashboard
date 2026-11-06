@@ -10,10 +10,19 @@
     </button>
   </div>
 
-  <app-in-page-nav *ngIf="isOwner"
-    [tabs]="subTabs"
-    [activeTab]="activeSubTab"
-    (tabChange)="onSubTabChange($event)">
+  <ng-container *ngIf="isOwner">
+
+    <!-- Sub-tab toggle -->
+    <div class="tw-mb-4 tw-flex tw-justify-center">
+      <div class="sub-tab-toggle" role="group" aria-label="Collaborators view">
+        <button type="button" class="sub-tab-btn" [class.sub-tab-btn-active]="activeSubTab === 'collaborators'" (click)="onSubTabChange('collaborators')">
+          <app-icon name="layers" />Collaborators
+        </button>
+        <button type="button" class="sub-tab-btn" [class.sub-tab-btn-active]="activeSubTab === 'team-members'" (click)="onSubTabChange('team-members')">
+          <app-icon name="users" />Team Members
+        </button>
+      </div>
+    </div>
 
     <!-- ── Collaborators (Brand) Tab ─────────────────────────────────────── -->
     <div *ngIf="activeSubTab === 'collaborators'">
@@ -285,6 +294,6 @@
       </ng-container><!-- /isOwner -->
     </div>
 
-  </app-in-page-nav>
+  </ng-container>
 
 </div>
