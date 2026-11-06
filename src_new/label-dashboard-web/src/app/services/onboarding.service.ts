@@ -313,14 +313,16 @@ export class OnboardingService {
           showOnMobile: true,
           showOnDesktop: true
         });
-        // Event selection step — no targetElement since there may be no events yet
+        // Event selection step
         steps.push({
           id: 'event-selection',
           wizardId,
           title: 'Event Selection',
           description: 'Use the event selector at the top of the Events page to switch between events. Create your first event using the "New Event" button.',
-          position: 'center',
+          targetElement: '.event-selection-container',
+          position: 'bottom',
           workspace: 'campaigns',
+          navigateTo: '/campaigns/events/tickets',
           delay: 500,
           showOnMobile: true,
           showOnDesktop: true
@@ -341,14 +343,16 @@ export class OnboardingService {
             showOnMobile: true,
             showOnDesktop: true
           });
-          // Fundraiser selection step — no targetElement since there may be no fundraisers yet
+          // Fundraiser selection step
           steps.push({
             id: 'fundraiser-selection',
             wizardId,
             title: 'Fundraiser Selection',
             description: 'Use the fundraiser selector at the top of the Fundraisers page to switch between campaigns. Create your first fundraiser using the "New Fundraiser" button.',
-            position: 'center',
+            targetElement: '.fundraiser-selection-container',
+            position: 'bottom',
             workspace: 'campaigns',
+            navigateTo: '/campaigns/fundraisers/donations',
             delay: 500,
             showOnMobile: true,
             showOnDesktop: true
