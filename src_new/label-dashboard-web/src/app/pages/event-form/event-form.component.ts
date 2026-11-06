@@ -1036,11 +1036,12 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     if (this.eventData.date_and_time) n++;
     if (this.eventData.venue?.trim()) n++;
     if (!this.eventData.ticketing_enabled || (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price)))) n++;
+    if (this.eventData.description?.trim() || this.eventData.poster_url?.trim()) n++;
     return n;
   }
 
   progressPercent(): number {
-    return Math.round((this.completedSections() / 4) * 100);
+    return Math.round((this.completedSections() / 5) * 100);
   }
 
   isNewEventValid(): boolean {
