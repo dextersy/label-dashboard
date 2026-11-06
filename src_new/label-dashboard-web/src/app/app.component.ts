@@ -145,15 +145,12 @@ export class AppComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(sidebarSubscription);
 
-    // Initialize onboarding for users who haven't completed it
+    // Initialize onboarding for authenticated users (never on public routes).
+    // The service itself determines which wizards still need to be shown.
     const authSubscription = this.authService.currentUser.subscribe(user => {
-      if (user) {
-        const onboardingCompleted = localStorage.getItem('onboarding_completed') === 'true';
-        if (!onboardingCompleted) {
-          // Get available workspaces for this user based on admin status
-          const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
-          this.onboardingService.initializeOnboarding(availableWorkspaces);
-        }
+      if (user && !window.location.pathname.startsWith('/public')) {
+        const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
+        this.onboardingService.initializeOnboarding(availableWorkspaces, user.is_admin);
       }
     });
     this.subscriptions.push(authSubscription);

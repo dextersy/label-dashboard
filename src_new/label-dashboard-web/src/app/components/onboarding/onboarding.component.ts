@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OnboardingService, OnboardingStep } from '../../services/onboarding.service';
+import { OnboardingService, OnboardingStep, OnboardingWizard } from '../../services/onboarding.service';
 import { Subscription } from 'rxjs';
 import { IconComponent } from '../shared/icon/icon.component';
 
@@ -16,6 +16,9 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   currentStep: OnboardingStep | null = null;
   currentStepIndex = 0;
   totalSteps = 0;
+  currentWizard: OnboardingWizard | null = null;
+  wizardStepIndex = 0;
+  wizardTotalSteps = 0;
   highlightStyle: any = {};
   tooltipStyle: any = {};
   isTransitioning = false;
@@ -53,11 +56,21 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     this.currentStep = this.onboardingService.getCurrentStep();
     this.currentStepIndex = this.onboardingService.getCurrentStepIndex();
     this.totalSteps = this.onboardingService.getSteps().length;
+    this.currentWizard = this.onboardingService.getCurrentWizard();
+    this.wizardStepIndex = this.onboardingService.getWizardStepIndex();
+    this.wizardTotalSteps = this.onboardingService.getWizardTotalSteps();
 
     if (this.currentStep) {
       // Use the step's delay if specified, otherwise use default 100ms
       const delay = this.currentStep.delay || 100;
       setTimeout(() => {
+        // Programmatically open a dropdown or trigger an element if requested
+        if (this.currentStep?.clickElement) {
+          const el = document.querySelector(this.currentStep.clickElement) as HTMLElement | null;
+          el?.click();
+          // Re-calculate highlight after the dropdown has rendered (extra tick)
+          setTimeout(() => this.updateHighlightPosition(), 100);
+        }
         this.updateHighlightPosition();
         // Fade back in after positions are updated
         if (this.isTransitioning) {
@@ -121,7 +134,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     if (isMobile) {
       const estimatedTooltipHeight = 200; // Approximate tooltip height
       const spaceBelow = viewportHeight - rect.bottom;
-      const spaceAbove = rect.top;
 
       // If element is in bottom half and there's not enough space below, position above
       if (position === 'top' || spaceBelow < estimatedTooltipHeight + offset) {
@@ -158,18 +170,28 @@ export class OnboardingComponent implements OnInit, OnDestroy {
           left: `${Math.max(padding, Math.min(rect.left + rect.width / 2, viewportWidth - padding))}px`,
           transform: 'translateX(-50%)'
         };
-      case 'left':
+      case 'left': {
+        const estimatedHeight = 220;
+        const centerY = rect.top + rect.height / 2;
+        const rawTop = centerY - estimatedHeight / 2;
+        const clampedTop = Math.max(padding, Math.min(rawTop, viewportHeight - estimatedHeight - padding));
         return {
-          top: `${Math.max(padding, Math.min(rect.top + rect.height / 2, viewportHeight - padding))}px`,
+          top: `${clampedTop}px`,
           right: `${viewportWidth - rect.left + offset}px`,
-          transform: 'translateY(-50%)'
+          transform: 'none'
         };
-      case 'right':
+      }
+      case 'right': {
+        const estimatedHeight = 220;
+        const centerY = rect.top + rect.height / 2;
+        const rawTop = centerY - estimatedHeight / 2;
+        const clampedTop = Math.max(padding, Math.min(rawTop, viewportHeight - estimatedHeight - padding));
         return {
-          top: `${Math.max(padding, Math.min(rect.top + rect.height / 2, viewportHeight - padding))}px`,
+          top: `${clampedTop}px`,
           left: `${rect.right + offset}px`,
-          transform: 'translateY(-50%)'
+          transform: 'none'
         };
+      }
       case 'center':
       default:
         return {
@@ -181,6 +203,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   onNext(): void {
+    this.closePendingDropdown();
     // Start fade-out transition
     this.isTransitioning = true;
     // Wait for fade-out, then change step
@@ -190,6 +213,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   onPrevious(): void {
+    this.closePendingDropdown();
     // Start fade-out transition
     this.isTransitioning = true;
     // Wait for fade-out, then change step
@@ -198,8 +222,39 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     }, 200);
   }
 
-  onSkip(): void {
+  onSkipWizard(): void {
+    this.closePendingDropdown();
+    // Start fade-out transition
+    this.isTransitioning = true;
+    // Wait for fade-out, then jump to next wizard
+    setTimeout(() => {
+      this.onboardingService.skipWizard();
+    }, 200);
+  }
+
+  onClose(): void {
+    this.closePendingDropdown();
+    // X button — closes the entire onboarding immediately
     this.onboardingService.skipOnboarding();
+  }
+
+  /**
+   * If the current step opened a dropdown via clickElement, close it again
+   * before navigating away so the UI is left in a clean state.
+   */
+  private closePendingDropdown(): void {
+    if (this.currentStep?.clickElement) {
+      const el = document.querySelector(this.currentStep.clickElement) as HTMLElement | null;
+      // Only re-click if the dropdown is currently open (parent has .open class)
+      if (el?.closest('.open') || el?.parentElement?.classList.contains('open')) {
+        el?.click();
+      }
+    }
+  }
+
+  get skipWizardLabel(): string {
+    if (!this.currentWizard) return 'Skip';
+    return `Skip ${this.currentWizard.name} tour`;
   }
 
   get canGoPrevious(): boolean {
@@ -207,6 +262,6 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   get isLastStep(): boolean {
-    return this.currentStepIndex === this.totalSteps - 1;
+    return this.onboardingService.isLastStepOfWizard() && this.onboardingService.isLastWizard();
   }
 }

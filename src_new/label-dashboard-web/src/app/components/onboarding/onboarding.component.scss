@@ -59,13 +59,27 @@
   .tooltip-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px 16px;
+    align-items: flex-start;
+    padding: 14px 18px 12px;
     border-bottom: 1px solid #e9ecef;
+
+    .tooltip-header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .wizard-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--brand-color, #3b82f6);
+    }
 
     h3 {
       margin: 0;
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 600;
       color: #333;
     }
@@ -74,11 +88,11 @@
       background: none;
       border: none;
       color: #6c757d;
-      font-size: 20px;
+      font-size: 16px;
       cursor: pointer;
       padding: 4px;
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -93,22 +107,22 @@
   }
 
   .tooltip-body {
-    padding: 20px 24px;
+    padding: 12px 18px;
 
     p {
       margin: 0;
-      font-size: 15px;
+      font-size: 13px;
       line-height: 1.6;
       color: #495057;
     }
   }
 
   .tooltip-footer {
-    padding: 16px 24px 20px;
+    padding: 10px 18px 14px;
     border-top: 1px solid #e9ecef;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 10px;
 
     .step-indicator {
       display: flex;
@@ -116,7 +130,7 @@
       justify-content: space-between;
 
       .step-number {
-        font-size: 13px;
+        font-size: 11px;
         color: #6c757d;
         font-weight: 500;
       }
@@ -148,17 +162,17 @@
       flex-wrap: wrap;
 
       button {
-        font-size: 14px;
-        padding: 8px 16px;
+        font-size: 12px;
+        padding: 6px 12px;
         border-radius: 6px;
         font-weight: 500;
         transition: all 0.2s ease;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
 
         i {
-          font-size: 12px;
+          font-size: 11px;
         }
 
         &.btn-primary {

@@ -8,8 +8,11 @@
   <!-- Tooltip with step content -->
   <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning">
     <div class="tooltip-header">
-      <h3>{{ currentStep.title }}</h3>
-      <button class="close-btn" (click)="onSkip()" aria-label="Skip onboarding">
+      <div class="tooltip-header-text">
+        <span class="wizard-label" *ngIf="currentWizard">{{ currentWizard.name }} tour</span>
+        <h3>{{ currentStep.title }}</h3>
+      </div>
+      <button class="close-btn" (click)="onClose()" aria-label="Close onboarding">
         <app-icon name="x" iconOnly />
       </button>
     </div>
@@ -20,12 +23,12 @@
 
     <div class="tooltip-footer">
       <div class="step-indicator">
-        <span class="step-number">{{ currentStepIndex + 1 }} of {{ totalSteps }}</span>
+        <span class="step-number">{{ wizardStepIndex + 1 }} of {{ wizardTotalSteps }}</span>
         <div class="step-dots">
           <span
-            *ngFor="let step of [].constructor(totalSteps); let i = index"
+            *ngFor="let step of [].constructor(wizardTotalSteps); let i = index"
             class="dot"
-            [class.active]="i === currentStepIndex">
+            [class.active]="i === wizardStepIndex">
           </span>
         </div>
       </div>
@@ -39,8 +42,8 @@
         </button>
         <button
           class="btn-secondary"
-          (click)="onSkip()">
-          Skip Tour
+          (click)="onSkipWizard()">
+          {{ skipWizardLabel }}
         </button>
         <button
           class="btn-primary"
