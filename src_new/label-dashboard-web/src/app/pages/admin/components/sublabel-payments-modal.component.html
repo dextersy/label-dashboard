@@ -2,23 +2,23 @@
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Payouts - {{ brandName }}</h5>
+        <div class="modal-title">
+          <div class="pm-header-type">Payouts</div>
+          <div class="pm-header-brand">{{ brandName }}</div>
+        </div>
         <button type="button" class="btn-close" (click)="onClose()"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body tw-px-4 tw-pt-3 tw-pb-2">
 
-        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6" *ngIf="pagination">
-          <div class="tw-col-span-6">
-            <div class="summary-box">
-              <div class="summary-label">Total Payouts</div>
-              <div class="summary-value tw-text-success">₱{{ totalAmount | number:'1.2-2' }}</div>
-            </div>
+        <div class="pm-summary" *ngIf="pagination">
+          <div class="pm-summary-item">
+            <span class="pm-summary-label">Total Payouts</span>
+            <span class="pm-summary-value tw-text-success">₱{{ totalAmount | number:'1.2-2' }}</span>
           </div>
-          <div class="tw-col-span-6">
-            <div class="summary-box">
-              <div class="summary-label">Total Processing Fees</div>
-              <div class="summary-value tw-text-[#0891b2]">₱{{ totalProcessingFees | number:'1.2-2' }}</div>
-            </div>
+          <div class="pm-summary-divider"></div>
+          <div class="pm-summary-item">
+            <span class="pm-summary-label">Processing Fees</span>
+            <span class="pm-summary-value tw-text-[#0891b2]">₱{{ totalProcessingFees | number:'1.2-2' }}</span>
           </div>
         </div>
 
@@ -40,7 +40,7 @@
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-secondary" (click)="onClose()">Close</button>
+        <button type="button" class="btn-secondary btn-sm" (click)="onClose()">Close</button>
       </div>
     </div>
   </div>
