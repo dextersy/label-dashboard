@@ -87,7 +87,11 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   }
 
   private updateHighlightPosition(retryCount = 0, finalizeTransition = false): void {
-    if (!this.currentStep || !this.currentStep.targetElement) {
+    const isMobile = window.innerWidth <= 991;
+    // On mobile, the welcome intro step is always centered (no highlight)
+    const forceCenter = isMobile && this.currentStep?.id === 'welcome';
+
+    if (!this.currentStep || !this.currentStep.targetElement || forceCenter) {
       // Center position for steps without target elements
       this.highlightStyle = {};
       this.highlightReady = false;

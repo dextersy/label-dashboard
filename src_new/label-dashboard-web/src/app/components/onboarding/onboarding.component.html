@@ -22,29 +22,17 @@
     </div>
 
     <div class="tooltip-footer">
-      <div class="step-indicator">
-        <span class="step-number">{{ wizardStepIndex + 1 }} of {{ wizardTotalSteps }}</span>
-        <div class="step-dots">
-          <span
-            *ngFor="let step of [].constructor(wizardTotalSteps); let i = index"
-            class="dot"
-            [class.active]="i === wizardStepIndex">
-          </span>
-        </div>
-      </div>
-
-      <div class="button-group">
+      <div class="button-row">
         <button
-          *ngIf="canGoPrevious"
+          *ngIf="canGoPrevious; else backSpacer"
           class="btn-secondary"
           (click)="onPrevious()">
-          <app-icon name="arrow-left" /> Previous
+          <app-icon name="arrow-left" /> Back
         </button>
-        <button
-          class="btn-secondary"
-          (click)="onSkipWizard()">
-          {{ skipWizardLabel }}
-        </button>
+        <ng-template #backSpacer><span class="btn-spacer"></span></ng-template>
+
+        <span class="step-number">{{ wizardStepIndex + 1 }} of {{ wizardTotalSteps }}</span>
+
         <button
           class="btn-primary"
           (click)="onNext()">
@@ -52,6 +40,10 @@
           <app-icon name="arrow-right" iconOnly *ngIf="!isLastStep" />
           <app-icon name="check" iconOnly *ngIf="isLastStep" />
         </button>
+      </div>
+
+      <div class="skip-row">
+        <button class="skip-link" (click)="onSkipWizard()">{{ skipWizardLabel }}</button>
       </div>
     </div>
   </div>

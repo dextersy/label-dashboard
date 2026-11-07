@@ -53,7 +53,6 @@
 
   @media (max-width: 768px) {
     max-width: 90vw;
-    margin: 0 5vw;
   }
 
   .tooltip-header {
@@ -122,9 +121,9 @@
     border-top: 1px solid #e9ecef;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 
-    .step-indicator {
+    .button-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -133,33 +132,15 @@
         font-size: 11px;
         color: #6c757d;
         font-weight: 500;
+        text-align: center;
+        flex: 1;
       }
 
-      .step-dots {
-        display: flex;
-        gap: 6px;
-
-        .dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #dee2e6;
-          transition: all 0.2s ease;
-
-          &.active {
-            background: var(--brand-color, #3b82f6);
-            width: 24px;
-            border-radius: 4px;
-          }
-        }
+      .btn-spacer {
+        // Invisible placeholder matching btn-secondary size to keep step-number centered
+        display: inline-block;
+        min-width: 64px;
       }
-    }
-
-    .button-group {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
 
       button {
         font-size: 12px;
@@ -170,6 +151,7 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
+        white-space: nowrap;
 
         i {
           font-size: 11px;
@@ -188,8 +170,9 @@
           }
         }
 
-        &.btn-outline-secondary {
-          border-color: #dee2e6;
+        &.btn-secondary {
+          border: 1px solid #dee2e6;
+          background: none;
           color: #6c757d;
 
           &:hover {
@@ -199,24 +182,26 @@
           }
         }
       }
+    }
 
-      @media (max-width: 768px) {
-        button {
-          flex: 1;
-          min-width: auto;
+    .skip-row {
+      display: flex;
+      justify-content: center;
+      padding-top: 2px;
 
-          &:first-child {
-            order: 1;
-          }
+      .skip-link {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 11px;
+        color: #adb5bd;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        transition: color 0.2s ease;
 
-          &:nth-child(2) {
-            order: 2;
-          }
-
-          &:last-child {
-            order: 3;
-            flex-basis: 100%;
-          }
+        &:hover {
+          color: #6c757d;
         }
       }
     }
