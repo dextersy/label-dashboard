@@ -1,17 +1,17 @@
-<div class="onboarding-overlay" *ngIf="showOnboarding && currentStep">
+<div class="onboarding-overlay" *ngIf="(showOnboarding && currentStep) || isClosing" [class.closing]="isClosing">
   <!-- Dark backdrop -->
   <div class="onboarding-backdrop"></div>
 
   <!-- Highlight around target element (only shown once a valid position has been measured) -->
-  <div class="onboarding-highlight" *ngIf="currentStep.targetElement && highlightReady" [ngStyle]="highlightStyle" [class.transitioning]="isTransitioning"></div>
+  <div class="onboarding-highlight" *ngIf="currentStep?.targetElement && highlightReady" [ngStyle]="highlightStyle" [class.transitioning]="isTransitioning"></div>
 
-  <!-- Tooltip with step content (only transition opacity when highlight is also ready, to avoid a tooltipless dark screen) -->
-  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning && highlightReady">
+  <!-- Tooltip with step content -->
+  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning">
 
     <div class="tooltip-header">
       <!-- Graphic background (optional) -->
-      <div class="tooltip-graphic" *ngIf="currentStep.graphic">
-        <ng-container [ngSwitch]="currentStep.graphic">
+      <div class="tooltip-graphic" *ngIf="currentStep?.graphic">
+        <ng-container [ngSwitch]="currentStep?.graphic">
 
           <!-- welcome: rising bar chart -->
           <ng-container *ngSwitchCase="'welcome'">
@@ -149,7 +149,7 @@
       <div class="tooltip-header-content">
         <div class="tooltip-header-text">
           <span class="wizard-label" *ngIf="currentWizard">{{ currentWizard.name }} tour</span>
-          <h3>{{ currentStep.title }}</h3>
+          <h3>{{ currentStep?.title }}</h3>
         </div>
         <button class="close-btn" (click)="onClose()" aria-label="Close onboarding">
           <app-icon name="x" iconOnly />

@@ -23,6 +23,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   highlightReady = false; // true only when highlight has a valid measured position
   tooltipStyle: any = {};
   isTransitioning = false;
+  isClosing = false;
 
   private subscriptions = new Subscription();
 
@@ -34,12 +35,17 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       this.onboardingService.showOnboarding$.subscribe(show => {
         this.showOnboarding = show;
         if (!show) {
-          // Reset state immediately so stale highlight/tooltip don't linger
+          // Fade out the overlay before removing it from the DOM
+          this.isClosing = true;
           this.isTransitioning = false;
-          this.highlightReady = false;
-          this.currentStep = null;
+          setTimeout(() => {
+            this.isClosing = false;
+            this.highlightReady = false;
+            this.currentStep = null;
+          }, 300);
         }
         if (show) {
+          this.isClosing = false;
           this.updateCurrentStep();
         }
       })

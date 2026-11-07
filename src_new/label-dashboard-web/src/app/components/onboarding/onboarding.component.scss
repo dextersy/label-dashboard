@@ -6,6 +6,13 @@
   bottom: 0;
   z-index: 10000; // Above everything else
   pointer-events: none; // Allow clicks through overlay except on interactive elements
+  opacity: 1;
+  transition: opacity 0.25s ease;
+
+  &.closing {
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 .onboarding-backdrop {
