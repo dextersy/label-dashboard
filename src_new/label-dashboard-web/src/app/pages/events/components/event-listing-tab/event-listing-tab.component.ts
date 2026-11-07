@@ -18,6 +18,7 @@ export class EventListingTabComponent implements OnInit, OnChanges {
   @Input() isAdmin = false;
   @Output() alertMessage = new EventEmitter<{ type: string; text: string }>();
   @Output() eventUpdated = new EventEmitter<Event>();
+  @Output() changed = new EventEmitter<void>();
 
   availableTags: EventTag[] = [];
   selectedTagIds: number[] = [];
@@ -92,12 +93,17 @@ export class EventListingTabComponent implements OnInit, OnChanges {
     return this.selectedTagIds.includes(tagId);
   }
 
+  onFieldChange(): void {
+    this.changed.emit();
+  }
+
   toggleTag(tagId: number): void {
     if (this.selectedTagIds.includes(tagId)) {
       this.selectedTagIds = this.selectedTagIds.filter(id => id !== tagId);
     } else {
       this.selectedTagIds = [...this.selectedTagIds, tagId];
     }
+    this.changed.emit();
   }
 
   addCustomTag(): void {
@@ -108,6 +114,7 @@ export class EventListingTabComponent implements OnInit, OnChanges {
         this.availableTags = [...this.availableTags, tag];
         this.selectedTagIds = [...this.selectedTagIds, tag.id];
         this.newTagInput = '';
+        this.changed.emit();
       },
       error: (err) => {
         this.alertMessage.emit({ type: 'error', text: err.message || 'Failed to create tag' });

@@ -157,6 +157,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   private nextTempId = 1;
 
   selectedPosterFile: File | null = null;
+  listingDirty = false;
   posterPreview: string | null = null;
   currentVenueSelection: VenueSelection | null = null;
   ticketTypes: TicketType[] = [];
@@ -515,6 +516,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
             this.originalEventDays = JSON.parse(JSON.stringify(this.eventDays));
             this.originalIsMultiDay = this.isMultiDay;
             this.selectedPosterFile = null;
+            this.listingDirty = false;
             // Save listing settings then navigate (wait so tags are in DB before loadEvent runs)
             const listingSave$: Observable<Event | null> = capturedListingState
               ? this.eventService.updateEventListing(event.id, capturedListingState)
@@ -544,6 +546,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
             this.loadWalkInTypes();
             // Clear the selected poster file since it's now uploaded
             this.selectedPosterFile = null;
+            this.listingDirty = false;
             // Clear the PIN refreshed flag
             this.pinRefreshed = false;
           }
@@ -1230,7 +1233,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
     const walkInTypesChanged = JSON.stringify(this.walkInTypes) !== JSON.stringify(this.originalWalkInTypes);
     const eventDaysChanged = this.isMultiDay !== this.originalIsMultiDay ||
       JSON.stringify(this.eventDays) !== JSON.stringify(this.originalEventDays);
-    return eventDataChanged || ticketTypesChanged || walkInTypesChanged || eventDaysChanged || this.selectedPosterFile !== null;
+    return eventDataChanged || ticketTypesChanged || walkInTypesChanged || eventDaysChanged || this.selectedPosterFile !== null || this.listingDirty;
   }
 
   async onUnpublish(): Promise<void> {

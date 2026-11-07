@@ -7,6 +7,7 @@
       <input class="form-check-input" type="checkbox" role="switch"
              id="listedOnTicketing"
              [(ngModel)]="listedOnTicketing"
+             (ngModelChange)="onFieldChange()"
              [disabled]="!isAdmin">
       <label class="form-check-label" for="listedOnTicketing">
         List on YourScene.live
@@ -29,6 +30,7 @@
       <input class="form-check-input" type="checkbox" role="switch"
              id="showAttendeeCount"
              [(ngModel)]="showAttendeeCount"
+             (ngModelChange)="onFieldChange()"
              [disabled]="!isAdmin">
       <label class="form-check-label" for="showAttendeeCount">
         Show number of attendees
@@ -45,7 +47,7 @@
     <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-mb-5">
       <div>
         <label for="eventType" class="tw-label">Event Type</label>
-        <select id="eventType" [(ngModel)]="eventType" class="tw-input" [disabled]="!isAdmin">
+        <select id="eventType" [(ngModel)]="eventType" (ngModelChange)="onFieldChange()" class="tw-input" [disabled]="!isAdmin">
           <option *ngFor="let opt of eventTypeOptions" [value]="opt.value">{{ opt.label }}</option>
         </select>
       </div>
