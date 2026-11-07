@@ -150,7 +150,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     },
     {
       key: 'music_earnings',
-      label: 'Net Music Earnings + Royalties',
+      label: 'Music Earnings',
       type: 'number',
       sortable: true,
       align: 'right',
@@ -159,7 +159,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     },
     {
       key: 'event_earnings',
-      label: 'Net Event Earnings',
+      label: 'Event Earnings',
       type: 'number',
       sortable: true,
       align: 'right',
@@ -168,7 +168,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     },
     {
       key: 'fundraiser_earnings',
-      label: 'Net Fundraiser Earnings',
+      label: 'Fundraiser Earnings',
       type: 'number',
       sortable: true,
       align: 'right',
@@ -186,7 +186,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     },
     { 
       key: 'platform_fees', 
-      label: 'Platform Fees', 
+      label: 'Fees',
       type: 'number',
       sortable: true,
       align: 'right',
@@ -195,7 +195,7 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
     },
     { 
       key: 'balance', 
-      label: 'Payable Balance', 
+      label: 'Balance',
       type: 'number',
       sortable: true,
       align: 'right',
