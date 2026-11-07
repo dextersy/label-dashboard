@@ -2,11 +2,11 @@
   <!-- Dark backdrop -->
   <div class="onboarding-backdrop"></div>
 
-  <!-- Highlight around target element -->
-  <div class="onboarding-highlight" *ngIf="currentStep.targetElement" [ngStyle]="highlightStyle" [class.transitioning]="isTransitioning"></div>
+  <!-- Highlight around target element (only shown once a valid position has been measured) -->
+  <div class="onboarding-highlight" *ngIf="currentStep.targetElement && highlightReady" [ngStyle]="highlightStyle" [class.transitioning]="isTransitioning"></div>
 
-  <!-- Tooltip with step content -->
-  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning">
+  <!-- Tooltip with step content (only transition opacity when highlight is also ready, to avoid a tooltipless dark screen) -->
+  <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning && highlightReady">
     <div class="tooltip-header">
       <div class="tooltip-header-text">
         <span class="wizard-label" *ngIf="currentWizard">{{ currentWizard.name }} tour</span>

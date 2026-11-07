@@ -20,6 +20,7 @@ export class OnboardingComponent implements OnInit, OnDestroy {
   wizardStepIndex = 0;
   wizardTotalSteps = 0;
   highlightStyle: any = {};
+  highlightReady = false; // true only when highlight has a valid measured position
   tooltipStyle: any = {};
   isTransitioning = false;
 
@@ -32,6 +33,12 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.onboardingService.showOnboarding$.subscribe(show => {
         this.showOnboarding = show;
+        if (!show) {
+          // Reset state immediately so stale highlight/tooltip don't linger
+          this.isTransitioning = false;
+          this.highlightReady = false;
+          this.currentStep = null;
+        }
         if (show) {
           this.updateCurrentStep();
         }
@@ -61,6 +68,8 @@ export class OnboardingComponent implements OnInit, OnDestroy {
     this.wizardTotalSteps = this.onboardingService.getWizardTotalSteps();
 
     if (this.currentStep) {
+      // Reset highlight while we wait for the new step's element to appear
+      this.highlightReady = false;
       // Use the step's delay if specified, otherwise use default 100ms
       const delay = this.currentStep.delay || 100;
       setTimeout(() => {
@@ -69,40 +78,43 @@ export class OnboardingComponent implements OnInit, OnDestroy {
           const el = document.querySelector(this.currentStep.clickElement) as HTMLElement | null;
           el?.click();
           // Re-calculate highlight after the dropdown has rendered (extra tick)
-          setTimeout(() => this.updateHighlightPosition(), 100);
+          setTimeout(() => this.updateHighlightPosition(0, false), 100);
         }
-        this.updateHighlightPosition();
-        // Fade back in after positions are updated
-        if (this.isTransitioning) {
-          setTimeout(() => {
-            this.isTransitioning = false;
-          }, 50);
-        }
+        // finalizeTransition=true: isTransitioning will be cleared once a valid position is found
+        this.updateHighlightPosition(0, true);
       }, delay);
     }
   }
 
-  private updateHighlightPosition(retryCount = 0): void {
+  private updateHighlightPosition(retryCount = 0, finalizeTransition = false): void {
     if (!this.currentStep || !this.currentStep.targetElement) {
       // Center position for steps without target elements
       this.highlightStyle = {};
+      this.highlightReady = false;
       this.tooltipStyle = {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)'
       };
+      if (finalizeTransition && this.isTransitioning) {
+        setTimeout(() => { this.isTransitioning = false; }, 50);
+      }
       return;
     }
 
     const element = document.querySelector(this.currentStep.targetElement) as HTMLElement;
     if (!element) {
+      // Clear any stale highlight immediately so the previous step's box isn't shown
+      this.highlightStyle = {};
+      this.highlightReady = false;
       if (retryCount < 10) {
         // Element not in DOM yet (e.g. waiting for *ngIf / data load); retry
-        setTimeout(() => this.updateHighlightPosition(retryCount + 1), 300);
+        setTimeout(() => this.updateHighlightPosition(retryCount + 1, finalizeTransition), 300);
       } else {
         console.warn(`Target element not found after retries: ${this.currentStep.targetElement}`);
-        // Clear stale highlight so the previous step's box isn't shown
-        this.highlightStyle = {};
+        if (finalizeTransition && this.isTransitioning) {
+          setTimeout(() => { this.isTransitioning = false; }, 50);
+        }
       }
       return;
     }
@@ -117,9 +129,14 @@ export class OnboardingComponent implements OnInit, OnDestroy {
       width: `${rect.width + padding * 2}px`,
       height: `${rect.height + padding * 2}px`
     };
+    this.highlightReady = true;
 
     // Position tooltip based on step position
     this.tooltipStyle = this.calculateTooltipPosition(rect);
+
+    if (finalizeTransition && this.isTransitioning) {
+      setTimeout(() => { this.isTransitioning = false; }, 50);
+    }
   }
 
   private calculateTooltipPosition(rect: DOMRect): any {
