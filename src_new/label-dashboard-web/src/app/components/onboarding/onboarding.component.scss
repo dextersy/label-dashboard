@@ -56,10 +56,45 @@
   }
 
   .tooltip-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 14px 18px 12px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px 10px 0 0;
+
+    // Graphic fills the header as a background
+    .tooltip-graphic {
+      position: absolute;
+      inset: 0;
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    // Fade to white at the bottom so text is always legible
+    &:has(.tooltip-graphic)::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 20%, rgba(255,255,255,0.97) 72%);
+      pointer-events: none;
+    }
+
+    // Extra top padding when graphic is present to let it breathe
+    &:has(.tooltip-graphic) .tooltip-header-content {
+      padding-top: 52px;
+    }
+
+    .tooltip-header-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 14px 18px 12px;
+    }
+
     border-bottom: 1px solid #e9ecef;
 
     .tooltip-header-text {
@@ -227,6 +262,153 @@
     transform: translate(-50%, -50%);
   }
 }
+
+// ─── Graphic animations ─────────────────────────────────────────────────────
+
+// welcome: bar chart
+.g-welcome {
+  .wb {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: gBarRise 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .wb1 { animation-delay: 0.05s; }
+  .wb2 { animation-delay: 0.18s; }
+  .wb3 { animation-delay: 0.11s; }
+  .wb4 { animation-delay: 0.28s; }
+
+  .wsp {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gSparkle 1.6s ease-in-out infinite alternate;
+  }
+  .wsp1 { animation-delay: 0s; }
+  .wsp2 { animation-delay: 0.55s; }
+  .wsp3 { animation-delay: 1.1s; }
+}
+
+// music: vinyl record + notes
+.g-music {
+  .vinyl-group {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gVinylSpin 4s linear infinite;
+  }
+  .note {
+    animation: gNoteFloat 2s ease-in-out infinite alternate;
+  }
+  .note1 { animation-duration: 2.2s; animation-delay: 0s; }
+  .note2 { animation-duration: 1.8s; animation-delay: 0.5s; }
+  .note3 { animation-duration: 2.5s; animation-delay: 1.0s; }
+  .note4 { animation-duration: 2.0s; animation-delay: 1.5s; }
+}
+
+// events: ticket + sparkles
+.g-events {
+  .ev-ticket {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gFadeScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .ev-sp {
+    animation: gSparkleOpacity 2.2s ease-in-out infinite;
+  }
+  .ev-sp1 { animation-delay: 0s; }
+  .ev-sp2 { animation-delay: 0.7s; }
+  .ev-sp3 { animation-delay: 1.4s; }
+}
+
+// labels: stacked contracts
+.g-labels {
+  .lb-doc {
+    animation: gFadeScale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .lb-doc3 { animation-delay: 0.05s; }
+  .lb-doc2 { animation-delay: 0.15s; }
+  .lb-doc1 { animation-delay: 0.25s; }
+
+  .lb-sig {
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: gDraw 0.55s ease 0.55s forwards;
+  }
+
+  .lb-note {
+    animation: gNoteFloat 2.2s ease-in-out infinite alternate;
+  }
+
+  .lb-dot {
+    opacity: 0;
+    animation: gFadeIn 0.3s ease forwards;
+  }
+  .lb-d1 { animation-delay: 0.4s; }
+  .lb-d2 { animation-delay: 0.55s; }
+  .lb-d3 { animation-delay: 0.7s; }
+}
+
+// admin: shield + checkmark
+.g-admin {
+  .ad-shield {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gFadeScale 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+  }
+  .ad-check {
+    stroke-dasharray: 44;
+    stroke-dashoffset: 44;
+    animation: gDraw 0.45s ease 0.5s forwards;
+  }
+  .ad-dot {
+    opacity: 0;
+    animation: gFadeIn 0.3s ease forwards;
+  }
+  .ad-d1 { animation-delay: 0.65s; }
+  .ad-d2 { animation-delay: 0.75s; }
+  .ad-d3 { animation-delay: 0.8s; }
+  .ad-d4 { animation-delay: 0.9s; }
+}
+
+@keyframes gBarRise {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+@keyframes gVinylSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gNoteFloat {
+  from { transform: translateY(0);    opacity: 0.5; }
+  to   { transform: translateY(-7px); opacity: 1; }
+}
+
+@keyframes gSparkle {
+  from { opacity: 0.35; transform: scale(0.7); }
+  to   { opacity: 1;    transform: scale(1.3); }
+}
+
+@keyframes gSparkleOpacity {
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 1; }
+}
+
+@keyframes gFadeScale {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+
+@keyframes gFadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes gDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 @keyframes pulse {
   0%, 100% {

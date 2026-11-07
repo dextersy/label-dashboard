@@ -7,14 +7,154 @@
 
   <!-- Tooltip with step content (only transition opacity when highlight is also ready, to avoid a tooltipless dark screen) -->
   <div class="onboarding-tooltip" [ngStyle]="tooltipStyle" [class.transitioning]="isTransitioning && highlightReady">
+
     <div class="tooltip-header">
-      <div class="tooltip-header-text">
-        <span class="wizard-label" *ngIf="currentWizard">{{ currentWizard.name }} tour</span>
-        <h3>{{ currentStep.title }}</h3>
+      <!-- Graphic background (optional) -->
+      <div class="tooltip-graphic" *ngIf="currentStep.graphic">
+        <ng-container [ngSwitch]="currentStep.graphic">
+
+          <!-- welcome: rising bar chart -->
+          <ng-container *ngSwitchCase="'welcome'">
+          <svg class="g-welcome" viewBox="0 0 240 82" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="wBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#ede9fe"/>
+                <stop offset="100%" stop-color="#fce7f3"/>
+              </linearGradient>
+            </defs>
+            <rect width="240" height="82" fill="url(#wBg)"/>
+            <line x1="34" y1="66" x2="206" y2="66" stroke="#c4b5fd" stroke-width="1.5"/>
+            <rect class="wb wb1" x="58"  y="38" width="22" height="28" rx="3" fill="#f59e0b"/>
+            <rect class="wb wb2" x="90"  y="22" width="22" height="44" rx="3" fill="var(--brand-color)"/>
+            <rect class="wb wb3" x="122" y="32" width="22" height="34" rx="3" fill="#10b981"/>
+            <rect class="wb wb4" x="154" y="16" width="22" height="50" rx="3" fill="#8b5cf6"/>
+            <circle class="wsp wsp1" cx="42"  cy="24" r="3.5" fill="#f59e0b"/>
+            <circle class="wsp wsp2" cx="198" cy="22" r="2.5" fill="#10b981"/>
+            <circle class="wsp wsp3" cx="120" cy="8"  r="2"   fill="#ec4899"/>
+          </svg>
+        </ng-container>
+
+        <!-- music: spinning vinyl record + floating notes -->
+        <ng-container *ngSwitchCase="'music'">
+          <svg class="g-music" viewBox="0 0 240 82" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="mBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#fce7f3"/>
+                <stop offset="100%" stop-color="#ede9fe"/>
+              </linearGradient>
+            </defs>
+            <rect width="240" height="82" fill="url(#mBg)"/>
+            <g class="vinyl-group">
+              <circle cx="120" cy="41" r="35" fill="#1e1e2e"/>
+              <circle cx="120" cy="41" r="29" stroke="#2d2d3f" stroke-width="0.8" fill="none"/>
+              <circle cx="120" cy="41" r="23" stroke="#2d2d3f" stroke-width="0.8" fill="none"/>
+              <circle cx="120" cy="41" r="17" stroke="#2d2d3f" stroke-width="0.8" fill="none"/>
+              <circle cx="120" cy="41" r="13" fill="#f43f5e"/>
+              <circle cx="120" cy="41" r="4"  fill="#1e1e2e"/>
+              <circle cx="126" cy="38" r="1.5" fill="rgba(255,255,255,0.25)"/>
+            </g>
+            <text class="note note1" x="168" y="30" font-size="17" fill="#f59e0b">&#9834;</text>
+            <text class="note note2" x="44"  y="38" font-size="15" fill="#8b5cf6">&#9835;</text>
+            <text class="note note3" x="172" y="60" font-size="13" fill="#ec4899">&#9833;</text>
+            <text class="note note4" x="38"  y="60" font-size="13" fill="#10b981">&#9834;</text>
+          </svg>
+        </ng-container>
+
+        <!-- events/campaigns: ticket + sparkles -->
+        <ng-container *ngSwitchCase="'events'">
+          <svg class="g-events" viewBox="0 0 240 82" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="eBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#fff7ed"/>
+                <stop offset="100%" stop-color="#fce7f3"/>
+              </linearGradient>
+            </defs>
+            <rect width="240" height="82" fill="url(#eBg)"/>
+            <!-- ticket fill (stub left side) -->
+            <path d="M52,20 L90,20 L90,62 L52,62 Q48,62 48,58 L48,52 Q42,52 42,41 Q42,30 48,30 L48,24 Q48,20 52,20 Z" fill="#f59e0b" opacity="0.25"/>
+            <!-- ticket outline -->
+            <path class="ev-ticket" d="M52,20 L162,20 Q166,20 166,24 L166,30 Q172,30 172,41 Q172,52 166,52 L166,58 Q166,62 162,62 L52,62 Q48,62 48,58 L48,52 Q42,52 42,41 Q42,30 48,30 L48,24 Q48,20 52,20 Z" fill="none" stroke="#f59e0b" stroke-width="1.8"/>
+            <line x1="90" y1="22" x2="90" y2="60" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3,3" stroke-opacity="0.5"/>
+            <line x1="102" y1="34" x2="156" y2="34" stroke="var(--brand-color)" stroke-width="2"   stroke-linecap="round" stroke-opacity="0.5"/>
+            <line x1="102" y1="41" x2="150" y2="41" stroke="var(--brand-color)" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.35"/>
+            <line x1="102" y1="48" x2="140" y2="48" stroke="var(--brand-color)" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.35"/>
+            <g class="ev-sp ev-sp1" transform="translate(28,18)">
+              <line x1="-5" y1="0" x2="5" y2="0" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/>
+              <line x1="0" y1="-5" x2="0" y2="5" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/>
+            </g>
+            <g class="ev-sp ev-sp2" transform="translate(196,20)">
+              <line x1="-4" y1="0" x2="4" y2="0" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="0" y1="-4" x2="0" y2="4" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+            <g class="ev-sp ev-sp3" transform="translate(178,66)">
+              <line x1="-3.5" y1="0" x2="3.5" y2="0" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="0" y1="-3.5" x2="0" y2="3.5" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </ng-container>
+
+        <!-- labels: stacked contracts with animated signature -->
+        <ng-container *ngSwitchCase="'labels'">
+          <svg class="g-labels" viewBox="0 0 240 82" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="lBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#fffbeb"/>
+                <stop offset="100%" stop-color="#fce7f3"/>
+              </linearGradient>
+            </defs>
+            <rect width="240" height="82" fill="url(#lBg)"/>
+            <!-- stacked docs -->
+            <rect class="lb-doc lb-doc3" x="76" y="11" width="82" height="62" rx="5" fill="#fbbf24" transform="rotate(-6,117,42)"/>
+            <rect class="lb-doc lb-doc2" x="78" y="9"  width="82" height="62" rx="5" fill="#f97316" transform="rotate(3,119,40)"/>
+            <rect class="lb-doc lb-doc1" x="80" y="8"  width="82" height="62" rx="5" fill="white" stroke="#f3f4f6" stroke-width="1"/>
+            <!-- contract text lines -->
+            <line x1="90" y1="22" x2="152" y2="22" stroke="#e5e7eb" stroke-width="2"   stroke-linecap="round"/>
+            <line x1="90" y1="30" x2="150" y2="30" stroke="#e5e7eb" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="90" y1="37" x2="148" y2="37" stroke="#e5e7eb" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="90" y1="44" x2="152" y2="44" stroke="#e5e7eb" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- signature line + animated signature -->
+            <line x1="90" y1="59" x2="132" y2="59" stroke="#d1d5db" stroke-width="1" stroke-linecap="round"/>
+            <path class="lb-sig" d="M91,57 Q96,52 100,57 Q104,62 108,56 Q112,50 116,54 Q119,57 123,55" stroke="#8b5cf6" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- floating music note -->
+            <text class="lb-note" x="176" y="36" font-size="18" fill="#f43f5e">&#9834;</text>
+            <!-- accent dots -->
+            <circle class="lb-dot lb-d1" cx="34"  cy="24" r="3"   fill="#10b981"/>
+            <circle class="lb-dot lb-d2" cx="202" cy="58" r="2.5" fill="#f59e0b"/>
+            <circle class="lb-dot lb-d3" cx="38"  cy="56" r="2"   fill="#8b5cf6"/>
+          </svg>
+        </ng-container>
+
+        <!-- admin: shield with checkmark -->
+        <ng-container *ngSwitchCase="'admin'">
+          <svg class="g-admin" viewBox="0 0 240 82" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="aBg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%"   stop-color="#eff6ff"/>
+                <stop offset="100%" stop-color="#f0fdf4"/>
+              </linearGradient>
+            </defs>
+            <rect width="240" height="82" fill="url(#aBg)"/>
+            <path class="ad-shield" d="M120,6 L154,19 L154,46 Q154,68 120,78 Q86,68 86,46 L86,19 Z" fill="var(--brand-color)" fill-opacity="0.15" stroke="var(--brand-color)" stroke-width="1.5"/>
+            <path class="ad-check"  d="M105,42 L116,54 L135,30" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="ad-dot ad-d1" cx="46"  cy="18" r="3" fill="#f59e0b"/>
+            <circle class="ad-dot ad-d2" cx="194" cy="18" r="3" fill="#ec4899"/>
+            <circle class="ad-dot ad-d3" cx="46"  cy="64" r="3" fill="#8b5cf6"/>
+            <circle class="ad-dot ad-d4" cx="194" cy="64" r="3" fill="#10b981"/>
+          </svg>
+        </ng-container>
+
+        </ng-container>
       </div>
-      <button class="close-btn" (click)="onClose()" aria-label="Close onboarding">
-        <app-icon name="x" iconOnly />
-      </button>
+
+      <div class="tooltip-header-content">
+        <div class="tooltip-header-text">
+          <span class="wizard-label" *ngIf="currentWizard">{{ currentWizard.name }} tour</span>
+          <h3>{{ currentStep.title }}</h3>
+        </div>
+        <button class="close-btn" (click)="onClose()" aria-label="Close onboarding">
+          <app-icon name="x" iconOnly />
+        </button>
+      </div>
     </div>
 
     <div class="tooltip-body">

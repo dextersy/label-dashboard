@@ -25,6 +25,7 @@ export interface OnboardingStep {
   expandMenu?: string; // Route of a sidebar menu to expand (e.g., '/campaigns/events')
   navigateTo?: string; // Route to navigate to for this step
   clickElement?: string; // CSS selector of an element to programmatically click when this step becomes active (e.g. to open a dropdown)
+  graphic?: string; // Optional mini-hero graphic identifier shown above the step title
 }
 
 @Injectable({
@@ -110,6 +111,7 @@ export class OnboardingService {
       title: 'Welcome to the New Dashboard!',
       description: 'We\'ve redesigned the interface to make it easier to navigate. Let\'s take a quick tour of the new features.',
       position: 'center',
+      graphic: 'welcome',
       showOnMobile: true,
       showOnDesktop: true
     });
@@ -191,6 +193,7 @@ export class OnboardingService {
             description: 'The Music workspace is where you manage artists, releases, and royalties.',
             targetElement: this.isMobile ? '.mobile-workspace-btn-music' : '.workspace-tab-music',
             position: this.isMobile ? 'top' : 'bottom',
+            graphic: 'music',
             workspace: 'music',
             navigateTo: this.workspaceService.getWorkspaceLandingUrl('music'),
             delay: 500,
@@ -294,6 +297,7 @@ export class OnboardingService {
             description: 'The Campaigns workspace is where you manage live events, fundraisers, tickets, and donations.',
             targetElement: this.isMobile ? '.mobile-workspace-btn-campaigns' : '.workspace-tab-campaigns',
             position: this.isMobile ? 'top' : 'bottom',
+            graphic: 'events',
             workspace: 'campaigns',
             navigateTo: this.workspaceService.getWorkspaceLandingUrl('campaigns'),
             delay: 500,
@@ -410,6 +414,7 @@ export class OnboardingService {
           description: 'The Labels workspace gives you an overview of your label\'s roster, financials, and sublabel structure.',
           targetElement: this.isMobile ? '.mobile-workspace-btn-labels' : '.workspace-tab-labels',
           position: this.isMobile ? 'top' : 'bottom',
+          graphic: 'labels',
           workspace: 'labels',
           navigateTo: this.workspaceService.getWorkspaceLandingUrl('labels'),
           delay: 500,
@@ -537,6 +542,7 @@ export class OnboardingService {
         title: 'Admin Workspace',
         description: 'You\'re now in the Admin workspace — your control centre for managing users, integrations, billing, and system tools.',
         position: 'center',
+        graphic: 'admin',
         workspace: 'admin',
         delay: 500,
         showOnMobile: true,
