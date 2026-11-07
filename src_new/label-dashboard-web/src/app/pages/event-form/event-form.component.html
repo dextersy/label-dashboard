@@ -13,7 +13,7 @@
     </div>
     <div class="new-event-progress">
       <div class="new-event-progress-labels">
-        <span>{{ completedSections() }} of 5 sections complete</span>
+        <span>{{ completedSections() }} of 4 sections complete</span>
         <span>{{ progressPercent() }}%</span>
       </div>
       <div class="new-event-progress-track">
@@ -578,7 +578,7 @@
               [(walkInTypes)]="walkInTypes">
             </app-event-walk-in-settings>
             <div class="tw-mt-4 tw-text-right">
-              <button type="button" class="btn-ghost" (click)="goToNextTab()">
+              <button type="button" class="btn-ghost" (click)="skipSection('walk-in')">
                 Next: Listing <app-icon name="arrow-right" class="tw-ml-1" />
               </button>
             </div>
@@ -815,8 +815,8 @@
     type="button"
     class="btn-primary fab-primary-btn ef-create-btn"
     (click)="onPublish()"
-    [disabled]="saving"
-    [class.ef-create-btn--disabled]="!isNewEventValid()"
+    [disabled]="saving || !canPublish()"
+    [class.ef-create-btn--disabled]="!canPublish()"
     *ngIf="isNewEvent">
     <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
     <app-icon name="rocket" *ngIf="!saving" />
@@ -829,7 +829,7 @@
     type="button"
     class="btn-primary fab-primary-btn"
     (click)="onPublish()"
-    [disabled]="saving || isEventPast()"
+    [disabled]="saving || isEventPast() || !canPublish()"
     *ngIf="!isNewEvent && isEventDraft()">
     <app-icon name="spinner" class="tw-animate-spin" *ngIf="saving" />
     <app-icon name="rocket" *ngIf="!saving" />

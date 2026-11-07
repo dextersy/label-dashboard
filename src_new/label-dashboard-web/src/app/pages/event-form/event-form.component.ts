@@ -173,6 +173,41 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   editingFields: Set<string> = new Set();
   private fieldOriginals: Map<string, any> = new Map();
 
+  // New event section skip tracking
+  skippedSections = new Set<EventFormSection>();
+
+  private skippedStorageKey(): string | null {
+    return this.eventId ? `event-setup-skipped-${this.eventId}` : null;
+  }
+
+  private persistSkipped(): void {
+    const key = this.skippedStorageKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify([...this.skippedSections]));
+  }
+
+  private restoreSkipped(): void {
+    this.skippedSections = new Set();
+    const key = this.skippedStorageKey();
+    if (!key) return;
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) this.skippedSections = new Set(JSON.parse(stored));
+    } catch {}
+  }
+
+  private clearSkipped(): void {
+    const key = this.skippedStorageKey();
+    if (key) localStorage.removeItem(key);
+  }
+
+  skipSection(section: EventFormSection): void {
+    this.skippedSections.add(section);
+    this.persistSkipped();
+    this.goToNextTab();
+  }
+
+
   // Cancel event state
   canceling = false;
   cancelDialogVisible = false;
@@ -306,6 +341,7 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         next: (event) => {
           this.event = event;
           this.populateFormFromEvent(event);
+          this.restoreSkipped();
           this.loading = false;
         },
         error: (error) => {
@@ -368,17 +404,28 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
   }
 
   get navTabs(): InPageNavTab[] {
+    const showErrors = this.isEventDraft();
+    const errorStatus = (section: EventFormSection) =>
+      showErrors && !this.isSectionComplete(section) ? 'error' as const : null;
+
     const tabs: InPageNavTab[] = [
-      { id: 'details', label: 'Details', icon: 'info' },
-      { id: 'ticketing', label: 'Ticketing', icon: 'ticket' },
-      { id: 'walk-in', label: 'Walk-in', icon: 'walking' },
-      { id: 'listing', label: 'Listing', icon: 'globe' },
+      { id: 'details', label: 'Details', icon: 'info', status: errorStatus('details') },
+      { id: 'ticketing', label: 'Ticketing', icon: 'ticket', status: errorStatus('ticketing') },
+      { id: 'walk-in', label: 'Walk-in', icon: 'walking', status: errorStatus('walk-in') },
+      { id: 'listing', label: 'Listing', icon: 'globe', status: errorStatus('listing') },
     ];
     if (!this.isEventDraft()) {
       tabs.push({ id: 'scanner', label: 'Scanner', icon: 'scan' });
     }
-    tabs.push({ id: 'collaborators', label: 'Collaborators', icon: 'users' });
+    if (!this.isNewEvent) {
+      tabs.push({ id: 'collaborators', label: 'Collaborators', icon: 'users' });
+    }
     return tabs;
+  }
+
+  canPublish(): boolean {
+    const required: EventFormSection[] = ['details', 'ticketing', 'walk-in', 'listing'];
+    return required.every(s => this.isSectionComplete(s));
   }
 
   onNavTabChange(id: string): void {
@@ -568,7 +615,9 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
         next: (event) => {
           this.saving = false;
           this.event = event;
+          this.eventId = event.id;
           this.eventService.setSelectedEvent(event);
+          this.clearSkipped();
           
           // Show the event published modal
           if (event.buy_shortlink || !event.ticketing_enabled) {
@@ -1030,17 +1079,29 @@ export class EventFormComponent implements OnInit, OnDestroy, HasUnsavedChanges 
 
   // ── New event progress tracking ───────────────────────────────────────────
 
+  isSectionComplete(section: EventFormSection): boolean {
+    switch (section) {
+      case 'details':
+        return !!(this.eventData.title?.trim() && this.eventData.date_and_time && this.eventData.venue?.trim());
+      case 'ticketing':
+        return !this.eventData.ticketing_enabled ||
+          (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price)));
+      case 'walk-in':
+        return !this.isEventDraft() || !!this.eventData.walk_in_enabled || this.skippedSections.has('walk-in');
+      case 'collaborators':
+      case 'listing':
+      default:
+        return true;
+    }
+  }
+
   completedSections(): number {
-    let n = 0;
-    if (this.eventData.title?.trim()) n++;
-    if (this.eventData.date_and_time) n++;
-    if (this.eventData.venue?.trim()) n++;
-    if (!this.eventData.ticketing_enabled || (this.ticketTypes.length > 0 && this.ticketTypes.some(t => t.name && t.price !== null && t.price !== undefined && !isNaN(t.price)))) n++;
-    return n;
+    const sections: EventFormSection[] = ['details', 'ticketing', 'walk-in', 'listing'];
+    return sections.filter(s => this.isSectionComplete(s)).length;
   }
 
   progressPercent(): number {
-    return Math.round((this.completedSections() / 5) * 100);
+    return Math.round((this.completedSections() / 4) * 100);
   }
 
   isNewEventValid(): boolean {

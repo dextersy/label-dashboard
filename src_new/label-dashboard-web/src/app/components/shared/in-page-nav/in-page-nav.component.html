@@ -17,8 +17,8 @@
         <app-icon [name]="tab.icon" />
         <span>{{ tab.label }}</span>
         <app-icon name="check-circle" iconOnly class="status-icon status-completed" *ngIf="tab.status === 'completed'" />
-        <app-icon name="warning" iconOnly class="status-icon status-warning" *ngIf="tab.status === 'warning'" />
-        <app-icon name="warning" iconOnly class="status-icon status-error" *ngIf="tab.status === 'error'" />
+        <app-icon name="info" iconOnly class="status-icon status-warning" *ngIf="tab.status === 'warning'" />
+        <app-icon name="info" iconOnly class="status-icon status-error" *ngIf="tab.status === 'error'" />
       </button>
     </div>
   </nav>
