@@ -93,6 +93,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rowClassGetter?: (item: any) => string; // Function to get CSS classes for each row
   @Input() headerActions: HeaderAction[] = []; // Action buttons rendered above the table
   @Input() rowClickable: boolean = false;
+  @Input() compact: boolean = false;
   @Input() initialFilters: SearchFilters = {};
   @Output() pageChange = new EventEmitter<number>();
   @Output() filtersChange = new EventEmitter<SearchFilters>();
@@ -531,11 +532,14 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getTableClasses(): string {
-    const baseClass = 'table';
+    const classes = ['table'];
     if (this.responsiveMode === 'financial') {
-      return `${baseClass} table-financial`;
+      classes.push('table-financial');
     }
-    return baseClass;
+    if (this.compact) {
+      classes.push('table-compact');
+    }
+    return classes.join(' ');
   }
 
   getColumnClasses(column: TableColumn): string {

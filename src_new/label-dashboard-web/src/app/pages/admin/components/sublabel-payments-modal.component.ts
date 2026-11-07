@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters } from '../../../components/shared/paginated-table/paginated-table.component';
+import { IconComponent } from '../../../components/shared/icon/icon.component';
 
 export interface SublabelPayment {
   id: number;
@@ -32,7 +33,7 @@ export interface SublabelPayment {
 
 @Component({
     selector: 'app-sublabel-payments-modal',
-    imports: [CommonModule, PaginatedTableComponent],
+    imports: [CommonModule, PaginatedTableComponent, IconComponent],
     templateUrl: './sublabel-payments-modal.component.html',
     styleUrls: ['./sublabel-payments-modal.component.scss']
 })
@@ -50,19 +51,27 @@ export class SublabelPaymentsModalComponent implements OnChanges {
   totalProcessingFees: number = 0;
 
   columns: TableColumn[] = [
-    { key: 'date_paid', label: 'Date', type: 'date', sortable: true, searchable: false, mobileGroup: 'summary' },
-    { key: 'description', label: 'Description', type: 'text', sortable: true, searchable: false, mobileGroup: 'summary', mobileGroupMain: true },
+    { key: 'date_paid', label: 'Date', type: 'date', sortable: true, searchable: false, mobileGroup: 'summary', maxWidth: '100px' },
     {
-      key: 'paid_thru_type',
-      label: 'Payout Account',
+      key: 'description',
+      label: 'Description / Account',
       type: 'text',
-      sortable: false,
+      sortable: true,
       searchable: false,
       mobileGroup: 'summary',
-      formatter: (payment: SublabelPayment) => this.getPaymentMethodDisplay(payment)
+      mobileGroupMain: true,
+      renderHtml: true,
+      formatter: (payment: SublabelPayment) => {
+        const desc = payment.description || '<span class="tw-text-gray-400 tw-italic">—</span>';
+        const account = this.getPaymentMethodDisplay(payment);
+        const accountHtml = account !== 'N/A'
+          ? `<br><span class="tw-text-xs tw-text-gray-400">${account}</span>`
+          : '';
+        return `${desc}${accountHtml}`;
+      }
     },
-    { key: 'amount', label: 'Amount', type: 'number', sortable: true, searchable: false, align: 'right' },
-    { key: 'payment_processing_fee', label: 'Fee', type: 'number', sortable: true, searchable: false, align: 'right' },
+    { key: 'amount', label: 'Amount', type: 'number', sortable: true, searchable: false, align: 'right', maxWidth: '90px' },
+    { key: 'payment_processing_fee', label: 'Fee', type: 'number', sortable: true, searchable: false, align: 'right', maxWidth: '70px' },
     {
       key: 'status',
       label: 'Status',
@@ -75,6 +84,7 @@ export class SublabelPaymentsModalComponent implements OnChanges {
       sortable: true,
       searchable: false,
       renderHtml: true,
+      maxWidth: '90px',
       mobileGroup: 'summary',
       formatter: (payment: SublabelPayment) => this.formatStatus(payment.status, payment.failure_reason)
     }

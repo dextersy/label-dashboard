@@ -1,5 +1,5 @@
 <div class="modal fade show" style="display: block;" *ngIf="show" (click)="onBackdropClick($event)">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-title">
@@ -10,15 +10,20 @@
       </div>
       <div class="modal-body tw-px-4 tw-pt-3 tw-pb-2">
 
-        <div class="pm-summary" *ngIf="pagination">
-          <div class="pm-summary-item">
-            <span class="pm-summary-label">Total Payouts</span>
-            <span class="pm-summary-value tw-text-success">₱{{ totalAmount | number:'1.2-2' }}</span>
+        <div class="tw-flex tw-mb-3" *ngIf="pagination">
+          <div class="tw-flex tw-items-center tw-justify-center tw-gap-3 tw-px-4 tw-py-3 tw-flex-1">
+            <app-icon name="currency" class="tw-text-xl tw-text-success tw-opacity-70" />
+            <div class="tw-text-center">
+              <div class="tw-text-base tw-font-semibold tw-leading-tight tw-text-success">₱{{ totalAmount | number:'1.2-2' }}</div>
+              <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Total Payouts</div>
+            </div>
           </div>
-          <div class="pm-summary-divider"></div>
-          <div class="pm-summary-item">
-            <span class="pm-summary-label">Processing Fees</span>
-            <span class="pm-summary-value tw-text-[#0891b2]">₱{{ totalProcessingFees | number:'1.2-2' }}</span>
+          <div class="tw-flex tw-items-center tw-justify-center tw-gap-3 tw-px-4 tw-py-3 tw-flex-1">
+            <app-icon name="receipt" class="tw-text-xl tw-text-[#0891b2] tw-opacity-70" />
+            <div class="tw-text-center">
+              <div class="tw-text-base tw-font-semibold tw-leading-tight tw-text-[#0891b2]">₱{{ totalProcessingFees | number:'1.2-2' }}</div>
+              <div class="tw-text-xs tw-text-gray-500 tw-mt-0.5">Processing Fees</div>
+            </div>
           </div>
         </div>
 
@@ -34,6 +39,7 @@
           [actions]="rowActions"
           [responsiveMode]="'financial'"
           [showSearch]="false"
+          [compact]="true"
           (pageChange)="loadPayments($event)"
           (sortChange)="onSortChange($event)">
         </app-paginated-table>
