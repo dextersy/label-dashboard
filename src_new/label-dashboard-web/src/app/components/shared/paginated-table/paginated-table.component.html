@@ -131,7 +131,7 @@
           <!-- Sortable headers (optional) -->
           <ng-container *ngIf="showSortableHeaders && displayColumns.length > 0">
           <div [class.has-mobile-template]="!!mobileRowTemplate">
-          <div class="table-responsive">
+          <div class="table-responsive" [style.max-height]="maxHeight">
             <table [class]="getTableClasses()">
               <thead>
                 <tr>
@@ -356,7 +356,6 @@
     </div>
   </div>
 </div>
-
 <!-- Mobile actions dropdown — same structure as kebab dropdown, rendered outside card -->
 <div class="kebab-dropdown"
      *ngIf="mobileActionsOpen && mobileActionsPosition && headerActions.length > 0"

@@ -206,9 +206,18 @@ tr.row-clickable {
 // Ensure table is properly scrollable
 .table-responsive {
   overflow-x: auto;
+  overflow-y: auto;
 
   table {
     width: 100%;
+  }
+
+  // Sticky header so column labels stay visible while scrolling vertically
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
   }
 }
 
