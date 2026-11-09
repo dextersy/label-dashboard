@@ -561,9 +561,9 @@
 
               <!-- Company Name -->
               <div>
-                <label class="tw-label">Company / Legal Name <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+                <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-500 tw-mb-1.5">Company / Legal Name <span class="tw-font-normal">(optional)</span></label>
                 <div *ngIf="!isBillingEditing('billing_company_name')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
-                  <span class="tw-text-sm tw-text-body">{{ editingBillingValues.billing_company_name || '—' }}</span>
+                  <span class="tw-text-base tw-font-medium">{{ editingBillingValues.billing_company_name || '—' }}</span>
                   <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startBillingEditing('billing_company_name')" title="Edit">
                     <app-icon name="edit" iconOnly />
                   </button>
@@ -581,9 +581,9 @@
 
               <!-- Billing Address -->
               <div>
-                <label class="tw-label">Billing Address <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+                <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-500 tw-mb-1.5">Billing Address <span class="tw-font-normal">(optional)</span></label>
                 <div *ngIf="!isBillingEditing('billing_address')" class="tw-flex tw-items-start tw-gap-1 tw-min-h-[32px]">
-                  <span class="tw-text-sm tw-text-body tw-whitespace-pre-line">{{ editingBillingValues.billing_address || '—' }}</span>
+                  <span class="tw-text-base tw-font-medium tw-whitespace-pre-line">{{ editingBillingValues.billing_address || '—' }}</span>
                   <button type="button" class="tw-shrink-0 tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startBillingEditing('billing_address')" title="Edit">
                     <app-icon name="edit" iconOnly />
                   </button>
@@ -604,9 +604,9 @@
 
               <!-- TIN -->
               <div>
-                <label class="tw-label">TIN / Tax ID <span class="tw-text-muted tw-font-normal">(optional)</span></label>
+                <label class="tw-block tw-text-xs tw-font-medium tw-text-gray-500 tw-mb-1.5">TIN / Tax ID <span class="tw-font-normal">(optional)</span></label>
                 <div *ngIf="!isBillingEditing('billing_tin')" class="tw-flex tw-items-center tw-gap-1 tw-min-h-[32px]">
-                  <span class="tw-text-sm tw-text-body">{{ editingBillingValues.billing_tin || '—' }}</span>
+                  <span class="tw-text-base tw-font-medium">{{ editingBillingValues.billing_tin || '—' }}</span>
                   <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startBillingEditing('billing_tin')" title="Edit">
                     <app-icon name="edit" iconOnly />
                   </button>
