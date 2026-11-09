@@ -785,6 +785,11 @@ export class OnboardingService {
     this.showOnboardingSubject.next(false);
     this.currentStepSubject.next(0);
 
+    // Close sidebar on mobile — onboarding may have opened it, leave the UI clean
+    if (this.isMobile) {
+      this.sidebarService.closeSidebar();
+    }
+
     const landingWorkspace = this.availableWorkspaces[0] ?? 'music';
     this.workspaceService.setWorkspace(landingWorkspace);
     this.router.navigate([this.workspaceService.getWorkspaceLandingUrl(landingWorkspace)]);

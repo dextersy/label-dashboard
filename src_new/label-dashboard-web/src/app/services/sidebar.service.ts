@@ -103,6 +103,11 @@ export class SidebarService {
       return;
     }
 
+    // Don't create a duplicate if one already exists
+    if (document.getElementById('bodyClick')) {
+      return;
+    }
+
     const bodyClick = document.createElement('div');
     bodyClick.id = 'bodyClick';
     bodyClick.style.position = 'fixed';
