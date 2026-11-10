@@ -1142,7 +1142,7 @@ async function getRecentArtistsData(req: AuthRequest) {
     where: { brand_id: req.user.brand_id },
     attributes: ['id', 'name', 'profile_photo'],
     order: [['updatedAt', 'DESC']],
-    limit: 4
+    limit: 5
   });
 
   return artists.map(artist => ({
