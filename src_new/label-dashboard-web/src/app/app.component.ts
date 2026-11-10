@@ -145,13 +145,12 @@ export class AppComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(sidebarSubscription);
 
-    // Initialize onboarding for authenticated users (never on public routes).
-    // The service itself determines which wizards still need to be shown.
-    // Guard against stale localStorage from a different brand — only proceed when
-    // the user's brand_id matches the currently loaded brand.
-    const authSubscription = this.authService.currentUser.subscribe(user => {
+    // Initialize onboarding on actual login events only — not on app startup.
+    // loginSuccess$ is a plain Subject (not a BehaviorSubject) so it never replays
+    // a stored value, meaning it won't fire while the user is still on the login page.
+    const authSubscription = this.authService.loginSuccess$.subscribe(user => {
       const currentBrandId = this.brandService.getCurrentBrandSettings()?.id;
-      if (user && currentBrandId && user.brand_id === currentBrandId && !window.location.pathname.startsWith('/public')) {
+      if (currentBrandId && user.brand_id === currentBrandId) {
         const availableWorkspaces = this.workspaceService.getAvailableWorkspaces(user.is_admin);
         this.onboardingService.initializeOnboarding(availableWorkspaces, user.is_admin);
       }

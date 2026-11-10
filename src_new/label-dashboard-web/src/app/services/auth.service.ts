@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, throwError } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 export interface User {
@@ -39,6 +39,12 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
 
+  /** Emits only on genuine new authentications (login, OAuth, invite acceptance).
+   *  Unlike currentUser, this does NOT replay on subscription — so it won't fire
+   *  on app startup from a stored localStorage value. */
+  private loginSuccessSubject = new Subject<User>();
+  public loginSuccess$ = this.loginSuccessSubject.asObservable();
+
   constructor(private http: HttpClient) {
     const storedUser = localStorage.getItem('currentUser') || localStorage.getItem('user_data') || 'null';
     const userData = JSON.parse(storedUser);
@@ -70,6 +76,7 @@ export class AuthService {
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       this.currentUserSubject.next(response.user);
+      this.loginSuccessSubject.next(response.user);
       return response;
     }));
   }
@@ -95,6 +102,7 @@ export class AuthService {
       localStorage.setItem('auth_token', response.token);
       localStorage.setItem('currentUser', JSON.stringify(response.user));
       this.currentUserSubject.next(response.user);
+      this.loginSuccessSubject.next(response.user);
       return response;
     }));
   }
@@ -114,6 +122,7 @@ export class AuthService {
           localStorage.setItem('auth_token', response.token);
           localStorage.setItem('currentUser', JSON.stringify(response.user));
           this.currentUserSubject.next(response.user);
+          this.loginSuccessSubject.next(response.user);
         }
       })
     );
@@ -192,6 +201,7 @@ export class AuthService {
           localStorage.setItem('auth_token', response.token);
           localStorage.setItem('currentUser', JSON.stringify(response.user));
           this.currentUserSubject.next(response.user);
+          this.loginSuccessSubject.next(response.user);
         }
       })
     );
