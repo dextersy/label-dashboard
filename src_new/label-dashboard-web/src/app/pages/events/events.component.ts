@@ -27,7 +27,7 @@ import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 
 export type EventsTabType = 'tickets' | 'walk-ins' | 'abandoned' | 'referrals' | 'email' | 'listing' | 'access' | 'details' | 'add-ons';
-export type EventsSectionType = 'sales' | 'email' | 'settings';
+export type EventsSectionType = 'sales' | 'email' | 'settings' | 'add-ons';
 
 // Using the Event interface from EventService directly
 export type EventSelection = Event;
@@ -103,7 +103,7 @@ export class EventsComponent implements OnInit, OnDestroy, HasUnsavedChanges {
     'listing': 'settings',
     'access': 'settings',
     'details': 'settings',
-    'add-ons': 'settings',
+    'add-ons': 'add-ons',
   };
 
   get activeSection(): EventsSectionType {

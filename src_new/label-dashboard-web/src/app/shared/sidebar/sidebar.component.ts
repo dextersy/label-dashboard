@@ -144,9 +144,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
           adminOnly: true,
           eventAccessVisible: true,
           children: [
-            { route: '/campaigns/events/details', title: 'Manage Event', adminOnly: true, eventAccessVisible: true, activeRoutes: ['/campaigns/events/listing', '/campaigns/events/access', '/campaigns/events/add-ons', '/campaigns/events/new'] },
+            { route: '/campaigns/events/details', title: 'Manage Event', adminOnly: true, eventAccessVisible: true, activeRoutes: ['/campaigns/events/listing', '/campaigns/events/access', '/campaigns/events/new'] },
             { route: '/campaigns/events/tickets', title: 'View Sales', adminOnly: true, eventAccessVisible: true, activeRoutes: ['/campaigns/events/walk-ins', '/campaigns/events/abandoned', '/campaigns/events/referrals'] },
             { route: '/campaigns/events/email', title: 'Email Attendees', adminOnly: true, eventAccessVisible: true },
+            { route: '/campaigns/events/add-ons', title: 'Order Add-ons', adminOnly: true, eventAccessVisible: true },
           ]
         },
         {
