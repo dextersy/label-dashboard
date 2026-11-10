@@ -1,6 +1,9 @@
 import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
+import {
+  Chart, ChartConfiguration, ChartType,
+  BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend
+} from 'chart.js';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface EventSales {
@@ -15,7 +18,7 @@ export interface EventSales {
   is_collab?: boolean;
 }
 
-Chart.register(...registerables);
+Chart.register(BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend);
 
 @Component({
     selector: 'app-event-sales-chart',

@@ -3,13 +3,16 @@ import {
   ViewChild, ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import {
+  Chart, ChartConfiguration,
+  ArcElement, DoughnutController, Tooltip, Legend
+} from 'chart.js';
 import { AdminService, ChildBrand } from '../../../../services/admin.service';
 import { Router } from '@angular/router';
 import { DateRangeFilterComponent, DateRangeSelection } from '../../../../components/shared/date-range-filter/date-range-filter.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
-Chart.register(...registerables);
+Chart.register(ArcElement, DoughnutController, Tooltip, Legend);
 
 @Component({
   selector: 'app-sublabel-earnings-chart',

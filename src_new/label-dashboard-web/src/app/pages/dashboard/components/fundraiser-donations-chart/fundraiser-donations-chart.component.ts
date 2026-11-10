@@ -1,6 +1,9 @@
 import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, OnChanges, SimpleChanges, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import {
+  Chart, ChartConfiguration,
+  BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend
+} from 'chart.js';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 export interface FundraiserDonations {
@@ -11,7 +14,7 @@ export interface FundraiserDonations {
   donor_count: number;
 }
 
-Chart.register(...registerables);
+Chart.register(BarElement, BarController, CategoryScale, LinearScale, Tooltip, Legend);
 
 @Component({
   selector: 'app-fundraiser-donations-chart',
