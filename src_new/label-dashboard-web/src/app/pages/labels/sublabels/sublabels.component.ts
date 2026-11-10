@@ -18,6 +18,7 @@ import { EarningsBreakdownModalComponent, AggregatedTotals } from '../../admin/c
 import { SublabelPaymentsModalComponent } from '../../admin/components/sublabel-payments-modal.component';
 import { SublabelAddEarningModalComponent } from '../components/sublabel-add-earning-modal/sublabel-add-earning-modal.component';
 import { SublabelAdminsModalComponent } from '../../admin/components/sublabel-admins-modal.component';
+import { SublabelEarningsChartComponent } from '../components/sublabel-earnings-chart/sublabel-earnings-chart.component';
 import { FeeSettings } from '../../../services/admin.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { ConfirmationService } from '../../../services/confirmation.service';
@@ -25,7 +26,7 @@ import { SubscriptionService, AdminPlan } from '../../../services/subscription.s
 
 @Component({
     selector: 'app-labels-sublabels',
-    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, SublabelAddEarningModalComponent, BreadcrumbComponent, IconComponent, SublabelAdminsModalComponent],
+    imports: [CommonModule, FormsModule, DateRangeFilterComponent, PaginatedTableComponent, AddSublabelModalComponent, FeeSettingsModalComponent, FeatureTogglesModalComponent, SublabelPayoutModalComponent, EarningsBreakdownModalComponent, SublabelPaymentsModalComponent, SublabelAddEarningModalComponent, BreadcrumbComponent, IconComponent, SublabelAdminsModalComponent, SublabelEarningsChartComponent],
     templateUrl: './sublabels.component.html',
     styleUrls: ['./sublabels.component.scss']
 })
