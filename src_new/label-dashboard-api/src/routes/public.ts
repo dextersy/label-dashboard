@@ -31,6 +31,7 @@ import {
   registerArtist,
   getArtistRegistrationInfo,
   getOrganizerProfile,
+  getOrganizerPastEvents,
   toggleOrganizerFollow,
   getFollowedOrganizers,
   getTicketingSitemap,
@@ -110,6 +111,7 @@ router.get('/sitemap.xml', getTicketingSitemap);
 
 // Organizer profile (public)
 router.get('/organizers/:brandId', publicRateLimit, getOrganizerProfile);
+router.get('/organizers/:brandId/past-events', publicRateLimit, getOrganizerPastEvents);
 
 // Audience user routes (requires audience JWT)
 router.get('/audience/me/tickets', authenticateAudienceToken, getAudienceTickets);

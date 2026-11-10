@@ -3884,6 +3884,47 @@ export const getOrganizerProfile = async (req: Request, res: Response) => {
   }
 };
 
+export const getOrganizerPastEvents = async (req: Request, res: Response) => {
+  try {
+    const brandId = parseInt(req.params.brandId as string, 10);
+    if (isNaN(brandId)) return res.status(400).json({ error: 'Invalid brand ID' });
+
+    const pageNum = Math.max(1, parseInt(req.query.page as string || '1', 10));
+    const perPage = Math.min(50, Math.max(1, parseInt(req.query.per_page as string || '12', 10)));
+    const offset = (pageNum - 1) * perPage;
+
+    const brand = await Brand.findByPk(brandId, { attributes: ['id'] });
+    if (!brand) return res.status(404).json({ error: 'Organizer not found' });
+
+    const collabRows = await EventBrandCollaboration.findAll({
+      where: { brand_id: brandId, status: 'Accepted' },
+      attributes: ['event_id'],
+    });
+    const collabEventIds = collabRows.map((c: any) => c.event_id);
+
+    const { count, rows: pastEvents } = await Event.findAndCountAll({
+      where: {
+        [Op.or]: [
+          { brand_id: brandId },
+          ...(collabEventIds.length > 0 ? [{ id: { [Op.in]: collabEventIds } }] : []),
+        ],
+        status: 'published',
+        listed_on_ticketing: true,
+        date_and_time: { [Op.lt]: new Date() },
+      },
+      attributes: ['id', 'title', 'date_and_time', 'venue', 'event_type', 'poster_url'],
+      order: [['date_and_time', 'DESC']],
+      limit: perPage,
+      offset,
+    });
+
+    return res.json({ past_events: pastEvents, total: count, page: pageNum, per_page: perPage });
+  } catch (error) {
+    console.error('getOrganizerPastEvents error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const toggleOrganizerFollow = async (req: Request, res: Response) => {
   try {
     const audienceUser = (req as any).audienceUser;

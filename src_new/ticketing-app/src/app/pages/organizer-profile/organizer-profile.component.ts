@@ -1,10 +1,19 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { AudienceAuthService } from '../../services/audience-auth.service';
 import { AudienceHeaderComponent } from '../../components/audience-header/audience-header.component';
 import { environment } from '../../../environments/environment';
+
+interface OrganizerEvent {
+  id: number;
+  title: string;
+  date_and_time: string;
+  venue: string;
+  event_type: string;
+  poster_url?: string | null;
+}
 
 interface OrganizerProfile {
   id: number;
@@ -14,15 +23,10 @@ interface OrganizerProfile {
   brand_website: string | null;
   about_us: string | null;
   follower_count: number;
-  upcoming_events: {
-    id: number;
-    title: string;
-    date_and_time: string;
-    venue: string;
-    event_type: string;
-    poster_url?: string | null;
-  }[];
+  upcoming_events: OrganizerEvent[];
 }
+
+const PAST_PER_PAGE = 12;
 
 @Component({
   selector: 'app-organizer-profile',
@@ -106,7 +110,7 @@ interface OrganizerProfile {
           </div>
 
           <!-- Upcoming Events -->
-          <div>
+          <div class="mb-12">
             <p class="text-xs font-mono text-white/40 uppercase tracking-[0.2em] mb-4">— upcoming events —</p>
 
             @if (profile()!.upcoming_events.length === 0) {
@@ -116,48 +120,122 @@ interface OrganizerProfile {
             } @else {
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 @for (event of profile()!.upcoming_events; track event.id) {
-                  <a [routerLink]="['/events', event.id]"
-                    class="block border border-white/10 hover:border-yellow-400/50 transition-colors group overflow-hidden">
-                    <!-- Poster -->
-                    <div class="aspect-[3/4] bg-white/5 overflow-hidden">
-                      @if (event.poster_url) {
-                        <img [src]="event.poster_url" [alt]="event.title"
-                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                      } @else {
-                        <div class="w-full h-full flex items-center justify-center" [style.background-color]="profile()!.brand_color">
-                          <p class="text-white/40 text-xs font-mono uppercase tracking-widest px-2 text-center">No Poster</p>
-                        </div>
-                      }
-                    </div>
-                    <!-- Info -->
-                    <div class="px-3 py-3">
-                      <p class="text-sm font-black text-white uppercase leading-tight group-hover:text-yellow-400 transition-colors line-clamp-2">
-                        {{ event.title }}
-                      </p>
-                      <p class="text-xs font-mono text-white/40 mt-1">
-                        {{ event.date_and_time | date:'MMM d, y' }}
-                      </p>
-                      @if (event.venue) {
-                        <p class="text-xs font-mono text-white/30 mt-0.5 truncate">{{ event.venue }}</p>
-                      }
-                    </div>
-                  </a>
+                  <ng-container *ngTemplateOutlet="eventCard; context: { $implicit: event }"></ng-container>
                 }
               </div>
             }
           </div>
 
+          <!-- Past Events -->
+          <div>
+            <p class="text-xs font-mono text-white/40 uppercase tracking-[0.2em] mb-4">— past events —</p>
+
+            @if (pastLoading()) {
+              <div class="flex items-center justify-center py-12">
+                <p class="text-xs font-mono text-white/30 uppercase tracking-widest animate-pulse">loading...</p>
+              </div>
+            } @else if (pastEvents().length === 0) {
+              <div class="border border-white/10 px-6 py-10 text-center">
+                <p class="text-xs font-mono text-white/30 uppercase tracking-widest">No past events</p>
+              </div>
+            } @else {
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                @for (event of pastEvents(); track event.id) {
+                  <ng-container *ngTemplateOutlet="eventCard; context: { $implicit: event }"></ng-container>
+                }
+              </div>
+
+              <!-- Past Events Pagination -->
+              @if (pastTotalPages() > 1) {
+                <div class="flex items-center justify-between mt-4">
+                  <p class="text-xs font-mono text-white/30">
+                    {{ (pastPage() - 1) * perPage + 1 }}–{{ pastPage() * perPage > pastTotal() ? pastTotal() : pastPage() * perPage }} of {{ pastTotal() }}
+                  </p>
+                  <div class="flex items-center gap-1">
+                    <button (click)="loadPastEvents(pastPage() - 1)"
+                      [disabled]="pastPage() === 1"
+                      class="px-3 py-1.5 text-xs font-mono uppercase tracking-wider border border-white/20 text-white/50 disabled:opacity-30 disabled:cursor-not-allowed hover:border-white/40 hover:text-white/80 transition-colors">
+                      ‹ Prev
+                    </button>
+                    @for (p of pastPageNumbers(); track p) {
+                      <button (click)="loadPastEvents(p)"
+                        class="px-3 py-1.5 text-xs font-mono border transition-colors"
+                        [class]="p === pastPage()
+                          ? 'border-yellow-400 bg-yellow-400 text-black font-black'
+                          : 'border-white/20 text-white/50 hover:border-white/40 hover:text-white/80'">
+                        {{ p }}
+                      </button>
+                    }
+                    <button (click)="loadPastEvents(pastPage() + 1)"
+                      [disabled]="pastPage() === pastTotalPages()"
+                      class="px-3 py-1.5 text-xs font-mono uppercase tracking-wider border border-white/20 text-white/50 disabled:opacity-30 disabled:cursor-not-allowed hover:border-white/40 hover:text-white/80 transition-colors">
+                      Next ›
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
         }
       </main>
+
+      <!-- Event card template -->
+      <ng-template #eventCard let-event>
+        <a [routerLink]="['/events', event.id]"
+          class="block border border-white/10 hover:border-yellow-400/50 transition-colors group overflow-hidden">
+          <!-- Poster -->
+          <div class="aspect-[3/4] bg-white/5 overflow-hidden">
+            @if (event.poster_url) {
+              <img [src]="event.poster_url" [alt]="event.title"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            } @else {
+              <div class="w-full h-full flex items-center justify-center" [style.background-color]="profile()!.brand_color">
+                <p class="text-white/40 text-xs font-mono uppercase tracking-widest px-2 text-center">No Poster</p>
+              </div>
+            }
+          </div>
+          <!-- Info -->
+          <div class="px-3 py-3">
+            <p class="text-sm font-black text-white uppercase leading-tight group-hover:text-yellow-400 transition-colors line-clamp-2">
+              {{ event.title }}
+            </p>
+            <p class="text-xs font-mono text-white/40 mt-1">
+              {{ event.date_and_time | date:'MMM d, y' }}
+            </p>
+            @if (event.venue) {
+              <p class="text-xs font-mono text-white/30 mt-0.5 truncate">{{ event.venue }}</p>
+            }
+          </div>
+        </a>
+      </ng-template>
     </div>
   `
 })
 export class OrganizerProfileComponent implements OnInit {
+  readonly perPage = PAST_PER_PAGE;
+
   profile = signal<OrganizerProfile | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
   isFollowing = signal(false);
   followLoading = signal(false);
+
+  pastEvents = signal<OrganizerEvent[]>([]);
+  pastTotal = signal(0);
+  pastPage = signal(1);
+  pastLoading = signal(true);
+
+  pastTotalPages = () => Math.ceil(this.pastTotal() / this.perPage);
+  pastPageNumbers = () => {
+    const total = this.pastTotalPages();
+    const current = this.pastPage();
+    const pages: number[] = [];
+    const start = Math.max(1, current - 2);
+    const end = Math.min(total, current + 2);
+    for (let i = start; i <= end; i++) pages.push(i);
+    return pages;
+  };
 
   private brandId!: number;
 
@@ -170,6 +248,7 @@ export class OrganizerProfileComponent implements OnInit {
   ngOnInit(): void {
     this.brandId = parseInt(this.route.snapshot.paramMap.get('brandId') || '0');
     this.loadProfile();
+    this.loadPastEvents(1);
 
     if (this.audienceAuth.isLoggedIn()) {
       this.loadFollowStatus();
@@ -192,6 +271,25 @@ export class OrganizerProfileComponent implements OnInit {
           this.loading.set(false);
         }
       });
+  }
+
+  loadPastEvents(page: number): void {
+    if (page < 1 || (this.pastTotalPages() > 0 && page > this.pastTotalPages())) return;
+    this.pastPage.set(page);
+    this.pastLoading.set(true);
+    const params = new HttpParams()
+      .set('page', page)
+      .set('per_page', this.perPage);
+    this.http.get<{ past_events: OrganizerEvent[]; total: number; page: number; per_page: number }>(
+      `${environment.apiUrl}/public/organizers/${this.brandId}/past-events`, { params }
+    ).subscribe({
+      next: (res) => {
+        this.pastEvents.set(res.past_events);
+        this.pastTotal.set(res.total);
+        this.pastLoading.set(false);
+      },
+      error: () => this.pastLoading.set(false)
+    });
   }
 
   loadFollowStatus(): void {
