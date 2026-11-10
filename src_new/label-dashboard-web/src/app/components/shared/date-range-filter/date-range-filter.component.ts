@@ -21,6 +21,7 @@ export class DateRangeFilterComponent implements OnInit {
   @Input() showExport: boolean = false;
   @Input() loading: boolean = false;
   @Input() compact: boolean = false; // For smaller layouts like tables
+  @Input() minimal: boolean = false; // No card wrapper, inline use inside other cards
   
   @Output() dateRangeChange = new EventEmitter<DateRangeSelection>();
   @Output() refresh = new EventEmitter<void>();

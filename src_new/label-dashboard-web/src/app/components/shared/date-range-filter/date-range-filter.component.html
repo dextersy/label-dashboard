@@ -1,5 +1,11 @@
 <!-- Date Range Filter Component -->
-<div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-2 date-range-filter" [class.compact]="compact">
+<div class="date-range-filter"
+     [class.tw-bg-white]="!minimal"
+     [class.sm:tw-rounded-card]="!minimal"
+     [class.sm:tw-shadow-card]="!minimal"
+     [class.sm:tw-overflow-hidden]="!minimal"
+     [class.tw-mb-2]="!minimal"
+     [class.compact]="compact">
   <div class="sm:tw-px-card-pad tw-py-3" [class.tw-py-2]="compact">
     <!-- Collapsed Header - Always visible -->
     <div class="tw-items-center date-range-header tw-grid tw-grid-cols-1 md:tw-grid-cols-12">
@@ -12,12 +18,13 @@
             <strong class="tw-font-semibold">{{ getPresetDisplayName() }}</strong>
             <app-icon [name]="isExpanded ? 'chevron-up' : 'chevron-down'" iconOnly class="tw-text-gray-400" />
           </button>
-          <span class="tw-text-sm tw-text-gray-400 tw-mr-2" [ngClass]="{'tw-hidden': compact, 'sm:tw-inline': compact}">
+          <span class="tw-text-sm tw-text-gray-400 tw-mr-2" [ngClass]="{'tw-hidden': compact || minimal, 'sm:tw-inline': compact && !minimal}">
             {{ formatDateForDisplay(startDate) }} – {{ formatDateForDisplay(endDate) }}
             <span class="tw-text-green-600 tw-ml-1" *ngIf="selectedPreset !== 'alltime'">({{ getDaysDifference() }} days)</span>
             <span class="tw-text-green-600 tw-ml-1" *ngIf="selectedPreset === 'alltime'">(All data)</span>
           </span>
-          <button class="tw-inline-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-500 tw-bg-transparent tw-border-0 tw-cursor-pointer hover:tw-bg-gray-100 hover:tw-text-gray-700 tw-transition-colors disabled:tw-opacity-50 disabled:tw-cursor-not-allowed"
+          <button *ngIf="!minimal"
+                  class="tw-inline-flex tw-items-center tw-gap-1.5 tw-px-2.5 tw-py-1 tw-rounded-md tw-text-sm tw-font-medium tw-text-gray-500 tw-bg-transparent tw-border-0 tw-cursor-pointer hover:tw-bg-gray-100 hover:tw-text-gray-700 tw-transition-colors disabled:tw-opacity-50 disabled:tw-cursor-not-allowed"
                   (click)="onRefresh()"
                   [disabled]="loading"
                   [title]="loading ? 'Refreshing data...' : 'Refresh data'">
