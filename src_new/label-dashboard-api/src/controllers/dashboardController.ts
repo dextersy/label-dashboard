@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer, EventBrandCollaboration, EventDay } from '../models';
+import { Release, Artist, Earning, Royalty, Payment, Event, Ticket, ReleaseArtist, ArtistAccess, Fundraiser, Donation, ArtistImage, PaymentMethod, PressCampaign, SyncLicensingPitch, SyncLicensingPitchSong, Song, SongAuthor, SongComposer, EventBrandCollaboration, EventDay, Brand } from '../models';
 import { sequelize } from '../config/database';
 
 interface AuthRequest extends Request {
@@ -913,7 +913,16 @@ async function getDashboardStatsData(req: AuthRequest, artistId: number | null =
     countReleases({ status: { [Op.in]: ['Draft', 'For Submission', 'Pending'] } })
   ]);
 
-  return { totalReleases, unreleasedCount };
+  if (!req.user.is_admin) {
+    return { totalReleases, unreleasedCount };
+  }
+
+  const [totalArtists, totalSublabels] = await Promise.all([
+    Artist.count({ where: { brand_id: req.user.brand_id } }),
+    Brand.count({ where: { parent_brand: req.user.brand_id } })
+  ]);
+
+  return { totalReleases, unreleasedCount, totalArtists, totalSublabels };
 }
 
 async function getReleasePipelineData(req: AuthRequest) {

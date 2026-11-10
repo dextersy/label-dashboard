@@ -32,6 +32,10 @@
         <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="user" class="tw-opacity-60" /> {{ dashboardData.stats?.totalArtists || 0 }} artists</span>
         <span class="tw-text-gray-300">·</span>
         <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="music" class="tw-opacity-60" /> {{ dashboardData.stats?.totalReleases || 0 }} releases</span>
+        <ng-container *ngIf="featureSublabels && (dashboardData.stats?.totalSublabels ?? 0) >= 0">
+          <span class="tw-text-gray-300">·</span>
+          <span class="tw-flex tw-items-center tw-gap-1"><app-icon name="layers" class="tw-opacity-60" /> {{ dashboardData.stats?.totalSublabels || 0 }} sublabels</span>
+        </ng-container>
       </p>
 
       <!-- Desktop: artists left, pipeline right. Mobile: stacked (artists first) -->
@@ -64,55 +68,61 @@
         <!-- Release Pipeline (full width mobile, 2/3 desktop, full width if no recent artists) -->
         <div [class]="dashboardData.recentArtists?.length ? 'lg:tw-col-span-2' : 'lg:tw-col-span-3'">
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-3">Release Pipeline</p>
-          <!-- Pipeline cards: 2×2 on mobile, 4 columns on sm+ -->
-          <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-4 tw-gap-3">
+          <!-- Pipeline: flex row with arrows between stages -->
+          <div class="tw-flex tw-items-center tw-gap-0">
 
             <!-- Draft -->
-            <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0">
-              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-60 tw-text-gray-400 tw-flex-shrink-0">
+            <div class="tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-px-1 tw-py-2 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 tw-min-w-0">
+              <div class="tw-text-sm tw-mb-0.5 sm:tw-text-[2rem] sm:tw-mb-0 sm:tw-mr-4 tw-opacity-60 tw-text-gray-400 tw-flex-shrink-0">
                 <app-icon name="file" />
               </div>
-              <div class="tw-min-w-0">
-                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ getPipelineStageCount('Draft') }}</div>
-                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Draft</div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-base sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #333;">{{ getPipelineStageCount('Draft') }}</div>
+                <div class="tw-text-[0.6rem] sm:tw-text-sm tw-leading-none tw-mt-0.5 tw-truncate" style="color: #666;">Draft</div>
                 <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1 tw-hidden sm:tw-block">{{ getPipelinePct('Draft') }}%</div>
               </div>
             </div>
 
+            <div class="tw-flex-shrink-0 tw-text-gray-300 tw-text-xs sm:tw-text-sm">&#9654;</div>
+
             <!-- For Submission -->
             <a routerLink="/labels/discography" [queryParams]="{status: 'For Submission'}"
-               class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
-              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-flex-shrink-0" style="color: #3b82f6;">
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-px-1 tw-py-2 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 tw-min-w-0 hover:tw-opacity-80 tw-transition-opacity">
+              <div class="tw-text-sm tw-mb-0.5 sm:tw-text-[2rem] sm:tw-mb-0 sm:tw-mr-4 tw-opacity-80 tw-flex-shrink-0" style="color: #3b82f6;">
                 <app-icon name="paper-plane" />
               </div>
-              <div class="tw-min-w-0">
-                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #3b82f6;">{{ getPipelineStageCount('For Submission') }}</div>
-                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">For Submission</div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-base sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #3b82f6;">{{ getPipelineStageCount('For Submission') }}</div>
+                <div class="tw-text-[0.6rem] sm:tw-text-sm tw-leading-none tw-mt-0.5 tw-truncate" style="color: #666;">For Submission</div>
                 <div class="tw-text-xs tw-font-mono tw-mt-1 tw-hidden sm:tw-block" style="color: #3b82f6;">{{ getPipelinePct('For Submission') }}% · Submit →</div>
               </div>
             </a>
 
+            <div class="tw-flex-shrink-0 tw-text-gray-300 tw-text-xs sm:tw-text-sm">&#9654;</div>
+
             <!-- Pending -->
             <a routerLink="/labels/discography" [queryParams]="{status: 'Pending'}"
-               class="tw-no-underline tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 hover:tw-shadow-md tw-transition-shadow">
-              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-warning tw-flex-shrink-0">
+               class="tw-no-underline tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-px-1 tw-py-2 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 tw-min-w-0 hover:tw-opacity-80 tw-transition-opacity">
+              <div class="tw-text-sm tw-mb-0.5 sm:tw-text-[2rem] sm:tw-mb-0 sm:tw-mr-4 tw-opacity-80 tw-text-warning tw-flex-shrink-0">
                 <app-icon name="clock" />
               </div>
-              <div class="tw-min-w-0">
-                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #f59e0b;">{{ getPipelineStageCount('Pending') }}</div>
-                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Pending</div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-base sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #f59e0b;">{{ getPipelineStageCount('Pending') }}</div>
+                <div class="tw-text-[0.6rem] sm:tw-text-sm tw-leading-none tw-mt-0.5 tw-truncate" style="color: #666;">Pending</div>
                 <div class="tw-text-xs tw-font-mono tw-mt-1 tw-hidden sm:tw-block" style="color: #f59e0b;">{{ getPipelinePct('Pending') }}% · Review →</div>
               </div>
             </a>
 
+            <div class="tw-flex-shrink-0 tw-text-gray-300 tw-text-xs sm:tw-text-sm">&#9654;</div>
+
             <!-- Live -->
-            <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-flex tw-items-center tw-px-3 tw-py-3 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0">
-              <div class="tw-text-xl tw-mr-2 sm:tw-text-[2rem] sm:tw-mr-4 tw-opacity-80 tw-text-success tw-flex-shrink-0">
+            <div class="tw-flex tw-flex-col tw-items-center sm:tw-flex-row sm:tw-items-center tw-flex-1 tw-px-1 tw-py-2 sm:tw-px-card-pad sm:tw-pb-card-pad sm:tw-pt-0 tw-min-w-0">
+              <div class="tw-text-sm tw-mb-0.5 sm:tw-text-[2rem] sm:tw-mb-0 sm:tw-mr-4 tw-opacity-80 tw-text-success tw-flex-shrink-0">
                 <app-icon name="globe" />
               </div>
-              <div class="tw-min-w-0">
-                <div class="tw-text-xl sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #10b981;">{{ getPipelineStageCount('Live') }}</div>
-                <div class="tw-text-xs sm:tw-text-sm tw-mt-0.5 tw-truncate" style="color: #666;">Live</div>
+              <div class="tw-min-w-0 tw-text-center sm:tw-text-left">
+                <div class="tw-text-base sm:tw-text-2xl tw-font-semibold tw-leading-tight" style="color: #10b981;">{{ getPipelineStageCount('Live') }}</div>
+                <div class="tw-text-[0.6rem] sm:tw-text-sm tw-leading-none tw-mt-0.5 tw-truncate" style="color: #666;">Live</div>
                 <div class="tw-text-xs tw-font-mono tw-text-muted tw-mt-1 tw-hidden sm:tw-block">{{ getPipelinePct('Live') }}%</div>
               </div>
             </div>

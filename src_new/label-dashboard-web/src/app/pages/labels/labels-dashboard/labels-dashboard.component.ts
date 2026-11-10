@@ -56,6 +56,7 @@ interface DashboardStats {
   } | null;
   totalArtists: number;
   totalReleases: number;
+  totalSublabels?: number;
 }
 
 interface RecentArtist {
@@ -96,6 +97,7 @@ export class LabelsDashboardComponent implements OnInit {
   error: string | null = null;
   brandName: string = '';
   featureMusicWorkspace: boolean = true;
+  featureSublabels: boolean = false;
   pendingReleases: { release: DiscographyRelease; daysUntil: number | null; tasks: ReleaseTask[] }[] = [];
   liveReleasesData: DiscographyRelease[] = [];
   hasPayoutAccount: boolean | null = null;
@@ -252,6 +254,7 @@ export class LabelsDashboardComponent implements OnInit {
   private applyBrandSettings(settings: BrandSettings): void {
     this.brandName = settings.name || '';
     this.featureMusicWorkspace = settings.feature_music_workspace !== false;
+    this.featureSublabels = settings.feature_sublabels !== false;
   }
 
   getCoverArtUrl(coverArt: string | null | undefined): string {
