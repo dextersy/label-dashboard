@@ -1,6 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { DateRangeFilterComponent, DateRangeSelection } from '../../../../components/shared/date-range-filter/date-range-filter.component';
+import { environment } from 'environments/environment';
 
 export interface TopEarningRelease {
   id: number;
@@ -13,16 +16,24 @@ export interface TopEarningRelease {
 
 @Component({
     selector: 'app-top-albums',
-    imports: [CommonModule],
+    imports: [CommonModule, DateRangeFilterComponent],
     templateUrl: './top-albums.component.html',
     styleUrl: './top-albums.component.scss'
 })
-export class TopAlbumsComponent {
-  @Input() releases: TopEarningRelease[] = [];
+export class TopAlbumsComponent implements OnInit {
   @Input() ctaLabel: string = 'View all release earnings →';
   @Input() ctaRoute: string = '/financial/release';
 
-  constructor(private router: Router) {}
+  releases: TopEarningRelease[] = [];
+  loading = false;
+  private startDate = '';
+  private endDate = '';
+
+  constructor(private router: Router, private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.loadData();
+  }
 
   get displayReleases(): TopEarningRelease[] {
     return this.releases.slice(0, 6);
@@ -53,7 +64,36 @@ export class TopAlbumsComponent {
     return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
   }
 
+  onDateRangeChange(range: DateRangeSelection): void {
+    if (range.preset === 'alltime') {
+      this.startDate = '';
+      this.endDate = '';
+    } else {
+      this.startDate = range.startDate;
+      this.endDate = range.endDate;
+    }
+    this.loadData();
+  }
+
   goToFinancial(): void {
     this.router.navigate([this.ctaRoute]);
+  }
+
+  private loadData(): void {
+    this.loading = true;
+    const params = new URLSearchParams();
+    if (this.startDate) params.set('startDate', this.startDate);
+    if (this.endDate)   params.set('endDate', this.endDate);
+    const query = params.toString() ? `?${params}` : '';
+
+    this.http.get<{ releases: TopEarningRelease[] }>(`${environment.apiUrl}/dashboard/top-earning-releases${query}`).subscribe({
+      next: ({ releases }) => {
+        this.releases = releases;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
 }

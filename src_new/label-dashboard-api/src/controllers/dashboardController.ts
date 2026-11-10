@@ -78,7 +78,16 @@ export const getLatestReleases = async (req: AuthRequest, res: Response) => {
 export const getTopEarningReleases = async (req: AuthRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || undefined;
-    
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+
+    const earningWhere: any = {};
+    if (startDate || endDate) {
+      const { Op } = require('sequelize');
+      if (startDate) earningWhere.date_recorded = { ...(earningWhere.date_recorded || {}), [Op.gte]: new Date(startDate) };
+      if (endDate)   earningWhere.date_recorded = { ...(earningWhere.date_recorded || {}), [Op.lte]: new Date(endDate) };
+    }
+
     // Get all releases with their earnings (no initial limit to ensure proper sorting)
     const releases = await Release.findAll({
       where: { brand_id: req.user.brand_id },
@@ -96,7 +105,8 @@ export const getTopEarningReleases = async (req: AuthRequest, res: Response) => 
         {
           model: Earning,
           as: 'earnings',
-          required: false
+          required: false,
+          where: Object.keys(earningWhere).length ? earningWhere : undefined
         }
       ]
       // Remove order and limit here since we need to calculate totals first
