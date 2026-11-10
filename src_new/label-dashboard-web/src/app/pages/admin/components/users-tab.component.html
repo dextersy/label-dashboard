@@ -12,7 +12,7 @@
 <app-in-page-nav [tabs]="navTabs" [activeTab]="activeSection" (tabChange)="setActiveSection($event)">
 
   <!-- Users Table -->
-  <div *ngIf="activeSection === 'users'">
+  <div *ngIf="activeSection === 'users'" class="users-grid-section">
     <app-paginated-table
       title="Users"
       [data]="displayUsers"
@@ -28,29 +28,22 @@
       (sortChange)="onUsersSortChange($event)">
 
       <ng-template #mobileRowTemplate let-user let-toggleKebab="toggleKebab" let-isKebabOpen="isKebabOpen" let-visibleActions="visibleActions">
-        <div class="user-card">
-          <div class="user-card__header">
-            <div class="user-card__avatar" [style.background-color]="getAvatarColor(getUserDisplayName(user))">
-              {{ getInitials(getUserDisplayName(user)) }}
-            </div>
-            <div class="user-card__info">
-              <div class="user-card__name">{{ user.username }}</div>
-              <div class="user-card__email">{{ user.email_address }}</div>
-            </div>
-            <div class="user-card__badges">
-              <span *ngIf="user.is_admin" class="status-badge status-info">Admin</span>
-              <span *ngIf="user.has_pending_invite" class="status-badge status-warning">Pending</span>
-            </div>
-            <button *ngIf="visibleActions.length > 0"
-                    class="user-card__menu kebab-btn"
-                    type="button"
-                    (click)="toggleKebab($event)"
-                    [class.active]="isKebabOpen">
-              <app-icon name="more-vertical" iconOnly />
-            </button>
+        <div class="user-square-card">
+          <button *ngIf="visibleActions.length > 0"
+                  class="user-square-card__menu kebab-btn"
+                  type="button"
+                  (click)="toggleKebab($event)"
+                  [class.active]="isKebabOpen">
+            <app-icon name="more-vertical" iconOnly />
+          </button>
+          <div class="user-square-card__avatar" [style.background-color]="getAvatarColor(getUserDisplayName(user))">
+            {{ getInitials(getUserDisplayName(user)) }}
           </div>
-          <div class="user-card__footer" *ngIf="user.last_logged_in">
-            <app-icon name="clock" /> Last login: {{ user.last_logged_in | date:'mediumDate' }}
+          <div class="user-square-card__name">{{ user.username }}</div>
+          <div class="user-square-card__email">{{ user.email_address }}</div>
+          <div class="user-square-card__badges">
+            <span *ngIf="user.is_admin" class="status-badge status-primary user-square-card__admin-badge">Admin</span>
+            <span *ngIf="user.has_pending_invite" class="status-badge status-warning">Pending</span>
           </div>
         </div>
       </ng-template>

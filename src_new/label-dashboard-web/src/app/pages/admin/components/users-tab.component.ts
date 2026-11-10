@@ -147,7 +147,7 @@ export class UsersTabComponent implements OnInit {
     { key: 'last_name', label: 'Last Name', type: 'text', searchable: true, sortable: true },
     { key: 'email_address', label: 'Email address', type: 'text', searchable: true, sortable: true },
     { key: 'last_logged_in', label: 'Last logged in', type: 'date', searchable: false, sortable: true },
-    { key: 'is_admin', label: 'Is administrator', type: 'text', searchable: false, sortable: true }
+    { key: 'is_admin', label: 'Is administrator', type: 'select', searchable: true, sortable: true, options: [{ value: 'true', label: 'Admin' }, { value: 'false', label: 'Non-admin' }] }
   ];
 
   loginAttemptsColumns: TableColumn[] = [

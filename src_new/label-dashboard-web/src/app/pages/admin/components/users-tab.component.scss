@@ -1,5 +1,103 @@
 // Layout and navigation styles are provided by app-in-page-nav
 
+// 2-column grid for the users section mobile list
+.users-grid-section {
+  @media (max-width: 575px) {
+    ::ng-deep .mobile-card-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+  }
+}
+
+// Square user card (2-column mobile grid)
+.user-square-card {
+  position: relative;
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05);
+  padding: 12px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+  text-align: center;
+
+  &__menu {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: none;
+    border: none;
+    color: #9ca3af;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 6px;
+    line-height: 1;
+
+    &:hover {
+      color: #374151;
+      background: #f3f4f6;
+    }
+
+    &.active {
+      color: var(--brand-color, #3b82f6);
+      background: color-mix(in srgb, var(--brand-color, #3b82f6) 10%, transparent);
+    }
+  }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #111827;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__email {
+    font-size: 11px;
+    color: #6b7280;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  &__admin-badge {
+    &::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/%3E%3C/svg%3E");
+    }
+  }
+}
+
 // Mobile user card layout
 .user-card {
   background: #fff;
