@@ -28,6 +28,7 @@ function hashName(name: string): number {
   return h;
 }
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { SublabelEarningsChartComponent } from '../components/sublabel-earnings-chart/sublabel-earnings-chart.component';
 import { LatestRelease } from '../../dashboard/components/latest-albums/latest-albums.component';
 import { PipelineStage } from '../../dashboard/components/release-pipeline/release-pipeline.component';
 import { ReleaseTaskService } from '../../../services/release-task.service';
@@ -87,6 +88,7 @@ interface DashboardData {
     BalanceTableComponent,
     BreadcrumbComponent,
     IconComponent,
+    SublabelEarningsChartComponent,
   ],
   templateUrl: './labels-dashboard.component.html',
   styleUrl: './labels-dashboard.component.scss'

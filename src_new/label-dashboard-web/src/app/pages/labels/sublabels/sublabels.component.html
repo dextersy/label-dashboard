@@ -8,11 +8,6 @@
     (refresh)="onRefreshData()">
   </app-date-range-filter>
 
-  <app-sublabel-earnings-chart
-    *ngIf="!loading && childBrands.length > 0"
-    [childBrands]="childBrands">
-  </app-sublabel-earnings-chart>
-
   <app-paginated-table
     title="Sublabels"
     [data]="sortedChildBrands"

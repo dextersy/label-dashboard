@@ -24,7 +24,7 @@
   <!-- ZONE 1: HERO STRIP                                      -->
   <!-- ─────────────────────────────────────────────────────── -->
   <div class="tw-bg-white">
-    <div class="tw-px-4 tw-pt-6 tw-pb-0 sm:tw-px-8 sm:tw-pt-8" style="max-width: 1100px; margin: 0 auto;">
+    <div class="tw-px-4 tw-pt-6 tw-pb-0 sm:tw-px-8 sm:tw-pt-8" style="max-width: 1300px; margin: 0 auto;">
 
       <!-- Workspace info -->
       <p class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-6 tw-flex tw-items-center tw-gap-2 tw-flex-wrap">
@@ -154,7 +154,7 @@
   <!-- ─────────────────────────────────────────────────────── -->
   <!-- ZONE 2: MAIN BODY                                       -->
   <!-- ─────────────────────────────────────────────────────── -->
-  <div class="tw-px-4 tw-py-7 sm:tw-px-8 sm:tw-py-8" style="max-width: 1100px; margin: 0 auto;">
+  <div class="tw-px-4 tw-py-7 sm:tw-px-8 sm:tw-py-8" style="max-width: 1300px; margin: 0 auto;">
 
     <!-- Row 1: Upcoming releases (full width, 5-column card grid) -->
     <div *ngIf="pendingReleases.length > 0" class="tw-mb-8">
@@ -331,8 +331,11 @@
   </div><!-- /zone 2 -->
 
   <!-- Earnings section -->
-  <div class="tw-px-4 tw-pb-8 sm:tw-px-8" style="max-width: 1100px; margin: 0 auto;">
-    <div class="tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-4 tw-items-start">
+  <div class="tw-px-4 tw-pb-8 sm:tw-px-8" style="max-width: 1300px; margin: 0 auto;">
+    <div class="tw-grid tw-grid-cols-1 tw-gap-8 tw-items-stretch"
+         [class.lg:tw-grid-cols-2]="!featureSublabels"
+         [class.lg:tw-grid-cols-3]="featureSublabels"
+         [class.earnings-grid--with-sublabels]="featureSublabels">
       <app-top-albums
         [releases]="dashboardData.topEarningReleases"
         ctaLabel="View Music Earnings Report →"
@@ -343,6 +346,11 @@
         ctaLabel="View Balance Report →"
         ctaRoute="/labels/reports/artist-balances">
       </app-balance-table>
+      <app-sublabel-earnings-chart
+        *ngIf="featureSublabels"
+        ctaLabel="View Sublabels →"
+        ctaRoute="/labels/sublabels">
+      </app-sublabel-earnings-chart>
     </div>
   </div>
 

@@ -1,26 +1,53 @@
 import {
-  Component, Input, OnChanges, SimpleChanges,
-  AfterViewInit, OnDestroy, ViewChild, ElementRef
+  Component, Input, OnInit, AfterViewInit, OnDestroy,
+  ViewChild, ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
-import { ChildBrand } from '../../../../services/admin.service';
+import { AdminService, ChildBrand } from '../../../../services/admin.service';
+import { Router } from '@angular/router';
+import { DateRangeFilterComponent, DateRangeSelection } from '../../../../components/shared/date-range-filter/date-range-filter.component';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-sublabel-earnings-chart',
-  imports: [CommonModule, IconComponent],
+  imports: [CommonModule, DateRangeFilterComponent, IconComponent],
   templateUrl: './sublabel-earnings-chart.component.html',
   styleUrl: './sublabel-earnings-chart.component.scss'
 })
-export class SublabelEarningsChartComponent implements AfterViewInit, OnChanges, OnDestroy {
-  @Input() childBrands: ChildBrand[] = [];
+export class SublabelEarningsChartComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input() ctaLabel: string = 'View Sublabels →';
+  @Input() ctaRoute: string = '/labels/sublabels';
   @ViewChild('pieChart') pieChartRef!: ElementRef<HTMLCanvasElement>;
 
   mode: 'earnings' | 'fees' = 'earnings';
+  loading = false;
+  private childBrands: ChildBrand[] = [];
   private chart: Chart | null = null;
+  private startDate = '';
+  private endDate = '';
+  private viewReady = false;
+
+  constructor(private adminService: AdminService, private router: Router) {}
+
+  goToCta(): void {
+    this.router.navigate([this.ctaRoute]);
+  }
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+    this.renderChart();
+  }
+
+  ngOnDestroy(): void {
+    this.chart?.destroy();
+  }
 
   get musicValue(): number {
     return this.mode === 'earnings'
@@ -61,22 +88,33 @@ export class SublabelEarningsChartComponent implements AfterViewInit, OnChanges,
     this.renderChart();
   }
 
-  ngAfterViewInit(): void {
-    this.renderChart();
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['childBrands'] && !changes['childBrands'].firstChange) {
-      this.renderChart();
+  onDateRangeChange(range: DateRangeSelection): void {
+    if (range.preset === 'alltime') {
+      this.startDate = '';
+      this.endDate = '';
+    } else {
+      this.startDate = range.startDate;
+      this.endDate = range.endDate;
     }
+    this.loadData();
   }
 
-  ngOnDestroy(): void {
-    this.chart?.destroy();
+  private loadData(): void {
+    this.loading = true;
+    this.adminService.getSublabels(this.startDate || undefined, this.endDate || undefined).subscribe({
+      next: (brands) => {
+        this.childBrands = brands;
+        this.loading = false;
+        this.renderChart();
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
 
   private renderChart(): void {
-    if (!this.pieChartRef) return;
+    if (!this.viewReady || !this.pieChartRef) return;
 
     this.chart?.destroy();
     this.chart = null;
