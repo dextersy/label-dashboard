@@ -126,7 +126,7 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
 
   // Kebab menu state
   openKebabItem: any = null;
-  dropdownPosition: { top: number | null; bottom: number | null; right: number } | null = null;
+  dropdownPosition: { top: number | null; bottom: number | null; right: number; maxHeight: number; measuring: boolean } | null = null;
 
   // Mobile actions dropdown state
   mobileActionsOpen: boolean = false;
@@ -135,8 +135,11 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
   // Close dropdown on any scroll (capture phase catches scrolling within nested containers too)
   private readonly scrollCloseHandler = () => this.closeAllKebabs();
 
-  @HostListener('document:click')
-  closeAllKebabs(): void {
+  @HostListener('document:click', ['$event'])
+  closeAllKebabs(event?: MouseEvent): void {
+    // Don't close if the click originated inside a kebab dropdown or button
+    // (handles native scrollbar clicks which bypass stopPropagation on the div)
+    if (event && (event.target as Element).closest('.kebab-dropdown, .kebab-btn')) return;
     this.openKebabItem = null;
     this.dropdownPosition = null;
     this.mobileActionsOpen = false;
@@ -172,22 +175,32 @@ export class PaginatedTableComponent implements OnInit, OnChanges, OnDestroy {
       const bottomNavEl = document.querySelector('.mobile-bottom-nav') as HTMLElement | null;
       const bottomNavHeight = (bottomNavEl && bottomNavEl.offsetParent !== null) ? bottomNavEl.offsetHeight : 0;
       const effectiveBottom = viewportHeight - bottomNavHeight;
-      const estimatedDropdownHeight = 300;
       const margin = 8;
-      const spaceBelow = effectiveBottom - rect.bottom;
-      const spaceAbove = rect.top;
+      const clientWidth = document.documentElement.clientWidth;
+      const right = clientWidth - rect.right;
+      const spaceBelow = effectiveBottom - rect.bottom - margin;
+      const spaceAbove = rect.top - margin;
       this.openKebabItem = item;
-      if (spaceBelow >= estimatedDropdownHeight) {
-        // Enough room below — open downward
-        this.dropdownPosition = { top: rect.bottom + 2, bottom: null, right: document.documentElement.clientWidth - rect.right };
-      } else if (spaceAbove >= estimatedDropdownHeight) {
-        // Not enough room below but enough above — flip upward
-        this.dropdownPosition = { top: null, bottom: viewportHeight - rect.top + 2, right: document.documentElement.clientWidth - rect.right };
-      } else {
-        // Neither fits fully — clamp top so it stays within viewport (above the bottom nav)
-        const top = Math.max(margin, Math.min(rect.bottom + 2, effectiveBottom - estimatedDropdownHeight - margin));
-        this.dropdownPosition = { top, bottom: null, right: document.documentElement.clientWidth - rect.right };
-      }
+      // Phase 1: render off-screen invisibly to measure actual menu height
+      this.dropdownPosition = { top: -9999, bottom: null, right, maxHeight: 9999, measuring: true };
+      setTimeout(() => {
+        if (this.openKebabItem !== item) return; // closed before we could measure
+        const el = document.querySelector('.kebab-dropdown') as HTMLElement | null;
+        const menuHeight = el ? el.scrollHeight : 300;
+        // Phase 2: position using actual height
+        if (spaceBelow >= menuHeight && spaceBelow >= spaceAbove) {
+          // Enough room below — open downward
+          this.dropdownPosition = { top: rect.bottom + 2, bottom: null, right, maxHeight: spaceBelow, measuring: false };
+        } else if (spaceAbove >= menuHeight) {
+          // Enough room above — flip upward
+          this.dropdownPosition = { top: null, bottom: viewportHeight - rect.top + 2, right, maxHeight: spaceAbove, measuring: false };
+        } else {
+          // Neither direction fits the full menu — fly out to the left
+          const maxHeight = effectiveBottom - margin - margin;
+          const top = Math.max(margin, Math.min(rect.top, effectiveBottom - margin - maxHeight));
+          this.dropdownPosition = { top, bottom: null, right: clientWidth - rect.left + 4, maxHeight, measuring: false };
+        }
+      });
     }
   }
 

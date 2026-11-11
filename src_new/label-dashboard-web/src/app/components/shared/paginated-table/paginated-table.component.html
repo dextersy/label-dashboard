@@ -383,6 +383,8 @@
      [style.top.px]="dropdownPosition.top !== null ? dropdownPosition.top : undefined"
      [style.bottom.px]="dropdownPosition.bottom !== null ? dropdownPosition.bottom : undefined"
      [style.right.px]="dropdownPosition.right"
+     [style.max-height.px]="dropdownPosition.maxHeight"
+     [style.visibility]="dropdownPosition.measuring ? 'hidden' : 'visible'"
      (click)="$event.stopPropagation()">
   <ng-container *ngIf="actions.length > 0">
     <ng-container *ngFor="let bucket of getVisibleActionsGrouped(openKebabItem); let first = first; let last = last">
