@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
+import { HttpEventType } from '@angular/common/http';
 import { Release, ReleaseService } from '../../../../services/release.service';
 import { SongService } from '../../../../services/song.service';
 import { AudioPlayerService } from '../../../../services/audio-player.service';
@@ -54,6 +55,17 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
   // Per-song download state
   downloadingSongMaster: { [songId: number]: boolean } = {};
   downloadingSongMp3: { [songId: number]: boolean } = {};
+
+  // Per-song upload state (admin only)
+  uploadProgress: { [songId: number]: number } = {};
+
+  isUploading(songId: number | undefined): boolean {
+    return songId !== undefined && songId in this.uploadProgress;
+  }
+
+  getUploadProgress(songId: number): number {
+    return this.uploadProgress[songId] ?? 0;
+  }
 
   // Download priority pitch state
   downloadingPriorityPitch = false;
@@ -814,6 +826,67 @@ export class ReleaseViewComponent implements OnInit, OnChanges, OnDestroy {
         this.downloadingSongMp3[song.id] = false;
         const errorMessage = error.status === 404 ? `No MP3 available for "${song.title}".` : `Failed to download MP3 for "${song.title}".`;
         this.alertMessage.emit({ type: 'error', message: errorMessage });
+      }
+    });
+  }
+
+  onUploadAudio(song: any): void {
+    if (!song.id) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.wav,audio/wav,audio/x-wav';
+    input.onchange = async (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (!file.type.includes('wav') && !file.name.toLowerCase().endsWith('.wav')) {
+        this.alertMessage.emit({ type: 'error', message: 'Only WAV files are allowed for audio masters' });
+        return;
+      }
+      const storageResult = await this.planLimitService.checkStorageLimit(file.size);
+      if (storageResult === 'blocked_admin') {
+        this.planLimitService.showUpgradeModal({ limit_type: 'storage' });
+        return;
+      }
+      if (storageResult === 'blocked_nonadmin') {
+        this.alertMessage.emit({ type: 'error', message: 'Not enough storage. Contact your label representative for support.' });
+        return;
+      }
+      this.uploadAudioFile(song, file);
+    };
+    input.click();
+  }
+
+  private uploadAudioFile(song: any, file: File): void {
+    this.uploadProgress[song.id] = 0;
+
+    this.songService.uploadAudio(song.id, file).subscribe({
+      next: (event: any) => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          this.uploadProgress[song.id] = Math.round((100 * event.loaded) / event.total);
+        } else if (event.type === HttpEventType.Response) {
+          delete this.uploadProgress[song.id];
+          const songs = this.release?.songs as any[];
+          if (songs) {
+            const index = songs.findIndex((s: any) => s.id === song.id);
+            if (index !== -1) {
+              songs[index] = {
+                ...songs[index],
+                audio_file: event.body?.audio_file ?? songs[index].audio_file,
+                audio_file_size: event.body?.audio_file_size ?? songs[index].audio_file_size,
+                audio_file_mp3: event.body?.audio_file_mp3 ?? songs[index].audio_file_mp3,
+                audio_file_mp3_size: event.body?.audio_file_mp3_size ?? songs[index].audio_file_mp3_size,
+                ...(event.body?.duration != null ? { duration: event.body.duration } : {})
+              };
+            }
+          }
+          this.alertMessage.emit({ type: 'success', message: `Audio uploaded successfully for "${song.title}"` });
+          this.planLimitService.refreshStorageInfo();
+        }
+      },
+      error: (error: any) => {
+        delete this.uploadProgress[song.id];
+        if (this.planLimitService.handleLimitError(error)) return;
+        this.alertMessage.emit({ type: 'error', message: `Failed to upload audio for "${song.title}"` });
       }
     });
   }

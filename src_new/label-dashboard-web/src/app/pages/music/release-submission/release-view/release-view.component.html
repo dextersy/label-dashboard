@@ -530,7 +530,7 @@
                 <app-icon [name]="expandedTrackIds.has(song.id) ? 'chevron-up' : 'chevron-down'" />
               </button>
               <div class="kebab-container track-kebab-desktop"
-                   *ngIf="song.audio_file || song.audio_file_mp3 || song.lyrics"
+                   *ngIf="song.audio_file || song.audio_file_mp3 || song.lyrics || isAdmin"
                    (click)="$event.stopPropagation()">
                 <button class="kebab-btn" type="button"
                         (click)="toggleTrackKebab(song, $event)"
@@ -539,6 +539,17 @@
                 </button>
               </div>
             </span>
+          </div>
+
+          <!-- Upload progress bar (admin only) -->
+          <div *ngIf="isUploading(song.id)" class="tw-px-3 tw-pb-2">
+            <div class="progress" style="height: 4px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                   role="progressbar"
+                   [style.width.%]="getUploadProgress(song.id)">
+              </div>
+            </div>
+            <small class="tw-text-muted">Uploading... {{ getUploadProgress(song.id) }}%</small>
           </div>
 
           <!-- Expanded details panel (mobile always, desktop on demand) -->
@@ -600,6 +611,14 @@
            [style.top.px]="trackKebabPosition.top"
            [style.right.px]="trackKebabPosition.right"
            (click)="$event.stopPropagation()">
+        <button *ngIf="isAdmin" class="btn-ghost"
+                (click)="onUploadAudio(openTrackKebabItem); closeTrackKebab()"
+                [disabled]="isUploading(openTrackKebabItem.id)">
+          <app-icon [name]="isUploading(openTrackKebabItem.id) ? 'spinner' : 'upload'"
+                    class="tw-mr-2"
+                    [class.tw-animate-spin]="isUploading(openTrackKebabItem.id)" />
+          {{ isUploading(openTrackKebabItem.id) ? 'Uploading...' : openTrackKebabItem.audio_file ? 'Replace Audio' : 'Upload Audio' }}
+        </button>
         <button *ngIf="openTrackKebabItem.lyrics" class="btn-ghost"
                 (click)="openLyricsModal(openTrackKebabItem); closeTrackKebab()">
           <app-icon name="paragraph" class="tw-mr-2" />View Lyrics

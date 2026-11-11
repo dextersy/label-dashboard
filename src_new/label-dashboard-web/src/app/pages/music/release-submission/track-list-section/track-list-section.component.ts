@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpEventType } from '@angular/common/http';
 import { SongService, Song } from '../../../../services/song.service';
 import { ReleaseService } from '../../../../services/release.service';
 import { AuthService } from '../../../../services/auth.service';
@@ -197,12 +198,11 @@ export class TrackListSectionComponent implements OnInit, OnChanges {
 
     this.songService.uploadAudio(songId, file).subscribe({
       next: (event) => {
-        if (event.type === 1) { // HttpEventType.UploadProgress
-          // Calculate and update progress percentage
+        if (event.type === HttpEventType.UploadProgress) {
           if (event.total) {
             this.uploadProgress[songId] = Math.round((100 * event.loaded) / event.total);
           }
-        } else if (event.type === 4) { // HttpEventType.Response
+        } else if (event.type === HttpEventType.Response) {
           // Upload complete
           delete this.uploadProgress[songId];
           this.alertMessage.emit({

@@ -120,7 +120,7 @@ export class SongService {
     );
   }
 
-  uploadAudio(songId: number, audioFile: File): Observable<HttpEvent<{ message: string; audio_file: string }>> {
+  uploadAudio(songId: number, audioFile: File): Observable<HttpEvent<{ message: string; audio_file: string; audio_file_size: number; audio_file_mp3?: string; audio_file_mp3_size?: number; duration: number | null }>> {
     const formData = new FormData();
     formData.append('audio', audioFile);
 
@@ -129,7 +129,7 @@ export class SongService {
       'Authorization': token ? `Bearer ${token}` : ''
     });
 
-    return this.http.post<{ message: string; audio_file: string }>(
+    return this.http.post<{ message: string; audio_file: string; audio_file_size: number; audio_file_mp3?: string; audio_file_mp3_size?: number; duration: number | null }>(
       `${this.baseUrl}/songs/${songId}/audio`,
       formData,
       {
