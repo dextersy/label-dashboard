@@ -821,22 +821,38 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Only Draft releases can be deleted' });
     }
 
-    // Get song IDs linked to this release
-    const songIds = release.songs?.map((song: any) => song.id) || [];
+    // Get song objects linked to this release (for S3 cleanup)
+    const linkedSongs: any[] = release.songs || [];
+    const songIds = linkedSongs.map((song: any) => song.id);
 
     // Remove all release-song links for this release
     await ReleaseSong.destroy({ where: { release_id: releaseId } });
 
     // Find orphaned songs (no longer linked to any release) and delete them
     if (songIds.length > 0) {
-      for (const songId of songIds) {
-        const remainingLinks = await ReleaseSong.count({ where: { song_id: songId } });
+      for (const song of linkedSongs) {
+        const remainingLinks = await ReleaseSong.count({ where: { song_id: song.id } });
         if (remainingLinks === 0) {
+          // Delete audio files from S3
+          if (song.audio_file) {
+            try {
+              await deleteFromS3({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: song.audio_file });
+            } catch (s3Error) {
+              console.error('S3 delete error (WAV):', s3Error);
+            }
+          }
+          if (song.audio_file_mp3) {
+            try {
+              await deleteFromS3({ Bucket: process.env.S3_BUCKET_MASTERS!, Key: song.audio_file_mp3 });
+            } catch (s3Error) {
+              console.error('S3 delete error (MP3):', s3Error);
+            }
+          }
           // Delete song-related records
-          await SongCollaborator.destroy({ where: { song_id: songId } });
-          await SongAuthor.destroy({ where: { song_id: songId } });
-          await SongComposer.destroy({ where: { song_id: songId } });
-          await Song.destroy({ where: { id: songId } });
+          await SongCollaborator.destroy({ where: { song_id: song.id } });
+          await SongAuthor.destroy({ where: { song_id: song.id } });
+          await SongComposer.destroy({ where: { song_id: song.id } });
+          await Song.destroy({ where: { id: song.id } });
         }
       }
     }
@@ -860,7 +876,17 @@ export const deleteRelease = async (req: AuthRequest, res: Response) => {
     // 7. Delete release-artist associations
     await ReleaseArtist.destroy({ where: { release_id: releaseId } });
 
-    // 8. Finally, delete the release itself
+    // 8. Delete cover art from S3
+    if (release.cover_art && release.cover_art.startsWith('https://')) {
+      try {
+        const coverArtKey = new URL(release.cover_art).pathname.substring(1);
+        await deleteFromS3({ Bucket: process.env.S3_BUCKET!, Key: coverArtKey });
+      } catch (s3Error) {
+        console.error('S3 delete error (cover art):', s3Error);
+      }
+    }
+
+    // 9. Finally, delete the release itself
     await release.destroy();
 
     res.json({ message: 'Release deleted successfully' });
