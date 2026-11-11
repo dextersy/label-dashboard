@@ -1,9 +1,14 @@
 import { Readable } from 'stream';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { getCachedModelUrl, prewarmModels } from './modelCache';
 
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
@@ -249,6 +254,39 @@ export async function extractMoodScores(audioBuffer: Buffer): Promise<MoodScores
   }
 
   return scores;
+}
+
+// ── Duration via ffprobe ──────────────────────────────────────────────────────
+
+/**
+ * Extract duration in seconds from any audio buffer using ffprobe.
+ * Handles all WAV variants (standard, broadcast WAV, RF64) and other formats.
+ * Returns null if ffprobe fails or duration is unavailable.
+ */
+export async function extractDurationFromWav(buffer: Buffer): Promise<number | null> {
+  const tmpFile = path.join(os.tmpdir(), `duration-${Date.now()}-${Math.random().toString(36).slice(2)}.wav`);
+  try {
+    await fs.promises.writeFile(tmpFile, buffer);
+    return await new Promise((resolve) => {
+      ffmpeg(tmpFile).ffprobe((err: any, data: any) => {
+        if (err) {
+          console.error('[extractDuration] ffprobe error:', err?.message ?? err);
+          resolve(null);
+          return;
+        }
+        const raw = data?.format?.duration;
+        const seconds = parseFloat(raw);
+        if (!isFinite(seconds)) {
+          console.warn('[extractDuration] duration not finite, raw value:', raw);
+          resolve(null);
+          return;
+        }
+        resolve(Math.round(seconds));
+      });
+    });
+  } finally {
+    fs.promises.unlink(tmpFile).catch(() => {});
+  }
 }
 
 // ── Serial queue ──────────────────────────────────────────────────────────────

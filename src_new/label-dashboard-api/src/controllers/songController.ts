@@ -9,7 +9,7 @@ async function getChildBrandIds(brandId: number): Promise<number[]> {
 }
 import { uploadToS3, deleteFromS3, headS3Object, getS3ObjectStream } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
-import { extractDSPFeatures, extractMoodScores, enqueueAudioExtraction } from '../utils/audioFeatures';
+import { extractDSPFeatures, extractMoodScores, enqueueAudioExtraction, extractDurationFromWav } from '../utils/audioFeatures';
 import { generateSongSummaryBackground } from '../utils/songAI';
 import { Readable } from 'stream';
 
@@ -818,12 +818,15 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       mp3FileSize = undefined;
     }
 
-    // Detect BPM and duration from the uploaded audio before responding
-    // so the frontend can display updated values immediately
+    // Extract duration via ffprobe — fast (header read only, no decoding).
+    // Saved before the response so the frontend can display it immediately.
+    const duration = await extractDurationFromWav(req.file.buffer).catch(() => null);
+
     const songUpdates: any = {
       audio_file: fileName,
       audio_file_size: fileSize,
-      ...(mp3FileName ? { audio_file_mp3: mp3FileName, audio_file_mp3_size: mp3FileSize } : {})
+      ...(mp3FileName ? { audio_file_mp3: mp3FileName, audio_file_mp3_size: mp3FileSize } : {}),
+      ...(duration !== null ? { duration } : {})
     };
 
     await song.update(songUpdates);
@@ -833,7 +836,8 @@ export const uploadAudio = async (req: AuthRequest, res: Response) => {
       audio_file: fileName,
       audio_file_size: fileSize,
       audio_file_mp3: mp3FileName,
-      audio_file_mp3_size: mp3FileSize
+      audio_file_mp3_size: mp3FileSize,
+      duration
     });
 
     // Run DSP + mood extraction in background after response is sent.
