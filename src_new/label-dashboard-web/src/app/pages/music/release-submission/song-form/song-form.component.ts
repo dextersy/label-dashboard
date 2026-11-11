@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Song, SongCollaborator, SongAuthor, SongComposer, Songwriter } from '../../../../services/song.service';
 import { ApiService } from '../../../../services/api.service';
 import { SongwriterService } from '../../../../services/songwriter.service';
@@ -14,7 +15,7 @@ import { IconComponent } from '../../../../components/shared/icon/icon.component
     styleUrl: './song-form.component.scss',
     encapsulation: ViewEncapsulation.None
 })
-export class SongFormComponent implements OnChanges, OnInit {
+export class SongFormComponent implements OnChanges, OnInit, OnDestroy {
   @Input() isVisible: boolean = false;
   @Input() releaseId: number = 0;
   @Input() song: Song | null = null;
@@ -39,6 +40,9 @@ export class SongFormComponent implements OnChanges, OnInit {
   authorInputFocused: boolean = false;
   composerInputFocused: boolean = false;
   nextTempSongwriterId: number = -1; // Negative IDs for temporary songwriters
+
+  private authorSearch$ = new Subject<string>();
+  private composerSearch$ = new Subject<string>();
 
   songForm = {
     title: '',
@@ -81,6 +85,45 @@ export class SongFormComponent implements OnChanges, OnInit {
   ngOnInit(): void {
     this.loadArtists();
     this.loadSongwriters();
+
+    this.authorSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(search => this.songwriterService.searchSongwriters(search))
+    ).subscribe({
+      next: (response) => {
+        const addedIds = this.songForm.authors.map(a => a.songwriter_id);
+        const apiResults = response.songwriters || [];
+        const tempMatches = this.songwriters.filter(s =>
+          s.id < 0 &&
+          !addedIds.includes(s.id) &&
+          s.name.toLowerCase().includes(this.newAuthor.name.toLowerCase())
+        );
+        this.filteredAuthorSongwriters = [...tempMatches, ...apiResults.filter(s => !addedIds.includes(s.id))];
+      }
+    });
+
+    this.composerSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(search => this.songwriterService.searchSongwriters(search))
+    ).subscribe({
+      next: (response) => {
+        const addedIds = this.songForm.composers.map(c => c.songwriter_id);
+        const apiResults = response.songwriters || [];
+        const tempMatches = this.songwriters.filter(s =>
+          s.id < 0 &&
+          !addedIds.includes(s.id) &&
+          s.name.toLowerCase().includes(this.newComposer.name.toLowerCase())
+        );
+        this.filteredComposerSongwriters = [...tempMatches, ...apiResults.filter(s => !addedIds.includes(s.id))];
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.authorSearch$.complete();
+    this.composerSearch$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -152,19 +195,27 @@ export class SongFormComponent implements OnChanges, OnInit {
   }
 
   onAuthorNameChange(): void {
-    const search = this.newAuthor.name.toLowerCase();
-    const addedIds = this.songForm.authors.map(a => a.songwriter_id);
-    this.filteredAuthorSongwriters = this.getFilteredSongwriters(search, addedIds);
     this.showAuthorDropdown = true;
     this.newAuthor.songwriter_id = 0;
+    const search = this.newAuthor.name;
+    if (search.trim()) {
+      this.authorSearch$.next(search);
+    } else {
+      const addedIds = this.songForm.authors.map(a => a.songwriter_id);
+      this.filteredAuthorSongwriters = this.getFilteredSongwriters('', addedIds);
+    }
   }
 
   onComposerNameChange(): void {
-    const search = this.newComposer.name.toLowerCase();
-    const addedIds = this.songForm.composers.map(c => c.songwriter_id);
-    this.filteredComposerSongwriters = this.getFilteredSongwriters(search, addedIds);
     this.showComposerDropdown = true;
     this.newComposer.songwriter_id = 0;
+    const search = this.newComposer.name;
+    if (search.trim()) {
+      this.composerSearch$.next(search);
+    } else {
+      const addedIds = this.songForm.composers.map(c => c.songwriter_id);
+      this.filteredComposerSongwriters = this.getFilteredSongwriters('', addedIds);
+    }
   }
 
   private getFilteredSongwriters(search: string, excludeIds: number[]): Songwriter[] {

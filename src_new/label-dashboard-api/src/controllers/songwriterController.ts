@@ -22,11 +22,17 @@ export const searchSongwriters = async (req: AuthRequest, res: Response) => {
       ];
     }
 
-    const songwriters = await Songwriter.findAll({
+    const queryOptions: any = {
       where: whereClause,
-      order: [['name', 'ASC']],
-      limit: 50 // Limit results for autocomplete
-    });
+      order: [['name', 'ASC']]
+    };
+
+    // Only limit when no search term is provided to avoid dumping the entire table
+    if (!search) {
+      queryOptions.limit = 50;
+    }
+
+    const songwriters = await Songwriter.findAll(queryOptions);
 
     res.json({ songwriters });
   } catch (error) {
