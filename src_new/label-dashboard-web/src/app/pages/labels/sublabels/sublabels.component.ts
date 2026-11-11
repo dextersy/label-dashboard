@@ -221,25 +221,6 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
 
   sublabelActions: TableAction[] = [
     {
-      icon: 'key',
-      label: 'Log in as Admin',
-      hidden: (item) => !this.hasDomains(item) || !this.authService.isAdmin(),
-      handler: (item) => this.loginAsSublabelAdmin(item)
-    },
-    {
-      icon: 'users',
-      label: 'Manage Admins',
-      group: 'Administration',
-      handler: (item) => this.openAdminsModal(item)
-    },
-    {
-      icon: 'shield',
-      label: 'Verify Domains',
-      group: 'Administration',
-      hidden: (item) => !this.canVerifyDomains(item),
-      handler: (item) => this.verifyDomains(item)
-    },
-    {
       icon: 'tag',
       label: 'Assign Plan',
       group: 'Plan',
@@ -270,9 +251,30 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       handler: (item) => this.openPayoutModal(item)
     },
     {
+      icon: 'key',
+      label: 'Log in as Admin',
+      group: 'Administration',
+      hidden: (item) => !this.hasDomains(item) || !this.authService.isAdmin(),
+      handler: (item) => this.loginAsSublabelAdmin(item)
+    },
+    {
+      icon: 'users',
+      label: 'Manage Admins',
+      group: 'Administration',
+      handler: (item) => this.openAdminsModal(item)
+    },
+    {
+      icon: 'shield',
+      label: 'Verify Domains',
+      group: 'Administration',
+      hidden: (item) => !this.canVerifyDomains(item),
+      handler: (item) => this.verifyDomains(item)
+    },
+    {
       icon: 'ban',
       label: 'Deactivate',
       type: 'danger',
+      group: 'Administration',
       hidden: () => !this.isSuperAdmin(),
       handler: (item) => this.deactivateSublabel(item)
     }
