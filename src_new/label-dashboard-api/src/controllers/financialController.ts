@@ -692,8 +692,11 @@ const findMatchingReleaseForProduct = (
       // Require ≥50% token overlap to prevent spurious single-token matches
       const titleTokens = new Set(normalizeForBM25(release.title || '').split(' ').filter((t: string) => t.length > 1));
       const shared = [...queryTokens].filter(t => titleTokens.has(t)).length;
-      const overlap = shared / Math.min(queryTokens.size, titleTokens.size);
-      if (overlap >= 0.5) return { release, score: bm25Score };
+      // Require that ≥75% of the release title's tokens appear in the product name.
+      // Using titleTokens.size as denominator (not min) prevents short titles from
+      // matching on a single incidental word (e.g. "Kid" in "Kid Cloud" vs "Cosmic Kid - Long Sleeve").
+      const titleCoverage = titleTokens.size > 0 ? shared / titleTokens.size : 0;
+      if (titleCoverage >= 0.75) return { release, score: bm25Score };
     }
   }
 
