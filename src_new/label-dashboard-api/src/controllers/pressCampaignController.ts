@@ -234,7 +234,7 @@ async function enrichCampaign(campaign: any): Promise<any> {
   // For release campaigns: artists come from the release
   if (plain.campaign_type === 'event' && plain.artist_id) {
     const artist = await Artist.findOne({
-      where: { id: plain.artist_id, brand_id: brandId },
+      where: { id: plain.artist_id, brand_id: brandId, epk_template: { [Op.ne]: 0 } },
       attributes: ['id', 'name', 'bio', 'profile_photo', 'instagram_handle', 'facebook_handle', 'twitter_handle', 'tiktok_handle', 'youtube_channel'],
       include: [{ model: ArtistImage, as: 'images', attributes: ['id', 'path', 'credits', 'display_order'] }],
     });
@@ -261,6 +261,8 @@ async function enrichCampaign(campaign: any): Promise<any> {
           as: 'artists',
           attributes: ['id', 'name', 'bio', 'profile_photo', 'instagram_handle', 'facebook_handle', 'twitter_handle', 'tiktok_handle', 'youtube_channel'],
           through: { attributes: [] },
+          where: { epk_template: { [Op.ne]: 0 } },
+          required: false,
         },
         {
           model: Song,
@@ -1508,6 +1510,7 @@ export const searchArtists = async (req: Request, res: Response) => {
         brand_id: brandId,
         name: { [Op.like]: `%${escapeLikeWildcards(search)}%` },
         status: 'Active',
+        epk_template: { [Op.ne]: 0 },
       },
       attributes: ['id', 'name', 'profile_photo', 'bio'],
       limit: 20,
