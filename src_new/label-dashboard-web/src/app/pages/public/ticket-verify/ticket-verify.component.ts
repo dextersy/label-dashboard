@@ -158,11 +158,19 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       this.currentEventDay = null;
       return;
     }
-    const today = new Date().toISOString().substring(0, 10); // YYYY-MM-DD UTC
-    const match = days.find(d => {
+    const nowMs = Date.now();
+    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+    const matching = days.filter(d => {
       if (!d.date_and_time) return false;
-      return new Date(d.date_and_time).toISOString().substring(0, 10) === today;
+      const eventDate = new Date(d.date_and_time);
+      const eventMidnightUTC = Date.UTC(eventDate.getUTCFullYear(), eventDate.getUTCMonth(), eventDate.getUTCDate());
+      // Window: 12 hours before the event's actual start time → end of event's UTC calendar day
+      const windowStart = eventDate.getTime() - TWELVE_HOURS_MS;
+      const windowEnd = eventMidnightUTC + 24 * 60 * 60 * 1000;
+      return nowMs >= windowStart && nowMs < windowEnd;
     });
+    // Pick the latest matching day for display
+    const match = matching.sort((a, b) => new Date(b.date_and_time).getTime() - new Date(a.date_and_time).getTime())[0] ?? null;
     this.currentEventDay = match || null;
     // Show warning when it's a multiday event but none of the days match today
     if (days.length > 1 && !match) {

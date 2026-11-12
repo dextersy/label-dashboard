@@ -95,20 +95,35 @@ export const scannerLogin = async (req: Request, res: Response) => {
  * Find the EventDay matching today's calendar date for a given event.
  * Returns null if no day matches today (soft warning — scanning is still allowed by caller).
  */
-const findCurrentEventDay = async (eventId: number): Promise<EventDay | null> => {
+const findActiveEventDays = async (eventId: number): Promise<EventDay[]> => {
   const days = await EventDay.findAll({ where: { event_id: eventId } });
-  if (days.length === 0) return null;
-  if (days.length === 1) return days[0];
+  if (days.length === 0) return [];
+  if (days.length === 1) return days;
 
-  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD UTC
-  const matching = days.filter(d => {
-    const dayStr = new Date(d.date_and_time).toISOString().slice(0, 10);
-    return dayStr === todayStr;
+  const nowMs = Date.now();
+  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+  return days.filter(d => {
+    const eventDate = new Date(d.date_and_time);
+    const eventMidnightUTC = Date.UTC(eventDate.getUTCFullYear(), eventDate.getUTCMonth(), eventDate.getUTCDate());
+    const windowStart = eventDate.getTime() - TWELVE_HOURS_MS;
+    const windowEnd = eventMidnightUTC + 24 * 60 * 60 * 1000;
+    return nowMs >= windowStart && nowMs < windowEnd;
   });
+};
 
-  if (matching.length === 0) return null;
-  // Pick earliest matching day if there are multiple on the same calendar date
-  return matching.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())[0];
+/**
+ * From a list of active event days, find the one this ticket type is valid for.
+ * Returns the matching day, or null if none match.
+ */
+const resolveEventDayForTicket = async (activeDays: EventDay[], ticketTypeId: number | null): Promise<EventDay | null> => {
+  if (activeDays.length === 0) return null;
+  if (!ticketTypeId) return activeDays[0];
+
+  for (const day of activeDays.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())) {
+    const link = await TicketTypeDay.findOne({ where: { ticket_type_id: ticketTypeId, event_day_id: day.id } });
+    if (link) return day;
+  }
+  return null;
 };
 
 /**
@@ -151,17 +166,13 @@ export const scannerGetTicket = async (req: ScannerRequest, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found or not confirmed' });
     }
 
-    // Determine current event day
-    const currentEventDay = await findCurrentEventDay(eventId!);
+    // Determine current event day for this specific ticket
+    const activeDays = await findActiveEventDays(eventId!);
+    const currentEventDay = await resolveEventDayForTicket(activeDays, ticket.ticket_type_id);
 
-    // Check if this ticket's type is valid for today's day (only enforce if a day was found)
-    if (currentEventDay && ticket.ticket_type_id) {
-      const dayLink = await TicketTypeDay.findOne({
-        where: { ticket_type_id: ticket.ticket_type_id, event_day_id: currentEventDay.id }
-      });
-      if (!dayLink) {
-        return res.status(403).json({ error: 'This ticket is not valid for today' });
-      }
+    // If there are active days but none match this ticket type, it's not valid today
+    if (activeDays.length > 0 && !currentEventDay) {
+      return res.status(403).json({ error: 'This ticket is not valid for today' });
     }
 
     // Compute per-day claimed count
@@ -255,17 +266,13 @@ export const scannerCheckIn = async (req: ScannerRequest, res: Response) => {
       return res.status(400).json({ error: 'Ticket is not confirmed and cannot be checked in' });
     }
 
-    // Determine current event day
-    const currentEventDay = await findCurrentEventDay(eventId!);
+    // Determine current event day for this specific ticket
+    const activeDays = await findActiveEventDays(eventId!);
+    const currentEventDay = await resolveEventDayForTicket(activeDays, ticket.ticket_type_id);
 
-    // Validate ticket type is valid for today (only enforce when a day is found)
-    if (currentEventDay && ticket.ticket_type_id) {
-      const dayLink = await TicketTypeDay.findOne({
-        where: { ticket_type_id: ticket.ticket_type_id, event_day_id: currentEventDay.id }
-      });
-      if (!dayLink) {
-        return res.status(403).json({ error: 'This ticket is not valid for today' });
-      }
+    // If there are active days but none match this ticket type, it's not valid today
+    if (activeDays.length > 0 && !currentEventDay) {
+      return res.status(403).json({ error: 'This ticket is not valid for today' });
     }
 
     // Wrap the read-validate-write in a transaction with row lock to prevent double check-in
