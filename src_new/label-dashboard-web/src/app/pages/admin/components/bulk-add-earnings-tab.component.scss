@@ -64,10 +64,23 @@
     }
 
     td {
-      padding: 0.75rem;
+      padding: 0.5rem 0.75rem;
       vertical-align: middle;
+
+      // Compact input/select sizing for dense table rows
+      .tw-input {
+        font-size: 13px;
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+        height: auto;
+      }
     }
   }
+}
+
+// Keep date input height consistent with the smaller inputs
+.earnings-table input[type="date"].tw-input {
+  height: 34px;
 }
 
 // Row number column — narrow, centred, muted
@@ -494,13 +507,22 @@
   border-radius: 10px;
   padding: 4px;
   border: 1px solid #e9ecef;
+
+  @media (max-width: 575px) {
+    width: 100%;
+  }
 }
 
 .sub-tab-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 8px 20px;
+
+  @media (max-width: 575px) {
+    flex: 1;
+  }
   border: none;
   border-radius: 7px;
   background: transparent;
@@ -615,6 +637,23 @@ input[type="date"].tw-input {
 }
 
 // ── Mobile card layout ────────────────────────────────────────────────────────
+
+// Compact input sizing inside mobile cards
+.apply-all-card,
+.earning-card {
+  .tw-input {
+    font-size: 13px;
+    height: 34px;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 34px;
+  }
+
+  // selects need line-height reset or text sits oddly
+  select.tw-input {
+    line-height: normal;
+  }
+}
 
 // Apply-to-all card
 .apply-all-card {

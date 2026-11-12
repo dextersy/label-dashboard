@@ -1,7 +1,7 @@
 <!-- Page Header -->
 <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
   <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-    <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-3">
+    <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between tw-gap-3 sm:tw-flex-nowrap">
       <h3 class="tw-mb-0">
         <app-icon name="file-upload" class="tw-mr-2" />
         Bulk Add Earnings
@@ -40,8 +40,8 @@
           <th>Release</th>
           <th>Earning Date</th>
           <th>Earning Type</th>
-          <th>Earning Description</th>
-          <th>Earning Amount</th>
+          <th style="width:22%">Earning Description</th>
+          <th style="width:12%">Earning Amount</th>
           <th>Calculate Royalties</th>
           <th></th>
         </tr>
@@ -73,8 +73,15 @@
             </select>
           </td>
           <td>
-            <input type="text" class="tw-input" #applyAllDescInput placeholder="Description"
-                   (change)="applyAllDescription(applyAllDescInput.value); applyAllDescInput.value = ''">
+            <div class="tw-flex tw-items-center tw-gap-1.5">
+              <input type="text" class="tw-input tw-flex-1 tw-min-w-0" #applyAllDescInput placeholder="Description"
+                     maxlength="45"
+                     (input)="applyAllDescCount = applyAllDescInput.value.length"
+                     (change)="applyAllDescription(applyAllDescInput.value); applyAllDescInput.value = ''; applyAllDescCount = 0">
+              <span class="tw-text-xs tw-flex-shrink-0"
+                    [class.tw-text-muted]="(applyAllDescCount || 0) < 45"
+                    [class.tw-text-red-500]="(applyAllDescCount || 0) >= 45">{{ applyAllDescCount || 0 }}/45</span>
+            </div>
           </td>
           <td></td>
           <td>
@@ -145,9 +152,13 @@
             </select>
           </td>
           <td>
-            <input type="text" class="tw-input" [(ngModel)]="earning.description"
-                   placeholder="Description" maxlength="45">
-            <div class="tw-text-xs tw-text-right tw-mt-1" [class.tw-text-muted]="(earning.description?.length || 0) < 45" [class.tw-text-red-500]="(earning.description?.length || 0) >= 45">{{ earning.description?.length || 0 }}/45</div>
+            <div class="tw-flex tw-items-center tw-gap-1.5">
+              <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [(ngModel)]="earning.description"
+                     placeholder="Description" maxlength="45">
+              <span class="tw-text-xs tw-flex-shrink-0"
+                    [class.tw-text-muted]="(earning.description?.length || 0) < 45"
+                    [class.tw-text-red-500]="(earning.description?.length || 0) >= 45">{{ earning.description?.length || 0 }}/45</span>
+            </div>
           </td>
           <td>
             <div class="amount-input-container">
@@ -211,8 +222,15 @@
         </div>
         <div class="tw-col-span-2">
           <label class="tw-label tw-text-xs">Description</label>
-          <input type="text" class="tw-input" #applyAllDescMobileInput placeholder="Description"
-                 (change)="applyAllDescription(applyAllDescMobileInput.value); applyAllDescMobileInput.value = ''">
+          <div class="tw-flex tw-items-center tw-gap-1.5">
+            <input type="text" class="tw-input tw-flex-1 tw-min-w-0" #applyAllDescMobileInput placeholder="Description"
+                   maxlength="45"
+                   (input)="applyAllDescCountMobile = applyAllDescMobileInput.value.length"
+                   (change)="applyAllDescription(applyAllDescMobileInput.value); applyAllDescMobileInput.value = ''; applyAllDescCountMobile = 0">
+            <span class="tw-text-xs tw-flex-shrink-0"
+                  [class.tw-text-muted]="(applyAllDescCountMobile || 0) < 45"
+                  [class.tw-text-red-500]="(applyAllDescCountMobile || 0) >= 45">{{ applyAllDescCountMobile || 0 }}/45</span>
+          </div>
         </div>
       </div>
     </div>
@@ -300,9 +318,13 @@
         <!-- Description -->
         <div class="tw-col-span-2">
           <label class="tw-label tw-text-xs">Description</label>
-          <input type="text" class="tw-input" [(ngModel)]="earning.description"
-                 placeholder="Description" maxlength="45">
-          <div class="tw-text-xs tw-text-muted tw-text-right tw-mt-1">{{ earning.description?.length || 0 }}/45</div>
+          <div class="tw-flex tw-items-center tw-gap-1.5">
+            <input type="text" class="tw-input tw-flex-1 tw-min-w-0" [(ngModel)]="earning.description"
+                   placeholder="Description" maxlength="45">
+            <span class="tw-text-xs tw-flex-shrink-0"
+                  [class.tw-text-muted]="(earning.description?.length || 0) < 45"
+                  [class.tw-text-red-500]="(earning.description?.length || 0) >= 45">{{ earning.description?.length || 0 }}/45</span>
+          </div>
         </div>
 
         <!-- Amount -->

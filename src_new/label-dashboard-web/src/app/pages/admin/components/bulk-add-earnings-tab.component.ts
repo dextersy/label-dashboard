@@ -30,6 +30,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
   filteredReleases: Release[] = [];
   bulkEarnings: BulkEarning[] = [];
   totalEarnings: number = 0;
+  applyAllDescCount: number = 0;
+  applyAllDescCountMobile: number = 0;
   searchTerms: string[] = [];
   showDropdown: boolean[] = [];
 
