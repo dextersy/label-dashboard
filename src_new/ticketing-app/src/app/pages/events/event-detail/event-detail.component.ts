@@ -548,9 +548,13 @@ import { EventAddOnsComponent } from '../event-add-ons/event-add-ons.component';
                             @if (isManager()) {
                               <div class="flex items-center justify-end gap-3">
                                 <button (click)="resendTicket(ticket)" class="text-xs font-mono text-yellow-500 hover:text-yellow-600 uppercase tracking-wider">Resend</button>
-                                @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
+                                @if ((ticket.number_of_claimed_entries ?? 0) === 0 && (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed')) {
                                   <button (click)="openTransferModal(ticket)" class="text-xs font-mono text-blue-500 hover:text-blue-600 uppercase tracking-wider">Transfer</button>
+                                }
+                                @if ((ticket.number_of_claimed_entries ?? 0) === 0 && ticket.status !== 'Canceled' && ticket.status !== 'Refunded') {
                                   <button (click)="confirmAction('cancel', ticket)" class="text-xs font-mono text-gray-400 hover:text-gray-900 uppercase tracking-wider">Cancel</button>
+                                }
+                                @if (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed') {
                                   <button (click)="confirmAction('refund', ticket)" class="text-xs font-mono text-red-400 hover:text-red-300 uppercase tracking-wider">Refund</button>
                                 }
                               </div>

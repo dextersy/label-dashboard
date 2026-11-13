@@ -1401,12 +1401,43 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ error: errorMsg });
       }
 
-      // Check if event is past (admins can create custom tickets even when sales are closed)
-      if (event.date_and_time && new Date() > new Date(event.date_and_time)) {
-        const errorMsg = ticketsData.length > 1 
-          ? `Cannot create tickets for past event: ${event.title}` 
-          : 'Cannot create tickets for past events';
-        return res.status(400).json({ error: errorMsg });
+      // Check ticket type availability — same logic as the public buy page.
+      // Admins always bypass.
+      if (!req.user.is_admin) {
+        // 1. Check ticket type start_date / end_date
+        if (!ticketType.isAvailable()) {
+          const errorMsg = ticketsData.length > 1
+            ? `Ticket type is not available for ticket: ${name}`
+            : 'This ticket type is not currently available';
+          return res.status(400).json({ error: errorMsg });
+        }
+
+        // 2. For multi-day events, check if any of the ticket type's assigned days
+        //    ended more than 8h ago (same rule as the public buy page).
+        const eventDaysForCheck = await EventDay.findAll({
+          where: { event_id: eventIdNum },
+          order: [['date_and_time', 'ASC']]
+        });
+        if (eventDaysForCheck.length > 1) {
+          const ttDayLinks = await TicketTypeDay.findAll({
+            where: { ticket_type_id: ticketTypeIdNum }
+          });
+          if (ttDayLinks.length > 0) {
+            const ttDayIds = new Set(ttDayLinks.map((link: any) => link.event_day_id));
+            const assignedDays = eventDaysForCheck.filter((d: any) => ttDayIds.has(d.id));
+            const now = new Date();
+            const isDayExpired = assignedDays.some((d: any) => {
+              const endOfDay = new Date(new Date(d.date_and_time).getTime() + 8 * 60 * 60 * 1000);
+              return endOfDay < now;
+            });
+            if (isDayExpired) {
+              const errorMsg = ticketsData.length > 1
+                ? `Ticket type is no longer available for ticket: ${name}`
+                : 'This ticket type is no longer available';
+              return res.status(400).json({ error: errorMsg });
+            }
+          }
+        }
       }
 
       // Find referrer if code provided
@@ -2086,11 +2117,12 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
     const ticketIds = parseTicketIds(req.body, res);
     if (!ticketIds) return;
 
-    // Find tickets that belong to user's brand and are not already canceled
+    // Find tickets that belong to user's brand, are not already canceled, and have no claimed entries
     const tickets = await Ticket.findAll({
-      where: { 
+      where: {
         id: ticketIds,
-        status: { [Op.ne]: 'Canceled' }
+        status: { [Op.ne]: 'Canceled' },
+        number_of_claimed_entries: 0
       },
       include: [
         { 
@@ -2103,7 +2135,7 @@ export const cancelTicket = async (req: AuthRequest, res: Response) => {
     });
 
     if (tickets.length === 0) {
-      return res.status(404).json({ error: 'No eligible tickets found for cancellation (tickets may already be canceled or not found)' });
+      return res.status(404).json({ error: 'No eligible tickets found for cancellation (tickets may already be canceled, claimed, or not found)' });
     }
 
     if (!req.user.is_admin) {

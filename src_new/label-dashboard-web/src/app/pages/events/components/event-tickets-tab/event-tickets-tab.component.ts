@@ -571,7 +571,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isTicketCancellable(ticket: EventTicket): boolean {
-    return !this.isEventPast()
+    return ticket.status !== 'Canceled'
       && ticket.status !== 'Refunded'
       && Number(ticket.number_of_claimed_entries) === 0
       && !!this.isAdmin;
@@ -593,8 +593,7 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   isTicketTransferable(ticket: EventTicket): boolean {
-    // Allow transfer even if event is past, but only if no entries claimed
-    return ticket.status === 'Ticket sent.'
+    return (ticket.status === 'Ticket sent.' || ticket.status === 'Payment Confirmed')
       && Number(ticket.number_of_claimed_entries) === 0
       && !!this.isAdmin;
   }
