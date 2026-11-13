@@ -549,6 +549,17 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     if (ticket.status === 'Refunded') {
       return 'text-muted';
     }
+    const days = this.selectedEvent?.days;
+    if (days && days.length > 1 && ticket.scanLogs) {
+      // For multi-day events, only gray out if every day has been fully claimed
+      const allDaysClaimed = days.every((day: any) => {
+        const claimed = ticket.scanLogs!
+          .filter(log => log.event_day_id === day.id)
+          .reduce((sum, log) => sum + log.entries_claimed, 0);
+        return claimed >= Number(ticket.number_of_entries);
+      });
+      return allDaysClaimed ? 'text-muted' : '';
+    }
     return Number(ticket.number_of_claimed_entries) === Number(ticket.number_of_entries) ? 'text-muted' : '';
   }
 
