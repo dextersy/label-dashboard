@@ -421,13 +421,6 @@ export const getEvent = async (req: AuthRequest, res: Response) => {
         where: eventWhereClause,
         include: [
           { model: Brand, as: 'brand' },
-          // Only the fields needed for cancel-event checks (hasClaimedTickets, hasConfirmedTickets, onCancelEvent).
-          // No status filter here — hasClaimedTickets() must see scanned tickets even if later canceled/refunded.
-          {
-            model: Ticket,
-            as: 'tickets',
-            attributes: ['id', 'status', 'number_of_entries', 'number_of_claimed_entries', 'price_per_ticket'],
-          },
           { model: EventReferrer, as: 'referrers' },
           { model: TicketType, as: 'ticketTypes', include: [{ model: EventDay, as: 'days', through: { attributes: [] }, order: [['date_and_time', 'ASC']] }] },
           { model: EventTag, as: 'tags', through: { attributes: [] } },
