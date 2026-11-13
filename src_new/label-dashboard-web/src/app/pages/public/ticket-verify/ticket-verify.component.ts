@@ -159,13 +159,13 @@ export class TicketVerifyComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     const nowMs = Date.now();
-    const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+    const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
     const matching = days.filter(d => {
       if (!d.date_and_time) return false;
       const eventDate = new Date(d.date_and_time);
       const eventMidnightUTC = Date.UTC(eventDate.getUTCFullYear(), eventDate.getUTCMonth(), eventDate.getUTCDate());
       // Window: 12 hours before the event's actual start time → end of event's UTC calendar day
-      const windowStart = eventDate.getTime() - TWELVE_HOURS_MS;
+      const windowStart = eventDate.getTime() - EIGHT_HOURS_MS;
       const windowEnd = eventMidnightUTC + 24 * 60 * 60 * 1000;
       return nowMs >= windowStart && nowMs < windowEnd;
     });

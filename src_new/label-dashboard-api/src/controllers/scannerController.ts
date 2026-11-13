@@ -101,11 +101,11 @@ const findActiveEventDays = async (eventId: number): Promise<EventDay[]> => {
   if (days.length === 1) return days;
 
   const nowMs = Date.now();
-  const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+  const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
   return days.filter(d => {
     const eventDate = new Date(d.date_and_time);
     const eventMidnightUTC = Date.UTC(eventDate.getUTCFullYear(), eventDate.getUTCMonth(), eventDate.getUTCDate());
-    const windowStart = eventDate.getTime() - TWELVE_HOURS_MS;
+    const windowStart = eventDate.getTime() - EIGHT_HOURS_MS;
     const windowEnd = eventMidnightUTC + 24 * 60 * 60 * 1000;
     return nowMs >= windowStart && nowMs < windowEnd;
   });
@@ -117,9 +117,12 @@ const findActiveEventDays = async (eventId: number): Promise<EventDay[]> => {
  */
 const resolveEventDayForTicket = async (activeDays: EventDay[], ticketTypeId: number | null): Promise<EventDay | null> => {
   if (activeDays.length === 0) return null;
-  if (!ticketTypeId) return activeDays[0];
+  // When multiple days are active (Day N's window overlaps Day N+1's 8-hour pre-window),
+  // prefer the latest active day.
+  const sorted = [...activeDays].sort((a, b) => new Date(b.date_and_time).getTime() - new Date(a.date_and_time).getTime());
+  if (!ticketTypeId) return sorted[0];
 
-  for (const day of activeDays.sort((a, b) => new Date(a.date_and_time).getTime() - new Date(b.date_and_time).getTime())) {
+  for (const day of sorted) {
     const link = await TicketTypeDay.findOne({ where: { ticket_type_id: ticketTypeId, event_day_id: day.id } });
     if (link) return day;
   }
