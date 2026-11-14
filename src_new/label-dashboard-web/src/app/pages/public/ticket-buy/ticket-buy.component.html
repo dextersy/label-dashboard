@@ -116,8 +116,8 @@
               <div class="tw-grid tw-gap-2" [style.grid-template-columns]="'repeat(' + event.days.length + ', 1fr)'">
                 <!-- ≤3 days: horizontal card (icon left, text right) -->
                 <ng-container *ngIf="event.days.length <= 2">
-                  <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-items-center tw-gap-2.5">
-                    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" style="background-color: #2D28B8;">
+                  <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-items-center tw-gap-2.5" [class.tw-opacity-40]="isDayUnavailable(day.id, event)">
+                    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" [style.background-color]="isDayUnavailable(day.id, event) ? '#9CA3AF' : '#2D28B8'">
                       <span class="tw-text-[8px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(day.date_and_time) }}</span>
                       <span class="tw-text-base tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[1] }}</span>
                       <span class="tw-text-[8px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[0] }}</span>
@@ -130,8 +130,8 @@
                 </ng-container>
                 <!-- 4+ days: vertical card (icon top, label+time below, centered) -->
                 <ng-container *ngIf="event.days.length > 2">
-                  <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-flex-row tw-items-center tw-gap-2.5 sm:tw-flex-col sm:tw-items-center sm:tw-text-center sm:tw-gap-1">
-                    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" style="background-color: #2D28B8;">
+                  <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-flex-row tw-items-center tw-gap-2.5 sm:tw-flex-col sm:tw-items-center sm:tw-text-center sm:tw-gap-1" [class.tw-opacity-40]="isDayUnavailable(day.id, event)">
+                    <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" [style.background-color]="isDayUnavailable(day.id, event) ? '#9CA3AF' : '#2D28B8'">
                       <span class="tw-text-[8px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(day.date_and_time) }}</span>
                       <span class="tw-text-base tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[1] }}</span>
                       <span class="tw-text-[8px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[0] }}</span>
@@ -472,8 +472,8 @@
             <div class="tw-grid tw-gap-2" [style.grid-template-columns]="'repeat(' + event.days.length + ', 1fr)'">
               <!-- ≤3 days: horizontal card -->
               <ng-container *ngIf="event.days.length <= 2">
-                <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-items-center tw-gap-2.5">
-                  <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" style="background-color: #2D28B8;">
+                <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-items-center tw-gap-2.5" [class.tw-opacity-40]="isDayUnavailable(day.id, event)">
+                  <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" [style.background-color]="isDayUnavailable(day.id, event) ? '#9CA3AF' : '#2D28B8'">
                     <span class="tw-text-[8px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(day.date_and_time) }}</span>
                     <span class="tw-text-base tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[1] }}</span>
                     <span class="tw-text-[8px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[0] }}</span>
@@ -486,8 +486,8 @@
               </ng-container>
               <!-- 3+ days: vertical card on desktop, horizontal on mobile -->
               <ng-container *ngIf="event.days.length > 2">
-                <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-flex-row tw-items-center tw-gap-2.5 sm:tw-flex-col sm:tw-items-center sm:tw-text-center sm:tw-gap-1">
-                  <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" style="background-color: #2D28B8;">
+                <div *ngFor="let day of event.days; let di = index" class="tw-flex tw-flex-row tw-items-center tw-gap-2.5 sm:tw-flex-col sm:tw-items-center sm:tw-text-center sm:tw-gap-1" [class.tw-opacity-40]="isDayUnavailable(day.id, event)">
+                  <div class="tw-flex tw-flex-col tw-items-center tw-justify-center tw-rounded-lg tw-flex-shrink-0 tw-w-10 tw-h-10 tw-text-white" [style.background-color]="isDayUnavailable(day.id, event) ? '#9CA3AF' : '#2D28B8'">
                     <span class="tw-text-[8px] tw-font-bold tw-uppercase tw-tracking-wider tw-opacity-80 tw-leading-none">{{ formatEventWeekday(day.date_and_time) }}</span>
                     <span class="tw-text-base tw-font-black tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[1] }}</span>
                     <span class="tw-text-[8px] tw-font-semibold tw-uppercase tw-opacity-80 tw-leading-none tw-mt-0.5">{{ formatEventMonthDay(day.date_and_time).split(' ')[0] }}</span>

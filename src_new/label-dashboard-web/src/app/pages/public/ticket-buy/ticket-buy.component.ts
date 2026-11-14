@@ -497,6 +497,16 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
   }
 
+  isDayUnavailable(dayId: number, event: any): boolean {
+    if (!event?.ticketTypes?.length) return false;
+    return !event.ticketTypes.some((tt: any) => {
+      if (!tt.is_available || tt.is_sold_out) return false;
+      // If ticket type has no specific days assigned, it covers all days
+      if (!tt.days || tt.days.length === 0) return true;
+      return tt.days.some((d: any) => d.id === dayId);
+    });
+  }
+
   formatVenueDisplay(event: PublicEvent): string {
     if (!event) return '';
     
