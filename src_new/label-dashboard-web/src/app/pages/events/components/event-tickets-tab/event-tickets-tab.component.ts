@@ -84,7 +84,8 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
     { key: 'ticket_code', label: 'Ticket Code', searchable: true, sortable: true, cardHeader: true, renderHtml: true,
       formatter: (item) => {
         if (!item.ticket_code) return '—';
-        const { bg, color } = this.getTicketTypeColor(item.ticket_type_name);
+        const muted = !!this.getRowClass(item);
+        const { bg, color } = muted ? { bg: '#f3f4f6', color: '#9ca3af' } : this.getTicketTypeColor(item.ticket_type_name);
         return `<span style="font-size:0.95rem;font-weight:600;letter-spacing:0.05em;background:${bg};border-radius:4px;padding:2px 8px;color:${color};white-space:nowrap;user-select:text">${item.ticket_code}</span>`;
       }
     },
@@ -101,13 +102,19 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
           item.email_address ? `<span style="display:flex;align-items:center;font-size:0.85rem;color:#6b7280;margin-top:1px">${envelopeSvg}${this.esc(item.email_address)}</span>` : '',
           item.contact_number ? `<span style="display:flex;align-items:center;font-size:0.85rem;color:#6b7280;margin-top:1px">${phoneSvg}${this.esc(item.contact_number)}</span>` : ''
         ].filter(Boolean).join('');
-        return `<span class="avatar-chip"><span class="avatar-chip__circle ac-${idx}">${this.esc(initials)}</span><span>${this.esc(item.name)}${sub}</span></span>`;
+        const muted = !!this.getRowClass(item);
+        const avatarStyle = muted ? `display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e5e7eb;color:#9ca3af;font-size:11px;font-weight:700;flex-shrink:0` : '';
+        const avatarEl = muted
+          ? `<span style="${avatarStyle}">${this.esc(initials)}</span>`
+          : `<span class="avatar-chip__circle ac-${idx}">${this.esc(initials)}</span>`;
+        return `<span class="avatar-chip">${avatarEl}<span>${this.esc(item.name)}${sub}</span></span>`;
       }
     },
     { key: 'claimed_status', label: 'Claimed / Seats', sortable: false, renderHtml: true, minWidth: '200px', formatter: (item) => {
+      const muted = !!this.getRowClass(item);
       const days = this.selectedEvent?.days;
       if (!days || days.length <= 1) {
-        return this.claimCircleSvg(item.number_of_claimed_entries, item.number_of_entries);
+        return this.claimCircleSvg(item.number_of_claimed_entries, item.number_of_entries, undefined, muted);
       }
       const circles = days.map((day: any, i: number) => {
         const label = day.label || `Day ${i + 1}`;
@@ -115,13 +122,14 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
         if (!validForDay) return this.claimCircleNa(label);
         const log = (item.scanLogs || []).find((l: any) => l.event_day_id === day.id);
         const claimed = log?.entries_claimed ?? 0;
-        return this.claimCircleSvg(claimed, item.number_of_entries, label);
+        return this.claimCircleSvg(claimed, item.number_of_entries, label, muted);
       }).join('');
       return `<div style="display:flex;flex-wrap:wrap;gap:4px">${circles}</div>`;
     }},
     { key: 'ticket_type_name', label: 'Ticket Type', searchable: true, sortable: true, renderHtml: true, formatter: (item) => {
       const name = item.ticket_type_name || 'Regular';
-      const { bg, color } = this.getTicketTypeColor(name);
+      const muted = !!this.getRowClass(item);
+      const { bg, color } = muted ? { bg: '#f3f4f6', color: '#9ca3af' } : this.getTicketTypeColor(name);
       return `<span style="font-size:0.95rem;font-weight:600;background:${bg};border-radius:4px;padding:2px 8px;color:${color};white-space:nowrap">${this.esc(name)}</span>`;
     }},
     { key: 'total_paid', label: 'Total Paid', sortable: false, type: 'number', align: 'right', formatter: (item) => item.status === 'Refunded' ? 'Refunded' : (this.getTotalPaid(item) > 0 ? this.formatCurrency(this.getTotalPaid(item)) : '-') },
@@ -550,15 +558,20 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
       return 'text-muted';
     }
     const days = this.selectedEvent?.days;
-    if (days && days.length > 1 && ticket.scanLogs) {
-      // For multi-day events, only gray out if every day has been fully claimed
-      const allDaysClaimed = days.every((day: any) => {
-        const claimed = ticket.scanLogs!
-          .filter(log => log.event_day_id === day.id)
-          .reduce((sum, log) => sum + log.entries_claimed, 0);
-        return claimed >= Number(ticket.number_of_entries);
-      });
-      return allDaysClaimed ? 'text-muted' : '';
+    if (days && days.length > 1 && ticket.ticket_type_day_ids && ticket.scanLogs) {
+      // For multi-day events, determine which days this ticket is valid for,
+      // then gray out only if all of those days have been fully claimed per scan logs.
+      const validDayIds = ticket.ticket_type_day_ids;
+      const validDays = days.filter((day: any) => validDayIds.includes(day.id));
+      if (validDays.length > 0) {
+        const allDaysClaimed = validDays.every((day: any) => {
+          const claimed = ticket.scanLogs!
+            .filter(log => log.event_day_id === day.id)
+            .reduce((sum, log) => sum + log.entries_claimed, 0);
+          return claimed >= Number(ticket.number_of_entries);
+        });
+        return allDaysClaimed ? 'text-muted' : '';
+      }
     }
     return Number(ticket.number_of_claimed_entries) === Number(ticket.number_of_entries) ? 'text-muted' : '';
   }
@@ -769,10 +782,11 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getClaimCirclesHtml(ticket: EventTicket): SafeHtml {
+    const muted = !!this.getRowClass(ticket);
     const days = this.selectedEvent?.days;
     let html: string;
     if (!days || days.length <= 1) {
-      html = this.claimCircleSvg(ticket.number_of_claimed_entries, ticket.number_of_entries);
+      html = this.claimCircleSvg(ticket.number_of_claimed_entries, ticket.number_of_entries, undefined, muted);
     } else {
       const circles = days.map((day: any, i: number) => {
         const label = day.label || `Day ${i + 1}`;
@@ -780,31 +794,34 @@ export class EventTicketsTabComponent implements OnInit, OnChanges, OnDestroy {
         if (!validForDay) return this.claimCircleNa(label);
         const log = (ticket.scanLogs || []).find((l: any) => l.event_day_id === day.id);
         const claimed = log?.entries_claimed ?? 0;
-        return this.claimCircleSvg(claimed, ticket.number_of_entries, label);
+        return this.claimCircleSvg(claimed, ticket.number_of_entries, label, muted);
       }).join('');
       html = `<div style="display:flex;flex-wrap:wrap;gap:4px">${circles}</div>`;
     }
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  private claimCircleSvg(claimed: number, total: number, label?: string): string {
+  private claimCircleSvg(claimed: number, total: number, label?: string, muted = false): string {
     const r = 16, cx = 22, cy = 22, size = 44;
     const circumference = 2 * Math.PI * r;
     const progress = total > 0 ? Math.min(claimed / total, 1) : 0;
     const offset = circumference * (1 - progress);
-    const stroke = claimed >= total && total > 0 ? '#10b981' : 'var(--brand-color, #3b82f6)';
+    const stroke = muted ? '#d1d5db' : (claimed >= total && total > 0 ? '#10b981' : 'var(--brand-color, #3b82f6)');
+    const trackStroke = muted ? '#f3f4f6' : '#e5e7eb';
+    const textFill = muted ? '#9ca3af' : '#111827';
+    const labelColor = muted ? '#d1d5db' : '#9ca3af';
     const labelHtml = label
-      ? `<div style="font-size:0.6rem;color:#9ca3af;text-align:center;margin-bottom:1px;max-width:${size}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>`
+      ? `<div style="font-size:0.6rem;color:${labelColor};text-align:center;margin-bottom:1px;max-width:${size}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>`
       : '';
     return `<div style="display:inline-flex;flex-direction:column;align-items:center">
       ${labelHtml}
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="3.5"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${trackStroke}" stroke-width="3.5"/>
         <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${stroke}" stroke-width="3.5"
           stroke-dasharray="${circumference.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
           stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>
         <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-          style="font-size:9px;font-weight:700;fill:#111827">${claimed}/${total}</text>
+          style="font-size:9px;font-weight:700;fill:${textFill}">${claimed}/${total}</text>
       </svg>
     </div>`;
   }
