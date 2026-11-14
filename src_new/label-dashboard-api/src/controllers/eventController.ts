@@ -1426,7 +1426,7 @@ export const addTicket = async (req: AuthRequest, res: Response) => {
             const ttDayIds = new Set(ttDayLinks.map((link: any) => link.event_day_id));
             const assignedDays = eventDaysForCheck.filter((d: any) => ttDayIds.has(d.id));
             const now = new Date();
-            const isDayExpired = assignedDays.some((d: any) => {
+            const isDayExpired = !ticketType.end_date && assignedDays.some((d: any) => {
               const endOfDay = new Date(new Date(d.date_and_time).getTime() + 8 * 60 * 60 * 1000);
               return endOfDay < now;
             });

@@ -167,7 +167,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
       // be purchased once day 1 is over.
       const ttDays: any[] = (ticketType as any).days || [];
       const now = new Date();
-      const isDayExpired = eventDays.length > 1 && ttDays.length > 0 && ttDays.some((d: any) => {
+      const isDayExpired = eventDays.length > 1 && ttDays.length > 0 && !ticketType.end_date && ttDays.some((d: any) => {
         const endOfDay = new Date(new Date(d.date_and_time).getTime() + 8 * 60 * 60 * 1000);
         return endOfDay < now;
       });
