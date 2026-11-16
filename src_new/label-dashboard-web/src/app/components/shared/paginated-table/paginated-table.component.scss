@@ -308,11 +308,9 @@ tr.row-clickable {
   }
 }
 
-// Ensure text-muted on tr applies to all td elements
+// Ensure text-muted on tr dims all td elements including inline-styled HTML cells
 tr.text-muted {
-  td {
-    color: #adb5bd !important;
-  }
+  opacity: 0.4;
 }
 
 // Mobile column group merging — secondary values hidden on desktop
