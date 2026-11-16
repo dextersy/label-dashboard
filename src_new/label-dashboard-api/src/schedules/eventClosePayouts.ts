@@ -317,8 +317,12 @@ export async function rehydrateEventCloseSchedules(): Promise<void> {
         [Op.or]: [
           { close_time: { [Op.gt]: now } },
           { date_and_time: { [Op.gt]: now } },
-          // Multi-day events where date_and_time (first day) is past but a later day is still future
-          literal(`EXISTS (SELECT 1 FROM event_day WHERE event_day.event_id = "Event"."id" AND event_day.date_and_time > NOW())`)
+          // Multi-day events where a later day is still in the future
+          literal(`EXISTS (SELECT 1 FROM event_day WHERE event_day.event_id = "Event"."id" AND event_day.date_and_time > NOW())`),
+          // Multi-day events with no explicit close_time where the last day started within
+          // the past 8h — resolveEventCloseTime extends the close to +8h after the last day,
+          // so the payout window may still be open even though all days are in the past.
+          literal(`("Event".close_time IS NULL AND EXISTS (SELECT 1 FROM event_day WHERE event_day.event_id = "Event"."id" AND event_day.date_and_time > NOW() - INTERVAL '8 hours' AND event_day.date_and_time <= NOW()))`)
         ]
       },
       attributes: ['id', 'brand_id', 'close_time', 'date_and_time'],
