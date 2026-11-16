@@ -1523,6 +1523,7 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
 
         // Send money through Paymongo
         const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+        console.log(`[manual-payment] callbackUrl: ${callbackUrl}`);
         const transferResult = await paymentService.sendMoneyTransfer(
           brand.id,
           payment_method_id,

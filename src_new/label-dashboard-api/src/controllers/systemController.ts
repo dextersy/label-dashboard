@@ -860,6 +860,7 @@ export const processArtistPayouts = async (req: Request, res: Response) => {
     const dryRun = req.query.dry_run === 'true' || req.query.dry_run === '1';
     const paymentService = new PaymentService();
     const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
+    console.log(`[artist-payout] callbackUrl: ${callbackUrl}`);
     const datePaid = new Date();
     const description = 'Automated balance payout';
 
