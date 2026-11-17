@@ -1070,7 +1070,10 @@ export const downloadArtistPhotosZip = async (req: Request, res: Response) => {
         const key = extractS3Key(photos[i].path);
         if (!key) continue;
         const ext = (key.split('.').pop() || 'jpg').toLowerCase();
-        entries.push({ key, name: `photo-${i + 1}.${ext}` });
+        const rawLabel = (photos[i].label || '').trim();
+        const safeLabel = rawLabel ? rawLabel.replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-') : '';
+        const baseName = safeLabel ? `${safeLabel}-${i + 1}` : `photo-${i + 1}`;
+        entries.push({ key, name: `${baseName}.${ext}` });
       }
     } else {
       // Release campaigns: each collaborating artist's ArtistImage media library (up to 5 per artist)
@@ -1097,7 +1100,10 @@ export const downloadArtistPhotosZip = async (req: Request, res: Response) => {
           const key = extractS3Key(images[i].path);
           if (!key) continue;
           const ext = (key.split('.').pop() || 'jpg').toLowerCase();
-          entries.push({ key, name: `${folder}${safeArtist}-${i + 1}.${ext}` });
+          const rawCredits = (images[i].credits || '').trim();
+          const safeCredits = rawCredits ? rawCredits.replace(/[^a-zA-Z0-9\s-]/g, '').trim().replace(/\s+/g, '-') : '';
+          const baseName = safeCredits ? `${safeArtist}-${safeCredits}-${i + 1}` : `${safeArtist}-${i + 1}`;
+          entries.push({ key, name: `${folder}${baseName}.${ext}` });
         }
       }
     }
