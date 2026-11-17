@@ -372,7 +372,7 @@
         </a>
         <a routerLink="/campaigns/sync-licensing"
            class="tw-no-underline tw-flex tw-flex-1 tw-min-w-0 tw-items-center tw-gap-3 tw-bg-white tw-rounded-lg tw-shadow-sm tw-border tw-border-gray-100 tw-px-4 tw-py-3 hover:tw-shadow-md tw-transition-shadow">
-          <div class="tw-text-lg tw-opacity-70 tw-text-[#0d9488] tw-flex-shrink-0"><app-icon name="file" /></div>
+          <div class="tw-text-lg tw-opacity-70 tw-text-[#0d9488] tw-flex-shrink-0"><app-icon name="film" /></div>
           <div class="tw-min-w-0">
             <div class="tw-text-lg tw-font-semibold tw-leading-tight" style="color:#333;">{{ dashboardData.stats.syncPitches || 0 }}</div>
             <div class="tw-text-[11px] tw-leading-tight" style="color:#999;">Sync Pitches</div>
@@ -473,11 +473,11 @@
         <!-- Decorative icon -->
         <div class="tw-absolute tw-inset-0 tw-flex tw-items-center tw-justify-center tw-pointer-events-none"
              style="opacity: 0.12; font-size: 6rem; color: #fff;">
-          <app-icon name="file" />
+          <app-icon name="film" />
         </div>
         <div class="tw-absolute tw-inset-0" style="background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 100%);"></div>
         <span class="tw-absolute tw-top-2.5 tw-right-2.5 tw-flex tw-items-center tw-gap-1 tw-text-[10px] tw-font-semibold tw-uppercase tw-tracking-wider tw-text-white tw-px-2 tw-py-0.5 tw-rounded-full" style="background: rgba(13,148,136,0.75);">
-          <app-icon name="file" class="tw-text-[9px]" />Sync
+          <app-icon name="film" class="tw-text-[9px]" />Sync
         </span>
         <span *ngIf="pitch.warning_count > 0"
               class="tw-absolute tw-top-2.5 tw-left-2.5 tw-text-[10px] tw-font-semibold tw-text-orange-300 tw-px-2 tw-py-0.5 tw-rounded-full"
@@ -502,7 +502,7 @@
         <app-icon name="newspaper" /><span>New press campaign</span>
       </a>
       <a routerLink="/campaigns/sync-licensing" class="btn btn-secondary tw-no-underline tw-flex tw-flex-col sm:tw-flex-row tw-items-center tw-justify-center tw-gap-1 sm:tw-gap-2">
-        <app-icon name="file" /><span>New sync pitch</span>
+        <app-icon name="film" /><span>New sync pitch</span>
       </a>
     </div>
 

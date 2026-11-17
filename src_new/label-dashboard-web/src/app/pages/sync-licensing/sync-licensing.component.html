@@ -5,7 +5,7 @@
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-mb-2">
-        <app-icon name="file" class="tw-mr-2" />
+        <app-icon name="film" class="tw-mr-2" />
         Sync Licensing
       </h3>
       <p class="tw-mb-0 tw-text-muted">Create and manage sync licensing pitches for your catalog.</p>
@@ -209,7 +209,7 @@
                 <div class="tw-flex tw-items-center">
                   <img *ngIf="song.release?.cover_art" [src]="song.release?.cover_art" class="rounded tw-mr-3" style="width: 40px; height: 40px; object-fit: cover;">
                   <div *ngIf="!song.release?.cover_art" class="bg-secondary rounded tw-mr-3 tw-flex tw-items-center tw-justify-center" style="width: 40px; height: 40px;">
-                    <app-icon name="music" class="tw-text-white" />
+                    <app-icon name="film" class="tw-text-white" />
                   </div>
                   <div>
                     <strong>{{ song.title }}</strong>
@@ -237,7 +237,7 @@
           </div>
 
           <div *ngIf="selectedSongs.length === 0" class="tw-py-4 border rounded tw-text-center tw-text-muted">
-            <app-icon name="music" [size]="32" class="tw-mb-2" />
+            <app-icon name="film" [size]="32" class="tw-mb-2" />
             <p class="tw-mb-0">No songs selected. Search and add songs above.</p>
           </div>
         </div>

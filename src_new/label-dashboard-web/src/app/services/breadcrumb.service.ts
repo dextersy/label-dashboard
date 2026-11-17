@@ -25,7 +25,7 @@ export class BreadcrumbService {
   // Menu structure for breadcrumb generation
   private menuStructure: Record<string, MenuItemBase> = {
     '/dashboard': { label: 'Dashboard', icon: 'chart-bar' },
-    '/campaigns/sync-licensing': { label: 'Sync Licensing', icon: 'file' },
+    '/campaigns/sync-licensing': { label: 'Sync Licensing', icon: 'film' },
 
     // Artist section
     '/artist': { label: 'Artist', icon: 'headphones' },
