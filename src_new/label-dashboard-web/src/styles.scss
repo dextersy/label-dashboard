@@ -1489,3 +1489,8 @@ svg {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+/* Press campaign writeup read-only display */
+.writeup-content, .writeup-content * {
+  font-size: 13px !important;
+}

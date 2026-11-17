@@ -1,9 +1,5 @@
 // Press Campaigns component styles
 
-// Writeup read-only display — enforce 13px on Quill-generated inner elements
-::ng-deep .writeup-content * {
-  font-size: 13px !important;
-}
 
 // "+ Add" button sits inline with tw-input fields — match input height exactly
 .input-height-btn {
