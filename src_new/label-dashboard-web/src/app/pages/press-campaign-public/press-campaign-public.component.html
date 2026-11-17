@@ -126,8 +126,46 @@
             </button>
           </div>
 
-          <!-- Artist Photos ZIP Row -->
-          <div *ngIf="hasArtists && artistPhotoZipUrl"
+          <!-- Artist Photo Rows (event campaigns: individually uploaded photos) -->
+          <ng-container *ngIf="campaign.campaign_type === 'event' && campaign.artistPhotos?.length">
+            <div *ngFor="let photo of campaign.artistPhotos; let last = last"
+              class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 tw-border-b tw-border-gray-100 hover:tw-bg-gray-50 tw-cursor-pointer"
+              [class.tw-border-b]="!last || !!artistPhotoZipUrl"
+              (click)="downloadFile(photo.path, (photo.label || ('Artist-Photo-' + (photo.sort_order + 1))) + '.jpg')">
+              <div class="tw-flex-shrink-0 tw-rounded tw-overflow-hidden tw-bg-gray-100" style="width:40px;height:40px;">
+                <img [src]="photo.path" [alt]="photo.label || 'Artist photo'"
+                  class="tw-w-full tw-h-full" style="object-fit:cover;" />
+              </div>
+              <div class="tw-flex-1 tw-min-w-0">
+                <p class="tw-mb-0 tw-font-medium tw-truncate">{{ photo.label || ('Artist Photo ' + (photo.sort_order + 1)) }}</p>
+                <small class="tw-text-muted">Image</small>
+              </div>
+              <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0"
+                (click)="$event.stopPropagation(); downloadFile(photo.path, (photo.label || ('Artist-Photo-' + (photo.sort_order + 1))) + '.jpg')">
+                <app-icon name="download" [iconOnly]="true" />
+              </button>
+            </div>
+            <!-- Download All ZIP row -->
+            <div *ngIf="artistPhotoZipUrl"
+              class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-cursor-pointer"
+              (click)="downloadFile(artistPhotoZipUrl, (campaign.title + '-Artist-Photos.zip'))">
+              <div class="tw-flex-shrink-0 tw-rounded tw-bg-blue-50 tw-flex tw-items-center tw-justify-center"
+                style="width:40px;height:40px;">
+                <app-icon name="archive" class="tw-text-blue-500" [iconOnly]="true" />
+              </div>
+              <div class="tw-flex-1 tw-min-w-0">
+                <p class="tw-mb-0 tw-font-medium">Download All Photos</p>
+                <small class="tw-text-muted">ZIP Archive</small>
+              </div>
+              <button type="button" class="btn-sm btn-ghost tw-text-muted hover:tw-text-body tw-flex-shrink-0"
+                (click)="$event.stopPropagation(); downloadFile(artistPhotoZipUrl, (campaign.title + '-Artist-Photos.zip'))">
+                <app-icon name="download" [iconOnly]="true" />
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Artist Photos ZIP Row (release campaigns: photos come from artist model) -->
+          <div *ngIf="campaign.campaign_type !== 'event' && hasArtists && artistPhotoZipUrl"
             class="tw-flex tw-items-center tw-gap-3 tw-px-4 tw-py-3 hover:tw-bg-gray-50 tw-cursor-pointer"
             (click)="downloadFile(artistPhotoZipUrl, (campaign.title + '-Artist-Photos.zip'))">
             <div class="tw-flex-shrink-0 tw-rounded tw-bg-blue-50 tw-flex tw-items-center tw-justify-center"

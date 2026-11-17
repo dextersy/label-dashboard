@@ -88,7 +88,9 @@ export class PressCampaignPublicComponent implements OnInit {
   }
 
   get hasArtists(): boolean {
-    if (this.campaign?.campaign_type === 'event') return !!this.campaign?.artist;
+    if (this.campaign?.campaign_type === 'event') {
+      return (this.campaign?.artistPhotos?.length || 0) > 0;
+    }
     return (this.campaign?.release?.artists?.length || 0) > 0;
   }
 
