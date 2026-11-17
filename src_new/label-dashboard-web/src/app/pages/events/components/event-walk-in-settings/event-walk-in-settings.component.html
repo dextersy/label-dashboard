@@ -49,7 +49,7 @@
                    id="walkInMaxCountUnlimited"
                    [ngModel]="isMaxCountUnlimited"
                    (ngModelChange)="onMaxCountUnlimitedChange($event)">
-            <label class="form-check-label" for="walkInMaxCountUnlimited">Unlimited</label>
+            <label class="form-check-label small tw-text-sm" for="walkInMaxCountUnlimited">Unlimited</label>
           </div>
           <div *ngIf="!isMaxCountUnlimited" class="input-group" style="max-width: 200px;">
             <input type="number" class="tw-input" [(ngModel)]="eventData.walk_in_max_count" min="1" placeholder="Max count">
