@@ -446,7 +446,7 @@
                 <div>
                   <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Title</p>
                   <div *ngIf="editingField !== 'title'" class="tw-flex tw-items-center tw-gap-1">
-                    <span class="tw-text-sm tw-text-gray-800">{{ detailCampaign.title }}</span>
+                    <span class="tw-text-[13px] tw-text-gray-800">{{ detailCampaign.title }}</span>
                     <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditingField('title')" title="Edit">
                       <app-icon name="edit" iconOnly />
                     </button>
@@ -492,7 +492,7 @@
                     Linked {{ detailCampaign.campaign_type === 'event' ? 'Event' : 'Release' }}
                   </p>
                   <div *ngIf="editingField !== 'linked'" class="tw-flex tw-items-center tw-gap-1">
-                    <span class="tw-text-sm tw-text-gray-800">{{ detailCampaign.release?.title || detailCampaign.event?.title || '—' }}</span>
+                    <span class="tw-text-[13px] tw-text-gray-800">{{ detailCampaign.release?.title || detailCampaign.event?.title || '—' }}</span>
                     <button type="button" class="tw-text-gray-400 hover:tw-text-gray-600 tw-p-0.5" (click)="startEditingField('linked')" title="Edit">
                       <app-icon name="edit" iconOnly />
                     </button>
@@ -559,7 +559,7 @@
                 <div *ngIf="detailCampaign.writeup || editingField === 'writeup'">
                   <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-mb-1">Press Release Writeup</p>
                   <ng-container *ngIf="editingField !== 'writeup'">
-                    <div [class.tw-line-clamp-3]="!writeupExpanded" class="tw-text-sm tw-text-gray-700" [innerHTML]="detailCampaign.writeup"></div>
+                    <div [class.tw-line-clamp-3]="!writeupExpanded" class="tw-text-gray-700 writeup-content" [innerHTML]="detailCampaign.writeup"></div>
                     <div class="tw-flex tw-items-center tw-gap-3 tw-mt-1">
                       <button type="button" class="tw-text-xs tw-text-blue-500 hover:tw-text-blue-700" (click)="writeupExpanded = !writeupExpanded">
                         {{ writeupExpanded ? 'View less' : 'View more' }}
@@ -918,12 +918,15 @@
                 <label class="tw-label">Photo caption (optional)</label>
                 <input type="text" class="tw-input" [(ngModel)]="photoLabelInput" placeholder="e.g. Live at the studio" />
               </div>
-              <app-file-upload
-                accept="image/*"
-                label="Add Photo"
-                [disabled]="uploadingPhoto"
-                (fileSelected)="onArtistPhotoSelected($event)">
-              </app-file-upload>
+              <div class="tw-flex-shrink-0">
+                <label class="tw-label">&nbsp;</label>
+                <app-file-upload
+                  accept="image/*"
+                  label="Add Photo"
+                  [disabled]="uploadingPhoto"
+                  (fileSelected)="onArtistPhotoSelected($event)">
+                </app-file-upload>
+              </div>
             </div>
           </div>
 
@@ -979,13 +982,16 @@
               <label class="tw-label">URL</label>
               <input type="url" class="tw-input" [(ngModel)]="newLinkUrl" placeholder="https://..." />
             </div>
-            <button type="button" class="btn-secondary tw-flex-shrink-0"
-              [disabled]="addingLink || !newLinkLabel.trim() || !newLinkUrl.trim()"
-              (click)="addLink()">
-              <app-icon name="spinner" class="tw-animate-spin tw-mr-1" [iconOnly]="true" *ngIf="addingLink" />
-              <app-icon name="plus" class="tw-mr-1" [iconOnly]="true" *ngIf="!addingLink" />
-              Add
-            </button>
+            <div class="tw-flex-shrink-0">
+              <label class="tw-label">&nbsp;</label>
+              <button type="button" class="btn-secondary input-height-btn"
+                [disabled]="addingLink || !newLinkLabel.trim() || !newLinkUrl.trim()"
+                (click)="addLink()">
+                <app-icon name="spinner" class="tw-animate-spin tw-mr-1" [iconOnly]="true" *ngIf="addingLink" />
+                <app-icon name="plus" class="tw-mr-1" [iconOnly]="true" *ngIf="!addingLink" />
+                Add
+              </button>
+            </div>
           </div>
 
         </ng-container>

@@ -35,7 +35,11 @@
     </div>
   } @else {
     <!-- Button trigger (single mode) -->
-    <label class="tw-inline-flex tw-items-center tw-gap-2 btn btn-secondary btn-sm tw-cursor-pointer tw-self-start"
+    <label class="tw-inline-flex tw-items-center tw-gap-1.5 tw-self-start tw-cursor-pointer tw-select-none
+                  tw-rounded-md tw-border tw-border-[#d1d5db] tw-bg-transparent
+                  tw-px-4 tw-py-2 tw-text-[13px] tw-font-medium tw-leading-normal tw-text-[#374151]
+                  tw-whitespace-nowrap tw-no-underline tw-transition-colors
+                  hover:tw-bg-[#f3f4f6] hover:tw-border-[#9ca3af]"
            [class.tw-opacity-50]="isBlocked"
            [class.tw-pointer-events-none]="isBlocked"
            (click)="$event.preventDefault(); openFilePicker()">

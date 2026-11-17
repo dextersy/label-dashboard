@@ -1,5 +1,20 @@
 // Press Campaigns component styles
 
+// Writeup read-only display — enforce 13px on Quill-generated inner elements
+::ng-deep .writeup-content * {
+  font-size: 13px !important;
+}
+
+// "+ Add" button sits inline with tw-input fields — match input height exactly
+.input-height-btn {
+  padding-top: 0.625rem !important;    // tw-py-2.5
+  padding-bottom: 0.625rem !important;
+  padding-left: 0.875rem !important;   // tw-px-3.5
+  padding-right: 0.875rem !important;
+  line-height: 1.5rem !important;      // matches tw-text-base line-height on tw-input
+  font-size: 13px !important;
+}
+
 // ── Campaign type toggle ───────────────────────────────────────────────────────
 .sub-tab-toggle {
   display: inline-flex;
