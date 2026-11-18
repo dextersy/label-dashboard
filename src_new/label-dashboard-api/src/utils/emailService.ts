@@ -2002,7 +2002,7 @@ export async function sendTicketAdminNotification(params: TicketAdminNotificatio
     const ticketingParentId = parseInt(process.env.TICKETING_PARENT_BRAND_ID || '0');
     const collabBrands = await EventBrandCollaboration.findAll({ where: { event_id: event.id, status: 'Accepted' } });
 
-    const collabNotifications: { brandId: number; userIds: number[]; emails: string[]; dashboardUrl: string }[] = [];
+    const collabNotifications: { brandId: number; userIds: number[]; emails: string[]; dashboardUrl: string; brand: any }[] = [];
 
     for (const collab of collabBrands) {
       const collabAdmins = await User.findAll({
@@ -2010,7 +2010,7 @@ export async function sendTicketAdminNotification(params: TicketAdminNotificatio
         attributes: ['id', 'email_address'],
       });
 
-      const collabBrand = await Brand.findByPk(collab.brand_id, { attributes: ['id', 'parent_brand'] });
+      const collabBrand = await Brand.findByPk(collab.brand_id, { attributes: ['id', 'parent_brand', 'brand_name', 'logo_url', 'brand_color'] });
       const isTicketingBrand = ticketingParentId > 0 && (collabBrand as any)?.parent_brand === ticketingParentId;
 
       let collabDashboardUrl: string;
@@ -2030,6 +2030,7 @@ export async function sendTicketAdminNotification(params: TicketAdminNotificatio
         userIds: collabAdmins.map((a: any) => a.id as number),
         emails: collabAdmins.map((a: any) => a.email_address).filter(Boolean),
         dashboardUrl: collabDashboardUrl,
+        brand: collabBrand,
       });
     }
 
@@ -2065,11 +2066,21 @@ export async function sendTicketAdminNotification(params: TicketAdminNotificatio
 
     for (const collab of collabNotifications) {
       if (collab.emails.length > 0 && collab.dashboardUrl) {
+        const cb = collab.brand;
+        const collabBrandLogoHtml = cb?.logo_url
+          ? `<img src="${cb.logo_url}" alt="${cb.brand_name}" style="max-width: 150px; max-height: 60px; height: auto;" />`
+          : `<div style="font-size: 24px; font-weight: bold; color: #ffffff;">${cb?.brand_name || 'Dashboard'}</div>`;
         await sendBrandedEmail(
           collab.emails,
           'ticket_admin_notification',
-          { ...baseTemplateData, DASHBOARD_URL: collab.dashboardUrl },
-          event.brand_id
+          {
+            ...baseTemplateData,
+            BRAND_NAME: cb?.brand_name || baseTemplateData.BRAND_NAME,
+            BRAND_LOGO_HTML: collabBrandLogoHtml,
+            BRAND_COLOR: cb?.brand_color || baseTemplateData.BRAND_COLOR,
+            DASHBOARD_URL: collab.dashboardUrl,
+          },
+          collab.brandId
         );
       }
     }
