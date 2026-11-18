@@ -36,7 +36,9 @@ import {
   getFollowedOrganizers,
   getTicketingSitemap,
   getTicketingEvents,
-  trackEventShare
+  trackEventShare,
+  searchTicketing,
+  getPublicAudienceUserProfile
 } from '../controllers/publicController';
 import { audienceInviteFriend } from '../controllers/audienceAuthController';
 import {
@@ -63,6 +65,7 @@ import { upload } from '../controllers/artistController';
 const router = Router();
 
 // Public API routes (no authentication required)
+router.get('/search', publicRateLimit, searchTicketing);
 router.get('/brand/domain/:domain', getBrandByDomain);
 router.get('/events/domain/:domain', getAllEventsForDomain);
 router.get('/events', getTicketingEvents);
@@ -108,6 +111,9 @@ router.post('/artists/register', publicRateLimit, upload.single('profile_photo')
 
 // Sitemap
 router.get('/sitemap.xml', getTicketingSitemap);
+
+// Public audience user profile
+router.get('/people/:id', publicRateLimit, getPublicAudienceUserProfile);
 
 // Organizer profile (public)
 router.get('/organizers/:brandId', publicRateLimit, getOrganizerProfile);

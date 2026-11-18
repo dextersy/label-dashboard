@@ -1,25 +1,37 @@
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AudienceAuthService } from '../../services/audience-auth.service';
 import { AudienceSocialService } from '../../services/audience-social.service';
 import { AuthService } from '../../services/auth.service';
 import { InviteFriendModalComponent } from '../invite-friend-modal/invite-friend-modal.component';
+import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { AudienceNotification } from '../../models/audience-notification';
 
 @Component({
   selector: 'app-audience-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, InviteFriendModalComponent],
+  imports: [CommonModule, RouterLink, InviteFriendModalComponent, SearchBarComponent],
   template: `
     <header class="fixed top-0 inset-x-0 z-50 bg-black border-b-2 border-white/15">
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-12">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center h-12 gap-3">
 
         <!-- ── Left side ── -->
-        <a routerLink="/"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
+        <a routerLink="/" class="flex-shrink-0"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
+
+        <!-- ── Search bar ── -->
+        <app-search-bar #searchBar class="flex-1 min-w-0 hidden sm:contents"></app-search-bar>
 
         <!-- ── Right side ── -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 flex-shrink-0 ml-auto">
+
+          <!-- Search icon (mobile only) -->
+          <button type="button" (click)="searchBar.openMobile(); $event.stopPropagation()"
+            class="sm:hidden text-white/40 hover:text-white transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+            </svg>
+          </button>
 
           <!-- ── Audience user section ── -->
           @if (isAudienceLoggedIn()) {
@@ -228,6 +240,8 @@ export class AudienceHeaderComponent implements OnInit {
   readonly notifPanelOpen = signal(false);
   readonly notifLoading = signal(false);
   readonly recentNotifs = signal<AudienceNotification[]>([]);
+
+  @ViewChild('searchBar') searchBar!: SearchBarComponent;
 
   constructor(
     private audienceAuthService: AudienceAuthService,

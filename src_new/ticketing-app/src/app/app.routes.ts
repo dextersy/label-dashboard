@@ -143,6 +143,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/events/event-collab-invite/event-collab-invite.component').then(m => m.EventCollabInviteComponent)
   },
   {
+    path: 'search',
+    loadComponent: () => import('./pages/search/search.component').then(m => m.SearchComponent)
+  },
+  {
+    path: 'people/:id',
+    loadComponent: () => import('./pages/audience/public-profile/public-profile.component').then(m => m.PublicProfileComponent)
+  },
+  {
     path: 'wristband-order',
     loadComponent: () => import('./pages/public-wristband/public-wristband-start.component').then(m => m.PublicWristbandStartComponent)
   },

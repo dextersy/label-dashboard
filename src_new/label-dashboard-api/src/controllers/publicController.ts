@@ -4040,3 +4040,160 @@ export const trackEventShare = async (req: Request, res: Response) => {
   }
 };
 
+// ─── Public audience user profile ────────────────────────────────────────────
+
+export const getPublicAudienceUserProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id as string, 10);
+    if (isNaN(userId)) return res.status(400).json({ error: 'Invalid user ID' });
+
+    const user = await AudienceUser.findByPk(userId, {
+      attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city', 'music_genres', 'points_total', 'is_public', 'social_discoverable'],
+    });
+    if (!user || !user.social_discoverable) return res.status(404).json({ error: 'User not found.' });
+
+    const level = (user.points_total ?? 0) >= 700 ? 'Platinum' : (user.points_total ?? 0) >= 300 ? 'Gold' : 'Silver';
+    const showFullName = user.is_public || user.social_discoverable;
+
+    // Shows attended: distinct events from paid/sent tickets
+    // Get distinct event IDs from paid tickets first, then fetch those events
+    const ticketRows = await Ticket.findAll({
+      where: {
+        audience_user_id: userId,
+        status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] },
+      },
+      attributes: [[sequelize.fn('DISTINCT', sequelize.col('event_id')), 'event_id']],
+      raw: true,
+    });
+    const attendedEventIds = (ticketRows as any[]).map(r => r.event_id);
+
+    const attendedEventRows = attendedEventIds.length === 0 ? [] : await Event.findAll({
+      where: { id: { [Op.in]: attendedEventIds }, listed_on_ticketing: true },
+      attributes: ['id', 'title', 'date_and_time', 'poster_url'],
+      order: [['date_and_time', 'DESC']],
+      limit: 9,
+    });
+
+    const attendedShows = attendedEventRows.map((e: any) => ({
+      id: e.id,
+      title: e.title,
+      date_and_time: e.date_and_time,
+      poster_url: e.poster_url ?? null,
+    }));
+
+    return res.json({
+      user: {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: showFullName ? (user.last_name ?? null) : null,
+        last_name_initial: !showFullName && user.last_name ? user.last_name.charAt(0) + '.' : null,
+        profile_photo_url: user.profile_photo_url ?? null,
+        membership_tier: level,
+        city: user.city ?? null,
+        music_genres: user.music_genres ?? [],
+      },
+      attended_shows: attendedShows,
+    });
+  } catch (error) {
+    console.error('getPublicAudienceUserProfile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// ─── Global search ────────────────────────────────────────────────────────────
+
+export const searchTicketing = async (req: Request, res: Response) => {
+  try {
+    const q = ((req.query.q as string) || '').trim();
+    if (!q || q.length < 2) return res.json({ events: [], organizers: [], people: [], totals: { events: 0, organizers: 0, people: 0 } });
+
+    const limit = 3;
+    const like = { [Op.iLike]: `%${q}%` };
+
+    // Events: published, listed on ticketing (all time)
+    const [events, eventsTotal] = await Promise.all([
+      Event.findAll({
+        where: { status: 'published', listed_on_ticketing: true, title: like },
+        attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url'],
+        include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name'] }],
+        limit,
+        order: [['date_and_time', 'DESC']],
+      }),
+      Event.count({
+        where: { status: 'published', listed_on_ticketing: true, title: like },
+      }),
+    ]);
+
+    // Organizers: sub-brands of ticketing parent
+    const [organizers, organizersTotal] = await Promise.all([
+      Brand.findAll({
+        where: { brand_name: like },
+        attributes: ['id', 'brand_name', 'logo_url'],
+        limit,
+        order: [['brand_name', 'ASC']],
+      }),
+      Brand.count({ where: { brand_name: like } }),
+    ]);
+
+    // People: audience users who are publicly discoverable
+    const [people, peopleTotal] = await Promise.all([
+      AudienceUser.findAll({
+        where: {
+          social_discoverable: true,
+          [Op.or]: [
+            { first_name: like },
+            { last_name: like },
+            sequelize.where(
+              sequelize.fn('concat', sequelize.col('first_name'), ' ', sequelize.col('last_name')),
+              { [Op.iLike]: `%${q}%` }
+            ),
+          ],
+        },
+        attributes: ['id', 'first_name', 'last_name', 'profile_photo_url', 'city'],
+        limit,
+        order: [['first_name', 'ASC']],
+      }),
+      AudienceUser.count({
+        where: {
+          social_discoverable: true,
+          [Op.or]: [
+            { first_name: like },
+            { last_name: like },
+            sequelize.where(
+              sequelize.fn('concat', sequelize.col('first_name'), ' ', sequelize.col('last_name')),
+              { [Op.iLike]: `%${q}%` }
+            ),
+          ],
+        },
+      }),
+    ]);
+
+    return res.json({
+      events: events.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        date_and_time: e.date_and_time,
+        venue: e.venue,
+        poster_url: e.poster_url || null,
+        brand_name: e.brand?.brand_name || null,
+      })),
+      organizers: organizers.map((b: any) => ({
+        id: b.id,
+        brand_name: b.brand_name,
+        logo_url: b.logo_url || null,
+      })),
+      people: people.map((u: any) => ({
+        id: u.id,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        profile_photo_url: u.profile_photo_url || null,
+        city: u.city || null,
+      })),
+      totals: { events: eventsTotal, organizers: organizersTotal, people: peopleTotal },
+    });
+  } catch (error) {
+    console.error('searchTicketing error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
