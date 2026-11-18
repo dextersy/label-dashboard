@@ -541,7 +541,7 @@ export const sendPaymentMethodNotification = async (
       return false;
     }
 
-    const templatePath = path.join(__dirname, '../../src/assets/templates/add_payment_method_email.html');
+    const templatePath = path.join(__dirname, '../assets/templates/add_payment_method_email.html');
     let template = fs.readFileSync(templatePath, 'utf8');
 
     // Replace template variables
@@ -573,7 +573,7 @@ export const sendPayoutPointNotification = async (
   artistId: number
 ): Promise<boolean> => {
   try {
-    const templatePath = path.join(__dirname, '../../src/assets/templates/artist_update_payout_point.html');
+    const templatePath = path.join(__dirname, '../assets/templates/artist_update_payout_point.html');
     let template = fs.readFileSync(templatePath, 'utf8');
 
     // Replace template variables
