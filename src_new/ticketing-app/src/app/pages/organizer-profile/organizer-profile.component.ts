@@ -246,13 +246,16 @@ export class OrganizerProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.brandId = parseInt(this.route.snapshot.paramMap.get('brandId') || '0');
-    this.loadProfile();
-    this.loadPastEvents(1);
-
-    if (this.audienceAuth.isLoggedIn()) {
-      this.loadFollowStatus();
-    }
+    this.route.paramMap.subscribe(params => {
+      this.brandId = parseInt(params.get('brandId') || '0');
+      this.profile.set(null);
+      this.loading.set(true);
+      this.loadProfile();
+      this.loadPastEvents(1);
+      if (this.audienceAuth.isLoggedIn()) {
+        this.loadFollowStatus();
+      }
+    });
   }
 
   isAudienceLoggedIn(): boolean {
