@@ -103,7 +103,7 @@ const getBrandAdministrators = async (brandId: number): Promise<string[]> => {
 };
 
 // Helper function to get admin emails for a brand and its parent brand
-const getBrandAndParentAdministrators = async (brandId: number): Promise<string[]> => {
+export const getBrandAndParentAdministrators = async (brandId: number): Promise<string[]> => {
   try {
     const brand = await Brand.findByPk(brandId, { attributes: ['id', 'parent_brand'] });
     const brandIds: number[] = [brandId];

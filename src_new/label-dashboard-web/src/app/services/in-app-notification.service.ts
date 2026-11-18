@@ -137,7 +137,8 @@ export class InAppNotificationService implements OnDestroy {
       'task_assigned': 'Task assigned',
       'task_due_today': 'Task due today',
       'artist_registration': 'Artist registration',
-      'payment_succeeded': 'Payment sent'
+      'payment_succeeded': 'Payment sent',
+      'bulk_import_complete': 'Bulk import complete'
     };
     return labels[type] || type;
   }

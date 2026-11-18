@@ -38,6 +38,10 @@ export class BulkAddEarningsTabComponent implements OnInit {
   // Brand settings (for integration enabled checks)
   brandSettings: BrandSettings | null = null;
 
+  // Import started modal
+  showImportStartedModal: boolean = false;
+  importStartedCount: number = 0;
+
   // View toggle
   currentView: 'manual' | 'import' = 'manual';
   importSource: 'csv' | 'loyverse' | 'woocommerce' = 'csv';
@@ -231,8 +235,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.bulkEarnings.forEach(earning => earning.calculate_royalties = calculate);
   }
 
-  saveBulkEarnings(): void {
-    const validEarnings = this.bulkEarnings.filter(earning => 
+  async saveBulkEarnings(): Promise<void> {
+    const validEarnings = this.bulkEarnings.filter(earning =>
       earning.release_id > 0 && earning.amount !== 0
     );
 
@@ -241,15 +245,26 @@ export class BulkAddEarningsTabComponent implements OnInit {
       return;
     }
 
+    const totalAmount = validEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Confirm Bulk Import',
+      message: `Import ${validEarnings.length} earning${validEarnings.length !== 1 ? 's' : ''} totalling ${this.formatCurrency(totalAmount)}? Processing will happen in the background.`,
+      confirmText: 'Import',
+      cancelText: 'Cancel',
+      type: 'info'
+    });
+    if (!confirmed) return;
+
     this.loading = true;
     this.adminService.bulkAddEarnings(validEarnings).subscribe({
       next: () => {
+        this.loading = false;
+        this.importStartedCount = validEarnings.length;
+        this.showImportStartedModal = true;
         this.initializeBulkEarnings();
         this.onBulkAmountChange();
-        this.notificationService.showSuccess(`${validEarnings.length} earnings added successfully`);
-        this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.notificationService.showError('Error saving bulk earnings');
         this.loading = false;
       }
@@ -561,7 +576,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.csvPagination.total_count = 0;
   }
 
-  saveCsvEarnings(): void {
+  async saveCsvEarnings(): Promise<void> {
     if (this.csvData.length === 0) {
       this.notificationService.showError('No CSV data to save');
       return;
@@ -569,7 +584,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
     // Filter out rows that don't have matched releases
     const matchedRows = this.csvDataAll.filter(row => row.matched_release);
-    
+
     if (matchedRows.length === 0) {
       this.notificationService.showError('No matched releases to save. Please ensure your CSV contains valid catalog numbers or release titles.');
       return;
@@ -587,17 +602,28 @@ export class BulkAddEarningsTabComponent implements OnInit {
       calculate_royalties: this.csvCalculateRoyalties
     }));
 
+    const totalAmount = bulkEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const skippedCount = this.csvDataAll.length - matchedRows.length;
+    const confirmMsg = skippedCount > 0
+      ? `Import ${matchedRows.length} matched earnings totalling ${this.formatCurrency(totalAmount)}? (${skippedCount} unmatched rows will be skipped.) Processing will happen in the background.`
+      : `Import ${matchedRows.length} earnings totalling ${this.formatCurrency(totalAmount)}? Processing will happen in the background.`;
+
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Confirm CSV Import',
+      message: confirmMsg,
+      confirmText: 'Import',
+      cancelText: 'Cancel',
+      type: 'info'
+    });
+    if (!confirmed) return;
+
     this.loading = true;
-    
+
     this.adminService.bulkAddEarnings(bulkEarnings).subscribe({
-      next: (response) => {
+      next: () => {
         this.loading = false;
-        const skippedCount = this.csvDataAll.length - matchedRows.length;
-        let message = `${matchedRows.length} earnings imported successfully`;
-        if (skippedCount > 0) {
-          message += `, ${skippedCount} rows skipped (no matching releases)`;
-        }
-        this.notificationService.showSuccess(message);
+        this.importStartedCount = matchedRows.length;
+        this.showImportStartedModal = true;
         this.removeCsvFile();
       },
       error: (error) => {

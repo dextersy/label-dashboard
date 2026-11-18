@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import { Op, fn, col } from 'sequelize';
 import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
 import { sequelize } from '../config/database';
-import { sendEarningsNotification, sendEarningAdminNotification } from '../utils/emailService';
-import { createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
+import { sendEarningsNotification, sendEarningAdminNotification, sendEmailWithAttachment, getBrandAndParentAdministrators } from '../utils/emailService';
+import { createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds, getBrandAndParentAdminUserIds } from '../utils/notificationService';
 import { PaymentService } from '../utils/paymentService';
 import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
 import { getLockedArtistIds, isArtistLocked } from '../utils/artistUtils';
@@ -142,118 +142,182 @@ export const bulkAddEarnings = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Earnings array is required' });
     }
 
-    const createdEarnings = [];
-    const errors = [];
+    // Respond immediately — processing happens in the background
+    res.status(202).json({ message: 'Import started', count: earnings.length });
 
-    // Cache locked artist IDs per brand for the duration of this bulk request,
-    // so we don't repeat the same queries for every row that shares a brand.
-    const lockedIdsCache = new Map<number, Set<number>>();
-    const getLockedIdsCached = async (brandId: number): Promise<Set<number>> => {
-      if (!lockedIdsCache.has(brandId)) {
-        lockedIdsCache.set(brandId, await getLockedArtistIds(brandId));
-      }
-      return lockedIdsCache.get(brandId)!;
-    };
-
-    // Also cache the parent brand info (used for sublabel notifications)
-    let cachedParentBrand: { id: number; brand_name: string } | null | undefined = undefined;
-    const getParentBrand = async () => {
-      if (cachedParentBrand === undefined) {
-        const b = await Brand.findByPk(req.user.brand_id, { attributes: ['id', 'brand_name'] });
-        cachedParentBrand = b ? { id: b.id, brand_name: b.brand_name } : null;
-      }
-      return cachedParentBrand;
-    };
-
-    for (let i = 0; i < earnings.length; i++) {
-      try {
-        const earningData = earnings[i];
-
-        // Verify release exists and belongs to user's brand or a direct child brand
-        const release = await Release.findOne({ where: { id: earningData.release_id } });
-
-        if (!release) {
-          errors.push(`Row ${i + 1}: Release not found`);
-          continue;
-        }
-
-        let rowRecordedByBrandId: number | null = null;
-
-        if (release.brand_id === req.user.brand_id) {
-          rowRecordedByBrandId = null;
-        } else {
-          const childBrand = await Brand.findOne({
-            where: { id: release.brand_id, parent_brand: req.user.brand_id }
-          });
-          if (!childBrand) {
-            errors.push(`Row ${i + 1}: Release not found`);
-            continue;
-          }
-          rowRecordedByBrandId = req.user.brand_id;
-        }
-
-        // Create earning record with 0 platform fee initially (will be calculated after processing)
-        const earning = await Earning.create({
-          release_id: earningData.release_id,
-          type: earningData.type || 'Streaming',
-          amount: parseFloat(earningData.amount.toFixed(2)),
-          description: earningData.description,
-          date_recorded: new Date(earningData.date_recorded),
-          platform_fee: 0,
-          recorded_by_brand_id: rowRecordedByBrandId
-        });
-
-        // Process recuperable expenses and royalties if requested
-        let recuperationInfo = null;
-        if (earningData.calculate_royalties) {
-          // Process both recuperable expenses and royalties
-          recuperationInfo = await processEarningRoyalties(earning);
-        }
-
-        // Calculate and set the platform fee (regardless of royalty calculation)
-        const grossAmount = parseFloat(earningData.amount.toFixed(2));
-        let netRevenue = grossAmount;
-
-        if (earningData.calculate_royalties && recuperationInfo) {
-          // If royalties are calculated, use net revenue after recuperable expenses and royalties
-          netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
-        }
-        // If royalties are not calculated, use the gross amount as net revenue
-
-        const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-          release.brand_id,
-          grossAmount,
-          netRevenue
-        );
-
-        // Update the earning with the final platform fee
-        await earning.update({
-          platform_fee: finalPlatformFeeCalc.totalPlatformFee
-        });
-
-        // If parent recorded for sublabel, pass parent brand info for notifications
-        const rowPostedByBrand = rowRecordedByBrandId ? await getParentBrand() : null;
-
-        // Send earning notification emails (matching PHP logic)
-        const rowLockedIds = await getLockedIdsCached(release.brand_id);
-        await sendEarningNotifications(earning, release.brand_id, recuperationInfo, rowPostedByBrand, rowLockedIds);
-
-        createdEarnings.push(earning);
-      } catch (error) {
-        errors.push(`Row ${i + 1}: ${error.message}`);
-      }
-    }
-
-    res.json({
-      message: `Processed ${earnings.length} earnings`,
-      created: createdEarnings.length,
-      errors
+    setImmediate(() => {
+      processBulkEarningsJob(earnings, req.user.brand_id).catch(err => {
+        console.error('[BulkEarnings] Unhandled job error:', err);
+      });
     });
   } catch (error) {
     console.error('Bulk add earnings error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+async function processBulkEarningsJob(earnings: any[], brandId: number): Promise<void> {
+  const createdRows: Array<{ catalog_no: string; release_title: string; type: string; description: string; date: string; amount: number }> = [];
+  const failedRows: Array<{ index: number; row: any; error: string }> = [];
+
+  // Cache locked artist IDs per brand for the duration of this bulk request,
+  // so we don't repeat the same queries for every row that shares a brand.
+  const lockedIdsCache = new Map<number, Set<number>>();
+  const getLockedIdsCached = async (bId: number): Promise<Set<number>> => {
+    if (!lockedIdsCache.has(bId)) {
+      lockedIdsCache.set(bId, await getLockedArtistIds(bId));
+    }
+    return lockedIdsCache.get(bId)!;
+  };
+
+  // Cache the parent brand info (used for sublabel notifications)
+  let cachedParentBrand: { id: number; brand_name: string } | null | undefined = undefined;
+  const getParentBrand = async () => {
+    if (cachedParentBrand === undefined) {
+      const b = await Brand.findByPk(brandId, { attributes: ['id', 'brand_name'] });
+      cachedParentBrand = b ? { id: b.id, brand_name: b.brand_name } : null;
+    }
+    return cachedParentBrand;
+  };
+
+  for (let i = 0; i < earnings.length; i++) {
+    try {
+      const earningData = earnings[i];
+
+      // Verify release exists and belongs to user's brand or a direct child brand
+      const release = await Release.findOne({ where: { id: earningData.release_id } });
+
+      if (!release) {
+        failedRows.push({ index: i + 1, row: earningData, error: 'Release not found' });
+        continue;
+      }
+
+      let rowRecordedByBrandId: number | null = null;
+
+      if (release.brand_id === brandId) {
+        rowRecordedByBrandId = null;
+      } else {
+        const childBrand = await Brand.findOne({
+          where: { id: release.brand_id, parent_brand: brandId }
+        });
+        if (!childBrand) {
+          failedRows.push({ index: i + 1, row: earningData, error: 'Release not found' });
+          continue;
+        }
+        rowRecordedByBrandId = brandId;
+      }
+
+      // Create earning record with 0 platform fee initially (will be calculated after processing)
+      const earning = await Earning.create({
+        release_id: earningData.release_id,
+        type: earningData.type || 'Streaming',
+        amount: parseFloat(earningData.amount.toFixed(2)),
+        description: earningData.description,
+        date_recorded: new Date(earningData.date_recorded),
+        platform_fee: 0,
+        recorded_by_brand_id: rowRecordedByBrandId
+      });
+
+      // Process recuperable expenses and royalties if requested
+      let recuperationInfo = null;
+      if (earningData.calculate_royalties) {
+        recuperationInfo = await processEarningRoyalties(earning);
+      }
+
+      // Calculate and set the platform fee (regardless of royalty calculation)
+      const grossAmount = parseFloat(earningData.amount.toFixed(2));
+      let netRevenue = grossAmount;
+
+      if (earningData.calculate_royalties && recuperationInfo) {
+        netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
+      }
+
+      const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
+        release.brand_id,
+        grossAmount,
+        netRevenue
+      );
+
+      await earning.update({ platform_fee: finalPlatformFeeCalc.totalPlatformFee });
+
+      // If parent recorded for sublabel, pass parent brand info for notifications
+      const rowPostedByBrand = rowRecordedByBrandId ? await getParentBrand() : null;
+
+      // Send earning notification emails (matching PHP logic)
+      const rowLockedIds = await getLockedIdsCached(release.brand_id);
+      await sendEarningNotifications(earning, release.brand_id, recuperationInfo, rowPostedByBrand, rowLockedIds);
+
+      createdRows.push({
+        catalog_no: (release as any).catalog_no || '',
+        release_title: (release as any).title || '',
+        type: earning.type,
+        description: earning.description || '',
+        date: earning.date_recorded ? new Date(earning.date_recorded).toISOString().split('T')[0] : '',
+        amount: earning.amount
+      });
+    } catch (error) {
+      failedRows.push({ index: i + 1, row: earnings[i], error: (error as any).message || String(error) });
+    }
+  }
+
+  console.log(`[BulkEarnings] Job complete — created=${createdRows.length} failed=${failedRows.length}`);
+
+  // Notify admins via bell notification
+  const notifTitle = `Bulk import complete — ${createdRows.length} earnings added`;
+  const notifMessage = failedRows.length > 0
+    ? `${createdRows.length} imported, ${failedRows.length} skipped/errored`
+    : `${createdRows.length} imported successfully`;
+  const adminUserIds = await getBrandAndParentAdminUserIds(brandId);
+  await createNotificationsForUsers(adminUserIds, brandId, 'bulk_import_complete', notifTitle, notifMessage, '/admin/earnings');
+
+  // Build CSV attachments
+  const importedCsvHeader = 'catalog_no,release_title,type,description,date,amount\n';
+  const importedCsvRows = createdRows.map(r =>
+    [r.catalog_no, r.release_title, r.type, r.description, r.date, r.amount].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+  const importedCsvBuffer = Buffer.from(importedCsvHeader + importedCsvRows, 'utf-8');
+
+  const attachments: Array<{ filename: string; content: Buffer; contentType: string }> = [
+    { filename: 'imported_earnings.csv', content: importedCsvBuffer, contentType: 'text/csv' }
+  ];
+
+  if (failedRows.length > 0) {
+    const failedCsvHeader = 'row_number,error,release_id,type,description,date_recorded,amount\n';
+    const failedCsvRows = failedRows.map(r =>
+      [r.index, r.error, r.row.release_id, r.row.type, r.row.description, r.row.date_recorded, r.row.amount]
+        .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+    attachments.push({
+      filename: 'failed_earnings.csv',
+      content: Buffer.from(failedCsvHeader + failedCsvRows, 'utf-8'),
+      contentType: 'text/csv'
+    });
+  }
+
+  // Send summary email to admins
+  const now = new Date().toLocaleString();
+  const errorRows = failedRows.length > 0
+    ? `<tr><td style="padding:6px 12px;border:1px solid #e5e7eb;">Errors</td><td style="padding:6px 12px;border:1px solid #e5e7eb;">${failedRows.length}</td></tr>`
+    : '';
+  const emailHtml = `
+    <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+      <h2 style="color:#111827;">Bulk Earnings Import Complete</h2>
+      <table style="border-collapse:collapse;width:100%;margin-top:16px;">
+        <tr style="background:#f9fafb;"><th style="padding:6px 12px;border:1px solid #e5e7eb;text-align:left;">Metric</th><th style="padding:6px 12px;border:1px solid #e5e7eb;text-align:left;">Value</th></tr>
+        <tr><td style="padding:6px 12px;border:1px solid #e5e7eb;">Total submitted</td><td style="padding:6px 12px;border:1px solid #e5e7eb;">${earnings.length}</td></tr>
+        <tr><td style="padding:6px 12px;border:1px solid #e5e7eb;">Successfully created</td><td style="padding:6px 12px;border:1px solid #e5e7eb;">${createdRows.length}</td></tr>
+        ${errorRows}
+        <tr><td style="padding:6px 12px;border:1px solid #e5e7eb;">Date/Time</td><td style="padding:6px 12px;border:1px solid #e5e7eb;">${now}</td></tr>
+      </table>
+      ${failedRows.length > 0 ? '<p style="margin-top:12px;color:#6b7280;font-size:14px;">See attached CSV files for details on imported and failed rows.</p>' : '<p style="margin-top:12px;color:#6b7280;font-size:14px;">See attached CSV for a full list of imported earnings.</p>'}
+    </div>
+  `;
+
+  const adminEmails = await getBrandAndParentAdministrators(brandId);
+  if (adminEmails.length > 0) {
+    await sendEmailWithAttachment(adminEmails, 'Bulk Earnings Import Complete', emailHtml, brandId, attachments);
+  }
+}
 
 interface CsvRow {
   [key: string]: string;

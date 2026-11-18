@@ -1146,3 +1146,30 @@
     </div>
   </div>
 </ng-template>
+
+<!-- Import Started Modal -->
+<div *ngIf="showImportStartedModal"
+     class="modal fade show"
+     style="display:block;"
+     tabindex="-1"
+     role="dialog"
+     aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-body tw-text-center tw-py-8 tw-px-6">
+        <div class="tw-flex tw-items-center tw-justify-center tw-w-14 tw-h-14 tw-rounded-full tw-bg-green-100 tw-mx-auto tw-mb-4">
+          <app-icon name="check" class="tw-text-green-600" />
+        </div>
+        <h4 class="tw-mb-2">Import Started</h4>
+        <p class="tw-text-muted tw-mb-0">
+          {{ importStartedCount }} earning{{ importStartedCount !== 1 ? 's are' : ' is' }} being processed in the background.
+          You'll receive a notification and email when it's done.
+        </p>
+      </div>
+      <div class="modal-footer tw-justify-center">
+        <button type="button" class="btn-primary" (click)="showImportStartedModal = false">Got it</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="showImportStartedModal" class="modal-backdrop fade show"></div>

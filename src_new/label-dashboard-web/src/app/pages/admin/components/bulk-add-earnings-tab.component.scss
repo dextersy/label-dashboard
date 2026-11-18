@@ -78,6 +78,12 @@
   }
 }
 
+// Manual entry table: slightly more padding than the import preview table
+.table-responsive .earnings-table {
+  th { padding: 0.75rem 0.75rem; }
+  td { padding: 0.65rem 0.75rem !important; }
+}
+
 // Keep date input height consistent with the smaller inputs
 .earnings-table input[type="date"].tw-input {
   height: 34px;
