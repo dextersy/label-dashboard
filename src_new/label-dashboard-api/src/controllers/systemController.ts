@@ -1262,6 +1262,7 @@ export const processLabelAutoPayouts = async (req: Request, res: Response) => {
   try {
     const paymentService = new PaymentService();
     const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
+    console.log(`[processLabelAutoPayouts] callbackUrl: ${callbackUrl}`);
 
     const nowUtc = new Date();
 

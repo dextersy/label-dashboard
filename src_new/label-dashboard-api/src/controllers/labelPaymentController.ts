@@ -253,7 +253,8 @@ export const addLabelPayment = async (req: AuthRequest, res: Response) => {
         const transferAmount = amount - processingFee;
 
         // Send money through Paymongo
-        const callbackUrl = `${req.protocol}://${req.get('host')}/api/public/webhook/transfer`;
+        const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
+        console.log(`[label-payment] callbackUrl: ${callbackUrl}`);
         const transferResult = await paymentService.sendMoneyTransfer(
           req.user.brand_id,
           payment_method_id,

@@ -201,6 +201,7 @@ async function triggerEventClosePayout(eventId: number, brandId: number): Promis
 
     const paymentService = new PaymentService();
     const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
+    console.log(`[eventClosePayouts] callbackUrl: ${callbackUrl}`);
     const description = `Automated payout (event close) - ${sublabel.brand_name}`;
 
     const transferResult = await paymentService.sendMoneyTransfer(
