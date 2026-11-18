@@ -182,7 +182,8 @@ export class LabelsSubLabelsComponent implements OnInit, OnDestroy {
       sortable: true,
       align: 'right',
       formatter: (item: ChildBrand) => `₱${item.payments.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      showBreakdownButton: true
+      showBreakdownButton: true,
+      showBreakdownAlways: true
     },
     { 
       key: 'platform_fees', 

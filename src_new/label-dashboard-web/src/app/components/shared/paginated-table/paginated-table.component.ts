@@ -45,6 +45,7 @@ export interface TableColumn {
   mobileClass?: string; // CSS classes for mobile responsiveness
   tabletClass?: string; // CSS classes for tablet responsiveness
   showBreakdownButton?: boolean; // Show breakdown button for earnings columns
+  showBreakdownAlways?: boolean; // Show breakdown button even when value is 0 (e.g. for columns that may have pending records)
   renderHtml?: boolean; // Render formatter output as HTML instead of text
   cardHeader?: boolean; // Use this column as the card title in mobile view
   hideDataLabel?: boolean; // Hide the data-label prefix in mobile card view
