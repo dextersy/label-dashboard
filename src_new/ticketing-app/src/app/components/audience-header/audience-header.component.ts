@@ -20,7 +20,7 @@ import { AudienceNotification } from '../../models/audience-notification';
         <a routerLink="/" class="flex-shrink-0"><img src="/assets/logo-dark-bg.png" alt="Your Scene" class="h-6"></a>
 
         <!-- ── Search bar ── -->
-        <app-search-bar #searchBar class="flex-1 min-w-0 hidden sm:contents"></app-search-bar>
+        <app-search-bar #searchBar class="contents"></app-search-bar>
 
         <!-- ── Right side ── -->
         <div class="flex items-center gap-3 flex-shrink-0 ml-auto">
