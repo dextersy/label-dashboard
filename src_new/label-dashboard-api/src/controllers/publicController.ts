@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow, EventBrandCollaboration, EventDay } from '../models';
+import { Ticket, Event, EventReferrer, Brand, User, Domain, Artist, ArtistAccess, Release, ArtistImage, TicketType, Song, Fundraiser, Donation, ReleaseSong, WalkInType, WalkInTransaction, WalkInTransactionItem, EventTag, AudienceUser, EventLike, AudienceFollow, AudienceConnection, EventBrandCollaboration, EventDay } from '../models';
 import { generateSecureToken } from '../utils/tokenUtils';
 import { claimTicketsByEmailInternal } from './audienceAuthController';
 import { sequelize } from '../config/database';
@@ -4081,6 +4081,41 @@ export const getPublicAudienceUserProfile = async (req: Request, res: Response) 
       poster_url: e.poster_url ?? null,
     }));
 
+    // Connections: accepted connections, only preview avatars for public users
+    const connectionRows = await AudienceConnection.findAll({
+      where: {
+        status: 'accepted',
+        [Op.or]: [{ requester_id: userId }, { addressee_id: userId }],
+      },
+      include: [
+        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'profile_photo_url', 'is_public', 'social_discoverable'] },
+        { model: AudienceUser, as: 'addressee', attributes: ['id', 'first_name', 'profile_photo_url', 'is_public', 'social_discoverable'] },
+      ],
+    });
+
+    const connectionCount = connectionRows.length;
+    const publicConnections = connectionRows
+      .map((c: any) => c.requester_id === userId ? c.addressee : c.requester)
+      .filter((u: any) => u && u.is_public);
+    const connectionPreviews = publicConnections.slice(0, 3).map((u: any) => ({
+      id: u.id,
+      first_name: u.first_name,
+      profile_photo_url: u.profile_photo_url ?? null,
+    }));
+
+    // Following organizers
+    const followRows = await AudienceFollow.findAll({
+      where: { audience_user_id: userId },
+      include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'logo_url'] }],
+    });
+    const following = followRows
+      .filter((f: any) => f.brand)
+      .map((f: any) => ({
+        id: f.brand.id,
+        name: f.brand.brand_name,
+        logo_url: f.brand.logo_url ?? null,
+      }));
+
     return res.json({
       user: {
         id: user.id,
@@ -4091,8 +4126,11 @@ export const getPublicAudienceUserProfile = async (req: Request, res: Response) 
         membership_tier: level,
         city: user.city ?? null,
         music_genres: user.music_genres ?? [],
+        connection_count: connectionCount,
+        connection_previews: connectionPreviews,
       },
       attended_shows: attendedShows,
+      following,
     });
   } catch (error) {
     console.error('getPublicAudienceUserProfile error:', error);

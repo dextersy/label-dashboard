@@ -3,6 +3,18 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface ConnectionPreview {
+  id: number;
+  first_name: string;
+  profile_photo_url: string | null;
+}
+
+export interface FollowedOrganizer {
+  id: number;
+  name: string;
+  logo_url: string | null;
+}
+
 export interface PublicUserProfile {
   id: number;
   first_name: string;
@@ -12,6 +24,8 @@ export interface PublicUserProfile {
   membership_tier: string;
   city: string | null;
   music_genres: string[];
+  connection_count: number;
+  connection_previews: ConnectionPreview[];
 }
 
 export interface AttendedShow {
@@ -27,7 +41,7 @@ export class AudienceProfileService {
 
   constructor(private http: HttpClient) {}
 
-  getPublicUserProfile(id: number): Observable<{ user: PublicUserProfile; attended_shows: AttendedShow[] }> {
-    return this.http.get<{ user: PublicUserProfile; attended_shows: AttendedShow[] }>(`${this.base}/people/${id}`);
+  getPublicUserProfile(id: number): Observable<{ user: PublicUserProfile; attended_shows: AttendedShow[]; following: FollowedOrganizer[] }> {
+    return this.http.get<{ user: PublicUserProfile; attended_shows: AttendedShow[]; following: FollowedOrganizer[] }>(`${this.base}/people/${id}`);
   }
 }

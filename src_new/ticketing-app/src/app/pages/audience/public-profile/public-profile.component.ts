@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AudienceHeaderComponent } from '../../../components/audience-header/audience-header.component';
 import { ConnectButtonComponent } from '../../../components/connect-button/connect-button.component';
-import { AudienceProfileService, PublicUserProfile, AttendedShow } from '../../../services/audience-profile.service';
+import { AudienceProfileService, PublicUserProfile, AttendedShow, FollowedOrganizer } from '../../../services/audience-profile.service';
 import { AudienceAuthService } from '../../../services/audience-auth.service';
 import { AudienceSocialService } from '../../../services/audience-social.service';
 import { ConnectionMeta } from '../../../models/audience-connection';
@@ -62,6 +62,34 @@ import { ConnectionMeta } from '../../../models/audience-connection';
               {{ user()!.membership_tier }}
             </span>
 
+            <!-- Connections -->
+            @if (user()!.connection_count > 0) {
+              <div class="flex items-center gap-2 mt-4">
+                <!-- Overlapping avatars (public connections only) -->
+                @if (user()!.connection_previews.length > 0) {
+                  <div class="flex items-center">
+                    @for (preview of user()!.connection_previews; track preview.id; let i = $index) {
+                      <div class="w-6 h-6 rounded-full border-2 border-black overflow-hidden flex-shrink-0 flex items-center justify-center"
+                        [style.margin-left]="i === 0 ? '0' : '-6px'"
+                        [style.position]="'relative'"
+                        [style.z-index]="3 - i">
+                        @if (preview.profile_photo_url) {
+                          <img [src]="preview.profile_photo_url" [alt]="preview.first_name" class="w-full h-full object-cover">
+                        } @else {
+                          <div class="w-full h-full bg-white flex items-center justify-center">
+                            <span class="text-black text-[8px] font-black">{{ preview.first_name.charAt(0).toUpperCase() }}</span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+                <p class="text-xs font-mono text-white/40">
+                  {{ user()!.connection_count }} {{ user()!.connection_count === 1 ? 'connection' : 'connections' }}
+                </p>
+              </div>
+            }
+
             <!-- Connect button (only for logged-in audience users viewing someone else's profile) -->
             @if (showConnectButton()) {
               <div class="mt-4">
@@ -86,7 +114,7 @@ import { ConnectionMeta } from '../../../models/audience-connection';
           @if (attendedShows().length > 0) {
             <div class="mt-12">
               <p class="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-4">Shows attended</p>
-              <div class="grid grid-cols-3 gap-1">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 @for (show of attendedShows(); track show.id) {
                   <a [routerLink]="['/events', show.id]" class="relative aspect-square group overflow-hidden">
                     @if (show.poster_url) {
@@ -108,6 +136,28 @@ import { ConnectionMeta } from '../../../models/audience-connection';
             </div>
           }
 
+          <!-- Following organizers -->
+          @if (following().length > 0) {
+            <div class="mt-12">
+              <p class="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-4">Following</p>
+              <div class="flex flex-wrap gap-3">
+                @for (org of following(); track org.id) {
+                  <a [routerLink]="['/organizers', org.id]"
+                    class="flex items-center gap-2 border border-white/10 px-3 py-2 hover:border-white/30 transition-colors">
+                    @if (org.logo_url) {
+                      <img [src]="org.logo_url" [alt]="org.name" class="w-6 h-6 object-contain flex-shrink-0">
+                    } @else {
+                      <div class="w-6 h-6 bg-white/10 flex items-center justify-center flex-shrink-0">
+                        <span class="text-white/50 text-[9px] font-black">{{ org.name.charAt(0).toUpperCase() }}</span>
+                      </div>
+                    }
+                    <p class="text-xs font-mono text-white/60">{{ org.name }}</p>
+                  </a>
+                }
+              </div>
+            </div>
+          }
+
         }
 
       </main>
@@ -119,6 +169,7 @@ export class PublicProfileComponent implements OnInit {
   readonly notFound = signal(false);
   readonly user = signal<PublicUserProfile | null>(null);
   readonly attendedShows = signal<AttendedShow[]>([]);
+  readonly following = signal<FollowedOrganizer[]>([]);
   readonly connectionMeta = signal<ConnectionMeta | null>(null);
   readonly showConnectButton = signal(false);
 
@@ -143,6 +194,7 @@ export class PublicProfileComponent implements OnInit {
     this.notFound.set(false);
     this.user.set(null);
     this.attendedShows.set([]);
+    this.following.set([]);
     this.connectionMeta.set(null);
     this.showConnectButton.set(false);
 
@@ -153,6 +205,7 @@ export class PublicProfileComponent implements OnInit {
       next: (res) => {
         this.user.set(res.user);
         this.attendedShows.set(res.attended_shows);
+        this.following.set(res.following);
         this.loading.set(false);
 
         // Show connect button if logged-in audience user viewing someone else's profile
