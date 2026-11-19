@@ -4081,27 +4081,35 @@ export const getPublicAudienceUserProfile = async (req: Request, res: Response) 
       poster_url: e.poster_url ?? null,
     }));
 
-    // Connections: accepted connections, only preview avatars for public users
-    const connectionRows = await AudienceConnection.findAll({
+    // Connections: COUNT for total, separate small query for public previews
+    const connectionCount = await AudienceConnection.count({
+      where: {
+        status: 'accepted',
+        [Op.or]: [{ requester_id: userId }, { addressee_id: userId }],
+      },
+    });
+
+    const previewRows = await AudienceConnection.findAll({
       where: {
         status: 'accepted',
         [Op.or]: [{ requester_id: userId }, { addressee_id: userId }],
       },
       include: [
-        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'profile_photo_url', 'is_public', 'social_discoverable'] },
-        { model: AudienceUser, as: 'addressee', attributes: ['id', 'first_name', 'profile_photo_url', 'is_public', 'social_discoverable'] },
+        { model: AudienceUser, as: 'requester', attributes: ['id', 'first_name', 'profile_photo_url', 'is_public'], where: { is_public: true }, required: false },
+        { model: AudienceUser, as: 'addressee', attributes: ['id', 'first_name', 'profile_photo_url', 'is_public'], where: { is_public: true }, required: false },
       ],
+      limit: 10,
     });
 
-    const connectionCount = connectionRows.length;
-    const publicConnections = connectionRows
+    const connectionPreviews = previewRows
       .map((c: any) => c.requester_id === userId ? c.addressee : c.requester)
-      .filter((u: any) => u && u.is_public);
-    const connectionPreviews = publicConnections.slice(0, 3).map((u: any) => ({
-      id: u.id,
-      first_name: u.first_name,
-      profile_photo_url: u.profile_photo_url ?? null,
-    }));
+      .filter((u: any) => u && u.is_public)
+      .slice(0, 3)
+      .map((u: any) => ({
+        id: u.id,
+        first_name: u.first_name,
+        profile_photo_url: u.profile_photo_url ?? null,
+      }));
 
     // Following organizers
     const followRows = await AudienceFollow.findAll({
