@@ -144,10 +144,11 @@ import { AudienceNotification } from '../../models/audience-notification';
 
               @if (menuOpen()) {
                 <div class="absolute right-0 top-full mt-2 w-44 bg-black border border-white/20 shadow-xl z-50">
-                  <div class="px-4 py-3 border-b border-white/10">
+                  <a [routerLink]="['/people', userId()]" (click)="menuOpen.set(false)"
+                    class="block px-4 py-3 border-b border-white/10 hover:bg-white/5 transition-colors">
                     <p class="text-xs font-mono text-white truncate">{{ userName() }}</p>
-                    <p class="text-xs font-mono text-white/40">Audience</p>
-                  </div>
+                    <p class="text-xs font-mono text-white/40">View profile →</p>
+                  </a>
                   <a routerLink="/my-shows" (click)="menuOpen.set(false)"
                     class="flex items-center px-4 py-2.5 text-xs font-mono text-white/60 hover:text-white hover:bg-white/5 uppercase tracking-wider transition-colors">
                     My Shows
@@ -263,6 +264,10 @@ export class AudienceHeaderComponent implements OnInit {
 
   isAudienceLoggedIn(): boolean {
     return this.audienceAuthService.isLoggedIn();
+  }
+
+  userId(): number | null {
+    return this.audienceAuthService.getUser()?.id ?? null;
   }
 
   userInitial(): string {
