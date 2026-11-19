@@ -57,6 +57,7 @@ interface PublicEventView {
   member_discount_type?: 'fixed' | 'percent' | null;
   member_discount_amount?: number | null;
   co_organizers?: { id: number; name: string; logo_url?: string | null }[];
+  status?: string;
 }
 
 @Component({
@@ -208,7 +209,12 @@ interface PublicEventView {
                 <!-- Status / CTA + attending count -->
                 <div class="flex flex-wrap items-center gap-4">
                   <div class="flex flex-wrap items-center gap-3">
-                    @if (event()!.external_ticket_link) {
+                    @if (event()!.status === 'canceled') {
+                      <div class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-red-500/40 text-red-400 text-sm font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                        Event Canceled
+                      </div>
+                    } @else if (event()!.external_ticket_link) {
                       <a [href]="normalizeUrl(event()!.external_ticket_link)" target="_blank" rel="noopener noreferrer"
                         class="inline-flex flex-col px-7 py-3 bg-yellow-400 hover:bg-yellow-300 text-black transition-colors shadow-lg">
                         <span class="font-black uppercase tracking-wider text-sm leading-tight">Get Tickets ↗</span>
@@ -364,7 +370,7 @@ interface PublicEventView {
                   </div>
 
                   <!-- CTA below ticket types -->
-                  @if (!event()!.is_closed && (event()!.external_ticket_link || event()!.buy_shortlink)) {
+                  @if (event()!.status !== 'canceled' && !event()!.is_closed && (event()!.external_ticket_link || event()!.buy_shortlink)) {
                     <div class="mt-6">
                       @if (event()!.external_ticket_link) {
                         <a [href]="normalizeUrl(event()!.external_ticket_link)" target="_blank" rel="noopener noreferrer"

@@ -112,7 +112,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: {
         id: eventId,
-        status: 'published',
+        status: { [Op.in]: ['published', 'canceled'] },
       },
       include: [
         {
@@ -1392,7 +1392,7 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: {
         id,
-        status: 'published',
+        status: { [Op.in]: ['published', 'canceled'] },
       },
       include: [{
         model: Brand,
@@ -1800,7 +1800,7 @@ export const getAudienceTickets = async (req: Request, res: Response) => {
         {
           model: Event,
           as: 'event',
-          where: { listed_on_ticketing: true },
+          where: { listed_on_ticketing: true, status: 'published' },
           required: true,
           include: [
             { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'], where: { is_active: true }, required: true }
@@ -4115,7 +4115,7 @@ export const getPublicAudienceUserProfile = async (req: Request, res: Response) 
     const attendedEventIds = (ticketRows as any[]).map(r => r.event_id);
 
     const attendedEventRows = attendedEventIds.length === 0 ? [] : await Event.findAll({
-      where: { id: { [Op.in]: attendedEventIds }, listed_on_ticketing: true },
+      where: { id: { [Op.in]: attendedEventIds }, listed_on_ticketing: true, status: 'published' },
       attributes: ['id', 'title', 'date_and_time', 'poster_url'],
       include: [{ model: Brand, as: 'brand', attributes: [], where: { is_active: true }, required: true }],
       order: [['date_and_time', 'DESC']],
