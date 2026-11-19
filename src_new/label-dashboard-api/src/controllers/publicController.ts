@@ -1908,6 +1908,10 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
 
     const mainBrand = domainRecord.brand;
 
+    if (!mainBrand.is_active) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
     // Get all descendant brands (sublabels) recursively
     const visitedBrandIds = new Set<number>([mainBrand.id]);
     const allBrands = [mainBrand];
@@ -1915,7 +1919,7 @@ export const getAllEventsForDomain = async (req: Request, res: Response) => {
     while (queue.length > 0) {
       const parentIds = queue.splice(0, queue.length);
       const children = await Brand.findAll({
-        where: { parent_brand: parentIds }
+        where: { parent_brand: parentIds, is_active: true }
       });
       for (const child of children) {
         if (!visitedBrandIds.has(child.id)) {
@@ -2066,6 +2070,8 @@ export const getTicketingEvents = async (req: Request, res: Response) => {
           model: Brand,
           as: 'brand',
           attributes: ['id', 'brand_name', 'brand_color', 'logo_url'],
+          where: { is_active: true },
+          required: true,
         },
         {
           model: TicketType,
@@ -4202,12 +4208,13 @@ export const searchTicketing = async (req: Request, res: Response) => {
       Event.findAll({
         where: { status: 'published', listed_on_ticketing: true, title: like },
         attributes: ['id', 'title', 'date_and_time', 'venue', 'poster_url'],
-        include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name'] }],
+        include: [{ model: Brand, as: 'brand', attributes: ['id', 'brand_name'], where: { is_active: true }, required: true }],
         limit,
         order: [['date_and_time', 'DESC']],
       }),
       Event.count({
         where: { status: 'published', listed_on_ticketing: true, title: like },
+        include: [{ model: Brand, as: 'brand', where: { is_active: true }, required: true }],
       }),
     ]);
 
