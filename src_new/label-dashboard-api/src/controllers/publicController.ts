@@ -1803,7 +1803,7 @@ export const getAudienceTickets = async (req: Request, res: Response) => {
           where: { listed_on_ticketing: true },
           required: true,
           include: [
-            { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] }
+            { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'], where: { is_active: true }, required: true }
           ],
         },
         { model: TicketType, as: 'ticketType', attributes: ['id', 'name'] },
@@ -4117,6 +4117,7 @@ export const getPublicAudienceUserProfile = async (req: Request, res: Response) 
     const attendedEventRows = attendedEventIds.length === 0 ? [] : await Event.findAll({
       where: { id: { [Op.in]: attendedEventIds }, listed_on_ticketing: true },
       attributes: ['id', 'title', 'date_and_time', 'poster_url'],
+      include: [{ model: Brand, as: 'brand', attributes: [], where: { is_active: true }, required: true }],
       order: [['date_and_time', 'DESC']],
       limit: 9,
     });
