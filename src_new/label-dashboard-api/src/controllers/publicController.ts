@@ -10,7 +10,7 @@ import { sendEmail, sendArtistRegistrationNotification, sendTicketAdminNotificat
 import { getBrandAdminUserIds, createNotificationsForUsers } from '../utils/notificationService';
 import { getEventDisplayPriceSync } from '../utils/eventPriceUtils';
 import { resolveEventCloseTime } from '../utils/eventCloseTime';
-import { Op } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 import jwt from 'jsonwebtoken';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
@@ -144,34 +144,50 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     // Attach days to event so resolveEventCloseTime can derive the close time
     (event as any).days = eventDays;
 
-    // Get ticket types with availability information and their valid days
-    const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventId, disabled: false },
-      include: [
-        { model: Ticket, as: 'tickets', required: false, attributes: ['id'] },
-        { model: EventDay, as: 'days', through: { attributes: [] }, attributes: ['id', 'date_and_time', 'label'] }
-      ],
-      order: [['id', 'ASC']]
-    });
+    // Get ticket types with their valid days, plus sold counts in one aggregation query
+    const [ticketTypes, ticketSoldAgg] = await Promise.all([
+      TicketType.findAll({
+        where: { event_id: eventId, disabled: false },
+        include: [
+          { model: EventDay, as: 'days', through: { attributes: [] }, attributes: ['id', 'date_and_time', 'label'] }
+        ],
+        order: [['id', 'ASC']]
+      }),
+      Ticket.findAll({
+        attributes: [
+          'ticket_type_id',
+          [fn('SUM', col('number_of_entries')), 'sold_count']
+        ],
+        where: {
+          event_id: eventId,
+          status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] }
+        },
+        group: ['ticket_type_id'],
+        raw: true
+      }) as unknown as Promise<{ ticket_type_id: number; sold_count: string }[]>
+    ]);
 
-    const processedTicketTypes = [];
-    for (const ticketType of ticketTypes) {
+    // Build lookup: ticket_type_id -> sold count
+    const soldByType = new Map<number, number>();
+    let totalSoldFromAgg = 0;
+    for (const row of ticketSoldAgg) {
+      const count = parseInt(row.sold_count, 10) || 0;
+      soldByType.set(row.ticket_type_id, count);
+      totalSoldFromAgg += count;
+    }
+
+    const now = new Date();
+    const processedTicketTypes = ticketTypes.map((ticketType) => {
+      const soldCount = soldByType.get(ticketType.id) ?? 0;
+      const isSoldOut = ticketType.max_tickets > 0 && soldCount >= ticketType.max_tickets;
+      const remainingTickets = ticketType.max_tickets > 0 ? Math.max(0, ticketType.max_tickets - soldCount) : null;
       const isAvailable = ticketType.isAvailable();
-      const isSoldOut = await ticketType.isSoldOut();
-      const remainingTickets = await ticketType.getRemainingTickets();
-      const soldCount = await ticketType.getSoldCount();
-
-      // For public event details, include all enabled tickets with availability status.
-      // For multiday events: mark a ticket type unavailable if any of its assigned days
-      // ended more than 8h ago (approx. end of event day), so e.g. a 2-day pass cannot
-      // be purchased once day 1 is over.
       const ttDays: any[] = (ticketType as any).days || [];
-      const now = new Date();
       const isDayExpired = eventDays.length > 1 && ttDays.length > 0 && !ticketType.end_date && ttDays.some((d: any) => {
         const endOfDay = new Date(new Date(d.date_and_time).getTime() + 8 * 60 * 60 * 1000);
         return endOfDay < now;
       });
-      processedTicketTypes.push({
+      return {
         id: ticketType.id,
         name: ticketType.name,
         price: ticketType.price,
@@ -181,8 +197,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
         sold_count: soldCount,
         special_instructions: ticketType.special_instructions || null,
         days: ttDays.map((d: any) => ({ id: d.id, date_and_time: d.date_and_time, label: d.label || null }))
-      });
-    }
+      };
+    });
 
     // Check if event is closed due to time.
     // For multiday events without an explicit close_time, fall back to 8h after the last day's
@@ -208,8 +224,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     // Event is closed if time has passed or no ticket types are available
     const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
 
-    // Calculate remaining tickets if max_tickets is set
-    const totalSold = await getTotalTicketsSold(eventId);
+    // Calculate remaining tickets if max_tickets is set (reuse the aggregation computed above)
+    const totalSold = totalSoldFromAgg;
     let remainingTickets = null;
     if (event.max_tickets && event.max_tickets > 0) {
       remainingTickets = event.max_tickets - totalSold;
@@ -230,19 +246,36 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     // Build walk-in info if enabled
     let walkInTypes: any[] | undefined;
     if (event.walk_in_enabled) {
-      const witList = await WalkInType.findAll({
-        where: { event_id: eventId },
-        order: [['id', 'ASC']]
-      });
-      walkInTypes = [];
-      for (const wit of witList) {
-        const remainingSlots = await wit.getRemainingSlots();
-        walkInTypes.push({
-          name: wit.name,
-          price: wit.price,
-          remaining_slots: remainingSlots
-        });
+      const [witList, witSoldAgg] = await Promise.all([
+        WalkInType.findAll({
+          where: { event_id: eventId },
+          order: [['id', 'ASC']]
+        }),
+        WalkInTransactionItem.findAll({
+          attributes: [
+            'walk_in_type_id',
+            [fn('SUM', col('quantity')), 'sold_count']
+          ],
+          where: {
+            walk_in_type_id: {
+              [Op.in]: literal(`(SELECT id FROM walk_in_type WHERE event_id = ${eventId})`)
+            }
+          },
+          group: ['walk_in_type_id'],
+          raw: true
+        }) as unknown as Promise<{ walk_in_type_id: number; sold_count: string }[]>
+      ]);
+
+      const soldByWalkInType = new Map<number, number>();
+      for (const row of witSoldAgg) {
+        soldByWalkInType.set(row.walk_in_type_id, parseInt(row.sold_count, 10) || 0);
       }
+
+      walkInTypes = witList.map((wit) => {
+        const sold = soldByWalkInType.get(wit.id) ?? 0;
+        const remainingSlots = wit.max_slots > 0 ? Math.max(0, wit.max_slots - sold) : null;
+        return { name: wit.name, price: wit.price, remaining_slots: remainingSlots };
+      });
     }
 
     res.json({
@@ -329,33 +362,39 @@ export const getAvailableTicketTypesPublic = async (req: Request, res: Response)
       return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    // Get all ticket types for the event
-    const ticketTypes = await TicketType.findAll({
-      where: { event_id: eventIdNum, disabled: false },
-      include: [{
-        model: Ticket,
-        as: 'tickets',
-        required: false,
-        attributes: ['id']
-      }],
-      order: [['id', 'ASC']]
-    });
+    // Get all ticket types and sold counts in parallel
+    const [ticketTypes, ticketSoldAgg] = await Promise.all([
+      TicketType.findAll({
+        where: { event_id: eventIdNum, disabled: false },
+        order: [['id', 'ASC']]
+      }),
+      Ticket.findAll({
+        attributes: [
+          'ticket_type_id',
+          [fn('SUM', col('number_of_entries')), 'sold_count']
+        ],
+        where: {
+          event_id: eventIdNum,
+          status: { [Op.in]: ['Payment Confirmed', 'Ticket sent.'] }
+        },
+        group: ['ticket_type_id'],
+        raw: true
+      }) as unknown as Promise<{ ticket_type_id: number; sold_count: string }[]>
+    ]);
+
+    const soldByType = new Map<number, number>();
+    for (const row of ticketSoldAgg) {
+      soldByType.set(row.ticket_type_id, parseInt(row.sold_count, 10) || 0);
+    }
 
     const availableTicketTypes = [];
-
     for (const ticketType of ticketTypes) {
       const isAvailable = ticketType.isAvailable();
-      const isSoldOut = await ticketType.isSoldOut();
-      const remainingTickets = await ticketType.getRemainingTickets();
+      if (!isAvailable) continue; // Only hide if outside date range
 
-      // For public buy page, include all tickets but mark availability status
-      // Hide only those outside date range, but show sold out ones as grayed out
-      if (!isAvailable) {
-        continue; // Only hide if outside date range
-      }
-
-      // Get the actual sold count using the same logic as isSoldOut()
-      const soldCount = await ticketType.getSoldCount();
+      const soldCount = soldByType.get(ticketType.id) ?? 0;
+      const isSoldOut = ticketType.max_tickets > 0 && soldCount >= ticketType.max_tickets;
+      const remainingTickets = ticketType.max_tickets > 0 ? Math.max(0, ticketType.max_tickets - soldCount) : null;
 
       availableTicketTypes.push({
         ...ticketType.toJSON(),
