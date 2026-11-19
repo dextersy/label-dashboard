@@ -1800,6 +1800,8 @@ export const getAudienceTickets = async (req: Request, res: Response) => {
         {
           model: Event,
           as: 'event',
+          where: { listed_on_ticketing: true },
+          required: true,
           include: [
             { model: Brand, as: 'brand', attributes: ['id', 'brand_name', 'brand_color', 'logo_url'] }
           ],
