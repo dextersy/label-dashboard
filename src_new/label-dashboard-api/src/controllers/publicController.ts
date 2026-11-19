@@ -112,7 +112,7 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: {
         id: eventId,
-        status: { [Op.in]: ['published', 'canceled'] }
+        status: 'published',
       },
       include: [
         {
@@ -1392,7 +1392,7 @@ export const getPublicEventInfo = async (req: Request, res: Response) => {
     const event = await Event.findOne({
       where: {
         id,
-        status: { [Op.in]: ['published', 'canceled'] }
+        status: 'published',
       },
       include: [{
         model: Brand,
