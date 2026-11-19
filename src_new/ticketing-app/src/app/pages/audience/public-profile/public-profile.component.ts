@@ -116,7 +116,7 @@ import { ConnectionMeta } from '../../../models/audience-connection';
               <p class="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-4">Shows attended</p>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 @for (show of attendedShows(); track show.id) {
-                  <a [routerLink]="['/events', show.id]" class="relative aspect-square group overflow-hidden">
+                  <a [routerLink]="['/events', show.id]" class="relative aspect-[3/4] group overflow-hidden">
                     @if (show.poster_url) {
                       <img [src]="show.poster_url" [alt]="show.title" class="w-full h-full object-cover">
                     } @else {
@@ -140,18 +140,18 @@ import { ConnectionMeta } from '../../../models/audience-connection';
           @if (following().length > 0) {
             <div class="mt-12">
               <p class="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-4">Following</p>
-              <div class="flex flex-wrap gap-3">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 @for (org of following(); track org.id) {
                   <a [routerLink]="['/organizers', org.id]"
-                    class="flex items-center gap-2 border border-white/10 px-3 py-2 hover:border-white/30 transition-colors">
+                    class="flex flex-col items-center gap-3 border border-white/10 p-4 hover:border-white/30 transition-colors text-center">
                     @if (org.logo_url) {
-                      <img [src]="org.logo_url" [alt]="org.name" class="w-6 h-6 object-contain flex-shrink-0">
+                      <img [src]="org.logo_url" [alt]="org.name" class="w-12 h-12 object-contain flex-shrink-0">
                     } @else {
-                      <div class="w-6 h-6 bg-white/10 flex items-center justify-center flex-shrink-0">
-                        <span class="text-white/50 text-[9px] font-black">{{ org.name.charAt(0).toUpperCase() }}</span>
+                      <div class="w-12 h-12 bg-white/10 flex items-center justify-center flex-shrink-0">
+                        <span class="text-white/50 text-sm font-black">{{ org.name.charAt(0).toUpperCase() }}</span>
                       </div>
                     }
-                    <p class="text-xs font-mono text-white/60">{{ org.name }}</p>
+                    <p class="text-xs font-mono text-white/60 leading-snug">{{ org.name }}</p>
                   </a>
                 }
               </div>
