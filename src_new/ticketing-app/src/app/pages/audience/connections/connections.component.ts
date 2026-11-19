@@ -48,7 +48,7 @@ interface FollowedOrganizer {
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 @for (item of pending(); track item.connection_id) {
                   <div class="border border-white/10 p-3 flex flex-col gap-3">
-                    <div class="flex flex-col items-center text-center gap-2">
+                    <a [routerLink]="['/people', item.user.id]" class="flex flex-col items-center text-center gap-2">
                       <ng-container *ngTemplateOutlet="avatar; context: { $implicit: item.user }"></ng-container>
                       <div class="min-w-0 w-full">
                         <p class="text-sm font-black text-white uppercase truncate">
@@ -58,7 +58,7 @@ interface FollowedOrganizer {
                           {{ item.user.city || item.user.membership_tier }}
                         </p>
                       </div>
-                    </div>
+                    </a>
                     <app-connect-button
                       [userId]="item.user.id"
                       [connectionMeta]="{ connection_id: item.connection_id, status: 'pending', i_am_requester: false }"
@@ -87,7 +87,7 @@ interface FollowedOrganizer {
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 @for (item of connections(); track item.connection_id) {
                   <div class="border border-white/10 p-3 flex flex-col gap-2">
-                    <div class="flex flex-col items-center text-center gap-2">
+                    <a [routerLink]="['/people', item.user.id]" class="flex flex-col items-center text-center gap-2">
                       <ng-container *ngTemplateOutlet="avatar; context: { $implicit: item.user }"></ng-container>
                       <div class="min-w-0 w-full">
                         <p class="text-sm font-black text-white uppercase truncate">
@@ -102,7 +102,7 @@ interface FollowedOrganizer {
                           </p>
                         }
                       </div>
-                    </div>
+                    </a>
                     <app-connect-button
                       [userId]="item.user.id"
                       [connectionMeta]="{ connection_id: item.connection_id, status: 'accepted', i_am_requester: true }"

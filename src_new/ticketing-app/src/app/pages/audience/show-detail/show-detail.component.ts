@@ -53,22 +53,24 @@ import { AudienceAttendee } from '../../../models/audience-connection';
             <div class="space-y-2">
               @for (item of attendees(); track item.user.id) {
                 <div class="flex items-center gap-4 border border-white/10 px-4 py-3">
-                  @if (item.user.profile_photo_url) {
-                    <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name"
-                      class="w-9 h-9 object-cover border border-white/20 flex-shrink-0">
-                  } @else {
-                    <div class="w-9 h-9 bg-white flex items-center justify-center border border-white/20 flex-shrink-0">
-                      <span class="text-black text-xs font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
+                  <a [routerLink]="['/people', item.user.id]" class="flex items-center gap-4 flex-1 min-w-0">
+                    @if (item.user.profile_photo_url) {
+                      <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name"
+                        class="w-9 h-9 object-cover border border-white/20 flex-shrink-0">
+                    } @else {
+                      <div class="w-9 h-9 bg-white flex items-center justify-center border border-white/20 flex-shrink-0">
+                        <span class="text-black text-xs font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
+                      </div>
+                    }
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-black text-white uppercase truncate">
+                        {{ item.user.first_name }} {{ item.user.last_name ?? item.user.last_name_initial }}
+                      </p>
+                      <p class="text-xs font-mono text-white/30 truncate">
+                        {{ item.user.city ? item.user.city + ' · ' : '' }}{{ item.user.membership_tier }}
+                      </p>
                     </div>
-                  }
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-black text-white uppercase truncate">
-                      {{ item.user.first_name }} {{ item.user.last_name ?? item.user.last_name_initial }}
-                    </p>
-                    <p class="text-xs font-mono text-white/30 truncate">
-                      {{ item.user.city ? item.user.city + ' · ' : '' }}{{ item.user.membership_tier }}
-                    </p>
-                  </div>
+                  </a>
                   <app-connect-button
                     [userId]="item.user.id"
                     [connectionMeta]="item.connection"

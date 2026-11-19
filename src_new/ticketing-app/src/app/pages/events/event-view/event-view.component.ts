@@ -477,22 +477,25 @@ interface PublicEventView {
           <div class="overflow-y-auto flex-1">
             @for (item of attendees(); track item.user.id) {
               <div class="flex items-center gap-3 px-5 py-3 border-b border-white/5">
-                @if (item.user.profile_photo_url) {
-                  <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name"
-                    class="w-9 h-9 object-cover border border-white/20 flex-shrink-0">
-                } @else {
-                  <div class="w-9 h-9 bg-white flex items-center justify-center border border-white/20 flex-shrink-0">
-                    <span class="text-black text-xs font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
-                  </div>
-                }
-                <div class="flex-1 min-w-0">
-                  <p class="text-sm font-black text-white uppercase truncate leading-tight">
-                    {{ item.user.first_name }} {{ item.user.last_name ?? item.user.last_name_initial }}
-                  </p>
-                  @if (item.user.city) {
-                    <p class="text-[10px] font-mono text-white/30 truncate">{{ item.user.city }}</p>
+                <a [routerLink]="['/people', item.user.id]" (click)="attendeesModalOpen.set(false)"
+                  class="flex items-center gap-3 flex-1 min-w-0">
+                  @if (item.user.profile_photo_url) {
+                    <img [src]="item.user.profile_photo_url" [alt]="item.user.first_name"
+                      class="w-9 h-9 object-cover border border-white/20 flex-shrink-0">
+                  } @else {
+                    <div class="w-9 h-9 bg-white flex items-center justify-center border border-white/20 flex-shrink-0">
+                      <span class="text-black text-xs font-black">{{ item.user.first_name.charAt(0).toUpperCase() }}</span>
+                    </div>
                   }
-                </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-black text-white uppercase truncate leading-tight">
+                      {{ item.user.first_name }} {{ item.user.last_name ?? item.user.last_name_initial }}
+                    </p>
+                    @if (item.user.city) {
+                      <p class="text-[10px] font-mono text-white/30 truncate">{{ item.user.city }}</p>
+                    }
+                  </div>
+                </a>
                 <app-connect-button
                   [userId]="item.user.id"
                   [connectionMeta]="item.connection"
