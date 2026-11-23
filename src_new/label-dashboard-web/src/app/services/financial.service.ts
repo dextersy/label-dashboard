@@ -160,8 +160,8 @@ export class FinancialService {
     };
   }
 
-  async updatePaymentStatus(paymentId: number, status: 'succeeded' | 'failed'): Promise<void> {
-    await firstValueFrom(this.http.patch(`${environment.apiUrl}/financial/payments/${paymentId}/status`, { status }, {
+  async updatePaymentStatus(paymentId: number, status: 'succeeded' | 'failed', sendNotification?: boolean): Promise<void> {
+    await firstValueFrom(this.http.patch(`${environment.apiUrl}/financial/payments/${paymentId}/status`, { status, sendNotification }, {
       headers: this.getAuthHeaders()
     }));
   }

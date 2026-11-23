@@ -1724,7 +1724,7 @@ export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, sendNotification } = req.body;
 
     const validStatuses = ['succeeded', 'failed'];
     if (!status || !validStatuses.includes(status as string)) {
@@ -1741,6 +1741,24 @@ export const updatePaymentStatus = async (req: AuthRequest, res: Response) => {
     }
 
     await payment.update({ status });
+
+    if (status === 'succeeded' && sendNotification) {
+      try {
+        const reloadedPayment = await Payment.findByPk(payment.id, {
+          include: [
+            { model: Artist, as: 'artist', include: [{ model: Brand, as: 'brand' }] },
+            { model: PaymentMethod, as: 'paymentMethod', required: false }
+          ]
+        });
+        if (reloadedPayment) {
+          const paymentService = new PaymentService();
+          await paymentService.notifyArtistPaymentStatus(reloadedPayment, 'succeeded');
+        }
+      } catch (notifyError) {
+        console.error('Failed to send payment notification:', notifyError);
+      }
+    }
+
     res.json({ payment });
   } catch (error) {
     console.error('Update payment status error:', error);

@@ -6,6 +6,7 @@ import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, Head
 import { AuthService } from '../../../../services/auth.service';
 import { FinancialService } from '../../../../services/financial.service';
 import { NotificationService } from '../../../../services/notification.service';
+import { ConfirmationService } from '../../../../services/confirmation.service';
 
 @Component({
     selector: 'app-payments-table',
@@ -140,7 +141,8 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
     private router: Router,
     private authService: AuthService,
     private financialService: FinancialService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit() {
@@ -224,8 +226,28 @@ export class PaymentsTableComponent implements OnInit, OnChanges {
   }
 
   async updateStatus(payment: Payment, status: 'succeeded' | 'failed'): Promise<void> {
+    let sendNotification = false;
+    if (status === 'succeeded') {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Mark as succeeded',
+        message: 'Are you sure you want to mark this payment as succeeded?',
+        confirmText: 'Mark as succeeded',
+        cancelText: 'Cancel',
+        type: 'info'
+      });
+      if (!confirmed) return;
+
+      sendNotification = await this.confirmationService.confirm({
+        title: 'Send payment notification',
+        message: 'Send a payment notification email to the artist?',
+        confirmText: 'Yes, send email',
+        cancelText: 'No, skip',
+        type: 'info'
+      });
+    }
+
     try {
-      await this.financialService.updatePaymentStatus(payment.id, status);
+      await this.financialService.updatePaymentStatus(payment.id, status, sendNotification);
       this.notificationService.showSuccess(status === 'succeeded' ? 'Payment marked as succeeded' : 'Payment voided');
       this.refresh.emit();
     } catch {

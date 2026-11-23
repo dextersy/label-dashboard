@@ -1222,8 +1222,8 @@ export class AdminService {
     });
   }
 
-  updateSublabelPaymentStatus(brandId: number, paymentId: number, status: 'succeeded' | 'failed'): Observable<any> {
-    return this.http.patch(`${environment.apiUrl}/brands/${brandId}/payments/${paymentId}/status`, { status }, {
+  updateSublabelPaymentStatus(brandId: number, paymentId: number, status: 'succeeded' | 'failed', sendNotification?: boolean): Observable<any> {
+    return this.http.patch(`${environment.apiUrl}/brands/${brandId}/payments/${paymentId}/status`, { status, sendNotification }, {
       headers: this.getAuthHeaders()
     });
   }

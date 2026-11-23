@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../services/admin.service';
 import { NotificationService } from '../../../services/notification.service';
+import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, PaginationInfo, TableColumn, TableAction, HeaderAction, SearchFilters } from '../../../components/shared/paginated-table/paginated-table.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 
@@ -120,7 +121,8 @@ export class SublabelPaymentsModalComponent implements OnChanges {
 
   constructor(
     private adminService: AdminService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -166,8 +168,29 @@ export class SublabelPaymentsModalComponent implements OnChanges {
 
   async updateStatus(payment: SublabelPayment, status: 'succeeded' | 'failed'): Promise<void> {
     if (!this.brandId) return;
+
+    let sendNotification = false;
+    if (status === 'succeeded') {
+      const confirmed = await this.confirmationService.confirm({
+        title: 'Mark as succeeded',
+        message: 'Are you sure you want to mark this payment as succeeded?',
+        confirmText: 'Mark as succeeded',
+        cancelText: 'Cancel',
+        type: 'info'
+      });
+      if (!confirmed) return;
+
+      sendNotification = await this.confirmationService.confirm({
+        title: 'Send payment notification',
+        message: `Send a payment notification email to ${this.brandName}?`,
+        confirmText: 'Yes, send email',
+        cancelText: 'No, skip',
+        type: 'info'
+      });
+    }
+
     try {
-      await firstValueFrom(this.adminService.updateSublabelPaymentStatus(this.brandId, payment.id, status));
+      await firstValueFrom(this.adminService.updateSublabelPaymentStatus(this.brandId, payment.id, status, sendNotification));
       this.notificationService.showSuccess(status === 'succeeded' ? 'Payment marked as succeeded' : 'Payment voided');
       await this.loadPayments(this.pagination?.current_page ?? 1);
     } catch {

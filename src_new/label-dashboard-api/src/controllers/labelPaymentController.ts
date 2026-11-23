@@ -509,7 +509,7 @@ export const updateLabelPaymentStatus = async (req: AuthRequest, res: Response) 
     }
 
     const { brandId, id } = req.params;
-    const { status } = req.body;
+    const { status, sendNotification } = req.body;
     const targetBrandId = parseInt(brandId as string, 10);
 
     const validStatuses = ['succeeded', 'failed'];
@@ -534,6 +534,24 @@ export const updateLabelPaymentStatus = async (req: AuthRequest, res: Response) 
     }
 
     await payment.update({ status });
+
+    if (status === 'succeeded' && sendNotification) {
+      try {
+        const reloadedPayment = await LabelPayment.findByPk(payment.id, {
+          include: [
+            { model: Brand, as: 'brand', include: [{ model: Brand, as: 'parentBrand' }] },
+            { model: LabelPaymentMethod, as: 'paymentMethod', required: false }
+          ]
+        });
+        if (reloadedPayment) {
+          const paymentService = new PaymentService();
+          await paymentService.notifyLabelPaymentStatus(reloadedPayment, 'succeeded');
+        }
+      } catch (notifyError) {
+        console.error('Failed to send label payment notification:', notifyError);
+      }
+    }
+
     res.json({ payment });
   } catch (error) {
     console.error('Update label payment status error:', error);
