@@ -420,10 +420,16 @@
 
         <!-- State header -->
         <div class="closed-state-header">
-          <ng-container *ngIf="event && event.ticketing_enabled === false; else salesEndedHeader">
+          <ng-container *ngIf="event && event.ticketing_enabled === false; else checkScheduledHeader">
             <h2 class="closed-title">Listing Only</h2>
             <p class="closed-subtitle">Online ticket sales are not available for this event.</p>
           </ng-container>
+          <ng-template #checkScheduledHeader>
+            <ng-container *ngIf="hasScheduledTicketsOnly(); else salesEndedHeader">
+              <h2 class="closed-title">No Tickets Available</h2>
+              <p class="closed-subtitle">No tickets are available at this time. Ticket sales might have already ended or are scheduled to open at a later date.</p>
+            </ng-container>
+          </ng-template>
           <ng-template #salesEndedHeader>
             <h2 class="closed-title">Online Sales Ended</h2>
             <p class="closed-subtitle">
@@ -438,7 +444,7 @@
         </div>
 
         <!-- Walk-in ticket type cards -->
-        <div *ngIf="event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
+        <div *ngIf="!hasScheduledTicketsOnly() && event.walk_in_enabled && event.walkInTypes && event.walkInTypes.length > 0 && hasAvailableWalkInSlots()"
           class="tw-mb-4">
           <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-widest tw-text-gray-400 tw-mb-2">Walk-in tickets at the venue</p>
           <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-2">

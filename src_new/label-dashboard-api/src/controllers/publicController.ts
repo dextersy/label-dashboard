@@ -212,17 +212,8 @@ export const getEventForPublic = async (req: Request, res: Response) => {
     }
     const isClosedByTime = new Date() > fallbackCloseTime;
 
-    // Check if event is closed due to no available ticket types
-    let hasAvailableTicketTypes = false;
-    for (const ticketType of processedTicketTypes) {
-      if (ticketType.is_available && !ticketType.is_sold_out) {
-        hasAvailableTicketTypes = true;
-        break;
-      }
-    }
-
-    // Event is closed if time has passed or no ticket types are available
-    const isEventClosed = isClosedByTime || !hasAvailableTicketTypes;
+    // Event is closed if time has passed
+    const isEventClosed = isClosedByTime;
 
     // Calculate remaining tickets if max_tickets is set (reuse the aggregation computed above)
     const totalSold = totalSoldFromAgg;

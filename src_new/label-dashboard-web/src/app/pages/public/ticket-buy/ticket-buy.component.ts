@@ -347,6 +347,15 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return !this.event?.ticket_price || this.event.ticket_price <= 0;
   }
 
+  hasScheduledTicketsOnly(): boolean {
+    if (!this.event) return false;
+    if (this.event.ticketing_enabled === false) return false;
+    if (this.event.is_closed) return false;
+    if (!this.event.ticketTypes || this.event.ticketTypes.length === 0) return false;
+    // All ticket types exist but none are currently available (e.g. scheduled for later)
+    return this.event.ticketTypes.every(tt => tt.is_available === false);
+  }
+
   hasAvailableWalkInSlots(): boolean {
     if (!this.event?.walkInTypes || this.event.walkInTypes.length === 0) return false;
     return this.event.walkInTypes.some(wit =>
