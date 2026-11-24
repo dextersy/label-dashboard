@@ -1586,7 +1586,7 @@ export const addPayment = async (req: AuthRequest, res: Response) => {
         const transferAmount = amount - processingFee;
 
         // Send money through Paymongo
-        const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
+        const callbackUrl = `${process.env.PAYMONGO_CALLBACK_BASE_URL || process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
         console.log(`[manual-payment] callbackUrl: ${callbackUrl}`);
         const transferResult = await paymentService.sendMoneyTransfer(
           brand.id,
@@ -3547,7 +3547,7 @@ export const payAllBalances = async (req: AuthRequest, res: Response) => {
     }
 
     const childBrandId = req.body.child_brand_id ? parseInt(req.body.child_brand_id, 10) : null;
-    const callbackUrl = `${process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
+    const callbackUrl = `${process.env.PAYMONGO_CALLBACK_BASE_URL || process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`}/api/public/webhook/transfer`;
     console.log(`[payAllBalances] callbackUrl: ${callbackUrl}`);
 
     const payments = [];
