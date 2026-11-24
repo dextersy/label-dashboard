@@ -32,6 +32,15 @@ RewriteCond %{REQUEST_URI} ^/public/tickets/buy\.php$
 RewriteCond %{QUERY_STRING} ^id=([0-9]+)&ref=([^&]+)(&.*)?$
 RewriteRule ^public/tickets/buy\.php$ /public/tickets/buy/%1?ref=%2 [R=301,L]
 
+# Proxy /api/ requests to the Node.js API running on port 3001.
+# This allows Paymongo (and other external services) to reach the API
+# via the standard HTTPS port without needing to expose port 3001 externally.
+# Requires mod_proxy and mod_proxy_http to be enabled on Apache.
+<IfModule mod_proxy.c>
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteRule ^api/(.*)$ https://localhost:3001/api/$1 [P,L]
+</IfModule>
+
 # Handle Angular Router (client-side routing)
 # If the requested resource doesn't exist as a file or directory
 # Serve the index.html file instead (except for API calls)
