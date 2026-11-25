@@ -1503,19 +1503,19 @@ export const downloadPriorityPitch = async (req: AuthRequest, res: Response) => 
       track_number: rs.track_number
     }));
 
-    // Build public download URLs using brand domain
+    // Build public download URLs
     let artistPhotosLink = '';
     let listeningLink = '';
     let downloadLink = '';
+    const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
     if (brand?.domains && (brand.domains as any[]).length > 0) {
       const brandDomain = (brand.domains as any[])[0].domain_name;
-      const apiPort = process.env.HTTPS_PORT || '3001';
       if (artists.length > 0) {
-        artistPhotosLink = `https://${brandDomain}:${apiPort}/api/public/epk/${artists[0].id}/photos/download`;
+        artistPhotosLink = `${serverUrl}/api/public/epk/${artists[0].id}/photos/download`;
         listeningLink = `https://${brandDomain}/public/player/${artists[0].id}/${release.id}`;
       }
       if (release.UPC && release.UPC.trim()) {
-        downloadLink = `https://${brandDomain}:${apiPort}/api/public/epk/release/${encodeURIComponent(release.UPC.trim())}/download`;
+        downloadLink = `${serverUrl}/api/public/epk/release/${encodeURIComponent(release.UPC.trim())}/download`;
       }
     }
 

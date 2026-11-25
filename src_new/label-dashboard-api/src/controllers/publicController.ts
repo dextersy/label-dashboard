@@ -3297,44 +3297,12 @@ export const downloadArtistPhotos = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid artist ID' });
     }
 
-    // For direct browser navigation (e.g. clicking link from a document),
-    // Origin/Referer headers are absent, so also check the Host header
-    let requestDomain = getRequestDomain(req);
-    if (!requestDomain) {
-      const hostHeader = req.get('host') || '';
-      requestDomain = hostHeader.split(':')[0];
-    }
-
     const artist = await Artist.findOne({
       where: { id: artistId },
-      include: [
-        {
-          model: Brand,
-          as: 'brand',
-          attributes: ['id', 'brand_name'],
-          include: [
-            {
-              model: Domain,
-              as: 'domains',
-              attributes: ['domain_name']
-            }
-          ]
-        }
-      ],
       attributes: ['id', 'name']
     });
 
     if (!artist) {
-      return res.status(404).json({ error: 'Artist not found' });
-    }
-
-    // Validate domain
-    if (artist.brand && artist.brand.domains && requestDomain) {
-      const artistBrandDomains = artist.brand.domains.map((d: any) => d.domain_name);
-      if (!artistBrandDomains.includes(requestDomain)) {
-        return res.status(404).json({ error: 'Artist not found' });
-      }
-    } else {
       return res.status(404).json({ error: 'Artist not found' });
     }
 
@@ -3435,47 +3403,18 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
       return res.status(400).json({ error: 'Invalid UPC' });
     }
 
-    // Domain validation (supports direct browser navigation)
-    let requestDomain = getRequestDomain(req);
-    if (!requestDomain) {
-      const hostHeader = req.get('host') || '';
-      requestDomain = hostHeader.split(':')[0];
-    }
-
     if (!process.env.S3_BUCKET || !process.env.S3_BUCKET_MASTERS) {
       console.error('Missing required S3 environment variables');
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
     const release = await Release.findOne({
-      where: { UPC: upc },
-      include: [
-        {
-          model: Artist,
-          as: 'artists',
-          include: [
-            {
-              model: Brand,
-              as: 'brand',
-              attributes: ['id'],
-              include: [
-                {
-                  model: Domain,
-                  as: 'domains',
-                  attributes: ['domain_name']
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      where: { UPC: upc }
     });
 
     if (!release) {
       return res.status(404).json({ error: 'Release not found' });
     }
-
-    const artists = (release as any).artists || [];
 
     // Get songs via join table, filtered to those with audio files
     const releaseSongsData = await ReleaseSong.findAll({
@@ -3494,20 +3433,15 @@ export const downloadReleaseMastersByUPC = async (req: Request, res: Response) =
       track_number: rs.track_number
     }));
 
-    // Validate domain using the release's brand (via artist)
-    if (artists.length > 0 && artists[0].brand?.domains && requestDomain) {
-      const brandDomains = artists[0].brand.domains.map((d: any) => d.domain_name);
-      if (!brandDomains.includes(requestDomain)) {
-        return res.status(404).json({ error: 'Release not found' });
-      }
-    } else {
-      return res.status(404).json({ error: 'Release not found' });
-    }
-
     if (songs.length === 0 && !release.cover_art) {
       return res.status(404).json({ error: 'No masters available for this release' });
     }
 
+    const releaseWithArtist = await Release.findOne({
+      where: { id: release.id },
+      include: [{ model: Artist, as: 'artists', attributes: ['name'] }]
+    });
+    const artists = (releaseWithArtist as any)?.artists || [];
     const artistName = artists.length > 0 ? artists[0].name : 'Unknown Artist';
     const rawFileName = `${artistName} - ${release.title}`;
     let sanitizedFileName = rawFileName
