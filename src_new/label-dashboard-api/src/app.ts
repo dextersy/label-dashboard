@@ -68,6 +68,11 @@ const configureCors = () => {
   });
 };
 
+// Trust the Apache reverse proxy sitting in front of this server.
+// This allows express-rate-limit (and other middleware) to correctly identify
+// client IPs from the X-Forwarded-For header set by Apache.
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(morgan('combined'));

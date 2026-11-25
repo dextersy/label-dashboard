@@ -37,6 +37,9 @@ RewriteRule ^public/tickets/buy\.php$ /public/tickets/buy/%1?ref=%2 [R=301,L]
 # via the standard HTTPS port without needing to expose port 3001 externally.
 # Requires mod_proxy and mod_proxy_http to be enabled on Apache.
 <IfModule mod_proxy.c>
+    # Strip any client-supplied X-Forwarded-For header before proxying to prevent IP spoofing.
+    # Apache will then set its own trusted X-Forwarded-For with the real client IP.
+    RequestHeader unset X-Forwarded-For
     RewriteCond %{REQUEST_URI} ^/api/
     RewriteRule ^api/(.*)$ https://localhost:3001/api/$1 [P,L]
 </IfModule>
