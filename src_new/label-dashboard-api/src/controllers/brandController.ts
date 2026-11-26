@@ -43,7 +43,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
           'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
           'favicon_url', 'paymongo_wallet_id', 'payment_processing_fee_for_payouts',
           'release_submission_url', 'catalog_prefix',
-          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels',
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_merch_workspace', 'feature_sublabels',
           'feature_artist_profiles', 'feature_music_releases', 'artist_custom_fields'
         ]
       }]
@@ -71,6 +71,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         catalog_prefix: brand.catalog_prefix || 'REL',
         feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
         feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+        feature_merch_workspace: Boolean(brand.feature_merch_workspace),
         feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
         feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
         feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases),
@@ -518,6 +519,7 @@ export const getFeatureToggles = async (req: Request, res: Response) => {
     res.json({
       feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
       feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+      feature_merch_workspace: Boolean(brand.feature_merch_workspace),
       feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
       feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
       feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases)
@@ -532,7 +534,7 @@ export const getFeatureToggles = async (req: Request, res: Response) => {
 export const updateFeatureToggles = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { feature_music_workspace, feature_campaigns_workspace, feature_sublabels, feature_artist_profiles, feature_music_releases } = req.body;
+    const { feature_music_workspace, feature_campaigns_workspace, feature_merch_workspace, feature_sublabels, feature_artist_profiles, feature_music_releases } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
 
@@ -547,6 +549,9 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
     if (feature_campaigns_workspace !== undefined && typeof feature_campaigns_workspace !== 'boolean') {
       return res.status(400).json({ error: 'feature_campaigns_workspace must be a boolean' });
     }
+    if (feature_merch_workspace !== undefined && typeof feature_merch_workspace !== 'boolean') {
+      return res.status(400).json({ error: 'feature_merch_workspace must be a boolean' });
+    }
     if (feature_sublabels !== undefined && typeof feature_sublabels !== 'boolean') {
       return res.status(400).json({ error: 'feature_sublabels must be a boolean' });
     }
@@ -560,6 +565,7 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
     await brand.update({
       feature_music_workspace: feature_music_workspace !== undefined ? feature_music_workspace : brand.feature_music_workspace,
       feature_campaigns_workspace: feature_campaigns_workspace !== undefined ? feature_campaigns_workspace : brand.feature_campaigns_workspace,
+      feature_merch_workspace: feature_merch_workspace !== undefined ? feature_merch_workspace : brand.feature_merch_workspace,
       feature_sublabels: feature_sublabels !== undefined ? feature_sublabels : brand.feature_sublabels,
       feature_artist_profiles: feature_artist_profiles !== undefined ? feature_artist_profiles : brand.feature_artist_profiles,
       feature_music_releases: feature_music_releases !== undefined ? feature_music_releases : brand.feature_music_releases
@@ -571,6 +577,7 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
       message: 'Feature toggles updated successfully',
       feature_music_workspace: brand.feature_music_workspace !== false,
       feature_campaigns_workspace: brand.feature_campaigns_workspace !== false,
+      feature_merch_workspace: Boolean(brand.feature_merch_workspace),
       feature_sublabels: brand.feature_sublabels !== false,
       feature_artist_profiles: brand.feature_artist_profiles !== false,
       feature_music_releases: brand.feature_music_releases !== false

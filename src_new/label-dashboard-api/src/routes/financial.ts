@@ -32,6 +32,7 @@ import {
   getAdminRecuperableExpenseFlowDetails,
   updatePaymentStatus
 } from '../controllers/financialController';
+import { searchEarningTargets } from '../controllers/productController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 // Configure multer for CSV file uploads
@@ -53,6 +54,9 @@ const router = Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Earning targets (releases + products autocomplete)
+router.get('/earning-targets', searchEarningTargets);
 
 // Earnings management
 router.post('/earnings', requireAdmin, addEarning);

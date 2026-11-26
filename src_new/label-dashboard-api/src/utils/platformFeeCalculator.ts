@@ -84,6 +84,75 @@ export async function calculatePlatformFeeForMusicEarnings(
 }
 
 /**
+ * Resolve effective merch fee settings for a brand.
+ * Brand-level values act as overrides; NULL means fall back to the plan's default.
+ */
+async function resolveMerchFeeSettings(brandId: number): Promise<{
+  transactionFixedFee: number;
+  revenuePercentageFee: number;
+  feeRevenueType: 'net' | 'gross';
+}> {
+  const brand = await Brand.findByPk(brandId);
+  if (!brand) throw new Error('Brand not found');
+
+  if (brand.merch_transaction_fixed_fee !== null || brand.merch_revenue_percentage_fee !== null) {
+    return {
+      transactionFixedFee: brand.merch_transaction_fixed_fee ?? 0,
+      revenuePercentageFee: brand.merch_revenue_percentage_fee ?? 0,
+      feeRevenueType: brand.merch_fee_revenue_type ?? 'net',
+    };
+  }
+
+  // Fall back to plan defaults (use music defaults as fallback since there are no plan-level merch defaults yet)
+  const brandPlan = await BrandPlan.findOne({
+    where: { brand_id: brandId },
+    include: [{ model: Plan, as: 'plan' }],
+  });
+  const plan = brandPlan?.plan;
+
+  return {
+    transactionFixedFee: plan?.default_music_transaction_fixed_fee ?? 0,
+    revenuePercentageFee: plan?.default_music_revenue_percentage_fee ?? 0,
+    feeRevenueType: plan?.default_music_fee_revenue_type ?? 'net',
+  };
+}
+
+/**
+ * Calculate platform fee for a merch earning based on brand fee settings.
+ */
+export async function calculatePlatformFeeForMerchEarnings(
+  brandId: number,
+  grossAmount: number,
+  netRevenue: number
+): Promise<PlatformFeeCalculation> {
+  const { transactionFixedFee, revenuePercentageFee, feeRevenueType } =
+    await resolveMerchFeeSettings(brandId);
+
+  let fixedFee = 0;
+  let percentageFee = 0;
+
+  if (transactionFixedFee > 0) {
+    fixedFee = transactionFixedFee;
+  }
+
+  if (revenuePercentageFee > 0) {
+    if (feeRevenueType === 'gross') {
+      percentageFee = (grossAmount * revenuePercentageFee) / 100;
+    } else if (feeRevenueType === 'net') {
+      percentageFee = (netRevenue * revenuePercentageFee) / 100;
+    }
+  }
+
+  const totalPlatformFee = parseFloat((fixedFee + percentageFee).toFixed(2));
+
+  return {
+    fixedFee: parseFloat(fixedFee.toFixed(2)),
+    percentageFee: parseFloat(percentageFee.toFixed(2)),
+    totalPlatformFee
+  };
+}
+
+/**
  * Resolve effective event fee settings for a brand.
  * Brand-level values act as overrides; NULL means fall back to the plan's default.
  */

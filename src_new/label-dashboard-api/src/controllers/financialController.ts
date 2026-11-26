@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { Op, fn, col } from 'sequelize';
-import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User } from '../models';
+import { Earning, Royalty, Payment, PaymentMethod, Artist, Release, RecuperableExpense, ReleaseArtist, Brand, ArtistAccess, User, Product, ProductArtist } from '../models';
 import { sequelize } from '../config/database';
 import { sendEarningsNotification, sendEarningAdminNotification, sendEmailWithAttachment, getBrandAndParentAdministrators } from '../utils/emailService';
 import { createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds, getBrandAndParentAdminUserIds } from '../utils/notificationService';
 import { PaymentService } from '../utils/paymentService';
-import { calculatePlatformFeeForMusicEarnings } from '../utils/platformFeeCalculator';
+import { calculatePlatformFeeForMusicEarnings, calculatePlatformFeeForMerchEarnings } from '../utils/platformFeeCalculator';
 import { getLockedArtistIds, isArtistLocked } from '../utils/artistUtils';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
 import csv from 'csv-parser';
@@ -27,6 +27,7 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
 
     const {
       release_id,
+      product_id,
       type,
       amount,
       description,
@@ -34,40 +35,73 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       calculate_royalties = false
     } = req.body;
 
-    if (!release_id || !amount || !date_recorded) {
+    if (!amount || !date_recorded) {
       return res.status(400).json({
-        error: 'Release ID, amount, and date are required'
+        error: 'Amount and date are required'
       });
     }
 
-    // Verify release exists and belongs to user's brand, or to a direct child brand
-    const release = await Release.findOne({ where: { id: release_id } });
-
-    if (!release) {
-      return res.status(404).json({ error: 'Release not found' });
+    // Exactly one of release_id or product_id must be provided
+    if (!release_id && !product_id) {
+      return res.status(400).json({ error: 'Either release_id or product_id is required' });
+    }
+    if (release_id && product_id) {
+      return res.status(400).json({ error: 'Only one of release_id or product_id can be provided' });
     }
 
+    let targetBrandId: number;
     let recordedByBrandId: number | null = null;
+    let earningType = type;
 
-    if (release.brand_id === req.user.brand_id) {
-      // Sublabel self-entry — direct income, no payable obligation to parent
-      recordedByBrandId = null;
+    if (product_id) {
+      // Product-based earning
+      const product = await Product.findOne({ where: { id: product_id } });
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
+      // Verify product belongs to user's brand or a direct child brand
+      if (product.brand_id === req.user.brand_id) {
+        recordedByBrandId = null;
+      } else {
+        const childBrand = await Brand.findOne({
+          where: { id: product.brand_id, parent_brand: req.user.brand_id }
+        });
+        if (!childBrand) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
+        recordedByBrandId = req.user.brand_id;
+      }
+
+      targetBrandId = product.brand_id;
+      earningType = 'Merch'; // Auto-set type for product earnings
     } else {
-      // Check if release's brand is a direct child of the user's brand
-      const childBrand = await Brand.findOne({
-        where: { id: release.brand_id, parent_brand: req.user.brand_id }
-      });
-      if (!childBrand) {
+      // Release-based earning (original flow)
+      const release = await Release.findOne({ where: { id: release_id } });
+      if (!release) {
         return res.status(404).json({ error: 'Release not found' });
       }
-      // Parent recording for sublabel — creates payable obligation
-      recordedByBrandId = req.user.brand_id;
+
+      if (release.brand_id === req.user.brand_id) {
+        recordedByBrandId = null;
+      } else {
+        const childBrand = await Brand.findOne({
+          where: { id: release.brand_id, parent_brand: req.user.brand_id }
+        });
+        if (!childBrand) {
+          return res.status(404).json({ error: 'Release not found' });
+        }
+        recordedByBrandId = req.user.brand_id;
+      }
+
+      targetBrandId = release.brand_id;
     }
 
     // Create earning record with 0 platform fee initially (will be calculated after processing)
     const earning = await Earning.create({
-      release_id,
-      type: type || 'Streaming',
+      release_id: release_id || null,
+      product_id: product_id || null,
+      type: earningType || 'Streaming',
       amount: parseFloat(amount.toFixed(2)),
       description,
       date_recorded: new Date(date_recorded),
@@ -92,11 +126,9 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     }
     // If royalties are not calculated, use the gross amount as net revenue
 
-    const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-      release.brand_id,
-      grossAmount,
-      netRevenue
-    );
+    const finalPlatformFeeCalc = product_id
+      ? await calculatePlatformFeeForMerchEarnings(targetBrandId, grossAmount, netRevenue)
+      : await calculatePlatformFeeForMusicEarnings(targetBrandId, grossAmount, netRevenue);
 
     // Update the earning with the final platform fee
     await earning.update({
@@ -109,12 +141,12 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       : null;
 
     // Pre-compute locked IDs once for this earning's brand
-    const earningLockedIds = await getLockedArtistIds(release.brand_id);
+    const earningLockedIds = await getLockedArtistIds(targetBrandId);
 
     // Send earning notification emails (matching PHP logic)
     await sendEarningNotifications(
       earning,
-      release.brand_id,
+      targetBrandId,
       recuperationInfo,
       postedByBrand ? { id: postedByBrand.id, brand_name: postedByBrand.brand_name } : null,
       earningLockedIds
@@ -184,33 +216,68 @@ async function processBulkEarningsJob(earnings: any[], brandId: number): Promise
     try {
       const earningData = earnings[i];
 
-      // Verify release exists and belongs to user's brand or a direct child brand
-      const release = await Release.findOne({ where: { id: earningData.release_id } });
-
-      if (!release) {
-        failedRows.push({ index: i + 1, row: earningData, error: 'Release not found' });
-        continue;
-      }
-
       let rowRecordedByBrandId: number | null = null;
+      let targetBrandId: number;
+      let rowLabel = '';
+      let rowTitle = '';
+      let earningType = earningData.type;
 
-      if (release.brand_id === brandId) {
-        rowRecordedByBrandId = null;
+      if (earningData.product_id) {
+        // Product-based earning
+        const product = await Product.findOne({ where: { id: earningData.product_id } });
+        if (!product) {
+          failedRows.push({ index: i + 1, row: earningData, error: 'Product not found' });
+          continue;
+        }
+
+        if (product.brand_id === brandId) {
+          rowRecordedByBrandId = null;
+        } else {
+          const childBrand = await Brand.findOne({
+            where: { id: product.brand_id, parent_brand: brandId }
+          });
+          if (!childBrand) {
+            failedRows.push({ index: i + 1, row: earningData, error: 'Product not found' });
+            continue;
+          }
+          rowRecordedByBrandId = brandId;
+        }
+
+        targetBrandId = product.brand_id;
+        earningType = 'Merch';
+        rowLabel = product.sku || '';
+        rowTitle = product.name || '';
       } else {
-        const childBrand = await Brand.findOne({
-          where: { id: release.brand_id, parent_brand: brandId }
-        });
-        if (!childBrand) {
+        // Release-based earning (original flow)
+        const release = await Release.findOne({ where: { id: earningData.release_id } });
+        if (!release) {
           failedRows.push({ index: i + 1, row: earningData, error: 'Release not found' });
           continue;
         }
-        rowRecordedByBrandId = brandId;
+
+        if (release.brand_id === brandId) {
+          rowRecordedByBrandId = null;
+        } else {
+          const childBrand = await Brand.findOne({
+            where: { id: release.brand_id, parent_brand: brandId }
+          });
+          if (!childBrand) {
+            failedRows.push({ index: i + 1, row: earningData, error: 'Release not found' });
+            continue;
+          }
+          rowRecordedByBrandId = brandId;
+        }
+
+        targetBrandId = release.brand_id;
+        rowLabel = (release as any).catalog_no || '';
+        rowTitle = (release as any).title || '';
       }
 
       // Create earning record with 0 platform fee initially (will be calculated after processing)
       const earning = await Earning.create({
-        release_id: earningData.release_id,
-        type: earningData.type || 'Streaming',
+        release_id: earningData.release_id || null,
+        product_id: earningData.product_id || null,
+        type: earningType || 'Streaming',
         amount: parseFloat(earningData.amount.toFixed(2)),
         description: earningData.description,
         date_recorded: new Date(earningData.date_recorded),
@@ -232,11 +299,9 @@ async function processBulkEarningsJob(earnings: any[], brandId: number): Promise
         netRevenue = Math.max(0, grossAmount - (recuperationInfo?.recuperatedAmount || 0) - (recuperationInfo?.totalRoyalties || 0));
       }
 
-      const finalPlatformFeeCalc = await calculatePlatformFeeForMusicEarnings(
-        release.brand_id,
-        grossAmount,
-        netRevenue
-      );
+      const finalPlatformFeeCalc = earningData.product_id
+        ? await calculatePlatformFeeForMerchEarnings(targetBrandId, grossAmount, netRevenue)
+        : await calculatePlatformFeeForMusicEarnings(targetBrandId, grossAmount, netRevenue);
 
       await earning.update({ platform_fee: finalPlatformFeeCalc.totalPlatformFee });
 
@@ -244,12 +309,12 @@ async function processBulkEarningsJob(earnings: any[], brandId: number): Promise
       const rowPostedByBrand = rowRecordedByBrandId ? await getParentBrand() : null;
 
       // Send earning notification emails (matching PHP logic)
-      const rowLockedIds = await getLockedIdsCached(release.brand_id);
-      await sendEarningNotifications(earning, release.brand_id, recuperationInfo, rowPostedByBrand, rowLockedIds);
+      const rowLockedIds = await getLockedIdsCached(targetBrandId);
+      await sendEarningNotifications(earning, targetBrandId, recuperationInfo, rowPostedByBrand, rowLockedIds);
 
       createdRows.push({
-        catalog_no: (release as any).catalog_no || '',
-        release_title: (release as any).title || '',
+        catalog_no: rowLabel,
+        release_title: rowTitle,
         type: earning.type,
         description: earning.description || '',
         date: earning.date_recorded ? new Date(earning.date_recorded).toISOString().split('T')[0] : '',
@@ -973,24 +1038,99 @@ export const previewWoocommerceEarnings = async (req: AuthRequest, res: Response
   }
 };
 
-// Helper function to process earning royalties with recuperable expense handling
-async function processEarningRoyalties(earning: any) {
-  // Get the release to find the brand_id
-  const release = await Release.findByPk(earning.release_id);
-  if (!release) {
-    throw new Error('Release not found');
+// Helper: resolve artist splits for an earning (product or release)
+async function resolveArtistSplits(earning: any): Promise<Array<{ artist_id: number; percentage: number; type: string }>> {
+  if (earning.product_id) {
+    // Product-based earning: check ProductArtist first
+    const productArtists = await ProductArtist.findAll({
+      where: { product_id: earning.product_id },
+      include: [{ model: Artist, as: 'artist' }],
+    });
+
+    if (productArtists.length > 0) {
+      return productArtists.map(pa => ({
+        artist_id: pa.artist_id,
+        percentage: parseFloat(String(pa.merch_royalty_percentage)),
+        type: pa.merch_royalty_type,
+      }));
+    }
+
+    // Fallback: if product is linked to a release, use ReleaseArtist merch splits
+    const product = await Product.findByPk(earning.product_id);
+    if (product?.release_id) {
+      const releaseArtists = await ReleaseArtist.findAll({
+        where: { release_id: product.release_id },
+        include: [{ model: Artist, as: 'artist' }],
+      });
+      return releaseArtists.map(ra => ({
+        artist_id: ra.artist_id,
+        percentage: parseFloat(String(ra.merch_royalty_percentage)),
+        type: ra.merch_royalty_type,
+      }));
+    }
+
+    return [];
   }
 
-  // Calculate current recuperable expense balance for this release
-  const recuperableExpenses = await RecuperableExpense.findAll({
-    where: { 
-      release_id: earning.release_id,
-      brand_id: release.brand_id 
-    }
-  });
+  // Release-based earning: use ReleaseArtist splits by type
+  if (earning.release_id) {
+    const releaseArtists = await ReleaseArtist.findAll({
+      where: { release_id: earning.release_id },
+      include: [{ model: Artist, as: 'artist' }],
+    });
+
+    return releaseArtists.map(ra => {
+      let royaltyPercentage = 0;
+      switch (earning.type) {
+        case 'Streaming':
+          royaltyPercentage = parseFloat(String(ra.streaming_royalty_percentage));
+          break;
+        case 'Sync':
+          royaltyPercentage = parseFloat(String(ra.sync_royalty_percentage));
+          break;
+        case 'Downloads':
+          royaltyPercentage = parseFloat(String(ra.download_royalty_percentage));
+          break;
+        case 'Physical':
+          royaltyPercentage = parseFloat(String(ra.physical_royalty_percentage));
+          break;
+        case 'Merch':
+          royaltyPercentage = parseFloat(String(ra.merch_royalty_percentage));
+          break;
+      }
+      return { artist_id: ra.artist_id, percentage: royaltyPercentage, type: 'Revenue' };
+    });
+  }
+
+  return [];
+}
+
+// Helper function to process earning royalties with recuperable expense handling
+async function processEarningRoyalties(earning: any) {
+  // Determine the brand_id from the earning's target (release or product)
+  let brandId: number;
+  if (earning.product_id) {
+    const product = await Product.findByPk(earning.product_id);
+    if (!product) throw new Error('Product not found');
+    brandId = product.brand_id;
+  } else {
+    const release = await Release.findByPk(earning.release_id);
+    if (!release) throw new Error('Release not found');
+    brandId = release.brand_id;
+  }
+
+  // Calculate current recuperable expense balance
+  const expenseWhere: any = { brand_id: brandId };
+  if (earning.product_id) {
+    expenseWhere.product_id = earning.product_id;
+  } else {
+    expenseWhere.release_id = earning.release_id;
+  }
+
+  const recuperableExpenses = await RecuperableExpense.findAll({ where: expenseWhere });
 
   const recuperableBalance = recuperableExpenses.reduce(
-    (sum, expense) => sum + parseFloat((expense.expense_amount || 0).toString()), 
+    (sum, expense) => sum + parseFloat((expense.expense_amount || 0).toString()),
     0
   );
 
@@ -998,12 +1138,13 @@ async function processEarningRoyalties(earning: any) {
   let recuperatedAmount = 0;
 
   if (earning.amount < 0) {
-    // Negative earning: add back to recuperable expenses (artist-friendly — never charge a negative royalty)
+    // Negative earning: add back to recuperable expenses
     await RecuperableExpense.create({
-      release_id: earning.release_id,
-      brand_id: release.brand_id,
+      release_id: earning.release_id || null,
+      product_id: earning.product_id || null,
+      brand_id: brandId,
       expense_description: `${earning.type} reversal`,
-      expense_amount: -earning.amount, // Positive value to increase the balance
+      expense_amount: -earning.amount,
       date_recorded: earning.date_recorded
     });
     return {
@@ -1016,22 +1157,20 @@ async function processEarningRoyalties(earning: any) {
   // If there are recuperable expenses remaining, deduct from them first
   if (recuperableBalance > 0) {
     if (earning.amount >= recuperableBalance) {
-      // Earning covers all remaining recuperable expenses
       recuperatedAmount = recuperableBalance;
       remainingEarningAmount = earning.amount - recuperableBalance;
     } else {
-      // Earning partially covers recuperable expenses
       recuperatedAmount = earning.amount;
       remainingEarningAmount = 0;
     }
 
-    // Create negative recuperable expense entry to track the deduction
     if (recuperatedAmount > 0) {
       await RecuperableExpense.create({
-        release_id: earning.release_id,
-        brand_id: release.brand_id,
+        release_id: earning.release_id || null,
+        product_id: earning.product_id || null,
+        brand_id: brandId,
         expense_description: `Recuperated from ${earning.type}`,
-        expense_amount: -recuperatedAmount, // Negative value to reduce balance
+        expense_amount: -recuperatedAmount,
         date_recorded: earning.date_recorded
       });
     }
@@ -1041,50 +1180,28 @@ async function processEarningRoyalties(earning: any) {
   let totalRoyalties = 0;
 
   if (remainingEarningAmount > 0) {
-    const releaseArtists = await ReleaseArtist.findAll({
-      where: { release_id: earning.release_id },
-      include: [{ model: Artist, as: 'artist' }]
-    });
+    const splits = await resolveArtistSplits(earning);
 
-    for (const releaseArtist of releaseArtists) {
-      let royaltyPercentage = 0;
-      
-      // Get royalty percentage based on earning type
-      switch (earning.type) {
-        case 'Streaming':
-          royaltyPercentage = releaseArtist.streaming_royalty_percentage;
-          break;
-        case 'Sync':
-          royaltyPercentage = releaseArtist.sync_royalty_percentage;
-          break;
-        case 'Downloads':
-          royaltyPercentage = releaseArtist.download_royalty_percentage;
-          break;
-        case 'Physical':
-          royaltyPercentage = releaseArtist.physical_royalty_percentage;
-          break;
-      }
+    for (const split of splits) {
+      if (split.percentage > 0) {
+        const royaltyAmount = parseFloat((remainingEarningAmount * split.percentage).toFixed(2));
 
-      if (royaltyPercentage > 0) {
-        const royaltyAmount = parseFloat((remainingEarningAmount * royaltyPercentage).toFixed(2));
-        
         await Royalty.create({
-          artist_id: releaseArtist.artist_id,
+          artist_id: split.artist_id,
           earning_id: earning.id,
-          release_id: earning.release_id,
-          percentage_of_earning: royaltyPercentage,
+          release_id: earning.release_id || null,
+          product_id: earning.product_id || null,
+          percentage_of_earning: split.percentage,
           amount: royaltyAmount,
           description: `${earning.type} royalty from ${earning.description || 'earning'} (after recuperable expense deduction)`,
           date_recorded: earning.date_recorded
         });
-        
-        // Track total royalties applied
+
         totalRoyalties += royaltyAmount;
       }
     }
   }
 
-  // Return recuperation and royalty info
   return {
     recuperatedAmount,
     remainingRecuperableBalance: Math.max(0, recuperableBalance - recuperatedAmount),
@@ -1274,14 +1391,26 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
+    // Brand scope: earnings linked to a release OR product belonging to this brand
+    const brandId = req.user.brand_id;
+    const brandReleaseIds = (await Release.findAll({ where: { brand_id: brandId }, attributes: ['id'], raw: true })).map((r: any) => r.id);
+    const brandProductIds = (await Product.findAll({ where: { brand_id: brandId }, attributes: ['id'], raw: true })).map((p: any) => p.id);
+
+    const brandScope: any[] = [];
+    if (brandReleaseIds.length > 0) brandScope.push({ release_id: { [Op.in]: brandReleaseIds } });
+    if (brandProductIds.length > 0) brandScope.push({ product_id: { [Op.in]: brandProductIds } });
+
+    if (brandScope.length === 0) {
+      return res.json({ earnings: [], pagination: { current_page: 1, total_pages: 0, total_count: 0, per_page: pageSize, has_next: false, has_prev: false } });
+    }
+
+    where[Op.and] = [{ [Op.or]: brandScope }];
+
     const { count, rows: earnings } = await Earning.findAndCountAll({
       where,
       include: [
-        { 
-          model: Release, 
-          as: 'release',
-          where: { brand_id: req.user.brand_id }
-        }
+        { model: Release, as: 'release', required: false },
+        { model: Product, as: 'product', required: false },
       ],
       order: [['date_recorded', 'DESC']],
       limit: pageSize,
@@ -1313,18 +1442,32 @@ export const getEarningById = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
 
     const earning = await Earning.findOne({
-      where: { id },
+      where: { id: parseInt(id as string, 10) },
       include: [
-        { 
-          model: Release, 
-          as: 'release',
-          where: { brand_id: req.user.brand_id }
-        }
+        { model: Release, as: 'release', required: false },
+        { model: Product, as: 'product', required: false },
       ]
     });
 
     if (!earning) {
       return res.status(404).json({ error: 'Earning not found' });
+    }
+
+    // Verify brand scope
+    const brandId = req.user.brand_id;
+    const belongsToBrand = (earning.release_id && earning.release?.brand_id === brandId)
+      || (earning.product_id && earning.product?.brand_id === brandId);
+    if (!belongsToBrand) {
+      // Check if belongs to child brand
+      if (earning.release_id && earning.release) {
+        const childBrand = await Brand.findOne({ where: { id: earning.release.brand_id, parent_brand: brandId } });
+        if (!childBrand) return res.status(404).json({ error: 'Earning not found' });
+      } else if (earning.product_id && earning.product) {
+        const childBrand = await Brand.findOne({ where: { id: earning.product.brand_id, parent_brand: brandId } });
+        if (!childBrand) return res.status(404).json({ error: 'Earning not found' });
+      } else {
+        return res.status(404).json({ error: 'Earning not found' });
+      }
     }
 
     res.json({ earning });
@@ -1411,39 +1554,59 @@ export const getEarningsByArtist = async (req: AuthRequest, res: Response) => {
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    // Build release where clause for title filtering
-    // Allow releases from any brand the admin can access (own brand + child brands)
-    const releaseWhere: any = { brand_id: { [Op.in]: allowedBrandIdsForEarnings } };
-    
-    if (filters.release_title && filters.release_title !== '') {
-      releaseWhere.title = { [require('sequelize').Op.like]: `%${filters.release_title}%` };
-    }
-    if (filters.catalog_no && filters.catalog_no !== '') {
-      releaseWhere.catalog_no = { [require('sequelize').Op.like]: `%${filters.catalog_no}%` };
+    // Find release IDs associated with this artist within allowed brands
+    const artistReleaseIds = (await ReleaseArtist.findAll({
+      where: { artist_id: artistIdNum },
+      attributes: ['release_id'],
+      include: [{ model: Release, as: 'release', where: { brand_id: { [Op.in]: allowedBrandIdsForEarnings } }, attributes: [] }],
+      raw: true,
+    })).map((ra: any) => ra.release_id);
+
+    // Find product IDs associated with this artist (via ProductArtist) within allowed brands
+    const artistProductIds = (await ProductArtist.findAll({
+      where: { artist_id: artistIdNum },
+      attributes: ['product_id'],
+      include: [{ model: Product, as: 'product', where: { brand_id: { [Op.in]: allowedBrandIdsForEarnings } }, attributes: [] }],
+      raw: true,
+    })).map((pa: any) => pa.product_id);
+
+    // Also include products directly linked to this artist
+    const directProductIds = (await Product.findAll({
+      where: { artist_id: artistIdNum, brand_id: { [Op.in]: allowedBrandIdsForEarnings } },
+      attributes: ['id'],
+      raw: true,
+    })).map((p: any) => p.id);
+
+    const allProductIds = [...new Set([...artistProductIds, ...directProductIds])];
+
+    // Build OR condition: earnings linked to artist's releases OR artist's products
+    const targetScope: any[] = [];
+    if (artistReleaseIds.length > 0) targetScope.push({ release_id: { [Op.in]: artistReleaseIds } });
+    if (allProductIds.length > 0) targetScope.push({ product_id: { [Op.in]: allProductIds } });
+
+    if (targetScope.length === 0) {
+      return res.json({ earnings: [], artist: { id: artist.id, name: artist.name }, pagination: { current_page: pageNum, total_pages: 0, total_count: 0, per_page: pageSize, has_next: false, has_prev: false } });
     }
 
-    // Get earnings for releases associated with this artist
+    earningsWhere[Op.or] = targetScope;
+
+    // Apply release title/catalog_no filters if provided
+    let releaseWhere: any = undefined;
+    if ((filters.release_title && filters.release_title !== '') || (filters.catalog_no && filters.catalog_no !== '')) {
+      releaseWhere = {};
+      if (filters.release_title && filters.release_title !== '') {
+        releaseWhere.title = { [Op.iLike]: `%${filters.release_title}%` };
+      }
+      if (filters.catalog_no && filters.catalog_no !== '') {
+        releaseWhere.catalog_no = { [Op.iLike]: `%${filters.catalog_no}%` };
+      }
+    }
+
     const { count, rows: earnings } = await Earning.findAndCountAll({
       where: earningsWhere,
       include: [
-        {
-          model: Release,
-          as: 'release',
-          where: releaseWhere,
-          include: [
-            {
-              model: ReleaseArtist,
-              as: 'releaseArtists',
-              where: { artist_id: artistIdNum },
-              include: [
-                {
-                  model: Artist,
-                  as: 'artist'
-                }
-              ]
-            }
-          ]
-        }
+        { model: Release, as: 'release', required: !!releaseWhere, where: releaseWhere },
+        { model: Product, as: 'product', required: false },
       ],
       order: orderClause,
       limit: pageSize,
@@ -1942,17 +2105,24 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ error: 'Artist not found' });
       }
 
-      // Fetch totals and release IDs in parallel
-      const [totalRoyalties, totalPayments, artistReleases] = await Promise.all([
+      // Fetch totals and release/product IDs in parallel
+      const [totalRoyalties, totalPayments, artistReleases, artistProducts] = await Promise.all([
         Royalty.sum('amount', { where: { artist_id: artistIdNum } }).then(v => v || 0),
         Payment.sum('amount', { where: { artist_id: artistIdNum, status: 'succeeded' } }).then(v => v || 0),
         ReleaseArtist.findAll({ where: { artist_id: artistIdNum }, attributes: ['release_id'] }),
+        ProductArtist.findAll({ where: { artist_id: artistIdNum }, attributes: ['product_id'] }),
       ]);
 
-      // Calculate total earnings from all releases the artist is on (any brand)
+      // Calculate total earnings from all releases + products the artist is on
       const releaseIds = artistReleases.map(ra => ra.release_id);
-      const totalEarnings = releaseIds.length > 0 ? await Earning.sum('amount', {
-        where: { release_id: releaseIds }
+      const productIds = artistProducts.map(pa => pa.product_id);
+
+      const earningOrConditions: any[] = [];
+      if (releaseIds.length > 0) earningOrConditions.push({ release_id: { [Op.in]: releaseIds } });
+      if (productIds.length > 0) earningOrConditions.push({ product_id: { [Op.in]: productIds } });
+
+      const totalEarnings = earningOrConditions.length > 0 ? await Earning.sum('amount', {
+        where: { [Op.or]: earningOrConditions }
       }) || 0 : 0;
 
       summary = {
@@ -1984,11 +2154,21 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         // Build earning query params based on perspective
         let ownEarningQuery: string | null = null;
         let ownEarningReplacements: any = null;
-        if (releaseIds.length > 0) {
+        if (releaseIds.length > 0 || productIds.length > 0) {
           // Always query unbranded earnings (sub-label's own) and derive parent's as total - unbranded
+          const clauses: string[] = [];
+          const replacements: any = {};
+          if (releaseIds.length > 0) {
+            clauses.push('release_id IN (:releaseIds)');
+            replacements.releaseIds = releaseIds;
+          }
+          if (productIds.length > 0) {
+            clauses.push('product_id IN (:productIds)');
+            replacements.productIds = productIds;
+          }
           ownEarningQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM earning
-            WHERE release_id IN (:releaseIds) AND (recorded_by_brand_id IS NULL)`;
-          ownEarningReplacements = { releaseIds };
+            WHERE (${clauses.join(' OR ')}) AND (recorded_by_brand_id IS NULL)`;
+          ownEarningReplacements = replacements;
         }
 
         // Build brand name lookup promise
@@ -2050,12 +2230,16 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
       }
     } else {
       // Brand-wide summary — run all three aggregate queries in parallel
+      // Use raw SQL to include both release-based and product-based earnings
+      const brandId = req.user.brand_id;
       const [earningsResult, royaltiesResult, paymentsResult] = await Promise.all([
-        Earning.findAll({
-          include: [{ model: Release, as: 'release', where: { brand_id: req.user.brand_id } }],
-          attributes: [[require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']],
-          raw: true
-        }),
+        sequelize.query(
+          `SELECT COALESCE(SUM(e.amount), 0) AS total FROM earning e
+           LEFT JOIN release r ON e.release_id = r.id
+           LEFT JOIN product p ON e.product_id = p.id
+           WHERE (r.brand_id = :brandId OR p.brand_id = :brandId)`,
+          { replacements: { brandId }, type: 'SELECT' }
+        ).then(rows => rows),
         Royalty.findAll({
           include: [{ model: Artist, as: 'artist', where: { brand_id: req.user.brand_id } }],
           attributes: [[require('sequelize').fn('sum', require('sequelize').col('amount')), 'total']],
@@ -2132,26 +2316,31 @@ export const getAdminEarningsSummary = async (req: AuthRequest, res: Response) =
       return res.status(400).json({ error: 'start_date and end_date are required' });
     }
 
-    // Get all releases for the brand
-    const releases = await Release.findAll({
-      where: { brand_id: req.user.brand_id }
-    });
+    // Get all releases and products for the brand
+    const releases = await Release.findAll({ where: { brand_id: req.user.brand_id }, attributes: ['id'] });
+    const products = await Product.findAll({ where: { brand_id: req.user.brand_id }, attributes: ['id'] });
 
     const releaseIds = releases.map(r => r.id);
+    const productIds = products.map((p: any) => p.id);
 
-    if (releaseIds.length === 0) {
+    const brandScope: any[] = [];
+    if (releaseIds.length > 0) brandScope.push({ release_id: { [Op.in]: releaseIds } });
+    if (productIds.length > 0) brandScope.push({ product_id: { [Op.in]: productIds } });
+
+    if (brandScope.length === 0) {
       return res.json({
         physical_earnings: 0,
         download_earnings: 0,
         streaming_earnings: 0,
-        sync_earnings: 0
+        sync_earnings: 0,
+        merch_earnings: 0,
       });
     }
 
     // Get earnings by type for the date range
     const earningsByType = await Earning.findAll({
       where: {
-        release_id: releaseIds,
+        [Op.or]: brandScope,
         date_recorded: {
           [require('sequelize').Op.between]: [start_date, end_date]
         }
@@ -2165,11 +2354,12 @@ export const getAdminEarningsSummary = async (req: AuthRequest, res: Response) =
     });
 
     // Initialize summary with zeros
-    const summary = {
+    const summary: any = {
       physical_earnings: 0,
       download_earnings: 0,
       streaming_earnings: 0,
-      sync_earnings: 0
+      sync_earnings: 0,
+      merch_earnings: 0,
     };
 
     // Populate summary with actual earnings
@@ -2187,6 +2377,9 @@ export const getAdminEarningsSummary = async (req: AuthRequest, res: Response) =
           break;
         case 'Sync':
           summary.sync_earnings = total;
+          break;
+        case 'Merch':
+          summary.merch_earnings = total;
           break;
       }
     });
@@ -2309,7 +2502,7 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    // Get all releases for the brand
+    // Get all releases and products for the brand
     const releaseWhere: any = { brand_id: req.user.brand_id };
     if (release_title && release_title !== '') {
       releaseWhere.title = { [require('sequelize').Op.like]: `%${release_title}%` };
@@ -2317,13 +2510,21 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
     const releases = await Release.findAll({ where: releaseWhere, attributes: ['id'] });
     const releaseIds = releases.map((r: any) => r.id);
 
-    if (releaseIds.length === 0) {
+    const products = await Product.findAll({ where: { brand_id: req.user.brand_id }, attributes: ['id'] });
+    const productIds = products.map((p: any) => p.id);
+
+    // Build brand scope: earnings linked to brand's releases OR products
+    const brandScope: any[] = [];
+    if (releaseIds.length > 0) brandScope.push({ release_id: { [Op.in]: releaseIds } });
+    if (productIds.length > 0) brandScope.push({ product_id: { [Op.in]: productIds } });
+
+    if (brandScope.length === 0) {
       return res.json({ earnings: [], pagination: { current_page: 1, total_pages: 0, total_count: 0, per_page: pageSize, has_next: false, has_prev: false } });
     }
 
     // Build earnings where clause
     const earningsWhere: any = {
-      release_id: releaseIds,
+      [Op.or]: brandScope,
       date_recorded: { [require('sequelize').Op.between]: [start_date, end_date] }
     };
     if (description && description !== '') {
@@ -2333,6 +2534,12 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
       earningsWhere.type = type;
     }
 
+    // If filtering by release_title, exclude product-only earnings
+    if (release_title && release_title !== '') {
+      earningsWhere.release_id = { [Op.in]: releaseIds };
+      delete earningsWhere[Op.or];
+    }
+
     // Build order clause
     const validSortColumns: { [key: string]: string } = { date_recorded: 'date_recorded', amount: 'amount', type: 'type', description: 'description' };
     const orderColumn = sortBy && validSortColumns[sortBy as string] ? validSortColumns[sortBy as string] : 'date_recorded';
@@ -2340,7 +2547,10 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
 
     const { count, rows } = await (Earning as any).findAndCountAll({
       where: earningsWhere,
-      include: [{ model: Release, as: 'release', attributes: ['title', 'catalog_no', 'cover_art'] }],
+      include: [
+        { model: Release, as: 'release', attributes: ['title', 'catalog_no', 'cover_art'], required: false },
+        { model: Product, as: 'product', attributes: ['id', 'name', 'sku'], required: false },
+      ],
       order: [[orderColumn, orderDir]],
       limit: pageSize,
       offset
@@ -2351,12 +2561,14 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
       earnings: rows.map((e: any) => ({
         id: e.id,
         date_recorded: e.date_recorded,
-        release_title: e.release?.title || '',
-        catalog_no: e.release?.catalog_no || '',
+        release_title: e.release?.title || e.product?.name || '',
+        catalog_no: e.release?.catalog_no || e.product?.sku || '',
         cover_art: e.release?.cover_art || null,
         description: e.description,
         type: e.type,
-        amount: parseFloat(e.amount || 0)
+        amount: parseFloat(e.amount || 0),
+        product_id: e.product_id,
+        product_name: e.product?.name || null,
       })),
       pagination: { current_page: pageNum, total_pages: totalPages, total_count: count, per_page: pageSize, has_next: pageNum < totalPages, has_prev: pageNum > 1 }
     });
@@ -2511,108 +2723,100 @@ async function sendEarningNotifications(
   lockedArtistIds?: Set<number>
 ) {
   try {
-    // Get release with associated artists and brand
-    const release = await Release.findByPk(earning.release_id, {
-      include: [
-        {
-          model: ReleaseArtist,
-          as: 'releaseArtists',
-          include: [
-            {
-              model: Artist,
-              as: 'artist'
-            }
-          ]
-        },
-        {
-          model: Brand,
-          as: 'brand'
-        }
-      ]
-    });
+    // Resolve artists and brand info from either release or product
+    let artistSplits: Array<{ artist: any }> = [];
+    let brand: any = null;
+    let targetName: string = 'Unknown';
+    let targetBrandId: number = brandId;
 
-    if (!release || !release.releaseArtists || release.releaseArtists.length === 0) {
-      return;
-    }
-
-    const lockedIds = lockedArtistIds ?? await getLockedArtistIds(brandId);
-
-    // Process each artist (matching PHP logic)
-    for (const releaseArtist of release.releaseArtists) {
-      if (!releaseArtist.artist) {
-        continue;
-      }
-
-      // Skip locked artists — they are excluded from financial operations and notifications
-      if (lockedIds.has(releaseArtist.artist.id)) {
-        continue;
-      }
-
-      // Get artist access (team members with email addresses)
-      const artistAccess = await ArtistAccess.findAll({
-        where: {
-          artist_id: releaseArtist.artist.id,
-          status: 'Accepted' // SECURITY: Only send notifications to accepted users
-        },
+    if (earning.release_id) {
+      const release = await Release.findByPk(earning.release_id, {
         include: [
-          {
-            model: User,
-            as: 'user',
-            attributes: ['email_address', 'first_name', 'last_name']
-          }
+          { model: ReleaseArtist, as: 'releaseArtists', include: [{ model: Artist, as: 'artist' }] },
+          { model: Brand, as: 'brand' },
         ]
       });
 
-      if (!artistAccess || artistAccess.length === 0) {
-        continue;
+      if (!release || !release.releaseArtists || release.releaseArtists.length === 0) return;
+
+      artistSplits = release.releaseArtists.map((ra: any) => ({ artist: ra.artist }));
+      brand = release.brand;
+      targetName = release.title || 'Unknown Release';
+      targetBrandId = release.brand_id;
+    } else if (earning.product_id) {
+      const product = await Product.findByPk(earning.product_id, {
+        include: [
+          { model: ProductArtist, as: 'productArtists', include: [{ model: Artist, as: 'artist' }] },
+          { model: Brand, as: 'brand' },
+          { model: Artist, as: 'artist' },
+        ]
+      });
+
+      if (!product) return;
+
+      // Product artists from ProductArtist join table
+      if (product.productArtists && product.productArtists.length > 0) {
+        artistSplits = product.productArtists.map((pa: any) => ({ artist: pa.artist }));
+      } else if (product.artist) {
+        // Fallback: direct artist link
+        artistSplits = [{ artist: product.artist }];
+      } else {
+        return; // No artists to notify
       }
 
-      // Get email addresses for team members
+      brand = product.brand;
+      targetName = product.name || 'Unknown Product';
+      targetBrandId = product.brand_id;
+    } else {
+      return;
+    }
+
+    const lockedIds = lockedArtistIds ?? await getLockedArtistIds(targetBrandId);
+
+    for (const { artist } of artistSplits) {
+      if (!artist) continue;
+      if (lockedIds.has(artist.id)) continue;
+
+      const artistAccess = await ArtistAccess.findAll({
+        where: { artist_id: artist.id, status: 'Accepted' },
+        include: [{ model: User, as: 'user', attributes: ['email_address', 'first_name', 'last_name'] }]
+      });
+
+      if (!artistAccess || artistAccess.length === 0) continue;
+
       const emailAddresses = artistAccess
         .map((access: any) => access.user?.email_address)
-        .filter((email: string) => email); // Remove any undefined emails
+        .filter((email: string) => email);
 
-      if (emailAddresses.length === 0) {
-        continue;
-      }
+      if (emailAddresses.length === 0) continue;
 
-      // Use recuperable expense information from royalty processing
       const recuperatedAmount = recuperationInfo?.recuperatedAmount || 0;
       const recuperableBalance = recuperationInfo?.remainingRecuperableBalance || 0;
-      
-      // Get royalty amount for this artist if it exists
+
       const royalty = await Royalty.findOne({
-        where: {
-          earning_id: earning.id,
-          artist_id: releaseArtist.artist.id
-        }
+        where: { earning_id: earning.id, artist_id: artist.id }
       });
       const royaltyAmount = royalty ? royalty.amount : null;
 
-      // Check if artist has a payment method set
       const hasPaymentMethod = await PaymentMethod.findOne({
-        where: { artist_id: releaseArtist.artist.id }
+        where: { artist_id: artist.id }
       });
 
-      // Get brand settings
-      const brandName = release.brand?.brand_name || 'Label Dashboard';
-      const brandColor = release.brand?.brand_color || '#667eea';
-      const brandLogo = release.brand?.logo_url || '';
+      const brandName = brand?.brand_name || 'Label Dashboard';
+      const brandColor = brand?.brand_color || '#667eea';
+      const brandLogo = brand?.logo_url || '';
 
-      // Generate dashboard URL using brand-specific domain
-      const dashboardUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial/earnings`;
-      const paymentScreenUrl = `${await getBrandFrontendUrl(release.brand_id)}/financial/payments`;
+      const dashboardUrl = `${await getBrandFrontendUrl(targetBrandId)}/financial/earnings`;
+      const paymentScreenUrl = `${await getBrandFrontendUrl(targetBrandId)}/financial/payments`;
 
-      // Build "posted by" note for artist team email description
       const earningDescription = postedByBrand
         ? `${earning.description || `${earning.type} earnings`} [Posted by ${postedByBrand.brand_name}]`
         : (earning.description || `${earning.type} earnings`);
 
-      // Send earnings notification email to artist team
       await sendEarningsNotification(
         emailAddresses,
-        releaseArtist.artist.name,
-        release.title || 'Unknown Release',
+        artist.name,
+        targetName,
         earningDescription,
         earning.amount.toString(),
         recuperatedAmount.toString(),
@@ -2622,15 +2826,14 @@ async function sendEarningNotifications(
         brandColor,
         brandLogo,
         dashboardUrl,
-        release.brand_id,
+        targetBrandId,
         !hasPaymentMethod,
         paymentScreenUrl
       );
 
-      // If posted by parent label, also email sublabel admins
       if (postedByBrand) {
         const adminUsers = await User.findAll({
-          where: { brand_id: release.brand_id, is_admin: true },
+          where: { brand_id: targetBrandId, is_admin: true },
           attributes: ['email_address']
         });
         const adminEmails = adminUsers
@@ -2640,30 +2843,28 @@ async function sendEarningNotifications(
         if (adminEmails.length > 0) {
           await sendEarningAdminNotification(
             adminEmails,
-            release.title || 'Unknown Release',
+            targetName,
             earning.type,
             earning.amount,
             postedByBrand.brand_name,
             brandName,
             brandColor,
             dashboardUrl,
-            release.brand_id
+            targetBrandId
           );
         }
       }
 
-      // In-app notification message includes "posted by" when relevant
       const notificationMessage = postedByBrand
         ? `${earning.type} earnings of ${earning.amount} (posted by ${postedByBrand.brand_name})`
         : `${earning.type} earnings of ${earning.amount}`;
 
-      // Create in-app notifications for artist team + admins
-      const notifyUserIds = await getArtistTeamAndAdminUserIds(releaseArtist.artist.id, release.brand_id);
+      const notifyUserIds = await getArtistTeamAndAdminUserIds(artist.id, targetBrandId);
       await createNotificationsForUsers(
         notifyUserIds,
-        release.brand_id,
+        targetBrandId,
         'earnings_posted',
-        `New earnings posted for ${release.title || 'Unknown Release'}`,
+        `New earnings posted for ${targetName}`,
         notificationMessage,
         '/financial/earnings'
       );
@@ -2671,7 +2872,6 @@ async function sendEarningNotifications(
 
   } catch (error) {
     console.error('Error sending earning notifications:', error);
-    // Don't throw error - email failures shouldn't block earning creation
   }
 }
 
@@ -3696,25 +3896,49 @@ export const downloadEarningsCSV = async (req: AuthRequest, res: Response) => {
       order = [[sortBy as string, sortDirection === 'desc' ? 'DESC' : 'ASC']];
     }
 
+    // Find earning IDs linked to this artist via ReleaseArtist or ProductArtist
+    const artistReleaseIds = (await ReleaseArtist.findAll({
+      where: { artist_id: artistIdNum },
+      attributes: ['release_id'],
+      raw: true,
+    })).map((ra: any) => ra.release_id);
+
+    const artistProductIds = (await ProductArtist.findAll({
+      where: { artist_id: artistIdNum },
+      attributes: ['product_id'],
+      raw: true,
+    })).map((pa: any) => pa.product_id);
+
+    // Build OR scope for artist's earnings
+    const targetScope: any[] = [];
+    if (artistReleaseIds.length > 0) targetScope.push({ release_id: { [Op.in]: artistReleaseIds } });
+    if (artistProductIds.length > 0) targetScope.push({ product_id: { [Op.in]: artistProductIds } });
+
+    if (targetScope.length > 0) {
+      where[Op.or] = targetScope;
+    } else {
+      // Artist has no releases or products — return empty CSV
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="earnings.csv"');
+      return res.send('Date,Release/Product,Description,Amount\n');
+    }
+
     // Get earnings data
     const earnings = await Earning.findAll({
       include: [
         {
           model: Release,
           as: 'release',
-          required: true, // INNER JOIN to ensure only earnings with releases
+          required: !!Object.keys(releaseWhere).length,
           where: Object.keys(releaseWhere).length > 0 ? releaseWhere : undefined,
-          include: [
-            {
-              model: ReleaseArtist,
-              as: 'releaseArtists',
-              required: true, // INNER JOIN to ensure only releases for this artist
-              where: { artist_id: artistIdNum },
-              attributes: []
-            }
-          ],
           attributes: ['title']
-        }
+        },
+        {
+          model: Product,
+          as: 'product',
+          required: false,
+          attributes: ['name']
+        },
       ],
       where,
       order,
@@ -3722,10 +3946,10 @@ export const downloadEarningsCSV = async (req: AuthRequest, res: Response) => {
     });
 
     // Convert to CSV format
-    const csvHeaders = ['Date', 'Release', 'Description', 'Amount'];
+    const csvHeaders = ['Date', 'Release/Product', 'Description', 'Amount'];
     const csvRows = earnings.map(earning => [
       new Date(earning.date_recorded).toLocaleDateString(),
-      earning.release?.title || '',
+      earning.release?.title || earning.product?.name || '',
       earning.description || '',
       `${parseFloat(earning.amount.toString()).toFixed(2)}`
     ]);
@@ -3809,25 +4033,25 @@ export const downloadRoyaltiesCSV = async (req: AuthRequest, res: Response) => {
       order = [[sortBy as string, sortDirection === 'desc' ? 'DESC' : 'ASC']];
     }
 
+    // Royalties already have artist_id — query directly
+    where.artist_id = artistIdNum;
+
     // Get royalties data
     const royalties = await Royalty.findAll({
       include: [
         {
           model: Release,
           as: 'release',
-          required: true, // INNER JOIN to ensure only royalties with releases
+          required: !!Object.keys(releaseWhere).length,
           where: Object.keys(releaseWhere).length > 0 ? releaseWhere : undefined,
-          include: [
-            {
-              model: ReleaseArtist,
-              as: 'releaseArtists',
-              required: true, // INNER JOIN to ensure only releases for this artist
-              where: { artist_id: artistIdNum },
-              attributes: []
-            }
-          ],
           attributes: ['title']
-        }
+        },
+        {
+          model: Product,
+          as: 'product',
+          required: false,
+          attributes: ['name']
+        },
       ],
       where,
       order,
@@ -3835,10 +4059,10 @@ export const downloadRoyaltiesCSV = async (req: AuthRequest, res: Response) => {
     });
 
     // Convert to CSV format
-    const csvHeaders = ['Date', 'Release', 'Description', 'Amount'];
+    const csvHeaders = ['Date', 'Release/Product', 'Description', 'Amount'];
     const csvRows = royalties.map(royalty => [
       new Date(royalty.date_recorded).toLocaleDateString(),
-      royalty.release?.title || '',
+      royalty.release?.title || royalty.product?.name || '',
       royalty.description || '',
       `${parseFloat(royalty.amount.toString()).toFixed(2)}`
     ]);

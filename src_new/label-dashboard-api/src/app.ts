@@ -177,6 +177,7 @@ const startServer = async () => {
       { name: 'eventAccess', path: './routes/eventAccess' },
       { name: 'eventBrandCollab', path: './routes/eventBrandCollab' },
       { name: 'publicWristband', path: './routes/publicWristband' },
+      { name: 'products', path: './routes/product' },
     ];
 
     // Load all route modules in parallel with detailed error reporting
@@ -238,6 +239,7 @@ const startServer = async () => {
     const eventAccessRoutes = routes.eventAccess;
     const eventBrandCollabRoutes = routes.eventBrandCollab;
     const publicWristbandRoutes = routes.publicWristband;
+    const productRoutes = routes.products;
 
     console.log(`✅ Successfully loaded ${routeResults.length} route modules`);
 
@@ -263,6 +265,7 @@ const startServer = async () => {
     app.use('/api/release-task-templates', releaseTaskTemplateRoutes);
     app.use('/api/event-access', eventAccessRoutes);
     app.use('/api/event-brand-collab', eventBrandCollabRoutes);
+    app.use('/api/products', productRoutes);
 
     // Public API Routes (no authentication required)
     app.use('/api/public', publicRoutes);
