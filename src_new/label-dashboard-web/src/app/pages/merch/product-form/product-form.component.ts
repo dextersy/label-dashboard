@@ -10,6 +10,7 @@ import { ApiService } from '../../../services/api.service';
 import { ReleaseService, Release } from '../../../services/release.service';
 import { environment } from '../../../../environments/environment';
 import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
+import { NotificationService } from '../../../services/notification.service';
 
 @Component({
   selector: 'app-product-form',
@@ -52,6 +53,7 @@ export class ProductFormComponent implements OnInit {
     private productService: ProductService,
     private apiService: ApiService,
     private releaseService: ReleaseService,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -197,6 +199,7 @@ export class ProductFormComponent implements OnInit {
       },
       error: () => {
         this.saving = false;
+        this.notificationService.showError('Failed to save product. Please try again.');
       }
     });
   }
@@ -245,6 +248,10 @@ export class ProductFormComponent implements OnInit {
     ).subscribe({
       next: (splits) => {
         this.artistSplits = splits;
+        this.notificationService.showSuccess('Artist splits saved.');
+      },
+      error: () => {
+        this.notificationService.showError('Failed to save artist splits. Please try again.');
       }
     });
   }

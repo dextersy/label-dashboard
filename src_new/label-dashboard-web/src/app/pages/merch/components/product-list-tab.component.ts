@@ -6,6 +6,7 @@ import { Product } from '../../../models/product.model';
 import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, PaginationInfo, SearchFilters } from '../../../components/shared/paginated-table/paginated-table.component';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ConfirmationService } from '../../../services/confirmation.service';
 
 @Component({
   selector: 'app-product-list-tab',
@@ -128,6 +129,7 @@ export class ProductListTabComponent implements OnInit {
     private productService: ProductService,
     public router: Router,
     private sanitizer: DomSanitizer,
+    private confirmationService: ConfirmationService,
   ) {}
 
   ngOnInit(): void {
@@ -170,8 +172,16 @@ export class ProductListTabComponent implements OnInit {
     this.loadProducts();
   }
 
-  deleteProduct(product: Product): void {
-    if (!confirm(`Delete "${product.name}"?`)) return;
+  async deleteProduct(product: Product): Promise<void> {
+    const confirmed = await this.confirmationService.confirm({
+      title: 'Delete Product',
+      message: `Delete "${product.name}"?`,
+      warning: 'This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      type: 'danger',
+    });
+    if (!confirmed) return;
     this.productService.deleteProduct(product.id).subscribe({
       next: () => this.loadProducts()
     });

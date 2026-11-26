@@ -340,7 +340,11 @@ export const getFeeSettings = async (req: Request, res: Response) => {
           revenue_percentage_fee: brand.merch_revenue_percentage_fee,
           fee_revenue_type: brand.merch_fee_revenue_type,
         } : null,
-        plan_default: null,
+        plan_default: {
+          transaction_fixed_fee: plan?.default_merch_transaction_fixed_fee ?? 0,
+          revenue_percentage_fee: plan?.default_merch_revenue_percentage_fee ?? 0,
+          fee_revenue_type: plan?.default_merch_fee_revenue_type ?? 'net',
+        },
       }
     });
 
@@ -554,7 +558,11 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
             revenue_percentage_fee: brand.merch_revenue_percentage_fee,
             fee_revenue_type: brand.merch_fee_revenue_type,
           } : null,
-          plan_default: null,
+          plan_default: {
+            transaction_fixed_fee: plan?.default_merch_transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: plan?.default_merch_revenue_percentage_fee ?? 0,
+            fee_revenue_type: plan?.default_merch_fee_revenue_type ?? 'net',
+          },
         }
       }
     });
