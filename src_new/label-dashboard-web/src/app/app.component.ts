@@ -197,6 +197,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (path.startsWith('/admin')) return 'admin';
     if (path.startsWith('/campaigns')) return 'campaigns';
     if (path.startsWith('/labels')) return 'labels';
+    if (path.startsWith('/merch')) return 'merch';
     // Routes that belong to the music workspace
     if (path === '/dashboard' || path.startsWith('/artist') || path.startsWith('/releases') || path.startsWith('/financial') || path.startsWith('/events') || path.startsWith('/team')) return 'music';
     // Routes that are workspace-agnostic (e.g. /profile) — preserve current workspace
