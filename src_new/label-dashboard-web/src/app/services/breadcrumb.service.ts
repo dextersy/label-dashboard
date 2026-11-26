@@ -100,6 +100,14 @@ export class BreadcrumbService {
     '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },
     '/labels/reports/payments-royalties': { label: 'Payouts & Royalties', parent: '/labels/reports' },
     '/labels/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/labels/reports' },
+
+    // Merch section
+    '/merch': { label: 'Merch', icon: 'shopping-bag' },
+    '/merch/products': { label: 'Products', parent: '/merch' },
+    '/merch/products/new': { label: 'New Product', parent: '/merch/products' },
+    '/merch/products/:id': { label: 'View Product', parent: '/merch/products' },
+    '/merch/products/:id/gallery': { label: 'Gallery', parent: '/merch/products/:id' },
+    '/merch/products/:id/edit': { label: 'Edit Product', parent: '/merch/products/:id' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

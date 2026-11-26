@@ -9,11 +9,12 @@ import { FloatingActionBarComponent } from '../../../components/shared/floating-
 import { ApiService } from '../../../services/api.service';
 import { ReleaseService, Release } from '../../../services/release.service';
 import { environment } from '../../../../environments/environment';
+import { BreadcrumbComponent } from '../../../shared/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, IconComponent, FloatingActionBarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IconComponent, FloatingActionBarComponent, BreadcrumbComponent],
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss',
 })
