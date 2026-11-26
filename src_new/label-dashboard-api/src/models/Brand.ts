@@ -22,7 +22,11 @@ interface BrandAttributes {
   fundraiser_transaction_fixed_fee?: number | null;
   fundraiser_revenue_percentage_fee?: number | null;
   fundraiser_fee_revenue_type?: 'net' | 'gross' | null;
+  merch_transaction_fixed_fee?: number | null;
+  merch_revenue_percentage_fee?: number | null;
+  merch_fee_revenue_type?: 'net' | 'gross' | null;
   feature_music_workspace?: boolean;
+  feature_merch_workspace?: boolean;
   feature_campaigns_workspace?: boolean;
   feature_sublabels?: boolean;
   feature_artist_profiles?: boolean;
@@ -68,7 +72,11 @@ class Brand extends Model<BrandAttributes, BrandCreationAttributes> implements B
   public fundraiser_transaction_fixed_fee?: number | null;
   public fundraiser_revenue_percentage_fee?: number | null;
   public fundraiser_fee_revenue_type?: 'net' | 'gross' | null;
+  public merch_transaction_fixed_fee?: number | null;
+  public merch_revenue_percentage_fee?: number | null;
+  public merch_fee_revenue_type?: 'net' | 'gross' | null;
   public feature_music_workspace?: boolean;
+  public feature_merch_workspace?: boolean;
   public feature_campaigns_workspace?: boolean;
   public feature_sublabels?: boolean;
   public feature_artist_profiles?: boolean;
@@ -242,10 +250,41 @@ Brand.init(
       type: DataTypes.ENUM('net', 'gross'),
       allowNull: true,
     },
+    merch_transaction_fixed_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      get() {
+        const value = this.getDataValue('merch_transaction_fixed_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
+      },
+      set(value: any) {
+        this.setDataValue('merch_transaction_fixed_fee', value !== null && value !== undefined ? parseFloat(value) : null);
+      }
+    },
+    merch_revenue_percentage_fee: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      get() {
+        const value = this.getDataValue('merch_revenue_percentage_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : null;
+      },
+      set(value: any) {
+        this.setDataValue('merch_revenue_percentage_fee', value !== null && value !== undefined ? parseFloat(value) : null);
+      }
+    },
+    merch_fee_revenue_type: {
+      type: DataTypes.ENUM('net', 'gross'),
+      allowNull: true,
+    },
     feature_music_workspace: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    feature_merch_workspace: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     feature_campaigns_workspace: {
       type: DataTypes.BOOLEAN,

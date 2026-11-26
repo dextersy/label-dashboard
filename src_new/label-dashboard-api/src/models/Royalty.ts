@@ -13,6 +13,7 @@ interface RoyaltyAttributes {
   percentage_of_earning?: number;
   amount: number;
   release_id?: number;
+  product_id?: number | null;
   description?: string;
   date_recorded: Date;
 }
@@ -26,11 +27,13 @@ class Royalty extends Model<RoyaltyAttributes, RoyaltyCreationAttributes> implem
   public percentage_of_earning?: number;
   public amount!: number;
   public release_id?: number;
+  public product_id?: number | null;
   public description?: string;
   public date_recorded!: Date;
 
-  // Association
+  // Associations
   public release?: ReleaseAssociation;
+  public product?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -63,6 +66,10 @@ Royalty.init(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     description: {
       type: DataTypes.STRING(255),
       allowNull: true,
@@ -80,6 +87,7 @@ Royalty.init(
       { fields: ['artist_id'] },
       { fields: ['earning_id'] },
       { fields: ['release_id'] },
+      { fields: ['product_id'] },
       { fields: ['date_recorded'] },
     ],
   }

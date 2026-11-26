@@ -14,12 +14,15 @@ interface ReleaseArtistAttributes {
   download_royalty_type: RoyaltyType;
   physical_royalty_percentage: number;
   physical_royalty_type: RoyaltyType;
+  merch_royalty_percentage: number;
+  merch_royalty_type: RoyaltyType;
 }
 
-interface ReleaseArtistCreationAttributes extends Optional<ReleaseArtistAttributes, 
-  'streaming_royalty_percentage' | 'streaming_royalty_type' | 'sync_royalty_percentage' | 
-  'sync_royalty_type' | 'download_royalty_percentage' | 'download_royalty_type' | 
-  'physical_royalty_percentage' | 'physical_royalty_type'> {}
+interface ReleaseArtistCreationAttributes extends Optional<ReleaseArtistAttributes,
+  'streaming_royalty_percentage' | 'streaming_royalty_type' | 'sync_royalty_percentage' |
+  'sync_royalty_type' | 'download_royalty_percentage' | 'download_royalty_type' |
+  'physical_royalty_percentage' | 'physical_royalty_type' |
+  'merch_royalty_percentage' | 'merch_royalty_type'> {}
 
 class ReleaseArtist extends Model<ReleaseArtistAttributes, ReleaseArtistCreationAttributes> implements ReleaseArtistAttributes {
   public artist_id!: number;
@@ -32,6 +35,8 @@ class ReleaseArtist extends Model<ReleaseArtistAttributes, ReleaseArtistCreation
   public download_royalty_type!: RoyaltyType;
   public physical_royalty_percentage!: number;
   public physical_royalty_type!: RoyaltyType;
+  public merch_royalty_percentage!: number;
+  public merch_royalty_type!: RoyaltyType;
 
   // Association properties
   public release?: any;
@@ -88,6 +93,16 @@ ReleaseArtist.init(
       defaultValue: 0.200,
     },
     physical_royalty_type: {
+      type: DataTypes.ENUM('Revenue', 'Profit'),
+      allowNull: false,
+      defaultValue: 'Revenue',
+    },
+    merch_royalty_percentage: {
+      type: DataTypes.DECIMAL(4, 3),
+      allowNull: false,
+      defaultValue: 0.200,
+    },
+    merch_royalty_type: {
       type: DataTypes.ENUM('Revenue', 'Profit'),
       allowNull: false,
       defaultValue: 'Revenue',

@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../config/database';
 
-type EarningType = 'Sync' | 'Streaming' | 'Downloads' | 'Physical';
+type EarningType = 'Sync' | 'Streaming' | 'Downloads' | 'Physical' | 'Merch';
 
 interface ReleaseAssociation {
   id: number;
@@ -10,7 +10,8 @@ interface ReleaseAssociation {
 
 interface EarningAttributes {
   id: number;
-  release_id: number;
+  release_id?: number | null;
+  product_id?: number | null;
   type: EarningType;
   amount?: number;
   description?: string;
@@ -23,7 +24,8 @@ interface EarningCreationAttributes extends Optional<EarningAttributes, 'id' | '
 
 class Earning extends Model<EarningAttributes, EarningCreationAttributes> implements EarningAttributes {
   public id!: number;
-  public release_id!: number;
+  public release_id?: number | null;
+  public product_id?: number | null;
   public type!: EarningType;
   public amount?: number;
   public description?: string;
@@ -31,8 +33,9 @@ class Earning extends Model<EarningAttributes, EarningCreationAttributes> implem
   public platform_fee?: number;
   public recorded_by_brand_id?: number | null;
 
-  // Association
+  // Associations
   public release?: ReleaseAssociation;
+  public product?: any;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -47,10 +50,14 @@ Earning.init(
     },
     release_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     type: {
-      type: DataTypes.ENUM('Sync', 'Streaming', 'Downloads', 'Physical'),
+      type: DataTypes.ENUM('Sync', 'Streaming', 'Downloads', 'Physical', 'Merch'),
       allowNull: false,
       defaultValue: 'Streaming',
     },
@@ -90,6 +97,7 @@ Earning.init(
     timestamps: false,
     indexes: [
       { fields: ['release_id'] },
+      { fields: ['product_id'] },
       { fields: ['recorded_by_brand_id'] },
       { fields: ['date_recorded'] },
     ],
