@@ -24,6 +24,7 @@ export class FeatureTogglesModalComponent implements OnChanges {
   toggles: FeatureToggles = {
     feature_music_workspace: true,
     feature_campaigns_workspace: true,
+    feature_merch_workspace: false,
     feature_sublabels: true,
     feature_artist_profiles: true,
     feature_music_releases: true

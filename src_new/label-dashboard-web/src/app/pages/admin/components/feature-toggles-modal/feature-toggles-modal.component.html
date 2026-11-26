@@ -69,6 +69,21 @@
               <div class="feature-desc">Events and fundraisers</div>
             </button>
 
+            <!-- Merch Workspace -->
+            <button
+              type="button"
+              class="feature-card"
+              [class.active]="toggles.feature_merch_workspace"
+              (click)="toggleFeature('feature_merch_workspace')">
+              <div class="feature-badge-disabled" *ngIf="!toggles.feature_merch_workspace">Disabled</div>
+              <div class="feature-badge-enabled" *ngIf="toggles.feature_merch_workspace">
+                <app-icon name="check" iconOnly />
+              </div>
+              <div class="feature-icon"><app-icon name="shopping-bag" iconOnly /></div>
+              <div class="feature-name">Merch Workspace</div>
+              <div class="feature-desc">Merchandise products and earnings</div>
+            </button>
+
             <!-- Sublabels -->
             <button
               type="button"

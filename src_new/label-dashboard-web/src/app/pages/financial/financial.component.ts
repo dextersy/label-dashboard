@@ -240,6 +240,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
 
   newEarningForm: {
     release_id: string;
+    product_id: number | null;
     type: string;
     description: string;
     amount: number;
@@ -247,6 +248,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
     calculate_royalties: boolean;
   } = {
     release_id: '',
+    product_id: null,
     type: 'Streaming',
     description: '',
     amount: 0,
@@ -706,6 +708,7 @@ export class FinancialComponent implements OnInit, OnDestroy {
   private resetEarningForm(): void {
     this.newEarningForm = {
       release_id: '',
+      product_id: null,
       type: 'Streaming',
       description: '',
       amount: 0,

@@ -102,7 +102,7 @@ export class FinancialEarningsTabComponent {
     },
     {
       key: 'release_title',
-      label: 'Release',
+      label: 'Release / Product',
       type: 'text',
       searchable: true,
       sortable: true,
@@ -136,7 +136,7 @@ export class FinancialEarningsTabComponent {
   ];
 
   formatReleaseCell(item: any) {
-    const title = item.release_title || '(None)';
+    const title = item.release_title || item.product_name || '(None)';
     const src = item.cover_art || this.coverArtPlaceholder;
     const html = `<span style="display:inline-flex;align-items:center;gap:8px"><img src="${src}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">${title}</span>`;
     return this.sanitizer.bypassSecurityTrustHtml(html);

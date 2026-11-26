@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { AdminService, BrandSettings, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
 import { ReleaseService, Release } from '../../../services/release.service';
+import { ProductService } from '../../../services/product.service';
+import { Product } from '../../../models/product.model';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
@@ -27,7 +29,9 @@ interface CsvEarningRow {
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;
   releases: Release[] = [];
+  products: Product[] = [];
   filteredReleases: Release[] = [];
+  filteredProducts: Product[] = [];
   bulkEarnings: BulkEarning[] = [];
   totalEarnings: number = 0;
   applyAllDescCount: number = 0;
@@ -139,6 +143,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private releaseService: ReleaseService,
+    private productService: ProductService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService
   ) {
@@ -147,9 +152,20 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBulkEarningsData();
+    this.loadProducts();
     this.adminService.getBrandSettings().subscribe({
       next: (settings) => { this.brandSettings = settings; },
       error: () => {}
+    });
+  }
+
+  private loadProducts(): void {
+    this.productService.getProducts({ page: 1, limit: 1000, status: 'active' }).subscribe({
+      next: (res) => {
+        this.products = res.products;
+        this.filteredProducts = [...this.products];
+      },
+      error: () => {} // Products may not be enabled
     });
   }
 
@@ -237,7 +253,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   async saveBulkEarnings(): Promise<void> {
     const validEarnings = this.bulkEarnings.filter(earning =>
-      earning.release_id > 0 && earning.amount !== 0
+      (earning.release_id > 0 || (earning.product_id && earning.product_id > 0)) && earning.amount !== 0
     );
 
     if (validEarnings.length === 0) {
@@ -286,13 +302,19 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   onReleaseSearch(index: number, searchTerm: string): void {
     this.searchTerms[index] = searchTerm;
-    
+    const term = searchTerm.toLowerCase();
+
     if (searchTerm.length === 0) {
       this.filteredReleases = [...this.releases];
+      this.filteredProducts = [...this.products];
     } else {
-      this.filteredReleases = this.releases.filter(release => 
-        release.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        release.catalog_no.toLowerCase().includes(searchTerm.toLowerCase())
+      this.filteredReleases = this.releases.filter(release =>
+        release.title.toLowerCase().includes(term) ||
+        release.catalog_no.toLowerCase().includes(term)
+      );
+      this.filteredProducts = this.products.filter(product =>
+        product.name.toLowerCase().includes(term) ||
+        (product.sku && product.sku.toLowerCase().includes(term))
       );
     }
   }
@@ -301,6 +323,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.showDropdown[index] = true;
     if (this.searchTerms[index].length === 0) {
       this.filteredReleases = [...this.releases];
+      this.filteredProducts = [...this.products];
     } else {
       this.onReleaseSearch(index, this.searchTerms[index]);
     }
@@ -315,9 +338,21 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   selectRelease(index: number, release: Release): void {
     this.bulkEarnings[index].release_id = release.id;
+    this.bulkEarnings[index].product_id = null;
     this.searchTerms[index] = `${release.catalog_no}: ${release.title}`;
     this.showDropdown[index] = false;
     this.filteredReleases = [];
+    this.filteredProducts = [];
+  }
+
+  selectProduct(index: number, product: Product): void {
+    this.bulkEarnings[index].product_id = product.id;
+    this.bulkEarnings[index].release_id = 0;
+    this.bulkEarnings[index].type = 'Merch';
+    this.searchTerms[index] = product.sku ? `${product.sku}: ${product.name}` : product.name;
+    this.showDropdown[index] = false;
+    this.filteredReleases = [];
+    this.filteredProducts = [];
   }
 
   getSelectedRelease(releaseId: number): Release | undefined {

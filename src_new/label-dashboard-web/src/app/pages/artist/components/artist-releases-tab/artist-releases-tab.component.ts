@@ -8,6 +8,8 @@ import { environment } from 'environments/environment';
 import { ReleaseValidationService } from '../../../../services/release-validation.service';
 import { Song } from '../../../../services/song.service';
 import { ReleaseService } from '../../../../services/release.service';
+import { ProductService } from '../../../../services/product.service';
+import { Product } from '../../../../models/product.model';
 import { downloadFromResponse } from '../../../../utils/file-utils';
 import { ConfirmationService } from '../../../../services/confirmation.service';
 import { IconComponent } from '../../../../components/shared/icon/icon.component';
@@ -100,23 +102,28 @@ export class ArtistReleasesTabComponent {
     action.handler(release);
   }
 
+  linkedProducts: Product[] = [];
+
   constructor(
     private http: HttpClient,
     private router: Router,
     private validationService: ReleaseValidationService,
     private releaseService: ReleaseService,
+    private productService: ProductService,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
     if (this.artist) {
       this.loadReleases();
+      this.loadLinkedProducts();
     }
   }
 
   ngOnChanges(): void {
     if (this.artist) {
       this.loadReleases();
+      this.loadLinkedProducts();
     }
   }
 
@@ -483,5 +490,17 @@ export class ArtistReleasesTabComponent {
         }
       });
     }
+  }
+
+  private loadLinkedProducts(): void {
+    if (!this.artist) return;
+    this.productService.getProducts({ artist_id: this.artist.id, limit: 100 }).subscribe({
+      next: (res) => { this.linkedProducts = res.products; },
+      error: () => {}
+    });
+  }
+
+  navigateToProduct(product: Product): void {
+    this.router.navigate(['/merch/products', product.id]);
   }
 }

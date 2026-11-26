@@ -37,7 +37,7 @@
       <thead class="earnings-sticky-head">
         <tr>
           <th class="row-num-col">#</th>
-          <th>Release</th>
+          <th>Release / Product</th>
           <th>Earning Date</th>
           <th>Earning Type</th>
           <th style="width:22%">Earning Description</th>
@@ -70,6 +70,7 @@
               <option value="Streaming">Streaming</option>
               <option value="Downloads">Downloads</option>
               <option value="Physical">Physical</option>
+              <option value="Merch">Merch</option>
             </select>
           </td>
           <td>
@@ -112,7 +113,7 @@
                        (input)="onReleaseSearch(i, searchTerms[i])"
                        (focus)="onInputFocus(i)"
                        (blur)="onInputBlur(i)"
-                       placeholder="Search releases..."
+                       placeholder="Search releases or products..."
                        autocomplete="off">
               </div>
 
@@ -120,17 +121,29 @@
               <div *ngIf="showDropdown[i]"
                    class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
                    style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-                <div *ngIf="filteredReleases.length > 0; else noResultsDesktop">
-                  <div *ngFor="let release of filteredReleases"
-                       class="tw-p-2 release-option"
-                       style="cursor: pointer; border-bottom: 1px solid #eee;"
-                       (click)="selectRelease(i, release)">
-                    <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
-                    <span *ngIf="release.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ release.brand!.brand_name }})</span>
+                <div *ngIf="filteredReleases.length > 0 || filteredProducts.length > 0; else noResultsDesktop">
+                  <div *ngIf="filteredReleases.length > 0">
+                    <div *ngIf="filteredProducts.length > 0" class="tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-bg-gray-50">Releases</div>
+                    <div *ngFor="let release of filteredReleases"
+                         class="tw-p-2 release-option"
+                         style="cursor: pointer; border-bottom: 1px solid #eee;"
+                         (click)="selectRelease(i, release)">
+                      <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
+                      <span *ngIf="release.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ release.brand!.brand_name }})</span>
+                    </div>
+                  </div>
+                  <div *ngIf="filteredProducts.length > 0">
+                    <div class="tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-bg-gray-50">Products</div>
+                    <div *ngFor="let product of filteredProducts"
+                         class="tw-p-2 release-option"
+                         style="cursor: pointer; border-bottom: 1px solid #eee;"
+                         (click)="selectProduct(i, product)">
+                      <strong *ngIf="product.sku">{{ product.sku }}:</strong> {{ product.name }}
+                    </div>
                   </div>
                 </div>
                 <ng-template #noResultsDesktop>
-                  <div class="tw-p-2 tw-text-muted">No releases found</div>
+                  <div class="tw-p-2 tw-text-muted">No releases or products found</div>
                 </ng-template>
               </div>
 
@@ -149,6 +162,7 @@
               <option value="Streaming">Streaming</option>
               <option value="Downloads">Downloads</option>
               <option value="Physical">Physical</option>
+              <option value="Merch">Merch</option>
             </select>
           </td>
           <td>
@@ -268,7 +282,7 @@
 
         <!-- Release search -->
         <div class="tw-col-span-2">
-          <label class="tw-label tw-text-xs">Release</label>
+          <label class="tw-label tw-text-xs">Release / Product</label>
           <div class="tw-relative">
             <div class="release-search-wrap">
               <app-icon name="search" class="release-search-icon" iconOnly />
@@ -284,17 +298,29 @@
             <div *ngIf="showDropdown[i]"
                  class="tw-absolute tw-w-full tw-bg-white border border-top-0 shadow-sm"
                  style="z-index: 1000; max-height: 200px; overflow-y: auto;">
-              <div *ngIf="filteredReleases.length > 0; else noResultsMobile">
-                <div *ngFor="let release of filteredReleases"
-                     class="tw-p-2 release-option"
-                     style="cursor: pointer; border-bottom: 1px solid #eee;"
-                     (click)="selectRelease(i, release)">
-                  <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
-                  <span *ngIf="release.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ release.brand!.brand_name }})</span>
+              <div *ngIf="filteredReleases.length > 0 || filteredProducts.length > 0; else noResultsMobile">
+                <div *ngIf="filteredReleases.length > 0">
+                  <div *ngIf="filteredProducts.length > 0" class="tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-bg-gray-50">Releases</div>
+                  <div *ngFor="let release of filteredReleases"
+                       class="tw-p-2 release-option"
+                       style="cursor: pointer; border-bottom: 1px solid #eee;"
+                       (click)="selectRelease(i, release)">
+                    <strong>{{ release.catalog_no }}</strong>: {{ release.title }}
+                    <span *ngIf="release.brand?.brand_name" class="tw-text-xs tw-text-gray-400 tw-ml-1">({{ release.brand!.brand_name }})</span>
+                  </div>
+                </div>
+                <div *ngIf="filteredProducts.length > 0">
+                  <div class="tw-px-2 tw-py-1 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-bg-gray-50">Products</div>
+                  <div *ngFor="let product of filteredProducts"
+                       class="tw-p-2 release-option"
+                       style="cursor: pointer; border-bottom: 1px solid #eee;"
+                       (click)="selectProduct(i, product)">
+                    <strong *ngIf="product.sku">{{ product.sku }}:</strong> {{ product.name }}
+                  </div>
                 </div>
               </div>
               <ng-template #noResultsMobile>
-                <div class="tw-p-2 tw-text-muted">No releases found</div>
+                <div class="tw-p-2 tw-text-muted">No releases or products found</div>
               </ng-template>
             </div>
           </div>
@@ -1056,7 +1082,7 @@
                                (input)="onEditReleaseSearch($any($event.target).value)"
                                (focus)="onEditReleaseFocus()"
                                (blur)="onEditReleaseBlur()"
-                               placeholder="Search releases..."
+                               placeholder="Search releases or products..."
                                autocomplete="off">
                       </div>
                       <div *ngIf="editShowDropdown"
