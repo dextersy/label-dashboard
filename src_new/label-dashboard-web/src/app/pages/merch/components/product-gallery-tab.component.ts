@@ -10,6 +10,7 @@ import { ConfirmationService } from '../../../services/confirmation.service';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { FileUploadComponent } from '../../../components/shared/file-upload/file-upload.component';
 import { PlanLimitService } from '../../../services/plan-limit.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-product-gallery-tab',
@@ -30,6 +31,8 @@ export class ProductGalleryTabComponent implements OnInit {
   reorderMode = false;
   savingReorder = false;
 
+  isAdmin = false;
+
   // Lightbox
   showLightbox = false;
   lightboxImageUrl = '';
@@ -43,9 +46,11 @@ export class ProductGalleryTabComponent implements OnInit {
     private productService: ProductService,
     private confirmationService: ConfirmationService,
     private planLimitService: PlanLimitService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.productId = parseInt(id as string, 10);

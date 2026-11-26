@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
 import { Product, ProductArtistSplit } from '../../../models/product.model';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-product-detail-tab',
@@ -16,14 +17,17 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
 export class ProductDetailTabComponent implements OnInit {
   product: Product | null = null;
   loading = true;
+  isAdmin = false;
 
   constructor(
     private route: ActivatedRoute,
     private productService: ProductService,
     private router: Router,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.productService.getProduct(parseInt(id, 10)).subscribe({

@@ -7,6 +7,7 @@ import { PaginatedTableComponent, TableColumn, TableAction, HeaderAction, Pagina
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ConfirmationService } from '../../../services/confirmation.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-product-list-tab',
@@ -84,7 +85,7 @@ export class ProductListTabComponent implements OnInit {
       key: 'price',
       label: 'Price',
       align: 'right',
-      formatter: (item: Product) => item.price != null ? `₱${item.price.toFixed(2)}` : '—'
+      formatter: (item: Product) => item.price != null ? `₱${item.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '—'
     },
     {
       key: 'status',
@@ -125,14 +126,52 @@ export class ProductListTabComponent implements OnInit {
     }
   ];
 
+  isAdmin = false;
+
   constructor(
     private productService: ProductService,
     public router: Router,
     private sanitizer: DomSanitizer,
     private confirmationService: ConfirmationService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
+    this.actions = this.isAdmin ? [
+      {
+        icon: 'eye',
+        label: 'View',
+        handler: (item: Product) => this.router.navigate(['/merch/products', item.id]),
+        primary: true,
+      },
+      {
+        icon: 'pencil',
+        label: 'Edit',
+        handler: (item: Product) => this.router.navigate(['/merch/products', item.id, 'edit']),
+      },
+      {
+        icon: 'trash',
+        label: 'Delete',
+        type: 'danger',
+        handler: (item: Product) => this.deleteProduct(item),
+      }
+    ] : [
+      {
+        icon: 'eye',
+        label: 'View',
+        handler: (item: Product) => this.router.navigate(['/merch/products', item.id]),
+        primary: true,
+      }
+    ];
+    this.headerActions = this.isAdmin ? [
+      {
+        icon: 'plus',
+        label: 'New Product',
+        type: 'primary',
+        handler: () => this.router.navigate(['/merch/products/new']),
+      }
+    ] : [];
     this.loadProducts();
   }
 

@@ -13,9 +13,11 @@
             <span class="tw-text-muted tw-text-sm tw-font-mono">{{ product.sku }}</span>
           }
         </div>
-        <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
-          <app-icon name="pencil" class="tw-mr-1" /> Edit
-        </button>
+        @if (isAdmin) {
+          <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
+            <app-icon name="pencil" class="tw-mr-1" /> Edit
+          </button>
+        }
       </div>
 
       @if (product.description) {
@@ -25,7 +27,7 @@
       <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-x-6 tw-gap-y-5">
         <div>
           <span class="pd-label">Price</span>
-          <span class="pd-value">{{ product.price != null ? product.price.toFixed(2) : '—' }}</span>
+          <span class="pd-value">{{ product.price != null ? product.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—' }}</span>
         </div>
         <div>
           <span class="pd-label">Status</span>

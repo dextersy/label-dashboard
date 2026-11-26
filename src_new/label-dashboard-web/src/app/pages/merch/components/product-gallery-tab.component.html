@@ -15,15 +15,17 @@
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 gallery-section">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Photos</h3>
-      <button class="btn-sm"
-              [class.btn-primary]="reorderMode"
-              [class.btn-secondary]="!reorderMode"
-              (click)="toggleReorderMode()"
-              [disabled]="savingReorder || images.length < 2">
-        <div class="loading-spinner" *ngIf="savingReorder"></div>
-        <app-icon name="move" *ngIf="!savingReorder" />
-        {{ reorderMode ? 'Done' : 'Reorder' }}
-      </button>
+      @if (isAdmin) {
+        <button class="btn-sm"
+                [class.btn-primary]="reorderMode"
+                [class.btn-secondary]="!reorderMode"
+                (click)="toggleReorderMode()"
+                [disabled]="savingReorder || images.length < 2">
+          <div class="loading-spinner" *ngIf="savingReorder"></div>
+          <app-icon name="move" *ngIf="!savingReorder" />
+          {{ reorderMode ? 'Done' : 'Reorder' }}
+        </button>
+      }
     </div>
     <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
 
@@ -58,8 +60,8 @@
               <app-icon name="drag" iconOnly />
             </div>
 
-            <!-- Desktop overlay -->
-            <div class="photo-overlay desktop-overlay" *ngIf="!reorderMode">
+            <!-- Desktop overlay (admin only) -->
+            <div class="photo-overlay desktop-overlay" *ngIf="!reorderMode && isAdmin">
               <div class="photo-actions">
                 <button class="btn-sm btn-danger btn-icon"
                         (click)="deleteImage(image)"
@@ -70,8 +72,8 @@
             </div>
           </div>
 
-          <!-- Mobile kebab menu -->
-          <div class="mobile-kebab" *ngIf="!reorderMode">
+          <!-- Mobile kebab menu (admin only) -->
+          <div class="mobile-kebab" *ngIf="!reorderMode && isAdmin">
             <button class="kebab-btn"
                     (click)="toggleKebabMenu(image.id, $event)"
                     title="More actions">
@@ -89,7 +91,8 @@
     </div>
   </div>
 
-  <!-- Upload Section -->
+  <!-- Upload Section (admin only) -->
+  @if (isAdmin) {
   <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 upload-section">
     <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
       <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Images</h3>
@@ -132,6 +135,7 @@
       </button>
     </div>
   </div>
+  }
 
   <!-- Lightbox -->
   <app-lightbox

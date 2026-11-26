@@ -63,7 +63,7 @@ export class WorkspaceService {
       workspaces.push('music');
     }
 
-    if (isAdmin && settings?.feature_merch_workspace) {
+    if (settings?.feature_merch_workspace) {
       workspaces.push('merch');
     }
 
