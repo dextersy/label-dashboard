@@ -127,6 +127,7 @@ export interface EmailLog {
 export interface FeatureToggles {
   feature_music_workspace: boolean;
   feature_campaigns_workspace: boolean;
+  feature_merch_workspace: boolean;
   feature_sublabels: boolean;
   feature_artist_profiles: boolean;
   feature_music_releases: boolean;
@@ -217,6 +218,7 @@ export interface ArtistBalance {
 
 export interface BulkEarning {
   release_id: number;
+  product_id?: number | null;
   date_recorded: string;
   type: string;
   description: string;

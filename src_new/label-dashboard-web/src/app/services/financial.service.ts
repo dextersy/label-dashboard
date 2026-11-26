@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FinancialSummary, FinancialSummaryBreakdown, Earning, Royalty, Payment, PaymentMethod, PayoutSettings } from '../pages/financial/financial.component';
+import { EarningTarget } from '../models/product.model';
 
 @Injectable({
   providedIn: 'root'
@@ -393,5 +394,12 @@ export class FinancialService {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  }
+
+  async searchEarningTargets(query: string): Promise<EarningTarget> {
+    return firstValueFrom(this.http.get<EarningTarget>(
+      `${environment.apiUrl}/financial/earning-targets?search=${encodeURIComponent(query)}`,
+      { headers: this.getAuthHeaders() }
+    ));
   }
 }

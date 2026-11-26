@@ -134,6 +134,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     {
+      id: 'merch',
+      adminOnly: true,
+      items: [
+        {
+          route: '/merch/products',
+          icon: 'shopping-bag',
+          title: 'Products',
+          adminOnly: true
+        },
+      ]
+    },
+    {
       id: 'campaigns',
       adminOnly: true,
       items: [
@@ -243,6 +255,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [{
             ...musicSection,
             items: [dashboardItem, ...filteredItems]
+          }];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      case 'merch':
+        const merchSection = this.sections.find(section => section.id === 'merch');
+        if (merchSection) {
+          this.visibleSections = [{
+            id: 'merch-top-level',
+            items: merchSection.items.map(item => ({ ...item, icon: item.icon || 'shopping-bag' }))
           }];
         } else {
           this.visibleSections = [];
