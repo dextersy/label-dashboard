@@ -170,7 +170,13 @@
       @for (split of artistSplits; track split.artist_id; let i = $index) {
         <div class="tw-flex tw-items-center tw-gap-3 tw-mb-2">
           <span class="tw-flex-1">{{ split.artist?.name || 'Artist #' + split.artist_id }}</span>
-          <input type="number" class="tw-input tw-w-24" [(ngModel)]="split.merch_royalty_percentage" step="0.001" min="0" max="1">
+          <div class="tw-flex tw-items-center tw-gap-1">
+            <input type="number" class="tw-input tw-w-24"
+                   [ngModel]="split.merch_royalty_percentage * 100 | number:'1.1-1'"
+                   (ngModelChange)="split.merch_royalty_percentage = $event / 100"
+                   step="0.1" min="0" max="100">
+            <span class="tw-text-sm tw-text-muted">%</span>
+          </div>
           <select class="tw-input tw-w-32" [(ngModel)]="split.merch_royalty_type">
             <option value="Revenue">Revenue</option>
             <option value="Profit">Profit</option>

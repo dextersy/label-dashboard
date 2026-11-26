@@ -5,6 +5,7 @@ import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
 import multer from 'multer';
 import path from 'path';
+import crypto from 'crypto';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -298,8 +299,12 @@ export const setProductArtists = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Artists array is required' });
     }
 
-    // Validate all artists belong to brand
+    // Validate all artists and split percentages
     for (const a of artists) {
+      const pct = a.merch_royalty_percentage;
+      if (pct !== undefined && pct !== null && (typeof pct !== 'number' || pct < 0 || pct > 1)) {
+        return res.status(400).json({ error: `merch_royalty_percentage must be between 0 and 1` });
+      }
       const artist = await Artist.findOne({ where: { id: a.artist_id, brand_id: brandId } });
       if (!artist) {
         return res.status(404).json({ error: `Artist ${a.artist_id} not found` });
@@ -367,7 +372,7 @@ export const addProductImage = async (req: AuthRequest, res: Response) => {
     const sortOrder = (maxImg?.sort_order ?? -1) + 1;
 
     const ext = path.extname(file.originalname) || '.jpg';
-    const key = `products/${brandId}/${productId}/${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    const key = `products/${brandId}/${productId}/${crypto.randomUUID()}${ext}`;
 
     const result = await uploadToS3({
       Bucket: process.env.S3_BUCKET!,
