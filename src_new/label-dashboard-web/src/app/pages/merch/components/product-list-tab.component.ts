@@ -12,6 +12,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [CommonModule, PaginatedTableComponent, IconComponent],
   templateUrl: './product-list-tab.component.html',
+  styleUrl: './product-list-tab.component.scss',
 })
 export class ProductListTabComponent implements OnInit {
   products: Product[] = [];
@@ -35,41 +36,61 @@ export class ProductListTabComponent implements OnInit {
       searchable: true,
       sortable: true,
       cardHeader: true,
+      minWidth: '200px',
       formatter: (item: Product) => {
         const img = item.images?.[0]?.path;
         const imgHtml = img
-          ? `<img src="${img}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;margin-right:8px;vertical-align:middle;">`
+          ? `<img src="${img}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;">`
+          : `<div style="width:40px;height:40px;border-radius:6px;background:#f3f4f6;flex-shrink:0;"></div>`;
+        const skuHtml = item.sku
+          ? `<div style="font-size:11px;color:#9ca3af;margin-top:1px;font-family:monospace;">${item.sku}</div>`
           : '';
-        return this.sanitizer.bypassSecurityTrustHtml(`${imgHtml}<span>${item.name}</span>`);
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<div style="display:flex;align-items:center;gap:10px;">
+            ${imgHtml}
+            <div style="min-width:0;">
+              <div style="font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+              ${skuHtml}
+            </div>
+          </div>`
+        );
       },
       renderHtml: true,
     },
-    { key: 'sku', label: 'SKU', searchable: true },
+    { key: 'sku', label: 'SKU', searchable: true, hidden: true },
     {
-      key: 'release_title',
-      label: 'Release',
-      formatter: (item: Product) => item.release?.title || '—'
-    },
-    {
-      key: 'artist_name',
-      label: 'Artist',
-      formatter: (item: Product) => item.artist?.name || '—'
+      key: 'linked_to',
+      label: 'Linked To',
+      renderHtml: true,
+      formatter: (item: Product) => {
+        const thumbUrl = item.release?.cover_art || item.artist?.profile_photo || null;
+        const thumbHtml = thumbUrl
+          ? `<img src="${thumbUrl}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:4px;flex-shrink:0;">`
+          : '';
+        const parts: string[] = [];
+        if (item.release?.title) parts.push(item.release.title);
+        if (item.artist?.name) parts.push(item.artist.name);
+        if (!parts.length) return '—';
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<div style="display:flex;align-items:center;gap:8px;">
+            ${thumbHtml}
+            <span>${parts.join(' · ')}</span>
+          </div>`
+        );
+      }
     },
     {
       key: 'price',
       label: 'Price',
       align: 'right',
-      formatter: (item: Product) => item.price != null ? `${item.price.toFixed(2)}` : '—'
+      formatter: (item: Product) => item.price != null ? `₱${item.price.toFixed(2)}` : '—'
     },
     {
       key: 'status',
       label: 'Status',
-      formatter: (item: Product) => {
-        const color = item.status === 'active' ? '#16a34a' : '#9ca3af';
-        return this.sanitizer.bypassSecurityTrustHtml(
-          `<span style="color:${color};font-weight:500;text-transform:capitalize">${item.status}</span>`
-        );
-      },
+      formatter: (item: Product) => item.status === 'active'
+        ? `<span class="status-badge status-success">Active</span>`
+        : `<span class="status-badge status-secondary">Inactive</span>`,
       renderHtml: true,
     }
   ];
@@ -105,7 +126,7 @@ export class ProductListTabComponent implements OnInit {
 
   constructor(
     private productService: ProductService,
-    private router: Router,
+    public router: Router,
     private sanitizer: DomSanitizer,
   ) {}
 
