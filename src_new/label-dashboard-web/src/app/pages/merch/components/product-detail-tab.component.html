@@ -65,9 +65,14 @@
     </div>
 
     <!-- Artist Splits -->
-    @if (product.productArtists && product.productArtists.length > 0) {
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
-        <p class="pd-section-label">Artist Splits</p>
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+      <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+        <p class="pd-section-label tw-mb-0">Artist Splits</p>
+        @if (isAdmin) {
+          <a [routerLink]="['/merch/products', product.id, 'edit']" class="tw-text-xs tw-text-muted tw-underline">Edit splits</a>
+        }
+      </div>
+      @if (splits.length > 0) {
         <table class="table table-sm tw-mb-0">
           <thead>
             <tr>
@@ -77,7 +82,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (pa of product.productArtists; track pa.artist_id) {
+            @for (pa of splits; track pa.artist_id) {
               <tr>
                 <td>{{ pa.artist?.name || 'Unknown' }}</td>
                 <td>{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</td>
@@ -86,8 +91,10 @@
             }
           </tbody>
         </table>
-      </div>
-    }
+      } @else {
+        <p class="tw-text-muted tw-text-sm tw-mb-0">No artist splits configured.</p>
+      }
+    </div>
   } @else {
     <div class="tw-text-center tw-py-8 tw-text-muted">Product not found.</div>
   }

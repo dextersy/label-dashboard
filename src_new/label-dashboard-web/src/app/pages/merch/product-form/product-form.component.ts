@@ -78,8 +78,10 @@ export class ProductFormComponent implements OnInit {
             artist_id: product.artist_id,
           };
           this.images = product.images || [];
-          this.artistSplits = product.productArtists || [];
-          // Load all artists for splits picker
+          // Load splits and all artists explicitly
+          this.productService.getProductArtists(this.productId!).subscribe({
+            next: (splits) => { this.artistSplits = splits; }
+          });
           this.apiService.getArtists().subscribe({
             next: (res: any) => { this.allArtists = res.artists || res || []; }
           });

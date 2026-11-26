@@ -6,6 +6,7 @@ import { ProductService } from '../../../services/product.service';
 import { Product, ProductArtistSplit } from '../../../models/product.model';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { AuthService } from '../../../services/auth.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-product-detail-tab',
@@ -16,6 +17,7 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class ProductDetailTabComponent implements OnInit {
   product: Product | null = null;
+  splits: ProductArtistSplit[] = [];
   loading = true;
   isAdmin = false;
 
@@ -30,9 +32,14 @@ export class ProductDetailTabComponent implements OnInit {
     this.isAdmin = this.authService.isAdmin();
     const id = this.route.snapshot.params['id'];
     if (id) {
-      this.productService.getProduct(parseInt(id, 10)).subscribe({
-        next: (product) => {
+      const productId = parseInt(id, 10);
+      forkJoin({
+        product: this.productService.getProduct(productId),
+        splits: this.productService.getProductArtists(productId),
+      }).subscribe({
+        next: ({ product, splits }) => {
           this.product = product;
+          this.splits = splits;
           this.loading = false;
         },
         error: () => {
