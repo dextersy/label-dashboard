@@ -186,9 +186,39 @@
           </button>
         </div>
       }
-      <button class="btn btn-sm btn-outline-secondary tw-mt-2" (click)="saveSplits()">
-        <app-icon name="check" class="tw-mr-1" /> Save Splits
-      </button>
+      <!-- Add artist split -->
+      <div class="tw-relative tw-mt-3 tw-mb-3" style="max-width:320px;">
+        <div class="link-search-wrap">
+          <app-icon name="plus" class="link-search-icon" iconOnly />
+          <input type="text"
+                 class="tw-input link-search-input"
+                 [(ngModel)]="splitSearchTerm"
+                 (ngModelChange)="onSplitSearch()"
+                 (focus)="onSplitSearch()"
+                 (blur)="onSplitBlur()"
+                 placeholder="Add artist…"
+                 autocomplete="off">
+        </div>
+        @if (showSplitDropdown && filteredSplitArtists.length > 0) {
+          <div class="link-dropdown">
+            @for (artist of filteredSplitArtists; track artist.id) {
+              <div class="link-option tw-flex tw-items-center tw-gap-2" (mousedown)="addSplit(artist)">
+                <span>{{ artist.name }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="tw-flex tw-items-center tw-gap-2">
+        <button class="btn btn-sm btn-outline-secondary" (click)="saveSplits()">
+          <app-icon name="check" class="tw-mr-1" /> Save Splits
+        </button>
+        @if (form.release_id) {
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="inheritSplits()" title="Replace current splits with the linked release's merch splits">
+            <app-icon name="refresh-cw" class="tw-mr-1" /> Re-inherit from release
+          </button>
+        }
+      </div>
     }
   </div>
 

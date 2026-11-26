@@ -7,6 +7,7 @@ import {
   deleteProduct,
   getProductArtists,
   setProductArtists,
+  inheritSplitsFromRelease,
   addProductImage,
   deleteProductImage,
   reorderProductImages,
@@ -29,6 +30,7 @@ router.delete('/:id', requireAdmin, deleteProduct);
 // Product artist splits
 router.get('/:id/artists', getProductArtists);
 router.put('/:id/artists', requireAdmin, setProductArtists);
+router.post('/:id/artists/inherit', requireAdmin, inheritSplitsFromRelease);
 
 // Product images
 router.post('/:id/images', requireAdmin, productImageUpload.single('image'), addProductImage);

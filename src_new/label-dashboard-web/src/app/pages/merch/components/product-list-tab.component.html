@@ -38,7 +38,7 @@
           </div>
         </div>
         <div class="product-mobile-right">
-          <div class="product-mobile-price">{{ item.price != null ? ('₱' + item.price.toFixed(2)) : '—' }}</div>
+          <div class="product-mobile-price">{{ item.price != null ? ('₱' + item.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '—' }}</div>
           <span [class]="item.status === 'active' ? 'status-badge status-success' : 'status-badge status-secondary'">
             {{ item.status === 'active' ? 'Active' : 'Inactive' }}
           </span>

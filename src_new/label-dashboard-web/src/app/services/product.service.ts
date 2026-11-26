@@ -57,6 +57,10 @@ export class ProductService {
     return this.http.put<ProductArtistSplit[]>(`${this.baseUrl}/products/${productId}/artists`, { artists }, { headers: this.getAuthHeaders() });
   }
 
+  inheritSplitsFromRelease(productId: number): Observable<ProductArtistSplit[]> {
+    return this.http.post<ProductArtistSplit[]>(`${this.baseUrl}/products/${productId}/artists/inherit`, {}, { headers: this.getAuthHeaders() });
+  }
+
   uploadImage(productId: number, file: File): Observable<ProductImage> {
     const formData = new FormData();
     formData.append('image', file);

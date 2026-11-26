@@ -47,6 +47,11 @@ export class ProductFormComponent implements OnInit {
   selectedArtist: any = null;
   selectedRelease: Release | null = null;
 
+  // Artist splits add UI
+  splitSearchTerm = '';
+  showSplitDropdown = false;
+  filteredSplitArtists: any[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -74,6 +79,10 @@ export class ProductFormComponent implements OnInit {
           };
           this.images = product.images || [];
           this.artistSplits = product.productArtists || [];
+          // Load all artists for splits picker
+          this.apiService.getArtists().subscribe({
+            next: (res: any) => { this.allArtists = res.artists || res || []; }
+          });
           if (product.release_id) {
             this.linkType = 'release';
             this.releaseService.getReleases().subscribe({
@@ -184,6 +193,31 @@ export class ProductFormComponent implements OnInit {
     return null;
   }
 
+  onSplitSearch(): void {
+    const term = this.splitSearchTerm.toLowerCase();
+    this.showSplitDropdown = true;
+    this.filteredSplitArtists = (term
+      ? this.allArtists.filter(a => a.name?.toLowerCase().includes(term))
+      : this.allArtists.slice(0, 10)
+    ).filter(a => !this.artistSplits.some(s => s.artist_id === a.id));
+  }
+
+  onSplitBlur(): void {
+    setTimeout(() => { this.showSplitDropdown = false; }, 150);
+  }
+
+  addSplit(artist: any): void {
+    this.artistSplits.push({
+      artist_id: artist.id,
+      product_id: this.productId!,
+      merch_royalty_percentage: 0.5,
+      merch_royalty_type: 'Revenue',
+      artist: { id: artist.id, name: artist.name },
+    });
+    this.splitSearchTerm = '';
+    this.showSplitDropdown = false;
+  }
+
   save(): void {
     if (this.saving) return;
     this.saving = true;
@@ -229,6 +263,17 @@ export class ProductFormComponent implements OnInit {
       next: () => {
         this.images = this.images.filter(i => i.id !== img.id);
       }
+    });
+  }
+
+  inheritSplits(): void {
+    if (!this.productId) return;
+    this.productService.inheritSplitsFromRelease(this.productId).subscribe({
+      next: (splits) => {
+        this.artistSplits = splits;
+        this.notificationService.showSuccess('Splits inherited from release.');
+      },
+      error: () => this.notificationService.showError('Failed to inherit splits.')
     });
   }
 

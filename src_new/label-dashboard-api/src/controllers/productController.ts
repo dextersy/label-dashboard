@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, fn, col } from 'sequelize';
-import { Product, ProductImage, ProductArtist, Brand, Release, Artist, Earning, Royalty } from '../models';
+import { Product, ProductImage, ProductArtist, Brand, Release, Artist, Earning, Royalty, ReleaseArtist, ArtistAccess } from '../models';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
 import multer from 'multer';
@@ -9,6 +9,54 @@ import crypto from 'crypto';
 
 interface AuthRequest extends Request {
   user?: any;
+}
+
+/**
+ * Returns the set of product IDs a non-admin user may access within a brand.
+ * A product is accessible if the user has an accepted ArtistAccess record for:
+ *   - the product's direct artist_id, OR
+ *   - the primary artist of the product's linked release, OR
+ *   - any artist listed in the product's ProductArtist splits.
+ */
+async function getAccessibleProductIds(userId: number, brandId: number): Promise<number[]> {
+  const accessRows = await ArtistAccess.findAll({
+    where: { user_id: userId, status: 'Accepted' },
+    attributes: ['artist_id'],
+  });
+  const artistIds = accessRows.map((r: any) => r.artist_id);
+
+  if (artistIds.length === 0) return [];
+
+  // Products directly linked to an accessible artist
+  const direct = await Product.findAll({
+    where: { brand_id: brandId, artist_id: { [Op.in]: artistIds } },
+    attributes: ['id'],
+  });
+
+  // Products linked via a release whose primary artist is accessible
+  const viaRelease = await Product.findAll({
+    where: { brand_id: brandId, release_id: { [Op.ne]: null } },
+    include: [{
+      model: Release, as: 'release',
+      where: { artist_id: { [Op.in]: artistIds } },
+      attributes: [],
+    }],
+    attributes: ['id'],
+  });
+
+  // Products where the user's artist appears in splits
+  const viaSplits = await ProductArtist.findAll({
+    where: { artist_id: { [Op.in]: artistIds } },
+    attributes: ['product_id'],
+  });
+
+  const ids = new Set<number>([
+    ...direct.map((p: any) => p.id),
+    ...viaRelease.map((p: any) => p.id),
+    ...viaSplits.map((pa: any) => pa.product_id),
+  ]);
+
+  return [...ids];
 }
 
 // Multer configuration for product image uploads
@@ -97,6 +145,22 @@ export const getProduct = async (req: AuthRequest, res: Response) => {
 };
 
 // POST /products — create
+/** Seed ProductArtist rows from a release's merch splits. Skips artists already present. */
+async function seedSplitsFromRelease(productId: number, releaseId: number): Promise<void> {
+  const releaseArtists = await ReleaseArtist.findAll({ where: { release_id: releaseId } });
+  for (const ra of releaseArtists) {
+    const exists = await ProductArtist.findOne({ where: { product_id: productId, artist_id: ra.artist_id } });
+    if (!exists) {
+      await ProductArtist.create({
+        product_id: productId,
+        artist_id: ra.artist_id,
+        merch_royalty_percentage: ra.merch_royalty_percentage ?? 0.5,
+        merch_royalty_type: ra.merch_royalty_type ?? 'Revenue',
+      });
+    }
+  }
+}
+
 export const createProduct = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user.is_admin) {
@@ -146,6 +210,11 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
       status: status || 'active',
     });
 
+    // Seed artist splits from release merch splits
+    if (release_id) {
+      await seedSplitsFromRelease(product.id, release_id);
+    }
+
     res.status(201).json(product);
   } catch (error) {
     console.error('Create product error:', error);
@@ -194,15 +263,26 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    const prevReleaseId = product.release_id;
+    const newReleaseId = release_id !== undefined ? (release_id || null) : product.release_id;
+
     await product.update({
       name: name !== undefined ? name : product.name,
       sku: sku !== undefined ? (sku || null) : product.sku,
       description: description !== undefined ? (description || null) : product.description,
       price: price !== undefined ? (price != null ? price : null) : product.price,
-      release_id: release_id !== undefined ? (release_id || null) : product.release_id,
+      release_id: newReleaseId,
       artist_id: artist_id !== undefined ? (artist_id || null) : product.artist_id,
       status: status !== undefined ? status : product.status,
     });
+
+    // If a release was just linked and the product has no existing splits, seed from release
+    if (newReleaseId && newReleaseId !== prevReleaseId) {
+      const existingSplits = await ProductArtist.count({ where: { product_id: productId } });
+      if (existingSplits === 0) {
+        await seedSplitsFromRelease(productId, newReleaseId);
+      }
+    }
 
     res.json(product);
   } catch (error) {
@@ -279,6 +359,37 @@ export const getProductArtists = async (req: AuthRequest, res: Response) => {
 };
 
 // PUT /products/:id/artists — set product artist splits (replace all)
+// POST /products/:id/artists/inherit — replace splits with the linked release's merch splits
+export const inheritSplitsFromRelease = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const brandId = req.user.brand_id;
+    const productId = parseInt(req.params.id as string, 10);
+
+    const product = await Product.findOne({
+      where: { id: productId, brand_id: brandId },
+      include: [{ model: ProductArtist, as: 'productArtists' }],
+    });
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (!product.release_id) return res.status(400).json({ error: 'Product is not linked to a release' });
+
+    await ProductArtist.destroy({ where: { product_id: productId } });
+    await seedSplitsFromRelease(productId, product.release_id);
+
+    const updated = await ProductArtist.findAll({
+      where: { product_id: productId },
+      include: [{ model: Artist, as: 'artist', attributes: ['id', 'name'] }],
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error('Inherit splits error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const setProductArtists = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user.is_admin) {
