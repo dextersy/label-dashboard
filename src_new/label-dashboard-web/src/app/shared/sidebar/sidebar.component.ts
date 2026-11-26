@@ -260,7 +260,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [];
         }
         break;
-      case 'merch':
+      case 'merch': {
         const merchSection = this.sections.find(section => section.id === 'merch');
         if (merchSection) {
           this.visibleSections = [{
@@ -271,6 +271,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [];
         }
         break;
+      }
       case 'campaigns':
         // For campaigns workspace, show dashboard first, then events and fundraisers menu items
         const campaignsSection = this.sections.find(section => section.id === 'campaigns');

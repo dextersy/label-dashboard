@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Product, ProductArtistSplit, ProductImage } from '../models/product.model';
 import { environment } from '../../environments/environment';
@@ -21,16 +21,15 @@ export class ProductService {
   }
 
   getProducts(params: any = {}): Observable<{ products: Product[]; total: number }> {
-    const queryParams = new URLSearchParams();
+    let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
       if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
-        queryParams.set(key, params[key]);
+        httpParams = httpParams.set(key, params[key]);
       }
     });
-    const qs = queryParams.toString();
     return this.http.get<{ products: Product[]; total: number }>(
-      `${this.baseUrl}/products${qs ? '?' + qs : ''}`,
-      { headers: this.getAuthHeaders() }
+      `${this.baseUrl}/products`,
+      { headers: this.getAuthHeaders(), params: httpParams }
     );
   }
 
