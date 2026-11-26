@@ -103,7 +103,7 @@ async function resolveMerchFeeSettings(brandId: number): Promise<{
     };
   }
 
-  // Fall back to plan defaults (use music defaults as fallback since there are no plan-level merch defaults yet)
+  // Fall back to plan defaults
   const brandPlan = await BrandPlan.findOne({
     where: { brand_id: brandId },
     include: [{ model: Plan, as: 'plan' }],
@@ -111,9 +111,9 @@ async function resolveMerchFeeSettings(brandId: number): Promise<{
   const plan = brandPlan?.plan;
 
   return {
-    transactionFixedFee: plan?.default_music_transaction_fixed_fee ?? 0,
-    revenuePercentageFee: plan?.default_music_revenue_percentage_fee ?? 0,
-    feeRevenueType: plan?.default_music_fee_revenue_type ?? 'net',
+    transactionFixedFee: plan?.default_merch_transaction_fixed_fee ?? 0,
+    revenuePercentageFee: plan?.default_merch_revenue_percentage_fee ?? 0,
+    feeRevenueType: plan?.default_merch_fee_revenue_type ?? 'net',
   };
 }
 

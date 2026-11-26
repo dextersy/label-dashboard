@@ -235,7 +235,7 @@
       <p class="tw-text-xs tw-uppercase tw-tracking-widest tw-font-semibold tw-text-[var(--color-muted)] tw-mb-3">Default Fees</p>
       <div class="tw-flex tw-flex-col tw-gap-4">
 
-        @for (type of ['music', 'event', 'fundraiser']; track type) {
+        @for (type of ['music', 'event', 'fundraiser', 'merch']; track type) {
           <div>
             <p class="tw-text-xs tw-font-semibold tw-text-[var(--color-body)] tw-mb-2 tw-capitalize">{{ type }}</p>
             <div class="tw-grid tw-grid-cols-2 sm:tw-grid-cols-3 tw-gap-3">
@@ -290,6 +290,23 @@
                   </select>
                 </div>
               }
+              @if (type === 'merch') {
+                <div>
+                  <label class="tw-label">Fixed Fee (₱)</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_merch_transaction_fixed_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">% Fee</label>
+                  <input class="tw-input tw-w-full" type="number" [(ngModel)]="form.default_merch_revenue_percentage_fee" min="0" step="0.01" [disabled]="saving">
+                </div>
+                <div>
+                  <label class="tw-label">Revenue Basis</label>
+                  <select class="tw-input tw-w-full" [(ngModel)]="form.default_merch_fee_revenue_type" [disabled]="saving">
+                    <option value="net">Net</option>
+                    <option value="gross">Gross</option>
+                  </select>
+                </div>
+              }
             </div>
           </div>
         }
@@ -338,6 +355,10 @@
         <div class="form-check form-switch mb-0">
           <input class="form-check-input" type="checkbox" id="sw_fundraisers_{{form.name}}" [(ngModel)]="form.feature_fundraisers" [disabled]="saving">
           <label class="form-check-label tw-text-sm" [for]="'sw_fundraisers_' + form.name">Fundraisers</label>
+        </div>
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" id="sw_merch_ws_{{form.name}}" [(ngModel)]="form.feature_merch_workspace" [disabled]="saving">
+          <label class="form-check-label tw-text-sm" [for]="'sw_merch_ws_' + form.name">Merch Workspace</label>
         </div>
       </div>
     </div>

@@ -67,6 +67,7 @@ export interface FeeSettings {
   music: FeeSettingsSection;
   event: FeeSettingsSection;
   fundraiser: FeeSettingsSection;
+  merch: FeeSettingsSection;
 }
 
 export interface Domain {

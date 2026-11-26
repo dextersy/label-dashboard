@@ -29,6 +29,7 @@ export interface Plan {
   feature_sync_licensing: boolean;
   feature_events: boolean;
   feature_fundraisers: boolean;
+  feature_merch_workspace: boolean;
   is_public: boolean;
   sort_order: number;
 }
@@ -37,6 +38,9 @@ export interface AdminPlan extends Plan {
   default_music_transaction_fixed_fee: number;
   default_music_revenue_percentage_fee: number;
   default_music_fee_revenue_type: 'net' | 'gross';
+  default_merch_transaction_fixed_fee: number;
+  default_merch_revenue_percentage_fee: number;
+  default_merch_fee_revenue_type: 'net' | 'gross';
   is_active: boolean;
   is_default_free: boolean;
 }

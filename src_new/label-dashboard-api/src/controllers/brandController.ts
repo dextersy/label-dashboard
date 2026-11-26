@@ -253,6 +253,7 @@ export const getFeeSettings = async (req: Request, res: Response) => {
     const hasMusicOverride = brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null;
     const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
     const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
+    const hasMerchOverride = brand.merch_transaction_fixed_fee !== null || brand.merch_revenue_percentage_fee !== null;
 
     res.json({
       id: brand.id,
@@ -323,6 +324,23 @@ export const getFeeSettings = async (req: Request, res: Response) => {
           revenue_percentage_fee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
           fee_revenue_type: plan?.default_fundraiser_fee_revenue_type ?? 'net',
         },
+      },
+      merch: {
+        transaction_fixed_fee: hasMerchOverride
+          ? (brand.merch_transaction_fixed_fee ?? 0)
+          : 0,
+        revenue_percentage_fee: hasMerchOverride
+          ? (brand.merch_revenue_percentage_fee ?? 0)
+          : 0,
+        fee_revenue_type: hasMerchOverride
+          ? (brand.merch_fee_revenue_type ?? 'net')
+          : 'net',
+        override: hasMerchOverride ? {
+          transaction_fixed_fee: brand.merch_transaction_fixed_fee,
+          revenue_percentage_fee: brand.merch_revenue_percentage_fee,
+          fee_revenue_type: brand.merch_fee_revenue_type,
+        } : null,
+        plan_default: null,
       }
     });
 
@@ -335,7 +353,7 @@ export const getFeeSettings = async (req: Request, res: Response) => {
 export const updateFeeSettings = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { music, event, fundraiser } = req.body;
+    const { music, event, fundraiser, merch } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
 
@@ -382,6 +400,19 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       }
     }
 
+    // Validate merch fee values
+    if (merch) {
+      if (merch.transaction_fixed_fee !== undefined && (isNaN(merch.transaction_fixed_fee) || merch.transaction_fixed_fee < 0)) {
+        return res.status(400).json({ error: 'Merch transaction fixed fee must be a non-negative number' });
+      }
+      if (merch.revenue_percentage_fee !== undefined && (isNaN(merch.revenue_percentage_fee) || merch.revenue_percentage_fee < 0 || merch.revenue_percentage_fee > 100)) {
+        return res.status(400).json({ error: 'Merch revenue percentage fee must be between 0 and 100' });
+      }
+      if (merch.fee_revenue_type && !['net', 'gross'].includes(merch.fee_revenue_type)) {
+        return res.status(400).json({ error: 'Merch fee revenue type must be either "net" or "gross"' });
+      }
+    }
+
     // Update all fee settings on the brand.
     // For music/event/fundraiser, passing null explicitly clears the override (brand will follow plan defaults).
     const updateData: any = {};
@@ -418,6 +449,16 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       if (fundraiser.fee_revenue_type !== undefined) updateData.fundraiser_fee_revenue_type = fundraiser.fee_revenue_type;
     }
 
+    if (merch === null) {
+      updateData.merch_transaction_fixed_fee = null;
+      updateData.merch_revenue_percentage_fee = null;
+      updateData.merch_fee_revenue_type = null;
+    } else if (merch) {
+      if (merch.transaction_fixed_fee !== undefined) updateData.merch_transaction_fixed_fee = merch.transaction_fixed_fee;
+      if (merch.revenue_percentage_fee !== undefined) updateData.merch_revenue_percentage_fee = merch.revenue_percentage_fee;
+      if (merch.fee_revenue_type !== undefined) updateData.merch_fee_revenue_type = merch.fee_revenue_type;
+    }
+
     await brand.update(updateData);
 
     const brandPlan = await BrandPlan.findOne({
@@ -429,6 +470,7 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
     const hasMusicOverride = brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null;
     const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
     const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
+    const hasMerchOverride = brand.merch_transaction_fixed_fee !== null || brand.merch_revenue_percentage_fee !== null;
 
     res.json({
       message: 'Fee settings updated successfully',
@@ -496,6 +538,23 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
             revenue_percentage_fee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
             fee_revenue_type: plan?.default_fundraiser_fee_revenue_type ?? 'net',
           },
+        },
+        merch: {
+          transaction_fixed_fee: hasMerchOverride
+            ? (brand.merch_transaction_fixed_fee ?? 0)
+            : 0,
+          revenue_percentage_fee: hasMerchOverride
+            ? (brand.merch_revenue_percentage_fee ?? 0)
+            : 0,
+          fee_revenue_type: hasMerchOverride
+            ? (brand.merch_fee_revenue_type ?? 'net')
+            : 'net',
+          override: hasMerchOverride ? {
+            transaction_fixed_fee: brand.merch_transaction_fixed_fee,
+            revenue_percentage_fee: brand.merch_revenue_percentage_fee,
+            fee_revenue_type: brand.merch_fee_revenue_type,
+          } : null,
+          plan_default: null,
         }
       }
     });

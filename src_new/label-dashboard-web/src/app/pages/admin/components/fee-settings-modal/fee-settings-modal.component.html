@@ -7,7 +7,7 @@
       </div>
       <div class="modal-body">
         <form [formGroup]="feeForm" (ngSubmit)="onSubmit()">
-          
+
           <div class="tw-mb-4 tw-flex tw-items-center tw-gap-2 tw-text-sm tw-text-gray-500">
             <span>Current plan:</span>
             <strong *ngIf="planInfo" class="tw-text-gray-800 tw-uppercase tw-tracking-wide">{{ planInfo.name }}</strong>
@@ -24,340 +24,255 @@
             Plan overrides can only be configured by a superadmin. You can view the current fee settings below.
           </div>
 
-          <!-- Music Fee Settings -->
-          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
-            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-items-center tw-justify-between">
-              <h6 class="tw-mb-0">
-                <app-icon name="music" class="tw-mr-2 text-primary" />
-                Music Earnings Fee Settings
-              </h6>
-              <div *ngIf="isSuperAdmin" class="form-check tw-mb-0">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="overrideMusicFees"
-                  [checked]="overrideMusic"
-                  (change)="overrideMusic = !overrideMusic">
-                <label class="form-check-label tw-text-sm" for="overrideMusicFees">
-                  Override plan fees
-                </label>
-              </div>
-            </div>
-            <div class="tw-px-card-pad tw-pb-card-pad">
+          <!-- Fee sections -->
+          <div class="tw-border tw-border-gray-200 tw-rounded-lg tw-divide-y tw-divide-gray-200 tw-mb-4">
 
-              <!-- Plan default banner when not overriding -->
-              <div *ngIf="!overrideMusic" class="tw-px-3 tw-py-2 tw-rounded-lg tw-bg-gray-50 tw-border tw-border-gray-200 tw-text-sm tw-text-gray-600">
-                <app-icon name="info" class="tw-mr-1" />
-                Using plan default:
-                <span *ngIf="musicPlanDefault">
-                  ₱{{ musicPlanDefault.transaction_fixed_fee | number:'1.2-2' }} fixed + {{ musicPlanDefault.revenue_percentage_fee }}% of {{ musicPlanDefault.fee_revenue_type }} revenue
-                </span>
-                <span *ngIf="!musicPlanDefault">no default set</span>
-              </div>
-
-              <!-- Override fields -->
-              <ng-container *ngIf="overrideMusic" formGroupName="music">
-
-                <!-- Music Transaction Fixed Fee -->
-                <div class="tw-mb-3 tw-mt-3">
-                  <label for="musicTransactionFee" class="tw-label">Fixed Fee per Transaction (₱)</label>
-                  <input
-                    type="number"
-                    id="musicTransactionFee"
-                    class="tw-input"
-                    formControlName="transaction_fixed_fee"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    [class.is-invalid]="feeForm.get('music.transaction_fixed_fee')?.invalid && feeForm.get('music.transaction_fixed_fee')?.touched">
-                  <div class="form-text">Fixed fee per music transaction</div>
-                  <div class="invalid-feedback" *ngIf="feeForm.get('music.transaction_fixed_fee')?.invalid && feeForm.get('music.transaction_fixed_fee')?.touched">
-                    Transaction fee must be a non-negative number
+            <!-- Music -->
+            <div>
+              <button type="button"
+                class="tw-w-full tw-px-4 tw-py-3 tw-flex tw-items-center tw-gap-2 tw-text-left tw-bg-transparent tw-border-0 hover:tw-bg-gray-50 tw-transition-colors"
+                (click)="collapsedMusic = !collapsedMusic">
+                <app-icon name="music" class="tw-text-blue-600 tw-shrink-0" />
+                <span class="tw-font-medium">Music</span>
+                <span class="tw-text-sm tw-text-gray-400 tw-flex-1">{{ getSectionSummary('music') }}</span>
+                <app-icon [name]="collapsedMusic ? 'chevron-down' : 'chevron-up'" class="tw-text-gray-400 tw-shrink-0" />
+              </button>
+              <div *ngIf="!collapsedMusic" class="tw-px-4 tw-pb-5 tw-pt-3 tw-bg-gray-50 tw-border-t tw-border-gray-200">
+                <div class="tw-mb-3" *ngIf="isSuperAdmin">
+                  <div class="form-check tw-mb-0">
+                    <input class="form-check-input" type="checkbox" id="overrideMusicFees"
+                      [checked]="overrideMusic" (change)="overrideMusic = !overrideMusic">
+                    <label class="form-check-label tw-text-sm" for="overrideMusicFees">Override plan fees</label>
                   </div>
                 </div>
-
-                <!-- Music Revenue Percentage Fee -->
-                <div class="tw-mb-3">
-                  <label for="musicRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
-                  <input
-                    type="number"
-                    id="musicRevenueFee"
-                    class="tw-input"
-                    formControlName="revenue_percentage_fee"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    placeholder="0.00"
-                    [class.is-invalid]="feeForm.get('music.revenue_percentage_fee')?.invalid && feeForm.get('music.revenue_percentage_fee')?.touched">
-                  <div class="form-text">Percentage of music revenue (0-100%)</div>
-                  <div class="invalid-feedback" *ngIf="feeForm.get('music.revenue_percentage_fee')?.invalid && feeForm.get('music.revenue_percentage_fee')?.touched">
-                    Revenue percentage must be between 0 and 100
-                  </div>
+                <div *ngIf="!overrideMusic" class="tw-text-xs tw-text-gray-500">
+                  <app-icon name="info" class="tw-mr-1" />Using plan default:
+                  <span *ngIf="musicPlanDefault">₱{{ musicPlanDefault.transaction_fixed_fee | number:'1.2-2' }} fixed + {{ musicPlanDefault.revenue_percentage_fee }}% of {{ musicPlanDefault.fee_revenue_type }} revenue</span>
+                  <span *ngIf="!musicPlanDefault">no default set</span>
                 </div>
-
-                <!-- Music Fee Revenue Type -->
-                <div class="tw-mb-3">
-                  <label class="tw-label">Revenue Type for Music Percentage Fee</label>
-                  <div class="tw-flex tw-gap-3">
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="music_fee_revenue_type" id="musicNetRevenue" value="net" formControlName="fee_revenue_type" [checked]="feeForm.get('music.fee_revenue_type')?.value === 'net'">
-                      <label class="form-check-label" for="musicNetRevenue">Net Revenue</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="music_fee_revenue_type" id="musicGrossRevenue" value="gross" formControlName="fee_revenue_type" [checked]="feeForm.get('music.fee_revenue_type')?.value === 'gross'">
-                      <label class="form-check-label" for="musicGrossRevenue">Gross Revenue</label>
+                <ng-container *ngIf="overrideMusic" formGroupName="music">
+                  <div class="tw-mb-3 tw-mt-1">
+                    <label for="musicTransactionFee" class="tw-label">Fixed Fee per Transaction (₱)</label>
+                    <input type="number" id="musicTransactionFee" class="tw-input" formControlName="transaction_fixed_fee" min="0" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('music.transaction_fixed_fee')?.invalid && feeForm.get('music.transaction_fixed_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('music.transaction_fixed_fee')?.invalid && feeForm.get('music.transaction_fixed_fee')?.touched">Transaction fee must be a non-negative number</div>
+                  </div>
+                  <div class="tw-mb-3">
+                    <label for="musicRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
+                    <input type="number" id="musicRevenueFee" class="tw-input" formControlName="revenue_percentage_fee" min="0" max="100" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('music.revenue_percentage_fee')?.invalid && feeForm.get('music.revenue_percentage_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('music.revenue_percentage_fee')?.invalid && feeForm.get('music.revenue_percentage_fee')?.touched">Revenue percentage must be between 0 and 100</div>
+                  </div>
+                  <div>
+                    <label class="tw-label">Revenue Type</label>
+                    <div class="tw-flex tw-gap-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="music_fee_revenue_type" id="musicNetRevenue" value="net" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="musicNetRevenue">Net</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="music_fee_revenue_type" id="musicGrossRevenue" value="gross" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="musicGrossRevenue">Gross</label>
+                      </div>
                     </div>
                   </div>
-                  <div class="form-text">Whether the percentage applies to net (after expenses) or gross (before expenses) music revenue</div>
-                </div>
-
-              </ng-container>
-            </div>
-          </div>
-
-          <!-- Event Fee Settings -->
-          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
-            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-items-center tw-justify-between">
-              <h6 class="tw-mb-0">
-                <app-icon name="calendar" class="tw-mr-2 tw-text-warning" />
-                Event Earnings Fee Settings
-              </h6>
-              <div *ngIf="isSuperAdmin" class="form-check tw-mb-0">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="overrideEventFees"
-                  [checked]="overrideEvent"
-                  (change)="overrideEvent = !overrideEvent">
-                <label class="form-check-label tw-text-sm" for="overrideEventFees">
-                  Override plan fees
-                </label>
+                </ng-container>
               </div>
             </div>
-            <div class="tw-px-card-pad tw-pb-card-pad">
 
-              <!-- Plan default banner when not overriding -->
-              <div *ngIf="!overrideEvent" class="tw-px-3 tw-py-2 tw-rounded-lg tw-bg-gray-50 tw-border tw-border-gray-200 tw-text-sm tw-text-gray-600">
-                <app-icon name="info" class="tw-mr-1" />
-                Using plan default:
-                <span *ngIf="eventPlanDefault">
-                  ₱{{ eventPlanDefault.transaction_fixed_fee | number:'1.2-2' }} fixed + {{ eventPlanDefault.revenue_percentage_fee }}% of {{ eventPlanDefault.fee_revenue_type }} revenue
-                </span>
-                <span *ngIf="!eventPlanDefault">no default set</span>
-              </div>
-
-              <!-- Override fields -->
-              <ng-container *ngIf="overrideEvent" formGroupName="event">
-
-                <!-- Event Transaction Fixed Fee -->
-                <div class="tw-mb-3 tw-mt-3">
-                  <label for="eventTransactionFee" class="tw-label">Fixed Fee per Transaction (₱)</label>
-                  <input
-                    type="number"
-                    id="eventTransactionFee"
-                    class="tw-input"
-                    formControlName="transaction_fixed_fee"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    [class.is-invalid]="feeForm.get('event.transaction_fixed_fee')?.invalid && feeForm.get('event.transaction_fixed_fee')?.touched">
-                  <div class="form-text">Fixed fee per event transaction</div>
-                  <div class="invalid-feedback" *ngIf="feeForm.get('event.transaction_fixed_fee')?.invalid && feeForm.get('event.transaction_fixed_fee')?.touched">
-                    Transaction fee must be a non-negative number
+            <!-- Event -->
+            <div>
+              <button type="button"
+                class="tw-w-full tw-px-4 tw-py-3 tw-flex tw-items-center tw-gap-2 tw-text-left tw-bg-transparent tw-border-0 hover:tw-bg-gray-50 tw-transition-colors"
+                (click)="collapsedEvent = !collapsedEvent">
+                <app-icon name="calendar" class="tw-text-warning tw-shrink-0" />
+                <span class="tw-font-medium">Events</span>
+                <span class="tw-text-sm tw-text-gray-400 tw-flex-1">{{ getSectionSummary('event') }}</span>
+                <app-icon [name]="collapsedEvent ? 'chevron-down' : 'chevron-up'" class="tw-text-gray-400 tw-shrink-0" />
+              </button>
+              <div *ngIf="!collapsedEvent" class="tw-px-4 tw-pb-5 tw-pt-3 tw-bg-gray-50 tw-border-t tw-border-gray-200">
+                <div class="tw-mb-3" *ngIf="isSuperAdmin">
+                  <div class="form-check tw-mb-0">
+                    <input class="form-check-input" type="checkbox" id="overrideEventFees"
+                      [checked]="overrideEvent" (change)="overrideEvent = !overrideEvent">
+                    <label class="form-check-label tw-text-sm" for="overrideEventFees">Override plan fees</label>
                   </div>
                 </div>
-
-                <!-- Event Revenue Percentage Fee -->
-                <div class="tw-mb-3">
-                  <label for="eventRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
-                  <input
-                    type="number"
-                    id="eventRevenueFee"
-                    class="tw-input"
-                    formControlName="revenue_percentage_fee"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    placeholder="0.00"
-                    [class.is-invalid]="feeForm.get('event.revenue_percentage_fee')?.invalid && feeForm.get('event.revenue_percentage_fee')?.touched">
-                  <div class="form-text">Percentage of event revenue (0-100%)</div>
-                  <div class="invalid-feedback" *ngIf="feeForm.get('event.revenue_percentage_fee')?.invalid && feeForm.get('event.revenue_percentage_fee')?.touched">
-                    Revenue percentage must be between 0 and 100
-                  </div>
+                <div *ngIf="!overrideEvent" class="tw-text-xs tw-text-gray-500">
+                  <app-icon name="info" class="tw-mr-1" />Using plan default:
+                  <span *ngIf="eventPlanDefault">₱{{ eventPlanDefault.transaction_fixed_fee | number:'1.2-2' }} fixed + {{ eventPlanDefault.revenue_percentage_fee }}% of {{ eventPlanDefault.fee_revenue_type }} revenue</span>
+                  <span *ngIf="!eventPlanDefault">no default set</span>
                 </div>
-
-                <!-- Event Fee Revenue Type -->
-                <div class="tw-mb-3">
-                  <label class="tw-label">Revenue Type for Event Percentage Fee</label>
-                  <div class="tw-flex tw-gap-3">
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="event_fee_revenue_type" id="eventNetRevenue" value="net" formControlName="fee_revenue_type" [checked]="feeForm.get('event.fee_revenue_type')?.value === 'net'">
-                      <label class="form-check-label" for="eventNetRevenue">Net Revenue</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="event_fee_revenue_type" id="eventGrossRevenue" value="gross" formControlName="fee_revenue_type" [checked]="feeForm.get('event.fee_revenue_type')?.value === 'gross'">
-                      <label class="form-check-label" for="eventGrossRevenue">Gross Revenue</label>
+                <ng-container *ngIf="overrideEvent" formGroupName="event">
+                  <div class="tw-mb-3 tw-mt-1">
+                    <label for="eventTransactionFee" class="tw-label">Fixed Fee per Transaction (₱)</label>
+                    <input type="number" id="eventTransactionFee" class="tw-input" formControlName="transaction_fixed_fee" min="0" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('event.transaction_fixed_fee')?.invalid && feeForm.get('event.transaction_fixed_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('event.transaction_fixed_fee')?.invalid && feeForm.get('event.transaction_fixed_fee')?.touched">Transaction fee must be a non-negative number</div>
+                  </div>
+                  <div class="tw-mb-3">
+                    <label for="eventRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
+                    <input type="number" id="eventRevenueFee" class="tw-input" formControlName="revenue_percentage_fee" min="0" max="100" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('event.revenue_percentage_fee')?.invalid && feeForm.get('event.revenue_percentage_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('event.revenue_percentage_fee')?.invalid && feeForm.get('event.revenue_percentage_fee')?.touched">Revenue percentage must be between 0 and 100</div>
+                  </div>
+                  <div>
+                    <label class="tw-label">Revenue Type</label>
+                    <div class="tw-flex tw-gap-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="event_fee_revenue_type" id="eventNetRevenue" value="net" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="eventNetRevenue">Net</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="event_fee_revenue_type" id="eventGrossRevenue" value="gross" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="eventGrossRevenue">Gross</label>
+                      </div>
                     </div>
                   </div>
-                  <div class="form-text">Whether the percentage applies to net (after expenses) or gross (before expenses) event revenue</div>
-                </div>
-
-              </ng-container>
-            </div>
-          </div>
-
-          <!-- Fundraiser Fee Settings -->
-          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-mb-4">
-            <div class="tw-px-card-pad tw-pt-card-pad tw-pb-4 tw-flex tw-items-center tw-justify-between">
-              <h6 class="tw-mb-0">
-                <app-icon name="heart" class="tw-mr-2 tw-text-danger" />
-                Fundraiser Earnings Fee Settings
-              </h6>
-              <div *ngIf="isSuperAdmin" class="form-check tw-mb-0">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="overrideFundraiserFees"
-                  [checked]="overrideFundraiser"
-                  (change)="overrideFundraiser = !overrideFundraiser">
-                <label class="form-check-label tw-text-sm" for="overrideFundraiserFees">
-                  Override plan fees
-                </label>
+                </ng-container>
               </div>
             </div>
-            <div class="tw-px-card-pad tw-pb-card-pad">
 
-              <!-- Plan default banner when not overriding -->
-              <div *ngIf="!overrideFundraiser" class="tw-px-3 tw-py-2 tw-rounded-lg tw-bg-gray-50 tw-border tw-border-gray-200 tw-text-sm tw-text-gray-600">
-                <app-icon name="info" class="tw-mr-1" />
-                Using plan default:
-                <span *ngIf="fundraiserPlanDefault">
-                  ₱{{ fundraiserPlanDefault.transaction_fixed_fee | number:'1.2-2' }} fixed + {{ fundraiserPlanDefault.revenue_percentage_fee }}% of {{ fundraiserPlanDefault.fee_revenue_type }} revenue
-                </span>
-                <span *ngIf="!fundraiserPlanDefault">no default set</span>
+            <!-- Fundraiser -->
+            <div>
+              <button type="button"
+                class="tw-w-full tw-px-4 tw-py-3 tw-flex tw-items-center tw-gap-2 tw-text-left tw-bg-transparent tw-border-0 hover:tw-bg-gray-50 tw-transition-colors"
+                (click)="collapsedFundraiser = !collapsedFundraiser">
+                <app-icon name="heart" class="tw-text-danger tw-shrink-0" />
+                <span class="tw-font-medium">Fundraisers</span>
+                <span class="tw-text-sm tw-text-gray-400 tw-flex-1">{{ getSectionSummary('fundraiser') }}</span>
+                <app-icon [name]="collapsedFundraiser ? 'chevron-down' : 'chevron-up'" class="tw-text-gray-400 tw-shrink-0" />
+              </button>
+              <div *ngIf="!collapsedFundraiser" class="tw-px-4 tw-pb-5 tw-pt-3 tw-bg-gray-50 tw-border-t tw-border-gray-200">
+                <div class="tw-mb-3" *ngIf="isSuperAdmin">
+                  <div class="form-check tw-mb-0">
+                    <input class="form-check-input" type="checkbox" id="overrideFundraiserFees"
+                      [checked]="overrideFundraiser" (change)="overrideFundraiser = !overrideFundraiser">
+                    <label class="form-check-label tw-text-sm" for="overrideFundraiserFees">Override plan fees</label>
+                  </div>
+                </div>
+                <div *ngIf="!overrideFundraiser" class="tw-text-xs tw-text-gray-500">
+                  <app-icon name="info" class="tw-mr-1" />Using plan default:
+                  <span *ngIf="fundraiserPlanDefault">₱{{ fundraiserPlanDefault.transaction_fixed_fee | number:'1.2-2' }} fixed + {{ fundraiserPlanDefault.revenue_percentage_fee }}% of {{ fundraiserPlanDefault.fee_revenue_type }} revenue</span>
+                  <span *ngIf="!fundraiserPlanDefault">no default set</span>
+                </div>
+                <ng-container *ngIf="overrideFundraiser" formGroupName="fundraiser">
+                  <div class="tw-mb-3 tw-mt-1">
+                    <label for="fundraiserTransactionFee" class="tw-label">Fixed Fee per Donation (₱)</label>
+                    <input type="number" id="fundraiserTransactionFee" class="tw-input" formControlName="transaction_fixed_fee" min="0" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('fundraiser.transaction_fixed_fee')?.invalid && feeForm.get('fundraiser.transaction_fixed_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.invalid && feeForm.get('fundraiser.transaction_fixed_fee')?.touched">Transaction fee must be a non-negative number</div>
+                  </div>
+                  <div class="tw-mb-3">
+                    <label for="fundraiserRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
+                    <input type="number" id="fundraiserRevenueFee" class="tw-input" formControlName="revenue_percentage_fee" min="0" max="100" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('fundraiser.revenue_percentage_fee')?.invalid && feeForm.get('fundraiser.revenue_percentage_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.invalid && feeForm.get('fundraiser.revenue_percentage_fee')?.touched">Revenue percentage must be between 0 and 100</div>
+                  </div>
+                  <div>
+                    <label class="tw-label">Revenue Type</label>
+                    <div class="tw-flex tw-gap-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="fundraiser_fee_revenue_type" id="fundraiserNetRevenue" value="net" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="fundraiserNetRevenue">Net</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="fundraiser_fee_revenue_type" id="fundraiserGrossRevenue" value="gross" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="fundraiserGrossRevenue">Gross</label>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
               </div>
-
-              <!-- Override fields -->
-              <ng-container *ngIf="overrideFundraiser" formGroupName="fundraiser">
-
-                <!-- Fundraiser Transaction Fixed Fee -->
-                <div class="tw-mb-3 tw-mt-3">
-                  <label for="fundraiserTransactionFee" class="tw-label">Fixed Fee per Donation (₱)</label>
-                  <input
-                    type="number"
-                    id="fundraiserTransactionFee"
-                    class="tw-input"
-                    formControlName="transaction_fixed_fee"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    [class.is-invalid]="feeForm.get('fundraiser.transaction_fixed_fee')?.invalid && feeForm.get('fundraiser.transaction_fixed_fee')?.touched">
-                  <div class="form-text">Fixed fee per donation transaction</div>
-                  <div class="invalid-feedback" *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.invalid && feeForm.get('fundraiser.transaction_fixed_fee')?.touched">
-                    Transaction fee must be a non-negative number
-                  </div>
-                </div>
-
-                <!-- Fundraiser Revenue Percentage Fee -->
-                <div class="tw-mb-3">
-                  <label for="fundraiserRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
-                  <input
-                    type="number"
-                    id="fundraiserRevenueFee"
-                    class="tw-input"
-                    formControlName="revenue_percentage_fee"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    placeholder="0.00"
-                    [class.is-invalid]="feeForm.get('fundraiser.revenue_percentage_fee')?.invalid && feeForm.get('fundraiser.revenue_percentage_fee')?.touched">
-                  <div class="form-text">Percentage of donation revenue (0-100%)</div>
-                  <div class="invalid-feedback" *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.invalid && feeForm.get('fundraiser.revenue_percentage_fee')?.touched">
-                    Revenue percentage must be between 0 and 100
-                  </div>
-                </div>
-
-                <!-- Fundraiser Fee Revenue Type -->
-                <div class="tw-mb-3">
-                  <label class="tw-label">Revenue Type for Fundraiser Percentage Fee</label>
-                  <div class="tw-flex tw-gap-3">
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="fundraiser_fee_revenue_type" id="fundraiserNetRevenue" value="net" formControlName="fee_revenue_type" [checked]="feeForm.get('fundraiser.fee_revenue_type')?.value === 'net'">
-                      <label class="form-check-label" for="fundraiserNetRevenue">Net Revenue</label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="fundraiser_fee_revenue_type" id="fundraiserGrossRevenue" value="gross" formControlName="fee_revenue_type" [checked]="feeForm.get('fundraiser.fee_revenue_type')?.value === 'gross'">
-                      <label class="form-check-label" for="fundraiserGrossRevenue">Gross Revenue</label>
-                    </div>
-                  </div>
-                  <div class="form-text">Whether the percentage applies to net (after processing fees) or gross (total donation) revenue</div>
-                </div>
-
-              </ng-container>
             </div>
+
+            <!-- Merch -->
+            <div>
+              <button type="button"
+                class="tw-w-full tw-px-4 tw-py-3 tw-flex tw-items-center tw-gap-2 tw-text-left tw-bg-transparent tw-border-0 hover:tw-bg-gray-50 tw-transition-colors"
+                (click)="collapsedMerch = !collapsedMerch">
+                <app-icon name="shopping-bag" class="tw-text-purple-600 tw-shrink-0" />
+                <span class="tw-font-medium">Merch</span>
+                <span class="tw-text-sm tw-text-gray-400 tw-flex-1">{{ getSectionSummary('merch') }}</span>
+                <app-icon [name]="collapsedMerch ? 'chevron-down' : 'chevron-up'" class="tw-text-gray-400 tw-shrink-0" />
+              </button>
+              <div *ngIf="!collapsedMerch" class="tw-px-4 tw-pb-5 tw-pt-3 tw-bg-gray-50 tw-border-t tw-border-gray-200">
+                <div class="tw-mb-3" *ngIf="isSuperAdmin">
+                  <div class="form-check tw-mb-0">
+                    <input class="form-check-input" type="checkbox" id="overrideMerchFees"
+                      [checked]="overrideMerch" (change)="overrideMerch = !overrideMerch">
+                    <label class="form-check-label tw-text-sm" for="overrideMerchFees">Override plan fees</label>
+                  </div>
+                </div>
+                <div *ngIf="!overrideMerch" class="tw-text-xs tw-text-gray-500">
+                  <app-icon name="info" class="tw-mr-1" />No plan default — merch fees are only applied when overridden here.
+                </div>
+                <ng-container *ngIf="overrideMerch" formGroupName="merch">
+                  <div class="tw-mb-3 tw-mt-1">
+                    <label for="merchTransactionFee" class="tw-label">Fixed Fee per Order (₱)</label>
+                    <input type="number" id="merchTransactionFee" class="tw-input" formControlName="transaction_fixed_fee" min="0" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('merch.transaction_fixed_fee')?.invalid && feeForm.get('merch.transaction_fixed_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('merch.transaction_fixed_fee')?.invalid && feeForm.get('merch.transaction_fixed_fee')?.touched">Transaction fee must be a non-negative number</div>
+                  </div>
+                  <div class="tw-mb-3">
+                    <label for="merchRevenueFee" class="tw-label">Revenue Percentage Fee (%)</label>
+                    <input type="number" id="merchRevenueFee" class="tw-input" formControlName="revenue_percentage_fee" min="0" max="100" step="0.01" placeholder="0.00"
+                      [class.is-invalid]="feeForm.get('merch.revenue_percentage_fee')?.invalid && feeForm.get('merch.revenue_percentage_fee')?.touched">
+                    <div class="invalid-feedback" *ngIf="feeForm.get('merch.revenue_percentage_fee')?.invalid && feeForm.get('merch.revenue_percentage_fee')?.touched">Revenue percentage must be between 0 and 100</div>
+                  </div>
+                  <div>
+                    <label class="tw-label">Revenue Type</label>
+                    <div class="tw-flex tw-gap-3">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="merch_fee_revenue_type" id="merchNetRevenue" value="net" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="merchNetRevenue">Net</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="merch_fee_revenue_type" id="merchGrossRevenue" value="gross" formControlName="fee_revenue_type">
+                        <label class="form-check-label" for="merchGrossRevenue">Gross</label>
+                      </div>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+
           </div>
 
           <!-- Fee Summary -->
-          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-overflow-hidden tw-mb-8 tw-bg-gray-50 tw-mt-4" *ngIf="showPreview()">
-            <div class="tw-px-card-pad tw-pb-card-pad">
-              <h6 class="card-title">Fee Summary</h6>
-              
-              <!-- Music Fees Summary -->
-              <div *ngIf="showMusicPreview()" class="tw-mb-3">
-                <strong class="text-primary">
-                  <app-icon name="music" class="tw-mr-2" />Music Earnings Fees:
-                </strong>
-                <ul class="list-unstyled tw-mb-0 tw-ml-3">
-                  <li *ngIf="feeForm.get('music.transaction_fixed_fee')?.value > 0">
-                    <app-icon name="transfer" class="tw-mr-2 tw-text-[#0891b2]" />
-                    Per Transaction: ₱{{ feeForm.get('music.transaction_fixed_fee')?.value | number:'1.2-2' }}
-                  </li>
-                  <li *ngIf="feeForm.get('music.revenue_percentage_fee')?.value > 0">
-                    <app-icon name="percentage" class="tw-mr-2 tw-text-warning" />
-                    {{ feeForm.get('music.revenue_percentage_fee')?.value }}% of {{ feeForm.get('music.fee_revenue_type')?.value }} revenue
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Event Fees Summary -->
-              <div *ngIf="showEventPreview()" class="tw-mb-3">
-                <strong class="tw-text-warning">
-                  <app-icon name="calendar" class="tw-mr-2" />Event Earnings Fees:
-                </strong>
-                <ul class="list-unstyled tw-mb-0 tw-ml-3">
-                  <li *ngIf="feeForm.get('event.transaction_fixed_fee')?.value > 0">
-                    <app-icon name="transfer" class="tw-mr-2 tw-text-[#0891b2]" />
-                    Per Transaction: ₱{{ feeForm.get('event.transaction_fixed_fee')?.value | number:'1.2-2' }}
-                  </li>
-                  <li *ngIf="feeForm.get('event.revenue_percentage_fee')?.value > 0">
-                    <app-icon name="percentage" class="tw-mr-2 tw-text-warning" />
-                    {{ feeForm.get('event.revenue_percentage_fee')?.value }}% of {{ feeForm.get('event.fee_revenue_type')?.value }} revenue
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Fundraiser Fees Summary -->
-              <div *ngIf="showFundraiserPreview()">
-                <strong class="tw-text-danger">
-                  <app-icon name="heart" class="tw-mr-2" />Fundraiser Earnings Fees:
-                </strong>
-                <ul class="list-unstyled tw-mb-0 tw-ml-3">
-                  <li *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.value > 0">
-                    <app-icon name="transfer" class="tw-mr-2 tw-text-[#0891b2]" />
-                    Per Donation: ₱{{ feeForm.get('fundraiser.transaction_fixed_fee')?.value | number:'1.2-2' }}
-                  </li>
-                  <li *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.value > 0">
-                    <app-icon name="percentage" class="tw-mr-2 tw-text-warning" />
-                    {{ feeForm.get('fundraiser.revenue_percentage_fee')?.value }}% of {{ feeForm.get('fundraiser.fee_revenue_type')?.value }} revenue
-                  </li>
-                </ul>
-              </div>
-
-              <!-- No Fees Message -->
-              <div *ngIf="!showPreview()">
-                <app-icon name="check" class="tw-mr-2 tw-text-success" />
-                No fees configured
-              </div>
+          <div class="tw-bg-gray-50 tw-border tw-border-gray-200 tw-rounded-lg tw-px-4 tw-py-3 tw-mt-2" *ngIf="showPreview()">
+            <p class="tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wide tw-text-gray-500 tw-mb-2">Fee Summary</p>
+            <div *ngIf="showMusicPreview()" class="tw-mb-2">
+              <strong class="tw-text-sm text-primary"><app-icon name="music" class="tw-mr-1" />Music:</strong>
+              <span class="tw-text-sm tw-text-gray-700 tw-ml-1">
+                <span *ngIf="feeForm.get('music.transaction_fixed_fee')?.value > 0">₱{{ feeForm.get('music.transaction_fixed_fee')?.value | number:'1.2-2' }} fixed</span>
+                <span *ngIf="feeForm.get('music.transaction_fixed_fee')?.value > 0 && feeForm.get('music.revenue_percentage_fee')?.value > 0"> + </span>
+                <span *ngIf="feeForm.get('music.revenue_percentage_fee')?.value > 0">{{ feeForm.get('music.revenue_percentage_fee')?.value }}% of {{ feeForm.get('music.fee_revenue_type')?.value }}</span>
+              </span>
+            </div>
+            <div *ngIf="showEventPreview()" class="tw-mb-2">
+              <strong class="tw-text-sm tw-text-warning"><app-icon name="calendar" class="tw-mr-1" />Events:</strong>
+              <span class="tw-text-sm tw-text-gray-700 tw-ml-1">
+                <span *ngIf="feeForm.get('event.transaction_fixed_fee')?.value > 0">₱{{ feeForm.get('event.transaction_fixed_fee')?.value | number:'1.2-2' }} fixed</span>
+                <span *ngIf="feeForm.get('event.transaction_fixed_fee')?.value > 0 && feeForm.get('event.revenue_percentage_fee')?.value > 0"> + </span>
+                <span *ngIf="feeForm.get('event.revenue_percentage_fee')?.value > 0">{{ feeForm.get('event.revenue_percentage_fee')?.value }}% of {{ feeForm.get('event.fee_revenue_type')?.value }}</span>
+              </span>
+            </div>
+            <div *ngIf="showFundraiserPreview()" class="tw-mb-2">
+              <strong class="tw-text-sm tw-text-danger"><app-icon name="heart" class="tw-mr-1" />Fundraisers:</strong>
+              <span class="tw-text-sm tw-text-gray-700 tw-ml-1">
+                <span *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.value > 0">₱{{ feeForm.get('fundraiser.transaction_fixed_fee')?.value | number:'1.2-2' }} fixed</span>
+                <span *ngIf="feeForm.get('fundraiser.transaction_fixed_fee')?.value > 0 && feeForm.get('fundraiser.revenue_percentage_fee')?.value > 0"> + </span>
+                <span *ngIf="feeForm.get('fundraiser.revenue_percentage_fee')?.value > 0">{{ feeForm.get('fundraiser.revenue_percentage_fee')?.value }}% of {{ feeForm.get('fundraiser.fee_revenue_type')?.value }}</span>
+              </span>
+            </div>
+            <div *ngIf="showMerchPreview()">
+              <strong class="tw-text-sm tw-text-purple-600"><app-icon name="shopping-bag" class="tw-mr-1" />Merch:</strong>
+              <span class="tw-text-sm tw-text-gray-700 tw-ml-1">
+                <span *ngIf="feeForm.get('merch.transaction_fixed_fee')?.value > 0">₱{{ feeForm.get('merch.transaction_fixed_fee')?.value | number:'1.2-2' }} fixed</span>
+                <span *ngIf="feeForm.get('merch.transaction_fixed_fee')?.value > 0 && feeForm.get('merch.revenue_percentage_fee')?.value > 0"> + </span>
+                <span *ngIf="feeForm.get('merch.revenue_percentage_fee')?.value > 0">{{ feeForm.get('merch.revenue_percentage_fee')?.value }}% of {{ feeForm.get('merch.fee_revenue_type')?.value }}</span>
+              </span>
             </div>
           </div>
 
@@ -372,7 +287,7 @@
             <app-icon name="spinner" class="tw-mr-2 tw-animate-spin" />Saving...
           </span>
           <span *ngIf="!loading">
-            <app-icon name="save" class=" tw-mr-2" />Save Fee Settings
+            <app-icon name="save" class="tw-mr-2" />Save Fee Settings
           </span>
         </button>
       </div>

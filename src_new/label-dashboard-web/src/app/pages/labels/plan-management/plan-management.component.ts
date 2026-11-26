@@ -29,6 +29,9 @@ interface PlanFormState {
   default_fundraiser_transaction_fixed_fee: number | '';
   default_fundraiser_revenue_percentage_fee: number | '';
   default_fundraiser_fee_revenue_type: 'net' | 'gross';
+  default_merch_transaction_fixed_fee: number | '';
+  default_merch_revenue_percentage_fee: number | '';
+  default_merch_fee_revenue_type: 'net' | 'gross';
   feature_music_workspace: boolean;
   feature_campaigns_workspace: boolean;
   feature_sublabels: boolean;
@@ -38,6 +41,7 @@ interface PlanFormState {
   feature_sync_licensing: boolean;
   feature_events: boolean;
   feature_fundraisers: boolean;
+  feature_merch_workspace: boolean;
 }
 
 interface PlanRow extends AdminPlan {
@@ -70,6 +74,9 @@ function blankForm(): PlanFormState {
     default_fundraiser_transaction_fixed_fee: 0,
     default_fundraiser_revenue_percentage_fee: 0,
     default_fundraiser_fee_revenue_type: 'net',
+    default_merch_transaction_fixed_fee: 0,
+    default_merch_revenue_percentage_fee: 0,
+    default_merch_fee_revenue_type: 'net',
     feature_music_workspace: true,
     feature_campaigns_workspace: true,
     feature_sublabels: true,
@@ -79,6 +86,7 @@ function blankForm(): PlanFormState {
     feature_sync_licensing: true,
     feature_events: true,
     feature_fundraisers: true,
+    feature_merch_workspace: false,
   };
 }
 
@@ -106,6 +114,9 @@ function planToForm(plan: AdminPlan): PlanFormState {
     default_fundraiser_transaction_fixed_fee: plan.default_fundraiser_transaction_fixed_fee ?? 0,
     default_fundraiser_revenue_percentage_fee: plan.default_fundraiser_revenue_percentage_fee ?? 0,
     default_fundraiser_fee_revenue_type: plan.default_fundraiser_fee_revenue_type ?? 'net',
+    default_merch_transaction_fixed_fee: plan.default_merch_transaction_fixed_fee ?? 0,
+    default_merch_revenue_percentage_fee: plan.default_merch_revenue_percentage_fee ?? 0,
+    default_merch_fee_revenue_type: plan.default_merch_fee_revenue_type ?? 'net',
     feature_music_workspace: plan.feature_music_workspace,
     feature_campaigns_workspace: plan.feature_campaigns_workspace,
     feature_sublabels: plan.feature_sublabels,
@@ -115,6 +126,7 @@ function planToForm(plan: AdminPlan): PlanFormState {
     feature_sync_licensing: plan.feature_sync_licensing,
     feature_events: plan.feature_events,
     feature_fundraisers: plan.feature_fundraisers,
+    feature_merch_workspace: plan.feature_merch_workspace,
   };
 }
 
@@ -143,6 +155,9 @@ function formToInput(form: PlanFormState): PlanInput {
     default_fundraiser_transaction_fixed_fee: form.default_fundraiser_transaction_fixed_fee === '' ? 0 : Number(form.default_fundraiser_transaction_fixed_fee),
     default_fundraiser_revenue_percentage_fee: form.default_fundraiser_revenue_percentage_fee === '' ? 0 : Number(form.default_fundraiser_revenue_percentage_fee),
     default_fundraiser_fee_revenue_type: form.default_fundraiser_fee_revenue_type,
+    default_merch_transaction_fixed_fee: form.default_merch_transaction_fixed_fee === '' ? 0 : Number(form.default_merch_transaction_fixed_fee),
+    default_merch_revenue_percentage_fee: form.default_merch_revenue_percentage_fee === '' ? 0 : Number(form.default_merch_revenue_percentage_fee),
+    default_merch_fee_revenue_type: form.default_merch_fee_revenue_type,
     feature_music_workspace: form.feature_music_workspace,
     feature_campaigns_workspace: form.feature_campaigns_workspace,
     feature_sublabels: form.feature_sublabels,
@@ -152,6 +167,7 @@ function formToInput(form: PlanFormState): PlanInput {
     feature_sync_licensing: form.feature_sync_licensing,
     feature_events: form.feature_events,
     feature_fundraisers: form.feature_fundraisers,
+    feature_merch_workspace: form.feature_merch_workspace,
   };
 }
 

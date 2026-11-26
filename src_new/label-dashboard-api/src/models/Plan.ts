@@ -25,6 +25,9 @@ interface PlanAttributes {
   default_fundraiser_transaction_fixed_fee?: number;
   default_fundraiser_revenue_percentage_fee?: number;
   default_fundraiser_fee_revenue_type?: 'net' | 'gross';
+  default_merch_transaction_fixed_fee?: number;
+  default_merch_revenue_percentage_fee?: number;
+  default_merch_fee_revenue_type?: 'net' | 'gross';
 
   // Feature flags
   feature_music_workspace: boolean;
@@ -36,6 +39,7 @@ interface PlanAttributes {
   feature_sync_licensing: boolean;
   feature_events: boolean;
   feature_fundraisers: boolean;
+  feature_merch_workspace: boolean;
 
   is_active: boolean;
   is_public: boolean;
@@ -71,6 +75,9 @@ class Plan extends Model<PlanAttributes, PlanCreationAttributes> implements Plan
   public default_fundraiser_transaction_fixed_fee?: number;
   public default_fundraiser_revenue_percentage_fee?: number;
   public default_fundraiser_fee_revenue_type?: 'net' | 'gross';
+  public default_merch_transaction_fixed_fee?: number;
+  public default_merch_revenue_percentage_fee?: number;
+  public default_merch_fee_revenue_type?: 'net' | 'gross';
 
   public feature_music_workspace!: boolean;
   public feature_campaigns_workspace!: boolean;
@@ -81,6 +88,7 @@ class Plan extends Model<PlanAttributes, PlanCreationAttributes> implements Plan
   public feature_sync_licensing!: boolean;
   public feature_events!: boolean;
   public feature_fundraisers!: boolean;
+  public feature_merch_workspace!: boolean;
 
   public is_active!: boolean;
   public is_public!: boolean;
@@ -223,6 +231,29 @@ Plan.init(
       allowNull: true,
       defaultValue: 'net',
     },
+    default_merch_transaction_fixed_fee: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('default_merch_transaction_fixed_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+    },
+    default_merch_revenue_percentage_fee: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 0,
+      get() {
+        const value = this.getDataValue('default_merch_revenue_percentage_fee');
+        return value !== null && value !== undefined ? parseFloat(String(value)) : value;
+      },
+    },
+    default_merch_fee_revenue_type: {
+      type: DataTypes.ENUM('net', 'gross'),
+      allowNull: true,
+      defaultValue: 'net',
+    },
 
     // Feature flags
     feature_music_workspace: {
@@ -269,6 +300,11 @@ Plan.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    feature_merch_workspace: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
 
     is_active: {
