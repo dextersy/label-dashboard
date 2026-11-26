@@ -156,23 +156,6 @@
       </div>
     </div>
 
-    <!-- Images -->
-    @if (isEdit) {
-      <hr class="tw-my-4">
-      <h5 class="tw-mb-3">Images</h5>
-      <div class="tw-flex tw-flex-wrap tw-gap-3 tw-mb-3">
-        @for (img of images; track img.id) {
-          <div class="tw-relative tw-group">
-            <img [src]="img.path" class="tw-w-24 tw-h-24 tw-object-cover tw-rounded">
-            <button
-              class="tw-absolute tw-top-1 tw-right-1 tw-bg-red-500 tw-text-white tw-rounded-full tw-w-5 tw-h-5 tw-flex tw-items-center tw-justify-center tw-text-xs tw-opacity-0 group-hover:tw-opacity-100 tw-transition-opacity"
-              (click)="deleteImage(img)">×</button>
-          </div>
-        }
-      </div>
-      <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-control tw-max-w-xs">
-    }
-
     <!-- Artist Splits -->
     @if (isEdit) {
       <hr class="tw-my-4">
