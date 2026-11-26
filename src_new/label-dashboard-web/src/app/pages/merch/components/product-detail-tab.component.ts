@@ -11,6 +11,7 @@ import { IconComponent } from '../../../components/shared/icon/icon.component';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, IconComponent],
   templateUrl: './product-detail-tab.component.html',
+  styleUrl: './product-detail-tab.component.scss',
 })
 export class ProductDetailTabComponent implements OnInit {
   product: Product | null = null;

@@ -1,0 +1,84 @@
+// ── Field labels — matches event-form ef-label convention ─────────────────────
+
+.pd-section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 30%, #9ca3af);
+  margin-bottom: 14px;
+}
+
+.pd-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--brand-color, #3b82f6) 20%, #6b7280);
+  margin-bottom: 4px;
+}
+
+.pd-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+// ── Linked-to chip (read-only, no X) ──────────────────────────────────────────
+
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 7px 12px 7px 8px;
+  max-width: 360px;
+}
+
+.link-chip-img {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  flex-shrink: 0;
+
+  &.link-chip-img-artist { border-radius: 50%; }
+  &.link-chip-img-release { border-radius: 4px; }
+}
+
+.link-chip-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--brand-color, #3b82f6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.link-chip-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.link-chip-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.link-chip-sub {
+  font-size: 11px;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
