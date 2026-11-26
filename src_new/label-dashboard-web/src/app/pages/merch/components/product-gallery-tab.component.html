@@ -1,0 +1,144 @@
+<div class="product-gallery-tab">
+
+  <!-- Page Header -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+      <h3 class="tw-mb-2">
+        <app-icon name="images" class="tw-mr-2" />
+        Image Gallery
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Upload and manage product images. Drag to reorder.</p>
+    </div>
+  </div>
+
+  <!-- Gallery Section -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 gallery-section">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4 tw-flex tw-justify-between tw-items-center">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Photos</h3>
+      <button class="btn-sm"
+              [class.btn-primary]="reorderMode"
+              [class.btn-secondary]="!reorderMode"
+              (click)="toggleReorderMode()"
+              [disabled]="savingReorder || images.length < 2">
+        <div class="loading-spinner" *ngIf="savingReorder"></div>
+        <app-icon name="move" *ngIf="!savingReorder" />
+        {{ reorderMode ? 'Done' : 'Reorder' }}
+      </button>
+    </div>
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+
+      <div *ngIf="loading" class="tw-text-center">
+        <div class="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+
+      <div *ngIf="!loading && images.length === 0" class="empty-gallery tw-text-center tw-text-muted">
+        <app-icon name="camera" [size]="48" iconOnly />
+        <p>No images uploaded yet</p>
+        <small>Upload your first image to get started!</small>
+      </div>
+
+      <div *ngIf="!loading && images.length > 0"
+           class="photo-grid"
+           [class.reorder-mode]="reorderMode"
+           cdkDropList
+           [cdkDropListDisabled]="!reorderMode"
+           (cdkDropListDropped)="onDrop($event)">
+        <div class="photo-item" *ngFor="let image of images" cdkDrag [cdkDragDisabled]="!reorderMode">
+          <div class="photo-container" (click)="closeKebabMenu()">
+            <img [src]="image.path"
+                 alt="Product image"
+                 class="photo-image"
+                 (click)="openLightbox(image)">
+
+            <div class="drag-handle" *ngIf="reorderMode" cdkDragHandle>
+              <app-icon name="drag" iconOnly />
+            </div>
+
+            <!-- Desktop overlay -->
+            <div class="photo-overlay desktop-overlay" *ngIf="!reorderMode">
+              <div class="photo-actions">
+                <button class="btn-sm btn-danger btn-icon"
+                        (click)="deleteImage(image)"
+                        title="Delete image">
+                  <app-icon name="trash" iconOnly />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile kebab menu -->
+          <div class="mobile-kebab" *ngIf="!reorderMode">
+            <button class="kebab-btn"
+                    (click)="toggleKebabMenu(image.id, $event)"
+                    title="More actions">
+              <app-icon name="more-vertical" iconOnly />
+            </button>
+            <div class="kebab-menu" *ngIf="openKebabMenuId === image.id" (click)="$event.stopPropagation()">
+              <button class="kebab-menu-item kebab-menu-item--danger" (click)="deleteImage(image); closeKebabMenu()">
+                <app-icon name="trash" /> Delete image
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-8 upload-section">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-0">Upload Images</h3>
+    </div>
+    <div class="sm:tw-px-card-pad sm:tw-pb-card-pad">
+      <app-file-upload
+        [multiple]="true"
+        [maxFiles]="20"
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        label="Select Images"
+        hint="JPEG, PNG, GIF or WebP · max 10 MB each · up to 20 files"
+        [disabled]="uploading"
+        (filesSelected)="onFilesSelected($event)">
+      </app-file-upload>
+
+      <div *ngIf="selectedFiles && selectedFiles.length > 0" class="selected-files tw-mt-3">
+        <h6>Selected Files:</h6>
+        <ul>
+          <li *ngFor="let file of getSelectedFilesArray()">
+            {{ file.name }} ({{ (file.size / 1024 / 1024).toFixed(2) }}MB)
+          </li>
+        </ul>
+      </div>
+
+      <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="progress tw-mt-3">
+        <div class="progress-bar"
+             role="progressbar"
+             [style.width.%]="uploadProgress">
+          {{ uploadProgress }}%
+        </div>
+      </div>
+
+      <button type="button"
+              class="btn-primary tw-mt-3"
+              (click)="uploadImages()"
+              [disabled]="!selectedFiles || selectedFiles.length === 0 || uploading">
+        <div class="loading-spinner" *ngIf="uploading"></div>
+        <app-icon name="upload" *ngIf="!uploading" />
+        {{ uploading ? 'Uploading...' : 'Upload Images' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <app-lightbox
+    [imageUrl]="lightboxImageUrl"
+    [imageAlt]="lightboxImageAlt"
+    [isVisible]="showLightbox"
+    (close)="closeLightbox()">
+  </app-lightbox>
+
+</div>

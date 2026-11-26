@@ -62,18 +62,6 @@
       </div>
     </div>
 
-    <!-- Image Gallery -->
-    @if (product.images && product.images.length > 0) {
-      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
-        <p class="pd-section-label">Images</p>
-        <div class="tw-flex tw-flex-wrap tw-gap-3">
-          @for (img of product.images; track img.id) {
-            <img [src]="img.path" class="tw-w-24 tw-h-24 tw-object-cover tw-rounded" />
-          }
-        </div>
-      </div>
-    }
-
     <!-- Artist Splits -->
     @if (product.productArtists && product.productArtists.length > 0) {
       <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">

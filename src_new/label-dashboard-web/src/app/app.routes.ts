@@ -145,6 +145,7 @@ export const routes: Routes = [
       { path: 'products', component: MerchComponent, data: { tab: 'products' } },
       { path: 'products/new', component: ProductFormComponent },
       { path: 'products/:id', component: MerchComponent, data: { tab: 'product-detail' } },
+      { path: 'products/:id/gallery', component: MerchComponent, data: { tab: 'product-gallery' } },
       { path: 'products/:id/edit', component: ProductFormComponent },
     ]
   },
