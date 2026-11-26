@@ -8,16 +8,7 @@ import { ProductDetailTabComponent } from './components/product-detail-tab.compo
   selector: 'app-merch',
   standalone: true,
   imports: [CommonModule, ProductListTabComponent, ProductDetailTabComponent],
-  template: `
-    @switch (activeTab) {
-      @case ('products') {
-        <app-product-list-tab />
-      }
-      @case ('product-detail') {
-        <app-product-detail-tab />
-      }
-    }
-  `
+  templateUrl: './merch.component.html',
 })
 export class MerchComponent implements OnInit {
   activeTab: string = 'products';

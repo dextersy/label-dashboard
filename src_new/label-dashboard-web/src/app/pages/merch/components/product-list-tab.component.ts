@@ -11,32 +11,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   selector: 'app-product-list-tab',
   standalone: true,
   imports: [CommonModule, PaginatedTableComponent, IconComponent],
-  template: `
-    <div class="container-fluid tw-py-4">
-      <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
-        <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
-          <h3 class="tw-mb-2">
-            <app-icon name="shopping-bag" class="tw-mr-2" />
-            Products
-          </h3>
-          <p class="tw-mb-0 tw-text-muted">Manage your merchandise products.</p>
-        </div>
-      </div>
-
-      <app-paginated-table
-        title="Products"
-        [data]="products"
-        [pagination]="pagination"
-        [loading]="loading"
-        [columns]="columns"
-        [showSearch]="true"
-        [actions]="actions"
-        [headerActions]="headerActions"
-        (pageChange)="onPageChange($event)"
-        (filtersChange)="onFiltersChange($event)"
-      />
-    </div>
-  `
+  templateUrl: './product-list-tab.component.html',
 })
 export class ProductListTabComponent implements OnInit {
   products: Product[] = [];
