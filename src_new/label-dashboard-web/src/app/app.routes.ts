@@ -140,7 +140,7 @@ export const routes: Routes = [
   // Merch workspace
   {
     path: 'merch',
-    canActivate: [authGuard, merchAccessGuard],
+    canActivate: [merchAccessGuard],
     children: [
       { path: '', redirectTo: 'products', pathMatch: 'full' },
       { path: 'products', component: MerchComponent, data: { tab: 'products' } },
