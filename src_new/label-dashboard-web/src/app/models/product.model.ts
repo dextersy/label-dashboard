@@ -17,6 +17,7 @@ export interface Product {
   artist?: {
     id: number;
     name: string;
+    profile_photo?: string | null;
   };
   images?: ProductImage[];
   productArtists?: ProductArtistSplit[];

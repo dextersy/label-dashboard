@@ -50,7 +50,7 @@ export const getProducts = async (req: AuthRequest, res: Response) => {
       where,
       include: [
         { model: Release, as: 'release', attributes: ['id', 'title', 'catalog_no', 'cover_art'] },
-        { model: Artist, as: 'artist', attributes: ['id', 'name'] },
+        { model: Artist, as: 'artist', attributes: ['id', 'name', 'profile_photo'] },
         { model: ProductImage, as: 'images', attributes: ['id', 'path', 'sort_order'], order: [['sort_order', 'ASC']], limit: 1, separate: true },
       ],
       order: [['id', 'DESC']],
