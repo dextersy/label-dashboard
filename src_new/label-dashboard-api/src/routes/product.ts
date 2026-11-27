@@ -15,6 +15,8 @@ import {
   addProductExpense,
   getProductExpenses,
   getProductEarnings,
+  getMerchEarnings,
+  getMerchExpenses,
 } from '../controllers/productController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -22,6 +24,10 @@ const router = Router();
 
 // All routes require authentication
 router.use(authenticateToken);
+
+// Brand-wide merch sales (must be before /:id routes)
+router.get('/sales/earnings', getMerchEarnings);
+router.get('/sales/expenses', getMerchExpenses);
 
 // Product CRUD
 router.get('/', getProducts);

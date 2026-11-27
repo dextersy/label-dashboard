@@ -739,3 +739,35 @@ export const getProductEarnings = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getMerchEarnings = async (req: AuthRequest, res: Response) => {
+  try {
+    const earnings = await Earning.findAll({
+      where: { type: 'Merch' },
+      include: [{ model: Product, as: 'product', where: { brand_id: req.user.brand_id }, attributes: ['id', 'name', 'sku'] }],
+      order: [['date_recorded', 'DESC']],
+    });
+
+    const total = earnings.reduce((sum, e) => sum + parseFloat((e.amount || 0).toString()), 0);
+    res.json({ total_earnings: total, earnings });
+  } catch (error) {
+    console.error('Get merch earnings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getMerchExpenses = async (req: AuthRequest, res: Response) => {
+  try {
+    const expenses = await RecuperableExpense.findAll({
+      where: { brand_id: req.user.brand_id, product_id: { [require('sequelize').Op.not]: null } },
+      include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
+      order: [['date_recorded', 'DESC']],
+    });
+
+    const total = expenses.reduce((sum, e) => sum + parseFloat((e.expense_amount || 0).toString()), 0);
+    res.json({ total_expenses: total, expenses });
+  } catch (error) {
+    console.error('Get merch expenses error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

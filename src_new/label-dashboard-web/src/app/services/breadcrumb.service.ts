@@ -108,6 +108,7 @@ export class BreadcrumbService {
     '/merch/products/:id': { label: 'View Product', parent: '/merch/products' },
     '/merch/products/:id/gallery': { label: 'Gallery', parent: '/merch/products/:id' },
     '/merch/products/:id/edit': { label: 'Edit Product', parent: '/merch/products/:id' },
+    '/merch/sales': { label: 'View Sales', parent: '/merch/products' },
     '/merch/products/:id/sales': { label: 'View Sales', parent: '/merch/products/:id' },
   };
 
