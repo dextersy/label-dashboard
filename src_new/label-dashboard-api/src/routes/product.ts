@@ -25,9 +25,9 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// Brand-wide merch sales (must be before /:id routes)
-router.get('/sales/earnings', getMerchEarnings);
-router.get('/sales/expenses', getMerchExpenses);
+// Brand-wide merch sales (must be before /:id routes) — admin only
+router.get('/sales/earnings', requireAdmin, getMerchEarnings);
+router.get('/sales/expenses', requireAdmin, getMerchExpenses);
 
 // Product CRUD
 router.get('/', getProducts);
