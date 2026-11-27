@@ -777,7 +777,10 @@ export const getMerchEarnings = async (req: AuthRequest, res: Response) => {
 
     const earnings = await Earning.findAll({
       where: { type: 'Merch' },
-      include: [{ model: Product, as: 'product', where: productWhere, attributes: ['id', 'name', 'sku'] }],
+      include: [{
+        model: Product, as: 'product', where: productWhere, attributes: ['id', 'name', 'sku'],
+        include: [{ model: ProductImage, as: 'images', attributes: ['path'], order: [['sort_order', 'ASC']], limit: 1, separate: true } as any],
+      }],
       order: [['date_recorded', 'DESC']],
     });
 
@@ -801,7 +804,10 @@ export const getMerchExpenses = async (req: AuthRequest, res: Response) => {
 
     const expenses = await RecuperableExpense.findAll({
       where: expenseWhere,
-      include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
+      include: [{
+        model: Product, as: 'product', attributes: ['id', 'name', 'sku'],
+        include: [{ model: ProductImage, as: 'images', attributes: ['path'], order: [['sort_order', 'ASC']], limit: 1, separate: true } as any],
+      }],
       order: [['date_recorded', 'DESC']],
     });
 

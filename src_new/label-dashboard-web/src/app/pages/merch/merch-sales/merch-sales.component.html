@@ -11,22 +11,6 @@
     <!-- ── EARNINGS ──────────────────────────────────────── -->
     @if (activeSubTab === 'earnings') {
       <div>
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
-          <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-            <p class="pd-section-label tw-mb-0">Earnings</p>
-            @if (isAdmin) {
-              <button class="btn btn-sm btn-primary" (click)="toggleEarningForm()">
-                @if (showEarningForm) {
-                  <app-icon name="x" class="tw-mr-1" /> Cancel
-                } @else {
-                  <app-icon name="plus" class="tw-mr-1" /> Add Earning
-                }
-              </button>
-            }
-          </div>
-          <p class="tw-text-xs tw-text-muted tw-mb-0">All merch revenue recorded across your products.</p>
-        </div>
-
         @if (showEarningForm && isAdmin) {
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
             <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">New Earning</h3>
@@ -77,69 +61,37 @@
           </div>
         }
 
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad">
-          @if (earnings.length > 0) {
-            <div class="table-responsive">
-              <table class="table table-financial">
-                <thead>
-                  <tr>
-                    <th class="mobile-narrow">Date</th>
-                    <th class="mobile-text">Product</th>
-                    <th class="mobile-text">Description</th>
-                    <th class="mobile-narrow mobile-number text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (earning of earnings; track earning.id) {
-                    <tr>
-                      <td class="mobile-narrow" data-label="Date">{{ formatDate(earning.date_recorded) }}</td>
-                      <td class="mobile-text" data-label="Product">
-                        <a [routerLink]="['/merch/products', earning.product?.id, 'sales']" class="tw-text-body">
-                          {{ earning.product ? productLabel(earning.product) : '—' }}
-                        </a>
-                      </td>
-                      <td class="mobile-text" data-label="Description">{{ earning.description }}</td>
-                      <td class="mobile-narrow mobile-number text-right" data-label="Amount" [ngClass]="getAmountClass(earning.amount)">{{ formatCurrency(earning.amount) }}</td>
-                    </tr>
-                  }
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="3" class="tw-text-sm tw-font-semibold">Total earnings</td>
-                    <td class="text-right tw-font-semibold" [ngClass]="getAmountClass(totalEarnings)">{{ formatCurrency(totalEarnings) }}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          } @else {
-            <div class="tw-py-8 tw-text-center tw-text-muted">
-              <app-icon name="coins" [size]="40" iconOnly class="tw-mb-3" />
-              <p class="tw-mb-0">No merch earnings recorded yet.</p>
-            </div>
-          }
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="md:tw-col-span-12">
+            <app-date-range-filter
+              [compact]="true"
+              [loading]="loading"
+              (dateRangeChange)="onDateRangeChange($event)">
+            </app-date-range-filter>
+          </div>
         </div>
+
+        <app-paginated-table
+          title="Earnings"
+          [data]="filteredEarnings"
+          [pagination]="earningsPagination"
+          [columns]="earningsColumns"
+          [sortInfo]="earningsSort"
+          [loading]="loading"
+          [showSearch]="true"
+          [showSortableHeaders]="true"
+          [responsiveMode]="'financial'"
+          [headerActions]="earningsHeaderActions"
+          (filtersChange)="onEarningsFiltersChange($event)"
+          (sortChange)="onEarningsSortChange($event)"
+          (pageChange)="onEarningsPageChange($event)">
+        </app-paginated-table>
       </div>
     }
 
     <!-- ── EXPENSES ──────────────────────────────────────── -->
     @if (activeSubTab === 'expenses') {
       <div>
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
-          <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
-            <p class="pd-section-label tw-mb-0">Recuperable Expenses</p>
-            @if (isAdmin) {
-              <button class="btn btn-sm btn-primary" (click)="toggleExpenseForm()">
-                @if (showExpenseForm) {
-                  <app-icon name="x" class="tw-mr-1" /> Cancel
-                } @else {
-                  <app-icon name="plus" class="tw-mr-1" /> Add Expense
-                }
-              </button>
-            }
-          </div>
-          <p class="tw-text-xs tw-text-muted tw-mb-0">All costs deducted from future earnings before royalties are calculated.</p>
-        </div>
-
         @if (showExpenseForm && isAdmin) {
           <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
             <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">New Expense</h3>
@@ -181,47 +133,31 @@
           </div>
         }
 
-        <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad">
-          @if (expenses.length > 0) {
-            <div class="table-responsive">
-              <table class="table table-financial">
-                <thead>
-                  <tr>
-                    <th class="mobile-narrow">Date</th>
-                    <th class="mobile-text">Product</th>
-                    <th class="mobile-text">Description</th>
-                    <th class="mobile-narrow mobile-number text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (expense of expenses; track expense.id) {
-                    <tr>
-                      <td class="mobile-narrow" data-label="Date">{{ formatDate(expense.date_recorded) }}</td>
-                      <td class="mobile-text" data-label="Product">
-                        <a [routerLink]="['/merch/products', expense.product?.id, 'sales']" class="tw-text-body">
-                          {{ expense.product ? productLabel(expense.product) : '—' }}
-                        </a>
-                      </td>
-                      <td class="mobile-text" data-label="Description">{{ expense.expense_description }}</td>
-                      <td class="mobile-narrow mobile-number text-right" data-label="Amount" [ngClass]="getAmountClass(expense.expense_amount)">{{ formatCurrency(expense.expense_amount) }}</td>
-                    </tr>
-                  }
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="3" class="tw-text-sm tw-font-semibold">Total outstanding</td>
-                    <td class="text-right tw-font-semibold" [ngClass]="getAmountClass(totalExpenses)">{{ formatCurrency(totalExpenses) }}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          } @else {
-            <div class="tw-py-8 tw-text-center tw-text-muted">
-              <app-icon name="receipt" [size]="40" iconOnly class="tw-mb-3" />
-              <p class="tw-mb-0">No recuperable expenses recorded yet.</p>
-            </div>
-          }
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="md:tw-col-span-12">
+            <app-date-range-filter
+              [compact]="true"
+              [loading]="loading"
+              (dateRangeChange)="onDateRangeChange($event)">
+            </app-date-range-filter>
+          </div>
         </div>
+
+        <app-paginated-table
+          title="Recuperable Expenses"
+          [data]="filteredExpenses"
+          [pagination]="expensesPagination"
+          [columns]="expensesColumns"
+          [sortInfo]="expensesSort"
+          [loading]="loading"
+          [showSearch]="true"
+          [showSortableHeaders]="true"
+          [responsiveMode]="'financial'"
+          [headerActions]="expensesHeaderActions"
+          (filtersChange)="onExpensesFiltersChange($event)"
+          (sortChange)="onExpensesSortChange($event)"
+          (pageChange)="onExpensesPageChange($event)">
+        </app-paginated-table>
       </div>
     }
 
