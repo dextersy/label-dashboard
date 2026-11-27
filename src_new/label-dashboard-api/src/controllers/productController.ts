@@ -767,9 +767,17 @@ export const getProductEarnings = async (req: AuthRequest, res: Response) => {
 
 export const getMerchEarnings = async (req: AuthRequest, res: Response) => {
   try {
+    const brandId = req.user.brand_id;
+    const productWhere: any = { brand_id: brandId };
+    if (!req.user.is_admin) {
+      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
+      if (accessibleIds.length === 0) return res.json({ total_earnings: 0, earnings: [] });
+      productWhere.id = { [Op.in]: accessibleIds };
+    }
+
     const earnings = await Earning.findAll({
       where: { type: 'Merch' },
-      include: [{ model: Product, as: 'product', where: { brand_id: req.user.brand_id }, attributes: ['id', 'name', 'sku'] }],
+      include: [{ model: Product, as: 'product', where: productWhere, attributes: ['id', 'name', 'sku'] }],
       order: [['date_recorded', 'DESC']],
     });
 
@@ -783,8 +791,16 @@ export const getMerchEarnings = async (req: AuthRequest, res: Response) => {
 
 export const getMerchExpenses = async (req: AuthRequest, res: Response) => {
   try {
+    const brandId = req.user.brand_id;
+    const expenseWhere: any = { brand_id: brandId, product_id: { [Op.not]: null } };
+    if (!req.user.is_admin) {
+      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
+      if (accessibleIds.length === 0) return res.json({ total_expenses: 0, expenses: [] });
+      expenseWhere.product_id = { [Op.in]: accessibleIds };
+    }
+
     const expenses = await RecuperableExpense.findAll({
-      where: { brand_id: req.user.brand_id, product_id: { [require('sequelize').Op.not]: null } },
+      where: expenseWhere,
       include: [{ model: Product, as: 'product', attributes: ['id', 'name', 'sku'] }],
       order: [['date_recorded', 'DESC']],
     });
