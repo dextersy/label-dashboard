@@ -199,19 +199,6 @@ export class ProductFormComponent implements OnInit {
     return this.artistSplits.reduce((sum, s) => sum + s.merch_royalty_percentage * 100, 0);
   }
 
-  getAvatarColorIndex(name: string): number {
-    if (!name) return 0;
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    return Math.abs(hash) % 8;
-  }
-
-  getInitials(name: string): string {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
-  }
-
   onSplitSearch(): void {
     const term = this.splitSearchTerm.toLowerCase();
     this.showSplitDropdown = true;

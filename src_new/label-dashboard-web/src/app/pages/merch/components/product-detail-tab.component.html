@@ -71,33 +71,23 @@
       <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
         <p class="pd-section-label tw-mb-0">Artist Splits</p>
         @if (isAdmin) {
-          <a [routerLink]="['/merch/products', product.id, 'edit']" class="btn-sm btn-secondary">
+          <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
             <app-icon name="pencil" class="tw-mr-1" /> Edit splits
-          </a>
+          </button>
         }
       </div>
       @if (splits.length > 0) {
-        <div class="split-list">
+        <div class="tw-grid tw-gap-px tw-bg-gray-200 tw-rounded-lg tw-overflow-hidden" [style.grid-template-columns]="'repeat(' + splits.length + ', 1fr)'">
           @for (pa of splits; track pa.artist_id) {
-            <div class="split-row">
-              <span [class]="'avatar-chip__circle ac-' + getAvatarColorIndex(pa.artist?.name || '')">
-                {{ getInitials(pa.artist?.name || '?') }}
-              </span>
-              <div class="split-row-info">
-                <span class="split-row-name">{{ pa.artist?.name || 'Unknown' }}</span>
-                <div class="split-bar-track">
-                  <div class="split-bar-fill" [style.width.%]="pa.merch_royalty_percentage * 100"></div>
-                </div>
-              </div>
-              <div class="split-row-right">
-                <span class="split-row-pct">{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</span>
-                <span class="split-row-type">{{ pa.merch_royalty_type }}</span>
-              </div>
+            <div class="tw-bg-white tw-p-4 tw-flex tw-flex-col tw-gap-1">
+              <div class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-500">{{ pa.artist?.name || 'Unknown' }}</div>
+              <div class="tw-text-2xl tw-font-bold tw-leading-tight">{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</div>
+              <div class="tw-text-xs tw-text-gray-500">of {{ pa.merch_royalty_type }}</div>
             </div>
           }
         </div>
-        <div class="split-total">
-          <span class="tw-text-muted tw-text-xs">Total</span>
+        <div class="tw-flex tw-justify-between tw-items-center tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-100">
+          <span class="tw-text-xs tw-text-muted">Total artist split</span>
           <span [class]="totalSplitPercentage === 100 ? 'status-badge status-success' : 'status-badge status-warning'">
             {{ totalSplitPercentage.toFixed(1) }}%
           </span>

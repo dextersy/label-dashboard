@@ -178,45 +178,52 @@
       </div>
 
       <!-- Split rows -->
-      @if (artistSplits.length > 0) {
-        <div class="split-edit-list tw-mb-4">
-          @for (split of artistSplits; track split.artist_id; let i = $index) {
-            <div class="split-edit-row">
-              <span [class]="'avatar-chip__circle ac-' + getAvatarColorIndex(split.artist?.name || '')">
-                {{ getInitials(split.artist?.name || '?') }}
-              </span>
-              <span class="split-edit-name">{{ split.artist?.name || 'Artist #' + split.artist_id }}</span>
-              <div class="tw-flex tw-items-center tw-gap-1">
-                <input type="number" class="tw-input split-edit-pct-input"
+      <div class="tw-space-y-2 tw-mb-4">
+        @for (split of artistSplits; track split.artist_id; let i = $index) {
+          <div class="tw-bg-gray-50 tw-rounded-lg tw-p-3">
+            <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-3 tw-items-end">
+              <div class="tw-col-span-2 md:tw-col-span-1">
+                <label class="tw-label tw-text-xs">Artist</label>
+                <div class="tw-font-semibold tw-text-sm tw-truncate">{{ split.artist?.name || 'Artist #' + split.artist_id }}</div>
+              </div>
+              <div>
+                <label class="tw-label tw-text-xs">Royalty %</label>
+                <input type="number" class="tw-input"
                        [ngModel]="split.merch_royalty_percentage * 100 | number:'1.1-1'"
                        (ngModelChange)="split.merch_royalty_percentage = $event / 100"
                        step="0.1" min="0" max="100">
-                <span class="tw-text-sm tw-text-muted">%</span>
               </div>
-              <select class="tw-input split-edit-type-select" [(ngModel)]="split.merch_royalty_type">
-                <option value="Revenue">Revenue</option>
-                <option value="Profit">Profit</option>
-              </select>
-              <button type="button" class="btn-icon tw-text-danger" (click)="removeSplit(i)" title="Remove">
-                <app-icon name="trash" iconOnly />
-              </button>
+              <div>
+                <label class="tw-label tw-text-xs">Type</label>
+                <select class="tw-input" [(ngModel)]="split.merch_royalty_type">
+                  <option value="Revenue">Revenue</option>
+                  <option value="Profit">Profit</option>
+                </select>
+              </div>
+              <div class="tw-flex tw-justify-end tw-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeSplit(i)">
+                  <app-icon name="trash" />
+                </button>
+              </div>
             </div>
-          }
-        </div>
+          </div>
+        }
 
-        <!-- Total indicator -->
-        <div class="split-edit-total tw-mb-4">
-          <span class="tw-text-xs tw-text-muted">Total</span>
-          <span [class]="totalSplitPercentage === 100 ? 'status-badge status-success' : 'status-badge status-warning'">
-            {{ totalSplitPercentage.toFixed(1) }}%
-          </span>
-        </div>
-      } @else {
-        <p class="tw-text-muted tw-text-sm tw-mb-4">No splits yet. Add an artist below.</p>
-      }
+        <!-- Total row -->
+        @if (artistSplits.length > 0) {
+          <div class="tw-bg-gray-100 tw-rounded-lg tw-p-3 tw-flex tw-justify-between tw-items-center">
+            <span class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-600">Total artist split</span>
+            <span [class]="totalSplitPercentage === 100 ? 'status-badge status-success' : 'status-badge status-warning'">
+              {{ totalSplitPercentage.toFixed(1) }}%
+            </span>
+          </div>
+        } @else {
+          <p class="tw-text-muted tw-text-sm tw-mb-0">No splits yet. Add an artist below.</p>
+        }
+      </div>
 
       <!-- Add artist search -->
-      <div class="tw-relative split-add-wrap">
+      <div class="tw-relative tw-mb-4" style="max-width:360px;">
         <div class="link-search-wrap">
           <app-icon name="user-plus" class="link-search-icon" iconOnly />
           <input type="text"
@@ -231,20 +238,15 @@
         @if (showSplitDropdown && filteredSplitArtists.length > 0) {
           <div class="link-dropdown">
             @for (artist of filteredSplitArtists; track artist.id) {
-              <div class="link-option tw-flex tw-items-center tw-gap-2" (mousedown)="addSplit(artist)">
-                <span [class]="'avatar-chip__circle ac-' + getAvatarColorIndex(artist.name)" style="width:24px;height:24px;font-size:9px;">
-                  {{ getInitials(artist.name) }}
-                </span>
-                <span>{{ artist.name }}</span>
-              </div>
+              <div class="link-option" (mousedown)="addSplit(artist)">{{ artist.name }}</div>
             }
           </div>
         }
       </div>
 
       <!-- Save button -->
-      <div class="tw-mt-4">
-        <button class="btn-primary" (click)="saveSplits()">
+      <div>
+        <button class="btn btn-sm btn-outline-secondary" (click)="saveSplits()">
           <app-icon name="check" class="tw-mr-1" /> Save Splits
         </button>
       </div>
