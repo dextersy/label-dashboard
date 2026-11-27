@@ -21,7 +21,6 @@ export class MerchComponent implements OnInit {
   productNavTabs: InPageNavTab[] = [
     { id: 'product-detail', label: 'Details', icon: 'info' },
     { id: 'product-gallery', label: 'Gallery', icon: 'images' },
-    { id: 'product-sales', label: 'View Sales', icon: 'chart-bar' },
   ];
 
   constructor(private route: ActivatedRoute, private router: Router) {}
@@ -47,8 +46,6 @@ export class MerchComponent implements OnInit {
       this.router.navigate(['/merch/products', this.productId]);
     } else if (tabId === 'product-gallery') {
       this.router.navigate(['/merch/products', this.productId, 'gallery']);
-    } else if (tabId === 'product-sales') {
-      this.router.navigate(['/merch/products', this.productId, 'sales']);
     }
   }
 }
