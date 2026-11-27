@@ -80,7 +80,12 @@ export class ProductFormComponent implements OnInit {
           this.images = product.images || [];
           // Load splits and all artists explicitly
           this.productService.getProductArtists(this.productId!).subscribe({
-            next: (splits) => { this.artistSplits = splits; }
+            next: (splits) => {
+              this.artistSplits = splits.map(s => ({
+                ...s,
+                merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage))
+              }));
+            }
           });
           this.apiService.getArtists().subscribe({
             next: (res: any) => { this.allArtists = res.artists || res || []; }
@@ -291,7 +296,10 @@ export class ProductFormComponent implements OnInit {
     if (!this.productId) return;
     this.productService.inheritSplitsFromRelease(this.productId).subscribe({
       next: (splits) => {
-        this.artistSplits = splits;
+        this.artistSplits = splits.map(s => ({
+          ...s,
+          merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage))
+        }));
         this.notificationService.showSuccess('Splits inherited from release.');
       },
       error: () => this.notificationService.showError('Failed to inherit splits.')
@@ -308,12 +316,15 @@ export class ProductFormComponent implements OnInit {
       this.productId,
       this.artistSplits.map(s => ({
         artist_id: s.artist_id,
-        merch_royalty_percentage: s.merch_royalty_percentage,
+        merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage)),
         merch_royalty_type: s.merch_royalty_type,
       }))
     ).subscribe({
       next: (splits) => {
-        this.artistSplits = splits;
+        this.artistSplits = splits.map(s => ({
+          ...s,
+          merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage))
+        }));
         this.notificationService.showSuccess('Artist splits saved.');
       },
       error: () => {
