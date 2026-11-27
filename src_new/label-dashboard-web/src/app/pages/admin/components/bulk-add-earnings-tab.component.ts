@@ -92,18 +92,25 @@ export class BulkAddEarningsTabComponent implements OnInit {
     const cols: TableColumn[] = [
       {
         key: 'matched_release',
-        label: 'Catalog No.',
+        label: 'Catalog No. / SKU',
         searchable: true,
         sortable: true,
         renderHtml: true,
-        formatter: (item) => `<span style="font-family:monospace;font-size:12px;">${item.matched_release?.catalog_no || ''}</span>`
+        formatter: (item) => {
+          const val = item.matched_product
+            ? (item.matched_product.sku || '')
+            : (item.matched_release?.catalog_no || '');
+          return `<span style="font-family:monospace;font-size:12px;">${val}</span>`;
+        }
       },
       {
         key: 'matched_release',
-        label: 'Release Title',
+        label: 'Release / Product',
         searchable: true,
         sortable: true,
-        formatter: (item) => item.matched_release?.title || ''
+        formatter: (item) => item.matched_product
+          ? item.matched_product.name
+          : (item.matched_release?.title || '')
       }
     ];
 
@@ -417,7 +424,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
           }
         });
         this.csvProcessingResult = result;
-        this.csvDataAll = result.data.filter(r => r.matched_release !== null);
+        this.csvDataAll = result.data.filter(r => r.matched_release !== null || r.matched_product != null);
         this.csvDetectedDateColumn = this.integrationConsolidate ? '' : 'date';
         this.csvDetectedLabelColumn = false;
         this.updateCsvSummary();
@@ -448,7 +455,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
           }
         });
         this.csvProcessingResult = result;
-        this.csvDataAll = result.data.filter(r => r.matched_release !== null);
+        this.csvDataAll = result.data.filter(r => r.matched_release !== null || r.matched_product != null);
         this.csvDetectedDateColumn = this.integrationConsolidate ? '' : 'date';
         this.csvDetectedLabelColumn = false;
         this.updateCsvSummary();
@@ -563,7 +570,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     } else {
       this.csvTotalCount = this.csvDataAll.length;
       this.csvTotalAmount = this.csvDataAll.reduce((sum, row) => sum + row.earning_amount, 0);
-      this.csvTotalUnmatched = this.csvDataAll.filter(row => !row.matched_release).length;
+      this.csvTotalUnmatched = this.csvDataAll.filter(row => !row.matched_release && !row.matched_product).length;
     }
     
     // Update pagination based on matched data count
@@ -617,25 +624,29 @@ export class BulkAddEarningsTabComponent implements OnInit {
       return;
     }
 
-    // Filter out rows that don't have matched releases
-    const matchedRows = this.csvDataAll.filter(row => row.matched_release);
+    // Filter out rows that don't have matched releases or products
+    const matchedRows = this.csvDataAll.filter(row => row.matched_release || row.matched_product);
 
     if (matchedRows.length === 0) {
-      this.notificationService.showError('No matched releases to save. Please ensure your CSV contains valid catalog numbers or release titles.');
+      this.notificationService.showError('No matched releases or products to save. Please ensure your CSV contains valid catalog numbers, release titles, or product names/SKUs.');
       return;
     }
 
     // Convert processed CSV data to BulkEarning format
-    const bulkEarnings: BulkEarning[] = matchedRows.map(row => ({
-      release_id: row.matched_release!.id,
-      date_recorded: this.csvDetectedDateColumn
-        ? this.parseCsvDate(row.original_data[this.csvDetectedDateColumn] || '')
-        : this.csvDateOverride,
-      type: row.row_type !== undefined ? row.row_type : this.csvEarningType,
-      description: row.row_description !== undefined ? row.row_description : this.csvDescription,
-      amount: row.earning_amount,
-      calculate_royalties: this.csvCalculateRoyalties
-    }));
+    const bulkEarnings: BulkEarning[] = matchedRows.map(row => {
+      const isProductRow = !!row.matched_product;
+      return {
+        release_id: isProductRow ? 0 : row.matched_release!.id,
+        product_id: isProductRow ? row.matched_product!.id : null,
+        date_recorded: this.csvDetectedDateColumn
+          ? this.parseCsvDate(row.original_data[this.csvDetectedDateColumn] || '')
+          : this.csvDateOverride,
+        type: row.row_type !== undefined ? row.row_type : (isProductRow ? 'Merch' : this.csvEarningType),
+        description: row.row_description !== undefined ? row.row_description : this.csvDescription,
+        amount: row.earning_amount,
+        calculate_royalties: this.csvCalculateRoyalties,
+      };
+    });
 
     const totalAmount = bulkEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
     const skippedCount = this.csvDataAll.length - matchedRows.length;
@@ -675,7 +686,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     }
 
     // Get all unmatched rows from the original processing result
-    const unmatchedRows = this.csvProcessingResult.data.filter(row => row.matched_release === null);
+    const unmatchedRows = this.csvProcessingResult.data.filter(row => !row.matched_release && !row.matched_product);
     
     if (unmatchedRows.length === 0) {
       this.notificationService.showInfo('No unmatched rows to download');

@@ -398,6 +398,11 @@ interface ProcessedEarningRow {
     catalog_no: string;
     title: string;
   } | null;
+  matched_product?: {
+    id: number;
+    sku: string;
+    name: string;
+  } | null;
   matched_brand?: {
     id: number;
     brand_name: string;
@@ -693,10 +698,11 @@ export const previewCsvForEarnings = async (req: AuthRequest, res: Response) => 
 
 // Shared helper: load all releases (own + child brands) for the admin's brand, filtered by locked artists
 const loadReleasesForAdmin = async (brandId: number) => {
-  const [ownReleases, childBrands, ownLockedIds] = await Promise.all([
+  const [ownReleases, childBrands, ownLockedIds, brandProducts] = await Promise.all([
     Release.findAll({ where: { brand_id: brandId } }),
     Brand.findAll({ where: { parent_brand: brandId } }),
     getLockedArtistIds(brandId),
+    Product.findAll({ where: { brand_id: brandId }, attributes: ['id', 'name', 'sku'] }),
   ]);
 
   const childBrandById: Map<number, any> = new Map();
@@ -739,7 +745,7 @@ const loadReleasesForAdmin = async (brandId: number) => {
     return artistIds.some((id) => !lockedIds.has(id));
   });
 
-  return { releases, childBrandById };
+  return { releases, childBrandById, products: brandProducts as any[] };
 };
 
 // Normalize for BM25 indexing/querying:
@@ -832,34 +838,122 @@ const findMatchingReleaseForProduct = (
   return { release: null, score: 0 };
 };
 
+interface ProductIndex {
+  bySku: Map<string, any>;
+  byNormName: Map<string, any>;
+  bm25Engine: any | null;
+  indexedProducts: any[];
+}
+
+const buildProductIndex = (products: any[]): ProductIndex => {
+  const bySku = new Map<string, any>();
+  const byNormName = new Map<string, any>();
+  const indexedProducts: any[] = [];
+
+  for (const product of products) {
+    if (product.sku) bySku.set(product.sku.toLowerCase().trim(), product);
+    const norm = normalizeForBM25(product.name || '');
+    if (!byNormName.has(norm)) byNormName.set(norm, product);
+  }
+
+  let bm25Engine: any = null;
+  if (products.length >= 3) {
+    const engine = winkBM25();
+    engine.defineConfig({ fldWeights: { name: 1 } });
+    engine.definePrepTasks(bm25PrepTasks);
+    for (const product of products) {
+      engine.addDoc({ name: product.name || '' }, indexedProducts.length);
+      indexedProducts.push(product);
+    }
+    engine.consolidate();
+    bm25Engine = engine;
+  } else {
+    indexedProducts.push(...products);
+  }
+
+  return { bySku, byNormName, bm25Engine, indexedProducts };
+};
+
+const findMatchingProductForName = (
+  index: ProductIndex,
+  name: string
+): { product: any | null; score: number } => {
+  const lower = name.toLowerCase().trim();
+
+  // Exact SKU match
+  if (index.bySku.has(lower)) return { product: index.bySku.get(lower), score: 100 };
+
+  const normQuery = normalizeForBM25(name);
+
+  // Exact normalized name match
+  const exactProduct = index.byNormName.get(normQuery);
+  if (exactProduct) return { product: exactProduct, score: 100 };
+
+  const queryTokens = new Set(normQuery.split(' ').filter((t: string) => t.length > 1));
+
+  // BM25 fuzzy match
+  if (index.bm25Engine) {
+    const results: [string, number][] = index.bm25Engine.search(normQuery);
+    if (results.length > 0) {
+      const [docIndexStr, bm25Score] = results[0];
+      const product = index.indexedProducts[parseInt(docIndexStr, 10)];
+      const nameTokens = new Set(normalizeForBM25(product.name || '').split(' ').filter((t: string) => t.length > 1));
+      const shared = [...queryTokens].filter(t => nameTokens.has(t)).length;
+      const nameCoverage = nameTokens.size > 0 ? shared / nameTokens.size : 0;
+      if (nameCoverage >= 0.75) return { product, score: bm25Score };
+    }
+  }
+
+  return { product: null, score: 0 };
+};
+
 // Shared helper: build CsvProcessingResult from a list of { name, amount, date } rows
 const buildPreviewResult = async (
   rows: { name: string; amount: number; date: string }[],
   releases: any[],
-  childBrandById: Map<number, any>
+  childBrandById: Map<number, any>,
+  products: any[] = []
 ) => {
-  const index = buildReleaseIndex(releases);
+  const releaseIndex = buildReleaseIndex(releases);
+  const productIndex = buildProductIndex(products);
   const processedRows: ProcessedEarningRow[] = [];
   let totalMatchedAmount = 0;
   let unmatchedCount = 0;
 
   for (const row of rows) {
-    const { release, score } = findMatchingReleaseForProduct(index, row.name);
     const processedRow: ProcessedEarningRow = {
       original_data: { name: row.name, amount: String(row.amount), date: row.date },
       catalog_no: '',
       release_title: row.name,
       earning_amount: row.amount,
       matched_release: null,
+      matched_product: null,
       matched_brand: null,
     };
+
+    // Try product match first (SKU exact → name exact → name fuzzy)
+    const { product, score: productScore } = findMatchingProductForName(productIndex, row.name);
+    if (product) {
+      processedRow.matched_product = {
+        id: (product as any).id,
+        sku: (product as any).sku || '',
+        name: (product as any).name || '',
+      };
+      processedRow.fuzzy_match_score = productScore;
+      totalMatchedAmount += row.amount;
+      processedRows.push(processedRow);
+      continue;
+    }
+
+    // Fall back to release match
+    const { release, score: releaseScore } = findMatchingReleaseForProduct(releaseIndex, row.name);
     if (release) {
       processedRow.matched_release = {
         id: release.id,
         catalog_no: release.catalog_no || '',
         title: release.title || '',
       };
-      processedRow.fuzzy_match_score = score;
+      processedRow.fuzzy_match_score = releaseScore;
       if (childBrandById.has(release.brand_id)) {
         const cb = childBrandById.get(release.brand_id);
         processedRow.matched_brand = { id: (cb as any).id, brand_name: (cb as any).brand_name };
@@ -948,8 +1042,8 @@ export const previewLoyverseEarnings = async (req: AuthRequest, res: Response) =
       rows = Array.from(map.entries()).map(([name, amount]) => ({ name, amount, date: end_date }));
     }
 
-    const { releases, childBrandById } = await loadReleasesForAdmin(req.user.brand_id);
-    const result = await buildPreviewResult(rows, releases, childBrandById);
+    const { releases, childBrandById, products } = await loadReleasesForAdmin(req.user.brand_id);
+    const result = await buildPreviewResult(rows, releases, childBrandById, products);
     return res.json(result);
 
   } catch (error) {
@@ -1028,8 +1122,8 @@ export const previewWoocommerceEarnings = async (req: AuthRequest, res: Response
       rows = Array.from(map.entries()).map(([name, amount]) => ({ name, amount, date: end_date }));
     }
 
-    const { releases, childBrandById } = await loadReleasesForAdmin(req.user.brand_id);
-    const result = await buildPreviewResult(rows, releases, childBrandById);
+    const { releases, childBrandById, products } = await loadReleasesForAdmin(req.user.brand_id);
+    const result = await buildPreviewResult(rows, releases, childBrandById, products);
     return res.json(result);
 
   } catch (error) {

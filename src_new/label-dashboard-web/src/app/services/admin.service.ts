@@ -238,6 +238,11 @@ export interface ProcessedEarningRow {
     catalog_no: string;
     title: string;
   } | null;
+  matched_product?: {
+    id: number;
+    sku: string;
+    name: string;
+  } | null;
   matched_brand?: {
     id: number;
     brand_name: string;
