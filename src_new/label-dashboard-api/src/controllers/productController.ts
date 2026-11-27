@@ -681,3 +681,32 @@ export const addProductExpense = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getProductExpenses = async (req: AuthRequest, res: Response) => {
+  try {
+    const productId = parseInt(req.params.id as string, 10);
+    if (isNaN(productId)) {
+      return res.status(400).json({ error: 'Invalid product ID' });
+    }
+
+    const product = await Product.findOne({ where: { id: productId, brand_id: req.user.brand_id } });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const expenses = await RecuperableExpense.findAll({
+      where: { product_id: productId },
+      order: [['date_recorded', 'DESC']],
+    });
+
+    const totalExpenses = expenses.reduce(
+      (sum, e) => sum + parseFloat((e.expense_amount || 0).toString()),
+      0
+    );
+
+    res.json({ product_id: productId, total_expenses: totalExpenses, expenses });
+  } catch (error) {
+    console.error('Get product expenses error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

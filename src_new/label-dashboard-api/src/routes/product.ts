@@ -13,6 +13,7 @@ import {
   reorderProductImages,
   productImageUpload,
   addProductExpense,
+  getProductExpenses,
 } from '../controllers/productController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -34,6 +35,7 @@ router.put('/:id/artists', requireAdmin, setProductArtists);
 router.post('/:id/artists/inherit', requireAdmin, inheritSplitsFromRelease);
 
 // Product expenses
+router.get('/:id/expenses', getProductExpenses);
 router.post('/:id/expenses', requireAdmin, addProductExpense);
 
 // Product images

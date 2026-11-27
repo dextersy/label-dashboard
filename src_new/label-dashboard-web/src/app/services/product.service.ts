@@ -76,4 +76,8 @@ export class ProductService {
   reorderImages(productId: number, imageIds: number[]): Observable<ProductImage[]> {
     return this.http.put<ProductImage[]>(`${this.baseUrl}/products/${productId}/images/reorder`, { image_ids: imageIds }, { headers: this.getAuthHeaders() });
   }
+
+  getProductExpenses(productId: number): Observable<{ product_id: number; total_expenses: number; expenses: any[] }> {
+    return this.http.get<any>(`${this.baseUrl}/products/${productId}/expenses`, { headers: this.getAuthHeaders() });
+  }
 }

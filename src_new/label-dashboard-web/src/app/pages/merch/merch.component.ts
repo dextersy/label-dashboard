@@ -4,13 +4,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ProductListTabComponent } from './components/product-list-tab.component';
 import { ProductDetailTabComponent } from './components/product-detail-tab.component';
 import { ProductGalleryTabComponent } from './components/product-gallery-tab.component';
+import { ProductExpensesTabComponent } from './components/product-expenses-tab.component';
 import { InPageNavComponent, InPageNavTab } from '../../components/shared/in-page-nav/in-page-nav.component';
 import { BreadcrumbComponent } from '../../shared/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-merch',
   standalone: true,
-  imports: [CommonModule, ProductListTabComponent, ProductDetailTabComponent, ProductGalleryTabComponent, InPageNavComponent, BreadcrumbComponent],
+  imports: [CommonModule, ProductListTabComponent, ProductDetailTabComponent, ProductGalleryTabComponent, ProductExpensesTabComponent, InPageNavComponent, BreadcrumbComponent],
   templateUrl: './merch.component.html',
 })
 export class MerchComponent implements OnInit {
@@ -20,6 +21,7 @@ export class MerchComponent implements OnInit {
   productNavTabs: InPageNavTab[] = [
     { id: 'product-detail', label: 'Details', icon: 'info' },
     { id: 'product-gallery', label: 'Gallery', icon: 'images' },
+    { id: 'product-expenses', label: 'Expenses', icon: 'receipt' },
   ];
 
   constructor(private route: ActivatedRoute, private router: Router) {}
@@ -36,7 +38,7 @@ export class MerchComponent implements OnInit {
   }
 
   get isProductView(): boolean {
-    return this.activeTab === 'product-detail' || this.activeTab === 'product-gallery';
+    return this.activeTab === 'product-detail' || this.activeTab === 'product-gallery' || this.activeTab === 'product-expenses';
   }
 
   onProductTabChange(tabId: string): void {
@@ -45,6 +47,8 @@ export class MerchComponent implements OnInit {
       this.router.navigate(['/merch/products', this.productId]);
     } else if (tabId === 'product-gallery') {
       this.router.navigate(['/merch/products', this.productId, 'gallery']);
+    } else if (tabId === 'product-expenses') {
+      this.router.navigate(['/merch/products', this.productId, 'expenses']);
     }
   }
 }

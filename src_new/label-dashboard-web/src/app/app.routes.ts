@@ -51,7 +51,6 @@ import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 import { MerchComponent } from './pages/merch/merch.component';
 import { ProductFormComponent } from './pages/merch/product-form/product-form.component';
 import { ProductEarningFormComponent } from './pages/merch/product-earning-form/product-earning-form.component';
-import { ProductExpenseFormComponent } from './pages/merch/product-expense-form/product-expense-form.component';
 import { campaignsAccessGuard } from './guards/campaigns-access.guard';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
@@ -148,9 +147,9 @@ export const routes: Routes = [
       { path: 'products/new', component: ProductFormComponent, canActivate: [adminGuard] },
       { path: 'products/:id', component: MerchComponent, data: { tab: 'product-detail' } },
       { path: 'products/:id/gallery', component: MerchComponent, data: { tab: 'product-gallery' } },
+      { path: 'products/:id/expenses', component: MerchComponent, data: { tab: 'product-expenses' } },
       { path: 'products/:id/edit', component: ProductFormComponent, canActivate: [adminGuard] },
       { path: 'earnings/new', component: ProductEarningFormComponent, canActivate: [adminGuard] },
-      { path: 'expenses/new', component: ProductExpenseFormComponent, canActivate: [adminGuard] },
     ]
   },
 

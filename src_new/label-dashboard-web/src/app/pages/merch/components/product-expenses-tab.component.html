@@ -1,0 +1,102 @@
+<div class="container-fluid tw-py-4">
+  @if (loading) {
+    <div class="tw-text-center tw-py-8">
+      <app-icon name="spinner" class="tw-animate-spin" /> Loading...
+    </div>
+  } @else {
+
+    <!-- Header -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+      <div class="tw-flex tw-justify-between tw-items-center tw-mb-1">
+        <p class="pd-section-label tw-mb-0">Recuperable Expenses</p>
+        @if (isAdmin) {
+          <button class="btn btn-sm btn-primary" (click)="toggleAddForm()">
+            @if (showAddForm) {
+              <app-icon name="x" class="tw-mr-1" /> Cancel
+            } @else {
+              <app-icon name="plus" class="tw-mr-1" /> Add Expense
+            }
+          </button>
+        }
+      </div>
+      <p class="tw-text-xs tw-text-muted tw-mb-0">
+        Recuperable expenses are costs that will be deducted from future earnings before royalties are calculated.
+      </p>
+    </div>
+
+    <!-- Inline add form -->
+    @if (showAddForm && isAdmin) {
+      <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+        <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">New Expense</h3>
+        <form (ngSubmit)="onSubmit()">
+          <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-4">
+            <div>
+              <label class="tw-label">Date Recorded</label>
+              <input type="date" class="tw-input" [(ngModel)]="form.date_recorded" name="date_recorded" required>
+            </div>
+            <div>
+              <label class="tw-label">Amount (PHP)</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">₱</span>
+                </div>
+                <input type="number" class="tw-input" [(ngModel)]="form.expense_amount" name="expense_amount" step="0.01" min="0" placeholder="0.00" required>
+              </div>
+            </div>
+            <div class="sm:tw-col-span-2">
+              <label class="tw-label">Description</label>
+              <input type="text" class="tw-input" [(ngModel)]="form.expense_description" name="expense_description" placeholder="Describe what this expense is for" maxlength="255" required>
+            </div>
+          </div>
+          <div class="tw-flex tw-justify-end">
+            <button type="submit" class="btn-primary" [disabled]="submitting || !isFormValid">
+              <app-icon name="spinner" class="tw-animate-spin" *ngIf="submitting" />
+              <app-icon name="plus" *ngIf="!submitting" />
+              {{ submitting ? 'Adding...' : 'Add Expense' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- Expenses table -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad">
+      @if (expenses.length > 0) {
+        <div class="table-responsive">
+          <table class="table table-financial">
+            <thead>
+              <tr>
+                <th class="mobile-narrow">Date</th>
+                <th class="mobile-text">Description</th>
+                <th class="mobile-narrow mobile-number text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (expense of expenses; track expense.id) {
+                <tr>
+                  <td class="mobile-narrow" data-label="Date">{{ formatDate(expense.date_recorded) }}</td>
+                  <td class="mobile-text" data-label="Description">{{ expense.expense_description }}</td>
+                  <td class="mobile-narrow mobile-number text-right" data-label="Amount" [ngClass]="getAmountClass(expense.expense_amount)">
+                    {{ formatCurrency(expense.expense_amount) }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" class="tw-text-sm tw-font-semibold">Total outstanding</td>
+                <td class="text-right tw-font-semibold" [ngClass]="getAmountClass(totalExpenses)">{{ formatCurrency(totalExpenses) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      } @else {
+        <div class="tw-py-8 tw-text-center tw-text-muted">
+          <app-icon name="file" [size]="40" iconOnly class="tw-mb-3" />
+          <p class="tw-mb-0">No recuperable expenses recorded for this product.</p>
+        </div>
+      }
+    </div>
+
+  }
+</div>
