@@ -31,7 +31,9 @@
         </div>
         <div>
           <span class="pd-label">Status</span>
-          <span class="pd-value tw-capitalize">{{ product.status }}</span>
+          <span [class]="product.status === 'active' ? 'status-badge status-success' : 'status-badge status-secondary'">
+            {{ product.status === 'active' ? 'Active' : 'Inactive' }}
+          </span>
         </div>
         <div class="md:tw-col-span-2">
           <span class="pd-label">Linked to</span>
@@ -69,28 +71,37 @@
       <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
         <p class="pd-section-label tw-mb-0">Artist Splits</p>
         @if (isAdmin) {
-          <a [routerLink]="['/merch/products', product.id, 'edit']" class="tw-text-xs tw-text-muted tw-underline">Edit splits</a>
+          <a [routerLink]="['/merch/products', product.id, 'edit']" class="btn-sm btn-secondary">
+            <app-icon name="pencil" class="tw-mr-1" /> Edit splits
+          </a>
         }
       </div>
       @if (splits.length > 0) {
-        <table class="table table-sm tw-mb-0">
-          <thead>
-            <tr>
-              <th>Artist</th>
-              <th>Royalty %</th>
-              <th>Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (pa of splits; track pa.artist_id) {
-              <tr>
-                <td>{{ pa.artist?.name || 'Unknown' }}</td>
-                <td>{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</td>
-                <td>{{ pa.merch_royalty_type }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="split-list">
+          @for (pa of splits; track pa.artist_id) {
+            <div class="split-row">
+              <span [class]="'avatar-chip__circle ac-' + getAvatarColorIndex(pa.artist?.name || '')">
+                {{ getInitials(pa.artist?.name || '?') }}
+              </span>
+              <div class="split-row-info">
+                <span class="split-row-name">{{ pa.artist?.name || 'Unknown' }}</span>
+                <div class="split-bar-track">
+                  <div class="split-bar-fill" [style.width.%]="pa.merch_royalty_percentage * 100"></div>
+                </div>
+              </div>
+              <div class="split-row-right">
+                <span class="split-row-pct">{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</span>
+                <span class="split-row-type">{{ pa.merch_royalty_type }}</span>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="split-total">
+          <span class="tw-text-muted tw-text-xs">Total</span>
+          <span [class]="totalSplitPercentage === 100 ? 'status-badge status-success' : 'status-badge status-warning'">
+            {{ totalSplitPercentage.toFixed(1) }}%
+          </span>
+        </div>
       } @else {
         <p class="tw-text-muted tw-text-sm tw-mb-0">No artist splits configured.</p>
       }

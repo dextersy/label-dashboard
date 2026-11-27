@@ -41,6 +41,58 @@
   }
 }
 
+// ── Artist splits edit ─────────────────────────────────────────────────────────
+
+.split-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.split-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+}
+
+.split-edit-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.split-edit-pct-input {
+  width: 72px !important;
+  text-align: right;
+}
+
+.split-edit-type-select {
+  width: 108px !important;
+}
+
+.split-edit-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.split-add-wrap {
+  max-width: 360px;
+}
+
 // ── Search input ───────────────────────────────────────────────────────────────
 
 .link-search-wrap {
