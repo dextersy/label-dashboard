@@ -83,13 +83,6 @@ export const getProducts = async (req: AuthRequest, res: Response) => {
 
     const where: any = { brand_id: brandId };
 
-    // Non-admins: restrict to products linked to their accessible artists
-    if (!req.user.is_admin) {
-      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
-      if (accessibleIds.length === 0) return res.json({ products: [], total: 0 });
-      where.id = { [Op.in]: accessibleIds };
-    }
-
     if (artist_id) where.artist_id = parseInt(artist_id as string, 10);
     if (release_id) where.release_id = parseInt(release_id as string, 10);
     if (status) where.status = status;
@@ -142,14 +135,6 @@ export const getProduct = async (req: AuthRequest, res: Response) => {
 
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
-    }
-
-    // Non-admins: verify the product is linked to an artist they have access to
-    if (!req.user.is_admin) {
-      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
-      if (!accessibleIds.includes(productId)) {
-        return res.status(403).json({ error: 'Access denied' });
-      }
     }
 
     res.json(product);
