@@ -96,7 +96,7 @@ export class BreadcrumbService {
     '/labels/setup': { label: 'Settings', icon: 'settings', parent: '/labels' },
     '/admin/subscription': { label: 'Billing', icon: 'credit-card', parent: '/admin' },
     '/labels/reports': { label: 'Reports', icon: 'chart-line', parent: '/labels' },
-    '/labels/reports/music-earnings': { label: 'Music Earnings', parent: '/labels/reports' },
+    '/labels/reports/music-earnings': { label: 'Earnings', parent: '/labels/reports' },
     '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },
     '/labels/reports/payments-royalties': { label: 'Payouts & Royalties', parent: '/labels/reports' },
     '/labels/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/labels/reports' },

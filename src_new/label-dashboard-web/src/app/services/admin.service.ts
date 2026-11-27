@@ -199,6 +199,7 @@ export interface EarningsSummary {
   download_earnings: number;
   streaming_earnings: number;
   sync_earnings: number;
+  merch_earnings: number;
 }
 
 export interface ArtistBalance {

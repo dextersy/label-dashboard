@@ -214,7 +214,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
               title: 'Reports',
               adminOnly: true,
               children: [
-                { route: '/labels/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
+                { route: '/labels/reports/music-earnings', title: 'Earnings', adminOnly: true },
                 { route: '/labels/reports/artist-balances', title: 'Artist Balances', adminOnly: true },
                 { route: '/labels/reports/payments-royalties', title: 'Payouts & Royalties', adminOnly: true },
                 { route: '/labels/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
