@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, literal, fn, col } from 'sequelize';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation, EventAddOnPayment } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation, EventAddOnPayment, Product } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -409,8 +409,21 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         ? { date_recorded: { [Op.between]: [startDateFilter, endDateFilter] as [Date, Date] } }
         : {};
 
+      // Fetch products linked to releases so merch earnings can be rolled up per release
+      const linkedProducts = await Product.findAll({
+        where: { release_id: { [Op.in]: releaseIds } },
+        attributes: ['id', 'release_id'],
+        raw: true
+      }) as any[];
+      const productIdToReleaseId = new Map<number, number>();
+      for (const p of linkedProducts) {
+        productIdToReleaseId.set(p.id, p.release_id);
+      }
+      const linkedProductIds = linkedProducts.map((p: any) => p.id);
+
       // Batch fetch all aggregates grouped by release_id (3 queries instead of 3*N)
-      const [earningAmountRows, royaltyRows, earningFeeRows] = await Promise.all([
+      // Plus merch earnings/fees for products linked to each release
+      const [earningAmountRows, royaltyRows, earningFeeRows, merchEarningRows, merchFeeRows] = await Promise.all([
         Earning.findAll({
           attributes: ['release_id', [fn('SUM', col('amount')), 'total']],
           where: { release_id: { [Op.in]: releaseIds }, ...earningDateFilter },
@@ -428,12 +441,31 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
           where: { release_id: { [Op.in]: releaseIds }, ...earningDateFilter },
           group: ['release_id'],
           raw: true
-        })
+        }),
+        linkedProductIds.length > 0 ? Earning.findAll({
+          attributes: ['product_id', [fn('SUM', col('amount')), 'total']],
+          where: { product_id: { [Op.in]: linkedProductIds }, ...earningDateFilter },
+          group: ['product_id'],
+          raw: true
+        }) : Promise.resolve([]),
+        linkedProductIds.length > 0 ? Earning.findAll({
+          attributes: ['product_id', [fn('SUM', col('platform_fee')), 'total']],
+          where: { product_id: { [Op.in]: linkedProductIds }, ...earningDateFilter },
+          group: ['product_id'],
+          raw: true
+        }) : Promise.resolve([])
       ]);
 
       const earningsMap = new Map<number, number>();
       for (const row of earningAmountRows as any[]) {
         earningsMap.set(row.release_id, parseFloat(row.total) || 0);
+      }
+      // Roll up merch earnings into the linked release
+      for (const row of merchEarningRows as any[]) {
+        const releaseId = productIdToReleaseId.get(row.product_id);
+        if (releaseId != null) {
+          earningsMap.set(releaseId, (earningsMap.get(releaseId) || 0) + (parseFloat(row.total) || 0));
+        }
       }
       const royaltiesMap = new Map<number, number>();
       for (const row of royaltyRows as any[]) {
@@ -442,6 +474,13 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
       const platformFeesMap = new Map<number, number>();
       for (const row of earningFeeRows as any[]) {
         platformFeesMap.set(row.release_id, parseFloat(row.total) || 0);
+      }
+      // Roll up merch platform fees into the linked release
+      for (const row of merchFeeRows as any[]) {
+        const releaseId = productIdToReleaseId.get(row.product_id);
+        if (releaseId != null) {
+          platformFeesMap.set(releaseId, (platformFeesMap.get(releaseId) || 0) + (parseFloat(row.total) || 0));
+        }
       }
 
       const breakdown = [];

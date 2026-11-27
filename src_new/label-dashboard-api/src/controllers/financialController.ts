@@ -3304,8 +3304,8 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
       replacements.title = `%${filters.title}%`;
     }
 
-    // Single aggregated query: sum expenses per release, join artists
-    // NOTE: expense sum is pre-aggregated in a subquery to avoid multiplication
+    // Single aggregated query: sum expenses per release (including product expenses for linked products), join artists
+    // NOTE: expense sums are pre-aggregated in subqueries to avoid multiplication
     // when a release has multiple artists (each artist row would otherwise
     // duplicate every recuperable_expense row in the outer SUM).
     const rawRows: any[] = await sequelize.query(
@@ -3314,18 +3314,26 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
          r.catalog_no,
          r.title,
          COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
-         COALESCE(re_agg.expense_sum, 0) AS remaining_expense
+         COALESCE(re_agg.expense_sum, 0) + COALESCE(prod_agg.expense_sum, 0) AS remaining_expense
        FROM release r
        LEFT JOIN (
          SELECT release_id, SUM(expense_amount) AS expense_sum
          FROM recuperable_expense
+         WHERE release_id IS NOT NULL
          GROUP BY release_id
        ) re_agg ON re_agg.release_id = r.id
+       LEFT JOIN (
+         SELECT p.release_id, SUM(re.expense_amount) AS expense_sum
+         FROM recuperable_expense re
+         INNER JOIN product p ON p.id = re.product_id
+         WHERE re.product_id IS NOT NULL AND p.release_id IS NOT NULL
+         GROUP BY p.release_id
+       ) prod_agg ON prod_agg.release_id = r.id
        LEFT JOIN release_artist ra ON ra.release_id = r.id
        LEFT JOIN artist a ON a.id = ra.artist_id
        WHERE ${releaseConditions.join(' AND ')}
-       GROUP BY r.id, r.catalog_no, r.title, re_agg.expense_sum
-       HAVING COALESCE(re_agg.expense_sum, 0) > 0`,
+       GROUP BY r.id, r.catalog_no, r.title, re_agg.expense_sum, prod_agg.expense_sum
+       HAVING COALESCE(re_agg.expense_sum, 0) + COALESCE(prod_agg.expense_sum, 0) > 0`,
       { replacements, type: 'SELECT' }
     );
 
@@ -3432,33 +3440,46 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
     }
 
     // Single aggregated query with CASE to split positive/negative amounts.
-    // NOTE: expense sums are pre-aggregated in a subquery to avoid multiplication
+    // NOTE: expense sums are pre-aggregated in subqueries to avoid multiplication
     // when a release has multiple artists (each artist row would otherwise
     // duplicate every recuperable_expense row in the outer SUM).
+    // Product expenses for products linked to a release are also included.
     const rawRows: any[] = await sequelize.query(
       `SELECT
          r.id AS release_id,
          r.catalog_no,
          r.title,
          COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
-         COALESCE(re_agg.new_expense, 0) AS new_expense,
-         COALESCE(re_agg.recuperated_expense, 0) AS recuperated_expense
+         COALESCE(re_agg.new_expense, 0) + COALESCE(prod_agg.new_expense, 0) AS new_expense,
+         COALESCE(re_agg.recuperated_expense, 0) + COALESCE(prod_agg.recuperated_expense, 0) AS recuperated_expense
        FROM release r
-       INNER JOIN (
+       LEFT JOIN (
          SELECT
            release_id,
            SUM(CASE WHEN expense_amount > 0 THEN expense_amount ELSE 0 END) AS new_expense,
            ABS(SUM(CASE WHEN expense_amount < 0 THEN expense_amount ELSE 0 END)) AS recuperated_expense
          FROM recuperable_expense
          WHERE date_recorded BETWEEN :startDate AND :endDate
+           AND release_id IS NOT NULL
          GROUP BY release_id
        ) re_agg ON re_agg.release_id = r.id
+       LEFT JOIN (
+         SELECT
+           p.release_id,
+           SUM(CASE WHEN re.expense_amount > 0 THEN re.expense_amount ELSE 0 END) AS new_expense,
+           ABS(SUM(CASE WHEN re.expense_amount < 0 THEN re.expense_amount ELSE 0 END)) AS recuperated_expense
+         FROM recuperable_expense re
+         INNER JOIN product p ON p.id = re.product_id
+         WHERE re.date_recorded BETWEEN :startDate AND :endDate
+           AND re.product_id IS NOT NULL AND p.release_id IS NOT NULL
+         GROUP BY p.release_id
+       ) prod_agg ON prod_agg.release_id = r.id
        LEFT JOIN release_artist ra ON ra.release_id = r.id
        LEFT JOIN artist a ON a.id = ra.artist_id
        WHERE ${releaseConditions.join(' AND ')}
-       GROUP BY r.id, r.catalog_no, r.title, re_agg.new_expense, re_agg.recuperated_expense
-       HAVING COALESCE(re_agg.new_expense, 0) > 0
-           OR COALESCE(re_agg.recuperated_expense, 0) > 0`,
+       GROUP BY r.id, r.catalog_no, r.title, re_agg.new_expense, re_agg.recuperated_expense, prod_agg.new_expense, prod_agg.recuperated_expense
+       HAVING COALESCE(re_agg.new_expense, 0) + COALESCE(prod_agg.new_expense, 0) > 0
+           OR COALESCE(re_agg.recuperated_expense, 0) + COALESCE(prod_agg.recuperated_expense, 0) > 0`,
       { replacements, type: 'SELECT' }
     );
 
