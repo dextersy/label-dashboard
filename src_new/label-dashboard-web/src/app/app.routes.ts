@@ -144,7 +144,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'products', pathMatch: 'full' },
       { path: 'products', component: MerchComponent, data: { tab: 'products' } },
-      { path: 'sales', component: MerchSalesComponent, canActivate: [adminGuard] },
+      { path: 'sales', component: MerchSalesComponent },
       { path: 'products/new', component: ProductFormComponent, canActivate: [adminGuard] },
       { path: 'products/:id', component: MerchComponent, data: { tab: 'product-detail' } },
       { path: 'products/:id/gallery', component: MerchComponent, data: { tab: 'product-gallery' } },
