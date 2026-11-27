@@ -1543,16 +1543,23 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
       order: [['release_date', 'DESC']]
     });
 
+    // Batch-fetch all products linked to any of these releases in a single query
+    const allReleaseIds = releases.map((r: any) => r.id);
+    const linkedProducts = allReleaseIds.length > 0
+      ? await Product.findAll({ where: { release_id: allReleaseIds }, attributes: ['id', 'release_id'], raw: true })
+      : [];
+    const productIdsByReleaseId = new Map<number, number[]>();
+    for (const p of linkedProducts as any[]) {
+      if (!productIdsByReleaseId.has(p.release_id)) productIdsByReleaseId.set(p.release_id, []);
+      productIdsByReleaseId.get(p.release_id)!.push(p.id);
+    }
+
     // Build response with all needed financial data
     const releaseInfo = await Promise.all(releases.map(async (release: any) => {
       const releaseArtist = release.releaseArtists[0];
 
       // Get recuperable expense balance (including expenses for products linked to this release)
-      const linkedProductIds = (await Product.findAll({
-        where: { release_id: release.id },
-        attributes: ['id'],
-        raw: true,
-      })).map((p: any) => p.id);
+      const linkedProductIds = productIdsByReleaseId.get(release.id) ?? [];
 
       const expenseScope: any = linkedProductIds.length > 0
         ? { [Op.or]: [{ release_id: release.id }, { product_id: { [Op.in]: linkedProductIds } }], brand_id: (release as any).brand_id }

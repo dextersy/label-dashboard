@@ -1488,8 +1488,10 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
 
     // Brand scope: earnings linked to a release OR product belonging to this brand
     const brandId = req.user.brand_id;
-    const brandReleaseIds = (await Release.findAll({ where: { brand_id: brandId }, attributes: ['id'], raw: true })).map((r: any) => r.id);
-    const brandProductIds = (await Product.findAll({ where: { brand_id: brandId }, attributes: ['id'], raw: true })).map((p: any) => p.id);
+    const [brandReleaseIds, brandProductIds] = await Promise.all([
+      Release.findAll({ where: { brand_id: brandId }, attributes: ['id'], raw: true }).then((rows: any[]) => rows.map((r: any) => r.id)),
+      Product.findAll({ where: { brand_id: brandId }, attributes: ['id'], raw: true }).then((rows: any[]) => rows.map((p: any) => p.id)),
+    ]);
 
     const brandScope: any[] = [];
     if (brandReleaseIds.length > 0) brandScope.push({ release_id: { [Op.in]: brandReleaseIds } });
