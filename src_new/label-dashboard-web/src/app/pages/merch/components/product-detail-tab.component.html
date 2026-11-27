@@ -7,11 +7,20 @@
     <!-- Product Info Card -->
     <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
       <div class="tw-flex tw-justify-between tw-items-start tw-mb-5">
-        <div>
-          <h3 class="tw-mb-1">{{ product.name }}</h3>
-          @if (product.sku) {
-            <span class="tw-text-muted tw-text-sm tw-font-mono">{{ product.sku }}</span>
+        <div class="tw-flex tw-items-start tw-gap-4">
+          @if (product.images?.length) {
+            <a [routerLink]="['/merch/products', product.id, 'gallery']" class="tw-flex-shrink-0" title="View gallery">
+              <img [src]="product.images![0].path" alt="{{ product.name }}"
+                   class="tw-rounded-lg tw-object-cover tw-border tw-border-gray-200 tw-cursor-pointer"
+                   style="width:72px;height:72px;">
+            </a>
           }
+          <div>
+            <h3 class="tw-mb-1">{{ product.name }}</h3>
+            @if (product.sku) {
+              <span class="tw-text-muted tw-text-sm tw-font-mono">{{ product.sku }}</span>
+            }
+          </div>
         </div>
         @if (isAdmin) {
           <div class="tw-flex tw-gap-2">
