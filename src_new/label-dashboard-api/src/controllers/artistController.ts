@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, literal } from 'sequelize';
-import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
+import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator, Product } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -1547,12 +1547,19 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
     const releaseInfo = await Promise.all(releases.map(async (release: any) => {
       const releaseArtist = release.releaseArtists[0];
 
-      // Get recuperable expense balance
+      // Get recuperable expense balance (including expenses for products linked to this release)
+      const linkedProductIds = (await Product.findAll({
+        where: { release_id: release.id },
+        attributes: ['id'],
+        raw: true,
+      })).map((p: any) => p.id);
+
+      const expenseScope: any = linkedProductIds.length > 0
+        ? { [Op.or]: [{ release_id: release.id }, { product_id: { [Op.in]: linkedProductIds } }], brand_id: (release as any).brand_id }
+        : { release_id: release.id, brand_id: (release as any).brand_id };
+
       const recuperableExpenseSum = await RecuperableExpense.sum('expense_amount', {
-        where: {
-          release_id: release.id,
-          brand_id: (release as any).brand_id
-        }
+        where: expenseScope,
       }) || 0;
 
       // Get total earnings for this release
