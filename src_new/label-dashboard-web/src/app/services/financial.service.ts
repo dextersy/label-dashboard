@@ -67,7 +67,9 @@ export class FinancialService {
       earnings: earnings.map(earning => ({
         id: earning.id,
         date_recorded: earning.date_recorded,
-        release_title: earning.release?.title || earning.release_title || '(No release)',
+        release_title: earning.release?.title || earning.release_title
+          || (earning.product ? (earning.product.sku ? `${earning.product.sku} : ${earning.product.name}` : earning.product.name) : null)
+          || '(No release)',
         catalog_no: earning.release?.catalog_no || earning.catalog_no || '',
         cover_art: earning.release?.cover_art,
         description: earning.description || earning.type || 'Earning',
