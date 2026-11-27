@@ -346,6 +346,11 @@ module.exports = {
 
     // Note: Cannot remove enum value 'Merch' from PostgreSQL easily
 
+    // Delete product-linked rows (release_id IS NULL) before restoring NOT NULL constraint.
+    // These rows were created by the merch feature and cannot survive the rollback.
+    await queryInterface.sequelize.query(`DELETE FROM recuperable_expense WHERE release_id IS NULL`);
+    await queryInterface.sequelize.query(`DELETE FROM earning WHERE release_id IS NULL`);
+
     // Restore NOT NULL on release_id columns
     await queryInterface.changeColumn('recuperable_expense', 'release_id', {
       type: Sequelize.INTEGER,
