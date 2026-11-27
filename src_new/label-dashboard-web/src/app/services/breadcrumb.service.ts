@@ -108,8 +108,7 @@ export class BreadcrumbService {
     '/merch/products/:id': { label: 'View Product', parent: '/merch/products' },
     '/merch/products/:id/gallery': { label: 'Gallery', parent: '/merch/products/:id' },
     '/merch/products/:id/edit': { label: 'Edit Product', parent: '/merch/products/:id' },
-    '/merch/products/:id/expenses': { label: 'Expenses', parent: '/merch/products/:id' },
-    '/merch/earnings/new': { label: 'Add Earning', parent: '/merch/products' },
+    '/merch/products/:id/sales': { label: 'View Sales', parent: '/merch/products/:id' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

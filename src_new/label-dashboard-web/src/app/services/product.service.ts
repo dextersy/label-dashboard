@@ -80,4 +80,8 @@ export class ProductService {
   getProductExpenses(productId: number): Observable<{ product_id: number; total_expenses: number; expenses: any[] }> {
     return this.http.get<any>(`${this.baseUrl}/products/${productId}/expenses`, { headers: this.getAuthHeaders() });
   }
+
+  getProductEarnings(productId: number): Observable<{ product_id: number; total_earnings: number; earnings: any[] }> {
+    return this.http.get<any>(`${this.baseUrl}/products/${productId}/earnings`, { headers: this.getAuthHeaders() });
+  }
 }

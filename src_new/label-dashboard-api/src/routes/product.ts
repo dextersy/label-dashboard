@@ -14,6 +14,7 @@ import {
   productImageUpload,
   addProductExpense,
   getProductExpenses,
+  getProductEarnings,
 } from '../controllers/productController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -34,7 +35,8 @@ router.get('/:id/artists', getProductArtists);
 router.put('/:id/artists', requireAdmin, setProductArtists);
 router.post('/:id/artists/inherit', requireAdmin, inheritSplitsFromRelease);
 
-// Product expenses
+// Product earnings & expenses
+router.get('/:id/earnings', getProductEarnings);
 router.get('/:id/expenses', getProductExpenses);
 router.post('/:id/expenses', requireAdmin, addProductExpense);
 

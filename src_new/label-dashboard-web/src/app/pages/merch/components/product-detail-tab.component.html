@@ -23,14 +23,9 @@
           </div>
         </div>
         @if (isAdmin) {
-          <div class="tw-flex tw-gap-2">
-            <a class="btn btn-sm btn-primary" [routerLink]="['/merch/earnings/new']" [queryParams]="{ product_id: product.id }">
-              <app-icon name="plus" class="tw-mr-1" /> Add Earning
-            </a>
-            <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
-              <app-icon name="pencil" class="tw-mr-1" /> Edit
-            </button>
-          </div>
+          <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
+            <app-icon name="pencil" class="tw-mr-1" /> Edit
+          </button>
         }
       </div>
 
