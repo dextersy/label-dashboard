@@ -2597,18 +2597,21 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
     const pageSize = parseInt(limit as string);
     const offset = (pageNum - 1) * pageSize;
 
-    // Get all releases and products for the brand
+    // Get releases and products for the brand, filtered by name/title if provided
     const releaseWhere: any = { brand_id: req.user.brand_id };
+    const productWhere: any = { brand_id: req.user.brand_id };
     if (release_title && release_title !== '') {
-      releaseWhere.title = { [require('sequelize').Op.like]: `%${release_title}%` };
+      releaseWhere.title = { [require('sequelize').Op.iLike]: `%${release_title}%` };
+      productWhere.name = { [require('sequelize').Op.iLike]: `%${release_title}%` };
     }
-    const releases = await Release.findAll({ where: releaseWhere, attributes: ['id'] });
+    const [releases, products] = await Promise.all([
+      Release.findAll({ where: releaseWhere, attributes: ['id'] }),
+      Product.findAll({ where: productWhere, attributes: ['id'] }),
+    ]);
     const releaseIds = releases.map((r: any) => r.id);
-
-    const products = await Product.findAll({ where: { brand_id: req.user.brand_id }, attributes: ['id'] });
     const productIds = products.map((p: any) => p.id);
 
-    // Build brand scope: earnings linked to brand's releases OR products
+    // Build brand scope: earnings linked to brand's matching releases OR products
     const brandScope: any[] = [];
     if (releaseIds.length > 0) brandScope.push({ release_id: { [Op.in]: releaseIds } });
     if (productIds.length > 0) brandScope.push({ product_id: { [Op.in]: productIds } });
@@ -2627,12 +2630,6 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
     }
     if (type && type !== '') {
       earningsWhere.type = type;
-    }
-
-    // If filtering by release_title, exclude product-only earnings
-    if (release_title && release_title !== '') {
-      earningsWhere.release_id = { [Op.in]: releaseIds };
-      delete earningsWhere[Op.or];
     }
 
     // Build order clause
