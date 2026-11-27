@@ -180,11 +180,18 @@
       <!-- Split rows -->
       <div class="tw-space-y-2 tw-mb-4">
         @for (split of artistSplits; track split.artist_id; let i = $index) {
-          <div class="tw-bg-gray-50 tw-rounded-lg tw-p-3">
+          <div class="tw-bg-gray-50 tw-rounded-lg tw-p-3 tw-border tw-border-gray-200">
             <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-3 tw-items-end">
               <div class="tw-col-span-2 md:tw-col-span-1">
                 <label class="tw-label tw-text-xs">Artist</label>
-                <div class="tw-font-semibold tw-text-sm tw-truncate">{{ split.artist?.name || 'Artist #' + split.artist_id }}</div>
+                <div class="tw-flex tw-items-center tw-gap-2">
+                  <div class="tw-flex tw-items-center tw-justify-center tw-rounded-full tw-text-white tw-font-bold tw-flex-shrink-0"
+                       style="width:28px;height:28px;font-size:10px;"
+                       [style.background-color]="getAvatarColor(split.artist?.name || '')">
+                    {{ getInitials(split.artist?.name || '?') }}
+                  </div>
+                  <div class="tw-font-semibold tw-text-sm tw-truncate">{{ split.artist?.name || 'Artist #' + split.artist_id }}</div>
+                </div>
               </div>
               <div>
                 <label class="tw-label tw-text-xs">Royalty %</label>

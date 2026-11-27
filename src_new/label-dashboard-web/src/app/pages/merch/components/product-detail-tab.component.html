@@ -14,9 +14,14 @@
           }
         </div>
         @if (isAdmin) {
-          <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
-            <app-icon name="pencil" class="tw-mr-1" /> Edit
-          </button>
+          <div class="tw-flex tw-gap-2">
+            <a class="btn btn-sm btn-primary" [routerLink]="['/merch/earnings/new']" [queryParams]="{ product_id: product.id }">
+              <app-icon name="plus" class="tw-mr-1" /> Add Earning
+            </a>
+            <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
+              <app-icon name="pencil" class="tw-mr-1" /> Edit
+            </button>
+          </div>
         }
       </div>
 
@@ -79,8 +84,15 @@
       @if (splits.length > 0) {
         <div class="tw-grid tw-gap-px tw-bg-gray-200 tw-rounded-lg tw-overflow-hidden" [style.grid-template-columns]="'repeat(' + splits.length + ', 1fr)'">
           @for (pa of splits; track pa.artist_id) {
-            <div class="tw-bg-white tw-p-4 tw-flex tw-flex-col tw-gap-1">
-              <div class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-500">{{ pa.artist?.name || 'Unknown' }}</div>
+            <div class="tw-bg-white tw-p-4 tw-flex tw-flex-col tw-gap-2">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-1">
+                <div class="tw-flex tw-items-center tw-justify-center tw-rounded-full tw-text-white tw-font-bold tw-flex-shrink-0"
+                     style="width:28px;height:28px;font-size:10px;"
+                     [style.background-color]="getAvatarColor(pa.artist?.name || '')">
+                  {{ getInitials(pa.artist?.name || '?') }}
+                </div>
+                <div class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-500 tw-truncate">{{ pa.artist?.name || 'Unknown' }}</div>
+              </div>
               <div class="tw-text-2xl tw-font-bold tw-leading-tight">{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</div>
               <div class="tw-text-xs tw-text-gray-500">of {{ pa.merch_royalty_type }}</div>
             </div>

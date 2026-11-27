@@ -195,6 +195,21 @@ export class ProductFormComponent implements OnInit {
     return null;
   }
 
+  private static readonly AVATAR_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#14b8a6','#f97316'];
+
+  getAvatarColor(name: string): string {
+    if (!name) return '#9ca3af';
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return ProductFormComponent.AVATAR_COLORS[Math.abs(hash) % 8];
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    return parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
+  }
+
   get totalSplitPercentage(): number {
     return this.artistSplits.reduce((sum, s) => sum + s.merch_royalty_percentage * 100, 0);
   }
