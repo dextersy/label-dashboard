@@ -135,16 +135,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     {
       id: 'merch',
-      adminOnly: true,
+      adminOnly: false,
       items: [
         {
           route: '/merch/products',
           icon: 'shopping-bag',
           title: 'Products',
-          adminOnly: true,
+          adminOnly: false,
           children: [
-            { route: '/merch/products', title: 'View Products', adminOnly: true },
-            { route: '/merch/sales', title: 'View Sales', adminOnly: true },
+            { route: '/merch/products', title: 'View Products', adminOnly: false },
+            { route: '/merch/sales', title: 'View Sales', adminOnly: false },
           ]
         },
       ]
