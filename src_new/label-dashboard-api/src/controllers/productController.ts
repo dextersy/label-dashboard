@@ -22,6 +22,7 @@ async function getAccessibleProductIds(userId: number, brandId: number): Promise
   const accessRows = await ArtistAccess.findAll({
     where: { user_id: userId, status: 'Accepted' },
     attributes: ['artist_id'],
+    raw: true,
   });
   const artistIds = accessRows.map((r: any) => r.artist_id);
 
@@ -31,23 +32,29 @@ async function getAccessibleProductIds(userId: number, brandId: number): Promise
   const direct = await Product.findAll({
     where: { brand_id: brandId, artist_id: { [Op.in]: artistIds } },
     attributes: ['id'],
+    raw: true,
   });
 
-  // Products linked via a release whose primary artist is accessible
-  const viaRelease = await Product.findAll({
-    where: { brand_id: brandId, release_id: { [Op.ne]: null } },
-    include: [{
-      model: Release, as: 'release',
-      where: { artist_id: { [Op.in]: artistIds } },
-      attributes: [],
-    }],
-    attributes: ['id'],
+  // Products linked via a release that has one of the accessible artists
+  const releaseArtistRows = await ReleaseArtist.findAll({
+    where: { artist_id: { [Op.in]: artistIds } },
+    attributes: ['release_id'],
+    raw: true,
   });
+  const releaseIds = releaseArtistRows.map((r: any) => r.release_id);
+  const viaRelease = releaseIds.length > 0
+    ? await Product.findAll({
+        where: { brand_id: brandId, release_id: { [Op.in]: releaseIds } },
+        attributes: ['id'],
+        raw: true,
+      })
+    : [];
 
   // Products where the user's artist appears in splits
   const viaSplits = await ProductArtist.findAll({
     where: { artist_id: { [Op.in]: artistIds } },
     attributes: ['product_id'],
+    raw: true,
   });
 
   const ids = new Set<number>([
@@ -82,6 +89,13 @@ export const getProducts = async (req: AuthRequest, res: Response) => {
     const { artist_id, release_id, status, search, page = '1', limit = '25' } = req.query;
 
     const where: any = { brand_id: brandId };
+
+    // Non-admins: restrict to products linked to their accessible artists
+    if (!req.user.is_admin) {
+      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
+      if (accessibleIds.length === 0) return res.json({ products: [], total: 0 });
+      where.id = { [Op.in]: accessibleIds };
+    }
 
     if (artist_id) where.artist_id = parseInt(artist_id as string, 10);
     if (release_id) where.release_id = parseInt(release_id as string, 10);
@@ -135,6 +149,14 @@ export const getProduct = async (req: AuthRequest, res: Response) => {
 
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Non-admins: verify the product is linked to an artist they have access to
+    if (!req.user.is_admin) {
+      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
+      if (!accessibleIds.includes(productId)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     res.json(product);
