@@ -1291,7 +1291,8 @@ export const getRoyalties = async (req: AuthRequest, res: Response) => {
 
     const includeConditions: any[] = [
       { model: Artist, as: 'artist', where: { brand_id: { [Op.in]: allowedBrandIdsForRoyalties } } },
-      { model: Release, as: 'release', where: releaseWhere, required: Object.keys(releaseWhere).length > 0 } // required only when filtering by release title/catalog_no
+      { model: Release, as: 'release', where: releaseWhere, required: Object.keys(releaseWhere).length > 0 }, // required only when filtering by release title/catalog_no
+      { model: Product, as: 'product', required: false },
     ];
 
     if (artist_id) {
