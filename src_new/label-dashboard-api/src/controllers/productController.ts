@@ -689,9 +689,18 @@ export const getProductExpenses = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
 
-    const product = await Product.findOne({ where: { id: productId, brand_id: req.user.brand_id } });
+    const brandId = req.user.brand_id;
+    const product = await Product.findOne({ where: { id: productId, brand_id: brandId } });
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Non-admins: verify the product is linked to an artist they have access to
+    if (!req.user.is_admin) {
+      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
+      if (!accessibleIds.includes(productId)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     const expenses = await RecuperableExpense.findAll({
@@ -718,9 +727,18 @@ export const getProductEarnings = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
 
-    const product = await Product.findOne({ where: { id: productId, brand_id: req.user.brand_id } });
+    const brandId = req.user.brand_id;
+    const product = await Product.findOne({ where: { id: productId, brand_id: brandId } });
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Non-admins: verify the product is linked to an artist they have access to
+    if (!req.user.is_admin) {
+      const accessibleIds = await getAccessibleProductIds(req.user.id, brandId);
+      if (!accessibleIds.includes(productId)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     const earnings = await Earning.findAll({
