@@ -220,6 +220,16 @@ export class FinancialService {
     }));
   }
 
+  async createProductEarning(productId: number, earningData: { amount: number; description: string; date_recorded: string; calculate_royalties: boolean }): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/financial/earnings`, {
+      product_id: productId,
+      type: 'Merch',
+      ...earningData
+    }, {
+      headers: this.getAuthHeaders()
+    }));
+  }
+
   async addPaymentMethod(artistId: number, paymentMethodData: any): Promise<void> {
     await firstValueFrom(this.http.post(`${environment.apiUrl}/artists/${artistId}/payment-methods`, {
       ...paymentMethodData
