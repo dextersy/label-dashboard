@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { switchMap, of } from 'rxjs';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductService } from '../../../services/product.service';
 import { Product, ProductArtistSplit, ProductImage } from '../../../models/product.model';
@@ -248,11 +249,26 @@ export class ProductFormComponent implements OnInit {
     if (this.saving) return;
     this.saving = true;
 
-    const obs = this.isEdit && this.productId
+    const saveProduct$ = this.isEdit && this.productId
       ? this.productService.updateProduct(this.productId, this.form)
       : this.productService.createProduct(this.form);
 
-    obs.subscribe({
+    saveProduct$.pipe(
+      switchMap((product) => {
+        const id = product.id;
+        if (this.artistSplits.length > 0) {
+          return this.productService.setProductArtists(
+            id,
+            this.artistSplits.map(s => ({
+              artist_id: s.artist_id,
+              merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage)),
+              merch_royalty_type: s.merch_royalty_type,
+            }))
+          ).pipe(switchMap(() => of(product)));
+        }
+        return of(product);
+      })
+    ).subscribe({
       next: (product) => {
         this.saving = false;
         this.router.navigate(['/merch/products', product.id]);
