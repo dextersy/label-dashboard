@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, fn, col } from 'sequelize';
-import { Product, ProductImage, ProductArtist, Brand, Release, Artist, Earning, Royalty, ReleaseArtist, ArtistAccess } from '../models';
+import { Product, ProductImage, ProductArtist, Brand, Release, Artist, Earning, Royalty, ReleaseArtist, ArtistAccess, RecuperableExpense } from '../models';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
 import multer from 'multer';
@@ -641,6 +641,43 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
     res.json({ releases, products });
   } catch (error) {
     console.error('Search earning targets error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const addProductExpense = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const productId = parseInt(req.params.id as string, 10);
+    if (isNaN(productId)) {
+      return res.status(400).json({ error: 'Invalid product ID' });
+    }
+
+    const { expense_description, expense_amount, date_recorded } = req.body;
+
+    if (!expense_description || !expense_amount) {
+      return res.status(400).json({ error: 'Description and amount are required' });
+    }
+
+    const product = await Product.findOne({ where: { id: productId, brand_id: req.user.brand_id } });
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    const expense = await RecuperableExpense.create({
+      product_id: productId,
+      expense_description,
+      expense_amount: parseFloat(expense_amount),
+      date_recorded: date_recorded ? new Date(date_recorded) : new Date(),
+      brand_id: req.user.brand_id,
+    });
+
+    res.status(201).json({ message: 'Recuperable expense added successfully', expense });
+  } catch (error) {
+    console.error('Add product expense error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

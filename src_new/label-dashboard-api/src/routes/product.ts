@@ -12,6 +12,7 @@ import {
   deleteProductImage,
   reorderProductImages,
   productImageUpload,
+  addProductExpense,
 } from '../controllers/productController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
@@ -31,6 +32,9 @@ router.delete('/:id', requireAdmin, deleteProduct);
 router.get('/:id/artists', getProductArtists);
 router.put('/:id/artists', requireAdmin, setProductArtists);
 router.post('/:id/artists/inherit', requireAdmin, inheritSplitsFromRelease);
+
+// Product expenses
+router.post('/:id/expenses', requireAdmin, addProductExpense);
 
 // Product images
 router.post('/:id/images', requireAdmin, productImageUpload.single('image'), addProductImage);
