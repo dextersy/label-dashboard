@@ -1197,7 +1197,7 @@ async function resolveArtistSplits(earning: any): Promise<Array<{ artist_id: num
           royaltyPercentage = parseFloat(String(ra.merch_royalty_percentage));
           break;
       }
-      return { artist_id: ra.artist_id, percentage: royaltyPercentage, type: 'Revenue' };
+      return { artist_id: ra.artist_id, percentage: royaltyPercentage, type: earning.type === 'Merch' ? ra.merch_royalty_type : 'Revenue' };
     });
   }
 
