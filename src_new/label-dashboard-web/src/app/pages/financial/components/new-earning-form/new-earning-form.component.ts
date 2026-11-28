@@ -22,6 +22,7 @@ export class NewEarningFormComponent {
   @Input() releases: any[] = [];
   @Input() onSubmitEarning: () => Promise<void> = async () => {};
   @Input() isLoading: boolean = false;
+  @Input() artistId: number | null = null;
 
   // Earning target search
   targetSearchQuery = '';
@@ -43,7 +44,7 @@ export class NewEarningFormComponent {
           return of(null);
         }
         this.searchLoading = true;
-        return from(this.financialService.searchEarningTargets(query));
+        return from(this.financialService.searchEarningTargets(query, this.artistId ?? undefined));
       })
     ).subscribe(result => {
       if (!result) {

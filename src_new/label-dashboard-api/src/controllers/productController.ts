@@ -627,6 +627,7 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
   try {
     const brandId = req.user.brand_id;
     const search = (req.query.search as string) || '';
+    const artistId = req.query.artist_id ? parseInt(req.query.artist_id as string, 10) : null;
 
     const searchWhere = search
       ? { [Op.or]: [
@@ -635,8 +636,18 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
         ] }
       : {};
 
+    let releaseWhere: any = { brand_id: brandId, ...searchWhere };
+    if (artistId) {
+      const artistReleaseIds = (await ReleaseArtist.findAll({
+        where: { artist_id: artistId },
+        attributes: ['release_id'],
+        raw: true,
+      })).map((ra: any) => ra.release_id);
+      releaseWhere.id = { [Op.in]: artistReleaseIds.length > 0 ? artistReleaseIds : [-1] };
+    }
+
     const releases = await Release.findAll({
-      where: { brand_id: brandId, ...searchWhere },
+      where: releaseWhere,
       attributes: ['id', 'title', 'catalog_no', 'cover_art'],
       limit: 10,
       order: [['title', 'ASC']],
@@ -649,8 +660,31 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
         ] }
       : {};
 
+    let productWhere: any = { brand_id: brandId, status: 'active', ...productSearchWhere };
+    if (artistId) {
+      // Products linked via ProductArtist join table
+      const paProductIds = (await ProductArtist.findAll({
+        where: { artist_id: artistId },
+        attributes: ['product_id'],
+        raw: true,
+      })).map((pa: any) => pa.product_id);
+
+      // Products linked via the artist's releases
+      const artistReleaseIds = releases.map((r: any) => r.id);
+      const releaseProductIds = artistReleaseIds.length > 0
+        ? (await Product.findAll({
+            where: { release_id: { [Op.in]: artistReleaseIds }, brand_id: brandId },
+            attributes: ['id'],
+            raw: true,
+          })).map((p: any) => p.id)
+        : [];
+
+      const allProductIds = [...new Set([...paProductIds, ...releaseProductIds])];
+      productWhere.id = { [Op.in]: allProductIds.length > 0 ? allProductIds : [-1] };
+    }
+
     const products = await Product.findAll({
-      where: { brand_id: brandId, status: 'active', ...productSearchWhere },
+      where: productWhere,
       attributes: ['id', 'name', 'sku'],
       include: [{ model: ProductImage, as: 'images', attributes: ['path'], limit: 1, separate: true, order: [['sort_order', 'ASC']] }],
       limit: 10,
