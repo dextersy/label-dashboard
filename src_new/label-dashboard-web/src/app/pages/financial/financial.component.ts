@@ -55,6 +55,8 @@ export interface Earning {
   cover_art?: string;
   description: string;
   amount: number;
+  product_name?: string | null;
+  product_sku?: string | null;
 }
 
 export interface Royalty {
@@ -65,6 +67,8 @@ export interface Royalty {
   cover_art?: string;
   description: string;
   amount: number;
+  product_name?: string | null;
+  product_sku?: string | null;
 }
 
 export interface Payment {

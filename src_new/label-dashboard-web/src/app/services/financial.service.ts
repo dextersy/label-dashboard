@@ -67,13 +67,13 @@ export class FinancialService {
       earnings: earnings.map(earning => ({
         id: earning.id,
         date_recorded: earning.date_recorded,
-        release_title: earning.release?.title || earning.release_title
-          || (earning.product ? (earning.product.sku ? `${earning.product.sku} : ${earning.product.name}` : earning.product.name) : null)
-          || '(No release)',
+        release_title: earning.release?.title || earning.release_title || '(No release)',
         catalog_no: earning.release?.catalog_no || earning.catalog_no || '',
         cover_art: earning.release?.cover_art,
         description: earning.description || earning.type || 'Earning',
-        amount: earning.amount
+        amount: earning.amount,
+        product_name: earning.product?.name || null,
+        product_sku: earning.product?.sku || null,
       })),
       pagination: response?.pagination || {}
     };
@@ -112,7 +112,9 @@ export class FinancialService {
         catalog_no: royalty.release?.catalog_no || royalty.catalog_no || '',
         cover_art: royalty.release?.cover_art,
         description: royalty.description || 'Royalty',
-        amount: royalty.amount
+        amount: royalty.amount,
+        product_name: royalty.product?.name || null,
+        product_sku: royalty.product?.sku || null,
       })),
       pagination: response?.pagination || {}
     };
