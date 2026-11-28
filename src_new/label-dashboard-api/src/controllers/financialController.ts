@@ -2828,7 +2828,31 @@ async function sendEarningNotifications(
     let targetName: string = 'Unknown';
     let targetBrandId: number = brandId;
 
-    if (earning.release_id) {
+    if (earning.product_id) {
+      const product = await Product.findByPk(earning.product_id, {
+        include: [
+          { model: ProductArtist, as: 'productArtists', include: [{ model: Artist, as: 'artist' }] },
+          { model: Brand, as: 'brand' },
+          { model: Artist, as: 'artist' },
+          { model: Release, as: 'release', attributes: ['title'] },
+        ]
+      });
+
+      if (!product) return;
+
+      if (product.productArtists && product.productArtists.length > 0) {
+        artistSplits = product.productArtists.map((pa: any) => ({ artist: pa.artist }));
+      } else if (product.artist) {
+        artistSplits = [{ artist: product.artist }];
+      } else {
+        return;
+      }
+
+      brand = product.brand;
+      const productName = product.name || 'Unknown Product';
+      targetName = product.release?.title ? `${productName} (${product.release.title})` : productName;
+      targetBrandId = product.brand_id;
+    } else if (earning.release_id) {
       const release = await Release.findByPk(earning.release_id, {
         include: [
           { model: ReleaseArtist, as: 'releaseArtists', include: [{ model: Artist, as: 'artist' }] },
@@ -2842,30 +2866,6 @@ async function sendEarningNotifications(
       brand = release.brand;
       targetName = release.title || 'Unknown Release';
       targetBrandId = release.brand_id;
-    } else if (earning.product_id) {
-      const product = await Product.findByPk(earning.product_id, {
-        include: [
-          { model: ProductArtist, as: 'productArtists', include: [{ model: Artist, as: 'artist' }] },
-          { model: Brand, as: 'brand' },
-          { model: Artist, as: 'artist' },
-        ]
-      });
-
-      if (!product) return;
-
-      // Product artists from ProductArtist join table
-      if (product.productArtists && product.productArtists.length > 0) {
-        artistSplits = product.productArtists.map((pa: any) => ({ artist: pa.artist }));
-      } else if (product.artist) {
-        // Fallback: direct artist link
-        artistSplits = [{ artist: product.artist }];
-      } else {
-        return; // No artists to notify
-      }
-
-      brand = product.brand;
-      targetName = product.name || 'Unknown Product';
-      targetBrandId = product.brand_id;
     } else {
       return;
     }
