@@ -2,11 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AdminService, BrandSettings, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
 import { ReleaseService, Release } from '../../../services/release.service';
-import { ProductService } from '../../../services/product.service';
-import { Product } from '../../../models/product.model';
+import { FinancialService } from '../../../services/financial.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
 import { PaginatedTableComponent, TableColumn, PaginationInfo } from '../../../components/shared/paginated-table/paginated-table.component';
@@ -29,9 +29,9 @@ interface CsvEarningRow {
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;
   releases: Release[] = [];
-  products: Product[] = [];
   filteredReleases: Release[] = [];
-  filteredProducts: Product[] = [];
+  filteredProducts: Array<{ id: number; name: string; sku?: string | null }> = [];
+  private productSearchSubject = new Subject<string>();
   bulkEarnings: BulkEarning[] = [];
   totalEarnings: number = 0;
   applyAllDescCount: number = 0;
@@ -150,29 +150,25 @@ export class BulkAddEarningsTabComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private releaseService: ReleaseService,
-    private productService: ProductService,
+    private financialService: FinancialService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService
   ) {
     this.initializeBulkEarnings();
+    this.productSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(term => term.length >= 2 ? this.financialService.searchEarningTargets(term) : of(null))
+    ).subscribe(result => {
+      this.filteredProducts = result?.products ?? [];
+    });
   }
 
   ngOnInit(): void {
     this.loadBulkEarningsData();
-    this.loadProducts();
     this.adminService.getBrandSettings().subscribe({
       next: (settings) => { this.brandSettings = settings; },
       error: () => {}
-    });
-  }
-
-  private loadProducts(): void {
-    this.productService.getProducts({ page: 1, limit: 1000, status: 'active' }).subscribe({
-      next: (res) => {
-        this.products = res.products;
-        this.filteredProducts = [...this.products];
-      },
-      error: () => {} // Products may not be enabled
     });
   }
 
@@ -313,24 +309,21 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
     if (searchTerm.length === 0) {
       this.filteredReleases = [...this.releases];
-      this.filteredProducts = [...this.products];
+      this.filteredProducts = [];
     } else {
       this.filteredReleases = this.releases.filter(release =>
         release.title.toLowerCase().includes(term) ||
         release.catalog_no.toLowerCase().includes(term)
       );
-      this.filteredProducts = this.products.filter(product =>
-        product.name.toLowerCase().includes(term) ||
-        (product.sku && product.sku.toLowerCase().includes(term))
-      );
     }
+    this.productSearchSubject.next(searchTerm);
   }
 
   onInputFocus(index: number): void {
     this.showDropdown[index] = true;
     if (this.searchTerms[index].length === 0) {
       this.filteredReleases = [...this.releases];
-      this.filteredProducts = [...this.products];
+      this.filteredProducts = [];
     } else {
       this.onReleaseSearch(index, this.searchTerms[index]);
     }
@@ -352,7 +345,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.filteredProducts = [];
   }
 
-  selectProduct(index: number, product: Product): void {
+  selectProduct(index: number, product: { id: number; name: string; sku?: string | null }): void {
     this.bulkEarnings[index].product_id = product.id;
     this.bulkEarnings[index].release_id = 0;
     this.bulkEarnings[index].type = 'Merch';
