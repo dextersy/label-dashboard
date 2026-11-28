@@ -43,7 +43,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
           'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
           'favicon_url', 'paymongo_wallet_id', 'payment_processing_fee_for_payouts',
           'release_submission_url', 'catalog_prefix',
-          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels',
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_merch_workspace', 'feature_sublabels',
           'feature_artist_profiles', 'feature_music_releases', 'artist_custom_fields'
         ]
       }]
@@ -71,6 +71,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         catalog_prefix: brand.catalog_prefix || 'REL',
         feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
         feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+        feature_merch_workspace: Boolean(brand.feature_merch_workspace),
         feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
         feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
         feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases),
@@ -252,6 +253,7 @@ export const getFeeSettings = async (req: Request, res: Response) => {
     const hasMusicOverride = brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null;
     const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
     const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
+    const hasMerchOverride = brand.merch_transaction_fixed_fee !== null || brand.merch_revenue_percentage_fee !== null;
 
     res.json({
       id: brand.id,
@@ -322,6 +324,27 @@ export const getFeeSettings = async (req: Request, res: Response) => {
           revenue_percentage_fee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
           fee_revenue_type: plan?.default_fundraiser_fee_revenue_type ?? 'net',
         },
+      },
+      merch: {
+        transaction_fixed_fee: hasMerchOverride
+          ? (brand.merch_transaction_fixed_fee ?? 0)
+          : 0,
+        revenue_percentage_fee: hasMerchOverride
+          ? (brand.merch_revenue_percentage_fee ?? 0)
+          : 0,
+        fee_revenue_type: hasMerchOverride
+          ? (brand.merch_fee_revenue_type ?? 'net')
+          : 'net',
+        override: hasMerchOverride ? {
+          transaction_fixed_fee: brand.merch_transaction_fixed_fee,
+          revenue_percentage_fee: brand.merch_revenue_percentage_fee,
+          fee_revenue_type: brand.merch_fee_revenue_type,
+        } : null,
+        plan_default: {
+          transaction_fixed_fee: plan?.default_merch_transaction_fixed_fee ?? 0,
+          revenue_percentage_fee: plan?.default_merch_revenue_percentage_fee ?? 0,
+          fee_revenue_type: plan?.default_merch_fee_revenue_type ?? 'net',
+        },
       }
     });
 
@@ -334,7 +357,7 @@ export const getFeeSettings = async (req: Request, res: Response) => {
 export const updateFeeSettings = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { music, event, fundraiser } = req.body;
+    const { music, event, fundraiser, merch } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
 
@@ -381,6 +404,19 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       }
     }
 
+    // Validate merch fee values
+    if (merch) {
+      if (merch.transaction_fixed_fee !== undefined && (isNaN(merch.transaction_fixed_fee) || merch.transaction_fixed_fee < 0)) {
+        return res.status(400).json({ error: 'Merch transaction fixed fee must be a non-negative number' });
+      }
+      if (merch.revenue_percentage_fee !== undefined && (isNaN(merch.revenue_percentage_fee) || merch.revenue_percentage_fee < 0 || merch.revenue_percentage_fee > 100)) {
+        return res.status(400).json({ error: 'Merch revenue percentage fee must be between 0 and 100' });
+      }
+      if (merch.fee_revenue_type && !['net', 'gross'].includes(merch.fee_revenue_type)) {
+        return res.status(400).json({ error: 'Merch fee revenue type must be either "net" or "gross"' });
+      }
+    }
+
     // Update all fee settings on the brand.
     // For music/event/fundraiser, passing null explicitly clears the override (brand will follow plan defaults).
     const updateData: any = {};
@@ -417,6 +453,16 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
       if (fundraiser.fee_revenue_type !== undefined) updateData.fundraiser_fee_revenue_type = fundraiser.fee_revenue_type;
     }
 
+    if (merch === null) {
+      updateData.merch_transaction_fixed_fee = null;
+      updateData.merch_revenue_percentage_fee = null;
+      updateData.merch_fee_revenue_type = null;
+    } else if (merch) {
+      if (merch.transaction_fixed_fee !== undefined) updateData.merch_transaction_fixed_fee = merch.transaction_fixed_fee;
+      if (merch.revenue_percentage_fee !== undefined) updateData.merch_revenue_percentage_fee = merch.revenue_percentage_fee;
+      if (merch.fee_revenue_type !== undefined) updateData.merch_fee_revenue_type = merch.fee_revenue_type;
+    }
+
     await brand.update(updateData);
 
     const brandPlan = await BrandPlan.findOne({
@@ -428,6 +474,7 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
     const hasMusicOverride = brand.music_transaction_fixed_fee !== null || brand.music_revenue_percentage_fee !== null;
     const hasEventOverride = brand.event_transaction_fixed_fee !== null || brand.event_revenue_percentage_fee !== null;
     const hasFundraiserOverride = brand.fundraiser_transaction_fixed_fee !== null || brand.fundraiser_revenue_percentage_fee !== null;
+    const hasMerchOverride = brand.merch_transaction_fixed_fee !== null || brand.merch_revenue_percentage_fee !== null;
 
     res.json({
       message: 'Fee settings updated successfully',
@@ -495,6 +542,27 @@ export const updateFeeSettings = async (req: Request, res: Response) => {
             revenue_percentage_fee: plan?.default_fundraiser_revenue_percentage_fee ?? 0,
             fee_revenue_type: plan?.default_fundraiser_fee_revenue_type ?? 'net',
           },
+        },
+        merch: {
+          transaction_fixed_fee: hasMerchOverride
+            ? (brand.merch_transaction_fixed_fee ?? 0)
+            : 0,
+          revenue_percentage_fee: hasMerchOverride
+            ? (brand.merch_revenue_percentage_fee ?? 0)
+            : 0,
+          fee_revenue_type: hasMerchOverride
+            ? (brand.merch_fee_revenue_type ?? 'net')
+            : 'net',
+          override: hasMerchOverride ? {
+            transaction_fixed_fee: brand.merch_transaction_fixed_fee,
+            revenue_percentage_fee: brand.merch_revenue_percentage_fee,
+            fee_revenue_type: brand.merch_fee_revenue_type,
+          } : null,
+          plan_default: {
+            transaction_fixed_fee: plan?.default_merch_transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: plan?.default_merch_revenue_percentage_fee ?? 0,
+            fee_revenue_type: plan?.default_merch_fee_revenue_type ?? 'net',
+          },
         }
       }
     });
@@ -518,6 +586,7 @@ export const getFeatureToggles = async (req: Request, res: Response) => {
     res.json({
       feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
       feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+      feature_merch_workspace: Boolean(brand.feature_merch_workspace),
       feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
       feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
       feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases)
@@ -532,7 +601,7 @@ export const getFeatureToggles = async (req: Request, res: Response) => {
 export const updateFeatureToggles = async (req: Request, res: Response) => {
   try {
     const { brandId } = req.params;
-    const { feature_music_workspace, feature_campaigns_workspace, feature_sublabels, feature_artist_profiles, feature_music_releases } = req.body;
+    const { feature_music_workspace, feature_campaigns_workspace, feature_merch_workspace, feature_sublabels, feature_artist_profiles, feature_music_releases } = req.body;
 
     const brand = await Brand.findByPk(brandId as string);
 
@@ -547,6 +616,9 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
     if (feature_campaigns_workspace !== undefined && typeof feature_campaigns_workspace !== 'boolean') {
       return res.status(400).json({ error: 'feature_campaigns_workspace must be a boolean' });
     }
+    if (feature_merch_workspace !== undefined && typeof feature_merch_workspace !== 'boolean') {
+      return res.status(400).json({ error: 'feature_merch_workspace must be a boolean' });
+    }
     if (feature_sublabels !== undefined && typeof feature_sublabels !== 'boolean') {
       return res.status(400).json({ error: 'feature_sublabels must be a boolean' });
     }
@@ -560,6 +632,7 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
     await brand.update({
       feature_music_workspace: feature_music_workspace !== undefined ? feature_music_workspace : brand.feature_music_workspace,
       feature_campaigns_workspace: feature_campaigns_workspace !== undefined ? feature_campaigns_workspace : brand.feature_campaigns_workspace,
+      feature_merch_workspace: feature_merch_workspace !== undefined ? feature_merch_workspace : brand.feature_merch_workspace,
       feature_sublabels: feature_sublabels !== undefined ? feature_sublabels : brand.feature_sublabels,
       feature_artist_profiles: feature_artist_profiles !== undefined ? feature_artist_profiles : brand.feature_artist_profiles,
       feature_music_releases: feature_music_releases !== undefined ? feature_music_releases : brand.feature_music_releases
@@ -571,6 +644,7 @@ export const updateFeatureToggles = async (req: Request, res: Response) => {
       message: 'Feature toggles updated successfully',
       feature_music_workspace: brand.feature_music_workspace !== false,
       feature_campaigns_workspace: brand.feature_campaigns_workspace !== false,
+      feature_merch_workspace: Boolean(brand.feature_merch_workspace),
       feature_sublabels: brand.feature_sublabels !== false,
       feature_artist_profiles: brand.feature_artist_profiles !== false,
       feature_music_releases: brand.feature_music_releases !== false

@@ -181,11 +181,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
         const labelsDefault = labelsSettings?.feature_music_workspace !== false ? '/labels/dashboard' : '/labels/earnings';
         this.router.navigate([labelsDefault]);
         break;
+      case 'merch':
+        this.router.navigate(['/merch/products']);
+        break;
       case 'admin':
         this.router.navigate(['/admin/users']);
         break;
       default:
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([this.workspaceService.getWorkspaceLandingUrl(workspace)]);
         break;
     }
   }

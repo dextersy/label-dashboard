@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User, EventAddOnPayment } from '../models';
+import { Artist, Brand, Royalty, Payment, PaymentMethod, ArtistImage, ArtistDocument, Event, Release, Earning, Ticket, LabelPayment, LabelPaymentMethod, Song, SongAuthor, SongComposer, ReleaseArtist, ReleaseSong, Fundraiser, PressCampaign, PressCampaignArtistPhoto, WristbandOrder, AudienceUser, User, EventAddOnPayment, ProductImage } from '../models';
 import ReleaseTask from '../models/ReleaseTask';
 import BrandPlan from '../models/BrandPlan';
 import Plan from '../models/Plan';
@@ -344,7 +344,11 @@ export const getUsedS3Urls = async (req: Request, res: Response) => {
     const wristbandOrders = await WristbandOrder.findAll({ attributes: ['design_url'] });
     wristbandOrders.forEach((o: any) => { if (o.design_url) allUrls.add(o.design_url); });
 
-    // 12. Audience user profile photos
+    // 12. Product Images (path)
+    const productImages = await ProductImage.findAll({ attributes: ['id', 'path'] });
+    productImages.forEach((img: any) => { if (img.path) allUrls.add(img.path); });
+
+    // 13. Audience user profile photos
     const audienceUsers = await AudienceUser.findAll({ attributes: ['id', 'profile_photo_url'] });
     audienceUsers.forEach((u: any) => { if (u.profile_photo_url) allUrls.add(u.profile_photo_url); });
 

@@ -96,10 +96,20 @@ export class BreadcrumbService {
     '/labels/setup': { label: 'Settings', icon: 'settings', parent: '/labels' },
     '/admin/subscription': { label: 'Billing', icon: 'credit-card', parent: '/admin' },
     '/labels/reports': { label: 'Reports', icon: 'chart-line', parent: '/labels' },
-    '/labels/reports/music-earnings': { label: 'Music Earnings', parent: '/labels/reports' },
+    '/labels/reports/music-earnings': { label: 'Earnings', parent: '/labels/reports' },
     '/labels/reports/artist-balances': { label: 'Artist Balances', parent: '/labels/reports' },
     '/labels/reports/payments-royalties': { label: 'Payouts & Royalties', parent: '/labels/reports' },
     '/labels/reports/recuperable-expense-balance': { label: 'Recuperable Expenses', parent: '/labels/reports' },
+
+    // Merch section
+    '/merch': { label: 'Merch', icon: 'shopping-bag' },
+    '/merch/products': { label: 'Products', parent: '/merch' },
+    '/merch/products/new': { label: 'New Product', parent: '/merch/products' },
+    '/merch/products/:id': { label: 'View Product', parent: '/merch/products' },
+    '/merch/products/:id/gallery': { label: 'Gallery', parent: '/merch/products/:id' },
+    '/merch/products/:id/edit': { label: 'Edit Product', parent: '/merch/products/:id' },
+    '/merch/sales': { label: 'View Sales', parent: '/merch/products' },
+    '/merch/products/:id/sales': { label: 'View Sales', parent: '/merch/products/:id' },
   };
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {

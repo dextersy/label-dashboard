@@ -663,6 +663,9 @@ const PLAN_EDITABLE_FIELDS = [
   'default_fundraiser_transaction_fixed_fee',
   'default_fundraiser_revenue_percentage_fee',
   'default_fundraiser_fee_revenue_type',
+  'default_merch_transaction_fixed_fee',
+  'default_merch_revenue_percentage_fee',
+  'default_merch_fee_revenue_type',
   'feature_music_workspace',
   'feature_campaigns_workspace',
   'feature_sublabels',
@@ -672,6 +675,7 @@ const PLAN_EDITABLE_FIELDS = [
   'feature_sync_licensing',
   'feature_events',
   'feature_fundraisers',
+  'feature_merch_workspace',
 ] as const;
 
 function pickEditableFields(body: any): Partial<Record<typeof PLAN_EDITABLE_FIELDS[number], any>> {

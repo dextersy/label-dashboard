@@ -1,0 +1,130 @@
+<div class="container-fluid tw-py-4">
+  @if (loading) {
+    <div class="tw-text-center tw-py-8">
+      <app-icon name="spinner" class="tw-animate-spin" /> Loading...
+    </div>
+  } @else if (product) {
+    <!-- Product Info Card -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+      <div class="tw-flex tw-justify-between tw-items-start tw-mb-5">
+        <div class="tw-flex tw-items-start tw-gap-4">
+          @if (product.images?.length) {
+            <a [routerLink]="['/merch/products', product.id, 'gallery']" class="tw-flex-shrink-0" title="View gallery">
+              <img [src]="product.images![0].path" alt="{{ product.name }}"
+                   class="tw-rounded-lg tw-object-cover tw-border tw-border-gray-200 tw-cursor-pointer"
+                   style="width:72px;height:72px;">
+            </a>
+          }
+          <div>
+            <h3 class="tw-mb-1">{{ product.name }}</h3>
+            @if (product.sku) {
+              <span class="tw-text-muted tw-text-sm tw-font-mono">{{ product.sku }}</span>
+            }
+          </div>
+        </div>
+        @if (isAdmin) {
+          <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
+            <app-icon name="pencil" class="tw-mr-1" /> Edit
+          </button>
+        }
+      </div>
+
+      @if (product.description) {
+        <p class="tw-text-muted tw-mb-5" style="font-size:13px;">{{ product.description }}</p>
+      }
+
+      <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-x-6 tw-gap-y-5">
+        <div>
+          <span class="pd-label">Price</span>
+          <span class="pd-value">{{ product.price != null ? product.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—' }}</span>
+        </div>
+        <div>
+          <span class="pd-label">Status</span>
+          <span [class]="product.status === 'active' ? 'status-badge status-success' : 'status-badge status-secondary'">
+            {{ product.status === 'active' ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+        <div class="md:tw-col-span-2">
+          <span class="pd-label">Categories</span>
+          @if (categories.length > 0) {
+            <div class="category-chips-wrap tw-mt-1">
+              @for (cat of categories; track cat.id) {
+                <span class="category-chip">{{ cat.name }}</span>
+              }
+            </div>
+          } @else {
+            <span class="pd-value">—</span>
+          }
+        </div>
+        <div class="md:tw-col-span-2">
+          <span class="pd-label">Linked to</span>
+          @if (product.release) {
+            <div class="link-chip">
+              @if (product.release.cover_art) {
+                <img [src]="product.release.cover_art" class="link-chip-img link-chip-img-release" alt="">
+              } @else {
+                <div class="link-chip-avatar" style="border-radius:4px;">
+                  <app-icon name="music" />
+                </div>
+              }
+              <div class="link-chip-info">
+                <span class="link-chip-name">{{ product.release.title }}</span>
+                <span class="link-chip-sub">{{ product.release.catalog_no }}</span>
+              </div>
+            </div>
+          } @else if (product.artist) {
+            <div class="link-chip">
+              <div class="link-chip-avatar">{{ product.artist.name?.charAt(0) }}</div>
+              <div class="link-chip-info">
+                <span class="link-chip-name">{{ product.artist.name }}</span>
+                <span class="link-chip-sub">Artist</span>
+              </div>
+            </div>
+          } @else {
+            <span class="pd-value">—</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Artist Splits -->
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+      <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+        <p class="pd-section-label tw-mb-0">Artist Splits</p>
+        @if (isAdmin) {
+          <button class="btn btn-sm btn-outline-secondary" [routerLink]="['/merch/products', product.id, 'edit']">
+            <app-icon name="pencil" class="tw-mr-1" /> Edit splits
+          </button>
+        }
+      </div>
+      @if (splits.length > 0) {
+        <div class="tw-grid tw-gap-px tw-bg-gray-200 tw-rounded-lg tw-overflow-hidden" [style.grid-template-columns]="'repeat(' + splits.length + ', 1fr)'">
+          @for (pa of splits; track pa.artist_id) {
+            <div class="tw-bg-white tw-p-4 tw-flex tw-flex-col tw-gap-2">
+              <div class="tw-flex tw-items-center tw-gap-2 tw-mb-1">
+                <div class="tw-flex tw-items-center tw-justify-center tw-rounded-full tw-text-white tw-font-bold tw-flex-shrink-0"
+                     style="width:28px;height:28px;font-size:10px;"
+                     [style.background-color]="getAvatarColor(pa.artist?.name || '')">
+                  {{ getInitials(pa.artist?.name || '?') }}
+                </div>
+                <div class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-500 tw-truncate">{{ pa.artist?.name || 'Unknown' }}</div>
+              </div>
+              <div class="tw-text-2xl tw-font-bold tw-leading-tight">{{ (pa.merch_royalty_percentage * 100).toFixed(1) }}%</div>
+              <div class="tw-text-xs tw-text-gray-500">of {{ pa.merch_royalty_type }}</div>
+            </div>
+          }
+        </div>
+        <div class="tw-flex tw-justify-between tw-items-center tw-mt-3 tw-pt-3 tw-border-t tw-border-gray-100">
+          <span class="tw-text-xs tw-text-muted">Total artist split</span>
+          <span [class]="totalSplitPercentage === 100 ? 'status-badge status-success' : 'status-badge status-warning'">
+            {{ totalSplitPercentage.toFixed(1) }}%
+          </span>
+        </div>
+      } @else {
+        <p class="tw-text-muted tw-text-sm tw-mb-0">No artist splits configured.</p>
+      }
+    </div>
+  } @else {
+    <div class="tw-text-center tw-py-8 tw-text-muted">Product not found.</div>
+  }
+</div>

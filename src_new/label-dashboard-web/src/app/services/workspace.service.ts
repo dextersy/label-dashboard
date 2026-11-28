@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { BrandService } from './brand.service';
 import { AuthService } from './auth.service';
 
-export type WorkspaceType = 'music' | 'campaigns' | 'labels' | 'admin';
+export type WorkspaceType = 'music' | 'merch' | 'campaigns' | 'labels' | 'admin';
 
 export interface WorkspaceInfo {
   type: WorkspaceType;
@@ -14,6 +14,7 @@ export interface WorkspaceInfo {
 
 const WORKSPACE_CONFIG: Record<WorkspaceType, Omit<WorkspaceInfo, 'type'>> = {
   music:     { label: 'Music',          icon: 'music',    description: 'Artist information, music releases, and financial' },
+  merch:     { label: 'Merch',          icon: 'shopping-bag', description: 'Merchandise products, earnings, and royalties' },
   campaigns: { label: 'Campaigns',      icon: 'bullhorn', description: 'Event tickets and fundraisers' },
   labels:    { label: 'Labels',         icon: 'tags',     description: 'Label and sublabel information' },
   admin:     { label: 'Administration', icon: 'settings', description: 'System settings and administration' },
@@ -62,6 +63,10 @@ export class WorkspaceService {
       workspaces.push('music');
     }
 
+    if (settings?.feature_merch_workspace) {
+      workspaces.push('merch');
+    }
+
     if (isAdmin) {
       if (settings?.feature_campaigns_workspace !== false) {
         workspaces.push('campaigns');
@@ -82,6 +87,7 @@ export class WorkspaceService {
   getWorkspaceLandingUrl(workspace: WorkspaceType): string {
     switch (workspace) {
       case 'music': return '/dashboard';
+      case 'merch': return '/merch/products';
       case 'campaigns': return this.authService.isAdmin() ? '/campaigns/dashboard' : '/campaigns/events/tickets';
       case 'labels': {
         const settings = this.brandService.getCurrentBrandSettings();
@@ -118,6 +124,6 @@ export class WorkspaceService {
   }
 
   private isValidWorkspace(value: string): boolean {
-    return ['music', 'campaigns', 'labels', 'admin'].includes(value);
+    return ['music', 'merch', 'campaigns', 'labels', 'admin'].includes(value);
   }
 }

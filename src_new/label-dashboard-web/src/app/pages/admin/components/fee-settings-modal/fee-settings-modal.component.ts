@@ -24,10 +24,16 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
   loading: boolean = false;
 
   // Whether to use a brand-level override for each fee category.
-  // When false, null is sent to the API so the brand follows its plan's defaults.
   overrideMusic: boolean = false;
   overrideEvent: boolean = false;
   overrideFundraiser: boolean = false;
+  overrideMerch: boolean = false;
+
+  // Whether each section is collapsed
+  collapsedMusic: boolean = true;
+  collapsedEvent: boolean = true;
+  collapsedFundraiser: boolean = true;
+  collapsedMerch: boolean = true;
 
   // Plan info for the brand
   planInfo: FeePlan | null = null;
@@ -76,6 +82,11 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         transaction_fixed_fee: [0, [Validators.min(0)]],
         revenue_percentage_fee: [0, [Validators.min(0), Validators.max(100)]],
         fee_revenue_type: ['net', [Validators.required]]
+      }),
+      merch: this.fb.group({
+        transaction_fixed_fee: [0, [Validators.min(0)]],
+        revenue_percentage_fee: [0, [Validators.min(0), Validators.max(100)]],
+        fee_revenue_type: ['net', [Validators.required]]
       })
     });
   }
@@ -86,18 +97,16 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
     this.loading = true;
     this.adminService.getFeeSettings(this.brandId).subscribe({
       next: (settings) => {
-        // Store plan info and defaults for display
         this.planInfo = settings.plan ?? null;
         this.musicPlanDefault = settings.music.plan_default ?? null;
         this.eventPlanDefault = settings.event.plan_default ?? null;
         this.fundraiserPlanDefault = settings.fundraiser.plan_default ?? null;
 
-        // Override is active when the API returns a non-null override object
         this.overrideMusic = settings.music.override !== null && settings.music.override !== undefined;
         this.overrideEvent = settings.event.override !== null && settings.event.override !== undefined;
         this.overrideFundraiser = settings.fundraiser.override !== null && settings.fundraiser.override !== undefined;
+        this.overrideMerch = settings.merch?.override !== null && settings.merch?.override !== undefined;
 
-        // Populate form fields with current effective values (override if set, else plan default)
         this.feeForm.patchValue({
           music: {
             transaction_fixed_fee: settings.music.transaction_fixed_fee ?? 0,
@@ -113,6 +122,11 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
             transaction_fixed_fee: settings.fundraiser.transaction_fixed_fee ?? 0,
             revenue_percentage_fee: settings.fundraiser.revenue_percentage_fee ?? 0,
             fee_revenue_type: settings.fundraiser.fee_revenue_type ?? 'net'
+          },
+          merch: {
+            transaction_fixed_fee: settings.merch?.transaction_fixed_fee ?? 0,
+            revenue_percentage_fee: settings.merch?.revenue_percentage_fee ?? 0,
+            fee_revenue_type: settings.merch?.fee_revenue_type ?? 'net'
           }
         });
 
@@ -125,35 +139,56 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
         this.feeForm.patchValue({
           music: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
           event: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
-          fundraiser: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' }
+          fundraiser: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' },
+          merch: { transaction_fixed_fee: 0, revenue_percentage_fee: 0, fee_revenue_type: 'net' }
         });
       }
     });
   }
 
+  getSectionSummary(category: 'music' | 'event' | 'fundraiser' | 'merch'): string {
+    const override = category === 'music' ? this.overrideMusic
+      : category === 'event' ? this.overrideEvent
+      : category === 'fundraiser' ? this.overrideFundraiser
+      : this.overrideMerch;
+
+    if (!override) return 'Using plan default';
+
+    const val = this.feeForm.get(category)?.value;
+    if (!val) return 'Override active';
+
+    const parts: string[] = [];
+    if (val.transaction_fixed_fee > 0) parts.push(`₱${Number(val.transaction_fixed_fee).toFixed(2)} fixed`);
+    if (val.revenue_percentage_fee > 0) parts.push(`${val.revenue_percentage_fee}% of ${val.fee_revenue_type}`);
+    return parts.length > 0 ? parts.join(' + ') : 'Override active (no fees set)';
+  }
+
   showPreview(): boolean {
-    return this.showMusicPreview() || this.showEventPreview() || this.showFundraiserPreview();
+    return this.showMusicPreview() || this.showEventPreview() || this.showFundraiserPreview() || this.showMerchPreview();
   }
 
   showMusicPreview(): boolean {
     if (!this.overrideMusic) return false;
     const music = this.feeForm.get('music')?.value;
-    if (!music) return false;
-    return music.transaction_fixed_fee > 0 || music.revenue_percentage_fee > 0;
+    return music && (music.transaction_fixed_fee > 0 || music.revenue_percentage_fee > 0);
   }
 
   showEventPreview(): boolean {
     if (!this.overrideEvent) return false;
     const event = this.feeForm.get('event')?.value;
-    if (!event) return false;
-    return event.transaction_fixed_fee > 0 || event.revenue_percentage_fee > 0;
+    return event && (event.transaction_fixed_fee > 0 || event.revenue_percentage_fee > 0);
   }
 
   showFundraiserPreview(): boolean {
     if (!this.overrideFundraiser) return false;
     const fundraiser = this.feeForm.get('fundraiser')?.value;
-    if (!fundraiser) return false;
-    return fundraiser.transaction_fixed_fee > 0 || fundraiser.revenue_percentage_fee > 0;
+    return fundraiser && (fundraiser.transaction_fixed_fee > 0 || fundraiser.revenue_percentage_fee > 0);
+  }
+
+  showMerchPreview(): boolean {
+    if (!this.overrideMerch) return false;
+    const merch = this.feeForm.get('merch')?.value;
+    return merch && (merch.transaction_fixed_fee > 0 || merch.revenue_percentage_fee > 0);
   }
 
   onSubmit(): void {
@@ -164,10 +199,10 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
 
     this.loading = true;
     const feeSettings = {
-      // Send null to clear override (follow plan); send values to set override
       music: this.overrideMusic ? this.feeForm.get('music')?.value : null,
       event: this.overrideEvent ? this.feeForm.get('event')?.value : null,
       fundraiser: this.overrideFundraiser ? this.feeForm.get('fundraiser')?.value : null,
+      merch: this.overrideMerch ? this.feeForm.get('merch')?.value : null,
     };
 
     this.adminService.updateFeeSettings(this.brandId, feeSettings).subscribe({
@@ -178,7 +213,8 @@ export class FeeSettingsModalComponent implements OnInit, OnChanges {
           plan: this.planInfo,
           music: feeSettings.music,
           event: feeSettings.event,
-          fundraiser: feeSettings.fundraiser
+          fundraiser: feeSettings.fundraiser,
+          merch: feeSettings.merch
         });
         this.onClose();
         this.loading = false;

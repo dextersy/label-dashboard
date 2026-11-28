@@ -1,0 +1,97 @@
+<app-breadcrumb></app-breadcrumb>
+<div class="container-fluid tw-py-4">
+
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+    <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+      <h3 class="tw-mb-0">Product Categories</h3>
+      @if (!showNewForm) {
+        <button class="btn-primary btn-sm" (click)="openNewForm()">
+          <app-icon name="plus" class="tw-mr-1" /> New Category
+        </button>
+      }
+    </div>
+
+    <!-- Suggested quick-add chips -->
+    @if (suggestedToAdd.length > 0) {
+      <div class="tw-mb-4">
+        <p class="tw-text-xs tw-text-muted tw-mb-2 tw-uppercase tw-tracking-wide tw-font-semibold">Quick add</p>
+        <div class="tw-flex tw-flex-wrap tw-gap-2">
+          @for (s of suggestedToAdd; track s) {
+            <button class="category-suggestion-chip" (click)="quickAdd(s)" [disabled]="saving">
+              <app-icon name="plus" class="tw-mr-1 tw-opacity-60" /> {{ s }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- New category form -->
+    @if (showNewForm) {
+      <div class="tw-bg-gray-50 tw-rounded-lg tw-p-4 tw-border tw-border-gray-200 tw-mb-4">
+        <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-3 tw-mb-3">
+          <div class="tw-flex tw-flex-col tw-gap-1">
+            <label class="tw-label">Category Name <span class="tw-text-red-500">*</span></label>
+            <input type="text" class="tw-input" [(ngModel)]="newName" placeholder="e.g. Vinyl" maxlength="255" autofocus>
+          </div>
+          <div class="tw-flex tw-flex-col tw-gap-1">
+            <label class="tw-label">Description</label>
+            <input type="text" class="tw-input" [(ngModel)]="newDescription" placeholder="Optional description" maxlength="500">
+          </div>
+        </div>
+        <div class="tw-flex tw-gap-2">
+          <button class="btn-primary btn-sm" (click)="createCategory()" [disabled]="!newName.trim() || saving">
+            Create
+          </button>
+          <button class="btn-secondary btn-sm" (click)="cancelNew()">Cancel</button>
+        </div>
+      </div>
+    }
+
+    <!-- Categories list -->
+    @if (loading) {
+      <div class="tw-text-center tw-py-8 tw-text-muted">
+        <app-icon name="spinner" class="tw-animate-spin tw-mr-1" /> Loading…
+      </div>
+    } @else if (categories.length === 0) {
+      <div class="tw-text-center tw-py-10 tw-text-muted">
+        <app-icon name="tag" class="tw-mb-2" style="font-size:2rem;" />
+        <p class="tw-mb-0">No categories yet. Create one above or use quick add.</p>
+      </div>
+    } @else {
+      <div class="tw-divide-y tw-divide-gray-100">
+        @for (cat of categories; track cat.id) {
+          <div class="tw-py-3 tw-flex tw-items-center tw-gap-3">
+            @if (editingId === cat.id) {
+              <!-- Inline edit row -->
+              <div class="tw-flex tw-flex-1 tw-gap-3 tw-items-center tw-flex-wrap">
+                <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editName" placeholder="Category name" maxlength="255" style="min-width:140px;">
+                <input type="text" class="tw-input tw-flex-1" [(ngModel)]="editDescription" placeholder="Description (optional)" maxlength="500" style="min-width:160px;">
+                <div class="tw-flex tw-gap-2 tw-flex-shrink-0">
+                  <button class="btn-primary btn-sm" (click)="saveEdit(cat)" [disabled]="!editName.trim() || saving">Save</button>
+                  <button class="btn-secondary btn-sm" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </div>
+            } @else {
+              <!-- Display row -->
+              <div class="tw-flex-1 tw-min-w-0">
+                <span class="tw-font-semibold tw-text-sm">{{ cat.name }}</span>
+                @if (cat.description) {
+                  <span class="tw-text-muted tw-text-xs tw-ml-2">{{ cat.description }}</span>
+                }
+              </div>
+              <div class="tw-flex tw-gap-2 tw-flex-shrink-0">
+                <button class="btn btn-sm btn-outline-secondary" (click)="startEdit(cat)" title="Edit">
+                  <app-icon name="pencil" />
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteCategory(cat)" title="Delete">
+                  <app-icon name="trash" />
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

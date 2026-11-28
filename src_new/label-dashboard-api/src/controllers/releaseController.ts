@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import { fn, col, literal, Op } from 'sequelize';
 import { sequelize } from '../config/database';
-import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain } from '../models';
+import { Release, Artist, ReleaseArtist, Brand, Earning, RecuperableExpense, Song, ReleaseSong, SongCollaborator, SongAuthor, SongComposer, Songwriter, ArtistAccess, User, Royalty, Domain, Product } from '../models';
 import path from 'path';
 import archiver from 'archiver';
 import { Document, Packer, Paragraph, TextRun, ExternalHyperlink, Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType, HeightRule, TableLayoutType, LineRuleType } from 'docx';
@@ -962,22 +962,22 @@ export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
+    // All recuperable expenses (including merch for linked products) are keyed by release_id
+    const expenseScope = { release_id: releaseId };
+
     // Get total count for pagination
-    const totalCount = await RecuperableExpense.count({
-      where: { release_id: releaseId }
-    });
+    const totalCount = await RecuperableExpense.count({ where: expenseScope });
 
     // Get paginated expenses
     const expenses = await RecuperableExpense.findAll({
-      where: { release_id: releaseId },
+      where: expenseScope,
+      include: [{ model: Product, as: 'product', required: false, attributes: ['id', 'name', 'sku'] }],
       order: [['date_recorded', 'DESC']],
       limit,
       offset
     });
 
-    const totalExpenses = await RecuperableExpense.sum('expense_amount', {
-      where: { release_id: releaseId }
-    });
+    const totalExpenses = await RecuperableExpense.sum('expense_amount', { where: expenseScope });
 
     const totalPages = Math.ceil(totalCount / limit);
 

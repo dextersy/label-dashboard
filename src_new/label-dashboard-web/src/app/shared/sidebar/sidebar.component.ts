@@ -134,6 +134,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ]
     },
     {
+      id: 'merch',
+      adminOnly: false,
+      items: [
+        {
+          route: '/merch/products',
+          icon: 'shopping-bag',
+          title: 'Products',
+          adminOnly: false,
+        },
+        {
+          route: '/merch/sales',
+          icon: 'currency',
+          title: 'Finance',
+          adminOnly: false,
+        },
+        {
+          route: '/merch/categories',
+          icon: 'tag',
+          title: 'Categories',
+          adminOnly: true,
+        },
+      ]
+    },
+    {
       id: 'campaigns',
       adminOnly: true,
       items: [
@@ -198,7 +222,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
               title: 'Reports',
               adminOnly: true,
               children: [
-                { route: '/labels/reports/music-earnings', title: 'Music Earnings', adminOnly: true },
+                { route: '/labels/reports/music-earnings', title: 'Earnings', adminOnly: true },
                 { route: '/labels/reports/artist-balances', title: 'Artist Balances', adminOnly: true },
                 { route: '/labels/reports/payments-royalties', title: 'Payouts & Royalties', adminOnly: true },
                 { route: '/labels/reports/recuperable-expense-balance', title: 'Recuperable Expenses', adminOnly: true }
@@ -248,6 +272,20 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.visibleSections = [];
         }
         break;
+      case 'merch': {
+        const merchSection = this.sections.find(section => section.id === 'merch');
+        if (merchSection) {
+          this.visibleSections = [{
+            id: 'merch-top-level',
+            items: merchSection.items
+              .filter(item => !item.adminOnly || this.isAdmin)
+              .map(item => ({ ...item, icon: item.icon || 'shopping-bag' }))
+          }];
+        } else {
+          this.visibleSections = [];
+        }
+        break;
+      }
       case 'campaigns':
         // For campaigns workspace, show dashboard first, then events and fundraisers menu items
         const campaignsSection = this.sections.find(section => section.id === 'campaigns');

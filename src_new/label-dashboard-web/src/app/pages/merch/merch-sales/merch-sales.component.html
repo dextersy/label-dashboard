@@ -1,0 +1,165 @@
+<app-breadcrumb></app-breadcrumb>
+
+@if (loading) {
+  <div class="tw-text-center tw-py-8">
+    <app-icon name="spinner" class="tw-animate-spin" /> Loading...
+  </div>
+} @else {
+
+  <app-in-page-nav [tabs]="subTabs" [activeTab]="activeSubTab" (tabChange)="onSubTabChange($event)">
+
+    <!-- ── EARNINGS ──────────────────────────────────────── -->
+    @if (activeSubTab === 'earnings') {
+      <div>
+        @if (showEarningForm && isAdmin) {
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">New Earning</h3>
+            <form (ngSubmit)="onSubmitEarning()">
+              <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-4">
+                <div class="sm:tw-col-span-2">
+                  <label class="tw-label">Product</label>
+                  <select class="tw-input" [(ngModel)]="selectedProductId" name="e_product_id" required>
+                    <option [ngValue]="null" disabled>Select a product…</option>
+                    @for (p of products; track p.id) {
+                      <option [ngValue]="p.id">{{ productLabel(p) }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="tw-label">Date Recorded</label>
+                  <input type="date" class="tw-input" [(ngModel)]="earningForm.date_recorded" name="e_date_recorded" required>
+                </div>
+                <div>
+                  <label class="tw-label">Amount (PHP)</label>
+                  <input type="number" class="tw-input" [(ngModel)]="earningForm.amount" name="e_amount" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="sm:tw-col-span-2">
+                  <label class="tw-label">Description</label>
+                  <textarea class="tw-input" [(ngModel)]="earningForm.description" name="e_description" rows="2" placeholder="Enter earning description" maxlength="45" required></textarea>
+                  <div class="tw-text-xs tw-text-right tw-mt-1"
+                    [class.tw-text-muted]="(earningForm.description?.length || 0) < 45"
+                    [class.tw-text-red-500]="(earningForm.description?.length || 0) >= 45">
+                    {{ earningForm.description?.length || 0 }}/45
+                  </div>
+                </div>
+                <div class="sm:tw-col-span-2">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="earningForm.calculate_royalties" name="e_calculate_royalties" id="calcRoyalties">
+                    <label class="form-check-label" for="calcRoyalties">Calculate royalties automatically</label>
+                  </div>
+                  <p class="tw-mt-1 tw-text-xs tw-text-muted">When checked, royalty entries are automatically created for all artists based on their configured split percentages.</p>
+                </div>
+              </div>
+              <div class="tw-flex tw-justify-end">
+                <button type="submit" class="btn-primary" [disabled]="submittingEarning || !isEarningFormValid">
+                  <app-icon name="spinner" class="tw-animate-spin" *ngIf="submittingEarning" />
+                  <app-icon name="plus" *ngIf="!submittingEarning" />
+                  {{ submittingEarning ? 'Adding...' : 'Add Earning' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="md:tw-col-span-12">
+            <app-date-range-filter
+              [compact]="true"
+              [loading]="loading"
+              (dateRangeChange)="onDateRangeChange($event)">
+            </app-date-range-filter>
+          </div>
+        </div>
+
+        <app-paginated-table
+          title="Earnings"
+          [data]="filteredEarnings"
+          [pagination]="earningsPagination"
+          [columns]="earningsColumns"
+          [sortInfo]="earningsSort"
+          [loading]="loading"
+          [showSearch]="true"
+          [showSortableHeaders]="true"
+          [responsiveMode]="'financial'"
+          [headerActions]="earningsHeaderActions"
+          (filtersChange)="onEarningsFiltersChange($event)"
+          (sortChange)="onEarningsSortChange($event)"
+          (pageChange)="onEarningsPageChange($event)">
+        </app-paginated-table>
+      </div>
+    }
+
+    <!-- ── EXPENSES ──────────────────────────────────────── -->
+    @if (activeSubTab === 'expenses') {
+      <div>
+        @if (showExpenseForm && isAdmin) {
+          <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+            <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-4">New Expense</h3>
+            <form (ngSubmit)="onSubmitExpense()">
+              <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4 tw-mb-4">
+                <div class="sm:tw-col-span-2">
+                  <label class="tw-label">Product</label>
+                  <select class="tw-input" [(ngModel)]="selectedExpenseProductId" name="x_product_id" required>
+                    <option [ngValue]="null" disabled>Select a product…</option>
+                    @for (p of products; track p.id) {
+                      <option [ngValue]="p.id">{{ productLabel(p) }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="tw-label">Date Recorded</label>
+                  <input type="date" class="tw-input" [(ngModel)]="expenseForm.date_recorded" name="x_date_recorded" required>
+                </div>
+                <div>
+                  <label class="tw-label">Amount (PHP)</label>
+                  <div class="input-group">
+                    <div class="input-group-prepend"><span class="input-group-text">₱</span></div>
+                    <input type="number" class="tw-input" [(ngModel)]="expenseForm.expense_amount" name="x_expense_amount" step="0.01" min="0" placeholder="0.00" required>
+                  </div>
+                </div>
+                <div class="sm:tw-col-span-2">
+                  <label class="tw-label">Description</label>
+                  <input type="text" class="tw-input" [(ngModel)]="expenseForm.expense_description" name="x_expense_description" placeholder="Describe what this expense is for" maxlength="255" required>
+                </div>
+              </div>
+              <div class="tw-flex tw-justify-end">
+                <button type="submit" class="btn-primary" [disabled]="submittingExpense || !isExpenseFormValid">
+                  <app-icon name="spinner" class="tw-animate-spin" *ngIf="submittingExpense" />
+                  <app-icon name="plus" *ngIf="!submittingExpense" />
+                  {{ submittingExpense ? 'Adding...' : 'Add Expense' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <div class="tw-mb-3 tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+          <div class="md:tw-col-span-12">
+            <app-date-range-filter
+              [compact]="true"
+              [loading]="loading"
+              (dateRangeChange)="onDateRangeChange($event)">
+            </app-date-range-filter>
+          </div>
+        </div>
+
+        <app-paginated-table
+          title="Recuperable Expenses"
+          [data]="filteredExpenses"
+          [pagination]="expensesPagination"
+          [columns]="expensesColumns"
+          [sortInfo]="expensesSort"
+          [loading]="loading"
+          [showSearch]="true"
+          [showSortableHeaders]="true"
+          [responsiveMode]="'financial'"
+          [headerActions]="expensesHeaderActions"
+          (filtersChange)="onExpensesFiltersChange($event)"
+          (sortChange)="onExpensesSortChange($event)"
+          (pageChange)="onExpensesPageChange($event)">
+        </app-paginated-table>
+      </div>
+    }
+
+  </app-in-page-nav>
+}

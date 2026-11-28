@@ -1,0 +1,53 @@
+<div class="container-fluid tw-py-4">
+  <div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+    <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+      <h3 class="tw-mb-2">
+        <app-icon name="shopping-bag" class="tw-mr-2" />
+        Products
+      </h3>
+      <p class="tw-mb-0 tw-text-muted">Manage your merchandise products.</p>
+    </div>
+  </div>
+
+  <app-paginated-table
+    title="Products"
+    [data]="products"
+    [pagination]="pagination"
+    [loading]="loading"
+    [columns]="columns"
+    [showSearch]="true"
+    [showSortableHeaders]="true"
+    [actions]="actions"
+    [headerActions]="headerActions"
+    (pageChange)="onPageChange($event)"
+    (filtersChange)="onFiltersChange($event)">
+
+    <ng-template #mobileRowTemplate let-item>
+      <div class="product-mobile-row" (click)="router.navigate(['/merch/products', item.id])">
+        <div class="product-mobile-img-wrap">
+          <img *ngIf="item.images?.[0]?.path" [src]="item.images[0].path" [alt]="item.name" class="product-mobile-img" />
+          <div *ngIf="!item.images?.[0]?.path" class="product-mobile-img-placeholder"></div>
+        </div>
+        <div class="product-mobile-info">
+          <div class="product-mobile-name">{{ item.name }}</div>
+          <div *ngIf="item.sku" class="product-mobile-sku">{{ item.sku }}</div>
+          <div *ngIf="item.categories?.length" class="category-chips-wrap tw-mt-1">
+            <span *ngFor="let cat of item.categories" class="category-chip">{{ cat.name }}</span>
+          </div>
+          <div class="product-mobile-linked" *ngIf="item.release?.title || item.artist?.name">
+            <span *ngIf="item.release?.title">{{ item.release.title }}</span>
+            <span *ngIf="item.release?.title && item.artist?.name"> · </span>
+            <span *ngIf="item.artist?.name">{{ item.artist.name }}</span>
+          </div>
+        </div>
+        <div class="product-mobile-right">
+          <div class="product-mobile-price">{{ item.price != null ? ('₱' + item.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '—' }}</div>
+          <span [class]="item.status === 'active' ? 'status-badge status-success' : 'status-badge status-secondary'">
+            {{ item.status === 'active' ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+      </div>
+    </ng-template>
+
+  </app-paginated-table>
+</div>

@@ -67,6 +67,11 @@ import AudiencePushNotifPreference from './AudiencePushNotifPreference';
 import EventDay from './EventDay';
 import TicketTypeDay from './TicketTypeDay';
 import TicketScanLog from './TicketScanLog';
+import Product from './Product';
+import ProductImage from './ProductImage';
+import ProductArtist from './ProductArtist';
+import ProductCategory from './ProductCategory';
+import ProductProductCategory from './ProductProductCategory';
 
 // Define relationships
 // Brand relationships
@@ -270,16 +275,68 @@ PaymentMethod.hasMany(Payment, { foreignKey: 'payment_method_id', as: 'payments'
 
 // Earning relationships
 Earning.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+Earning.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 Earning.hasMany(Royalty, { foreignKey: 'earning_id', as: 'royalties' });
 
 // Royalty relationships
 Royalty.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 Royalty.belongsTo(Earning, { foreignKey: 'earning_id', as: 'earning' });
 Royalty.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+Royalty.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 // RecuperableExpense relationships
 RecuperableExpense.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
 RecuperableExpense.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+RecuperableExpense.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+// Product relationships
+Product.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Product.belongsTo(Release, { foreignKey: 'release_id', as: 'release' });
+Product.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+Product.hasMany(ProductImage, { foreignKey: 'product_id', as: 'images' });
+Product.hasMany(ProductArtist, { foreignKey: 'product_id', as: 'productArtists' });
+Product.hasMany(Earning, { foreignKey: 'product_id', as: 'earnings' });
+Product.hasMany(Royalty, { foreignKey: 'product_id', as: 'royalties' });
+Product.hasMany(RecuperableExpense, { foreignKey: 'product_id', as: 'expenses' });
+Product.belongsToMany(Artist, {
+  through: ProductArtist,
+  foreignKey: 'product_id',
+  otherKey: 'artist_id',
+  as: 'artists'
+});
+Brand.hasMany(Product, { foreignKey: 'brand_id', as: 'products' });
+
+// ProductImage relationships
+ProductImage.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+// ProductArtist relationships
+ProductArtist.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
+ProductArtist.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+Artist.hasMany(ProductArtist, { foreignKey: 'artist_id', as: 'productArtists' });
+Artist.belongsToMany(Product, {
+  through: ProductArtist,
+  foreignKey: 'artist_id',
+  otherKey: 'product_id',
+  as: 'products'
+});
+
+// ProductCategory relationships
+ProductCategory.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Brand.hasMany(ProductCategory, { foreignKey: 'brand_id', as: 'productCategories' });
+Product.belongsToMany(ProductCategory, {
+  through: ProductProductCategory,
+  foreignKey: 'product_id',
+  otherKey: 'category_id',
+  as: 'categories',
+});
+ProductCategory.belongsToMany(Product, {
+  through: ProductProductCategory,
+  foreignKey: 'category_id',
+  otherKey: 'product_id',
+  as: 'products',
+});
+ProductProductCategory.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+ProductProductCategory.belongsTo(ProductCategory, { foreignKey: 'category_id', as: 'category' });
 
 // ArtistImage relationships
 ArtistImage.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
@@ -495,6 +552,11 @@ export {
   EventDay,
   TicketTypeDay,
   TicketScanLog,
+  Product,
+  ProductImage,
+  ProductArtist,
+  ProductCategory,
+  ProductProductCategory,
 };
 
 // Initialize database connection

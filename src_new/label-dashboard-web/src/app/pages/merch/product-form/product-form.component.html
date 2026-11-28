@@ -1,0 +1,309 @@
+<app-breadcrumb></app-breadcrumb>
+<div class="container-fluid tw-py-4">
+  <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+    <h3 class="tw-mb-4">{{ isEdit ? 'Edit Product' : 'New Product' }}</h3>
+
+    <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+      <div class="tw-flex tw-flex-col tw-gap-1">
+        <div class="tw-flex tw-justify-between tw-items-baseline">
+          <label class="tw-label">Product Name <span class="tw-text-red-500">*</span></label>
+          <span class="tw-text-xs" [class.tw-text-muted]="(form.name?.length || 0) < 100" [class.tw-text-red-500]="(form.name?.length || 0) >= 100">{{ form.name?.length || 0 }}/100</span>
+        </div>
+        <input type="text" class="tw-input" [(ngModel)]="form.name" placeholder="e.g. Band T-Shirt" maxlength="100">
+      </div>
+
+      <div class="tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-label">SKU</label>
+        <input type="text" class="tw-input" [(ngModel)]="form.sku" placeholder="e.g. MERCH-001">
+      </div>
+
+      <div class="tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-label">Price</label>
+        <input type="number" class="tw-input" [(ngModel)]="form.price" step="0.01" min="0" placeholder="0.00">
+      </div>
+
+      <div class="tw-flex tw-flex-col tw-gap-1">
+        <label class="tw-label">Status</label>
+        <select class="tw-input" [(ngModel)]="form.status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="tw-flex tw-flex-col tw-gap-1 md:tw-col-span-2">
+        <div class="tw-flex tw-justify-between tw-items-baseline">
+          <label class="tw-label">Description</label>
+          <span class="tw-text-xs" [class.tw-text-muted]="(form.description?.length || 0) < 500" [class.tw-text-red-500]="(form.description?.length || 0) >= 500">{{ form.description?.length || 0 }}/500</span>
+        </div>
+        <textarea class="tw-input" [(ngModel)]="form.description" rows="3" placeholder="Product description..." maxlength="500"></textarea>
+      </div>
+
+      <!-- Categories -->
+      <div class="tw-flex tw-flex-col tw-gap-1 md:tw-col-span-2">
+        <label class="tw-label">Categories</label>
+        <!-- Selected chips -->
+        <div class="category-input-wrap">
+          @for (cat of selectedCategories; track cat.id) {
+            <span class="category-chip category-chip--removable">
+              {{ cat.name }}
+              <button type="button" class="category-chip-remove" (click)="removeCategory(cat)" title="Remove">×</button>
+            </span>
+          }
+          <div class="tw-relative tw-flex tw-flex-1" style="min-width:140px;">
+            <input type="text"
+                   class="category-chip-input"
+                   [(ngModel)]="categorySearchTerm"
+                   name="categorySearchTerm"
+                   (ngModelChange)="onCategorySearch()"
+                   (focus)="onCategorySearch()"
+                   (blur)="onCategoryBlur()"
+                   [placeholder]="selectedCategories.length ? 'Add another…' : 'Search or add categories…'"
+                   autocomplete="off">
+            @if (showCategoryDropdown && filteredCategories.length > 0) {
+              <div class="link-dropdown">
+                @for (cat of filteredCategories; track cat.id) {
+                  <div class="link-option" (mousedown)="addCategory(cat)">{{ cat.name }}</div>
+                }
+              </div>
+            }
+            @if (showCategoryDropdown && filteredCategories.length === 0 && categorySearchTerm) {
+              <div class="link-dropdown">
+                <div class="link-option tw-text-muted">No matching categories</div>
+              </div>
+            }
+          </div>
+        </div>
+        @if (!categoriesLoaded) {
+          <span class="tw-text-xs tw-text-muted">Loading categories…</span>
+        }
+      </div>
+
+      <!-- Link to -->
+      <div class="tw-flex tw-flex-col tw-gap-1 md:tw-col-span-2">
+        <label class="tw-label">Link to</label>
+        @if (!selectedArtist && !selectedRelease) {
+          <div class="sub-tab-toggle tw-mb-3" role="group" aria-label="Link type">
+            <button type="button" class="sub-tab-btn" [class.sub-tab-btn-active]="linkType === 'none'" (click)="setLinkType('none')">None</button>
+            <button type="button" class="sub-tab-btn" [class.sub-tab-btn-active]="linkType === 'artist'" (click)="setLinkType('artist')">Artist</button>
+            <button type="button" class="sub-tab-btn" [class.sub-tab-btn-active]="linkType === 'release'" (click)="setLinkType('release')">Release</button>
+          </div>
+        }
+
+        @if (linkType === 'artist') {
+          @if (selectedArtist) {
+            <!-- Artist chip -->
+            <div class="link-chip">
+              @if (getArtistPhotoUrl(selectedArtist)) {
+                <img [src]="getArtistPhotoUrl(selectedArtist)" class="link-chip-img link-chip-img-artist" alt="">
+              } @else {
+                <div class="link-chip-avatar">{{ selectedArtist.name?.charAt(0) }}</div>
+              }
+              <div class="link-chip-info">
+                <span class="link-chip-name">{{ selectedArtist.name }}</span>
+                <span class="link-chip-sub">Artist</span>
+              </div>
+              <button type="button" class="link-chip-clear" (click)="clearLink()" title="Remove link">×</button>
+            </div>
+          } @else {
+            <!-- Artist search -->
+            <div class="tw-relative">
+              <div class="link-search-wrap">
+                <app-icon name="search" class="link-search-icon" iconOnly />
+                <input type="text"
+                       class="tw-input link-search-input"
+                       [(ngModel)]="linkSearchTerm"
+                       (ngModelChange)="onLinkSearch()"
+                       (focus)="onLinkSearch()"
+                       (blur)="onLinkBlur()"
+                       placeholder="Search artists..."
+                       autocomplete="off">
+              </div>
+              @if (showLinkDropdown && filteredArtists.length > 0) {
+                <div class="link-dropdown">
+                  @for (artist of filteredArtists; track artist.id) {
+                    <div class="link-option tw-flex tw-items-center tw-gap-2"
+                         (mousedown)="selectArtist(artist)">
+                      @if (getArtistPhotoUrl(artist)) {
+                        <img [src]="getArtistPhotoUrl(artist)" class="tw-w-7 tw-h-7 tw-rounded-full tw-object-cover tw-flex-shrink-0" alt="">
+                      } @else {
+                        <div class="tw-w-7 tw-h-7 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-text-xs tw-font-semibold tw-flex-shrink-0"
+                             style="background: var(--brand-color, #3b82f6); color: #fff;">
+                          {{ artist.name?.charAt(0) }}
+                        </div>
+                      }
+                      <span>{{ artist.name }}</span>
+                    </div>
+                  }
+                </div>
+              }
+              @if (!linkDataLoaded && linkSearchTerm === '') {
+                <div class="tw-text-sm tw-text-muted tw-mt-1">Loading artists…</div>
+              }
+            </div>
+          }
+        }
+
+        @if (linkType === 'release') {
+          @if (selectedRelease) {
+            <!-- Release chip -->
+            <div class="link-chip">
+              @if (selectedRelease.cover_art) {
+                <img [src]="selectedRelease.cover_art" class="link-chip-img link-chip-img-release" alt="">
+              } @else {
+                <div class="link-chip-avatar" style="border-radius: 4px;">
+                  <app-icon name="music" />
+                </div>
+              }
+              <div class="link-chip-info">
+                <span class="link-chip-name">{{ selectedRelease.title }}</span>
+                <span class="link-chip-sub">{{ selectedRelease.catalog_no }}</span>
+              </div>
+              <button type="button" class="link-chip-clear" (click)="clearLink()" title="Remove link">×</button>
+            </div>
+          } @else {
+            <!-- Release search -->
+            <div class="tw-relative">
+              <div class="link-search-wrap">
+                <app-icon name="search" class="link-search-icon" iconOnly />
+                <input type="text"
+                       class="tw-input link-search-input"
+                       [(ngModel)]="linkSearchTerm"
+                       (ngModelChange)="onLinkSearch()"
+                       (focus)="onLinkSearch()"
+                       (blur)="onLinkBlur()"
+                       placeholder="Search releases..."
+                       autocomplete="off">
+              </div>
+              @if (showLinkDropdown && filteredReleases.length > 0) {
+                <div class="link-dropdown">
+                  @for (release of filteredReleases; track release.id) {
+                    <div class="link-option tw-flex tw-items-center tw-gap-2"
+                         (mousedown)="selectRelease(release)">
+                      @if (release.cover_art) {
+                        <img [src]="release.cover_art" class="tw-w-7 tw-h-7 tw-rounded tw-object-cover tw-flex-shrink-0" alt="">
+                      } @else {
+                        <div class="tw-w-7 tw-h-7 tw-rounded tw-flex tw-items-center tw-justify-center tw-flex-shrink-0 tw-bg-gray-100">
+                          <app-icon name="music" />
+                        </div>
+                      }
+                      <div class="tw-min-w-0">
+                        <div class="tw-font-semibold tw-truncate" style="font-size:13px;">{{ release.title }}</div>
+                        <div class="tw-text-muted" style="font-size:11px;">{{ release.catalog_no }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              @if (!linkDataLoaded && linkSearchTerm === '') {
+                <div class="tw-text-sm tw-text-muted tw-mt-1">Loading releases…</div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Artist Splits card (edit only) -->
+  @if (isEdit) {
+    <div class="tw-bg-white tw-rounded-card tw-shadow-card tw-p-card-pad tw-mb-6">
+      <div class="tw-flex tw-justify-between tw-items-center tw-mb-4">
+        <h6 class="tw-mb-0">Artist Splits</h6>
+        @if (form.release_id) {
+          <button type="button" class="btn-sm btn-secondary" (click)="inheritSplits()" title="Replace current splits with this release's merch splits">
+            <app-icon name="refresh-cw" class="tw-mr-1" /> Re-inherit from release
+          </button>
+        }
+      </div>
+
+      <!-- Split rows -->
+      <div class="tw-space-y-2 tw-mb-4">
+        @for (split of artistSplits; track split.artist_id; let i = $index) {
+          <div class="tw-bg-gray-50 tw-rounded-lg tw-p-3 tw-border tw-border-gray-200">
+            <div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-3 tw-items-end">
+              <div class="tw-col-span-2 md:tw-col-span-1">
+                <label class="tw-label tw-text-xs">Artist</label>
+                <div class="tw-flex tw-items-center tw-gap-2">
+                  <div class="tw-flex tw-items-center tw-justify-center tw-rounded-full tw-text-white tw-font-bold tw-flex-shrink-0"
+                       style="width:28px;height:28px;font-size:10px;"
+                       [style.background-color]="getAvatarColor(split.artist?.name || '')">
+                    {{ getInitials(split.artist?.name || '?') }}
+                  </div>
+                  <div class="tw-font-semibold tw-text-sm tw-truncate">{{ split.artist?.name || 'Artist #' + split.artist_id }}</div>
+                </div>
+              </div>
+              <div>
+                <label class="tw-label tw-text-xs">Royalty %</label>
+                <input type="number" class="tw-input"
+                       [ngModel]="split.merch_royalty_percentage * 100 | number:'1.1-1'"
+                       (ngModelChange)="split.merch_royalty_percentage = $event / 100"
+                       step="0.1" min="0" max="100">
+              </div>
+              <div>
+                <label class="tw-label tw-text-xs">Type</label>
+                <select class="tw-input" [(ngModel)]="split.merch_royalty_type">
+                  <option value="Revenue">Revenue</option>
+                  <option value="Profit">Profit</option>
+                </select>
+              </div>
+              <div class="tw-flex tw-justify-end tw-items-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeSplit(i)">
+                  <app-icon name="trash" />
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Total row -->
+        @if (artistSplits.length > 0) {
+          <div class="tw-bg-gray-100 tw-rounded-lg tw-p-3 tw-flex tw-justify-between tw-items-center">
+            <span class="tw-text-xs tw-font-bold tw-uppercase tw-tracking-wide tw-text-gray-600">Total artist split</span>
+            <span [class]="totalSplitPercentage === 100 ? 'status-badge status-success' : 'status-badge status-warning'">
+              {{ totalSplitPercentage.toFixed(1) }}%
+            </span>
+          </div>
+        } @else {
+          <p class="tw-text-muted tw-text-sm tw-mb-0">No splits yet. Add an artist below.</p>
+        }
+      </div>
+
+      <!-- Add artist search -->
+      <div class="tw-relative tw-mb-4" style="max-width:360px;">
+        <div class="link-search-wrap">
+          <app-icon name="user-plus" class="link-search-icon" iconOnly />
+          <input type="text"
+                 class="tw-input link-search-input"
+                 [(ngModel)]="splitSearchTerm"
+                 (ngModelChange)="onSplitSearch()"
+                 (focus)="onSplitSearch()"
+                 (blur)="onSplitBlur()"
+                 placeholder="Add artist to splits…"
+                 autocomplete="off">
+        </div>
+        @if (showSplitDropdown && filteredSplitArtists.length > 0) {
+          <div class="link-dropdown">
+            @for (artist of filteredSplitArtists; track artist.id) {
+              <div class="link-option" (mousedown)="addSplit(artist)">{{ artist.name }}</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Save button -->
+      <div>
+        <button class="btn btn-sm btn-outline-secondary" (click)="saveSplits()">
+          <app-icon name="check" class="tw-mr-1" /> Save Splits
+        </button>
+      </div>
+    </div>
+  }
+
+  <app-floating-action-bar>
+    <button class="btn-secondary" (click)="cancel()">Cancel</button>
+    <button class="btn-primary fab-primary-btn" [disabled]="!form.name || saving" (click)="save()">
+      {{ isEdit ? 'Save Changes' : 'Create Product' }}
+    </button>
+  </app-floating-action-bar>
+</div>

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, literal } from 'sequelize';
-import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator } from '../models';
+import { Artist, Brand, Release, Payment, Royalty, ArtistImage, ArtistDocument, ArtistAccess, User, ReleaseArtist, PaymentMethod, Earning, RecuperableExpense, Song, SongAuthor, SongComposer, SongCollaborator, Product } from '../models';
 import { sendTeamInviteEmail, sendArtistUpdateNotifications, sendBrandedEmail, sendPaymentMethodNotification, sendPayoutPointNotification } from '../utils/emailService';
 import { createNotification, createNotificationsForUsers, getArtistTeamAndAdminUserIds, getArtistTeamUserIds } from '../utils/notificationService';
 import { getBrandFrontendUrl } from '../utils/brandUtils';
@@ -1547,12 +1547,9 @@ export const getArtistReleases = async (req: AuthRequest, res: Response) => {
     const releaseInfo = await Promise.all(releases.map(async (release: any) => {
       const releaseArtist = release.releaseArtists[0];
 
-      // Get recuperable expense balance
+      // All recuperable expenses (including merch) are keyed by release_id
       const recuperableExpenseSum = await RecuperableExpense.sum('expense_amount', {
-        where: {
-          release_id: release.id,
-          brand_id: (release as any).brand_id
-        }
+        where: { release_id: release.id, brand_id: (release as any).brand_id },
       }) || 0;
 
       // Get total earnings for this release

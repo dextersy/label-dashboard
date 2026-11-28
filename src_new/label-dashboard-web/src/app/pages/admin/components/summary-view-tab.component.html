@@ -3,7 +3,7 @@
   <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
     <h3 class="tw-mb-2">
       <app-icon name="chart-bar" class="tw-mr-2" />
-      Music Earnings
+      Earnings
     </h3>
     <p class="tw-mb-0 tw-text-muted">Overview of earnings across all artists and releases.</p>
   </div>
@@ -42,13 +42,13 @@
         <div class="balance-header">
           <h2 class="balance-title">Total Earnings</h2>
           <button class="btn btn-icon btn-sm balance-info-btn"
-            matTooltip="Across all earning types (physical, downloads, streaming, and sync)"
+            matTooltip="Across all earning types (physical, downloads, streaming, sync, and merch sales)"
             matTooltipPosition="above">
             <app-icon name="info" iconOnly />
           </button>
         </div>
         <h1 class="balance-amount">
-          {{ formatCurrency(earningsSummary.physical_earnings + earningsSummary.download_earnings + earningsSummary.streaming_earnings + earningsSummary.sync_earnings) }}
+          {{ formatCurrency(earningsSummary.physical_earnings + earningsSummary.download_earnings + earningsSummary.streaming_earnings + earningsSummary.sync_earnings + earningsSummary.merch_earnings) }}
         </h1>
       </div>
     </div>
@@ -75,6 +75,11 @@
           <span class="financial-item-label">Sync</span>
           <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.sync_earnings)">{{ formatCurrency(earningsSummary.sync_earnings) }}</span>
           <app-icon name="film" iconOnly class="financial-item-icon" />
+        </div>
+        <div class="financial-summary-item">
+          <span class="financial-item-label">Merch Sales</span>
+          <span class="financial-item-value" [ngClass]="getAmountClass(earningsSummary.merch_earnings)">{{ formatCurrency(earningsSummary.merch_earnings) }}</span>
+          <app-icon name="tag" iconOnly class="financial-item-icon" />
         </div>
       </div>
     </div>
@@ -108,7 +113,11 @@
         <img [src]="item.cover_art || coverArtPlaceholder" alt="" class="fin-mobile-cover">
         <div class="fin-mobile-body">
           <div class="fin-mobile-date">{{ item.date_recorded | date:'MMM d, yyyy' }}</div>
-          <div class="fin-mobile-release">{{ item.release_title || '(None)' }}</div>
+          <div class="fin-mobile-release">{{ item.release_title || '(None)' }}
+            <span *ngIf="item.product_name" class="tw-block tw-text-xs tw-text-gray-400">
+              {{ item.product_sku ? item.product_sku + ' · ' : '' }}{{ item.product_name }}
+            </span>
+          </div>
           <div class="fin-mobile-desc">{{ item.description }}</div>
           <div class="fin-mobile-type">
             <span class="status-badge status-info">{{ item.type }}</span>

@@ -102,7 +102,7 @@ export class FinancialEarningsTabComponent {
     },
     {
       key: 'release_title',
-      label: 'Release',
+      label: 'Release / Product',
       type: 'text',
       searchable: true,
       sortable: true,
@@ -136,9 +136,12 @@ export class FinancialEarningsTabComponent {
   ];
 
   formatReleaseCell(item: any) {
-    const title = item.release_title || '(None)';
+    const title = item.release_title || item.product_name || '(None)';
     const src = item.cover_art || this.coverArtPlaceholder;
-    const html = `<span style="display:inline-flex;align-items:center;gap:8px"><img src="${src}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">${title}</span>`;
+    const subcaption = item.release_title && item.product_name
+      ? `<span style="display:block;font-size:0.75rem;color:#9ca3af">${item.product_sku ? item.product_sku + ' · ' : ''}${item.product_name}</span>`
+      : '';
+    const html = `<span style="display:inline-flex;align-items:center;gap:8px"><img src="${src}" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0"><span>${title}${subcaption}</span></span>`;
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 

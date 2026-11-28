@@ -13,6 +13,7 @@ const WORKSPACE_ROOT_ROUTES: Record<WorkspaceType, string[]> = {
   campaigns: ['/campaigns'],
   labels:    ['/labels'],
   admin:     ['/admin'],
+  merch:     ['/merch'],
 };
 
 @Component({

@@ -48,6 +48,10 @@ import { PlanManagementComponent } from './pages/labels/plan-management/plan-man
 import { LabelsDashboardComponent } from './pages/labels/labels-dashboard/labels-dashboard.component';
 import { LabelsDiscographyComponent } from './pages/labels/labels-discography/labels-discography.component';
 import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
+import { MerchComponent } from './pages/merch/merch.component';
+import { ProductFormComponent } from './pages/merch/product-form/product-form.component';
+import { MerchSalesComponent } from './pages/merch/merch-sales/merch-sales.component';
+import { MerchCategoriesComponent } from './pages/merch/merch-categories/merch-categories.component';
 import { campaignsAccessGuard } from './guards/campaigns-access.guard';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
@@ -133,6 +137,23 @@ export const routes: Routes = [
     ]
   },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard], canDeactivate: [canDeactivateUnsavedChanges] },
+
+  // Merch workspace
+  {
+    path: 'merch',
+    canActivate: [authGuard],
+    children: [
+      { path: '', redirectTo: 'products', pathMatch: 'full' },
+      { path: 'products', component: MerchComponent, data: { tab: 'products' } },
+      { path: 'sales', component: MerchSalesComponent },
+      { path: 'products/new', component: ProductFormComponent, canActivate: [adminGuard] },
+      { path: 'products/:id', component: MerchComponent, data: { tab: 'product-detail' } },
+      { path: 'products/:id/gallery', component: MerchComponent, data: { tab: 'product-gallery' } },
+      { path: 'products/:id/sales', component: MerchComponent, data: { tab: 'product-sales' } },
+      { path: 'products/:id/edit', component: ProductFormComponent, canActivate: [adminGuard] },
+      { path: 'categories', component: MerchCategoriesComponent, canActivate: [adminGuard] },
+    ]
+  },
 
   // Campaigns workspace (Events + Fundraisers)
   {

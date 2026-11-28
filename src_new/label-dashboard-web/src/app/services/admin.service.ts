@@ -67,6 +67,7 @@ export interface FeeSettings {
   music: FeeSettingsSection;
   event: FeeSettingsSection;
   fundraiser: FeeSettingsSection;
+  merch: FeeSettingsSection;
 }
 
 export interface Domain {
@@ -127,6 +128,7 @@ export interface EmailLog {
 export interface FeatureToggles {
   feature_music_workspace: boolean;
   feature_campaigns_workspace: boolean;
+  feature_merch_workspace: boolean;
   feature_sublabels: boolean;
   feature_artist_profiles: boolean;
   feature_music_releases: boolean;
@@ -197,6 +199,7 @@ export interface EarningsSummary {
   download_earnings: number;
   streaming_earnings: number;
   sync_earnings: number;
+  merch_earnings: number;
 }
 
 export interface ArtistBalance {
@@ -217,11 +220,14 @@ export interface ArtistBalance {
 
 export interface BulkEarning {
   release_id: number;
+  product_id?: number | null;
   date_recorded: string;
   type: string;
   description: string;
   amount: number;
   calculate_royalties: boolean;
+  // UI-only display field, not sent to API
+  selected_release?: { id: number; catalog_no?: string; title: string; brand?: { brand_name: string } } | null;
 }
 
 export interface ProcessedEarningRow {
@@ -231,8 +237,14 @@ export interface ProcessedEarningRow {
   earning_amount: number;
   matched_release: {
     id: number;
-    catalog_no: string;
+    catalog_no?: string;
     title: string;
+    brand?: { brand_name: string };
+  } | null;
+  matched_product?: {
+    id: number;
+    sku: string;
+    name: string;
   } | null;
   matched_brand?: {
     id: number;

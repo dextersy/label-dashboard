@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, literal, fn, col } from 'sequelize';
-import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation, EventAddOnPayment } from '../models';
+import { Earning, Royalty, Ticket, Event, Release, LabelPayment, Artist, Payment, LabelPaymentMethod, Fundraiser, Donation, EventAddOnPayment, Product } from '../models';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -409,7 +409,8 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
         ? { date_recorded: { [Op.between]: [startDateFilter, endDateFilter] as [Date, Date] } }
         : {};
 
-      // Batch fetch all aggregates grouped by release_id (3 queries instead of 3*N)
+      // Batch fetch all aggregates grouped by release_id.
+      // Merch earnings for linked products now carry release_id, so a single query covers all.
       const [earningAmountRows, royaltyRows, earningFeeRows] = await Promise.all([
         Earning.findAll({
           attributes: ['release_id', [fn('SUM', col('amount')), 'total']],
@@ -428,7 +429,7 @@ export const getLabelFinanceBreakdown = async (req: AuthRequest, res: Response) 
           where: { release_id: { [Op.in]: releaseIds }, ...earningDateFilter },
           group: ['release_id'],
           raw: true
-        })
+        }),
       ]);
 
       const earningsMap = new Map<number, number>();

@@ -1,0 +1,25 @@
+<app-breadcrumb></app-breadcrumb>
+
+@switch (activeTab) {
+  @case ('products') {
+    <app-product-list-tab />
+  }
+  @default {
+    <app-in-page-nav
+      [tabs]="productNavTabs"
+      [activeTab]="activeTab"
+      (tabChange)="onProductTabChange($event)">
+
+      @if (activeTab === 'product-detail') {
+        <app-product-detail-tab />
+      }
+      @if (activeTab === 'product-gallery') {
+        <app-product-gallery-tab />
+      }
+      @if (activeTab === 'product-sales') {
+        <app-product-sales-tab />
+      }
+
+    </app-in-page-nav>
+  }
+}

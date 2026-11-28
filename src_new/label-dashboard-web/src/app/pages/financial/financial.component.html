@@ -152,7 +152,8 @@
             [newEarningForm]="newEarningForm"
             [releases]="releases"
             [onSubmitEarning]="onSubmitEarning.bind(this)"
-            [isLoading]="submittingEarning">
+            [isLoading]="submittingEarning"
+            [artistId]="selectedArtist?.id ?? null">
           </app-new-earning-form>
         </div>
       </div>

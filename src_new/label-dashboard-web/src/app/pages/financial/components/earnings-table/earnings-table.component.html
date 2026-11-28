@@ -14,7 +14,12 @@
         <td class="mobile-text" data-label="Release">
           <span style="display:inline-flex;align-items:center;gap:8px">
             <img [src]="earning.cover_art || coverArtPlaceholder" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">
-            {{ earning.release_title || '(None)' }}
+            <span>
+              {{ earning.release_title || earning.product_name || '(None)' }}
+              <span *ngIf="earning.release_title && earning.product_name" class="tw-block tw-text-xs tw-text-gray-400">
+                {{ earning.product_sku ? earning.product_sku + ' · ' : '' }}{{ earning.product_name }}
+              </span>
+            </span>
           </span>
         </td>
         <td class="tablet-hide" data-label="Description">{{ earning.description }}</td>

@@ -5,7 +5,7 @@
       <app-icon name="plus-circle" class="tw-mr-2" />
       Add New Earning
     </h3>
-    <p class="tw-mb-0 tw-text-muted">Record a new earning entry against a release for this artist.</p>
+    <p class="tw-mb-0 tw-text-muted">Record a new earning entry against a release or product.</p>
   </div>
 </div>
 
@@ -17,22 +17,66 @@
         <div class="tw-space-y-4">
 
           <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
-            <div>
-              <label class="tw-label">Release</label>
-              <select class="tw-input" [(ngModel)]="newEarningForm.release_id" name="release_id" required>
-                <option value="">Select a release</option>
-                <option *ngFor="let release of releases" [value]="release.id">
-                  {{ formatReleaseOption(release) }}
-                </option>
-              </select>
+            <div class="tw-relative">
+              <label class="tw-label">Release / Product</label>
+              <div class="tw-relative">
+                <input
+                  type="text"
+                  class="tw-input"
+                  [(ngModel)]="targetSearchQuery"
+                  name="target_search"
+                  (input)="onTargetSearch()"
+                  (focus)="targetSearchQuery.length >= 2 && (showTargetDropdown = true)"
+                  placeholder="Search releases or products..."
+                  autocomplete="off"
+                  [required]="!hasTarget"
+                >
+                <button
+                  *ngIf="hasTarget"
+                  type="button"
+                  class="tw-absolute tw-right-2 tw-top-1/2 tw--translate-y-1/2 tw-text-gray-400 hover:tw-text-gray-600"
+                  (click)="clearTarget()"
+                >×</button>
+              </div>
+
+              <!-- Dropdown -->
+              <div
+                *ngIf="showTargetDropdown && (targetSearchResults.releases.length || targetSearchResults.products.length || searchLoading)"
+                class="tw-absolute tw-z-50 tw-w-full tw-mt-1 tw-bg-white tw-border tw-border-gray-200 tw-rounded-lg tw-shadow-lg tw-max-h-60 tw-overflow-y-auto"
+              >
+                <div *ngIf="searchLoading" class="tw-px-3 tw-py-2 tw-text-sm tw-text-muted">
+                  <app-icon name="spinner" class="tw-animate-spin tw-mr-1" /> Searching...
+                </div>
+                <ng-container *ngIf="!searchLoading">
+                  <div *ngIf="targetSearchResults.releases.length">
+                    <div class="tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-bg-gray-50">Releases</div>
+                    <button
+                      *ngFor="let t of targetSearchResults.releases"
+                      type="button"
+                      class="tw-w-full tw-text-left tw-px-3 tw-py-2 tw-text-sm hover:tw-bg-gray-50 tw-cursor-pointer tw-border-0 tw-bg-transparent"
+                      (click)="selectTarget(t)"
+                    >{{ t.label }}</button>
+                  </div>
+                  <div *ngIf="targetSearchResults.products.length">
+                    <div class="tw-px-3 tw-py-1.5 tw-text-xs tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-400 tw-bg-gray-50">Products</div>
+                    <button
+                      *ngFor="let t of targetSearchResults.products"
+                      type="button"
+                      class="tw-w-full tw-text-left tw-px-3 tw-py-2 tw-text-sm hover:tw-bg-gray-50 tw-cursor-pointer tw-border-0 tw-bg-transparent"
+                      (click)="selectTarget(t)"
+                    >{{ t.label }}</button>
+                  </div>
+                </ng-container>
+              </div>
             </div>
             <div>
               <label class="tw-label">Earning Type</label>
-              <select class="tw-input" [(ngModel)]="newEarningForm.type" name="type" required>
+              <select class="tw-input" [(ngModel)]="newEarningForm.type" name="type" required [disabled]="isMerchTarget">
                 <option value="Streaming">Streaming</option>
                 <option value="Sync">Sync</option>
                 <option value="Downloads">Downloads</option>
                 <option value="Physical">Physical</option>
+                <option value="Merch">Merch</option>
               </select>
             </div>
             <div>
@@ -57,7 +101,7 @@
               Calculate royalties automatically based on artist percentages
             </label>
             <p class="tw-mt-1 tw-text-xs tw-text-muted">
-              When checked, this will automatically create royalty entries for all artists associated with the selected release based on their configured royalty percentages.
+              When checked, this will automatically create royalty entries for all artists associated with the selected release or product based on their configured royalty percentages.
             </p>
           </div>
 

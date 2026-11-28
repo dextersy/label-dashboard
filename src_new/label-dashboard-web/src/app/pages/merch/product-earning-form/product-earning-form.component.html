@@ -1,0 +1,122 @@
+<app-breadcrumb></app-breadcrumb>
+
+<!-- Page Header -->
+<div class="sm:tw-bg-white sm:tw-rounded-card sm:tw-shadow-card sm:tw-overflow-hidden tw-mb-6">
+  <div class="sm:tw-px-card-pad sm:tw-pt-card-pad sm:tw-pb-4">
+    <h3 class="tw-mb-1">
+      <app-icon name="plus-circle" class="tw-mr-2" />
+      Add Merch Earning
+    </h3>
+    <p class="tw-mb-0 tw-text-muted">Record a new earning entry against a merch product.</p>
+  </div>
+</div>
+
+<div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-12 tw-gap-6">
+  <div class="md:tw-col-span-8">
+    <div class="tw-bg-white sm:tw-rounded-card sm:tw-shadow-card tw-p-6">
+      <h3 class="tw-text-sm tw-font-semibold tw-uppercase tw-tracking-wider tw-text-gray-500 tw-mb-5">Earning Details</h3>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="tw-space-y-4">
+
+          <div class="tw-grid tw-grid-cols-1 sm:tw-grid-cols-2 tw-gap-4">
+
+            <!-- Product search -->
+            <div class="sm:tw-col-span-2 tw-relative">
+              <label class="tw-label">Product</label>
+              <div class="tw-relative">
+                <input
+                  type="text"
+                  class="tw-input"
+                  [(ngModel)]="productSearchQuery"
+                  name="product_search"
+                  (input)="onProductSearch()"
+                  (focus)="productSearchQuery.length >= 2 && (showProductDropdown = true)"
+                  placeholder="Search products by name or SKU..."
+                  autocomplete="off"
+                  [required]="!hasProduct"
+                >
+                <button
+                  *ngIf="hasProduct"
+                  type="button"
+                  class="tw-absolute tw-right-2 tw-top-1/2 tw--translate-y-1/2 tw-text-gray-400 hover:tw-text-gray-600"
+                  (click)="clearProduct()"
+                >×</button>
+              </div>
+
+              <!-- Dropdown -->
+              <div
+                *ngIf="showProductDropdown && (productSearchResults.length || searchLoading)"
+                class="tw-absolute tw-z-50 tw-w-full tw-mt-1 tw-bg-white tw-border tw-border-gray-200 tw-rounded-lg tw-shadow-lg tw-max-h-60 tw-overflow-y-auto"
+              >
+                <div *ngIf="searchLoading" class="tw-px-3 tw-py-2 tw-text-sm tw-text-muted">
+                  <app-icon name="spinner" class="tw-animate-spin tw-mr-1" /> Searching...
+                </div>
+                <ng-container *ngIf="!searchLoading">
+                  <button
+                    *ngFor="let p of productSearchResults"
+                    type="button"
+                    class="tw-w-full tw-text-left tw-px-3 tw-py-2 tw-text-sm hover:tw-bg-gray-50 tw-cursor-pointer tw-border-0 tw-bg-transparent"
+                    (click)="selectProduct(p)"
+                  >{{ p.sku ? p.sku + ' : ' + p.name : p.name }}</button>
+                </ng-container>
+              </div>
+            </div>
+
+            <!-- Type (locked) -->
+            <div>
+              <label class="tw-label">Earning Type</label>
+              <div class="tw-input tw-bg-gray-50 tw-text-muted tw-cursor-not-allowed">Merch</div>
+            </div>
+
+            <!-- Date -->
+            <div>
+              <label class="tw-label">Date Recorded</label>
+              <input type="date" class="tw-input" [(ngModel)]="form.date_recorded" name="date_recorded" required>
+            </div>
+
+            <!-- Amount -->
+            <div>
+              <label class="tw-label">Amount (PHP)</label>
+              <input type="number" class="tw-input" [(ngModel)]="form.amount" name="amount" step="0.01" placeholder="0.00" required>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="tw-label">Description</label>
+            <textarea class="tw-input" [(ngModel)]="form.description" name="description" rows="3" placeholder="Enter earning description" maxlength="45" required></textarea>
+            <div class="tw-text-xs tw-text-right tw-mt-1"
+              [class.tw-text-muted]="(form.description?.length || 0) < 45"
+              [class.tw-text-red-500]="(form.description?.length || 0) >= 45">
+              {{ form.description?.length || 0 }}/45
+            </div>
+          </div>
+
+          <!-- Calculate royalties -->
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" [(ngModel)]="form.calculate_royalties" name="calculate_royalties" id="calculateRoyalties">
+            <label class="form-check-label" for="calculateRoyalties">
+              Calculate royalties automatically based on artist percentages
+            </label>
+            <p class="tw-mt-1 tw-text-xs tw-text-muted">
+              When checked, this will automatically create royalty entries for all artists associated with the selected product based on their configured split percentages.
+            </p>
+          </div>
+
+        </div>
+
+        <div class="tw-mt-5 tw-flex tw-justify-between tw-items-center">
+          <a routerLink="/merch/products" class="btn btn-sm btn-outline-secondary">
+            Cancel
+          </a>
+          <button type="submit" class="btn-primary" [disabled]="submitting || !hasProduct">
+            <app-icon name="spinner" class="tw-animate-spin" *ngIf="submitting" />
+            <app-icon name="plus" *ngIf="!submitting" />
+            {{ submitting ? 'Adding...' : 'Add Earning' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

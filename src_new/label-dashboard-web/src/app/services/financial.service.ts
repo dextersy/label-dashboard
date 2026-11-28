@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FinancialSummary, FinancialSummaryBreakdown, Earning, Royalty, Payment, PaymentMethod, PayoutSettings } from '../pages/financial/financial.component';
+import { EarningTarget } from '../models/product.model';
 
 @Injectable({
   providedIn: 'root'
@@ -66,11 +67,13 @@ export class FinancialService {
       earnings: earnings.map(earning => ({
         id: earning.id,
         date_recorded: earning.date_recorded,
-        release_title: earning.release?.title || earning.release_title || '(No release)',
-        catalog_no: earning.release?.catalog_no || earning.catalog_no || '',
+        release_title: earning.release?.title || earning.release_title || null,
+        catalog_no: earning.release?.catalog_no || earning.catalog_no || earning.product?.sku || '',
         cover_art: earning.release?.cover_art,
         description: earning.description || earning.type || 'Earning',
-        amount: earning.amount
+        amount: earning.amount,
+        product_name: earning.product?.name || null,
+        product_sku: earning.product?.sku || null,
       })),
       pagination: response?.pagination || {}
     };
@@ -105,11 +108,13 @@ export class FinancialService {
       royalties: royalties.map(royalty => ({
         id: royalty.id,
         date_recorded: royalty.date_recorded,
-        release_title: royalty.release?.title || royalty.release_title || '(No release)',
-        catalog_no: royalty.release?.catalog_no || royalty.catalog_no || '',
+        release_title: royalty.release?.title || royalty.release_title || null,
+        catalog_no: royalty.release?.catalog_no || royalty.catalog_no || royalty.product?.sku || '',
         cover_art: royalty.release?.cover_art,
         description: royalty.description || 'Royalty',
-        amount: royalty.amount
+        amount: royalty.amount,
+        product_name: royalty.product?.name || null,
+        product_sku: royalty.product?.sku || null,
       })),
       pagination: response?.pagination || {}
     };
@@ -213,6 +218,22 @@ export class FinancialService {
   async createEarning(artistId: number, earningData: any): Promise<void> {
     await firstValueFrom(this.http.post(`${environment.apiUrl}/financial/earnings`, {
       artist_id: artistId,
+      ...earningData
+    }, {
+      headers: this.getAuthHeaders()
+    }));
+  }
+
+  async addProductExpense(productId: number, expenseData: { expense_description: string; expense_amount: string; date_recorded: string }): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/products/${productId}/expenses`, expenseData, {
+      headers: this.getAuthHeaders()
+    }));
+  }
+
+  async createProductEarning(productId: number, earningData: { amount: number; description: string; date_recorded: string; calculate_royalties: boolean }): Promise<void> {
+    await firstValueFrom(this.http.post(`${environment.apiUrl}/financial/earnings`, {
+      product_id: productId,
+      type: 'Merch',
       ...earningData
     }, {
       headers: this.getAuthHeaders()
@@ -393,5 +414,12 @@ export class FinancialService {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  }
+
+  async searchEarningTargets(query: string, artistId?: number, includeChildBrands?: boolean): Promise<EarningTarget> {
+    let url = `${environment.apiUrl}/financial/earning-targets?search=${encodeURIComponent(query)}`;
+    if (artistId) url += `&artist_id=${artistId}`;
+    if (includeChildBrands) url += `&include_child_brands=true`;
+    return firstValueFrom(this.http.get<EarningTarget>(url, { headers: this.getAuthHeaders() }));
   }
 }

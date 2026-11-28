@@ -1839,7 +1839,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         attributes: [
           'id', 'brand_name', 'logo_url', 'brand_color', 'brand_website',
           'favicon_url', 'release_submission_url', 'catalog_prefix',
-          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_sublabels',
+          'feature_music_workspace', 'feature_campaigns_workspace', 'feature_merch_workspace', 'feature_sublabels',
           'feature_artist_profiles', 'feature_music_releases', 'artist_custom_fields'
         ]
       }]
@@ -1863,6 +1863,7 @@ export const getBrandByDomain = async (req: Request, res: Response) => {
         catalog_prefix: brand.catalog_prefix,
         feature_music_workspace: brand.feature_music_workspace == null ? true : Boolean(brand.feature_music_workspace),
         feature_campaigns_workspace: brand.feature_campaigns_workspace == null ? true : Boolean(brand.feature_campaigns_workspace),
+        feature_merch_workspace: Boolean(brand.feature_merch_workspace),
         feature_sublabels: brand.feature_sublabels == null ? true : Boolean(brand.feature_sublabels),
         feature_artist_profiles: brand.feature_artist_profiles == null ? true : Boolean(brand.feature_artist_profiles),
         feature_music_releases: brand.feature_music_releases == null ? true : Boolean(brand.feature_music_releases),

@@ -3,7 +3,8 @@ import { sequelize } from '../config/database';
 
 interface RecuperableExpenseAttributes {
   id: number;
-  release_id: number;
+  release_id?: number | null;
+  product_id?: number | null;
   expense_description: string;
   expense_amount: number;
   date_recorded?: Date;
@@ -14,7 +15,8 @@ interface RecuperableExpenseCreationAttributes extends Optional<RecuperableExpen
 
 class RecuperableExpense extends Model<RecuperableExpenseAttributes, RecuperableExpenseCreationAttributes> implements RecuperableExpenseAttributes {
   public id!: number;
-  public release_id!: number;
+  public release_id?: number | null;
+  public product_id?: number | null;
   public expense_description!: string;
   public expense_amount!: number;
   public date_recorded?: Date;
@@ -33,7 +35,11 @@ RecuperableExpense.init(
     },
     release_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+    },
+    product_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     expense_description: {
       type: DataTypes.STRING(45),
@@ -58,6 +64,7 @@ RecuperableExpense.init(
     timestamps: false,
     indexes: [
       { fields: ['release_id'] },
+      { fields: ['product_id'] },
       { fields: ['brand_id', 'release_id'] },
       { fields: ['release_id', 'date_recorded'] },
     ],
