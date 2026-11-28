@@ -49,14 +49,15 @@
               <button type="button" class="category-chip-remove" (click)="removeCategory(cat)" title="Remove">×</button>
             </span>
           }
-          <div class="tw-relative tw-flex-1" style="min-width:140px;">
+          <div class="tw-relative tw-flex tw-flex-1" style="min-width:140px;">
             <input type="text"
                    class="category-chip-input"
                    [(ngModel)]="categorySearchTerm"
+                   name="categorySearchTerm"
                    (ngModelChange)="onCategorySearch()"
                    (focus)="onCategorySearch()"
                    (blur)="onCategoryBlur()"
-                   placeholder="{{ selectedCategories.length ? 'Add another…' : 'Search or add categories…' }}"
+                   [placeholder]="selectedCategories.length ? 'Add another…' : 'Search or add categories…'"
                    autocomplete="off">
             @if (showCategoryDropdown && filteredCategories.length > 0) {
               <div class="link-dropdown">

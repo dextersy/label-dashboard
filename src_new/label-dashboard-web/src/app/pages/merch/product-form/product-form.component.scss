@@ -233,13 +233,14 @@
 
 .category-chip-input {
   flex: 1;
+  width: 100%;
+  min-width: 0;
   border: none;
   outline: none;
   font-size: 13px;
   background: transparent;
   color: #111827;
   padding: 0;
-  min-width: 120px;
 
   &::placeholder {
     color: #9ca3af;
