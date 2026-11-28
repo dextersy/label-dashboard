@@ -416,9 +416,10 @@ export class FinancialService {
     window.URL.revokeObjectURL(url);
   }
 
-  async searchEarningTargets(query: string, artistId?: number): Promise<EarningTarget> {
+  async searchEarningTargets(query: string, artistId?: number, includeChildBrands?: boolean): Promise<EarningTarget> {
     let url = `${environment.apiUrl}/financial/earning-targets?search=${encodeURIComponent(query)}`;
     if (artistId) url += `&artist_id=${artistId}`;
+    if (includeChildBrands) url += `&include_child_brands=true`;
     return firstValueFrom(this.http.get<EarningTarget>(url, { headers: this.getAuthHeaders() }));
   }
 }

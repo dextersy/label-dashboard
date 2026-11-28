@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of, Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AdminService, BrandSettings, BulkEarning, ProcessedEarningRow, CsvProcessingResult } from '../../../services/admin.service';
-import { ReleaseService, Release } from '../../../services/release.service';
 import { FinancialService } from '../../../services/financial.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ConfirmationService } from '../../../services/confirmation.service';
@@ -28,10 +27,9 @@ interface CsvEarningRow {
 })
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;
-  releases: Release[] = [];
-  filteredReleases: Release[] = [];
+  filteredReleases: Array<{ id: number; catalog_no: string; title: string }> = [];
   filteredProducts: Array<{ id: number; name: string; sku?: string | null }> = [];
-  private productSearchSubject = new Subject<string>();
+  private searchSubject = new Subject<string>();
   bulkEarnings: BulkEarning[] = [];
   totalEarnings: number = 0;
   applyAllDescCount: number = 0;
@@ -69,7 +67,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
   // Per-row inline editing (import view)
   editingRow: ProcessedEarningRow | null = null;
   editDraft: { description: string; earning_amount: number; type: string; release_id: number; release_search_term: string } = { description: '', earning_amount: 0, type: '', release_id: 0, release_search_term: '' };
-  editFilteredReleases: Release[] = [];
+  editFilteredReleases: Array<{ id: number; catalog_no: string; title: string }> = [];
+  private editSearchSubject = new Subject<string>();
   editShowDropdown: boolean = false;
   csvProcessingResult: CsvProcessingResult | null = null;
   showAddRowsDropdown: boolean = false;
@@ -149,66 +148,32 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private releaseService: ReleaseService,
     private financialService: FinancialService,
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService
   ) {
     this.initializeBulkEarnings();
-    this.productSearchSubject.pipe(
+
+    const search$ = (subject: Subject<string>) => subject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap(term => term.length >= 2 ? this.financialService.searchEarningTargets(term) : of(null))
-    ).subscribe(result => {
+      switchMap(term => term.length >= 2 ? this.financialService.searchEarningTargets(term, undefined, true) : of(null))
+    );
+
+    search$(this.searchSubject).subscribe(result => {
+      this.filteredReleases = result?.releases ?? [];
       this.filteredProducts = result?.products ?? [];
+    });
+
+    search$(this.editSearchSubject).subscribe(result => {
+      this.editFilteredReleases = result?.releases ?? [];
     });
   }
 
   ngOnInit(): void {
-    this.loadBulkEarningsData();
     this.adminService.getBrandSettings().subscribe({
       next: (settings) => { this.brandSettings = settings; },
       error: () => {}
-    });
-  }
-
-  private loadBulkEarningsData(): void {
-    this.loading = true;
-
-    this.adminService.getSublabels().subscribe({
-      next: (childBrands) => {
-        const childBrandIds = childBrands.map(b => b.brand_id);
-        const requests = [
-          this.releaseService.getReleases(),
-          ...childBrandIds.map(id => this.releaseService.getReleasesByChildBrand(id))
-        ];
-
-        forkJoin(requests).subscribe({
-          next: (responses) => {
-            this.releases = responses.flatMap(r => r.releases);
-            this.filteredReleases = [...this.releases];
-            this.loading = false;
-          },
-          error: () => {
-            this.notificationService.showError('Error loading releases');
-            this.loading = false;
-          }
-        });
-      },
-      error: () => {
-        // No child brands or not a parent brand — just load own releases
-        this.releaseService.getReleases().subscribe({
-          next: (response) => {
-            this.releases = response.releases;
-            this.filteredReleases = [...this.releases];
-            this.loading = false;
-          },
-          error: () => {
-            this.notificationService.showError('Error loading releases');
-            this.loading = false;
-          }
-        });
-      }
     });
   }
 
@@ -305,28 +270,16 @@ export class BulkAddEarningsTabComponent implements OnInit {
 
   onReleaseSearch(index: number, searchTerm: string): void {
     this.searchTerms[index] = searchTerm;
-    const term = searchTerm.toLowerCase();
-
     if (searchTerm.length === 0) {
-      this.filteredReleases = [...this.releases];
+      this.filteredReleases = [];
       this.filteredProducts = [];
-    } else {
-      this.filteredReleases = this.releases.filter(release =>
-        release.title.toLowerCase().includes(term) ||
-        release.catalog_no.toLowerCase().includes(term)
-      );
     }
-    this.productSearchSubject.next(searchTerm);
+    this.searchSubject.next(searchTerm);
   }
 
   onInputFocus(index: number): void {
     this.showDropdown[index] = true;
-    if (this.searchTerms[index].length === 0) {
-      this.filteredReleases = [...this.releases];
-      this.filteredProducts = [];
-    } else {
-      this.onReleaseSearch(index, this.searchTerms[index]);
-    }
+    this.searchSubject.next(this.searchTerms[index]);
   }
 
   onInputBlur(index: number): void {
@@ -336,9 +289,10 @@ export class BulkAddEarningsTabComponent implements OnInit {
     }, 200);
   }
 
-  selectRelease(index: number, release: Release): void {
+  selectRelease(index: number, release: { id: number; catalog_no: string; title: string }): void {
     this.bulkEarnings[index].release_id = release.id;
     this.bulkEarnings[index].product_id = null;
+    this.bulkEarnings[index].selected_release = release;
     this.searchTerms[index] = `${release.catalog_no}: ${release.title}`;
     this.showDropdown[index] = false;
     this.filteredReleases = [];
@@ -348,6 +302,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   selectProduct(index: number, product: { id: number; name: string; sku?: string | null }): void {
     this.bulkEarnings[index].product_id = product.id;
     this.bulkEarnings[index].release_id = 0;
+    this.bulkEarnings[index].selected_release = null;
     this.bulkEarnings[index].type = 'Merch';
     this.searchTerms[index] = product.sku ? `${product.sku}: ${product.name}` : product.name;
     this.showDropdown[index] = false;
@@ -355,8 +310,8 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.filteredProducts = [];
   }
 
-  getSelectedRelease(releaseId: number): Release | undefined {
-    return this.releases.find(r => r.id === releaseId);
+  getSelectedRelease(index: number): { id: number; catalog_no: string; title: string } | null {
+    return this.bulkEarnings[index]?.selected_release ?? null;
   }
 
   // View toggle methods
@@ -778,7 +733,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.editingRow.row_type = this.editDraft.type;
     this.editingRow.earning_amount = this.editDraft.earning_amount;
     if (this.editDraft.release_id && this.editDraft.release_id !== this.editingRow.matched_release?.id) {
-      const rel = this.releases.find(r => r.id === this.editDraft.release_id);
+      const rel = this.editFilteredReleases.find(r => r.id === this.editDraft.release_id);
       if (rel) {
         this.editingRow.matched_release = { id: rel.id, catalog_no: rel.catalog_no, title: rel.title };
       }
@@ -797,32 +752,21 @@ export class BulkAddEarningsTabComponent implements OnInit {
   onEditReleaseSearch(term: string): void {
     this.editDraft.release_search_term = term;
     this.editDraft.release_id = 0;
-    if (term.length === 0) {
-      this.editFilteredReleases = [...this.releases];
-    } else {
-      this.editFilteredReleases = this.releases.filter(r =>
-        r.title.toLowerCase().includes(term.toLowerCase()) ||
-        r.catalog_no.toLowerCase().includes(term.toLowerCase())
-      );
-    }
+    if (term.length === 0) this.editFilteredReleases = [];
+    this.editSearchSubject.next(term);
     this.editShowDropdown = true;
   }
 
   onEditReleaseFocus(): void {
     this.editShowDropdown = true;
-    this.editFilteredReleases = this.editDraft.release_search_term
-      ? this.releases.filter(r =>
-          r.title.toLowerCase().includes(this.editDraft.release_search_term.toLowerCase()) ||
-          r.catalog_no.toLowerCase().includes(this.editDraft.release_search_term.toLowerCase())
-        )
-      : [...this.releases];
+    this.editSearchSubject.next(this.editDraft.release_search_term);
   }
 
   onEditReleaseBlur(): void {
     setTimeout(() => { this.editShowDropdown = false; }, 200);
   }
 
-  selectEditRelease(release: Release): void {
+  selectEditRelease(release: { id: number; catalog_no: string; title: string }): void {
     this.editDraft.release_id = release.id;
     this.editDraft.release_search_term = `${release.catalog_no}: ${release.title}`;
     this.editShowDropdown = false;

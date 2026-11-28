@@ -628,6 +628,13 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
     const brandId = req.user.brand_id;
     const search = (req.query.search as string) || '';
     const artistId = req.query.artist_id ? parseInt(req.query.artist_id as string, 10) : null;
+    const includeChildBrands = req.query.include_child_brands === 'true';
+
+    const allowedBrandIds = [brandId];
+    if (includeChildBrands) {
+      const childBrands = await Brand.findAll({ where: { parent_brand: brandId }, attributes: ['id'], raw: true });
+      allowedBrandIds.push(...childBrands.map((b: any) => b.id));
+    }
 
     const searchWhere = search
       ? { [Op.or]: [
@@ -636,7 +643,7 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
         ] }
       : {};
 
-    let releaseWhere: any = { brand_id: brandId, ...searchWhere };
+    let releaseWhere: any = { brand_id: { [Op.in]: allowedBrandIds }, ...searchWhere };
     if (artistId) {
       const artistReleaseIds = (await ReleaseArtist.findAll({
         where: { artist_id: artistId },
@@ -660,7 +667,7 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
         ] }
       : {};
 
-    let productWhere: any = { brand_id: brandId, status: 'active', ...productSearchWhere };
+    let productWhere: any = { brand_id: { [Op.in]: allowedBrandIds }, status: 'active', ...productSearchWhere };
     if (artistId) {
       // Products linked via ProductArtist join table
       const paProductIds = (await ProductArtist.findAll({
@@ -673,7 +680,7 @@ export const searchEarningTargets = async (req: AuthRequest, res: Response) => {
       const artistReleaseIds = releases.map((r: any) => r.id);
       const releaseProductIds = artistReleaseIds.length > 0
         ? (await Product.findAll({
-            where: { release_id: { [Op.in]: artistReleaseIds }, brand_id: brandId },
+            where: { release_id: { [Op.in]: artistReleaseIds }, brand_id: { [Op.in]: allowedBrandIds } },
             attributes: ['id'],
             raw: true,
           })).map((p: any) => p.id)

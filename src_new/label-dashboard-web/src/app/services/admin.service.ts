@@ -226,6 +226,8 @@ export interface BulkEarning {
   description: string;
   amount: number;
   calculate_royalties: boolean;
+  // UI-only display field, not sent to API
+  selected_release?: { id: number; catalog_no: string; title: string } | null;
 }
 
 export interface ProcessedEarningRow {
