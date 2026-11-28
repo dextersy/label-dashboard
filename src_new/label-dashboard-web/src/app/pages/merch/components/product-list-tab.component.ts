@@ -61,6 +61,20 @@ export class ProductListTabComponent implements OnInit {
     },
     { key: 'sku', label: 'SKU', searchable: true, hidden: true },
     {
+      key: 'categories',
+      label: 'Categories',
+      renderHtml: true,
+      formatter: (item: Product) => {
+        if (!item.categories?.length) return '—';
+        const chips = item.categories.map(c =>
+          `<span class="category-chip">${c.name}</span>`
+        ).join('');
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<div class="category-chips-wrap">${chips}</div>`
+        );
+      },
+    },
+    {
       key: 'linked_to',
       label: 'Linked To',
       renderHtml: true,

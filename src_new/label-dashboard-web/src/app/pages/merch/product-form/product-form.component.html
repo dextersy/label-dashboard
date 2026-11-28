@@ -38,6 +38,45 @@
         <textarea class="tw-input" [(ngModel)]="form.description" rows="3" placeholder="Product description..." maxlength="500"></textarea>
       </div>
 
+      <!-- Categories -->
+      <div class="tw-flex tw-flex-col tw-gap-1 md:tw-col-span-2">
+        <label class="tw-label">Categories</label>
+        <!-- Selected chips -->
+        <div class="category-input-wrap">
+          @for (cat of selectedCategories; track cat.id) {
+            <span class="category-chip category-chip--removable">
+              {{ cat.name }}
+              <button type="button" class="category-chip-remove" (click)="removeCategory(cat)" title="Remove">×</button>
+            </span>
+          }
+          <div class="tw-relative tw-flex-1" style="min-width:140px;">
+            <input type="text"
+                   class="category-chip-input"
+                   [(ngModel)]="categorySearchTerm"
+                   (ngModelChange)="onCategorySearch()"
+                   (focus)="onCategorySearch()"
+                   (blur)="onCategoryBlur()"
+                   placeholder="{{ selectedCategories.length ? 'Add another…' : 'Search or add categories…' }}"
+                   autocomplete="off">
+            @if (showCategoryDropdown && filteredCategories.length > 0) {
+              <div class="link-dropdown">
+                @for (cat of filteredCategories; track cat.id) {
+                  <div class="link-option" (mousedown)="addCategory(cat)">{{ cat.name }}</div>
+                }
+              </div>
+            }
+            @if (showCategoryDropdown && filteredCategories.length === 0 && categorySearchTerm) {
+              <div class="link-dropdown">
+                <div class="link-option tw-text-muted">No matching categories</div>
+              </div>
+            }
+          </div>
+        </div>
+        @if (!categoriesLoaded) {
+          <span class="tw-text-xs tw-text-muted">Loading categories…</span>
+        }
+      </div>
+
       <!-- Link to -->
       <div class="tw-flex tw-flex-col tw-gap-1 md:tw-col-span-2">
         <label class="tw-label">Link to</label>

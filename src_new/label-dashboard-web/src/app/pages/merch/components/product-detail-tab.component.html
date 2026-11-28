@@ -45,6 +45,18 @@
           </span>
         </div>
         <div class="md:tw-col-span-2">
+          <span class="pd-label">Categories</span>
+          @if (categories.length > 0) {
+            <div class="category-chips-wrap tw-mt-1">
+              @for (cat of categories; track cat.id) {
+                <span class="category-chip">{{ cat.name }}</span>
+              }
+            </div>
+          } @else {
+            <span class="pd-value">—</span>
+          }
+        </div>
+        <div class="md:tw-col-span-2">
           <span class="pd-label">Linked to</span>
           @if (product.release) {
             <div class="link-chip">

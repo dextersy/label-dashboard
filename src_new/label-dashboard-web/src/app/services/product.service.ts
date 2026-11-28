@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Product, ProductArtistSplit, ProductImage } from '../models/product.model';
+import { Product, ProductArtistSplit, ProductCategory, ProductImage } from '../models/product.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -91,5 +91,30 @@ export class ProductService {
 
   getMerchExpenses(): Observable<{ total_expenses: number; expenses: any[] }> {
     return this.http.get<any>(`${this.baseUrl}/products/sales/expenses`, { headers: this.getAuthHeaders() });
+  }
+
+  // Category management
+  getCategories(): Observable<ProductCategory[]> {
+    return this.http.get<ProductCategory[]>(`${this.baseUrl}/product-categories`, { headers: this.getAuthHeaders() });
+  }
+
+  createCategory(data: Partial<ProductCategory>): Observable<ProductCategory> {
+    return this.http.post<ProductCategory>(`${this.baseUrl}/product-categories`, data, { headers: this.getAuthHeaders() });
+  }
+
+  updateCategory(id: number, data: Partial<ProductCategory>): Observable<ProductCategory> {
+    return this.http.put<ProductCategory>(`${this.baseUrl}/product-categories/${id}`, data, { headers: this.getAuthHeaders() });
+  }
+
+  deleteCategory(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/product-categories/${id}`, { headers: this.getAuthHeaders() });
+  }
+
+  getProductCategories(productId: number): Observable<ProductCategory[]> {
+    return this.http.get<ProductCategory[]>(`${this.baseUrl}/products/${productId}/categories`, { headers: this.getAuthHeaders() });
+  }
+
+  setProductCategories(productId: number, categoryIds: number[]): Observable<ProductCategory[]> {
+    return this.http.put<ProductCategory[]>(`${this.baseUrl}/products/${productId}/categories`, { category_ids: categoryIds }, { headers: this.getAuthHeaders() });
   }
 }

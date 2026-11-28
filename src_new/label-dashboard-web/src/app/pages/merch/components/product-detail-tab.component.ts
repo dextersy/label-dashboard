@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
-import { Product, ProductArtistSplit } from '../../../models/product.model';
+import { Product, ProductArtistSplit, ProductCategory } from '../../../models/product.model';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { AuthService } from '../../../services/auth.service';
 import { forkJoin } from 'rxjs';
@@ -18,6 +18,7 @@ import { forkJoin } from 'rxjs';
 export class ProductDetailTabComponent implements OnInit {
   product: Product | null = null;
   splits: ProductArtistSplit[] = [];
+  categories: ProductCategory[] = [];
   loading = true;
   isAdmin = false;
 
@@ -59,6 +60,7 @@ export class ProductDetailTabComponent implements OnInit {
         next: ({ product, splits }) => {
           this.product = product;
           this.splits = splits;
+          this.categories = product.categories || [];
           this.loading = false;
         },
         error: () => {

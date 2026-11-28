@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { switchMap, of } from 'rxjs';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductService } from '../../../services/product.service';
-import { Product, ProductArtistSplit, ProductImage } from '../../../models/product.model';
+import { Product, ProductArtistSplit, ProductCategory, ProductImage } from '../../../models/product.model';
 import { IconComponent } from '../../../components/shared/icon/icon.component';
 import { FloatingActionBarComponent } from '../../../components/shared/floating-action-bar/floating-action-bar.component';
 import { ApiService } from '../../../services/api.service';
@@ -48,6 +48,13 @@ export class ProductFormComponent implements OnInit {
   selectedArtist: any = null;
   selectedRelease: Release | null = null;
 
+  // Category multi-select
+  allCategories: ProductCategory[] = [];
+  selectedCategories: ProductCategory[] = [];
+  categorySearchTerm = '';
+  showCategoryDropdown = false;
+  categoriesLoaded = false;
+
   // Artist splits add UI
   splitSearchTerm = '';
   showSplitDropdown = false;
@@ -63,6 +70,14 @@ export class ProductFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Load categories for all edits
+    this.productService.getCategories().subscribe({
+      next: (cats) => {
+        this.allCategories = cats;
+        this.categoriesLoaded = true;
+      },
+    });
+
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.isEdit = true;
@@ -79,6 +94,7 @@ export class ProductFormComponent implements OnInit {
             artist_id: product.artist_id,
           };
           this.images = product.images || [];
+          this.selectedCategories = product.categories || [];
           // Load splits and all artists explicitly
           this.productService.getProductArtists(this.productId!).subscribe({
             next: (splits) => {
@@ -245,6 +261,34 @@ export class ProductFormComponent implements OnInit {
     this.showSplitDropdown = false;
   }
 
+  get filteredCategories(): ProductCategory[] {
+    const term = this.categorySearchTerm.toLowerCase();
+    return this.allCategories.filter(c =>
+      !this.selectedCategories.some(s => s.id === c.id) &&
+      c.name.toLowerCase().includes(term)
+    );
+  }
+
+  onCategorySearch(): void {
+    this.showCategoryDropdown = true;
+  }
+
+  onCategoryBlur(): void {
+    setTimeout(() => { this.showCategoryDropdown = false; }, 150);
+  }
+
+  addCategory(cat: ProductCategory): void {
+    if (!this.selectedCategories.some(c => c.id === cat.id)) {
+      this.selectedCategories.push(cat);
+    }
+    this.categorySearchTerm = '';
+    this.showCategoryDropdown = false;
+  }
+
+  removeCategory(cat: ProductCategory): void {
+    this.selectedCategories = this.selectedCategories.filter(c => c.id !== cat.id);
+  }
+
   save(): void {
     if (this.saving) return;
     this.saving = true;
@@ -256,17 +300,19 @@ export class ProductFormComponent implements OnInit {
     saveProduct$.pipe(
       switchMap((product) => {
         const id = product.id;
-        if (this.artistSplits.length > 0) {
-          return this.productService.setProductArtists(
-            id,
-            this.artistSplits.map(s => ({
-              artist_id: s.artist_id,
-              merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage)),
-              merch_royalty_type: s.merch_royalty_type,
-            }))
-          ).pipe(switchMap(() => of(product)));
-        }
-        return of(product);
+        const splitsOp$ = this.artistSplits.length > 0
+          ? this.productService.setProductArtists(
+              id,
+              this.artistSplits.map(s => ({
+                artist_id: s.artist_id,
+                merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage)),
+                merch_royalty_type: s.merch_royalty_type,
+              }))
+            )
+          : of(null);
+        const catIds = this.selectedCategories.map(c => c.id);
+        const catsOp$ = this.productService.setProductCategories(id, catIds);
+        return splitsOp$.pipe(switchMap(() => catsOp$)).pipe(switchMap(() => of(product)));
       })
     ).subscribe({
       next: (product) => {

@@ -1,3 +1,19 @@
+export interface ProductCategory {
+  id: number;
+  brand_id?: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+  color?: string | null;
+  sort_order?: number;
+  is_visible?: boolean;
+  woocommerce_id?: number | null;
+  shopify_id?: string | null;
+  loyverse_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -21,6 +37,7 @@ export interface Product {
   };
   images?: ProductImage[];
   productArtists?: ProductArtistSplit[];
+  categories?: ProductCategory[];
 }
 
 export interface ProductImage {
