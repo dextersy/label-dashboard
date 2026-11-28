@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { switchMap, of } from 'rxjs';
+import { switchMap, of, map } from 'rxjs';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ProductService } from '../../../services/product.service';
 import { Product, ProductArtistSplit, ProductCategory, ProductImage } from '../../../models/product.model';
@@ -300,19 +300,22 @@ export class ProductFormComponent implements OnInit {
     saveProduct$.pipe(
       switchMap((product) => {
         const id = product.id;
-        const splitsOp$ = this.artistSplits.length > 0
-          ? this.productService.setProductArtists(
-              id,
-              this.artistSplits.map(s => ({
-                artist_id: s.artist_id,
-                merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage)),
-                merch_royalty_type: s.merch_royalty_type,
-              }))
-            )
-          : of(null);
         const catIds = this.selectedCategories.map(c => c.id);
-        const catsOp$ = this.productService.setProductCategories(id, catIds);
-        return splitsOp$.pipe(switchMap(() => catsOp$)).pipe(switchMap(() => of(product)));
+        const saveCategories$ = this.productService.setProductCategories(id, catIds);
+        if (this.artistSplits.length > 0) {
+          return this.productService.setProductArtists(
+            id,
+            this.artistSplits.map(s => ({
+              artist_id: s.artist_id,
+              merch_royalty_percentage: parseFloat(String(s.merch_royalty_percentage)),
+              merch_royalty_type: s.merch_royalty_type,
+            }))
+          ).pipe(
+            switchMap(() => saveCategories$),
+            map(() => product)
+          );
+        }
+        return saveCategories$.pipe(map(() => product));
       })
     ).subscribe({
       next: (product) => {
