@@ -722,6 +722,7 @@ export const addProductExpense = async (req: AuthRequest, res: Response) => {
 
     const expense = await RecuperableExpense.create({
       product_id: productId,
+      release_id: product.release_id || null,
       expense_description,
       expense_amount: parseFloat(expense_amount),
       date_recorded: date_recorded ? new Date(date_recorded) : new Date(),
