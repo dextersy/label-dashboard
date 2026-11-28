@@ -18,6 +18,7 @@ import {
   getMerchEarnings,
   getMerchExpenses,
 } from '../controllers/productController';
+import { getProductCategories, setProductCategories } from '../controllers/productCategoryController';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -45,6 +46,10 @@ router.post('/:id/artists/inherit', requireAdmin, inheritSplitsFromRelease);
 router.get('/:id/earnings', getProductEarnings);
 router.get('/:id/expenses', getProductExpenses);
 router.post('/:id/expenses', requireAdmin, addProductExpense);
+
+// Product categories
+router.get('/:id/categories', getProductCategories);
+router.put('/:id/categories', requireAdmin, setProductCategories);
 
 // Product images
 router.post('/:id/images', requireAdmin, productImageUpload.single('image'), addProductImage);

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, fn, col } from 'sequelize';
-import { Product, ProductImage, ProductArtist, Brand, Release, Artist, Earning, Royalty, ReleaseArtist, ArtistAccess, RecuperableExpense } from '../models';
+import { Product, ProductImage, ProductArtist, Brand, Release, Artist, Earning, Royalty, ReleaseArtist, ArtistAccess, RecuperableExpense, ProductCategory } from '../models';
 import { uploadToS3, deleteFromS3 } from '../utils/s3Service';
 import { checkStorageLimitForBrand } from '../services/subscriptionService';
 import multer from 'multer';
@@ -115,6 +115,7 @@ export const getProducts = async (req: AuthRequest, res: Response) => {
         { model: Release, as: 'release', attributes: ['id', 'title', 'catalog_no', 'cover_art'] },
         { model: Artist, as: 'artist', attributes: ['id', 'name', 'profile_photo'] },
         { model: ProductImage, as: 'images', attributes: ['id', 'path', 'sort_order'], order: [['sort_order', 'ASC']], limit: 1, separate: true },
+        { model: ProductCategory, as: 'categories', attributes: ['id', 'name', 'color'], through: { attributes: [] } },
       ],
       order: [['id', 'DESC']],
       limit: parseInt(limit as string, 10),
@@ -144,6 +145,7 @@ export const getProduct = async (req: AuthRequest, res: Response) => {
           model: ProductArtist, as: 'productArtists',
           include: [{ model: Artist, as: 'artist', attributes: ['id', 'name'] }],
         },
+        { model: ProductCategory, as: 'categories', attributes: ['id', 'name', 'color'], through: { attributes: [] } },
       ],
     });
 

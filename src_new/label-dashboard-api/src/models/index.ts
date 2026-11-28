@@ -70,6 +70,8 @@ import TicketScanLog from './TicketScanLog';
 import Product from './Product';
 import ProductImage from './ProductImage';
 import ProductArtist from './ProductArtist';
+import ProductCategory from './ProductCategory';
+import ProductProductCategory from './ProductProductCategory';
 
 // Define relationships
 // Brand relationships
@@ -318,6 +320,24 @@ Artist.belongsToMany(Product, {
   as: 'products'
 });
 
+// ProductCategory relationships
+ProductCategory.belongsTo(Brand, { foreignKey: 'brand_id', as: 'brand' });
+Brand.hasMany(ProductCategory, { foreignKey: 'brand_id', as: 'productCategories' });
+Product.belongsToMany(ProductCategory, {
+  through: ProductProductCategory,
+  foreignKey: 'product_id',
+  otherKey: 'category_id',
+  as: 'categories',
+});
+ProductCategory.belongsToMany(Product, {
+  through: ProductProductCategory,
+  foreignKey: 'category_id',
+  otherKey: 'product_id',
+  as: 'products',
+});
+ProductProductCategory.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+ProductProductCategory.belongsTo(ProductCategory, { foreignKey: 'category_id', as: 'category' });
+
 // ArtistImage relationships
 ArtistImage.belongsTo(Artist, { foreignKey: 'artist_id', as: 'artist' });
 
@@ -535,6 +555,8 @@ export {
   Product,
   ProductImage,
   ProductArtist,
+  ProductCategory,
+  ProductProductCategory,
 };
 
 // Initialize database connection
