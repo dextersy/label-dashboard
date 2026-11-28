@@ -27,7 +27,7 @@ interface CsvEarningRow {
 })
 export class BulkAddEarningsTabComponent implements OnInit {
   loading: boolean = false;
-  filteredReleases: Array<{ id: number; catalog_no: string; title: string }> = [];
+  filteredReleases: Array<{ id: number; catalog_no?: string; title: string; brand?: { brand_name: string } }> = [];
   filteredProducts: Array<{ id: number; name: string; sku?: string | null }> = [];
   private searchSubject = new Subject<string>();
   bulkEarnings: BulkEarning[] = [];
@@ -67,7 +67,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
   // Per-row inline editing (import view)
   editingRow: ProcessedEarningRow | null = null;
   editDraft: { description: string; earning_amount: number; type: string; release_id: number; release_search_term: string } = { description: '', earning_amount: 0, type: '', release_id: 0, release_search_term: '' };
-  editFilteredReleases: Array<{ id: number; catalog_no: string; title: string }> = [];
+  editFilteredReleases: Array<{ id: number; catalog_no?: string; title: string; brand?: { brand_name: string } }> = [];
   private editSearchSubject = new Subject<string>();
   editShowDropdown: boolean = false;
   csvProcessingResult: CsvProcessingResult | null = null;
@@ -289,11 +289,11 @@ export class BulkAddEarningsTabComponent implements OnInit {
     }, 200);
   }
 
-  selectRelease(index: number, release: { id: number; catalog_no: string; title: string }): void {
+  selectRelease(index: number, release: { id: number; catalog_no?: string; title: string; brand?: { brand_name: string } }): void {
     this.bulkEarnings[index].release_id = release.id;
     this.bulkEarnings[index].product_id = null;
     this.bulkEarnings[index].selected_release = release;
-    this.searchTerms[index] = `${release.catalog_no}: ${release.title}`;
+    this.searchTerms[index] = release.catalog_no ? `${release.catalog_no}: ${release.title}` : release.title;
     this.showDropdown[index] = false;
     this.filteredReleases = [];
     this.filteredProducts = [];
@@ -310,7 +310,7 @@ export class BulkAddEarningsTabComponent implements OnInit {
     this.filteredProducts = [];
   }
 
-  getSelectedRelease(index: number): { id: number; catalog_no: string; title: string } | null {
+  getSelectedRelease(index: number): { id: number; catalog_no?: string; title: string; brand?: { brand_name: string } } | null {
     return this.bulkEarnings[index]?.selected_release ?? null;
   }
 
@@ -766,9 +766,9 @@ export class BulkAddEarningsTabComponent implements OnInit {
     setTimeout(() => { this.editShowDropdown = false; }, 200);
   }
 
-  selectEditRelease(release: { id: number; catalog_no: string; title: string }): void {
+  selectEditRelease(release: { id: number; catalog_no?: string; title: string; brand?: { brand_name: string } }): void {
     this.editDraft.release_id = release.id;
-    this.editDraft.release_search_term = `${release.catalog_no}: ${release.title}`;
+    this.editDraft.release_search_term = release.catalog_no ? `${release.catalog_no}: ${release.title}` : release.title;
     this.editShowDropdown = false;
   }
 

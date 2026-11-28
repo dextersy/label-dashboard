@@ -64,6 +64,7 @@ export interface EarningTarget {
     title: string;
     catalog_no?: string;
     cover_art?: string;
+    brand?: { brand_name: string };
   }>;
   products: Array<{
     id: number;

@@ -227,7 +227,7 @@ export interface BulkEarning {
   amount: number;
   calculate_royalties: boolean;
   // UI-only display field, not sent to API
-  selected_release?: { id: number; catalog_no: string; title: string } | null;
+  selected_release?: { id: number; catalog_no?: string; title: string; brand?: { brand_name: string } } | null;
 }
 
 export interface ProcessedEarningRow {
@@ -237,8 +237,9 @@ export interface ProcessedEarningRow {
   earning_amount: number;
   matched_release: {
     id: number;
-    catalog_no: string;
+    catalog_no?: string;
     title: string;
+    brand?: { brand_name: string };
   } | null;
   matched_product?: {
     id: number;
