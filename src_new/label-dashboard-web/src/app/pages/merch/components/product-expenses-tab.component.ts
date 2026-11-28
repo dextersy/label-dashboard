@@ -95,15 +95,15 @@ export class ProductExpensesTabComponent implements OnInit {
     return !!this.form.expense_description && !!this.form.expense_amount;
   }
 
-  formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount);
+  formatCurrency(amount: number | string): string {
+    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(parseFloat(amount as string));
   }
 
   formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString('en-PH');
   }
 
-  getAmountClass(amount: number): string {
-    return amount < 0 ? 'tw-text-danger' : '';
+  getAmountClass(amount: number | string): string {
+    return parseFloat(amount as string) < 0 ? 'tw-text-danger' : '';
   }
 }
