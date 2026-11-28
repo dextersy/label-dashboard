@@ -51,6 +51,7 @@ import { canDeactivateUnsavedChanges } from './guards/unsaved-changes.guard';
 import { MerchComponent } from './pages/merch/merch.component';
 import { ProductFormComponent } from './pages/merch/product-form/product-form.component';
 import { MerchSalesComponent } from './pages/merch/merch-sales/merch-sales.component';
+import { MerchCategoriesComponent } from './pages/merch/merch-categories/merch-categories.component';
 import { campaignsAccessGuard } from './guards/campaigns-access.guard';
 import { WristbandOrderReviewComponent } from './pages/events/wristband-order-review/wristband-order-review.component';
 import { EventInviteComponent } from './pages/event-invite/event-invite.component';
@@ -150,6 +151,7 @@ export const routes: Routes = [
       { path: 'products/:id/gallery', component: MerchComponent, data: { tab: 'product-gallery' } },
       { path: 'products/:id/sales', component: MerchComponent, data: { tab: 'product-sales' } },
       { path: 'products/:id/edit', component: ProductFormComponent, canActivate: [adminGuard] },
+      { path: 'categories', component: MerchCategoriesComponent, canActivate: [adminGuard] },
     ]
   },
 

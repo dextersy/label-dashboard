@@ -142,10 +142,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
           icon: 'shopping-bag',
           title: 'Products',
           adminOnly: false,
-          children: [
-            { route: '/merch/products', title: 'View Products', adminOnly: false },
-            { route: '/merch/sales', title: 'View Sales', adminOnly: false },
-          ]
+        },
+        {
+          route: '/merch/sales',
+          icon: 'currency',
+          title: 'Finance',
+          adminOnly: false,
+        },
+        {
+          route: '/merch/categories',
+          icon: 'tag',
+          title: 'Categories',
+          adminOnly: true,
         },
       ]
     },
