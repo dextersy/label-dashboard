@@ -277,7 +277,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
         if (merchSection) {
           this.visibleSections = [{
             id: 'merch-top-level',
-            items: merchSection.items.map(item => ({ ...item, icon: item.icon || 'shopping-bag' }))
+            items: merchSection.items
+              .filter(item => !item.adminOnly || this.isAdmin)
+              .map(item => ({ ...item, icon: item.icon || 'shopping-bag' }))
           }];
         } else {
           this.visibleSections = [];
