@@ -48,15 +48,16 @@ export class ProductListTabComponent implements OnInit {
           ? `<div style="font-size:11px;color:#9ca3af;margin-top:1px;font-family:monospace;">${item.sku}</div>`
           : '';
         const chipsHtml = item.categories?.length
-          ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${item.categories.map(c => `<span class="category-chip">${c.name}</span>`).join('')}</div>`
+          ? item.categories.map(c => `<span class="category-chip" style="margin-left:6px;">${c.name}</span>`).join('')
           : '';
         return this.sanitizer.bypassSecurityTrustHtml(
           `<div style="display:flex;align-items:center;gap:10px;">
             ${imgHtml}
             <div style="min-width:0;">
-              <div style="font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+              <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;">
+                <span style="font-weight:600;color:#111827;">${item.name}</span>${chipsHtml}
+              </div>
               ${skuHtml}
-              ${chipsHtml}
             </div>
           </div>`
         );

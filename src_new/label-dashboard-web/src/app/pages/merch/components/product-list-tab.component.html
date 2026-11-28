@@ -31,6 +31,9 @@
         <div class="product-mobile-info">
           <div class="product-mobile-name">{{ item.name }}</div>
           <div *ngIf="item.sku" class="product-mobile-sku">{{ item.sku }}</div>
+          <div *ngIf="item.categories?.length" class="category-chips-wrap tw-mt-1">
+            <span *ngFor="let cat of item.categories" class="category-chip">{{ cat.name }}</span>
+          </div>
           <div class="product-mobile-linked" *ngIf="item.release?.title || item.artist?.name">
             <span *ngIf="item.release?.title">{{ item.release.title }}</span>
             <span *ngIf="item.release?.title && item.artist?.name"> · </span>
