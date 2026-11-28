@@ -434,6 +434,15 @@ export class TicketBuyComponent implements OnInit, OnDestroy {
     return '₱' + this.formatPrice(price);
   }
 
+  showOrganizerAvatars(): boolean {
+    if (!this.event) return false;
+    const allOrgs = [
+      this.event.brand,
+      ...(this.event.co_organizers || [])
+    ];
+    return allOrgs.some(o => o && (o as any).logo_url);
+  }
+
   formatCoOrganizers(brands: { name: string }[]): string {
     if (brands.length === 0) return '';
     if (brands.length === 1) return brands[0].name;

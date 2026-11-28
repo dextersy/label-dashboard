@@ -86,8 +86,41 @@
           <!-- Title -->
           <h1 class="tw-text-4xl tw-font-black tw-text-gray-900 tw-leading-tight tw-tracking-tight tw-mb-1 tw-text-center">{{ event.title }}</h1>
 
-          <!-- By brand -->
-          <p *ngIf="event.brand?.name" class="tw-text-sm tw-italic tw-text-gray-500 tw-mb-0 tw-text-center">by {{ event.brand?.name }}{{ event.co_organizers && event.co_organizers.length > 0 ? ', ' + formatCoOrganizers(event.co_organizers) : '' }}</p>
+          <!-- By brand / co-organizers -->
+          <div *ngIf="event.brand?.name" class="tw-flex tw-items-center tw-justify-center tw-flex-wrap tw-gap-x-3 tw-gap-y-1.5 tw-mb-0">
+
+            <!-- Main brand -->
+            <div class="tw-flex tw-items-center tw-gap-2">
+              <!-- Avatar mode -->
+              <ng-container *ngIf="showOrganizerAvatars()">
+                <span class="tw-inline-flex tw-items-center tw-justify-center tw-rounded-full tw-w-8 tw-h-8 tw-flex-shrink-0 tw-overflow-hidden" [style.background-color]="event.brand?.color || '#6b7280'">
+                  <img *ngIf="event.brand?.logo_url; else brandInitial" [src]="event.brand!.logo_url" alt="{{ event.brand?.name }}" class="tw-w-5 tw-h-5 tw-object-contain">
+                  <ng-template #brandInitial>
+                    <span class="tw-text-white tw-font-bold tw-text-xs">{{ (event.brand?.name || '?').charAt(0).toUpperCase() }}</span>
+                  </ng-template>
+                </span>
+              </ng-container>
+              <span class="tw-text-sm tw-text-gray-600 tw-font-medium">{{ event.brand?.name }}</span>
+            </div>
+
+            <!-- Co-organizers -->
+            <ng-container *ngIf="event.co_organizers && event.co_organizers.length > 0">
+              <span class="tw-text-xs tw-text-gray-400">+</span>
+              <div *ngFor="let co of event.co_organizers; let last = last" class="tw-flex tw-items-center tw-gap-2">
+                <ng-container *ngIf="showOrganizerAvatars()">
+                  <span class="tw-inline-flex tw-items-center tw-justify-center tw-rounded-full tw-w-8 tw-h-8 tw-flex-shrink-0 tw-overflow-hidden tw-bg-gray-400">
+                    <img *ngIf="co.logo_url; else coInitial" [src]="co.logo_url" alt="{{ co.name }}" class="tw-w-5 tw-h-5 tw-object-contain">
+                    <ng-template #coInitial>
+                      <span class="tw-text-white tw-font-bold tw-text-xs">{{ (co.name || '?').charAt(0).toUpperCase() }}</span>
+                    </ng-template>
+                  </span>
+                </ng-container>
+                <span class="tw-text-sm tw-text-gray-600 tw-font-medium">{{ co.name }}</span>
+                <span *ngIf="!last" class="tw-text-xs tw-text-gray-400">+</span>
+              </div>
+            </ng-container>
+
+          </div>
 
           <!-- Unified date / venue info bar -->
           <div class="tw-mt-5 tw-rounded-xl tw-bg-white tw-flex tw-flex-col sm:tw-flex-row tw-divide-y sm:tw-divide-y-0 sm:tw-divide-x tw-divide-gray-100" style="border: 0.5px solid #e5e7eb;">
