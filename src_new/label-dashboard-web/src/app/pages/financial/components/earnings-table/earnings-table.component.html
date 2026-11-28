@@ -15,8 +15,8 @@
           <span style="display:inline-flex;align-items:center;gap:8px">
             <img [src]="earning.cover_art || coverArtPlaceholder" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">
             <span>
-              {{ earning.release_title || '(None)' }}
-              <span *ngIf="earning.product_name" class="tw-block tw-text-xs tw-text-gray-400">
+              {{ earning.release_title || earning.product_name || '(None)' }}
+              <span *ngIf="earning.release_title && earning.product_name" class="tw-block tw-text-xs tw-text-gray-400">
                 {{ earning.product_sku ? earning.product_sku + ' · ' : '' }}{{ earning.product_name }}
               </span>
             </span>

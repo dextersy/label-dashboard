@@ -131,8 +131,8 @@
                   <app-icon name="music" class="tw-text-gray-300 tw-text-xs" />
                 </div>
                 <div class="tw-min-w-0">
-                  <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ earning.release_title || '(None)' }}</div>
-                  <div *ngIf="earning.product_name" class="tw-text-xs tw-text-gray-400 tw-truncate">{{ earning.product_sku ? earning.product_sku + ' · ' : '' }}{{ earning.product_name }}</div>
+                  <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ earning.release_title || earning.product_name || '(None)' }}</div>
+                  <div *ngIf="earning.release_title && earning.product_name" class="tw-text-xs tw-text-gray-400 tw-truncate">{{ earning.product_sku ? earning.product_sku + ' · ' : '' }}{{ earning.product_name }}</div>
                   <div class="tw-text-sm tw-text-gray-400 tw-truncate">{{ earning.description }}</div>
                 </div>
               </div>
@@ -169,8 +169,8 @@
                   <app-icon name="music" class="tw-text-gray-300 tw-text-xs" />
                 </div>
                 <div class="tw-min-w-0">
-                  <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ royalty.release_title || '(None)' }}</div>
-                  <div *ngIf="royalty.product_name" class="tw-text-xs tw-text-gray-400 tw-truncate">{{ royalty.product_sku ? royalty.product_sku + ' · ' : '' }}{{ royalty.product_name }}</div>
+                  <div class="tw-truncate tw-text-base tw-font-medium tw-text-gray-800">{{ royalty.release_title || royalty.product_name || '(None)' }}</div>
+                  <div *ngIf="royalty.release_title && royalty.product_name" class="tw-text-xs tw-text-gray-400 tw-truncate">{{ royalty.product_sku ? royalty.product_sku + ' · ' : '' }}{{ royalty.product_name }}</div>
                   <div class="tw-text-sm tw-text-gray-400 tw-truncate">{{ royalty.description }}</div>
                 </div>
               </div>

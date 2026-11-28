@@ -15,8 +15,8 @@
           <span style="display:inline-flex;align-items:center;gap:8px">
             <img [src]="royalty.cover_art || coverArtPlaceholder" alt="" style="width:28px;height:28px;object-fit:cover;border-radius:3px;flex-shrink:0">
             <span>
-              {{ royalty.release_title || '(None)' }}
-              <span *ngIf="royalty.product_name" class="tw-block tw-text-xs tw-text-gray-400">
+              {{ royalty.release_title || royalty.product_name || '(None)' }}
+              <span *ngIf="royalty.release_title && royalty.product_name" class="tw-block tw-text-xs tw-text-gray-400">
                 {{ royalty.product_sku ? royalty.product_sku + ' · ' : '' }}{{ royalty.product_name }}
               </span>
             </span>
