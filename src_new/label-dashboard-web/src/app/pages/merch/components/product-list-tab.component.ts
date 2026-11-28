@@ -47,12 +47,16 @@ export class ProductListTabComponent implements OnInit {
         const skuHtml = item.sku
           ? `<div style="font-size:11px;color:#9ca3af;margin-top:1px;font-family:monospace;">${item.sku}</div>`
           : '';
+        const chipsHtml = item.categories?.length
+          ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${item.categories.map(c => `<span class="category-chip">${c.name}</span>`).join('')}</div>`
+          : '';
         return this.sanitizer.bypassSecurityTrustHtml(
           `<div style="display:flex;align-items:center;gap:10px;">
             ${imgHtml}
             <div style="min-width:0;">
               <div style="font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
               ${skuHtml}
+              ${chipsHtml}
             </div>
           </div>`
         );
@@ -60,20 +64,6 @@ export class ProductListTabComponent implements OnInit {
       renderHtml: true,
     },
     { key: 'sku', label: 'SKU', searchable: true, hidden: true },
-    {
-      key: 'categories',
-      label: 'Categories',
-      renderHtml: true,
-      formatter: (item: Product) => {
-        if (!item.categories?.length) return '—';
-        const chips = item.categories.map(c =>
-          `<span class="category-chip">${c.name}</span>`
-        ).join('');
-        return this.sanitizer.bypassSecurityTrustHtml(
-          `<div class="category-chips-wrap">${chips}</div>`
-        );
-      },
-    },
     {
       key: 'linked_to',
       label: 'Linked To',
