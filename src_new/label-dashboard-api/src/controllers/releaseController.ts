@@ -962,16 +962,8 @@ export const getReleaseExpenses = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Release not found' });
     }
 
-    // Find product IDs linked to this release (to include their expenses too)
-    const linkedProductIds = (await Product.findAll({
-      where: { release_id: releaseId },
-      attributes: ['id'],
-      raw: true,
-    })).map((p: any) => p.id);
-
-    const expenseScope = linkedProductIds.length > 0
-      ? { [Op.or]: [{ release_id: releaseId }, { product_id: { [Op.in]: linkedProductIds } }] }
-      : { release_id: releaseId };
+    // All recuperable expenses (including merch for linked products) are keyed by release_id
+    const expenseScope = { release_id: releaseId };
 
     // Get total count for pagination
     const totalCount = await RecuperableExpense.count({ where: expenseScope });

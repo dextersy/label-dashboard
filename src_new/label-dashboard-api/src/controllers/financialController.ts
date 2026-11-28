@@ -26,7 +26,7 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
     }
 
     const {
-      release_id,
+      release_id: release_id_param,
       product_id,
       type,
       amount,
@@ -34,6 +34,7 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
       date_recorded,
       calculate_royalties = false
     } = req.body;
+    let release_id = release_id_param;
 
     if (!amount || !date_recorded) {
       return res.status(400).json({
@@ -75,6 +76,8 @@ export const addEarning = async (req: AuthRequest, res: Response) => {
 
       targetBrandId = product.brand_id;
       earningType = 'Merch'; // Auto-set type for product earnings
+      // Carry the product's release link onto the earning so all financial queries can use release_id
+      if (product.release_id) release_id = product.release_id;
     } else {
       // Release-based earning (original flow)
       const release = await Release.findOne({ where: { id: release_id } });
@@ -247,6 +250,8 @@ async function processBulkEarningsJob(earnings: any[], brandId: number): Promise
         earningType = 'Merch';
         rowLabel = product.sku || '';
         rowTitle = product.name || '';
+        // Carry the product's release link onto the earning
+        if (product.release_id) earningData.release_id = product.release_id;
       } else {
         // Release-based earning (original flow)
         const release = await Release.findOne({ where: { id: earningData.release_id } });
@@ -2333,7 +2338,7 @@ export const getFinancialSummary = async (req: AuthRequest, res: Response) => {
         sequelize.query(
           `SELECT COALESCE(SUM(e.amount), 0) AS total FROM earning e
            LEFT JOIN release r ON e.release_id = r.id
-           LEFT JOIN product p ON e.product_id = p.id
+           LEFT JOIN product p ON e.product_id = p.id AND e.release_id IS NULL
            WHERE (r.brand_id = :brandId OR p.brand_id = :brandId)`,
           { replacements: { brandId }, type: 'SELECT' }
         ).then(rows => rows),
@@ -3313,7 +3318,7 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
          r.catalog_no,
          r.title,
          COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
-         COALESCE(re_agg.expense_sum, 0) + COALESCE(prod_agg.expense_sum, 0) AS remaining_expense
+         COALESCE(re_agg.expense_sum, 0) AS remaining_expense
        FROM release r
        LEFT JOIN (
          SELECT release_id, SUM(expense_amount) AS expense_sum
@@ -3321,18 +3326,11 @@ export const getAdminRecuperableExpenses = async (req: AuthRequest, res: Respons
          WHERE release_id IS NOT NULL
          GROUP BY release_id
        ) re_agg ON re_agg.release_id = r.id
-       LEFT JOIN (
-         SELECT p.release_id, SUM(re.expense_amount) AS expense_sum
-         FROM recuperable_expense re
-         INNER JOIN product p ON p.id = re.product_id
-         WHERE re.product_id IS NOT NULL AND p.release_id IS NOT NULL
-         GROUP BY p.release_id
-       ) prod_agg ON prod_agg.release_id = r.id
        LEFT JOIN release_artist ra ON ra.release_id = r.id
        LEFT JOIN artist a ON a.id = ra.artist_id
        WHERE ${releaseConditions.join(' AND ')}
-       GROUP BY r.id, r.catalog_no, r.title, re_agg.expense_sum, prod_agg.expense_sum
-       HAVING COALESCE(re_agg.expense_sum, 0) + COALESCE(prod_agg.expense_sum, 0) > 0`,
+       GROUP BY r.id, r.catalog_no, r.title, re_agg.expense_sum
+       HAVING COALESCE(re_agg.expense_sum, 0) > 0`,
       { replacements, type: 'SELECT' }
     );
 
@@ -3442,15 +3440,15 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
     // NOTE: expense sums are pre-aggregated in subqueries to avoid multiplication
     // when a release has multiple artists (each artist row would otherwise
     // duplicate every recuperable_expense row in the outer SUM).
-    // Product expenses for products linked to a release are also included.
+    // All recuperable expenses (including merch) are keyed by release_id.
     const rawRows: any[] = await sequelize.query(
       `SELECT
          r.id AS release_id,
          r.catalog_no,
          r.title,
          COALESCE(STRING_AGG(DISTINCT a.name, ', '), '') AS artist_name,
-         COALESCE(re_agg.new_expense, 0) + COALESCE(prod_agg.new_expense, 0) AS new_expense,
-         COALESCE(re_agg.recuperated_expense, 0) + COALESCE(prod_agg.recuperated_expense, 0) AS recuperated_expense
+         COALESCE(re_agg.new_expense, 0) AS new_expense,
+         COALESCE(re_agg.recuperated_expense, 0) AS recuperated_expense
        FROM release r
        LEFT JOIN (
          SELECT
@@ -3462,23 +3460,12 @@ export const getAdminRecuperableExpenseFlow = async (req: AuthRequest, res: Resp
            AND release_id IS NOT NULL
          GROUP BY release_id
        ) re_agg ON re_agg.release_id = r.id
-       LEFT JOIN (
-         SELECT
-           p.release_id,
-           SUM(CASE WHEN re.expense_amount > 0 THEN re.expense_amount ELSE 0 END) AS new_expense,
-           ABS(SUM(CASE WHEN re.expense_amount < 0 THEN re.expense_amount ELSE 0 END)) AS recuperated_expense
-         FROM recuperable_expense re
-         INNER JOIN product p ON p.id = re.product_id
-         WHERE re.date_recorded BETWEEN :startDate AND :endDate
-           AND re.product_id IS NOT NULL AND p.release_id IS NOT NULL
-         GROUP BY p.release_id
-       ) prod_agg ON prod_agg.release_id = r.id
        LEFT JOIN release_artist ra ON ra.release_id = r.id
        LEFT JOIN artist a ON a.id = ra.artist_id
        WHERE ${releaseConditions.join(' AND ')}
-       GROUP BY r.id, r.catalog_no, r.title, re_agg.new_expense, re_agg.recuperated_expense, prod_agg.new_expense, prod_agg.recuperated_expense
-       HAVING COALESCE(re_agg.new_expense, 0) + COALESCE(prod_agg.new_expense, 0) > 0
-           OR COALESCE(re_agg.recuperated_expense, 0) + COALESCE(prod_agg.recuperated_expense, 0) > 0`,
+       GROUP BY r.id, r.catalog_no, r.title, re_agg.new_expense, re_agg.recuperated_expense
+       HAVING COALESCE(re_agg.new_expense, 0) > 0
+           OR COALESCE(re_agg.recuperated_expense, 0) > 0`,
       { replacements, type: 'SELECT' }
     );
 

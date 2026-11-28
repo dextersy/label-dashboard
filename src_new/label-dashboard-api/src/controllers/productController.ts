@@ -298,6 +298,16 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
       status: status !== undefined ? status : product.status,
     });
 
+    // If the release link changed, cascade release_id to all financial records for this product
+    // so their recuperable pool and report queries reflect the new state.
+    if (newReleaseId !== prevReleaseId) {
+      await Promise.all([
+        Earning.update({ release_id: newReleaseId }, { where: { product_id: productId } }),
+        Royalty.update({ release_id: newReleaseId }, { where: { product_id: productId } }),
+        RecuperableExpense.update({ release_id: newReleaseId }, { where: { product_id: productId } }),
+      ]);
+    }
+
     // If a release was just linked and the product has no existing splits, seed from release
     if (newReleaseId && newReleaseId !== prevReleaseId) {
       const existingSplits = await ProductArtist.count({ where: { product_id: productId } });
