@@ -2667,7 +2667,8 @@ export const getAdminEarningsList = async (req: AuthRequest, res: Response) => {
         type: e.type,
         amount: parseFloat(e.amount || 0),
         product_id: e.product_id,
-        product_name: e.product?.name || null,
+        product_name: e.product_id ? (e.product?.name || null) : null,
+        product_sku: e.product_id ? (e.product?.sku || null) : null,
       })),
       pagination: { current_page: pageNum, total_pages: totalPages, total_count: count, per_page: pageSize, has_next: pageNum < totalPages, has_prev: pageNum > 1 }
     });

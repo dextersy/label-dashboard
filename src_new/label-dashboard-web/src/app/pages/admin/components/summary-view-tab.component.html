@@ -113,7 +113,11 @@
         <img [src]="item.cover_art || coverArtPlaceholder" alt="" class="fin-mobile-cover">
         <div class="fin-mobile-body">
           <div class="fin-mobile-date">{{ item.date_recorded | date:'MMM d, yyyy' }}</div>
-          <div class="fin-mobile-release">{{ item.release_title || '(None)' }}</div>
+          <div class="fin-mobile-release">{{ item.release_title || '(None)' }}
+            <span *ngIf="item.product_name" class="tw-block tw-text-xs tw-text-gray-400">
+              {{ item.product_sku ? item.product_sku + ' · ' : '' }}{{ item.product_name }}
+            </span>
+          </div>
           <div class="fin-mobile-desc">{{ item.description }}</div>
           <div class="fin-mobile-type">
             <span class="status-badge status-info">{{ item.type }}</span>
